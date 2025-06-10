@@ -1,16 +1,19 @@
 using R3;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ItemPresenter
 {
     private readonly ItemModel itemModel;
     private readonly ItemShopView itemShopView;
+    private readonly TomsShopView tomsShopView;
     private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-    public ItemPresenter(ItemModel itemModel, ItemShopView itemShopView)
+    public ItemPresenter(ItemModel itemModel, ItemShopView itemShopView, TomsShopView tomsShopView)
     {
         this.itemModel = itemModel;
         this.itemShopView = itemShopView;
+        this.tomsShopView = tomsShopView;
 
         // 購入イベント購読
         itemShopView.OnPurchaseRequested
@@ -24,14 +27,27 @@ public class ItemPresenter
 
         // 所持金更新（ModelのデータからViewへ）
         itemModel.PlayerMoney
-            .Subscribe(money => itemShopView.UpdatePlayerMoney(money))
+            .Subscribe(money =>
+            {
+                itemShopView.UpdatePlayerMoney(money);
+                tomsShopView.UpdatePlayerMoney(money);
+            })
+            .AddTo(disposables);
+    }
+    public void BindItemSelectionView(ItemSelectionView itemSelectionView)
+    {
+        itemSelectionView.OnConfirmSelection
+            .Subscribe(selectedItems =>
+            {
+                itemModel.SetShopItemList(selectedItems);
+                itemShopView.PopulateItemList(itemModel.ShopItemList, itemModel);
+            })
             .AddTo(disposables);
     }
 
     private void HandlePurchase(string itemId, int quantity)
     {
         itemModel.PurchaseItem(itemId, quantity);
-        // 必要なら価格再計算も呼ぶ
     }
 
     private void HandleSell(string itemId, int quantity)

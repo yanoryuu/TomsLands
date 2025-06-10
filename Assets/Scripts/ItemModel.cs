@@ -8,9 +8,10 @@ public class ItemModel
 {
     private readonly List<ItemData> masterItems;
 
-    public ReactiveProperty<int> PlayerMoney { get; } = new ReactiveProperty<int>(1000);
+    public ReactiveProperty<int> PlayerMoney { get; } = new(1000);
 
-    public List<RuntimeItemData> RuntimeItems { get; private set; } = new List<RuntimeItemData>();
+    public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
+    public List<RuntimeItemData> ShopItemList { get; private set; } = new();
 
     public ItemModel(List<ItemData> masterItems)
     {
@@ -22,9 +23,14 @@ public class ItemModel
         return masterItems.FirstOrDefault(item => item.itemId == itemId);
     }
 
+    public RuntimeItemData GetRuntimeItem(string itemId)
+    {
+        return RuntimeItems.FirstOrDefault(item => item.ItemId == itemId);
+    }
+
     public void PurchaseItem(string itemId, int quantity)
     {
-        var runtime = RuntimeItems.FirstOrDefault(item => item.ItemId == itemId);
+        var runtime = GetRuntimeItem(itemId);
         if (runtime != null)
         {
             int totalPrice = runtime.CurrentPrice.Value * quantity;
@@ -32,17 +38,51 @@ public class ItemModel
             {
                 PlayerMoney.Value -= totalPrice;
                 runtime.Stock.Value += quantity;
+                runtime.PurchasedThisTurn = true;
+
+                float demandIncrease = 0.05f * quantity;
+                runtime.Demand.Value = Mathf.Clamp01(runtime.Demand.Value + demandIncrease);
+                runtime.UpdatePopularity();
+            }
+        }
+    }
+
+    public void SetShopItemList(Dictionary<string, int> selectedItems)
+    {
+        ShopItemList.Clear();
+
+        foreach (var kvp in selectedItems)
+        {
+            var runtime = GetRuntimeItem(kvp.Key);
+            if (runtime != null)
+            {
+                int assignStock = Mathf.Min(runtime.Stock.Value, kvp.Value);
+                runtime.Stock.Value -= assignStock;
+
+                var shopItem = new RuntimeItemData(
+                    runtime.ItemId,
+                    runtime.CurrentPrice.Value,
+                    assignStock,
+                    runtime.ItemIcon,
+                    runtime.Demand.Value
+                );
+
+                ShopItemList.Add(shopItem);
             }
         }
     }
 
     public void SellItem(string itemId, int quantity)
     {
-        var runtime = RuntimeItems.FirstOrDefault(item => item.ItemId == itemId);
+        var runtime = ShopItemList.FirstOrDefault(item => item.ItemId == itemId);
         if (runtime != null && runtime.Stock.Value >= quantity)
         {
             runtime.Stock.Value -= quantity;
             PlayerMoney.Value += runtime.CurrentPrice.Value * quantity;
+        }
+        else
+        {
+            Debug.Log("店舗に並べた商品しか売却できません！");
         }
     }
 
@@ -53,15 +93,44 @@ public class ItemModel
             var master = GetMasterItem(runtime.ItemId);
             if (master != null)
             {
-                if (phase == GamePhase.Preparation)
+                float baseMultiplier = phase switch
                 {
-                    runtime.CurrentPrice.Value = Mathf.RoundToInt(master.basePrice * Random.Range(0.95f, 1.05f));
-                }
-                else if (phase == GamePhase.Battle)
-                {
-                    runtime.CurrentPrice.Value = Mathf.RoundToInt(master.basePrice * Random.Range(0.8f, 1.3f));
-                }
+                    GamePhase.Battle => Random.Range(0.8f, 1.5f),
+                    _ => Random.Range(0.95f, 1.05f)
+                };
+
+                float demandBonus = 1.0f + (runtime.Demand.Value * 0.2f);
+                runtime.CurrentPrice.Value = Mathf.RoundToInt(master.basePrice * baseMultiplier * demandBonus);
+
+                runtime.UpdatePopularity();
             }
+        }
+    }
+
+    public void ApplyBattleResult(BattleResult result, List<string> usedItemIds)
+    {
+        foreach (var runtime in RuntimeItems)
+        {
+            if (usedItemIds.Contains(runtime.ItemId))
+            {
+                if (result == BattleResult.Victory)
+                {
+                    runtime.Demand.Value = Mathf.Clamp01(runtime.Demand.Value + 0.2f);
+                }
+                else
+                {
+                    runtime.Demand.Value = Mathf.Clamp01(runtime.Demand.Value - 0.2f);
+                }
+                runtime.UpdatePopularity();
+            }
+        }
+    }
+
+    public void ResetPurchasedFlags()
+    {
+        foreach (var runtime in RuntimeItems)
+        {
+            runtime.PurchasedThisTurn = false;
         }
     }
 
@@ -86,7 +155,13 @@ public class ItemModel
         else
         {
             RuntimeItems = masterItems
-                .Select(master => new RuntimeItemData(master.itemId, master.basePrice, 0))
+                .Select(master => new RuntimeItemData(
+                    master.itemId,
+                    master.basePrice,
+                    master.initialStock,
+                    master.itemIcon,
+                    Random.Range(0.3f, 0.7f)
+                ))
                 .ToList();
         }
     }

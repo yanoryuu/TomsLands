@@ -1,24 +1,34 @@
 using R3;
 using System;
-using UnityEngine;
 
 public class GamePhasePresenter : IDisposable
-{ 
-    [SerializeField] private GameManager gameManager;
-    [SerializeField] private ItemPresenter itemPresenter;
-    [SerializeField] private ItemShopView itemShopView;
-    [SerializeField] private PreparationView preparationView;
-    [SerializeField] private BattleView battleView;
-    [SerializeField] private EndPhaseView endPhaseView;
-    [SerializeField] private TomsShopView tomsShopView;
+{
+    private readonly GameManager gameManager;
+    private readonly ItemPresenter itemPresenter;
+    private readonly ItemShopView itemShopView;
+    private readonly PreparationView preparationView;
+    private readonly BattleView battleView;
+    private readonly EndPhaseView endPhaseView;
+    private readonly TomsShopView tomsShopView;
 
-    private readonly CompositeDisposable disposables = new CompositeDisposable();
+    private readonly CompositeDisposable disposables = new();
 
-    public GamePhasePresenter(GameManager gameManager, ItemPresenter itemPresenter, ItemShopView itemShopView)
+    public GamePhasePresenter(
+        GameManager gameManager,
+        ItemPresenter itemPresenter,
+        ItemShopView itemShopView,
+        PreparationView preparationView,
+        BattleView battleView,
+        EndPhaseView endPhaseView,
+        TomsShopView tomsShopView)
     {
         this.gameManager = gameManager;
         this.itemPresenter = itemPresenter;
         this.itemShopView = itemShopView;
+        this.preparationView = preparationView;
+        this.battleView = battleView;
+        this.endPhaseView = endPhaseView;
+        this.tomsShopView = tomsShopView;
 
         // GameManagerのフェーズを購読
         gameManager.CurrentPhase

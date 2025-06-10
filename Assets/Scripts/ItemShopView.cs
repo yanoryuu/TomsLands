@@ -10,7 +10,7 @@ public class ItemShopView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI playerMoneyText;
     [SerializeField] private Transform itemListContent;
     [SerializeField] private GameObject itemPrefab;
-    [SerializeField] private Button nextPhaseButton;
+    // [SerializeField] private Button nextPhaseButton;
 
     public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
     public Subject<(string itemId, int quantity)> OnSellRequested { get; } = new();
@@ -18,7 +18,17 @@ public class ItemShopView : MonoBehaviour
 
     private void Awake()
     {
-        nextPhaseButton.onClick.AddListener(() => OnNextPhaseRequested.OnNext(Unit.Default));
+        // nextPhaseButton.onClick.AddListener(() => OnNextPhaseRequested.OnNext(Unit.Default));
+    }
+
+    public void Show()
+    {
+        gameObject.SetActive(true);
+    }
+
+    public void Hide()
+    {
+        gameObject.SetActive(false);
     }
 
     public void UpdatePlayerMoney(int money)
@@ -41,7 +51,6 @@ public class ItemShopView : MonoBehaviour
             var go = Instantiate(itemPrefab, itemListContent);
             var itemUI = go.GetComponent<ItemUI>();
 
-            itemUI.SetItem(master.itemName, item.CurrentPrice.Value, item.Stock.Value);
 
             item.CurrentPrice
                 .Subscribe(price => itemUI.UpdatePrice(price))

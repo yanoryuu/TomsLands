@@ -7,4 +7,6 @@ public class ItemData : ScriptableObject
     public string itemName;
     public int basePrice;
     public string description;
+    public Sprite itemIcon;
+    public int initialStock;
 }
