@@ -1,8 +1,8 @@
-using UnityEngine;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using R3;
+using UnityEngine;
 
 public class ItemModel
 {
@@ -20,6 +20,11 @@ public class ItemModel
     public ItemData GetMasterItem(string itemId)
     {
         return masterItems.FirstOrDefault(item => item.itemId == itemId);
+    }
+
+    public RuntimeItemData GetRuntimeItem(string itemId)
+    {
+        return RuntimeItems.FirstOrDefault(item => item.ItemId == itemId);
     }
 
     public void PurchaseItem(string itemId, int quantity)
