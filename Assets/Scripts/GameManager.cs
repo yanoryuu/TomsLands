@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour
 
         // ItemModel初期化（マスターItemData読み込み例）
         ItemData[] masterItems = Resources.LoadAll<ItemData>("ItemData");
+        Debug.Log(masterItems.Length);
         itemModel = new ItemModel(masterItems.ToList());
 
         // ItemPresenter初期化（必要ならView渡す）

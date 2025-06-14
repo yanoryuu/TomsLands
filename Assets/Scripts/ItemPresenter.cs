@@ -40,9 +40,9 @@ public class ItemPresenter
             .Subscribe(selectedItems =>
             {
                 itemModel.SetShopItemList(selectedItems);
-                itemShopView.PopulateItemList(itemModel.ShopItemList, itemModel);
             })
             .AddTo(disposables);
+        itemShopView.PopulateItemList(itemModel.ShopItemList, itemModel);
     }
 
     private void HandlePurchase(string itemId, int quantity)

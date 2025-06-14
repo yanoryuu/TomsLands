@@ -11,8 +11,7 @@ public class RuntimeItemData
     public ReactiveProperty<bool> IsPopular { get; private set; }
 
     public bool PurchasedThisTurn { get; set; }
-    public Sprite ItemIcon { get; private set; }  // 👈 追加（アイコン）
-
+    public Sprite ItemIcon { get; private set; }
     public RuntimeItemData(string itemId, int currentPrice, int stock, Sprite icon, float demand = 0.5f)
     {
         ItemId = itemId;

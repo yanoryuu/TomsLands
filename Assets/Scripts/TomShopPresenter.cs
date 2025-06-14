@@ -24,7 +24,7 @@ public class TomShopPresenter : IDisposable
         this.itemSelectionView = itemSelectionView;
         this.itemModel = itemModel;
 
-        // 購入ボタン
+        // 仕入れボタン
         tomsShopView.OnPurchaseClicked
             .Subscribe(_ =>
             {
@@ -37,7 +37,7 @@ public class TomShopPresenter : IDisposable
         tomsShopView.OnSetItemClicked
             .Subscribe(_ =>
             {
-                itemSelectionView.PopulateItemList(itemModel.RuntimeItems);
+                itemSelectionView.SelectionItemList(itemModel.RuntimeItems);
                 tomsShopView.HideTomsShopUI();
                 itemSelectionView.Show();
             })

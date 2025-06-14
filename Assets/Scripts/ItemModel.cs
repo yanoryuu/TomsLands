@@ -30,6 +30,7 @@ public class ItemModel
 
     public void PurchaseItem(string itemId, int quantity)
     {
+        Debug.Log($"Purchasing item {itemId}");
         var runtime = GetRuntimeItem(itemId);
         if (runtime != null)
         {
@@ -49,6 +50,8 @@ public class ItemModel
 
     public void SetShopItemList(Dictionary<string, int> selectedItems)
     {
+        Debug.Log("Item list changed");
+        
         ShopItemList.Clear();
 
         foreach (var kvp in selectedItems)

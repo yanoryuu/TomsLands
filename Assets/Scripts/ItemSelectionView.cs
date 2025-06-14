@@ -27,7 +27,7 @@ public class ItemSelectionView : MonoBehaviour
     }
 
     // 商品リストを表示する
-    public void PopulateItemList(List<RuntimeItemData> runtimeItems)
+    public void SelectionItemList(List<RuntimeItemData> runtimeItems)
     {
         // 既存リスト削除
         foreach (Transform child in itemListParent)

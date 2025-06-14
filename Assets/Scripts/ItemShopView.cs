@@ -38,6 +38,7 @@ public class ItemShopView : MonoBehaviour
 
     public void PopulateItemList(List<RuntimeItemData> items, ItemModel model)
     {
+        
         foreach (Transform child in itemListContent)
         {
             Destroy(child.gameObject);
@@ -45,6 +46,7 @@ public class ItemShopView : MonoBehaviour
 
         foreach (var item in items)
         {
+            Debug.Log($"item: {item.ItemId}");
             var master = model.GetMasterItem(item.ItemId);
             if (master == null) continue;
 
