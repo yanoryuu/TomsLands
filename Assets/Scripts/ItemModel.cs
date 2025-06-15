@@ -6,12 +6,13 @@ using UnityEngine;
 
 public class ItemModel
 {
-    private readonly List<ItemData> masterItems;
+     private readonly List<ItemData> masterItems;
 
     public ReactiveProperty<int> PlayerMoney { get; } = new(1000);
 
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
     public List<RuntimeItemData> ShopItemList { get; private set; } = new();
+    public List<RuntimeItemData> DisplayItemList { get; private set; } = new(); // ← 追加
 
     public ItemModel(List<ItemData> masterItems)
     {
@@ -30,7 +31,6 @@ public class ItemModel
 
     public void PurchaseItem(string itemId, int quantity)
     {
-        Debug.Log($"Purchasing item {itemId}");
         var runtime = GetRuntimeItem(itemId);
         if (runtime != null)
         {
@@ -50,10 +50,7 @@ public class ItemModel
 
     public void SetShopItemList(Dictionary<string, int> selectedItems)
     {
-        Debug.Log("Item list changed");
-        
         ShopItemList.Clear();
-
         foreach (var kvp in selectedItems)
         {
             var runtime = GetRuntimeItem(kvp.Key);
@@ -69,8 +66,30 @@ public class ItemModel
                     runtime.ItemIcon,
                     runtime.Demand.Value
                 );
-
                 ShopItemList.Add(shopItem);
+            }
+        }
+    }
+
+    public void SetDisplayItemList(Dictionary<string, int> selectedItems)
+    {
+        DisplayItemList.Clear();
+        foreach (var kvp in selectedItems)
+        {
+            var runtime = GetRuntimeItem(kvp.Key);
+            if (runtime != null)
+            {
+                int assignStock = Mathf.Min(runtime.Stock.Value, kvp.Value);
+                runtime.Stock.Value -= assignStock;
+
+                var displayItem = new RuntimeItemData(
+                    runtime.ItemId,
+                    runtime.CurrentPrice.Value,
+                    assignStock,
+                    runtime.ItemIcon,
+                    runtime.Demand.Value
+                );
+                DisplayItemList.Add(displayItem);
             }
         }
     }
@@ -82,10 +101,6 @@ public class ItemModel
         {
             runtime.Stock.Value -= quantity;
             PlayerMoney.Value += runtime.CurrentPrice.Value * quantity;
-        }
-        else
-        {
-            Debug.Log("店舗に並べた商品しか売却できません！");
         }
     }
 
@@ -139,7 +154,9 @@ public class ItemModel
 
     public void SaveData()
     {
-        var dataList = new RuntimeItemDataList(RuntimeItems.Select(r => r.ToPlainData()).ToList());
+        var dataList = new RuntimeItemDataList(
+            RuntimeItems.Select(r => r.ToPlainData()).ToList()
+        );
         string json = JsonUtility.ToJson(dataList, true);
         File.WriteAllText(Application.persistentDataPath + "/itemData.json", json);
     }
@@ -157,18 +174,25 @@ public class ItemModel
         }
         else
         {
-            RuntimeItems = masterItems
-                .Select(master => new RuntimeItemData(
-                    master.itemId,
-                    master.basePrice,
-                    master.initialStock,
-                    master.itemIcon,
-                    Random.Range(0.3f, 0.7f)
-                ))
-                .ToList();
+            InitializeRuntimeItemsFromMaster();
         }
     }
+    
+    public void InitializeRuntimeItemsFromMaster()
+    {
+        RuntimeItems = masterItems
+            .Select(master => new RuntimeItemData(
+                master.itemId,
+                master.basePrice,
+                master.initialStock,
+                master.itemIcon,
+                Random.Range(0.3f, 0.7f)
+            ))
+            .ToList();
+    }
 }
+
+
 
 [System.Serializable]
 public class RuntimeItemDataList

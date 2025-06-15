@@ -42,7 +42,6 @@ public class ItemPresenter
                 itemModel.SetShopItemList(selectedItems);
             })
             .AddTo(disposables);
-        itemShopView.PopulateItemList(itemModel.ShopItemList, itemModel);
     }
 
     private void HandlePurchase(string itemId, int quantity)
@@ -58,7 +57,7 @@ public class ItemPresenter
     public void RefreshPrices(GamePhase phase)
     {
         itemModel.UpdateItemPrices(phase);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems, itemModel);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems);
     }
 
     public void Dispose()

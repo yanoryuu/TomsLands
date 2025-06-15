@@ -44,7 +44,8 @@ public class RuntimeItemData
             itemId = ItemId,
             currentPrice = CurrentPrice.Value,
             stock = Stock.Value,
-            demand = Demand.Value
+            demand = Demand.Value,
+            isPopular = IsPopular.Value
         };
     }
 }
@@ -56,4 +57,5 @@ public class RuntimeItemDataPlain
     public int currentPrice;
     public int stock;
     public float demand;
+    public bool isPopular;
 }

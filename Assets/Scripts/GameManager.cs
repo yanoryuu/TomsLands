@@ -28,6 +28,13 @@ public class GameManager : MonoBehaviour
         ItemData[] masterItems = Resources.LoadAll<ItemData>("ItemData");
         Debug.Log(masterItems.Length);
         itemModel = new ItemModel(masterItems.ToList());
+        
+        //データロード
+        itemModel.LoadData();
+        
+        //初期表示
+        itemShopView.PopulateItemList(itemModel.RuntimeItems);
+        itemSelectionView.PopulateItemList(itemModel.RuntimeItems);
 
         // ItemPresenter初期化（必要ならView渡す）
         itemPresenter = new ItemPresenter(itemModel, itemShopView ,tomsShopView);
@@ -47,7 +54,6 @@ public class GameManager : MonoBehaviour
         );
         
         tomShopPresenter = new TomShopPresenter(
-            this,
             tomsShopView,
             itemShopView,
             itemSelectionView,

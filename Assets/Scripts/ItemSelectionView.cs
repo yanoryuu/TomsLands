@@ -6,15 +6,19 @@ using R3;
 public class ItemSelectionView : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Transform itemListParent;
-    [SerializeField] private GameObject itemSelectionSlotPrefab;
-    [SerializeField] private Button confirmButton;
+    [SerializeField] private Transform itemListParent;                   // スロットを並べる親
+    [SerializeField] private GameObject itemSelectionSlotPrefab;         // スロットプレハブ
+    [SerializeField] private Button confirmButton;                       // 確定ボタン
 
-    // イベント（Presenterに通知）
     public Subject<Dictionary<string, int>> OnConfirmSelection { get; } = new();
 
-    // 内部データ
     private readonly Dictionary<string, int> selectedItems = new();
+    private readonly List<GameObject> activeSlots = new();
+
+    private void Awake()
+    {
+        confirmButton.onClick.AddListener(OnConfirmButtonClicked);
+    }
 
     public void Show()
     {
@@ -26,41 +30,51 @@ public class ItemSelectionView : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // 商品リストを表示する
-    public void SelectionItemList(List<RuntimeItemData> runtimeItems)
+    /// <summary>
+    /// 商品リストを表示
+    /// </summary>
+    public void PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // 既存リスト削除
-        foreach (Transform child in itemListParent)
+        // 既存スロットを削除
+        foreach (var slotObj in activeSlots)
         {
-            Destroy(child.gameObject);
+            Destroy(slotObj);
         }
+        activeSlots.Clear();
+        selectedItems.Clear();
 
-        // 商品を生成
         foreach (var item in runtimeItems)
         {
-            GameObject slotObj = Instantiate(itemSelectionSlotPrefab, itemListParent);
+            var slotObj = Instantiate(itemSelectionSlotPrefab, itemListParent);
             var slot = slotObj.GetComponent<ItemSelectionSlot>();
 
             slot.SetItem(
                 item.ItemId,
                 item.ItemIcon,
-                item.ItemId,  // ここはitemNameでもOK
+                item.ItemId,  // ItemName があればそちらでもOK
                 item.CurrentPrice.Value,
                 item.Stock.Value
             );
 
-            // Toggleの変化を購読
+            // Toggle変更
             slot.OnToggleChanged
                 .Subscribe(isOn =>
                 {
-                    if (!isOn)
+                    if (isOn)
+                    {
+                        if (!selectedItems.ContainsKey(item.ItemId))
+                        {
+                            selectedItems[item.ItemId] = 1; // デフォルト1
+                        }
+                    }
+                    else
                     {
                         selectedItems.Remove(item.ItemId);
                     }
                 })
                 .AddTo(this);
 
-            // Quantity変更を購読
+            // 数量変更
             slot.OnQuantityChanged
                 .Subscribe(quantity =>
                 {
@@ -71,23 +85,8 @@ public class ItemSelectionView : MonoBehaviour
                 })
                 .AddTo(this);
 
-            // Toggle初期化（選択状態なら追加）
-            slot.OnToggleChanged
-                .Where(isOn => isOn)
-                .Subscribe(_ =>
-                {
-                    if (!selectedItems.ContainsKey(item.ItemId))
-                    {
-                        selectedItems[item.ItemId] = 1; // デフォルト1
-                    }
-                })
-                .AddTo(this);
+            activeSlots.Add(slotObj);
         }
-    }
-
-    private void Awake()
-    {
-        confirmButton.onClick.AddListener(OnConfirmButtonClicked);
     }
 
     private void OnConfirmButtonClicked()
@@ -95,6 +94,7 @@ public class ItemSelectionView : MonoBehaviour
         if (selectedItems.Count > 0)
         {
             OnConfirmSelection.OnNext(new Dictionary<string, int>(selectedItems));
+            Hide();  
         }
         else
         {

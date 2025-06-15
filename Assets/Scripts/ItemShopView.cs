@@ -8,8 +8,8 @@ using R3;
 public class ItemShopView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerMoneyText;
-    [SerializeField] private Transform itemListContent;
-    [SerializeField] private GameObject itemPrefab;
+    [SerializeField] private Transform itemListParent;
+    [SerializeField] private GameObject itemShopSlotPrefab;
     // [SerializeField] private Button nextPhaseButton;
 
     public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
@@ -31,44 +31,55 @@ public class ItemShopView : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void UpdatePlayerMoney(int money)
-    {
-        playerMoneyText.text = $"所持金: {money}G";
-    }
+    private readonly List<ItemShopSlot> activeSlots = new();
 
-    public void PopulateItemList(List<RuntimeItemData> items, ItemModel model)
+    // 店舗の商品リストをUIに並べる
+    public void PopulateItemList(List<RuntimeItemData> items)
     {
-        
-        foreach (Transform child in itemListContent)
+        Debug.Log("PopulateItemList");
+        Debug.Log(items.Count);
+        // 既存UIをクリア
+        foreach (var slot in activeSlots)
         {
-            Destroy(child.gameObject);
+            Destroy(slot.gameObject);
         }
+        activeSlots.Clear();
 
+        // 新しいアイテムリストをUIに生成
         foreach (var item in items)
         {
-            Debug.Log($"item: {item.ItemId}");
-            var master = model.GetMasterItem(item.ItemId);
-            if (master == null) continue;
+            Debug.Log($"Adding item: {item}");
+            GameObject obj = Instantiate(itemShopSlotPrefab, itemListParent);
+            var slot = obj.GetComponent<ItemShopSlot>();
 
-            var go = Instantiate(itemPrefab, itemListContent);
-            var itemUI = go.GetComponent<ItemUI>();
+            slot.SetItem(
+                item.ItemId,
+                item.ItemIcon,
+                item.CurrentPrice.Value,
+                item.Stock.Value,
+                item.IsPopular.Value
+            );
+            
+            item.Stock.Subscribe(stock=>slot.UpdateStock(stock));
+            
+            item.CurrentPrice.Subscribe(price => slot.UpdatePrice(price));
 
+            // 購入ボタンの処理（Presenter側で購読した方が良い場合はSubjectで通知）
+            slot.OnPurchaseClicked
+                .Subscribe(quantity => OnPurchaseRequested.OnNext((item.ItemId, quantity)))
+                .AddTo(this);
 
-            item.CurrentPrice
-                .Subscribe(price => itemUI.UpdatePrice(price))
-                .AddTo(itemUI);
+            slot.OnSellClicked
+                .Subscribe(quantity => OnSellRequested.OnNext((item.ItemId, quantity)))
+                .AddTo(this);
 
-            item.Stock
-                .Subscribe(stock => itemUI.UpdateStock(stock))
-                .AddTo(itemUI);
-
-            itemUI.OnPurchaseClicked
-                .Subscribe(_ => OnPurchaseRequested.OnNext((item.ItemId, 1)))
-                .AddTo(itemUI);
-
-            itemUI.OnSellClicked
-                .Subscribe(_ => OnSellRequested.OnNext((item.ItemId, 1)))
-                .AddTo(itemUI);
+            activeSlots.Add(slot);
         }
+    }
+
+    // 所持金更新表示
+    public void UpdatePlayerMoney(int money)
+    {
+        playerMoneyText.text = $"{money} G";
     }
 }
