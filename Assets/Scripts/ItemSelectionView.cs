@@ -9,8 +9,10 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private Transform itemListParent;                   // スロットを並べる親
     [SerializeField] private GameObject itemSelectionSlotPrefab;         // スロットプレハブ
     [SerializeField] private Button confirmButton;                       // 確定ボタン
+    [SerializeField] private Button closeButton;
 
     public Subject<Dictionary<string, int>> OnConfirmSelection { get; } = new();
+    public Subject<Unit> OnCloseRequested { get; } = new();
 
     private readonly Dictionary<string, int> selectedItems = new();
     private readonly List<GameObject> activeSlots = new();
@@ -18,6 +20,8 @@ public class ItemSelectionView : MonoBehaviour
     private void Awake()
     {
         confirmButton.onClick.AddListener(OnConfirmButtonClicked);
+        
+        closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
     }
 
     public void Show()
@@ -94,7 +98,6 @@ public class ItemSelectionView : MonoBehaviour
         if (selectedItems.Count > 0)
         {
             OnConfirmSelection.OnNext(new Dictionary<string, int>(selectedItems));
-            Hide();  
         }
         else
         {

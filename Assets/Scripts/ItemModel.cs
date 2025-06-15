@@ -8,8 +8,6 @@ public class ItemModel
 {
      private readonly List<ItemData> masterItems;
 
-    public ReactiveProperty<int> PlayerMoney { get; } = new(1000);
-
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
     public List<RuntimeItemData> ShopItemList { get; private set; } = new();
     public List<RuntimeItemData> DisplayItemList { get; private set; } = new(); // ← 追加
@@ -26,25 +24,24 @@ public class ItemModel
 
     public RuntimeItemData GetRuntimeItem(string itemId)
     {
-        return RuntimeItems.FirstOrDefault(item => item.ItemId == itemId);
+        return RuntimeItems.FirstOrDefault(r => r.ItemId == itemId);
     }
 
     public void PurchaseItem(string itemId, int quantity)
     {
-        var runtime = GetRuntimeItem(itemId);
-        if (runtime != null)
+        var item = GetRuntimeItem(itemId);
+        if (item != null)
         {
-            int totalPrice = runtime.CurrentPrice.Value * quantity;
-            if (PlayerMoney.Value >= totalPrice)
-            {
-                PlayerMoney.Value -= totalPrice;
-                runtime.Stock.Value += quantity;
-                runtime.PurchasedThisTurn = true;
+            item.Stock.Value += quantity;
+        }
+    }
 
-                float demandIncrease = 0.05f * quantity;
-                runtime.Demand.Value = Mathf.Clamp01(runtime.Demand.Value + demandIncrease);
-                runtime.UpdatePopularity();
-            }
+    public void SellItem(string itemId, int quantity)
+    {
+        var item = GetRuntimeItem(itemId);
+        if (item != null && item.Stock.Value >= quantity)
+        {
+            item.Stock.Value -= quantity;
         }
     }
 
@@ -91,16 +88,6 @@ public class ItemModel
                 );
                 DisplayItemList.Add(displayItem);
             }
-        }
-    }
-
-    public void SellItem(string itemId, int quantity)
-    {
-        var runtime = ShopItemList.FirstOrDefault(item => item.ItemId == itemId);
-        if (runtime != null && runtime.Stock.Value >= quantity)
-        {
-            runtime.Stock.Value -= quantity;
-            PlayerMoney.Value += runtime.CurrentPrice.Value * quantity;
         }
     }
 
@@ -154,6 +141,7 @@ public class ItemModel
 
     public void SaveData()
     {
+        Debug.Log("Saving data");
         var dataList = new RuntimeItemDataList(
             RuntimeItems.Select(r => r.ToPlainData()).ToList()
         );

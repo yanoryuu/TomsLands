@@ -5,15 +5,17 @@ using System.Collections.Generic;
 public class ItemPresenter
 {
     private readonly ItemModel itemModel;
+    private readonly TomsShopModel tomsShopModel;
     private readonly ItemShopView itemShopView;
     private readonly TomsShopView tomsShopView;
     private readonly CompositeDisposable disposables = new CompositeDisposable();
 
-    public ItemPresenter(ItemModel itemModel, ItemShopView itemShopView, TomsShopView tomsShopView)
+    public ItemPresenter(ItemModel itemModel, ItemShopView itemShopView, TomsShopView tomsShopView,TomsShopModel tomsShopModel)
     {
         this.itemModel = itemModel;
         this.itemShopView = itemShopView;
         this.tomsShopView = tomsShopView;
+        this.tomsShopModel = tomsShopModel;
 
         // 購入イベント購読
         itemShopView.OnPurchaseRequested
@@ -26,7 +28,7 @@ public class ItemPresenter
             .AddTo(disposables);
 
         // 所持金更新（ModelのデータからViewへ）
-        itemModel.PlayerMoney
+        tomsShopModel.PlayerMoney
             .Subscribe(money =>
             {
                 itemShopView.UpdatePlayerMoney(money);

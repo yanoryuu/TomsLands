@@ -15,34 +15,33 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ItemSelectionView itemSelectionView;
 
     private ItemModel itemModel;
+    private TomsShopModel tomsShopModel;
     private ItemPresenter itemPresenter;
+    private ItemShopPresenter itemShopPresenter;
     private GamePhasePresenter gamePhasePresenter;
-    private TomShopPresenter tomShopPresenter;
+    private TomsShopPresenter tomsShopPresenter;
 
     private void Awake()
     {
         // ReactiveProperty初期化
         CurrentPhase = new ReactiveProperty<GamePhase>();
 
-        // ItemModel初期化（マスターItemData読み込み例）
-        ItemData[] masterItems = Resources.LoadAll<ItemData>("ItemData");
-        Debug.Log(masterItems.Length);
-        itemModel = new ItemModel(masterItems.ToList());
-        
-        //データロード
+        // マスターItemDataロード
+        var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
+        itemModel = new ItemModel(masterItems);
         itemModel.LoadData();
-        
-        //初期表示
-        itemShopView.PopulateItemList(itemModel.RuntimeItems);
-        itemSelectionView.PopulateItemList(itemModel.RuntimeItems);
 
-        // ItemPresenter初期化（必要ならView渡す）
-        itemPresenter = new ItemPresenter(itemModel, itemShopView ,tomsShopView);
-        
-        // PresenterとItemSelectionViewをバインド
+        // TomsShopModel初期化
+        tomsShopModel = new TomsShopModel();
+        tomsShopModel.Initialize();
+        tomsShopModel.LoadPlayerMoney();
+
+        // Presenter初期化
+        itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
         itemPresenter.BindItemSelectionView(itemSelectionView);
 
-        // GamePhasePresenterをnewで生成
+        itemShopPresenter = new ItemShopPresenter(tomsShopModel, itemModel, itemShopView);
+
         gamePhasePresenter = new GamePhasePresenter(
             this,
             itemPresenter,
@@ -52,15 +51,30 @@ public class GameManager : MonoBehaviour
             endPhaseView,
             tomsShopView
         );
-        
-        tomShopPresenter = new TomShopPresenter(
+
+        tomsShopPresenter = new TomsShopPresenter(
             tomsShopView,
             itemShopView,
             itemSelectionView,
-            itemModel
+            itemModel,
+            tomsShopModel
         );
 
+        // 初期フェーズ
         CurrentPhase.Value = GamePhase.TomsShop;
+    }
+
+    private void OnDestroy()
+    {
+        gamePhasePresenter?.Dispose();
+        tomsShopPresenter?.Dispose();
+        itemPresenter?.Dispose();
+    }
+
+    private void OnApplicationQuit()
+    {
+        itemModel.SaveData();
+        tomsShopModel.SavePlayerMoney();
     }
 
     public void ProceedToNextPhase()
@@ -84,10 +98,5 @@ public class GameManager : MonoBehaviour
                 break;
         }
         Debug.Log(CurrentPhase.Value);
-    }
-
-    private void OnDestroy()
-    {
-        gamePhasePresenter?.Dispose();
     }
 }

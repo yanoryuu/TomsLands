@@ -10,15 +10,19 @@ public class ItemShopView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI playerMoneyText;
     [SerializeField] private Transform itemListParent;
     [SerializeField] private GameObject itemShopSlotPrefab;
+    [SerializeField] private Button closeButton;
     // [SerializeField] private Button nextPhaseButton;
 
     public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
     public Subject<(string itemId, int quantity)> OnSellRequested { get; } = new();
+    public Subject<Unit> OnCloseRequested { get; } = new();
     public Subject<Unit> OnNextPhaseRequested { get; } = new();
 
     private void Awake()
     {
         // nextPhaseButton.onClick.AddListener(() => OnNextPhaseRequested.OnNext(Unit.Default));
+        
+        closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
     }
 
     public void Show()
