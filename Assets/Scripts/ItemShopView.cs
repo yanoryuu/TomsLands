@@ -8,10 +8,12 @@ using R3;
 public class ItemShopView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerMoneyText;
-    [SerializeField] private Transform itemListParent;
+    public Transform BlackSmithWeaponParent;
+    public Transform BlackSmithArmorParent;
+    public Transform ToolParent;
+    
     [SerializeField] private GameObject itemShopSlotPrefab;
     [SerializeField] private Button closeButton;
-    // [SerializeField] private Button nextPhaseButton;
 
     public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
     public Subject<(string itemId, int quantity)> OnSellRequested { get; } = new();
@@ -20,8 +22,6 @@ public class ItemShopView : MonoBehaviour
 
     private void Awake()
     {
-        // nextPhaseButton.onClick.AddListener(() => OnNextPhaseRequested.OnNext(Unit.Default));
-        
         closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
     }
 
@@ -36,9 +36,9 @@ public class ItemShopView : MonoBehaviour
     }
 
     private readonly List<ItemShopSlot> activeSlots = new();
-
+    
     // 店舗の商品リストをUIに並べる
-    public void PopulateItemList(List<RuntimeItemData> items)
+    public void PopulateItemList(List<RuntimeItemData> items,Transform itemListParent)
     {
         Debug.Log("PopulateItemList");
         Debug.Log(items.Count);

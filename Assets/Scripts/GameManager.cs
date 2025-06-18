@@ -20,6 +20,8 @@ public class GameManager : MonoBehaviour
     private ItemShopPresenter itemShopPresenter;
     private GamePhasePresenter gamePhasePresenter;
     private TomsShopPresenter tomsShopPresenter;
+    private ItemSelectionPresenter itemSelectionPresenter;
+    private ItemSelectionModel itemSelectionModel;
 
     private void Awake()
     {
@@ -35,6 +37,8 @@ public class GameManager : MonoBehaviour
         tomsShopModel = new TomsShopModel();
         tomsShopModel.Initialize();
         tomsShopModel.LoadPlayerMoney();
+        
+        itemSelectionModel = new ItemSelectionModel();
 
         // Presenter初期化
         itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
@@ -51,6 +55,8 @@ public class GameManager : MonoBehaviour
             endPhaseView,
             tomsShopView
         );
+
+        itemSelectionPresenter = new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel);
 
         tomsShopPresenter = new TomsShopPresenter(
             tomsShopView,

@@ -22,6 +22,7 @@ public class ItemShopSlot : MonoBehaviour
     {
         this.itemId = itemId;
         iconImage.sprite = icon;
+        Debug.Log(icon.name);
         priceText.text = $"{price} G";
         stockText.text = $"在庫: {stock}";
         popularIcon.SetActive(isPopular);

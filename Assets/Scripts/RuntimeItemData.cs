@@ -12,7 +12,10 @@ public class RuntimeItemData
 
     public bool PurchasedThisTurn { get; set; }
     public Sprite ItemIcon { get; private set; }
-    public RuntimeItemData(string itemId, int currentPrice, int stock, Sprite icon, float demand = 0.5f)
+    
+    public ItemTypeData.ItemType ItemType { get; private set; }
+    
+    public RuntimeItemData(string itemId, int currentPrice, int stock, Sprite icon, ItemTypeData.ItemType itemType, float demand = 0.5f)
     {
         ItemId = itemId;
         CurrentPrice = new ReactiveProperty<int>(currentPrice);
@@ -20,15 +23,17 @@ public class RuntimeItemData
         ItemIcon = icon;
         Demand = new ReactiveProperty<float>(demand);
         IsPopular = new ReactiveProperty<bool>(demand >= 0.8f);
+        ItemType = itemType;
     }
 
-    public RuntimeItemData(RuntimeItemDataPlain plainData)
+    public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon)
     {
         ItemId = plainData.itemId;
         CurrentPrice = new ReactiveProperty<int>(plainData.currentPrice);
         Stock = new ReactiveProperty<int>(plainData.stock);
         Demand = new ReactiveProperty<float>(plainData.demand);
         IsPopular = new ReactiveProperty<bool>(plainData.demand >= 0.8f);
+        ItemIcon = icon;
         PurchasedThisTurn = false;
     }
 
@@ -58,4 +63,15 @@ public class RuntimeItemDataPlain
     public int stock;
     public float demand;
     public bool isPopular;
+    public ItemTypeData.ItemType itemType;
+}
+
+public class ItemTypeData
+{
+    public enum ItemType
+    {
+        Weapon,
+        Armor,
+        Tool
+    }
 }

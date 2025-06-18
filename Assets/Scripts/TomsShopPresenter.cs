@@ -37,8 +37,8 @@ public class TomsShopPresenter : IDisposable
         itemSelectionView.OnConfirmSelection
             .Subscribe(selectedItems =>
             {
-                itemModel.SetDisplayItemList(selectedItems);
-                itemShopView.PopulateItemList(itemModel.DisplayItemList);
+                itemModel.CreateItemListForDisplay(selectedItems);
+                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
             })
             .AddTo(disposables);
 
@@ -54,7 +54,9 @@ public class TomsShopPresenter : IDisposable
 
     private void OpenPurchase()
     {
-        itemShopView.PopulateItemList(itemModel.RuntimeItems);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.BlackSmithWeaponParent);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems, itemShopView.BlackSmithArmorParent);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.ToolParent);
         itemShopView.Show();
         itemSelectionView.Hide();
         tomsShopView.HideTomsShopUI();

@@ -1,6 +1,4 @@
 using R3;
-using UnityEngine;
-using System.Collections.Generic;
 
 public class ItemPresenter
 {
@@ -41,7 +39,7 @@ public class ItemPresenter
         itemSelectionView.OnConfirmSelection
             .Subscribe(selectedItems =>
             {
-                itemModel.SetShopItemList(selectedItems);
+                itemModel.CreateItemListForDisplay(selectedItems);
             })
             .AddTo(disposables);
     }
@@ -59,7 +57,9 @@ public class ItemPresenter
     public void RefreshPrices(GamePhase phase)
     {
         itemModel.UpdateItemPrices(phase);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.BlackSmithWeaponParent);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems, itemShopView.BlackSmithArmorParent);
+        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.ToolParent);
     }
 
     public void Dispose()
