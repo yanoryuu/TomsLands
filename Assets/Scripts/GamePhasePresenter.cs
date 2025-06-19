@@ -34,11 +34,6 @@ public class GamePhasePresenter : IDisposable
         gameManager.CurrentPhase
             .Subscribe(OnPhaseChanged)
             .AddTo(disposables);
-
-        // Viewの「次フェーズへ」ボタンを購読
-        itemShopView.OnNextPhaseRequested
-            .Subscribe(_ => gameManager.ProceedToNextPhase())
-            .AddTo(disposables);
     }
 
     private void OnPhaseChanged(GamePhase phase)

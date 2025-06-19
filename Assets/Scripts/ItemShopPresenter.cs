@@ -1,5 +1,6 @@
 using System;
 using R3;
+using UnityEngine;
 
 public class ItemShopPresenter : IDisposable
 {
@@ -21,6 +22,39 @@ public class ItemShopPresenter : IDisposable
         itemShopView.OnSellRequested
             .Subscribe(tuple => HandleSell(tuple.itemId, tuple.quantity))
             .AddTo(disposables);
+        
+        itemShopView.OnWeaponPanelRequested
+            .Subscribe(tuple =>
+            {
+                itemShopView.PopulateItemList(itemModel.WeaponItem,itemShopView.BlackSmithWeaponParent);
+                Debug.Log(itemModel.WeaponItem.Count);
+                itemShopView.BlackSmithWeaponPanel.SetActive(true);
+                itemShopView.BlackSmithArmorPanel.SetActive(false);
+                itemShopView.ToolPanel.SetActive(false);
+            })
+            .AddTo(disposables);
+        
+        itemShopView.OnArmorPanelRequested
+            .Subscribe(_ =>
+            {
+                itemShopView.PopulateItemList(itemModel.ArmorItems,itemShopView.BlackSmithArmorParent);
+                Debug.Log(itemModel.ArmorItems.Count);
+                itemShopView.BlackSmithWeaponPanel.SetActive(false);
+                itemShopView.BlackSmithArmorPanel.SetActive(true);
+                itemShopView.ToolPanel.SetActive(false);
+            })
+            .AddTo(disposables);
+
+        itemShopView.OnToolPanelRequested
+            .Subscribe(_ =>
+            {
+                itemShopView.PopulateItemList(itemModel.ToolItems,itemShopView.ToolParent);
+                Debug.Log(itemModel.ToolItems.Count);
+                itemShopView.BlackSmithWeaponPanel.SetActive(false);
+                itemShopView.BlackSmithArmorPanel.SetActive(false);
+                itemShopView.ToolPanel.SetActive(true);
+            })
+            .AddTo(disposables);
     }
 
     private void HandlePurchase(string itemId, int quantity)
@@ -34,7 +68,7 @@ public class ItemShopPresenter : IDisposable
         }
         else
         {
-            UnityEngine.Debug.Log("お金が足りません！");
+            Debug.Log("お金が足りません！");
         }
     }
 

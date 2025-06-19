@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System;
 using System.Collections.Generic;
 using R3;
+using UnityEngine.InputSystem.Composites;
 
 public class ItemShopView : MonoBehaviour
 {
@@ -11,18 +11,31 @@ public class ItemShopView : MonoBehaviour
     public Transform BlackSmithWeaponParent;
     public Transform BlackSmithArmorParent;
     public Transform ToolParent;
+
+    public GameObject BlackSmithWeaponPanel;
+    public GameObject BlackSmithArmorPanel;
+    public GameObject ToolPanel;
     
     [SerializeField] private GameObject itemShopSlotPrefab;
     [SerializeField] private Button closeButton;
 
+    [SerializeField] private Button weaponButton;
+    [SerializeField] private Button armorButton;
+    [SerializeField] private Button toolButton;
+
     public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
     public Subject<(string itemId, int quantity)> OnSellRequested { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
-    public Subject<Unit> OnNextPhaseRequested { get; } = new();
+    public Subject<Unit> OnWeaponPanelRequested { get; } = new();
+    public Subject<Unit> OnArmorPanelRequested { get; } = new();
+    public Subject<Unit> OnToolPanelRequested { get; } = new();
 
     private void Awake()
     {
         closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
+        weaponButton.onClick.AddListener(()=>OnWeaponPanelRequested.OnNext(Unit.Default));
+        armorButton.onClick.AddListener(()=>OnArmorPanelRequested.OnNext(Unit.Default));
+        toolButton.onClick.AddListener(()=>OnToolPanelRequested.OnNext(Unit.Default));
     }
 
     public void Show()

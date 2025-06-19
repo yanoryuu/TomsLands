@@ -1,23 +1,10 @@
 fileFormatVersion: 2
-guid: 1810f09d324df46289d58e432045bcd1
-AssetOrigin:
-  serializedVersion: 1
-  productId: 197211
-  packageName: 2D Monster ORC - SPUM Premium Addon Pack
-  packageVersion: 3.0.0
-  assetPath: Assets/SPUM/Resources/Addons/Legacy/0_Unit/0_Sprite/5_Armor/Armor_1.png
-  uploadId: 713989
+guid: 4c9014b9240c84888ae1ad58845a74df
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1554369935797715747
-    second: Right
-  - first:
-      213: -3992137426342128158
+      213: -314589219302796148
     second: Body
-  - first:
-      213: -1120026500337400717
-    second: Left
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -59,7 +46,7 @@ TextureImporter:
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
-  spriteMode: 2
+  spriteMode: 1
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 9
@@ -111,7 +98,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
     buildTarget: iOS
-    maxTextureSize: 32
+    maxTextureSize: 128
     resizeAlgorithm: 0
     textureFormat: 4
     textureCompression: 1
@@ -126,7 +113,7 @@ TextureImporter:
     buildTarget: Android
     maxTextureSize: 2048
     resizeAlgorithm: 0
-    textureFormat: -1
+    textureFormat: 4
     textureCompression: 0
     compressionQuality: 50
     crunchedCompression: 0
@@ -152,67 +139,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Right
-      rect:
-        serializedVersion: 2
-        x: 3
-        y: 16
-        width: 5
-        height: 5
-      alignment: 9
-      pivot: {x: 0.8, y: 0.7}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: ddcfa3f57c4cd6ae0800000000000000
-      internalID: -1554369935797715747
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: Body
       rect:
         serializedVersion: 2
-        x: 10
-        y: 12
+        x: 0
+        y: 0
         width: 12
-        height: 9
+        height: 10
       alignment: 9
-      pivot: {x: 0.5, y: 0.3888889}
+      pivot: {x: 0.5, y: 0.45}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 2e5d55879241998c0800000000000000
-      internalID: -3992137426342128158
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Left
-      rect:
-        serializedVersion: 2
-        x: 24
-        y: 16
-        width: 5
-        height: 5
-      alignment: 9
-      pivot: {x: 0.4, y: 0.6}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 3748d5405ddd470f0800000000000000
-      internalID: -1120026500337400717
+      spriteID: c841a4595ca52abf0800000000000000
+      internalID: -314589219302796148
       vertices: []
       indices: 
       edges: []
@@ -221,7 +164,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 5e97eb03825dee720800000000000000
+    spriteID: b36bdbeaf64f44217be7910dbf258910
     internalID: 0
     vertices: []
     indices: 
@@ -231,9 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Body: -3992137426342128158
-      Left: -1120026500337400717
-      Right: -1554369935797715747
+      Body: -314589219302796148
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -9,13 +9,20 @@ public class ItemModel
     public readonly List<ItemData> masterItems;
 
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
-    public List<RuntimeItemData> ShopItemList { get; private set; } = new();
+
+    public List<RuntimeItemData> WeaponItem { get; private set;} = new();
+    public List<RuntimeItemData> ArmorItems { get; private set; } = new();
+    public List<RuntimeItemData> ToolItems { get; private set; } = new();
+    
     public List<RuntimeItemData> DisplayItemList { get; private set; } = new();
 
     public ItemModel(List<ItemData> masterItems)
     {
         this.masterItems = masterItems;
         InitializeRuntimeItemsFromMaster();
+        WeaponItem = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Weapon);
+        ArmorItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Armor);
+        ToolItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Tool);
     }
 
     public ItemData GetMasterItem(string itemId) =>
@@ -172,6 +179,7 @@ public class ItemModel
             if (runtimeItem.ItemType == itemtype)
             {
                 list.Add(runtimeItem);
+                Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
             }
         }
         

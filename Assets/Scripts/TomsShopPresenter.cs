@@ -38,7 +38,7 @@ public class TomsShopPresenter : IDisposable
             .Subscribe(selectedItems =>
             {
                 itemModel.CreateItemListForDisplay(selectedItems);
-                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
+                // itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
             })
             .AddTo(disposables);
 

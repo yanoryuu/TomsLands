@@ -57,9 +57,6 @@ public class ItemPresenter
     public void RefreshPrices(GamePhase phase)
     {
         itemModel.UpdateItemPrices(phase);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.BlackSmithWeaponParent);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems, itemShopView.BlackSmithArmorParent);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.ToolParent);
     }
 
     public void Dispose()
