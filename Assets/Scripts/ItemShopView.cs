@@ -24,7 +24,7 @@ public class ItemShopView : MonoBehaviour
     [SerializeField] private Button toolButton;
 
     public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
-    public Subject<(string itemId, int quantity)> OnSellRequested { get; } = new();
+    // public Subject<(string itemId, int quantity)> OnSellRequested { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
     public Subject<Unit> OnWeaponPanelRequested { get; } = new();
     public Subject<Unit> OnArmorPanelRequested { get; } = new();
@@ -73,6 +73,7 @@ public class ItemShopView : MonoBehaviour
                 item.ItemId,
                 item.ItemIcon,
                 item.CurrentPrice.Value,
+                item.maxStock.Value,
                 item.Stock.Value,
                 item.IsPopular.Value
             );
@@ -83,12 +84,16 @@ public class ItemShopView : MonoBehaviour
 
             // 購入ボタンの処理（Presenter側で購読した方が良い場合はSubjectで通知）
             slot.OnPurchaseClicked
-                .Subscribe(quantity => OnPurchaseRequested.OnNext((item.ItemId, quantity)))
+                .Subscribe(quantity =>
+                {
+                    OnPurchaseRequested.OnNext((item.ItemId, quantity));
+                    PopulateItemList(items, itemListParent);
+                })
                 .AddTo(this);
 
-            slot.OnSellClicked
-                .Subscribe(quantity => OnSellRequested.OnNext((item.ItemId, quantity)))
-                .AddTo(this);
+            // slot.OnSellClicked
+            //     .Subscribe(quantity => OnSellRequested.OnNext((item.ItemId, quantity)))
+            //     .AddTo(this);
 
             activeSlots.Add(slot);
         }

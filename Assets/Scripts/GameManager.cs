@@ -1,3 +1,4 @@
+using System.IO;
 using R3;
 using System.Linq;
 using UnityEngine;
@@ -25,6 +26,9 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+         // ゲーム開始時にセーブファイルを削除
+         DeleteAllSaveFiles();
+        
         // ReactiveProperty初期化
         CurrentPhase = new ReactiveProperty<GamePhase>();
 
@@ -104,5 +108,25 @@ public class GameManager : MonoBehaviour
                 break;
         }
         Debug.Log(CurrentPhase.Value);
+    }
+    
+    private void DeleteAllSaveFiles()
+    {
+        string dir = Application.persistentDataPath;
+        string[] files = {
+            "itemData.json",
+            "tomsShopData.json",
+            "displayItemData.json"
+        };
+
+        foreach (var filename in files)
+        {
+            string path = Path.Combine(dir, filename);
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+                Debug.Log($"Deleted save file: {filename}");
+            }
+        }
     }
 }

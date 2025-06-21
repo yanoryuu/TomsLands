@@ -10,9 +10,9 @@ public class ItemModel
 
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
 
-    public List<RuntimeItemData> WeaponItem { get; private set;} = new();
-    public List<RuntimeItemData> ArmorItems { get; private set; } = new();
-    public List<RuntimeItemData> ToolItems { get; private set; } = new();
+    // public List<RuntimeItemData> WeaponItem { get; private set;} = new();
+    // public List<RuntimeItemData> ArmorItems { get; private set; } = new();
+    // public List<RuntimeItemData> ToolItems { get; private set; } = new();
     
     public List<RuntimeItemData> DisplayItemList { get; private set; } = new();
 
@@ -20,9 +20,9 @@ public class ItemModel
     {
         this.masterItems = masterItems;
         InitializeRuntimeItemsFromMaster();
-        WeaponItem = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Weapon);
-        ArmorItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Armor);
-        ToolItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Tool);
+        // WeaponItem = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Weapon);
+        // ArmorItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Armor);
+        // ToolItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Tool);
     }
 
     public ItemData GetMasterItem(string itemId) =>
@@ -58,6 +58,7 @@ public class ItemModel
                 var newItem = new RuntimeItemData(
                     runtime.ItemId,
                     runtime.CurrentPrice.Value,
+                    runtime.maxStock.Value,
                     assignStock,
                     runtime.ItemIcon,
                     runtime.ItemType,
@@ -139,6 +140,7 @@ public class ItemModel
 
         string json = File.ReadAllText(path);
         var dataList = JsonUtility.FromJson<RuntimeItemDataList>(json);
+        
         RuntimeItems = dataList.items
             .Select(item => new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId)))
             .ToList();
@@ -152,6 +154,7 @@ public class ItemModel
             .Select(master => new RuntimeItemData(
                 master.itemId,
                 master.basePrice,
+                master.maxStock,
                 master.initialStock,
                 master.itemIcon,
                 master.itemType,
@@ -159,6 +162,10 @@ public class ItemModel
             ))
             .ToList();
 
+        foreach (var runtimeItem in RuntimeItems)
+        {
+            Debug.Log(runtimeItem.ItemId);   
+        }
         Debug.Log("Runtime items initialized from master.");
     }
 

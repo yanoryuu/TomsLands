@@ -15,15 +15,15 @@ public class ItemPresenter
         this.tomsShopView = tomsShopView;
         this.tomsShopModel = tomsShopModel;
 
-        // 購入イベント購読
-        itemShopView.OnPurchaseRequested
-            .Subscribe(tuple => HandlePurchase(tuple.itemId, tuple.quantity))
-            .AddTo(disposables);
+        // // 購入イベント購読
+        // itemShopView.OnPurchaseRequested
+        //     .Subscribe(tuple => HandlePurchase(tuple.itemId, tuple.quantity))
+        //     .AddTo(disposables);
 
-        // 売却イベント購読
-        itemShopView.OnSellRequested
-            .Subscribe(tuple => HandleSell(tuple.itemId, tuple.quantity))
-            .AddTo(disposables);
+        // // 売却イベント購読
+        // itemShopView.OnSellRequested
+        //     .Subscribe(tuple => HandleSell(tuple.itemId, tuple.quantity))
+        //     .AddTo(disposables);
 
         // 所持金更新（ModelのデータからViewへ）
         tomsShopModel.PlayerMoney
@@ -44,10 +44,10 @@ public class ItemPresenter
             .AddTo(disposables);
     }
 
-    private void HandlePurchase(string itemId, int quantity)
-    {
-        itemModel.PurchaseItem(itemId, quantity);
-    }
+    // private void HandlePurchase(string itemId, int quantity)
+    // {
+    //     itemModel.PurchaseItem(itemId, quantity);
+    // }
 
     private void HandleSell(string itemId, int quantity)
     {

@@ -54,9 +54,10 @@ public class TomsShopPresenter : IDisposable
 
     private void OpenPurchase()
     {
-        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.BlackSmithWeaponParent);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems, itemShopView.BlackSmithArmorParent);
-        itemShopView.PopulateItemList(itemModel.RuntimeItems,itemShopView.ToolParent);
+        itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
+        itemShopView.BlackSmithWeaponPanel.SetActive(true);
+        itemShopView.BlackSmithArmorPanel.SetActive(false);
+        itemShopView.ToolPanel.SetActive(false);
         itemShopView.Show();
         itemSelectionView.Hide();
         tomsShopView.HideTomsShopUI();
@@ -88,4 +89,5 @@ public class TomsShopPresenter : IDisposable
     {
         disposables.Dispose();
     }
+    
 }

@@ -9,5 +9,7 @@ public class ItemData : ScriptableObject
     public string description;
     public Sprite itemIcon;
     public int initialStock;
+    public int maxStock = 100;
     public ItemTypeData.ItemType itemType;
+
 }
