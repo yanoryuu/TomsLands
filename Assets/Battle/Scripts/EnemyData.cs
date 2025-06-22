@@ -14,8 +14,8 @@ public class EnemyData : ScriptableObject
     public ElementType elementType;        // 属性
     public Sprite enemySprite;             // 敵のスプライト
 
-    //[Header("使用スキル")]
-    //public List<SkillData> skills;
+    [Header("使用スキル")]
+    public List<SkillData> skills;
 }
 
 public enum ElementType 
