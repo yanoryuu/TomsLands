@@ -29,9 +29,9 @@ public class TomsShopPresenter : IDisposable
             .AddTo(disposables);
 
         // 「陳列設定」ボタン
-        tomsShopView.OnSetItemClicked
-            .Subscribe(_ => OpenSetItem())
-            .AddTo(disposables);
+        // tomsShopView.OnSetItemClicked
+        //     .Subscribe(_ => OpenSetItem())
+        //     .AddTo(disposables);
 
         // 陳列設定確定
         itemSelectionView.OnConfirmSelection
@@ -54,7 +54,7 @@ public class TomsShopPresenter : IDisposable
 
     private void OpenPurchase()
     {
-        itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
+        itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithWeaponParent);
         itemShopView.BlackSmithWeaponPanel.SetActive(true);
         itemShopView.BlackSmithArmorPanel.SetActive(false);
         itemShopView.ToolPanel.SetActive(false);

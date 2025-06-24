@@ -55,7 +55,7 @@ public class ItemSelectionView : MonoBehaviour
             slot.SetItem(
                 item.ItemId,
                 item.ItemIcon,
-                item.ItemId,  // ItemName があればそちらでもOK
+                item.ItemId,
                 item.CurrentPrice.Value,
                 item.Stock.Value
             );

@@ -9,10 +9,6 @@ public class ItemModel
     public readonly List<ItemData> masterItems;
 
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
-
-    // public List<RuntimeItemData> WeaponItem { get; private set;} = new();
-    // public List<RuntimeItemData> ArmorItems { get; private set; } = new();
-    // public List<RuntimeItemData> ToolItems { get; private set; } = new();
     
     public List<RuntimeItemData> DisplayItemList { get; private set; } = new();
 
@@ -20,9 +16,6 @@ public class ItemModel
     {
         this.masterItems = masterItems;
         InitializeRuntimeItemsFromMaster();
-        // WeaponItem = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Weapon);
-        // ArmorItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Armor);
-        // ToolItems = CreateItemRuntimeList(RuntimeItems, ItemTypeData.ItemType.Tool);
     }
 
     public ItemData GetMasterItem(string itemId) =>
@@ -58,11 +51,12 @@ public class ItemModel
                 var newItem = new RuntimeItemData(
                     runtime.ItemId,
                     runtime.CurrentPrice.Value,
-                    runtime.maxStock.Value,
+                    runtime.MaxStock.Value,
                     assignStock,
                     runtime.ItemIcon,
                     runtime.ItemType,
                     runtime.ItemAttribute,
+                    runtime.RequiredLevel.Value,
                     runtime.Demand.Value
                 );
                 list.Add(newItem);
@@ -160,6 +154,7 @@ public class ItemModel
                 master.itemIcon,
                 master.itemType,
                 master.itemAttribute,
+                master.requiredLevel,
                 Random.Range(0.3f, 0.7f)
             ))
             .ToList();
@@ -180,12 +175,13 @@ public class ItemModel
         return null;
     }
 
-    public List<RuntimeItemData> CreateItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype)
+    public List<RuntimeItemData> CreateItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype ,int currentLevel)
     {
         List<RuntimeItemData> list = new List<RuntimeItemData>();
         foreach (var runtimeItem in runtimeItems)
         {
-            if (runtimeItem.ItemType == itemtype)
+            if (runtimeItem.ItemType == itemtype && 
+                runtimeItem.RequiredLevel.Value <= currentLevel)
             {
                 list.Add(runtimeItem);
                 Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");

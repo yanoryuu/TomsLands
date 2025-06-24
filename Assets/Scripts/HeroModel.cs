@@ -35,7 +35,7 @@ public class HeroModel
 
     public void LoadHeroData()
     {
-        string path = Application.persistentDataPath + "/itemData.json";
+        string path = Application.persistentDataPath + "/heroData.json";
         if (!File.Exists(path))
         {
             InitializeRuntimeHeroFromMaster();

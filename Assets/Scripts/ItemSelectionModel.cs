@@ -52,6 +52,7 @@ public class ItemSelectionModel
                         master.itemIcon,
                         master.itemType,
                         master.itemAttribute,
+                        master.requiredLevel,
                         Random.Range(0.3f, 0.7f)
                     );
                 }

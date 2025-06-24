@@ -15,7 +15,7 @@ public class TomsShopView : MonoBehaviour
     public void Awake()
     {
         PurchaseButton.onClick.AddListener(() => OnPurchaseClicked.OnNext(Unit.Default));
-        SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
+        // SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
     }
     
     public void UpdatePlayerMoney(int money)

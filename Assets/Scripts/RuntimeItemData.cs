@@ -9,30 +9,27 @@ public class RuntimeItemData
     public ReactiveProperty<int> Stock { get; private set; }
     public ReactiveProperty<float> Demand { get; private set; }
     public ReactiveProperty<bool> IsPopular { get; private set; }
-    public ReactiveProperty<int> maxStock { get;private set; }
+    public ReactiveProperty<int> MaxStock { get;private set; }
+    
+    public ReactiveProperty<int> RequiredLevel { get; set; }
 
     public bool PurchasedThisTurn { get; set; }
     public Sprite ItemIcon { get; private set; }
     
     public ItemTypeData.ItemType ItemType { get; private set; }
-    
-<<<<<<< HEAD
     public ItemTypeData.ItemAttribute ItemAttribute { get; private set; }
-    
-    public RuntimeItemData(string itemId, int currentPrice, int stock, Sprite icon, ItemTypeData.ItemType itemType,ItemTypeData.ItemAttribute itemAttribute, float demand = 0.5f)
-=======
-    public RuntimeItemData(string itemId, int currentPrice,int maxstock, int stock, Sprite icon, ItemTypeData.ItemType itemType, float demand = 0.5f)
->>>>>>> 5d29d51ac28a5e3e8a1e56ccbca708930499309a
+    public RuntimeItemData(string itemId, int currentPrice,int maxstock, int stock, Sprite icon, ItemTypeData.ItemType itemType,ItemTypeData.ItemAttribute itemAttribute,int requiredLevel, float demand = 0.5f)
     {
         ItemId = itemId;
         CurrentPrice = new ReactiveProperty<int>(currentPrice);
         Stock = new ReactiveProperty<int>(stock);
-        maxStock = new ReactiveProperty<int>(maxstock);
+        MaxStock = new ReactiveProperty<int>(maxstock);
         ItemIcon = icon;
         Demand = new ReactiveProperty<float>(demand);
         IsPopular = new ReactiveProperty<bool>(demand >= 0.8f);
         ItemType = itemType;
-        ItemAttribute = itemAttribute;
+        ItemAttribute = itemAttribute; 
+        RequiredLevel = new ReactiveProperty<int>(requiredLevel);
     }
 
     public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon)
@@ -43,6 +40,7 @@ public class RuntimeItemData
         Demand = new ReactiveProperty<float>(plainData.demand);
         IsPopular = new ReactiveProperty<bool>(plainData.demand >= 0.8f);
         ItemIcon = icon;
+        ItemAttribute = plainData.itemAttribute;
         PurchasedThisTurn = false;
     }
 

@@ -5,6 +5,8 @@ using R3;
 public class TomsShopModel : MonoBehaviour
 {
     public ReactiveProperty<int> PlayerMoney { get; private set; }
+    
+    public ReactiveProperty<int> BlacksmithLevel { get; private set; }
 
     public void Initialize(int defaultMoney = 1000)
     {
@@ -26,10 +28,12 @@ public class TomsShopModel : MonoBehaviour
             string json = File.ReadAllText(path);
             var data = JsonUtility.FromJson<TomsShopData>(json);
             PlayerMoney.Value = data.shopMoney;
+            BlacksmithLevel.Value = data.blacksmithLevel;
         }
         else
         {
             PlayerMoney.Value = 1000; // デフォルト資金
+            BlacksmithLevel.Value = 1; // デフォルトの鍛冶屋レベル
         }
     }
 }

@@ -35,7 +35,7 @@ public class ItemShopView : MonoBehaviour
         closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
         weaponButton.onClick.AddListener(()=>OnWeaponPanelRequested.OnNext(Unit.Default));
         armorButton.onClick.AddListener(()=>OnArmorPanelRequested.OnNext(Unit.Default));
-        toolButton.onClick.AddListener(()=>OnToolPanelRequested.OnNext(Unit.Default));
+        // toolButton.onClick.AddListener(()=>OnToolPanelRequested.OnNext(Unit.Default));
     }
 
     public void Show()
@@ -73,7 +73,7 @@ public class ItemShopView : MonoBehaviour
                 item.ItemId,
                 item.ItemIcon,
                 item.CurrentPrice.Value,
-                item.maxStock.Value,
+                item.MaxStock.Value,
                 item.Stock.Value,
                 item.IsPopular.Value
             );

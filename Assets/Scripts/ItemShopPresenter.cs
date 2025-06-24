@@ -26,7 +26,7 @@ public class ItemShopPresenter : IDisposable
         itemShopView.OnWeaponPanelRequested
             .Subscribe(tuple =>
             {
-                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
+                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithWeaponParent);
                 // Debug.Log(itemModel.WeaponItem.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(true);
                 itemShopView.BlackSmithArmorPanel.SetActive(false);
@@ -37,7 +37,7 @@ public class ItemShopPresenter : IDisposable
         itemShopView.OnArmorPanelRequested
             .Subscribe(_ =>
             {
-                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Armor),itemShopView.BlackSmithArmorParent);
+                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Armor,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithArmorParent);
                 // Debug.Log(itemModel.ArmorItems.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(false);
                 itemShopView.BlackSmithArmorPanel.SetActive(true);
@@ -45,16 +45,16 @@ public class ItemShopPresenter : IDisposable
             })
             .AddTo(disposables);
 
-        itemShopView.OnToolPanelRequested
-            .Subscribe(_ =>
-            {
-                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Tool),itemShopView.ToolParent);
-                // Debug.Log(itemModel.ToolItems.Count);
-                itemShopView.BlackSmithWeaponPanel.SetActive(false);
-                itemShopView.BlackSmithArmorPanel.SetActive(false);
-                itemShopView.ToolPanel.SetActive(true);
-            })
-            .AddTo(disposables);
+        // itemShopView.OnToolPanelRequested
+        //     .Subscribe(_ =>
+        //     {
+        //         itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Tool),itemShopView.ToolParent);
+        //         // Debug.Log(itemModel.ToolItems.Count);
+        //         itemShopView.BlackSmithWeaponPanel.SetActive(false);
+        //         itemShopView.BlackSmithArmorPanel.SetActive(false);
+        //         itemShopView.ToolPanel.SetActive(true);
+        //     })
+        //     .AddTo(disposables);
     }
 
     private void HandlePurchase(string itemId, int quantity)
