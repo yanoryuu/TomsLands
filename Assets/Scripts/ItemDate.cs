@@ -10,4 +10,5 @@ public class ItemData : ScriptableObject
     public Sprite itemIcon;
     public int initialStock;
     public ItemTypeData.ItemType itemType;
+    public ItemTypeData.ItemAttribute itemAttribute;
 }

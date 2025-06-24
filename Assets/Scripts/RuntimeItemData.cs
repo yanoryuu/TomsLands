@@ -15,7 +15,9 @@ public class RuntimeItemData
     
     public ItemTypeData.ItemType ItemType { get; private set; }
     
-    public RuntimeItemData(string itemId, int currentPrice, int stock, Sprite icon, ItemTypeData.ItemType itemType, float demand = 0.5f)
+    public ItemTypeData.ItemAttribute ItemAttribute { get; private set; }
+    
+    public RuntimeItemData(string itemId, int currentPrice, int stock, Sprite icon, ItemTypeData.ItemType itemType,ItemTypeData.ItemAttribute itemAttribute, float demand = 0.5f)
     {
         ItemId = itemId;
         CurrentPrice = new ReactiveProperty<int>(currentPrice);
@@ -24,6 +26,7 @@ public class RuntimeItemData
         Demand = new ReactiveProperty<float>(demand);
         IsPopular = new ReactiveProperty<bool>(demand >= 0.8f);
         ItemType = itemType;
+        ItemAttribute = itemAttribute;
     }
 
     public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon)
@@ -50,7 +53,9 @@ public class RuntimeItemData
             currentPrice = CurrentPrice.Value,
             stock = Stock.Value,
             demand = Demand.Value,
-            isPopular = IsPopular.Value
+            isPopular = IsPopular.Value,
+            itemType = ItemType,
+            itemAttribute = ItemAttribute,
         };
     }
 }
@@ -64,6 +69,7 @@ public class RuntimeItemDataPlain
     public float demand;
     public bool isPopular;
     public ItemTypeData.ItemType itemType;
+    public ItemTypeData.ItemAttribute itemAttribute;
 }
 
 public class ItemTypeData
@@ -73,5 +79,15 @@ public class ItemTypeData
         Weapon,
         Armor,
         Tool
+    }
+    
+    public enum ItemAttribute
+    {
+        Fire,
+        Water,
+        Earth,
+        Wind,
+        Light,
+        Dark,
     }
 }

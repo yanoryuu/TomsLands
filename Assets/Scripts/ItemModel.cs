@@ -61,6 +61,7 @@ public class ItemModel
                     assignStock,
                     runtime.ItemIcon,
                     runtime.ItemType,
+                    runtime.ItemAttribute,
                     runtime.Demand.Value
                 );
                 list.Add(newItem);
@@ -155,6 +156,7 @@ public class ItemModel
                 master.initialStock,
                 master.itemIcon,
                 master.itemType,
+                master.itemAttribute,
                 Random.Range(0.3f, 0.7f)
             ))
             .ToList();

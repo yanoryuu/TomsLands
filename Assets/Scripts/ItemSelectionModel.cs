@@ -50,6 +50,7 @@ public class ItemSelectionModel
                         d.stock,
                         master.itemIcon,
                         master.itemType,
+                        master.itemAttribute,
                         Random.Range(0.3f, 0.7f)
                     );
                 }
