@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: AR1
   itemName: Armor
-  basePrice: 0
+  basePrice: 23
   description: NomalArmor
   itemIcon: {fileID: 21300000, guid: 207695b1214594af2accf84249fe1ab7, type: 3}
   initialStock: 0

@@ -19,15 +19,15 @@ public class ItemShopPresenter : IDisposable
             .Subscribe(tuple => HandlePurchase(tuple.itemId, tuple.quantity))
             .AddTo(disposables);
 
-        itemShopView.OnSellRequested
-            .Subscribe(tuple => HandleSell(tuple.itemId, tuple.quantity))
-            .AddTo(disposables);
+        // itemShopView.OnSellRequested
+        //     .Subscribe(tuple => HandleSell(tuple.itemId, tuple.quantity))
+        //     .AddTo(disposables);
         
         itemShopView.OnWeaponPanelRequested
             .Subscribe(tuple =>
             {
-                itemShopView.PopulateItemList(itemModel.WeaponItem,itemShopView.BlackSmithWeaponParent);
-                Debug.Log(itemModel.WeaponItem.Count);
+                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon),itemShopView.BlackSmithWeaponParent);
+                // Debug.Log(itemModel.WeaponItem.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(true);
                 itemShopView.BlackSmithArmorPanel.SetActive(false);
                 itemShopView.ToolPanel.SetActive(false);
@@ -37,8 +37,8 @@ public class ItemShopPresenter : IDisposable
         itemShopView.OnArmorPanelRequested
             .Subscribe(_ =>
             {
-                itemShopView.PopulateItemList(itemModel.ArmorItems,itemShopView.BlackSmithArmorParent);
-                Debug.Log(itemModel.ArmorItems.Count);
+                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Armor),itemShopView.BlackSmithArmorParent);
+                // Debug.Log(itemModel.ArmorItems.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(false);
                 itemShopView.BlackSmithArmorPanel.SetActive(true);
                 itemShopView.ToolPanel.SetActive(false);
@@ -48,8 +48,8 @@ public class ItemShopPresenter : IDisposable
         itemShopView.OnToolPanelRequested
             .Subscribe(_ =>
             {
-                itemShopView.PopulateItemList(itemModel.ToolItems,itemShopView.ToolParent);
-                Debug.Log(itemModel.ToolItems.Count);
+                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Tool),itemShopView.ToolParent);
+                // Debug.Log(itemModel.ToolItems.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(false);
                 itemShopView.BlackSmithArmorPanel.SetActive(false);
                 itemShopView.ToolPanel.SetActive(true);
@@ -59,6 +59,7 @@ public class ItemShopPresenter : IDisposable
 
     private void HandlePurchase(string itemId, int quantity)
     {
+        Debug.Log(itemId);
         var item = itemModel.GetRuntimeItem(itemId);
         int totalPrice = item.CurrentPrice.Value * quantity;
         if (tomsShopModel.PlayerMoney.Value >= totalPrice)

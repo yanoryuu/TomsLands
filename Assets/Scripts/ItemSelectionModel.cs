@@ -47,6 +47,7 @@ public class ItemSelectionModel
                     return new RuntimeItemData(
                         d.itemId,
                         master.basePrice,
+                        master.maxStock,
                         d.stock,
                         master.itemIcon,
                         master.itemType,
