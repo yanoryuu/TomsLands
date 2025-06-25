@@ -90,4 +90,10 @@ public class TomsShopPresenter : IDisposable
         disposables.Dispose();
     }
     
+    public void LevelUpBlacksmith()
+    {
+        tomsShopModel.BlacksmithLevel.Value++;
+        itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsShopModel.BlacksmithLevel.Value), itemShopView.BlackSmithWeaponParent);
+    }
+    
 }
