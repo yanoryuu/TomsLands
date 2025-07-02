@@ -2,7 +2,6 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using System;
-
 public class BattleCharacter : MonoBehaviour
 {
     [Header("キャラクター種別")]
@@ -20,6 +19,11 @@ public class BattleCharacter : MonoBehaviour
     public int AttackPower { get; private set; }
     public int DefensePower { get; private set; }
 
+    // --- 内部コンポーネント参照 ---
+    private SpriteRenderer characterSpriteRenderer;
+    private CharacterStatusView characterStatusView;
+
+    // --- 現在値 ---
     private int _currentHp;
     public int CurrentHp
     {
@@ -30,7 +34,7 @@ public class BattleCharacter : MonoBehaviour
             OnHpChanged?.Invoke(_currentHp, MaxHp);
         }
     }
-
+    
     private int _currentMp;
     public int CurrentMp
     {
@@ -46,11 +50,15 @@ public class BattleCharacter : MonoBehaviour
 
     void Awake()
     {
+        characterSpriteRenderer = GetComponent<SpriteRenderer>();
+        characterStatusView = GetComponent<CharacterStatusView>();
+        
         if (isHero)
+        {
             SetupHero();
+        }
     }
 
-    // 敵としてセットアップするメソッド
     public void Setup(EnemyData enemyData)
     {
         this.isHero = false;
@@ -63,28 +71,37 @@ public class BattleCharacter : MonoBehaviour
         DefensePower = enemyData.defensePower;
         skills = new List<SkillData>(enemyData.skills);
         
+        characterSpriteRenderer.sprite = this.CharacterSprite;
+
         this.CurrentHp = MaxHp;
         this.CurrentMp = MaxMp;
         
         gameObject.name = $"[Enemy] {CharacterName}";
+
+        characterStatusView.Initialize(this);
     }
 
-    // 勇者としてセットアップするメソッド
-    public void SetupHero()
+    public void SetupHero() 
     {
         this.isHero = true;
 
         CharacterName = "勇者";
         MaxHp = 200;
         MaxMp = 40;
-        AttackPower = 25;
+        AttackPower = 50;
         DefensePower = 15;
         skills = new List<SkillData>();
+        
+        if (this.CharacterSprite != null)
+        {
+            characterSpriteRenderer.sprite = this.CharacterSprite;
+        }
         
         this.CurrentHp = MaxHp;
         this.CurrentMp = MaxMp;
 
         gameObject.name = "[Hero]";
+        characterStatusView.Initialize(this);
     }
 
     public void TakeDamage(int damage)
@@ -100,5 +117,6 @@ public class BattleCharacter : MonoBehaviour
     }
 
     public bool IsDead() => CurrentHp <= 0;
+    
     public bool IsEnemy() => !isHero;
 }

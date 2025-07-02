@@ -6,7 +6,7 @@ using TMPro;
 public class LogManager : MonoBehaviour
 {
     [SerializeField] private TMP_Text logText;
-    [SerializeField] private int maxLogLines = 10;
+    [SerializeField] private int maxLogLines = 16;
 
     private readonly Queue<string> _logMessages = new Queue<string>();
     private BattleManager _battleManager;

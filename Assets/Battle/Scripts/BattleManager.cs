@@ -12,8 +12,8 @@ public class BattleManager : MonoBehaviour
     public event Action<List<BattleCharacter>> OnTurnOrderChanged;
 
     [Header("戦闘フロー設定")]
-    [SerializeField] private int totalNormalEnemies = 10; // ステージあたりの通常敵の総数
-    [SerializeField] private int maxConcurrentEnemies = 3; // 敵の最大同時出現数
+    [SerializeField] private int totalNormalEnemies = 10;
+    [SerializeField] private int maxConcurrentEnemies = 3;
 
     [Header("戦闘キャラクター設定")]
     [SerializeField] private BattleCharacter hero;
@@ -29,8 +29,9 @@ public class BattleManager : MonoBehaviour
     // --- 内部状態変数 ---
     private StageData currentStage;
     private List<BattleCharacter> enemies = new List<BattleCharacter>();
-    private int enemiesSpawnedCount = 0; // これまでに出現した通常敵の累計
-    private bool isBossPhase = false; // ボス戦フェーズかどうかのフラグ
+    private int enemiesSpawnedCount = 0;
+    private bool isBossPhase = false;
+    private bool battleEnded = false; // 戦闘が終了したかどうかのフラグ
 
     async void Start()
     {
@@ -53,23 +54,13 @@ public class BattleManager : MonoBehaviour
         await SetupPhase(token);
 
         int turnCount = 1;
-        while (!hero.IsDead()) // 勇者が生きている限りループ
+        while (!battleEnded && !token.IsCancellationRequested)
         {
             // --- ターン開始処理 ---
             OnLogMessage?.Invoke($"--- ターン {turnCount} ---");
-            UpdateTurnOrder();
+            var turnOrder = UpdateAndGetTurnOrder();
 
             // --- 各キャラクターの行動 ---
-            var turnOrder = new List<BattleCharacter>(OnTurnOrderChanged.GetInvocationList().Length > 0 ? enemies.Prepend(hero).ToList() : new List<BattleCharacter>());
-            if (OnTurnOrderChanged.GetInvocationList().Length > 0)
-            {
-                var currentTurnOrder = new List<BattleCharacter>();
-                if (!hero.IsDead()) currentTurnOrder.Add(hero);
-                currentTurnOrder.AddRange(enemies.Where(e => !e.IsDead()));
-                OnTurnOrderChanged?.Invoke(currentTurnOrder);
-                turnOrder = currentTurnOrder;
-            }
-            
             foreach (var character in turnOrder)
             {
                 if (token.IsCancellationRequested || character.IsDead()) continue;
@@ -82,47 +73,24 @@ public class BattleManager : MonoBehaviour
                     await UniTask.Delay(TimeSpan.FromSeconds(1), cancellationToken: token);
                 }
 
-                if (hero.IsDead()) break; // 勇者が行動中に倒されたら即ループを抜ける
-            }
-
-            if (hero.IsDead()) break; // ターン終了時に勇者が倒れていたらループを抜ける
-
-            // --- ターン終了処理 ---
-            // 敵が倒されていたら、補充のチェックを行う
-            await CheckAndReinforceEnemies(token);
-
-            // ボス戦への移行チェック
-            if (!isBossPhase && enemiesSpawnedCount >= totalNormalEnemies && enemies.All(e => e.IsDead()))
-            {
-                await StartBossPhase(token);
-            }
-
-            // 最終的な勝利条件のチェック
-            if (isBossPhase && enemies.All(e => e.IsDead()))
-            {
-                await VictoryPhase(token);
-                return; // 戦闘終了
+                // 勇者が行動中に倒されたら、即座に行動ループを抜ける
+                if (hero.IsDead()) break;
             }
             
-            await EndTurnPhase(token);
+            await EvaluateEndOfTurn(token);
+            
             turnCount++;
-        }
-
-        // ループを抜けたら敗北処理
-        if (hero.IsDead())
-        {
-            await DefeatPhase(token);
         }
     }
 
     private async UniTask SetupPhase(CancellationToken token)
     {
-        heroStatusView?.SetTargetCharacter(hero);
         enemies.Clear();
         enemiesSpawnedCount = 0;
         isBossPhase = false;
+        battleEnded = false;
 
-        // 初期の敵を最大数までスポーンさせる
+        // 初期敵のスポーン
         int initialSpawnCount = Mathf.Min(maxConcurrentEnemies, totalNormalEnemies);
         for (int i = 0; i < initialSpawnCount; i++)
         {
@@ -130,31 +98,75 @@ public class BattleManager : MonoBehaviour
         }
     }
     
-    // 敵が倒されたかチェックし、必要なら補充する
-    private async UniTask CheckAndReinforceEnemies(CancellationToken token)
+    // ターン終了時の評価を行うメソッド
+    private async UniTask EvaluateEndOfTurn(CancellationToken token)
     {
-        // 死んだ敵をリストから除去
-        enemies.RemoveAll(e => e.IsDead());
+        // 1. プレイヤーの敗北を最優先でチェック
+        if (hero.IsDead())
+        {
+            await DefeatPhase(token);
+            return;
+        }
 
-        // ボス戦中、または通常敵をすべて出し切ったら補充しない
+        // 2. 死んだ敵をフィールドから除去
+        RemoveDeadEnemies();
+
+        // 3. ボス戦中で、敵が全滅した場合（ボスを倒した場合）
+        if (isBossPhase && !enemies.Any())
+        {
+            await VictoryPhase(token);
+            return;
+        }
+
+        // 4. 通常フェーズで、規定数の敵を倒し、フィールドが空になった場合
+        if (!isBossPhase && enemiesSpawnedCount >= totalNormalEnemies && !enemies.Any())
+        {
+            await StartBossPhase(token);
+            return; // ボスが出現したので、このターンの評価は終わり
+        }
+
+        // 5. 上記のいずれでもない場合、増援条件を満たしていれば敵を補充する
+        await ReinforceEnemies(token);
+    }
+
+    // 死んだ敵をリストから除去し、オブジェクトを破棄する
+    private void RemoveDeadEnemies()
+    {
+        enemies.RemoveAll(e => 
+        {
+            if(e.IsDead())
+            {
+                Destroy(e.gameObject);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    // 敵の増援を呼び出すメソッド。
+    private async UniTask ReinforceEnemies(CancellationToken token)
+    {
         if (isBossPhase || enemiesSpawnedCount >= totalNormalEnemies) return;
 
-        // 空きスロットがあれば補充
         while (enemies.Count < maxConcurrentEnemies && enemiesSpawnedCount < totalNormalEnemies)
         {
             OnLogMessage?.Invoke("敵の増援が出現！");
-            await SpawnRandomEnemy(token);
+            bool success = await SpawnRandomEnemy(token);
+            if (!success)
+            {
+                OnLogMessage?.Invoke("増援を呼べる場所がない！");
+                break; // 無限ループを避ける
+            }
             await UniTask.Delay(500, cancellationToken: token);
         }
     }
 
-    // ランダムな敵1体を、空いている場所に出現させる
-    private async UniTask SpawnRandomEnemy(CancellationToken token)
+    private async UniTask<bool> SpawnRandomEnemy(CancellationToken token)
     {
-        if (currentStage.normalEnemies.Count == 0) return;
+        if (currentStage.normalEnemies.Count == 0) return false;
 
         Transform spawnPoint = enemySpawnPoints.FirstOrDefault(sp => !enemies.Any(e => Vector3.Distance(e.transform.position, sp.position) < 0.1f));
-        if (spawnPoint == null) return;
+        if (spawnPoint == null) return false;
 
         var enemyData = currentStage.normalEnemies[UnityEngine.Random.Range(0, currentStage.normalEnemies.Count)];
         GameObject enemyGo = Instantiate(enemyCharacterPrefab, spawnPoint.position, Quaternion.identity);
@@ -164,9 +176,9 @@ public class BattleManager : MonoBehaviour
         enemiesSpawnedCount++;
         
         await UniTask.Yield(token);
+        return true;
     }
     
-    // ボス戦を開始する処理
     private async UniTask StartBossPhase(CancellationToken token)
     {
         isBossPhase = true;
@@ -174,21 +186,20 @@ public class BattleManager : MonoBehaviour
         await UniTask.Delay(TimeSpan.FromSeconds(1), cancellationToken: token);
         OnLogMessage?.Invoke($"ボス: {currentStage.bossEnemy.enemyName} が出現した！");
 
-        // ボスをスポーンさせる
-        // TODO: ボス専用のスポーン位置を用意するとより良い
-        var spawnPoint = enemySpawnPoints[enemySpawnPoints.Length / 2]; // 中央に出現させる
+        var spawnPoint = enemySpawnPoints[enemySpawnPoints.Length / 2];
         GameObject enemyGo = Instantiate(enemyCharacterPrefab, spawnPoint.position, Quaternion.identity);
         var boss = enemyGo.GetComponent<BattleCharacter>();
         boss.Setup(currentStage.bossEnemy);
         enemies.Add(boss);
     }
 
-    private void UpdateTurnOrder()
+    private List<BattleCharacter> UpdateAndGetTurnOrder()
     {
         var turnOrderList = new List<BattleCharacter>();
         if (!hero.IsDead()) turnOrderList.Add(hero);
         turnOrderList.AddRange(enemies.Where(e => !e.IsDead()));
         OnTurnOrderChanged?.Invoke(turnOrderList);
+        return turnOrderList;
     }
 
     private async UniTask EndTurnPhase(CancellationToken token)
@@ -197,6 +208,19 @@ public class BattleManager : MonoBehaviour
         await UniTask.Yield(token);
     }
 
-    private async UniTask VictoryPhase(CancellationToken token) => OnLogMessage?.Invoke("★★★★★★ 完全勝利！ ★★★★★★");
-    private async UniTask DefeatPhase(CancellationToken token) => OnLogMessage?.Invoke("------ 敗北… ------");
+    private async UniTask VictoryPhase(CancellationToken token)
+    {
+        if (battleEnded) return;
+        battleEnded = true;
+        OnLogMessage?.Invoke("★★★★★★ 完全勝利！ ★★★★★★");
+        await UniTask.Yield(token);
+    }
+
+    private async UniTask DefeatPhase(CancellationToken token)
+    {
+        if (battleEnded) return;
+        battleEnded = true;
+        OnLogMessage?.Invoke("------ 敗北… ------");
+        await UniTask.Yield(token);
+    }
 }
