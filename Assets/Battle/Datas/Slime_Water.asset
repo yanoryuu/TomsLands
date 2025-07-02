@@ -17,4 +17,5 @@ MonoBehaviour:
   attackPower: 8
   defensePower: 10
   elementType: 1
-  enemySprite: {fileID: 0}
+  enemySprite: {fileID: 21300000, guid: c52c1677c4da70a448daaafbf77621ee, type: 3}
+  skills: []

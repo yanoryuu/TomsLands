@@ -5,12 +5,16 @@ using System;
 
 public class BattleCharacter : MonoBehaviour
 {
+    [Header("キャラクター種別")]
+    [SerializeField] private bool isHero = false;
 
-    public event Action<int, int> OnHpChanged; // <現在HP, 最大HP>
-    public event Action<int, int> OnMpChanged; // <現在MP, 最大MP>
+    // --- イベント定義 ---
+    public event Action<int, int> OnHpChanged;
+    public event Action<int, int> OnMpChanged;
+
+    // --- プロパティ ---
     public string CharacterName { get; private set; }
-    public Sprite CharacterSprite { get; private set; } // タイムラインUI用
-    public bool IsEnemy { get; private set; }
+    public Sprite CharacterSprite { get; private set; }
     public int MaxHp { get; private set; }
     public int MaxMp { get; private set; }
     public int AttackPower { get; private set; }
@@ -40,12 +44,19 @@ public class BattleCharacter : MonoBehaviour
     
     private List<SkillData> skills;
 
+    void Awake()
+    {
+        if (isHero)
+            SetupHero();
+    }
+
+    // 敵としてセットアップするメソッド
     public void Setup(EnemyData enemyData)
     {
+        this.isHero = false;
+
         CharacterName = enemyData.enemyName;
         CharacterSprite = enemyData.enemySprite;
-        IsEnemy = true;
-
         MaxHp = enemyData.hp;
         MaxMp = 0;
         AttackPower = enemyData.attackPower;
@@ -58,18 +69,17 @@ public class BattleCharacter : MonoBehaviour
         gameObject.name = $"[Enemy] {CharacterName}";
     }
 
-    public void SetupHero() 
+    // 勇者としてセットアップするメソッド
+    public void SetupHero()
     {
-        // TODO: 本来はHeroDataや装備、レベルからステータスを計算する
-        CharacterName = "勇者";
-        //CharacterSprite = heroData.sprite; // HeroDataからスプライトを設定
-        IsEnemy = false;
+        this.isHero = true;
 
+        CharacterName = "勇者";
         MaxHp = 200;
         MaxMp = 40;
         AttackPower = 25;
         DefensePower = 15;
-        skills = new List<SkillData>(); // TODO: 勇者のスキルを設定
+        skills = new List<SkillData>();
         
         this.CurrentHp = MaxHp;
         this.CurrentMp = MaxMp;
@@ -81,16 +91,14 @@ public class BattleCharacter : MonoBehaviour
     {
         int finalDamage = Mathf.Max(1, damage - DefensePower);
         CurrentHp -= finalDamage;
-
-        // ダメージを受けたという事実自体はManagerにログとして送ってもらう
         Debug.Log($"{CharacterName} は {finalDamage} のダメージを受けた！ (残りHP: {CurrentHp})");
     }
 
     public void Act(BattleCharacter target)
     {
-        // シンプルなAI: とりあえず通常攻撃
         target.TakeDamage(AttackPower);
     }
 
     public bool IsDead() => CurrentHp <= 0;
+    public bool IsEnemy() => !isHero;
 }
