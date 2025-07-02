@@ -83,7 +83,7 @@ public class ItemModel
 
             float baseMultiplier = phase switch
             {
-                GamePhase.Battle => Random.Range(0.8f, 1.5f),
+                GamePhase.Streaming => Random.Range(0.8f, 1.5f),
                 _ => Random.Range(0.95f, 1.05f)
             };
 

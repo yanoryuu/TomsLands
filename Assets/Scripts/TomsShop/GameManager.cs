@@ -10,10 +10,11 @@ public class GameManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private ItemShopView itemShopView;
     [SerializeField] private PreparationView preparationView;
-    [SerializeField] private BattleView battleView;
+    [SerializeField] private StreamingView streamingView;
     [SerializeField] private EndPhaseView endPhaseView;
     [SerializeField] private TomsShopView tomsShopView;
     [SerializeField] private ItemSelectionView itemSelectionView;
+    [SerializeField] private StreamingSettingView streamingSettingView;
 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
@@ -23,6 +24,10 @@ public class GameManager : MonoBehaviour
     private TomsShopPresenter tomsShopPresenter;
     private ItemSelectionPresenter itemSelectionPresenter;
     private ItemSelectionModel itemSelectionModel;
+    private StreamingItemModel streamingItemModel;
+    private StreamingItemPresenter streamingItemPresenter;
+    private StreamingSettingModel streamingSettingModel;
+    private StreamingSettingPresenter streamingSettingPresenter;
 
     private void Awake()
     {
@@ -37,12 +42,16 @@ public class GameManager : MonoBehaviour
         itemModel = new ItemModel(masterItems);
         itemModel.LoadData();
 
+        streamingItemModel = new StreamingItemModel(itemModel);
+
         // TomsShopModel初期化
         tomsShopModel = new TomsShopModel();
         tomsShopModel.Initialize();
         tomsShopModel.LoadPlayerMoney();
         
         itemSelectionModel = new ItemSelectionModel();
+        
+        streamingSettingModel = new StreamingSettingModel();
 
         // Presenter初期化
         itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
@@ -55,7 +64,7 @@ public class GameManager : MonoBehaviour
             itemPresenter,
             itemShopView,
             preparationView,
-            battleView,
+            streamingView,
             endPhaseView,
             tomsShopView
         );
@@ -69,6 +78,11 @@ public class GameManager : MonoBehaviour
             itemModel,
             tomsShopModel
         );
+
+        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView);
+
+        streamingSettingPresenter =
+            new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel,gamePhasePresenter);
 
         // 初期フェーズ
         CurrentPhase.Value = GamePhase.TomsShop;
@@ -85,29 +99,6 @@ public class GameManager : MonoBehaviour
     {
         itemModel.SaveData();
         tomsShopModel.SavePlayerMoney();
-    }
-
-    public void ProceedToNextPhase()
-    {
-        switch (CurrentPhase.Value)
-        {
-            case GamePhase.Preparation:
-                CurrentPhase.Value = GamePhase.Preparation;
-                break;
-            case GamePhase.Battle:
-                CurrentPhase.Value = GamePhase.Battle;
-                break;
-            case GamePhase.End:
-                CurrentPhase.Value = GamePhase.End;
-                break;
-            case GamePhase.TomsShop:
-                CurrentPhase.Value = GamePhase.TomsShop;
-                break;
-            default:
-                Debug.LogWarning("不正なフェーズ遷移");
-                break;
-        }
-        Debug.Log(CurrentPhase.Value);
     }
     
     private void DeleteAllSaveFiles()

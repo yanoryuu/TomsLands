@@ -7,7 +7,7 @@ public class GamePhasePresenter : IDisposable
     private readonly ItemPresenter itemPresenter;
     private readonly ItemShopView itemShopView;
     private readonly PreparationView preparationView;
-    private readonly BattleView battleView;
+    private readonly StreamingView streamingView;
     private readonly EndPhaseView endPhaseView;
     private readonly TomsShopView tomsShopView;
 
@@ -18,7 +18,7 @@ public class GamePhasePresenter : IDisposable
         ItemPresenter itemPresenter,
         ItemShopView itemShopView,
         PreparationView preparationView,
-        BattleView battleView,
+        StreamingView streamingView,
         EndPhaseView endPhaseView,
         TomsShopView tomsShopView)
     {
@@ -26,7 +26,7 @@ public class GamePhasePresenter : IDisposable
         this.itemPresenter = itemPresenter;
         this.itemShopView = itemShopView;
         this.preparationView = preparationView;
-        this.battleView = battleView;
+        this.streamingView = streamingView;
         this.endPhaseView = endPhaseView;
         this.tomsShopView = tomsShopView;
 
@@ -44,9 +44,12 @@ public class GamePhasePresenter : IDisposable
                 itemPresenter.RefreshPrices(GamePhase.Preparation);
                 preparationView.ShowPreparationUI();
                 break;
-            case GamePhase.Battle:
-                itemPresenter.RefreshPrices(GamePhase.Battle);
-                battleView.ShowBattleUI();
+            case GamePhase.StreamingSetting:
+                
+                break;
+            case GamePhase.Streaming:
+                itemPresenter.RefreshPrices(GamePhase.Streaming);
+                streamingView.ShowStreamingUI();
                 break;
             case GamePhase.End:
                 endPhaseView.ShowEndPhaseUI();
@@ -55,6 +58,11 @@ public class GamePhasePresenter : IDisposable
                 tomsShopView.ShowTomsShopUI();
                 break;
         }
+    }
+
+    public void ChangePhase(GamePhase phase)
+    {
+        gameManager.CurrentPhase.Value = phase;
     }
 
     public void Dispose()

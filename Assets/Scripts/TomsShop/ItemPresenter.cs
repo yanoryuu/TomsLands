@@ -63,4 +63,9 @@ public class ItemPresenter
     {
         disposables.Dispose();
     }
+
+    public void SettlePrice()
+    {
+        
+    }
 }
