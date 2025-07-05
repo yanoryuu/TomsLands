@@ -5,7 +5,7 @@ using System;
 /// <summary>
 /// 左パネルのドロップエリア。DraggableItemSlot のドロップを受け付ける。
 /// </summary>
-public class LeftDropZone : MonoBehaviour, IDropHandler
+public class RightDropZone : MonoBehaviour, IDropHandler
 {
     /// <summary>アイテムID がドロップされたとき発火</summary>
     public event Action<string> OnItemDropped;

@@ -10,9 +10,9 @@ using R3;
 public class StreamingSettingView : MonoBehaviour
 {
     [Header("Panels")]
-    [SerializeField] private Transform rightPanel;       // 利用可能アイテム
-    [SerializeField] private LeftDropZone leftDropZone;  // ドロップエリア
-    [SerializeField] private Transform leftPanel;        // 選択済みアイテム
+    [SerializeField] private RectTransform leftPanel;       // 利用可能アイテム
+    [SerializeField] private RightDropZone rightDropZone;  // ドロップエリア
+    [SerializeField] private RectTransform rightPanel;        // 選択済みアイテム
     [SerializeField] private Button confirmButton;
 
     [Header("Prefabs")]
@@ -27,26 +27,26 @@ public class StreamingSettingView : MonoBehaviour
 
     private void Awake()
     {
-        leftDropZone.OnItemDropped += id => OnItemDropped.OnNext(id);
+        rightDropZone.OnItemDropped += id => OnItemDropped.OnNext(id);
         confirmButton.onClick.AddListener(() => OnConfirmClicked.OnNext(Unit.Default));
     }
 
-    /// <summary>右パネルのアイテムを全件表示</summary>
-    public void PopulateAvailableItems(IEnumerable<RuntimeItemData> items)
+    /// <summary>左パネルのアイテムを全件表示</summary>
+    public void PopulateAvailableItems(List<RuntimeItemData> items)
     {
-        foreach (Transform t in rightPanel) Destroy(t.gameObject);
+        foreach (RectTransform t in leftPanel) Destroy(t.gameObject);
         foreach (var item in items)
         {
-            var go = Instantiate(draggableSlotPrefab, rightPanel);
+            var go = Instantiate(draggableSlotPrefab, leftPanel);
             var slot = go.GetComponent<DraggableItemSlot>();
             slot.Initialize(item.ItemId, item.ItemIcon);
         }
     }
 
-    /// <summary>左パネルに選択スロットを追加</summary>
+    /// <summary>右パネルに選択スロットを追加</summary>
     public void AddSelectedItem(string id, Sprite icon, string name)
     {
-        var go = Instantiate(selectedSlotPrefab, leftPanel);
+        var go = Instantiate(selectedSlotPrefab, rightPanel);
         var slot = go.GetComponent<SelectedItemSlot>();
         slot.Initialize(id, icon, name);
         slot.OnQuantityChanged += (itemId, qty) => OnQuantityChanged.OnNext((itemId, qty));
