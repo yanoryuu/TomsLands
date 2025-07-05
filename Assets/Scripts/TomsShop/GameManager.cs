@@ -82,7 +82,7 @@ public class GameManager : MonoBehaviour
         streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView);
 
         streamingSettingPresenter =
-            new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel ,gamePhasePresenter);
+            new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);
 
         // 初期フェーズ
         CurrentPhase.Value = GamePhase.TomsShop;

@@ -1,55 +1,77 @@
 using UnityEngine;
-using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using R3;
 
-/// <summary>
-/// 配信設定画面の View。右パネルに利用可能アイテム、左パネルに選択済みアイテムを表示。
-/// </summary>
 public class StreamingSettingView : MonoBehaviour
 {
-    [Header("Panels")]
-    [SerializeField] private RectTransform leftPanel;       // 利用可能アイテム
-    [SerializeField] private RightDropZone rightDropZone;  // ドロップエリア
-    [SerializeField] private RectTransform rightPanel;        // 選択済みアイテム
-    [SerializeField] private Button confirmButton;
-
-    [Header("Prefabs")]
-    [SerializeField] private GameObject draggableSlotPrefab;
+    [SerializeField] private Transform availablePanel;
+    [SerializeField] private Transform selectedPanel;
+    [SerializeField] private GameObject availableSlotPrefab;
     [SerializeField] private GameObject selectedSlotPrefab;
 
-    public Subject<string> OnItemDropped { get; } = new Subject<string>();
+    public Subject<string> OnItemSelected     { get; } = new Subject<string>();
+    public Subject<string> OnItemDeselected   { get; } = new Subject<string>();
     public Subject<(string id, int qty)> OnQuantityChanged { get; } = new Subject<(string, int)>();
-    public Subject<string> OnItemRemoved { get; } = new Subject<string>();
-    
-    public Subject<Unit> OnConfirmClicked { get; } = new Subject<Unit>();
 
-    private void Awake()
+    public void PopulateAvailable(IEnumerable<RuntimeItemData> items)
     {
-        rightDropZone.OnItemDropped += id => OnItemDropped.OnNext(id);
-        confirmButton.onClick.AddListener(() => OnConfirmClicked.OnNext(Unit.Default));
-    }
-
-    /// <summary>左パネルのアイテムを全件表示</summary>
-    public void PopulateAvailableItems(List<RuntimeItemData> items)
-    {
-        foreach (RectTransform t in leftPanel) Destroy(t.gameObject);
+        foreach (Transform t in availablePanel) Destroy(t.gameObject);
         foreach (var item in items)
         {
-            var go = Instantiate(draggableSlotPrefab, leftPanel);
-            var slot = go.GetComponent<DraggableItemSlot>();
-            slot.Initialize(item.ItemId, item.ItemIcon);
+            var go   = Instantiate(availableSlotPrefab, availablePanel);
+            var slot = go.GetComponent<AvailableItemSlot>();
+            slot.Initialize(item.ItemId, item.ItemIcon, item.ItemId);
+            slot.OnItemSelected += id => OnItemSelected.OnNext(id);
         }
     }
 
-    /// <summary>右パネルに選択スロットを追加</summary>
-    public void AddSelectedItem(string id, Sprite icon, string name)
+    public void PopulateSelected(IEnumerable<KeyValuePair<string, int>> selected, ItemModel model)
     {
-        var go = Instantiate(selectedSlotPrefab, rightPanel);
-        var slot = go.GetComponent<SelectedItemSlot>();
-        slot.Initialize(id, icon, name);
-        slot.OnQuantityChanged += (itemId, qty) => OnQuantityChanged.OnNext((itemId, qty));
-        slot.OnRemoved         += itemId => OnItemRemoved.OnNext(itemId);
+        foreach (Transform t in selectedPanel) Destroy(t.gameObject);
+
+        foreach (var kv in selected)
+        {
+            var id     = kv.Key;
+            var qty    = kv.Value;
+            var master = model.GetMasterItem(id);
+            var runtime= model.GetRuntimeItem(id);
+            if (master == null || runtime == null) 
+                continue;
+
+            // ここで在庫上限を取得
+            int maxQty = runtime.Stock.Value;
+
+            var go   = Instantiate(selectedSlotPrefab, selectedPanel);
+            var slot = go.GetComponent<SelectedItemSlot>();
+            slot.Initialize(
+                id,
+                master.itemIcon,
+                master.itemName,
+                qty,
+                maxQty
+            );
+            slot.OnQuantityChanged += (itemId, newQty) => 
+                OnQuantityChanged.OnNext((itemId, newQty));
+            slot.OnItemDeselected += itemId => 
+                OnItemDeselected.OnNext(itemId);
+        }
     }
+
+    /// <summary>
+    /// 個別追加用。（必要であればこちらも同様に maxQty を渡す）
+    /// </summary>
+    public void AddSelectedItem(string id, Sprite icon, string name, int qty, int maxQty)
+    {
+        var go   = Instantiate(selectedSlotPrefab, selectedPanel);
+        var slot = go.GetComponent<SelectedItemSlot>();
+        slot.Initialize(id, icon, name, qty, maxQty);
+        slot.OnQuantityChanged += (itemId, newQty) => 
+            OnQuantityChanged.OnNext((itemId, newQty));
+        slot.OnItemDeselected += itemId => 
+            OnItemDeselected.OnNext(itemId);
+    }
+
+    public void Show() => gameObject.SetActive(true);
+    public void Hide() => gameObject.SetActive(false);
 }

@@ -966,7 +966,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5420623324563119753}
-  - component: {fileID: 3744861415664716200}
+  - component: {fileID: 2809445823730583479}
   m_Layer: 0
   m_Name: StreamingSettingSlot
   m_TagString: Untagged
@@ -981,7 +981,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8448175552804354539}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -994,12 +994,12 @@ RectTransform:
   - {fileID: 6303009251446842374}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -960, y: -540}
-  m_SizeDelta: {x: -1820, y: -980}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3744861415664716200
+--- !u!114 &2809445823730583479
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1008,11 +1008,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 8448175552804354539}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d7dffa4b977e492cb4967ccaf3c9f1e, type: 3}
+  m_Script: {fileID: 11500000, guid: f35af07a399ed45f9ba9522239e9c0d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemIconImage: {fileID: 8207792735145050976}
-  priceText: {fileID: 7247841430225454062}
-  stockText: {fileID: 888496849740432436}
+  icon: {fileID: 8207792735145050976}
+  nameText: {fileID: 7247841430225454062}
   amountText: {fileID: 122359924052635948}
-  amountSlider: {fileID: 4339394918752624321}
+  qtySlider: {fileID: 4339394918752624321}
