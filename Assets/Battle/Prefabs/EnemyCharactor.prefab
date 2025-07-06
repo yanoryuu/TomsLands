@@ -746,7 +746,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_Sprite: {fileID: 21300000, guid: c15e769b84c5e40c9bcb97484c55b281, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -773,6 +773,8 @@ MonoBehaviour:
   hpText: {fileID: 3816173037305196001}
   attackText: {fileID: 5627108663839925041}
   defenseText: {fileID: 7058168404575852238}
+  damagePopupPrefab: {fileID: 3954445575370586647, guid: 4d04b91912b2d1e459636a34f0756120, type: 3}
+  popupContainer: {fileID: 112757428170012697}
 --- !u!1 &6097655322416196386
 GameObject:
   m_ObjectHideFlags: 0
@@ -912,8 +914,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294932821
-  m_fontColor: {r: 0.33490568, g: 0.47597158, b: 1, a: 1}
+    rgba: 4294953216
+  m_fontColor: {r: 0, g: 0.7882353, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1048,8 +1050,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4282943806
-  m_fontColor: {r: 0.24313727, g: 0.5372549, b: 0.28235295, a: 1}
+    rgba: 4287756929
+  m_fontColor: {r: 0.50445, g: 0.9811321, b: 0.56800765, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

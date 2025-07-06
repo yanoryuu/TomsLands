@@ -76,7 +76,7 @@ public class BattleCharacter : MonoBehaviour
         this.CurrentHp = MaxHp;
         this.CurrentMp = MaxMp;
         
-        gameObject.name = $"[Enemy] {CharacterName}";
+        gameObject.name = $"{CharacterName}";
 
         characterStatusView.Initialize(this);
     }
@@ -86,9 +86,9 @@ public class BattleCharacter : MonoBehaviour
         this.isHero = true;
 
         CharacterName = "勇者";
-        MaxHp = 200;
+        MaxHp = 300;
         MaxMp = 40;
-        AttackPower = 50;
+        AttackPower = 60;
         DefensePower = 15;
         skills = new List<SkillData>();
         
