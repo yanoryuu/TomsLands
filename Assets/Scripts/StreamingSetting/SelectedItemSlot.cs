@@ -5,10 +5,6 @@ using System;
 using R3;
 using TMPro;
 
-/// <summary>
-/// 選択済みアイテムスロット。
-/// スライダーで数量を変更し、右クリックで解除を通知します。
-/// </summary>
 public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;

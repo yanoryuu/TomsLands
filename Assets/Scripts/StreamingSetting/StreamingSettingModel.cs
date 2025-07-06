@@ -57,6 +57,18 @@ public class StreamingSettingModel
             _selected[item.itemId] = Mathf.Max(1, item.quantity);
         Debug.Log("Streaming selection loaded.");
     }
+
+    public List<StreamingItemPlain> GetSelectedRuntimeItemData(ItemModel itemModel)
+    {
+        var selectedRuntimeItems = new List<StreamingItemPlain>();
+        foreach (var item in _selected)
+        {
+            var itemData = itemModel.GetRuntimeItem(item.Key);
+            var streamingItemData = new StreamingItemPlain(item.Key,itemData.CurrentPrice.Value,itemData.ItemIcon,item.Value,itemData.Demand.Value);
+            selectedRuntimeItems.Add(streamingItemData);
+        }
+        return selectedRuntimeItems;
+    }
 }
 
 [Serializable]

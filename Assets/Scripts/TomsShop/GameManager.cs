@@ -42,16 +42,19 @@ public class GameManager : MonoBehaviour
         itemModel = new ItemModel(masterItems);
         itemModel.LoadData();
 
-        streamingItemModel = new StreamingItemModel(itemModel);
+        
 
         // TomsShopModel初期化
         tomsShopModel = new TomsShopModel();
         tomsShopModel.Initialize();
         tomsShopModel.LoadPlayerMoney();
         
+        
         itemSelectionModel = new ItemSelectionModel();
         
         streamingSettingModel = new StreamingSettingModel();
+        
+        streamingItemModel = new StreamingItemModel();
 
         // Presenter初期化
         itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
@@ -79,7 +82,7 @@ public class GameManager : MonoBehaviour
             tomsShopModel
         );
 
-        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView);
+        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel);
 
         streamingSettingPresenter =
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);
