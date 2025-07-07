@@ -5,10 +5,13 @@ using R3;
 
 public class StreamingView : MonoBehaviour
 {
-    [SerializeField] TextMeshProUGUI stealthCostText;
-    [SerializeField] TextMeshProUGUI stealthCooldownText;
-    [SerializeField] Button basicStealthButton;
-    [SerializeField] Button focusedStealthButton;
+    [SerializeField] private TextMeshProUGUI stealthCostText;
+    [SerializeField] private TextMeshProUGUI stealthCooldownText;
+    [SerializeField] private TextMeshProUGUI currentTomsShopMoneyText;
+    [SerializeField] private TextMeshProUGUI currentDateText;
+    [SerializeField] private Button menuButton;
+    [SerializeField] private Button basicStealthButton;
+    [SerializeField] private Button focusedStealthButton;
 
     string selectedItemId;
 
