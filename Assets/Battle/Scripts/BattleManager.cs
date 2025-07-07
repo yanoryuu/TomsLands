@@ -33,6 +33,8 @@ public class BattleManager : MonoBehaviour
     private bool isBossPhase = false;
     private bool battleEnded = false; // 戦闘が終了したかどうかのフラグ
 
+    //TODO:敵が死んだ際に通知するスクリプトを追加する
+
     async void Start()
     {
         if (testStageData != null)
@@ -136,6 +138,8 @@ public class BattleManager : MonoBehaviour
         {
             if(e.IsDead())
             {
+                OnLogMessage?.Invoke($"{e.gameObject.name}が死亡！");
+                //TODO:敵が死んだ際に通知するスクリプトを追加する
                 Destroy(e.gameObject);
                 return true;
             }

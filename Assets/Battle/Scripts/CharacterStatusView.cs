@@ -1,6 +1,11 @@
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
+using Cysharp.Threading.Tasks;
+using System;
+
+/// <summary>
+/// キャラクターのステータス表示とダメージポップアップ管理
+/// </summary>
 public class CharacterStatusView : MonoBehaviour
 {
     [Header("UI参照")]
@@ -8,74 +13,108 @@ public class CharacterStatusView : MonoBehaviour
     [SerializeField] private TMP_Text attackText;
     [SerializeField] private TMP_Text defenseText;
 
-    // 監視対象のキャラクター
-    private BattleCharacter _targetCharacter;
+    [Header("ポップアップ設定")]
+    [SerializeField] private DamagePopup damagePopupPrefab;
+    [SerializeField] private Transform popupContainer;
 
-    void OnDestroy()
+    private SpriteRenderer characterSpriteRenderer;
+
+    private BattleCharacter target;
+    private int prevHp;
+
+    private void Awake()
+    {
+        characterSpriteRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    private void OnDestroy()
     {
         UnsubscribeFromTarget();
     }
-    
-    /// <summary>
-    /// 監視対象のキャラクターを設定し、ステータスの表示を初期化します。
-    /// 呼び出し元: BattleCharacter.cs の SetupHero() / Setup() メソッド内。
-    /// </summary>
-    public void Initialize(BattleCharacter target)
-    {
-        // 以前の購読を解除し、新しいターゲットを設定します。
-        UnsubscribeFromTarget();
-        _targetCharacter = target;
-        
-        if (_targetCharacter != null)
-        {
-            // HP変更イベントを購読します。
-            _targetCharacter.OnHpChanged += UpdateHpText;
 
-            // 初期のステータス表示を更新します。
-            UpdateHpText(_targetCharacter.CurrentHp, _targetCharacter.MaxHp);
-            UpdateAttackText(_targetCharacter.AttackPower);
-            UpdateDefenseText(_targetCharacter.DefensePower);
+    public void Initialize(BattleCharacter character)
+    {
+        UnsubscribeFromTarget();
+
+        target = character;
+        if (target != null)
+        {
+            prevHp = target.CurrentHp;
+            target.OnHpChanged += HandleHpChanged;
+            UpdateHpText(target.CurrentHp);
+            UpdateAttackText(target.AttackPower);
+            UpdateDefenseText(target.DefensePower);
         }
     }
 
+    // HP変更時のコールバック
+    private void HandleHpChanged(int current, int max)
+    {
+        int delta = prevHp - current;
+
+        // ダメージを受けた場合
+        if (delta > 0)
+        {
+            // ダメージポップアップ表示を開始（完了を待たない）
+            if (damagePopupPrefab != null && popupContainer != null)
+            {
+                DamagePopup popup = Instantiate(damagePopupPrefab, popupContainer);
+                popup.ShowAsync(delta).Forget(); // .Forget()で「撃ちっぱなし」にする
+            }
+
+            // ダメージフラッシュ効果を開始（完了を待たない）
+            PlayDamageFlash().Forget();
+        }
+
+        // HPテキストは即座に更新する
+        UpdateHpText(current);
+        prevHp = current;
+    }
+
     /// <summary>
-    /// HPの表示を更新するメソッド。
+    /// キャラクターを短時間赤く点滅させる
     /// </summary>
-    private void UpdateHpText(int current, int max)
+    private async UniTaskVoid PlayDamageFlash()
+    {
+        // スプライトが設定されていなければ何もしない
+        if (characterSpriteRenderer == null) return;
+
+        // 元の色を保存しておく（通常は白）
+        Color originalColor = characterSpriteRenderer.color;
+
+        // 赤色に変更
+        characterSpriteRenderer.color = Color.red;
+
+        // 0.15秒待機
+        await UniTask.Delay(TimeSpan.FromMilliseconds(150));
+
+        // 元の色に戻す
+        characterSpriteRenderer.color = originalColor;
+    }
+
+    private void UpdateHpText(int current)
     {
         if (hpText != null)
-        {
             hpText.text = $"{current}";
-        }
     }
 
-    /// <summary>
-    /// 攻撃力の表示を更新するメソッド。
-    /// </summary>
     private void UpdateAttackText(int attack)
     {
         if (attackText != null)
-        {
             attackText.text = $"{attack}";
-        }
     }
 
-    /// <summary>
-    /// 防御力の表示を更新するメソッド。
-    /// </summary>
     private void UpdateDefenseText(int defense)
     {
         if (defenseText != null)
-        {
             defenseText.text = $"{defense}";
-        }
     }
-
+    
     private void UnsubscribeFromTarget()
     {
-        if (_targetCharacter != null)
+        if (target != null)
         {
-            _targetCharacter.OnHpChanged -= UpdateHpText;
+            target.OnHpChanged -= HandleHpChanged;
         }
     }
 }
