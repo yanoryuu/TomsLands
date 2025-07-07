@@ -1,16 +1,47 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using R3;
 
 public class StreamingView : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI stealthMarketingCostText;
-    
-    public void SetStealthMarketingCost(int cost){
-        stealthMarketingCostText.text = $"cost: {cost}G";
+    [SerializeField] TextMeshProUGUI stealthCostText;
+    [SerializeField] TextMeshProUGUI stealthCooldownText;
+    [SerializeField] Button basicStealthButton;
+    [SerializeField] Button focusedStealthButton;
+
+    string selectedItemId;
+
+    public Subject<Unit>   OnBasicStealthRequested   { get; } = new Subject<Unit>();
+    public Subject<string> OnFocusedStealthRequested { get; } = new Subject<string>();
+
+    void Awake()
+    {
+        basicStealthButton.onClick.AddListener(() => OnBasicStealthRequested.OnNext(Unit.Default));
+        focusedStealthButton.onClick.AddListener(() =>
+        {
+            if (!string.IsNullOrEmpty(selectedItemId))
+                OnFocusedStealthRequested.OnNext(selectedItemId);
+        });
     }
-    
+
+    public void SetStealthMarketingCost(int cost)
+        => stealthCostText.text = $"Cost: {cost}G";
+
+    public void SetStealthCooldown(float cd)
+        => stealthCooldownText.text = cd > 0
+            ? $"Cooldown: {Mathf.CeilToInt(cd)}s"
+            : "";
+
+    /// <summary>UIから集中ステマ対象アイテムを選択したら呼ぶ</summary>
+    public void SelectItem(string itemId)
+    {
+        selectedItemId           = itemId;
+        focusedStealthButton.interactable = !string.IsNullOrEmpty(itemId);
+    }
+
     public void ShowStreamingUI()
     {
-        
+        gameObject.SetActive(true);
     }
 }

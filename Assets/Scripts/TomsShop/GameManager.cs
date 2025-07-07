@@ -82,7 +82,7 @@ public class GameManager : MonoBehaviour
             tomsShopModel
         );
 
-        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel);
+        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsShopModel);
 
         streamingSettingPresenter =
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);

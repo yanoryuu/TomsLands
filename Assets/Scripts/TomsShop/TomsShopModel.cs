@@ -7,11 +7,14 @@ public class TomsShopModel : MonoBehaviour
     public ReactiveProperty<int> PlayerMoney { get; private set; }
     
     public ReactiveProperty<int> BlacksmithLevel { get; private set; }
+    
+    public ReactiveProperty<float> Trust { get; private set; }
 
-    public void Initialize(int defaultMoney = 1000, int defaultBlacksmithLevel = 1)
+    public void Initialize(int defaultMoney = 1000, int defaultBlacksmithLevel = 1, float defaultTrust = 1)
     {
         PlayerMoney = new ReactiveProperty<int>(defaultMoney);
         BlacksmithLevel = new ReactiveProperty<int>(defaultBlacksmithLevel);
+        Trust = new ReactiveProperty<float>(defaultTrust);
     }
 
     public void SavePlayerMoney()
