@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ItemSelectionView itemSelectionView;
     [SerializeField] private StreamingSettingView streamingSettingView;
     [SerializeField] private CommonView commonView;
+    [SerializeField] private BattleCharacter battleCharacter;
+    [SerializeField] private BattleManager battleManager;
 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
@@ -29,6 +31,7 @@ public class GameManager : MonoBehaviour
     private StreamingItemPresenter streamingItemPresenter;
     private StreamingSettingModel streamingSettingModel;
     private StreamingSettingPresenter streamingSettingPresenter;
+    private HeroModel heroModel;
 
     private void Awake()
     {
@@ -43,8 +46,6 @@ public class GameManager : MonoBehaviour
         itemModel = new ItemModel(masterItems);
         itemModel.LoadData();
 
-        
-
         // TomsShopModel初期化
         tomsShopModel = new TomsShopModel();
         tomsShopModel.Initialize();
@@ -56,6 +57,9 @@ public class GameManager : MonoBehaviour
         streamingSettingModel = new StreamingSettingModel();
         
         streamingItemModel = new StreamingItemModel();
+        
+        heroModel = new HeroModel();
+        heroModel.LoadHeroData();
 
         // Presenter初期化
         itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
@@ -84,7 +88,10 @@ public class GameManager : MonoBehaviour
             commonView
         );
 
-        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsShopModel);
+        //battleCharacterに勇者のデータを注入
+        battleCharacter.HeroData = heroModel.heroData;
+        
+        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsShopModel,battleManager);
 
         streamingSettingPresenter =
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);

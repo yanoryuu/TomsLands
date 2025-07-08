@@ -11,7 +11,7 @@ public class CommonView : MonoBehaviour
     [SerializeField] private Button menuButton;
     public void UpdatePlayerMoney(int money)
     {
-        playerMoneyText.text = $"Money: {money}G";
+        playerMoneyText.text = $"{money}G";
     }
     
     public void UpdateCurrentTurn(int turn)

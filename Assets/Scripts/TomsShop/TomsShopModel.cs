@@ -44,4 +44,14 @@ public class TomsShopModel : MonoBehaviour
             BlacksmithLevel.Value = 1; // デフォルトの鍛冶屋レベル
         }
     }
+
+    public void Settlement(int price, int quantity)
+    {
+        // 購入処理
+        if (PlayerMoney.Value >= price * quantity)
+        {
+            PlayerMoney.Value += price * quantity;
+            Debug.Log($"販売成功: {quantity}個を{price}Gで売り。残り資金: {PlayerMoney.Value}G");
+        }
+    }
 }

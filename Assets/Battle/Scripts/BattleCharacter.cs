@@ -18,6 +18,8 @@ public class BattleCharacter : MonoBehaviour
     public int MaxMp { get; private set; }
     public int AttackPower { get; private set; }
     public int DefensePower { get; private set; }
+    
+    public RuntimeHeroData HeroData;
 
     // --- 内部コンポーネント参照 ---
     private SpriteRenderer characterSpriteRenderer;
@@ -52,6 +54,8 @@ public class BattleCharacter : MonoBehaviour
     {
         characterSpriteRenderer = GetComponent<SpriteRenderer>();
         characterStatusView = GetComponent<CharacterStatusView>();
+        
+        
         
         if (isHero)
         {

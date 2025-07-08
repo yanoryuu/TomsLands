@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using R3;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 public class ItemModel
 {
@@ -35,6 +37,19 @@ public class ItemModel
         var item = GetRuntimeItem(itemId);
         if (item != null && item.Stock.Value >= quantity)
             item.Stock.Value -= quantity;
+    }
+    
+    public void Settlement(string itemId, int quantity)
+    {
+        var item = GetRuntimeItem(itemId);
+        if (item != null && item.Stock.Value >= quantity)
+        {
+            item.Stock.Value -= quantity;
+        }
+        else
+        {
+            Debug.LogWarning($"Item {itemId} not found or insufficient stock for settlement.");
+        }
     }
 
     public List<RuntimeItemData> CreateItemListForDisplay(Dictionary<string, int> selectedItems)
@@ -91,6 +106,39 @@ public class ItemModel
             runtime.CurrentPrice.Value = Mathf.RoundToInt(master.basePrice * baseMultiplier * demandBonus);
 
             runtime.UpdatePopularity();
+        }
+    }
+    
+    public void BattleWinBonus(string itemId, int bonusAmountDivision = 1)
+    {
+        var runtime = GetRuntimeItem(itemId);
+        if (runtime != null)
+        {
+            runtime.CurrentPrice.Value *= bonusAmountDivision;
+            
+            // 需要率は掛け算後に 0～1 の範囲へクランプ
+            float newDemand = Mathf.Clamp01(runtime.Demand.Value * bonusAmountDivision);
+            runtime.Demand.Value = newDemand;
+            Debug.Log($"Battle win bonus applied to {itemId}: +{bonusAmountDivision} stock.");
+        }
+        else
+        {
+            Debug.LogWarning($"Item not found for battle win bonus: {itemId}");
+        }
+    }
+    
+    public void BattleDefeatPenalty(string itemId, int penaltyAmountMultiplier)
+    {
+        var runtime = GetRuntimeItem(itemId);
+        if (runtime != null)
+        {
+            runtime.CurrentPrice.Value /= penaltyAmountMultiplier;
+            runtime.Demand.Value /= penaltyAmountMultiplier;
+            Debug.Log($"Battle defeat penalty applied to {itemId}: /{penaltyAmountMultiplier} stock.");
+        }
+        else
+        {
+            Debug.LogWarning($"Item not found for battle defeat penalty: {itemId}");
         }
     }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using System;
 using System.Threading;
+using R3;
 
 public class BattleManager : MonoBehaviour
 {
@@ -31,7 +32,10 @@ public class BattleManager : MonoBehaviour
     private List<BattleCharacter> enemies = new List<BattleCharacter>();
     private int enemiesSpawnedCount = 0;
     private bool isBossPhase = false;
-    private bool battleEnded = false; // 戦闘が終了したかどうかのフラグ
+    private ReactiveProperty<bool> battleEnded = new ReactiveProperty<bool>(); // 戦闘が終了したかどうかのフラグ
+    
+    public Subject<(string armor,string weapon)> OnWin = new Subject<(string armor, string weapon)>();
+    public Subject<(string armor,string weapon)> OnDefeat = new Subject<(string armor, string weapon)>();
 
     //TODO:敵が死んだ際に通知するスクリプトを追加する
 
@@ -56,7 +60,7 @@ public class BattleManager : MonoBehaviour
         await SetupPhase(token);
 
         int turnCount = 1;
-        while (!battleEnded && !token.IsCancellationRequested)
+        while (!battleEnded.Value && !token.IsCancellationRequested)
         {
             // --- ターン開始処理 ---
             OnLogMessage?.Invoke($"--- ターン {turnCount} ---");
@@ -90,7 +94,7 @@ public class BattleManager : MonoBehaviour
         enemies.Clear();
         enemiesSpawnedCount = 0;
         isBossPhase = false;
-        battleEnded = false;
+        battleEnded.Value = false;
 
         // 初期敵のスポーン
         int initialSpawnCount = Mathf.Min(maxConcurrentEnemies, totalNormalEnemies);
@@ -214,16 +218,18 @@ public class BattleManager : MonoBehaviour
 
     private async UniTask VictoryPhase(CancellationToken token)
     {
-        if (battleEnded) return;
-        battleEnded = true;
+        if (battleEnded.Value) return;
+        battleEnded.Value = true;
+        OnWin.OnNext((hero.HeroData.armorId.Value, hero.HeroData.weaponId.Value));
         OnLogMessage?.Invoke("★★★★★★ 完全勝利！ ★★★★★★");
         await UniTask.Yield(token);
     }
 
     private async UniTask DefeatPhase(CancellationToken token)
     {
-        if (battleEnded) return;
-        battleEnded = true;
+        if (battleEnded.Value) return;
+        battleEnded.Value = true;
+        OnDefeat.OnNext((hero.HeroData.armorId.Value, hero.HeroData.weaponId.Value));
         OnLogMessage?.Invoke("------ 敗北… ------");
         await UniTask.Yield(token);
     }
