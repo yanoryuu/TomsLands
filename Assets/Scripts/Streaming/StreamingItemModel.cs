@@ -34,13 +34,9 @@ public class StreamingItemModel
         itemData.quantity = newQuantity;
     }
 
-    // ── 追加メソッド ──
-
-    /// <summary>全体にステマをかける</summary>
     public void ApplyBasicStealth(TomsShopModel shop)
         => stealthMarketingModel.PerformBasic(runtimeStreamingItems, shop);
 
-    /// <summary>指定アイテムにステマをかける</summary>
     public void ApplyFocusedStealth(string itemId, TomsShopModel shop)
     {
         var item = runtimeStreamingItems.Find(i => i.itemId == itemId);

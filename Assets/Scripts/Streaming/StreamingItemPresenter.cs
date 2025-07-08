@@ -31,22 +31,22 @@ public class StreamingItemPresenter : IDisposable
         streamingItemModel.LoadStreamingItems(
             streamingSettingModel.GetSelectedRuntimeItemData(itemModel));
 
-        // コスト表示
-        streamingItemModel.stealthMarketingModel.Cost
-            .Subscribe(c => streamingView.SetStealthMarketingCost(c))
-            .AddTo(disposables);
-
-        // クールダウン表示
-        streamingItemModel.stealthMarketingModel.CooldownRemaining
-            .Subscribe(cd => streamingView.SetStealthCooldown(cd))
-            .AddTo(disposables);
+        // // コスト表示
+        // streamingItemModel.stealthMarketingModel.Cost
+        //     .Subscribe(c => streamingView.SetStealthMarketingCost(c))
+        //     .AddTo(disposables);
+        //
+        // // クールダウン表示
+        // streamingItemModel.stealthMarketingModel.CooldownRemaining
+        //     .Subscribe(cd => streamingView.SetStealthCooldown(cd))
+        //     .AddTo(disposables);
 
         // 全体ステマ
         streamingView.OnBasicStealthRequested
             .Subscribe(_ => streamingItemModel.ApplyBasicStealth(tomsShopModel))
             .AddTo(disposables);
 
-        // 集中ステマ
+        // 集中ステマ（桜）
         streamingView.OnFocusedStealthRequested
             .Subscribe(id => streamingItemModel.ApplyFocusedStealth(id, tomsShopModel))
             .AddTo(disposables);

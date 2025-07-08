@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TomsShopView tomsShopView;
     [SerializeField] private ItemSelectionView itemSelectionView;
     [SerializeField] private StreamingSettingView streamingSettingView;
+    [SerializeField] private CommonView commonView;
 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
@@ -79,7 +80,8 @@ public class GameManager : MonoBehaviour
             itemShopView,
             itemSelectionView,
             itemModel,
-            tomsShopModel
+            tomsShopModel,
+            commonView
         );
 
         streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsShopModel);

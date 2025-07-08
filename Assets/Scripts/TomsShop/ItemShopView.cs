@@ -98,10 +98,4 @@ public class ItemShopView : MonoBehaviour
             activeSlots.Add(slot);
         }
     }
-
-    // 所持金更新表示
-    public void UpdatePlayerMoney(int money)
-    {
-        playerMoneyText.text = $"{money} G";
-    }
 }

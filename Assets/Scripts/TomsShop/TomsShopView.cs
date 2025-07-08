@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class TomsShopView : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI playerMoneyText;
+    
     [SerializeField] private Button PurchaseButton;
     [SerializeField] private Button SetItemButton;
     
@@ -16,11 +16,6 @@ public class TomsShopView : MonoBehaviour
     {
         PurchaseButton.onClick.AddListener(() => OnPurchaseClicked.OnNext(Unit.Default));
         // SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
-    }
-    
-    public void UpdatePlayerMoney(int money)
-    {
-        playerMoneyText.text = $"Money: {money}G";
     }
     
     public void ShowTomsShopUI()

@@ -24,15 +24,6 @@ public class ItemPresenter
         // itemShopView.OnSellRequested
         //     .Subscribe(tuple => HandleSell(tuple.itemId, tuple.quantity))
         //     .AddTo(disposables);
-
-        // 所持金更新（ModelのデータからViewへ）
-        tomsShopModel.PlayerMoney
-            .Subscribe(money =>
-            {
-                itemShopView.UpdatePlayerMoney(money);
-                tomsShopView.UpdatePlayerMoney(money);
-            })
-            .AddTo(disposables);
     }
     public void BindItemSelectionView(ItemSelectionView itemSelectionView)
     {

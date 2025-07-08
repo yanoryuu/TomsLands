@@ -15,7 +15,8 @@ public class TomsShopPresenter : IDisposable
         ItemShopView itemShopView,
         ItemSelectionView itemSelectionView,
         ItemModel itemModel,
-        TomsShopModel tomsShopModel)
+        TomsShopModel tomsShopModel,
+        CommonView commonView)
     {
         this.tomsShopView = tomsShopView;
         this.itemShopView = itemShopView;
@@ -49,6 +50,20 @@ public class TomsShopPresenter : IDisposable
 
         itemShopView.OnCloseRequested
             .Subscribe(_ => CloseShopView())
+            .AddTo(disposables);
+        
+        // 所持金更新（ModelのデータからViewへ）
+        tomsShopModel.PlayerMoney
+            .Subscribe(money =>
+            {
+                commonView.UpdatePlayerMoney(money);
+            })
+            .AddTo(disposables);
+        
+        tomsShopModel.CurrentTurn.Subscribe(date =>
+        {
+            commonView.UpdateCurrentTurn(date);
+        })
             .AddTo(disposables);
     }
 

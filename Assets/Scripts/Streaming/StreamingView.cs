@@ -5,11 +5,8 @@ using R3;
 
 public class StreamingView : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI stealthCostText;
-    [SerializeField] private TextMeshProUGUI stealthCooldownText;
-    [SerializeField] private TextMeshProUGUI currentTomsShopMoneyText;
-    [SerializeField] private TextMeshProUGUI currentDateText;
-    [SerializeField] private Button menuButton;
+    // [SerializeField] private TextMeshProUGUI stealthCostText;
+    // [SerializeField] private TextMeshProUGUI stealthCooldownText;
     [SerializeField] private Button basicStealthButton;
     [SerializeField] private Button focusedStealthButton;
 
@@ -28,13 +25,13 @@ public class StreamingView : MonoBehaviour
         });
     }
 
-    public void SetStealthMarketingCost(int cost)
-        => stealthCostText.text = $"Cost: {cost}G";
-
-    public void SetStealthCooldown(float cd)
-        => stealthCooldownText.text = cd > 0
-            ? $"Cooldown: {Mathf.CeilToInt(cd)}s"
-            : "";
+    // public void SetStealthMarketingCost(int cost)
+    //     => stealthCostText.text = $"Cost: {cost}G";
+    //
+    // public void SetStealthCooldown(float cd)
+    //     => stealthCooldownText.text = cd > 0
+    //         ? $"Cooldown: {Mathf.CeilToInt(cd)}s"
+    //         : "";
 
     /// <summary>UIから集中ステマ対象アイテムを選択したら呼ぶ</summary>
     public void SelectItem(string itemId)
