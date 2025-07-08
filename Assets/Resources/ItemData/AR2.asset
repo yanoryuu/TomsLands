@@ -1,24 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b835d948d9f696468771ac77c17447c, type: 3}
-  m_Name: AR2
-  m_EditorClassIdentifier: 
-  itemId: AR2
-  itemName: Armor2
-  basePrice: 100
-  description: NomalArmor
-  itemIcon: {fileID: 21300000, guid: a9640fb5d6e65432096c5fe33c975cb0, type: 3}
-  initialStock: 0
-  maxStock: 100
-  itemType: 1
-  itemAttribute: 0
-  requiredLevel: 2
+version https://git-lfs.github.com/spec/v1
+oid sha256:136938f0ee27b9d4cb9dd63b51890448218bf0cfbacdc4417f6e30100fd1508e
+size 634

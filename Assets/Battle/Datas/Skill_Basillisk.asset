@@ -1,28 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ab3af9fc52230f541a7d657a4b01ff29, type: 3}
-  m_Name: Skill_Basillisk
-  m_EditorClassIdentifier: 
-  skillName: "\u6C37\u7D50\u8996\u7DDA"
-  description: "\u8996\u7DDA\u3092\u5408\u308F\u305B\u305F\u3082\u306E\u3092\u51CD\u3066\u3064\u304B\u305B\u3001\u77F3\u5316\u3055\u305B\u308B\u6050\u308D\u3057\u3044\u9B54\u773C\u3002\u77F3\u5316\uFF0B\u51CD\u7D50\u306E\u8FFD\u52A0\u52B9\u679C\r\n"
-  mpCost: 10
-  skillType: 3
-  elementType: 4
-  targetType: 1
-  power: 0
-  additionalEffects:
-  - effectType: 3
-    chance: 1
-    duration: 3
-  - effectType: 4
-    chance: 0.5
-    duration: 3
+version https://git-lfs.github.com/spec/v1
+oid sha256:5204923590c37909bc2f774e981a753e90d0dc83c0ddcefc178b1afb8ce3da06
+size 913
