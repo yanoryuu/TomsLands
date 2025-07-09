@@ -48,9 +48,11 @@ public class CharacterStatusView : MonoBehaviour
     }
 
     // HP変更時のコールバック
-    private void HandleHpChanged(int current, int max)
+    private void HandleHpChanged(int current, int max ,BattleCharacter character)
     {
         int delta = prevHp - current;
+        
+        
 
         // ダメージを受けた場合
         if (delta > 0)

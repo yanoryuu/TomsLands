@@ -4,11 +4,10 @@ using System.Linq;
 using System;
 public class BattleCharacter : MonoBehaviour
 {
-    [Header("キャラクター種別")]
-    [SerializeField] private bool isHero = false;
+    [Header("キャラクター種別")] [SerializeField] public bool isHero { get; private set; } = false;
 
     // --- イベント定義 ---
-    public event Action<int, int> OnHpChanged;
+    public event Action<int, int,BattleCharacter> OnHpChanged;
     public event Action<int, int> OnMpChanged;
 
     // --- プロパティ ---
@@ -33,7 +32,7 @@ public class BattleCharacter : MonoBehaviour
         private set
         {
             _currentHp = Mathf.Clamp(value, 0, MaxHp);
-            OnHpChanged?.Invoke(_currentHp, MaxHp);
+            OnHpChanged?.Invoke(_currentHp, MaxHp, this);
         }
     }
     
