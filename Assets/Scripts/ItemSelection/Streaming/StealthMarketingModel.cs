@@ -35,10 +35,12 @@ public class StealthMarketingModel : IDisposable
 
         shop.PlayerMoney.Value -= Cost.Value;
         foreach (var it in items)
-            it.price = Mathf.RoundToInt(it.price * (1 + PriceImpactAll.Value));
+            it.price.Value = Mathf.RoundToInt(it.price.Value * (1 + PriceImpactAll.Value));
 
         shop.Trust.Value = Mathf.Max(0f, shop.Trust.Value - 0.1f);
         Cost.Value       = Mathf.RoundToInt(Cost.Value * 1.2f);
+        
+        Debug.Log("Basic stealth applied to all items:");
         StartCooldown();
         return true;
     }
@@ -48,10 +50,12 @@ public class StealthMarketingModel : IDisposable
         if (!CanPerform || shop.PlayerMoney.Value < Cost.Value || item == null) return false;
 
         shop.PlayerMoney.Value -= Cost.Value;
-        item.price = Mathf.RoundToInt(item.price * (1 + PriceImpactFocused.Value));
+        item.price.Value = Mathf.RoundToInt(item.price.Value * (1 + PriceImpactFocused.Value));
 
         shop.Trust.Value = Mathf.Max(0f, shop.Trust.Value - 0.1f);
         Cost.Value       = Mathf.RoundToInt(Cost.Value * 1.2f);
+        
+        Debug.Log("Focused stealth applied to item: " + item.itemId);
         StartCooldown();
         return true;
     }

@@ -70,11 +70,13 @@ public class GameManager : MonoBehaviour
         gamePhasePresenter = new GamePhasePresenter(
             this,
             itemPresenter,
+            streamingItemPresenter,
             itemShopView,
             preparationView,
             streamingView,
             endPhaseView,
-            tomsShopView
+            tomsShopView,
+            battleManager
         );
 
         itemSelectionPresenter = new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel);
@@ -119,7 +121,8 @@ public class GameManager : MonoBehaviour
         string[] files = {
             "itemData.json",
             "tomsShopData.json",
-            "displayItemData.json"
+            "displayItemData.json",
+            "heroData.json",
         };
 
         foreach (var filename in files)

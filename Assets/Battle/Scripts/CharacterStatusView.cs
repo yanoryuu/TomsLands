@@ -21,7 +21,7 @@ public class CharacterStatusView : MonoBehaviour
 
     private BattleCharacter target;
     private int prevHp;
-
+    
     private void Awake()
     {
         characterSpriteRenderer = GetComponent<SpriteRenderer>();

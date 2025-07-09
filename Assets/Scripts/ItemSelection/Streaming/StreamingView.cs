@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,8 @@ public class StreamingView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI stealthCostText;
     [SerializeField] private TextMeshProUGUI stealthCooldownText;
+    
+    [SerializeField] private List<TextMeshProUGUI> selectedItemsPriceTexts;
     [SerializeField] private Button basicStealthButton;
     [SerializeField] private Button focusedStealthButton;
 
@@ -23,6 +26,16 @@ public class StreamingView : MonoBehaviour
             if (!string.IsNullOrEmpty(selectedItemId))
                 OnFocusedStealthRequested.OnNext(selectedItemId);
         });
+    }
+    
+    public void SetStreamingItemsPriceText(int itemIndex, int price)
+    {
+        if (itemIndex < 0 || itemIndex >= selectedItemsPriceTexts.Count)
+        {
+            Debug.LogError($"Invalid item index: {itemIndex}");
+            return;
+        }
+        selectedItemsPriceTexts[itemIndex].text = $"Price: {price}G";
     }
 
     public void SetStealthMarketingCost(int cost)

@@ -5,22 +5,26 @@ public class GamePhasePresenter : IDisposable
 {
     private readonly GameManager gameManager;
     private readonly ItemPresenter itemPresenter;
+    private readonly StreamingItemPresenter streamingItemPresenter;
     private readonly ItemShopView itemShopView;
     private readonly PreparationView preparationView;
     private readonly StreamingView streamingView;
     private readonly EndPhaseView endPhaseView;
     private readonly TomsShopView tomsShopView;
-
+    private readonly BattleManager battleManager;
     private readonly CompositeDisposable disposables = new();
 
     public GamePhasePresenter(
         GameManager gameManager,
         ItemPresenter itemPresenter,
+        StreamingItemPresenter streamingItemPresenter,
         ItemShopView itemShopView,
         PreparationView preparationView,
         StreamingView streamingView,
         EndPhaseView endPhaseView,
-        TomsShopView tomsShopView)
+        TomsShopView tomsShopView,
+        BattleManager battleManager
+        )
     {
         this.gameManager = gameManager;
         this.itemPresenter = itemPresenter;
@@ -29,6 +33,8 @@ public class GamePhasePresenter : IDisposable
         this.streamingView = streamingView;
         this.endPhaseView = endPhaseView;
         this.tomsShopView = tomsShopView;
+        this.streamingItemPresenter = streamingItemPresenter;
+        this.battleManager = battleManager;
 
         // GameManagerのフェーズを購読
         gameManager.CurrentPhase
@@ -49,6 +55,8 @@ public class GamePhasePresenter : IDisposable
                 break;
             case GamePhase.Streaming:
                 itemPresenter.RefreshPrices(GamePhase.Streaming);
+                streamingItemPresenter.Initialize();
+                battleManager.BattleStart();
                 streamingView.ShowStreamingUI();
                 break;
             case GamePhase.End:

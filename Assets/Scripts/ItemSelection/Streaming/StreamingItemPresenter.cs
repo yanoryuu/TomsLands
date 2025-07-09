@@ -11,7 +11,7 @@ public class StreamingItemPresenter : IDisposable
     private TomsShopModel        tomsShopModel;
     private BattleManager       battleManager;
 
-    CompositeDisposable  disposables = new CompositeDisposable();
+    private CompositeDisposable  disposables = new CompositeDisposable();
 
     public StreamingItemPresenter(
         StreamingItemModel    streamingItemModel,
@@ -50,11 +50,22 @@ public class StreamingItemPresenter : IDisposable
         streamingView.OnBasicStealthRequested
             .Subscribe(_ => streamingItemModel.ApplyBasicStealth(tomsShopModel))
             .AddTo(disposables);
+        
+        for(int i = 0; i < streamingItemModel.runtimeStreamingItems.Count; i++)
+        {
+            var item = streamingItemModel.runtimeStreamingItems[i];
+            // アイテムの価格を更新
+            item.price.Subscribe(price =>
+                {
+                    streamingView.SetStreamingItemsPriceText(i, price);
+                })
+                .AddTo(disposables);
+        }
 
-        // 集中ステマ（桜）
-        streamingView.OnFocusedStealthRequested
-            .Subscribe(id => streamingItemModel.ApplyFocusedStealth(id, tomsShopModel))
-            .AddTo(disposables);
+        // // 集中ステマ（桜）
+        // streamingView.OnFocusedStealthRequested
+        //     .Subscribe(id => streamingItemModel.ApplyFocusedStealth(id, tomsShopModel))
+        //     .AddTo(disposables);
         
         battleManager.OnWin
             .Subscribe(win =>
@@ -68,12 +79,12 @@ public class StreamingItemPresenter : IDisposable
                         itemModel.Settlement(item.itemId, soldQuantity);
                 
                         // TomsShopModelに販売処理を反映
-                        tomsShopModel.Settlement(item.price, soldQuantity);
+                        tomsShopModel.Settlement(item.price.Value, soldQuantity);
                     }
                 }
                 //勝利時に装備していた装備の値段をあげる
-                itemModel.BattleWinBonus(win.armor,2);
-                itemModel.BattleWinBonus(win.weapon,2);
+                itemModel.BattleWinBonus(win.armor,5);
+                itemModel.BattleWinBonus(win.weapon,5);
             })
             .AddTo(disposables);
         
@@ -89,7 +100,7 @@ public class StreamingItemPresenter : IDisposable
                         itemModel.Settlement(item.itemId, soldQuantity);
                 
                         // TomsShopModelに販売処理を反映
-                        tomsShopModel.Settlement(item.price, soldQuantity);
+                        tomsShopModel.Settlement(item.price.Value, soldQuantity);
                     }
                 }
                 

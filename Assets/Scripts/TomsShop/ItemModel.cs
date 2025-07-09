@@ -115,7 +115,6 @@ public class ItemModel
         if (runtime != null)
         {
             runtime.CurrentPrice.Value *= bonusAmountDivision;
-            
             // 需要率は掛け算後に 0～1 の範囲へクランプ
             float newDemand = Mathf.Clamp01(runtime.Demand.Value * bonusAmountDivision);
             runtime.Demand.Value = newDemand;

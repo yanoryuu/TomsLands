@@ -39,7 +39,7 @@ public class BattleManager : MonoBehaviour
 
     //TODO:敵が死んだ際に通知するスクリプトを追加する
 
-    async void Start()
+    public async void BattleStart()
     {
         if (testStageData != null)
         {
@@ -48,7 +48,7 @@ public class BattleManager : MonoBehaviour
         }
     }
 
-    public async UniTask StartBattle(StageData stageData, CancellationToken token)
+    private async UniTask StartBattle(StageData stageData, CancellationToken token)
     {
         currentStage = stageData;
         OnLogMessage?.Invoke($"--- 戦闘開始！ --- ステージ: {currentStage.stageName}");

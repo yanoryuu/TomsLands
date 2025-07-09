@@ -5,12 +5,12 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 最大6つまで選択可能なアイテム＋数量を管理し、
+/// 最大3つまで選択可能なアイテム＋数量を管理し、
 /// JSON で永続化するモデル。
 /// </summary>
 public class StreamingSettingModel
 {
-    private const int MaxSelection = 6;
+    private const int MaxSelection = 3;
     private const string FileName = "streamingSelection.json";
     private readonly Dictionary<string, int> _selected = new Dictionary<string, int>(MaxSelection);
 

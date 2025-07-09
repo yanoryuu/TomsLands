@@ -8,6 +8,8 @@ public class StreamingItemModel
     public List<StreamingItemPlain> runtimeStreamingItems { get; private set; } = new();
     public ReactiveProperty<float>  trustPenalty           { get; private set; }
     public StealthMarketingModel    stealthMarketingModel { get; private set; }
+    
+    private CompositeDisposable disposables = new CompositeDisposable();
 
     public void Initialize()
     {
@@ -30,18 +32,18 @@ public class StreamingItemModel
             Debug.LogError($"Streaming item with ID {itemId} not found.");
             return;
         }
-        itemData.price    = newPrice;
+        itemData.price.Value    = newPrice;
         itemData.quantity = newQuantity;
     }
 
     public void ApplyBasicStealth(TomsShopModel shop)
         => stealthMarketingModel.PerformBasic(runtimeStreamingItems, shop);
 
-    public void ApplyFocusedStealth(string itemId, TomsShopModel shop)
-    {
-        var item = runtimeStreamingItems.Find(i => i.itemId == itemId);
-        stealthMarketingModel.PerformFocused(item, shop);
-    }
+    // public void ApplyFocusedStealth(string itemId, TomsShopModel shop)
+    // {
+    //     var item = runtimeStreamingItems.Find(i => i.itemId == itemId);
+    //     stealthMarketingModel.PerformFocused(item, shop);
+    // }
 }
 
 
@@ -51,13 +53,13 @@ public class StreamingItemPlain
     public StreamingItemPlain(string itemId, int price, Sprite icon, int quantity, float demand)
     {
         this.itemId = itemId;
-        this.price = price;
+        this.price = new ReactiveProperty<int>(price);
         this.icon = icon;
         this.quantity = quantity;
         this.demand = demand;
     }
     public string itemId;
-    public int price;
+    public ReactiveProperty<int> price;
     public Sprite icon;
     public int quantity;
     public float demand;
