@@ -10,7 +10,6 @@ public class StreamingItemPresenter : IDisposable
     private StreamingView        streamingView;
     private TomsShopModel        tomsShopModel;
     private BattleManager       battleManager;
-
     private CompositeDisposable  disposables = new CompositeDisposable();
 
     public StreamingItemPresenter(
@@ -28,10 +27,14 @@ public class StreamingItemPresenter : IDisposable
         this.streamingSettingModel= settingModel;
         this.tomsShopModel        = tomsShopModel;
         this.battleManager        = battleManager;
+        disposables = new CompositeDisposable();
     }
 
     public void Initialize()
     {
+        disposables.Dispose();
+        disposables = new CompositeDisposable();
+        
         streamingItemModel.Initialize();
         streamingItemModel.LoadStreamingItems(
             streamingSettingModel.GetSelectedRuntimeItemData(itemModel));
@@ -61,11 +64,14 @@ public class StreamingItemPresenter : IDisposable
                 })
                 .AddTo(disposables);
         }
+        
+        
 
         // // 集中ステマ（桜）
-        // streamingView.OnFocusedStealthRequested
+         // streamingView.OnFocusedStealthRequested
         //     .Subscribe(id => streamingItemModel.ApplyFocusedStealth(id, tomsShopModel))
         //     .AddTo(disposables);
+        
         
         battleManager.OnWin
             .Subscribe(win =>
@@ -103,12 +109,31 @@ public class StreamingItemPresenter : IDisposable
                         tomsShopModel.Settlement(item.price.Value, soldQuantity);
                     }
                 }
-                
                 //敗北時に装備していた装備の値段を下げる
                 itemModel.BattleDefeatPenalty(defeat.armor,2);
                 itemModel.BattleDefeatPenalty(defeat.weapon,2);
             })
             .AddTo(disposables);
+
+        foreach (var enemy in battleManager.enemies)
+        {
+            enemy.OnTakeDamage.Subscribe(isHero =>
+            {
+                if (isHero)
+                {
+                    var item = streamingItemModel.runtimeStreamingItems.Find(item =>
+                        item.itemId == enemy.HeroData.armorId.Value);
+                    streamingItemModel.UpdateStreamingItems(enemy.HeroData.armorId.Value,Mathf.RoundToInt(item.price.Value*1.1f));
+                }
+                else
+                {
+                    var item = streamingItemModel.runtimeStreamingItems.Find(item =>
+                        item.itemId == enemy.HeroData.armorId.Value);
+                    streamingItemModel.UpdateStreamingItems(enemy.HeroData.weaponId.Value,Mathf.RoundToInt(item.price.Value*1.1f));
+                }
+            })
+            .AddTo(disposables);
+        }
     }
 
     public void Dispose()

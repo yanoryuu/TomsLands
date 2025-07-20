@@ -24,7 +24,7 @@ public class StreamingItemModel
         runtimeStreamingItems = itemDataList;
     }
 
-    public void UpdateStreamingItems(string itemId, int newPrice, int newQuantity)
+    public void UpdateStreamingItems(string itemId, int newPrice)
     {
         var itemData = runtimeStreamingItems.Find(item => item.itemId == itemId);
         if (itemData == null)
@@ -33,7 +33,7 @@ public class StreamingItemModel
             return;
         }
         itemData.price.Value    = newPrice;
-        itemData.quantity = newQuantity;
+        // itemData.quantity = newQuantity;
     }
 
     public void ApplyBasicStealth(TomsShopModel shop)
@@ -50,17 +50,19 @@ public class StreamingItemModel
 [Serializable]
 public class StreamingItemPlain
 {
-    public StreamingItemPlain(string itemId, int price, Sprite icon, int quantity, float demand)
+    public StreamingItemPlain(string itemId, int price, Sprite icon, int quantity, float demand,bool isSell = false)
     {
         this.itemId = itemId;
         this.price = new ReactiveProperty<int>(price);
         this.icon = icon;
         this.quantity = quantity;
         this.demand = demand;
+        this.isSell = new ReactiveProperty<bool>(isSell);
     }
     public string itemId;
     public ReactiveProperty<int> price;
     public Sprite icon;
     public int quantity;
     public float demand;
+    public ReactiveProperty<bool> isSell;
 }

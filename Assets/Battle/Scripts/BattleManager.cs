@@ -29,15 +29,13 @@ public class BattleManager : MonoBehaviour
 
     // --- 内部状態変数 ---
     private StageData currentStage;
-    private List<BattleCharacter> enemies = new List<BattleCharacter>();
+    public List<BattleCharacter> enemies { get; private set;} = new List<BattleCharacter>();
     private int enemiesSpawnedCount = 0;
     private bool isBossPhase = false;
     private ReactiveProperty<bool> battleEnded = new ReactiveProperty<bool>(); // 戦闘が終了したかどうかのフラグ
     
     public Subject<(string armor,string weapon)> OnWin = new Subject<(string armor, string weapon)>();
     public Subject<(string armor,string weapon)> OnDefeat = new Subject<(string armor, string weapon)>();
-
-    //TODO:敵が死んだ際に通知するスクリプトを追加する
 
     public async void BattleStart()
     {

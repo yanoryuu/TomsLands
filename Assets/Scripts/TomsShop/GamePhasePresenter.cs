@@ -51,7 +51,6 @@ public class GamePhasePresenter : IDisposable
                 preparationView.ShowPreparationUI();
                 break;
             case GamePhase.StreamingSetting:
-                
                 break;
             case GamePhase.Streaming:
                 itemPresenter.RefreshPrices(GamePhase.Streaming);

@@ -1,10 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 using System;
+using R3;
+
 public class BattleCharacter : MonoBehaviour
 {
-    [Header("キャラクター種別")] [SerializeField] public bool isHero { get; private set; } = false;
+    [Header("キャラクター種別")] public bool isHero { get; private set; } = false;
 
     // --- イベント定義 ---
     public event Action<int, int,BattleCharacter> OnHpChanged;
@@ -19,6 +20,8 @@ public class BattleCharacter : MonoBehaviour
     public int DefensePower { get; private set; }
     
     public RuntimeHeroData HeroData;
+    
+    public Subject<bool> OnTakeDamage = new Subject<bool>();
 
     // --- 内部コンポーネント参照 ---
     private SpriteRenderer characterSpriteRenderer;
@@ -53,9 +56,6 @@ public class BattleCharacter : MonoBehaviour
     {
         characterSpriteRenderer = GetComponent<SpriteRenderer>();
         characterStatusView = GetComponent<CharacterStatusView>();
-        
-        
-        
         if (isHero)
         {
             SetupHero();
@@ -117,6 +117,7 @@ public class BattleCharacter : MonoBehaviour
     public void Act(BattleCharacter target)
     {
         target.TakeDamage(AttackPower);
+        OnTakeDamage.OnNext(isHero);
     }
 
     public bool IsDead() => CurrentHp <= 0;
