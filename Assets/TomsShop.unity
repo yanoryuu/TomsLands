@@ -5542,6 +5542,12 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 0}
+  sellingItemIcon1: {fileID: 0}
+  sellingItemIcon2: {fileID: 0}
+  sellingItemIcon3: {fileID: 0}
+  selltingItemToggle1: {fileID: 0}
+  selltingItemToggle2: {fileID: 0}
+  selltingItemToggle3: {fileID: 0}
 --- !u!222 &359917140
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7487,7 +7493,7 @@ GameObject:
   - component: {fileID: 748742538}
   - component: {fileID: 748742539}
   m_Layer: 5
-  m_Name: Toggle (1)
+  m_Name: SellingItem2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10741,7 +10747,7 @@ GameObject:
   - component: {fileID: 1013410847}
   - component: {fileID: 1013410846}
   m_Layer: 5
-  m_Name: Background
+  m_Name: Background1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11366,7 +11372,7 @@ GameObject:
   - component: {fileID: 1120353743}
   - component: {fileID: 1120353744}
   m_Layer: 5
-  m_Name: Toggle (2)
+  m_Name: SellingItem3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11806,7 +11812,7 @@ GameObject:
   - component: {fileID: 1203052308}
   - component: {fileID: 1203052309}
   m_Layer: 5
-  m_Name: Toggle
+  m_Name: SellingItem1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12844,7 +12850,7 @@ GameObject:
   - component: {fileID: 1316277848}
   - component: {fileID: 1316277847}
   m_Layer: 5
-  m_Name: Background
+  m_Name: Background2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13221,6 +13227,12 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 1837237579}
   focusedStealthButton: {fileID: 939424954}
+  sellingItemIcon1: {fileID: 1013410846}
+  sellingItemIcon2: {fileID: 1316277847}
+  sellingItemIcon3: {fileID: 2023557450}
+  selltingItemToggle1: {fileID: 1203052309}
+  selltingItemToggle2: {fileID: 748742539}
+  selltingItemToggle3: {fileID: 1120353744}
 --- !u!1 &1415975582
 GameObject:
   m_ObjectHideFlags: 0
@@ -15397,6 +15409,12 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 0}
+  sellingItemIcon1: {fileID: 0}
+  sellingItemIcon2: {fileID: 0}
+  sellingItemIcon3: {fileID: 0}
+  selltingItemToggle1: {fileID: 0}
+  selltingItemToggle2: {fileID: 0}
+  selltingItemToggle3: {fileID: 0}
 --- !u!114 &1851955568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16212,7 +16230,7 @@ GameObject:
   - component: {fileID: 2023557451}
   - component: {fileID: 2023557450}
   m_Layer: 5
-  m_Name: Background
+  m_Name: Background3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -1,4 +1,5 @@
 using System;
+using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 
@@ -64,8 +65,15 @@ public class StreamingItemPresenter : IDisposable
                 })
                 .AddTo(disposables);
         }
-        
-        
+
+        for (int i = 0; i < streamingView.OnStreamingItemToggled.Count; i++)
+        {
+            streamingView.OnStreamingItemToggled[i].Subscribe(x =>
+                {
+                    streamingItemModel.SetIsSell(x.itemId,x.isSell);
+                })
+                .AddTo(disposables);
+        }        
 
         // // 集中ステマ（桜）
          // streamingView.OnFocusedStealthRequested

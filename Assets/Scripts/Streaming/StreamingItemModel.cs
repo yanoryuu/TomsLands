@@ -35,6 +35,17 @@ public class StreamingItemModel
         itemData.price.Value    = newPrice;
         // itemData.quantity = newQuantity;
     }
+    
+    public void SetIsSell(string itemId, bool isSell)
+    {
+        var itemData = runtimeStreamingItems.Find(item => item.itemId == itemId);
+        if (itemData == null)
+        {
+            Debug.LogError($"Streaming item with ID {itemId} not found.");
+            return;
+        }
+        itemData.isSell.Value = isSell;
+    }
 
     public void ApplyBasicStealth(TomsShopModel shop)
         => stealthMarketingModel.PerformBasic(runtimeStreamingItems, shop);
