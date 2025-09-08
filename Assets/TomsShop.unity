@@ -870,7 +870,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &114203530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5542,12 +5542,9 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 0}
-  sellingItemIcon1: {fileID: 0}
-  sellingItemIcon2: {fileID: 0}
-  sellingItemIcon3: {fileID: 0}
-  selltingItemToggle1: {fileID: 0}
-  selltingItemToggle2: {fileID: 0}
-  selltingItemToggle3: {fileID: 0}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!222 &359917140
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -6408,7 +6405,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &529239203
 Transform:
   m_ObjectHideFlags: 0
@@ -6585,7 +6582,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1931868005}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -7208,7 +7205,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 2142516091}
   m_Direction: 0
   m_Value: 0
-  m_Size: 1
+  m_Size: 0.9999999
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -11461,7 +11458,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1137235114
 Transform:
   m_ObjectHideFlags: 0
@@ -13227,12 +13224,9 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 1837237579}
   focusedStealthButton: {fileID: 939424954}
-  sellingItemIcon1: {fileID: 1013410846}
-  sellingItemIcon2: {fileID: 1316277847}
-  sellingItemIcon3: {fileID: 2023557450}
-  selltingItemToggle1: {fileID: 1203052309}
-  selltingItemToggle2: {fileID: 748742539}
-  selltingItemToggle3: {fileID: 1120353744}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!1 &1415975582
 GameObject:
   m_ObjectHideFlags: 0
@@ -15409,12 +15403,9 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 0}
-  sellingItemIcon1: {fileID: 0}
-  sellingItemIcon2: {fileID: 0}
-  sellingItemIcon3: {fileID: 0}
-  selltingItemToggle1: {fileID: 0}
-  selltingItemToggle2: {fileID: 0}
-  selltingItemToggle3: {fileID: 0}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!114 &1851955568
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16702,7 +16693,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 840133003}
   m_HandleRect: {fileID: 840133002}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:

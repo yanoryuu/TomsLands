@@ -110,5 +110,4 @@ public class TomsShopPresenter : IDisposable
         tomsShopModel.BlacksmithLevel.Value++;
         itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsShopModel.BlacksmithLevel.Value), itemShopView.BlackSmithWeaponParent);
     }
-    
 }
