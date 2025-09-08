@@ -15,7 +15,6 @@ public class StreamingItemModel
     {
         runtimeStreamingItems.Clear();
         trustPenalty = new ReactiveProperty<float>(0f);
-        // initCost=200G, 全体20%, 集中50%, CD=30s
         stealthMarketingModel = new StealthMarketingModel(200, 20f, 50f, 30f);
     }
 
