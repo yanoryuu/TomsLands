@@ -1,3 +1,21 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:1ddae2258d02ca2e9e0646b03f994e134a222f707618445ca6c2bed9889f4083
-size 611
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
+  m_Name: Bat
+  m_EditorClassIdentifier: 
+  enemyName: "\u30B3\u30A6\u30E2\u30EA"
+  hp: 50
+  attackPower: 10
+  defensePower: 5
+  elementType: 5
+  enemySprite: {fileID: 21300000, guid: b43bfd8bc446d4f2d95652c12dabba5d, type: 3}
+  skills: []
