@@ -1,3 +1,21 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:ba7f07f87d5476dc3d0384396fecca7d78e384e37a0558e3d72df89c45920da5
-size 613
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
+  m_Name: Yeti
+  m_EditorClassIdentifier: 
+  enemyName: "\u30A4\u30A8\u30C6\u30A3"
+  hp: 100
+  attackPower: 20
+  defensePower: 5
+  elementType: 1
+  enemySprite: {fileID: 21300000, guid: 6706b1f94b5904eb69abf09deac9919d, type: 3}
+  skills: []
