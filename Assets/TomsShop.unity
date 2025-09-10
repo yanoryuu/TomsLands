@@ -870,7 +870,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &114203530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5542,12 +5542,9 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 0}
-  sellingItemIcon1: {fileID: 0}
-  sellingItemIcon2: {fileID: 0}
-  sellingItemIcon3: {fileID: 0}
-  selltingItemToggle1: {fileID: 0}
-  selltingItemToggle2: {fileID: 0}
-  selltingItemToggle3: {fileID: 0}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!222 &359917140
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7404,7 +7401,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 50804867}
-  - {fileID: 1837237578}
   - {fileID: 939424953}
   - {fileID: 361825419}
   - {fileID: 630550971}
@@ -8662,7 +8658,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -738, y: -267}
+  m_AnchoredPosition: {x: -738, y: -425}
   m_SizeDelta: {x: 255, y: 125}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &939424954
@@ -13225,14 +13221,11 @@ MonoBehaviour:
   stealthCostText: {fileID: 0}
   stealthCooldownText: {fileID: 0}
   selectedItemsPriceTexts: []
-  basicStealthButton: {fileID: 1837237579}
+  basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 939424954}
-  sellingItemIcon1: {fileID: 1013410846}
-  sellingItemIcon2: {fileID: 1316277847}
-  sellingItemIcon3: {fileID: 2023557450}
-  selltingItemToggle1: {fileID: 1203052309}
-  selltingItemToggle2: {fileID: 748742539}
-  selltingItemToggle3: {fileID: 1120353744}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!1 &1415975582
 GameObject:
   m_ObjectHideFlags: 0
@@ -14999,126 +14992,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1815821326}
   m_CullTransparentMesh: 1
---- !u!1 &1837237577
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1837237578}
-  - component: {fileID: 1837237581}
-  - component: {fileID: 1837237580}
-  - component: {fileID: 1837237579}
-  m_Layer: 5
-  m_Name: StemaButton
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1837237578
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1837237577}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 741276966}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -738, y: -417}
-  m_SizeDelta: {x: 255, y: 125}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1837237579
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1837237577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Navigation:
-    m_Mode: 3
-    m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
-  m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
-  m_SpriteState:
-    m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 0}
-    m_SelectedSprite: {fileID: 0}
-    m_DisabledSprite: {fileID: 0}
-  m_AnimationTriggers:
-    m_NormalTrigger: Normal
-    m_HighlightedTrigger: Highlighted
-    m_PressedTrigger: Pressed
-    m_SelectedTrigger: Selected
-    m_DisabledTrigger: Disabled
-  m_Interactable: 1
-  m_TargetGraphic: {fileID: 1837237580}
-  m_OnClick:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &1837237580
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1837237577}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 4833826569465119767, guid: 015b0aa30e48e4fbbb7d77a32dfc442c, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 1
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1837237581
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1837237577}
-  m_CullTransparentMesh: 1
 --- !u!1 &1840818558
 GameObject:
   m_ObjectHideFlags: 0
@@ -15409,12 +15282,9 @@ MonoBehaviour:
   selectedItemsPriceTexts: []
   basicStealthButton: {fileID: 0}
   focusedStealthButton: {fileID: 0}
-  sellingItemIcon1: {fileID: 0}
-  sellingItemIcon2: {fileID: 0}
-  sellingItemIcon3: {fileID: 0}
-  selltingItemToggle1: {fileID: 0}
-  selltingItemToggle2: {fileID: 0}
-  selltingItemToggle3: {fileID: 0}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!114 &1851955568
 MonoBehaviour:
   m_ObjectHideFlags: 0
