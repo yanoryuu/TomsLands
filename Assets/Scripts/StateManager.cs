@@ -1,9 +1,9 @@
 using R3;
 using System;
 
-public class GamePhasePresenter : IDisposable
+public class StateManager : IDisposable
 {
-    private readonly GameManager gameManager;
+    public ReactiveProperty<GamePhase> currentPhase { get; private set; }
     private readonly ItemPresenter itemPresenter;
     private readonly StreamingItemPresenter streamingItemPresenter;
     private readonly ItemShopView itemShopView;
@@ -12,10 +12,10 @@ public class GamePhasePresenter : IDisposable
     private readonly EndPhaseView endPhaseView;
     private readonly TomsShopView tomsShopView;
     private readonly BattleManager battleManager;
+    private readonly TitleView titleView;
     private readonly CompositeDisposable disposables = new();
 
-    public GamePhasePresenter(
-        GameManager gameManager,
+    public StateManager(
         ItemPresenter itemPresenter,
         StreamingItemPresenter streamingItemPresenter,
         ItemShopView itemShopView,
@@ -23,10 +23,10 @@ public class GamePhasePresenter : IDisposable
         StreamingView streamingView,
         EndPhaseView endPhaseView,
         TomsShopView tomsShopView,
-        BattleManager battleManager
+        BattleManager battleManager,
+        TitleView titleView
         )
     {
-        this.gameManager = gameManager;
         this.itemPresenter = itemPresenter;
         this.itemShopView = itemShopView;
         this.preparationView = preparationView;
@@ -35,10 +35,16 @@ public class GamePhasePresenter : IDisposable
         this.tomsShopView = tomsShopView;
         this.streamingItemPresenter = streamingItemPresenter;
         this.battleManager = battleManager;
+        this.titleView = titleView;
+        currentPhase = new ReactiveProperty<GamePhase>(GamePhase.Title);
 
+        Bind();
+    }
+
+    private void Bind()
+    {
         // GameManagerのフェーズを購読
-        gameManager.CurrentPhase
-            .Subscribe(OnPhaseChanged)
+        currentPhase.Subscribe(OnPhaseChanged)
             .AddTo(disposables);
     }
 
@@ -46,6 +52,9 @@ public class GamePhasePresenter : IDisposable
     {
         switch (phase)
         {
+            case GamePhase.Title:
+                titleView.ShowTitleScreen();
+                break;
             case GamePhase.Preparation:
                 itemPresenter.RefreshPrices(GamePhase.Preparation);
                 preparationView.ShowPreparationUI();
@@ -69,7 +78,7 @@ public class GamePhasePresenter : IDisposable
 
     public void ChangePhase(GamePhase phase)
     {
-        gameManager.CurrentPhase.Value = phase;
+        currentPhase.Value = phase;
     }
 
     public void Dispose()
