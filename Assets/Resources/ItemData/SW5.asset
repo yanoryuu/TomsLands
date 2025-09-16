@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: SW5
   itemName: ShortSword
-  basePrice: 100
-  description: "\u77ED\u3044\u5263"
+  basePrice: 1000
+  description: "\u5263"
   itemIcon: {fileID: 21300000, guid: f9cdd1844b02d4c81989b265d121a78a, type: 3}
   initialStock: 0
+  maxStock: 100
+  itemType: 0
+  itemAttribute: 5
+  requiredLevel: 5

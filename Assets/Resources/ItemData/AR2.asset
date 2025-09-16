@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemId: AR2
   itemName: Armor2
-  basePrice: 100
-  description: NomalArmor
+  basePrice: 1000
+  description: "\u93A7"
   itemIcon: {fileID: 21300000, guid: a9640fb5d6e65432096c5fe33c975cb0, type: 3}
   initialStock: 0
   maxStock: 100
   itemType: 1
-  itemAttribute: 0
+  itemAttribute: 1
   requiredLevel: 2

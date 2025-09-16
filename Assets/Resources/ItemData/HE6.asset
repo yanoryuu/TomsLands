@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4b835d948d9f696468771ac77c17447c, type: 3}
-  m_Name: SW2
+  m_Name: HE6
   m_EditorClassIdentifier: 
-  itemId: SW2
-  itemName: ShortSword
-  basePrice: 600
-  description: "\u5263"
-  itemIcon: {fileID: 21300000, guid: 400f84ca50ac94f20a75a7ecfbe2cfe8, type: 3}
+  itemId: HE6
+  itemName: Helmet_6
+  basePrice: 1500
+  description: "\u30D8\u30EB\u30E0"
+  itemIcon: {fileID: 21300000, guid: 1b6aed270467e4520a414193468ecbae, type: 3}
   initialStock: 0
   maxStock: 100
-  itemType: 0
-  itemAttribute: 1
-  requiredLevel: 2
+  itemType: 1
+  itemAttribute: 4
+  requiredLevel: 3
