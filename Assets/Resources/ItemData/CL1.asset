@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4b835d948d9f696468771ac77c17447c, type: 3}
-  m_Name: SW2
+  m_Name: CL1
   m_EditorClassIdentifier: 
-  itemId: SW2
-  itemName: ShortSword
-  basePrice: 600
-  description: "\u5263"
-  itemIcon: {fileID: 21300000, guid: 400f84ca50ac94f20a75a7ecfbe2cfe8, type: 3}
+  itemId: CL1
+  itemName: "\u65E5\u306E\u670D"
+  basePrice: 0
+  description: "\u65E5\u91CE\u798F"
+  itemIcon: {fileID: -5059617106600631265, guid: 20826ee5fbaa8418b93e6ece5f885b00, type: 3}
   initialStock: 0
   maxStock: 100
-  itemType: 0
-  itemAttribute: 1
-  requiredLevel: 2
+  itemType: 1
+  itemAttribute: 0
+  requiredLevel: 1
