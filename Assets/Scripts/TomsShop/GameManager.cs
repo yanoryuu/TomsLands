@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public ReactiveProperty<GamePhase> CurrentPhase { get; private set; }
-
     [Header("References")]
     [SerializeField] private ItemShopView itemShopView;
     [SerializeField] private PreparationView preparationView;
@@ -18,12 +16,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CommonView commonView;
     [SerializeField] private BattleCharacter battleCharacter;
     [SerializeField] private BattleManager battleManager;
+    [SerializeField] private TitleView titleView;
 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
     private ItemPresenter itemPresenter;
     private ItemShopPresenter itemShopPresenter;
-    private GamePhasePresenter gamePhasePresenter;
+    private StateManager stateManager;
     private TomsShopPresenter tomsShopPresenter;
     private ItemSelectionPresenter itemSelectionPresenter;
     private ItemSelectionModel itemSelectionModel;
@@ -32,14 +31,12 @@ public class GameManager : MonoBehaviour
     private StreamingSettingModel streamingSettingModel;
     private StreamingSettingPresenter streamingSettingPresenter;
     private HeroModel heroModel;
+    private TitlePresenter titlePresenter;
 
     private void Awake()
     {
          // ゲーム開始時にセーブファイルを削除
          DeleteAllSaveFiles();
-        
-        // ReactiveProperty初期化
-        CurrentPhase = new ReactiveProperty<GamePhase>();
 
         // マスターItemDataロード
         var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
@@ -67,8 +64,7 @@ public class GameManager : MonoBehaviour
 
         itemShopPresenter = new ItemShopPresenter(tomsShopModel, itemModel, itemShopView);
 
-        gamePhasePresenter = new GamePhasePresenter(
-            this,
+        stateManager = new StateManager(
             itemPresenter,
             streamingItemPresenter,
             itemShopView,
@@ -76,7 +72,8 @@ public class GameManager : MonoBehaviour
             streamingView,
             endPhaseView,
             tomsShopView,
-            battleManager
+            battleManager,
+            titleView
         );
 
         itemSelectionPresenter = new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel);
@@ -97,14 +94,13 @@ public class GameManager : MonoBehaviour
 
         streamingSettingPresenter =
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);
-
-        // 初期フェーズ
-        CurrentPhase.Value = GamePhase.TomsShop;
+        
+        titlePresenter = new TitlePresenter(titleView, stateManager);
     }
 
     private void OnDestroy()
     {
-        gamePhasePresenter?.Dispose();
+        stateManager?.Dispose();
         tomsShopPresenter?.Dispose();
         itemPresenter?.Dispose();
     }

@@ -8,6 +8,7 @@ public class TomsShopView : MonoBehaviour
     
     [SerializeField] private Button PurchaseButton;
     [SerializeField] private Button SetItemButton;
+    [SerializeField] private GameObject TomsShopScreen;
     
     public Subject<Unit> OnPurchaseClicked { get; } = new();
     public Subject<Unit> OnSetItemClicked { get; } = new();
@@ -20,11 +21,11 @@ public class TomsShopView : MonoBehaviour
     
     public void ShowTomsShopUI()
     {
-        gameObject.SetActive(true);
+        TomsShopScreen.SetActive(true);
     }
 
     public void HideTomsShopUI()
     {
-        gameObject.SetActive(false);
+        TomsShopScreen.SetActive(false);
     }
 }
