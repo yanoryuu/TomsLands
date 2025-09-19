@@ -20,15 +20,6 @@ public class TitleView : MonoBehaviour
         loadGameButton.onClick.AddListener(() => OnLoadGameRequested.OnNext(Unit.Default));
         Bind();
     }
-    
-    public void ShowTitleScreen()
-    {
-        titleScreen.SetActive(true);
-    }
-    public void HideTitleScreen()
-    {
-        titleScreen.SetActive(false);
-    }
 
     private void Bind()
     {

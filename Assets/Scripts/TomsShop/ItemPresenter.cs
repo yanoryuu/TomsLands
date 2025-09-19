@@ -1,6 +1,6 @@
 using R3;
 
-public class ItemPresenter
+public class ItemPresenter : IPresenter
 {
     private readonly ItemModel itemModel;
     private readonly TomsShopModel tomsShopModel;
@@ -33,6 +33,11 @@ public class ItemPresenter
                 itemModel.CreateItemListForDisplay(selectedItems);
             })
             .AddTo(disposables);
+    }
+
+    public void Entry()
+    {
+        //ここにこの画面に移動した時にここを呼び出す。
     }
 
     // private void HandlePurchase(string itemId, int quantity)

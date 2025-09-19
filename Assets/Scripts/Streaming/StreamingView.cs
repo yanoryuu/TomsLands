@@ -80,9 +80,4 @@ public class StreamingView : MonoBehaviour
         selectedItemId = itemId;
         focusedStealthButton.interactable = !string.IsNullOrEmpty(itemId);
     }
-
-    public void ShowStreamingUI()
-    {
-        gameObject.SetActive(true);
-    }
 }

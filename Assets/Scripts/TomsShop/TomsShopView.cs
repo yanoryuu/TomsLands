@@ -19,13 +19,4 @@ public class TomsShopView : MonoBehaviour
         // SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
     }
     
-    public void ShowTomsShopUI()
-    {
-        TomsShopScreen.SetActive(true);
-    }
-
-    public void HideTomsShopUI()
-    {
-        TomsShopScreen.SetActive(false);
-    }
 }

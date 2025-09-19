@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private BattleCharacter battleCharacter;
     [SerializeField] private BattleManager battleManager;
     [SerializeField] private TitleView titleView;
+    [SerializeField] private GamePanelManager gamePanelManager;
 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
@@ -73,7 +74,8 @@ public class GameManager : MonoBehaviour
             endPhaseView,
             tomsShopView,
             battleManager,
-            titleView
+            titleView,
+            gamePanelManager
         );
 
         itemSelectionPresenter = new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel);

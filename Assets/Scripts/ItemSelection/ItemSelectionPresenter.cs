@@ -1,7 +1,7 @@
 using System;
 using R3;
 
-public class ItemSelectionPresenter : IDisposable
+public class ItemSelectionPresenter :IPresenter, IDisposable
 {
     private readonly ItemSelectionModel selectionModel;
     private readonly ItemSelectionView selectionView;
@@ -29,6 +29,11 @@ public class ItemSelectionPresenter : IDisposable
         selectionView.OnCloseRequested
             .Subscribe(_ => selectionView.Hide())
             .AddTo(disposables);
+    }
+
+    public void Entry()
+    {
+        //ここにこの画面に移動した時にここを呼び出す。
     }
 
     public void LoadSelection()

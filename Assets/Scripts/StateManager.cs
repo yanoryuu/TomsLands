@@ -1,5 +1,6 @@
 using R3;
 using System;
+using UnityEngine;
 
 public class StateManager : IDisposable
 {
@@ -14,6 +15,7 @@ public class StateManager : IDisposable
     private readonly BattleManager battleManager;
     private readonly TitleView titleView;
     private readonly CompositeDisposable disposables = new();
+    private readonly GamePanelManager gamePanelManager;
 
     public StateManager(
         ItemPresenter itemPresenter,
@@ -24,7 +26,8 @@ public class StateManager : IDisposable
         EndPhaseView endPhaseView,
         TomsShopView tomsShopView,
         BattleManager battleManager,
-        TitleView titleView
+        TitleView titleView,
+        GamePanelManager gamePanelManager
         )
     {
         this.itemPresenter = itemPresenter;
@@ -37,6 +40,7 @@ public class StateManager : IDisposable
         this.battleManager = battleManager;
         this.titleView = titleView;
         currentPhase = new ReactiveProperty<GamePhase>(GamePhase.Title);
+        this.gamePanelManager = gamePanelManager;
 
         Bind();
     }
@@ -53,25 +57,27 @@ public class StateManager : IDisposable
         switch (phase)
         {
             case GamePhase.Title:
-                titleView.ShowTitleScreen();
+                gamePanelManager.ShowPanel(GamePhase.Title);
+                
                 break;
             case GamePhase.Preparation:
                 itemPresenter.RefreshPrices(GamePhase.Preparation);
-                preparationView.ShowPreparationUI();
+                gamePanelManager.ShowPanel(GamePhase.Preparation);
                 break;
             case GamePhase.StreamingSetting:
+                gamePanelManager.ShowPanel(GamePhase.StreamingSetting);
                 break;
             case GamePhase.Streaming:
                 itemPresenter.RefreshPrices(GamePhase.Streaming);
                 streamingItemPresenter.Initialize();
                 battleManager.BattleStart();
-                streamingView.ShowStreamingUI();
+                gamePanelManager.ShowPanel(GamePhase.Streaming);
                 break;
             case GamePhase.End:
-                endPhaseView.ShowEndPhaseUI();
+                gamePanelManager.ShowPanel(GamePhase.End);
                 break;
             case GamePhase.TomsShop:
-                tomsShopView.ShowTomsShopUI();
+                gamePanelManager.ShowPanel(GamePhase.TomsShop);
                 break;
         }
     }
@@ -79,6 +85,7 @@ public class StateManager : IDisposable
     public void ChangePhase(GamePhase phase)
     {
         currentPhase.Value = phase;
+        Debug.Log($"Phase changed to {phase}");
     }
 
     public void Dispose()

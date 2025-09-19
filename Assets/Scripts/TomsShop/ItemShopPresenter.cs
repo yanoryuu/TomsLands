@@ -2,7 +2,7 @@ using System;
 using R3;
 using UnityEngine;
 
-public class ItemShopPresenter : IDisposable
+public class ItemShopPresenter : IDisposable, IPresenter
 {
     private readonly TomsShopModel tomsShopModel;
     private readonly ItemModel itemModel;
@@ -55,6 +55,11 @@ public class ItemShopPresenter : IDisposable
         //         itemShopView.ToolPanel.SetActive(true);
         //     })
         //     .AddTo(disposables);
+    }
+    
+    public void Entry()
+    {
+        //ここにこの画面に移動した時にここを呼び出す。
     }
 
     private void HandlePurchase(string itemId, int quantity)

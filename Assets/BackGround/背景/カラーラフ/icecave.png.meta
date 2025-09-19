@@ -173,7 +173,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      icecave_0: 7250530828602270911
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

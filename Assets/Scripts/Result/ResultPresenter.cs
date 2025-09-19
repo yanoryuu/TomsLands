@@ -1,16 +1,9 @@
 using UnityEngine;
 
-public class ResultPresenter : MonoBehaviour
+public class ResultPresenter : IPresenter
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public void Entry()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        //ここにこの画面に移動した時にここを呼び出す。
     }
 }

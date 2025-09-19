@@ -22,7 +22,7 @@ public class InfoBrokerModel
         "{0}に興味示してたな。多分装備する",
         "さっき{0}見てたから、きっと装備するよ",
         "{0}の値段聞いてたし、装備する気だと思う",
-        "{0}手に取ってたから、装備する可能性高いね",
+        @"{0}手に取ってたから、装備する可能性高いね",
         "勇者さん、{0}気に入ってたみたい。装備するかも",
         "{0}について質問してたから、装備検討してるね"
     };
@@ -76,7 +76,7 @@ public class InfoBrokerModel
     private readonly List<string> lowConfidenceTemplates = new()
     {
         "でも、確信はないけどね",
-        "ま、予想だけど",
+        @"ま、予想だけど",
         "そんな気がするだけだけど",
         "たぶんだけどね",
         "よくわからないけど、そんな感じ"
@@ -394,7 +394,7 @@ public class InfoBrokerModel
         new DungeonData("dungeon_forgotten_mausoleum", "忘却の霊廟", 20, ItemTypeData.ItemAttribute.Light, 8),
         
         //古代機構城メタリオン
-        new DungeonData("dungeon_metalion", "古代機構城メタリオン", 25, ItemTypeData.ItemAttribute.Water, 10)
+        new DungeonData("dungeon_metalion", @"古代機構城メタリオン", 25, ItemTypeData.ItemAttribute.Water, 10)
     };
     }
 }

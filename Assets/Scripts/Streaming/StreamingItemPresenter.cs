@@ -3,7 +3,7 @@ using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 
-public class StreamingItemPresenter : IDisposable
+public class StreamingItemPresenter : IDisposable , IPresenter
 { 
     private StreamingItemModel   streamingItemModel;
     private StreamingSettingModel streamingSettingModel;
@@ -13,6 +13,11 @@ public class StreamingItemPresenter : IDisposable
     private BattleManager       battleManager;
     private CompositeDisposable  disposables = new CompositeDisposable();
 
+    public void Entry()
+    {
+        //ここにこの画面に移動した時にここを呼び出す。
+    }
+    
     public StreamingItemPresenter(
         StreamingItemModel    streamingItemModel,
         StreamingView         streamingView,
@@ -143,6 +148,7 @@ public class StreamingItemPresenter : IDisposable
             .AddTo(disposables);
         }
     }
+    
 
     public void Dispose()
     {

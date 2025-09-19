@@ -1,7 +1,7 @@
 using System;
 using R3;
 
-public class TomsShopPresenter : IDisposable
+public class TomsShopPresenter : IDisposable, IPresenter
 {
     private readonly TomsShopView tomsShopView;
     private readonly ItemShopView itemShopView;
@@ -9,6 +9,7 @@ public class TomsShopPresenter : IDisposable
     private readonly ItemModel itemModel;
     private readonly TomsShopModel tomsShopModel;
     private readonly CompositeDisposable disposables = new();
+    private readonly CommonView commonView;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -23,8 +24,13 @@ public class TomsShopPresenter : IDisposable
         this.itemSelectionView = itemSelectionView;
         this.itemModel = itemModel;
         this.tomsShopModel = tomsShopModel;
+        this.commonView = commonView;
+        
+        Bind();
+    }
 
-        // 「仕入れ」ボタン
+    private void Bind()
+    {
         tomsShopView.OnPurchaseClicked
             .Subscribe(_ => OpenPurchase())
             .AddTo(disposables);
@@ -61,10 +67,15 @@ public class TomsShopPresenter : IDisposable
             .AddTo(disposables);
         
         tomsShopModel.CurrentTurn.Subscribe(date =>
-        {
-            commonView.UpdateCurrentTurn(date);
-        })
+            {
+                commonView.UpdateCurrentTurn(date);
+            })
             .AddTo(disposables);
+    }
+    
+    public void Entry()
+    {
+        //ここにこの画面に移動した時にここを呼び出す。
     }
 
     private void OpenPurchase()
@@ -75,7 +86,7 @@ public class TomsShopPresenter : IDisposable
         itemShopView.ToolPanel.SetActive(false);
         itemShopView.Show();
         itemSelectionView.Hide();
-        tomsShopView.HideTomsShopUI();
+        // tomsShopView.HideTomsShopUI();
     }
 
     private void OpenSetItem()
@@ -83,20 +94,20 @@ public class TomsShopPresenter : IDisposable
         itemSelectionView.PopulateItemList(itemModel.RuntimeItems);
         itemSelectionView.Show();
         itemShopView.Hide();
-        tomsShopView.HideTomsShopUI();
+        // tomsShopView.HideTomsShopUI();
     }
 
     private void CloseSelectionView()
     {
         itemSelectionView.Hide();
-        tomsShopView.ShowTomsShopUI();
+        // tomsShopView.ShowTomsShopUI();
         itemModel.SaveData();
     }
 
     private void CloseShopView()
     {
         itemShopView.Hide();
-        tomsShopView.ShowTomsShopUI();
+        // tomsShopView.ShowTomsShopUI();
         itemModel.SaveData();
     }
 

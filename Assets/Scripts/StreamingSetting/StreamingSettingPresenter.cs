@@ -1,7 +1,7 @@
 using R3;
 using System;
 using System.Linq;
-public class StreamingSettingPresenter : IDisposable
+public class StreamingSettingPresenter : IDisposable,IPresenter
 {
     private readonly StreamingSettingModel _model;
     private readonly StreamingSettingView  _view;
@@ -42,6 +42,11 @@ public class StreamingSettingPresenter : IDisposable
 
     // StreamingSettingPresenter.cs
 
+    public void Entry()
+    {
+        //ここにこの画面に移動した時にここを呼び出す。
+    }
+    
     private void HandleSelected(string id)
     {
         if (!_model.TryAdd(id)) return;

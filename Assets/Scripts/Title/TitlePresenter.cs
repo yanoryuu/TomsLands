@@ -20,14 +20,12 @@ public class TitlePresenter
         {
             // ロード処理
             stateManager.currentPhase.Value = GamePhase.TomsShop;
-            Debug.Log(stateManager.currentPhase);
         }).AddTo(disposable);
         
         titleView.OnLoadGameRequested.Subscribe(_ =>
         {
             // ロード処理
             stateManager.currentPhase.Value = GamePhase.TomsShop;
-            Debug.Log("Load Game Requested");
         }).AddTo(disposable);
     }
 }
