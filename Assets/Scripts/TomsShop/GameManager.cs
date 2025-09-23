@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private BattleManager battleManager;
     [SerializeField] private TitleView titleView;
     [SerializeField] private GamePanelManager gamePanelManager;
+    [SerializeField] private DungeonRepository dungeonRepository;
 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
@@ -33,16 +34,20 @@ public class GameManager : MonoBehaviour
     private StreamingSettingPresenter streamingSettingPresenter;
     private HeroModel heroModel;
     private TitlePresenter titlePresenter;
+    private DungeonCatalog dungeonCatalog;
 
     private void Awake()
     {
-         // ゲーム開始時にセーブファイルを削除
-         DeleteAllSaveFiles();
+        // ゲーム開始時にセーブファイルを削除
+        DeleteAllSaveFiles();
 
         // マスターItemDataロード
         var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
         itemModel = new ItemModel(masterItems);
         itemModel.LoadData();
+
+        dungeonCatalog = new DungeonCatalog();
+        dungeonRepository.SetCatalog(dungeonCatalog);
 
         // TomsShopModel初期化
         tomsShopModel = new TomsShopModel();

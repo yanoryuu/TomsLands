@@ -91,6 +91,7 @@ public class InfoBrokerModel
         "ŠmM‚µ‚Ä‚é"
     };
 
+    //ƒRƒ“ƒXƒgƒ‰ƒNƒ^
     public InfoBrokerModel(ItemModel itemModel, RuntimeHeroData heroData)
     {
         this.itemModel = itemModel;
@@ -381,20 +382,20 @@ public class InfoBrokerModel
     {
         availableDungeons = new List<DungeonData>
     {
-        //•X–¶‚Ì“´ŒA
-        new DungeonData("dungeon_ice_mist", "•X–¶‚Ì“´ŒA", 8, ItemTypeData.ItemAttribute.Fire, 4),
-        
-        //[—Î‚Ìb—Ñ
-        new DungeonData("dungeon_beast_forest", "[—Î‚Ìb—Ñ", 12, ItemTypeData.ItemAttribute.Fire, 5),
-        
-        // Ü”M‚Ì‰ÎR˜S
-        new DungeonData("dungeon_volcano_prison", "Ü”M‚Ì‰ÎR˜S", 16, ItemTypeData.ItemAttribute.Water, 7),
-        
-        // –Y‹p‚Ì—ì•_
-        new DungeonData("dungeon_forgotten_mausoleum", "–Y‹p‚Ì—ì•_", 20, ItemTypeData.ItemAttribute.Light, 8),
-        
-        //ŒÃ‘ã‹@\éƒƒ^ƒŠƒIƒ“
-        new DungeonData("dungeon_metalion", @"ŒÃ‘ã‹@\éƒƒ^ƒŠƒIƒ“", 25, ItemTypeData.ItemAttribute.Water, 10)
+        // //•X–¶‚Ì“´ŒA
+        // new DungeonData(),
+        //
+        // //[—Î‚Ìb—Ñ
+        // new DungeonData(),
+        //
+        // // Ü”M‚Ì‰ÎR˜S
+        // new DungeonData(),
+        //
+        // // –Y‹p‚Ì—ì•_
+        // new DungeonData(),
+        //
+        // //ŒÃ‘ã‹@\éƒƒ^ƒŠƒIƒ“
+        // new DungeonData()
     };
     }
 }

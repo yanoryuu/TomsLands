@@ -8,6 +8,8 @@ public class WorldStateModel
     //次のダンジョンID
     public ReactiveProperty<int> nextDungeonId{ get; private set; }
     
+    public List<DungeonData> dungeonDates { get; private set; }
+    
     //ダンジョンの順番
     public List<int> dungeonOrder {get; private set;}
     
