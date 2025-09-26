@@ -157,11 +157,11 @@ public class InfoBrokerModel
 
             if (confidence > 0.3f)
             {
-                string messageText = GenerateDungeonMessageText(dungeon.dungeonName, dungeon.dungeonId, confidence);
+                string messageText = GenerateDungeonMessageText(dungeon.dungeonName, dungeon.dungeonName, confidence);
 
                 var message = new InfoMessage(messageText, InfoType.Dungeon, confidence)
                 {
-                    targetDungeonId = dungeon.dungeonId
+                    targetDungeonId = dungeon.dungeonName
                 };
                 messages.Add(message);
             }
@@ -232,13 +232,13 @@ public class InfoBrokerModel
     private bool IsItemEffectiveForDungeon(ItemData item, DungeonData dungeon)
     {
         // 各ダンジョンの弱点属性定義
-        var effectiveAttributes = dungeon.dungeonId switch
+        var effectiveAttributes = dungeon.key switch
         {
-            "dungeon_ice_mist" => new[] { ItemTypeData.ItemAttribute.Fire }, // 氷に火が有効
-            "dungeon_beast_forest" => new[] { ItemTypeData.ItemAttribute.Fire, ItemTypeData.ItemAttribute.Light }, // 木に火、闇に光
-            "dungeon_volcano_prison" => new[] { ItemTypeData.ItemAttribute.Water }, // 火に水が有効
-            "dungeon_forgotten_mausoleum" => new[] { ItemTypeData.ItemAttribute.Light }, // 闇に光が有効
-            "dungeon_metalion" => new[] { ItemTypeData.ItemAttribute.Water, ItemTypeData.ItemAttribute.Earth }, // 機械に水・土が有効
+            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Fire }, // 氷に火が有効
+            DungeonName.DeepGreenBeastForest => new[] { ItemTypeData.ItemAttribute.Fire, ItemTypeData.ItemAttribute.Light }, // 木に火、闇に光
+            DungeonName.ScorchingVolcanoPrison => new[] { ItemTypeData.ItemAttribute.Water }, // 火に水が有効
+            DungeonName.MausoleumOblivion => new[] { ItemTypeData.ItemAttribute.Light }, // 闇に光が有効
+             // => new[] { ItemTypeData.ItemAttribute.Water, ItemTypeData.ItemAttribute.Earth }, // 機械に水・土が有効
             _ => new ItemTypeData.ItemAttribute[] { }
         };
 
@@ -271,13 +271,13 @@ public class InfoBrokerModel
     // ダンジョン固有のリスク評価
     private float CalculateDungeonRiskFactor(DungeonData dungeon)
     {
-        return dungeon.dungeonId switch
+        return dungeon.key switch
         {
-            "dungeon_ice_mist" => 0.9f,        // 極寒ダメージでやや危険
-            "dungeon_beast_forest" => 1.0f,    // 標準的な危険度
-            "dungeon_volcano_prison" => 0.8f,  // マグマダメージで危険
-            "dungeon_forgotten_mausoleum" => 0.7f, // 恐怖状態で非常に危険
-            "dungeon_metalion" => 0.6f,        // 機械トラップで最も危険
+            DungeonName.IceMistCave => 0.9f,        // 極寒ダメージでやや危険
+            DungeonName.DeepGreenBeastForest => 1.0f,    // 標準的な危険度
+            DungeonName.ScorchingVolcanoPrison => 0.8f,  // マグマダメージで危険
+            DungeonName.MausoleumOblivion => 0.7f, // 恐怖状態で非常に危険
+            // "dungeon_metalion" => 0.6f,        // 機械トラップで最も危険
             _ => 1.0f
         };
     }

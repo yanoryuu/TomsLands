@@ -1,15 +1,8 @@
 using UnityEngine;
 
-public class MapModel : MonoBehaviour
+public class MapModel
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
+    public MapModel()
     {
         
     }

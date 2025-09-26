@@ -4,7 +4,7 @@ using System.Collections.Generic;
 [Serializable]
 public class DungeonSaveData
 {
-    public string dungeonId;
+    public string dungeonKey;
     public int currentDungeonLevel;
 }
 

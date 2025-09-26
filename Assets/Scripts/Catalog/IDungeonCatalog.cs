@@ -1,4 +1,4 @@
 public interface IDungeonCatalog
 {
-    DungeonInfoScriptableObj GetDungeon(string dungeonId);
+    DungeonInfoScriptableObj GetDungeon(DungeonName key);
 }

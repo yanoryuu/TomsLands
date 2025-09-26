@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -16,6 +17,12 @@ public class EnemyData : ScriptableObject
 
     [Header("使用スキル")]
     public List<SkillData> skills;
+    
+    [Header("モンスターの説明")]
+    public String description;
+    
+    [Header("ボス")]
+    public bool isBoss = false;
 }
 
 public enum ElementType 

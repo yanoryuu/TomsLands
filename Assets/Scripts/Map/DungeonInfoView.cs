@@ -3,27 +3,43 @@ using UnityEngine;
 using UnityEngine.UI;
 
 using System.Collections.Generic;
+using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class DungeonInfoView : MonoBehaviour
 {
-    [SerializeField] private List<DungeonInfoScriptableObj> dungeonInfoScriptableObjs;
-    
     [SerializeField] private Image dungeonNameImage;
     
     [SerializeField] private GameObject dungeonInfoPanel;
     
+    [SerializeField] private GameObject dungeonMonsterPanelSlot;
+    
     [SerializeField] private TextMeshProUGUI dungeonLevelText;
     [SerializeField] private TextMeshProUGUI dungeonDescriptionText;
     [SerializeField] private TextMeshProUGUI dungeonMonsterText;    
-    [SerializeField] private TextMeshProUGUI dungeonBossText;
     [SerializeField] private TextMeshProUGUI dungeonRewardText;
     
-    public void ShowDungeonInfo(DungeonName dungeonName)
+    [SerializeField] private Button closeButton;
+    
+    //ダンジョンに出現するモンスター表示用パネルの親
+    [SerializeField] private Transform dungeonMonsterBarTransform;
+    
+    //ダンジョンに出現するモンスター表示用パネルをまとめる
+    private List<GameObject> dungeonMonsterPanels = new List<GameObject>();
+    
+    
+    public Subject<Unit> OnCloseRequested { get; private set; } = new();
+    
+    private void Awake()
     {
-        SetDungeonInfo(dungeonName);
+        closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+    }
+    
+    public void ShowDungeonInfo(DungeonData dungeonData)
+    {
+        SetDungeonInfo(dungeonData);
         dungeonInfoPanel.SetActive(true);
     }
 
@@ -32,24 +48,35 @@ public class DungeonInfoView : MonoBehaviour
         dungeonInfoPanel.SetActive(false);
     }
 
-    public void SetDungeonInfo(DungeonName dungeonName)
+    private void SetDungeonInfo(DungeonData　d)
     {
-        int index = (int)dungeonName;
+        if(d==null)return;
+        
+        dungeonNameImage.sprite = d.dungeonImage;
+        dungeonDescriptionText.text = d.dungeonDescription;
+        dungeonLevelText.text = d.currentDungeonLevel.ToString();
+        dungeonRewardText.text = d.rewardGold.ToString();
 
-        if (index < 0 || index >= dungeonInfoScriptableObjs.Count)
+        //すでにある前のモンスターデータを削除
+        if (dungeonMonsterPanels.Count > 0)
         {
-            Debug.LogWarning($"DungeonInfo not found for {dungeonName}");
-            return;
+            foreach (var panel in dungeonMonsterPanels)
+            {
+                Destroy(panel);
+            }
+            dungeonMonsterPanels = new();
         }
-
-        DungeonInfoScriptableObj info = dungeonInfoScriptableObjs[index];
-        if (info != null && info.dungeonImage != null)
+        
+        foreach (var monster in d.dungeonMonsters)
         {
-            dungeonNameImage.sprite = info.dungeonImage;
-        }
-        else
-        {
-            Debug.LogWarning($"Sprite not set for {dungeonName}");
-        }
+            var panel = Instantiate(dungeonMonsterPanelSlot, Vector3.zero, Quaternion.identity,
+                dungeonMonsterBarTransform);
+            
+            panel.transform.localPosition = Vector3.zero;
+            
+            panel.GetComponent<DungeonMonsterSlot>().SetMonsterData(monster);
+            
+            dungeonMonsterPanels.Add(panel);
+        }   
     }
 }

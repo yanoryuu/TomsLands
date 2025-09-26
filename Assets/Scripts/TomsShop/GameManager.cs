@@ -19,7 +19,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TitleView titleView;
     [SerializeField] private GamePanelManager gamePanelManager;
     [SerializeField] private DungeonRepository dungeonRepository;
-
+    [SerializeField] private DungeonInfoView dungeonInfoView;
+    [SerializeField] private MapView mapView;
+ 
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
     private ItemPresenter itemPresenter;
@@ -35,6 +37,8 @@ public class GameManager : MonoBehaviour
     private HeroModel heroModel;
     private TitlePresenter titlePresenter;
     private DungeonCatalog dungeonCatalog;
+    private MapPresenter mapPresenter;
+    private MapModel mapModel;
 
     private void Awake()
     {
@@ -46,9 +50,11 @@ public class GameManager : MonoBehaviour
         itemModel = new ItemModel(masterItems);
         itemModel.LoadData();
 
-        dungeonCatalog = new DungeonCatalog();
+        dungeonCatalog = dungeonRepository.CreateCatalog();
         dungeonRepository.SetCatalog(dungeonCatalog);
 
+        //Model
+        
         // TomsShopModel初期化
         tomsShopModel = new TomsShopModel();
         tomsShopModel.Initialize();
@@ -63,7 +69,11 @@ public class GameManager : MonoBehaviour
         
         heroModel = new HeroModel();
         heroModel.LoadHeroData();
+        
+        mapModel = new MapModel();
 
+        //Prenseter
+        
         // Presenter初期化
         itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
         itemPresenter.BindItemSelectionView(itemSelectionView);
@@ -93,6 +103,8 @@ public class GameManager : MonoBehaviour
             tomsShopModel,
             commonView
         );
+
+        mapPresenter = new MapPresenter(mapModel, mapView, dungeonRepository, dungeonInfoView);
 
         //battleCharacterに勇者のデータを注入
         battleCharacter.HeroData = heroModel.heroData;

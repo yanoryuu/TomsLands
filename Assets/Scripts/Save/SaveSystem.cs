@@ -18,10 +18,10 @@ public static class SaveSystem
         var game = new GameSaveData();
         foreach (var d in runtimeDungeons)
         {
-            if (d == null || string.IsNullOrWhiteSpace(d.dungeonId)) continue;
+            if (d == null || string.IsNullOrWhiteSpace(d.dungeonName)) continue;
             game.dungeons.Add(new DungeonSaveData
             {
-                dungeonId = d.dungeonId,
+                dungeonKey = d.dungeonName,
                 currentDungeonLevel = d.currentDungeonLevel
             });
         }

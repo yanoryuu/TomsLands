@@ -9,7 +9,7 @@ public class DungeonInfoScriptableObj : ScriptableObject
     // ----------------------
     [Header("基本情報")]
     [Tooltip("ダンジョンを一意に識別するID（セーブやDB用）")]
-    public string dungeonId;
+    public DungeonName key;
 
     [Tooltip("ダンジョン名（表示用）")]
     public string dungeonName;
@@ -67,4 +67,11 @@ public class DungeonInfoScriptableObj : ScriptableObject
     [Header("進行状況")]
     [Tooltip("現在のダンジョンレベル（周回や進行度で変化）")]
     public int currentDungeonLevel;
+    
+    // ----------------------
+    // 魔王軍が勝った時の報酬
+    // ----------------------
+    [Header("魔王軍勝利時の報酬")]
+    [Tooltip("魔王軍勝利時の報酬(プレイヤーの支援によって増減")]
+    public int rewardGold;
 }

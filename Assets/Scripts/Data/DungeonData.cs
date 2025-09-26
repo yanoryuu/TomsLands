@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -5,7 +6,7 @@ using UnityEngine;
 public class DungeonData
 {
     // ---- 基本情報 ----
-    public string dungeonId;
+    public DungeonName key;
     public string dungeonName;
 
     // ---- 表示用 ----
@@ -26,13 +27,14 @@ public class DungeonData
 
     // ---- 進行状況 ----
     public int currentDungeonLevel;
+    public int rewardGold;
 
     /// <summary>
     /// ScriptableObject から全データを注入
     /// </summary>
     public DungeonData(DungeonInfoScriptableObj so)
     {
-        dungeonId          = so.dungeonId;
+        key          = so.key;
         dungeonName        = so.dungeonName;
         dungeonDescription = so.dungeonDescription;
         dungeonImage       = so.dungeonImage;
@@ -47,26 +49,31 @@ public class DungeonData
 
         // デフォルトの進行値はSO準拠のみ
         currentDungeonLevel = so.currentDungeonLevel;
+        rewardGold          = so.rewardGold;
     }
     
-    public DungeonSaveData ToSave() => new DungeonSaveData
-    {
-        dungeonId = dungeonId,
+    public DungeonSaveData ToSave() => new DungeonSaveData {
+        dungeonKey = key.ToString(),
         currentDungeonLevel = currentDungeonLevel
     };
 
+
     public static DungeonData FromSave(DungeonSaveData save, IDungeonCatalog catalog)
     {
-        var so = catalog.GetDungeon(save.dungeonId);
-        if (so == null)
+        if (!Enum.TryParse<DungeonName>(save.dungeonKey, out var key))
         {
-            Debug.LogError($"Dungeon SO not found for id: {save.dungeonId}");
+            Debug.LogError($"Unknown dungeon key in save: {save.dungeonKey}");
             return null;
         }
-
-        var data = new DungeonData(so);
-        data.currentDungeonLevel = save.currentDungeonLevel; // 可変なのはここだけ反映
-        return data;
+        var so = catalog.GetDungeon(key);
+        if (so == null)
+        {
+            Debug.LogError($"SO not found for key: {key}");
+            return null;
+        }
+        var d = new DungeonData(so);
+        d.currentDungeonLevel = save.currentDungeonLevel;
+        return d;
     }
 }
 
