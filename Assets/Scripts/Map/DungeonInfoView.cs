@@ -18,7 +18,6 @@ public class DungeonInfoView : MonoBehaviour
     
     [SerializeField] private TextMeshProUGUI dungeonLevelText;
     [SerializeField] private TextMeshProUGUI dungeonDescriptionText;
-    [SerializeField] private TextMeshProUGUI dungeonMonsterText;    
     [SerializeField] private TextMeshProUGUI dungeonRewardText;
     
     [SerializeField] private Button closeButton;
