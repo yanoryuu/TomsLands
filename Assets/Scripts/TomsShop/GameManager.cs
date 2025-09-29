@@ -104,7 +104,7 @@ public class GameManager : MonoBehaviour
             commonView
         );
 
-        mapPresenter = new MapPresenter(mapModel, mapView, dungeonRepository, dungeonInfoView);
+        mapPresenter = new MapPresenter(mapModel, mapView, dungeonRepository, dungeonInfoView, stateManager);
 
         //battleCharacterに勇者のデータを注入
         battleCharacter.HeroData = heroModel.heroData;

@@ -19,13 +19,13 @@ public class TitlePresenter
         titleView.OnNewGameRequested.Subscribe(_ =>
         {
             // ロード処理
-            stateManager.currentPhase.Value = GamePhase.TomsShop;
+            stateManager.ChangePhase(GamePhase.Preparation);
         }).AddTo(disposable);
         
         titleView.OnLoadGameRequested.Subscribe(_ =>
         {
             // ロード処理
-            stateManager.currentPhase.Value = GamePhase.TomsShop;
+            stateManager.ChangePhase(GamePhase.TomsShop);
         }).AddTo(disposable);
     }
 }

@@ -28,6 +28,7 @@ public class DungeonData
     // ---- 進行状況 ----
     public int currentDungeonLevel;
     public int rewardGold;
+    public DungeonStatus dungeonStatus;
 
     /// <summary>
     /// ScriptableObject から全データを注入
@@ -50,6 +51,8 @@ public class DungeonData
         // デフォルトの進行値はSO準拠のみ
         currentDungeonLevel = so.currentDungeonLevel;
         rewardGold          = so.rewardGold;
+        
+        dungeonStatus = so.dungeonStatus;
     }
     
     public DungeonSaveData ToSave() => new DungeonSaveData {
@@ -77,6 +80,7 @@ public class DungeonData
     }
 }
 
+[Serializable]
 public enum DungeonName
 {
     GreenRest,
@@ -89,4 +93,13 @@ public enum DungeonName
     DeepGreenBeastForest,
     AncientMechanicalCastle,
     DemonKingCastle
+}
+
+[Serializable]
+public enum DungeonStatus
+{
+    None,
+    Clear,
+    Fail,
+    Still
 }
