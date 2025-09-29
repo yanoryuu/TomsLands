@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class MapView : MonoBehaviour
 {
+    [Header("ダンジョン")]
     [SerializeField] private Button greenRestButton;
     [SerializeField] private Button frostReachButton;
     [SerializeField] private Button duskHeavenButton;
@@ -15,7 +16,12 @@ public class MapView : MonoBehaviour
     [SerializeField] private Button ancientMechanicalCastle;
     [SerializeField] private Button demonKingsCastle;
     
+    [Header("UI")]
+    [SerializeField] private Button backButton;
+    
     public Subject<DungeonName> OnMapIcon { get; private set;} = new();
+    
+    public Subject<Unit> OnBackRequested { get; private set;} = new();
 
     private void Awake()
     {
@@ -34,5 +40,6 @@ public class MapView : MonoBehaviour
         deepGreenBeastForest.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.DeepGreenBeastForest));
         ancientMechanicalCastle.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.AncientMechanicalCastle));
         demonKingsCastle.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.DemonKingCastle));
+        backButton.onClick.AddListener(() => OnBackRequested.OnNext(Unit.Default));
     }
 }

@@ -8,8 +8,9 @@ public class MapPresenter
     private MapView mapView;
     private DungeonRepository dungeonRepository;
     private DungeonInfoView dungeonInfoView;
+    private StateManager stateManager;
     
-    public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView)
+    public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView,StateManager stateManager)
     {
         disposable = new CompositeDisposable();
         
@@ -17,6 +18,7 @@ public class MapPresenter
         this.mapView = mapView;
         this.dungeonRepository = dungeonRepository;
         this.dungeonInfoView = dungeonInfoView;
+        this.stateManager = stateManager;
         
         Bind();
     }
@@ -34,6 +36,11 @@ public class MapPresenter
             var data = dungeonRepository.GetById(key);
             
             dungeonInfoView.ShowDungeonInfo(data);
+        }).AddTo(disposable);
+
+        mapView.OnBackRequested.Subscribe(_ =>
+        {
+            stateManager.ChangePhase(GamePhase.TomsShop);
         }).AddTo(disposable);
 
     }

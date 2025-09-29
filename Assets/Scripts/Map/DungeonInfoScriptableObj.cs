@@ -74,4 +74,8 @@ public class DungeonInfoScriptableObj : ScriptableObject
     [Header("魔王軍勝利時の報酬")]
     [Tooltip("魔王軍勝利時の報酬(プレイヤーの支援によって増減")]
     public int rewardGold;
+    
+    [Header("ダンジョンの状態(クリア、失敗、未攻略")]
+    [Tooltip("ダンジョンの状態(クリア、失敗、未攻略")]
+    public DungeonStatus dungeonStatus;
 }
