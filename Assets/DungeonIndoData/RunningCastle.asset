@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
   m_Name: RunningCastle
   m_EditorClassIdentifier: 
-  dungeonId: RC
+  key: 8
   dungeonName: "\u53E4\u4EE3\u6A5F\u69CB\u57CE\u30E1\u30BF\u30EA\u30AA\u30F3"
   dungeonDescription: "\u9B54\u738B\u8ECD\u306E\u6280\u8853\u306B\u3088\u3063\u3066\u5EFA\u9020\u3055\u308C\u305F\u92FC\u9244\u306E\u57CE\u585E\u3002\u7121\u6570\u306E\u6B6F\u8ECA\u3068\u6A5F\u95A2\u304C\u7D76\u3048\u305A\u7A3C\u50CD\u3057\u3001\u4E2D\u306B\u6F5C\u3080\u30E2\u30F3\u30B9\u30BF\u30FC\u305F\u3061\u306F\u4FB5\u5165\u8005\u3092\u3059\u3079\u3066\u6392\u9664\u3059\u308B\u3002"
   dungeonImage: {fileID: 0}
@@ -23,3 +23,4 @@ MonoBehaviour:
   dungeonMonsters: []
   dungeonBoss: 
   currentDungeonLevel: 0
+  rewardGold: 0
