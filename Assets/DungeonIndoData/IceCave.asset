@@ -24,3 +24,4 @@ MonoBehaviour:
   dungeonBoss: 
   currentDungeonLevel: 0
   rewardGold: 0
+  dungeonStatus: 0

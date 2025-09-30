@@ -98,7 +98,6 @@ public enum DungeonName
 [Serializable]
 public enum DungeonStatus
 {
-    None,
     Clear,
     Fail,
     Still

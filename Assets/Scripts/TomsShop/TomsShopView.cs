@@ -6,17 +6,34 @@ using UnityEngine.UI;
 public class TomsShopView : MonoBehaviour
 {
     
-    [SerializeField] private Button PurchaseButton;
+    [SerializeField] private Button BlaskSmithButton;
     [SerializeField] private Button SetItemButton;
-    [SerializeField] private GameObject TomsShopScreen;
+    [SerializeField] private Button InfoButton;
+    [SerializeField] private Button ToolButton;
+    [SerializeField] private Button StartShopButton;
     
-    public Subject<Unit> OnPurchaseClicked { get; } = new();
+    //鍛冶屋を開く
+    public Subject<Unit> OnBlacksmithClicked { get; } = new();
+    //商品を陳列
     public Subject<Unit> OnSetItemClicked { get; } = new();
+    //情報屋を開く
+    public Subject<Unit> OnInfoClicked { get; } = new();
+    //道具屋を開く
+    public Subject<Unit> OnToolClicked { get; } = new();
+    //営業開始
+    public Subject<Unit> OnStartShopClicked { get; } = new();
 
     public void Awake()
     {
-        PurchaseButton.onClick.AddListener(() => OnPurchaseClicked.OnNext(Unit.Default));
-        // SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
+        BlaskSmithButton.onClick.AddListener(() => OnBlacksmithClicked.OnNext(Unit.Default));
+        SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
+        InfoButton.onClick.AddListener(() => OnInfoClicked.OnNext(Unit.Default));
+        ToolButton.onClick.AddListener(() => OnToolClicked.OnNext(Unit.Default));
+        StartShopButton.onClick.AddListener(() => OnStartShopClicked.OnNext(Unit.Default));
     }
-    
+
+    public void Initialize()
+    {
+        
+    }
 }

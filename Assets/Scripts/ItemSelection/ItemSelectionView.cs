@@ -10,6 +10,7 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private GameObject itemSelectionSlotPrefab;         // スロットプレハブ
     [SerializeField] private Button confirmButton;                       // 確定ボタン
     [SerializeField] private Button closeButton;
+    [SerializeField] private GameObject itemSelectionPanel;          // アイテム選択パネル
 
     public Subject<Dictionary<string, int>> OnConfirmSelection { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
@@ -22,6 +23,11 @@ public class ItemSelectionView : MonoBehaviour
         confirmButton.onClick.AddListener(OnConfirmButtonClicked);
         
         closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
+    }
+    
+    public void Initialize()
+    {
+        Hide();
     }
 
     public void Show()
