@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,9 +19,7 @@ public class MapView : MonoBehaviour
     
     [Header("UI")]
     [SerializeField] private Button backButton;
-    
     public Subject<DungeonName> OnMapIcon { get; private set;} = new();
-    
     public Subject<Unit> OnBackRequested { get; private set;} = new();
 
     private void Awake()
@@ -41,5 +40,71 @@ public class MapView : MonoBehaviour
         ancientMechanicalCastle.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.AncientMechanicalCastle));
         demonKingsCastle.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.DemonKingCastle));
         backButton.onClick.AddListener(() => OnBackRequested.OnNext(Unit.Default));
+    }
+
+    public void SetDungeonStatus(List<DungeonData> dungeonDates)
+    {
+        foreach (var data in dungeonDates)
+        {
+            switch (data.key) // data.key が DungeonName
+            {
+                case DungeonName.GreenRest:
+                    break;
+
+                case DungeonName.FrostReach:
+                    break;
+
+                case DungeonName.DuskHeaven:
+                    break;
+
+                case DungeonName.CenterCity:
+                    break;
+
+                case DungeonName.MausoleumOblivion:
+                    break;
+
+                case DungeonName.ScorchingVolcanoPrison:
+                    break;
+
+                case DungeonName.IceMistCave:
+                    break;
+
+                case DungeonName.DeepGreenBeastForest:
+                    break;
+
+                case DungeonName.AncientMechanicalCastle:
+                    break;
+
+                case DungeonName.DemonKingCastle:
+                    break;
+
+                default:
+                    // フォールバック（想定外の値）
+                    // TODO: ログやデフォルト表示など
+                    break;
+            }
+
+        }
+    }
+    
+    private void DungeonIcon(GameObject dungeonIcon, DungeonStatus status)
+    {
+        // ここでアイコンの見た目を変更するロジックを実装
+        // 例: クリア済みならチェックマークを表示、未クリアならグレーアウトなど
+        switch (status)
+        {
+            case DungeonStatus.Clear:
+                // クリア済みの見た目に設定
+                break;
+            case DungeonStatus.Fail:
+                // 失敗の見た目に設定
+                break;
+            case DungeonStatus.Still:
+                // 進行中の見た目に設定
+                break;
+            default:
+                // フォールバック（想定外の値）
+                break;
+        }
     }
 }

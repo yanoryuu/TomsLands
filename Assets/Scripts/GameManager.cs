@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviour
     private DungeonCatalog dungeonCatalog;
     private MapPresenter mapPresenter;
     private MapModel mapModel;
+    private CommonPresenter commonPresenter;
 
     private void Awake()
     {
@@ -97,11 +98,11 @@ public class GameManager : MonoBehaviour
 
         tomsShopPresenter = new TomsShopPresenter(
             tomsShopView,
-            itemShopView,
             itemSelectionView,
             itemModel,
             tomsShopModel,
-            commonView
+            commonView,
+            stateManager
         );
 
         mapPresenter = new MapPresenter(mapModel, mapView, dungeonRepository, dungeonInfoView, stateManager);
@@ -115,6 +116,8 @@ public class GameManager : MonoBehaviour
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);
         
         titlePresenter = new TitlePresenter(titleView, stateManager);
+        
+        commonPresenter = new CommonPresenter(commonView, tomsShopModel);
     }
 
     private void OnDestroy()
