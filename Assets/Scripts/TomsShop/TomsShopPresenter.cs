@@ -4,7 +4,7 @@ using R3;
 public class TomsShopPresenter : IDisposable, IPresenter
 {
     private readonly TomsShopView tomsShopView;
-    private readonly ItemSelectionView itemSelectionView;
+    private readonly ItemSelectionPresenter itemSelectionPresenter;
     private readonly ItemModel itemModel;
     private readonly TomsShopModel tomsShopModel;
     private readonly CompositeDisposable disposables = new();
@@ -13,14 +13,14 @@ public class TomsShopPresenter : IDisposable, IPresenter
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
-        ItemSelectionView itemSelectionView,
+        ItemSelectionPresenter itemSelectionPresenter,
         ItemModel itemModel,
         TomsShopModel tomsShopModel,
         CommonView commonView,
         StateManager stateManager)
     {
         this.tomsShopView = tomsShopView;
-        this.itemSelectionView = itemSelectionView;
+        this.itemSelectionPresenter = itemSelectionPresenter;
         this.itemModel = itemModel;
         this.tomsShopModel = tomsShopModel;
         this.commonView = commonView;
@@ -49,20 +49,6 @@ public class TomsShopPresenter : IDisposable, IPresenter
         tomsShopView.OnSetItemClicked
             .Subscribe(_ => OpenSelectionPanel())
             .AddTo(disposables);
-
-        // 陳列設定確定
-        itemSelectionView.OnConfirmSelection
-            .Subscribe(selectedItems =>
-            {
-                itemModel.CreateItemListForDisplay(selectedItems);
-            })
-            .AddTo(disposables);
-
-        // 閉じるボタン系
-        itemSelectionView.OnCloseRequested
-            .Subscribe(_ => CloseSelectionPanel())
-            .AddTo(disposables);
-        
     }
     
     public void Entry()
@@ -76,21 +62,14 @@ public class TomsShopPresenter : IDisposable, IPresenter
     private void Initialize()
     {
         tomsShopView.Initialize();
-        itemSelectionView.Initialize();
+        tomsShopModel.Initialize();
+        itemSelectionPresenter.Initialize();
     }
 
     //陳列画面を表示
     private void OpenSelectionPanel()
     {
-        itemSelectionView.PopulateItemList(itemModel.RuntimeItems);
-        itemSelectionView.Show();
-    }
-
-    //陳列画面を非表示、保存
-    private void CloseSelectionPanel()
-    {
-        itemSelectionView.Hide();
-        itemModel.SaveData();
+        itemSelectionPresenter.OnOpenSelectionPanel();
     }
 
     public void Dispose()

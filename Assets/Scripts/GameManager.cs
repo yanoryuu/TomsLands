@@ -24,7 +24,6 @@ public class GameManager : MonoBehaviour
  
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
-    private ItemPresenter itemPresenter;
     private ItemShopPresenter itemShopPresenter;
     private StateManager stateManager;
     private TomsShopPresenter tomsShopPresenter;
@@ -74,15 +73,10 @@ public class GameManager : MonoBehaviour
         mapModel = new MapModel();
 
         //Prenseter
-        
-        // Presenter初期化
-        itemPresenter = new ItemPresenter(itemModel, itemShopView, tomsShopView, tomsShopModel);
-        itemPresenter.BindItemSelectionView(itemSelectionView);
 
         itemShopPresenter = new ItemShopPresenter(tomsShopModel, itemModel, itemShopView);
 
         stateManager = new StateManager(
-            itemPresenter,
             streamingItemPresenter,
             itemShopView,
             preparationView,
@@ -94,11 +88,12 @@ public class GameManager : MonoBehaviour
             gamePanelManager
         );
 
-        itemSelectionPresenter = new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel);
+        itemSelectionPresenter =
+            new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel, tomsShopModel);
 
         tomsShopPresenter = new TomsShopPresenter(
             tomsShopView,
-            itemSelectionView,
+            itemSelectionPresenter,
             itemModel,
             tomsShopModel,
             commonView,
@@ -124,7 +119,6 @@ public class GameManager : MonoBehaviour
     {
         stateManager?.Dispose();
         tomsShopPresenter?.Dispose();
-        itemPresenter?.Dispose();
     }
 
     private void OnApplicationQuit()

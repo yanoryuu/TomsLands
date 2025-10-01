@@ -7,7 +7,6 @@ public class StateManager : IDisposable
     public ReactiveProperty<GamePhase> CurrentPhase { get; private set; }
 
     // --- Dependencies (null 許容: 未実装の画面は後で差し替え可能) ---
-    private readonly ItemPresenter itemPresenter;
     private readonly StreamingItemPresenter streamingItemPresenter;
     private readonly ItemShopView itemShopView;
     private readonly PreparationView preparationView;
@@ -25,7 +24,6 @@ public class StateManager : IDisposable
         = new System.Collections.Generic.Dictionary<GamePhase, Action>();
 
     public StateManager(
-        ItemPresenter itemPresenter,
         StreamingItemPresenter streamingItemPresenter,
         ItemShopView itemShopView,
         PreparationView preparationView,
@@ -37,7 +35,6 @@ public class StateManager : IDisposable
         GamePanelManager gamePanelManager
     )
     {
-        this.itemPresenter = itemPresenter;
         this.streamingItemPresenter = streamingItemPresenter;
         this.itemShopView = itemShopView;
         this.preparationView = preparationView;
@@ -65,7 +62,6 @@ public class StateManager : IDisposable
         onEnter[GamePhase.Preparation] = () =>
         {
             // 価格更新や在庫反映など
-            itemPresenter?.RefreshPrices(GamePhase.Preparation);
             // 例: preparationView.Initialize();
         };
 
@@ -101,8 +97,6 @@ public class StateManager : IDisposable
 
         onEnter[GamePhase.Streaming] = () =>
         {
-            // 配信開始時の各種初期化
-            itemPresenter?.RefreshPrices(GamePhase.Streaming);
             streamingItemPresenter?.Initialize();
             battleManager?.BattleStart();
             // streamingView?.Begin();

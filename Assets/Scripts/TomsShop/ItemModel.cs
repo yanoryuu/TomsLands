@@ -11,8 +11,6 @@ public class ItemModel
     public readonly List<ItemData> masterItems;
 
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
-    
-    public List<RuntimeItemData> DisplayItemList { get; private set; } = new();
 
     public ItemModel(List<ItemData> masterItems)
     {
@@ -52,43 +50,6 @@ public class ItemModel
         }
     }
 
-    public List<RuntimeItemData> CreateItemListForDisplay(Dictionary<string, int> selectedItems)
-    {
-        var list = new List<RuntimeItemData>();
-        foreach (var kvp in selectedItems)
-        {
-            var runtime = GetRuntimeItem(kvp.Key);
-            if (runtime != null)
-            {
-                int assignStock = Mathf.Min(runtime.Stock.Value, kvp.Value);
-                runtime.Stock.Value -= assignStock;
-
-                var newItem = new RuntimeItemData(
-                    runtime.ItemId,
-                    runtime.CurrentPrice.Value,
-                    runtime.MaxStock.Value,
-                    assignStock,
-                    runtime.ItemIcon,
-                    runtime.ItemType,
-                    runtime.ItemAttribute,
-                    runtime.RequiredLevel.Value,
-                    runtime.Demand.Value
-                );
-                list.Add(newItem);
-            }
-            else
-            {
-                Debug.LogWarning($"Item not found in RuntimeItems: {kvp.Key}");
-            }
-        }
-        return list;
-    }
-
-    public void SetDisplayItemList(List<RuntimeItemData> runtimeItems)
-    {
-        DisplayItemList = runtimeItems;
-    }
-
     public void UpdateItemPrices(GamePhase phase)
     {
         foreach (var runtime in RuntimeItems)
@@ -103,7 +64,8 @@ public class ItemModel
             };
 
             float demandBonus = 1.0f + (runtime.Demand.Value * 0.2f);
-            runtime.CurrentPrice.Value = Mathf.RoundToInt(master.basePrice * baseMultiplier * demandBonus);
+            
+            runtime.UpdatePrice(Mathf.RoundToInt(master.basePrice * baseMultiplier * demandBonus));
 
             runtime.UpdatePopularity();
         }
@@ -155,12 +117,7 @@ public class ItemModel
         }
     }
 
-    public void ResetPurchasedFlags()
-    {
-        foreach (var runtime in RuntimeItems)
-            runtime.PurchasedThisTurn = false;
-    }
-
+    //セーブ
     public void SaveData()
     {
         var dataList = new RuntimeItemDataList(
@@ -171,6 +128,7 @@ public class ItemModel
         Debug.Log("Item data saved.");
     }
 
+    //ここでロード
     public void LoadData()
     {
         string path = Application.persistentDataPath + "/itemData.json";
@@ -190,6 +148,7 @@ public class ItemModel
         Debug.Log("Item data loaded.");
     }
 
+    //初期データ
     public void InitializeRuntimeItemsFromMaster()
     {
         RuntimeItems = masterItems
@@ -198,11 +157,13 @@ public class ItemModel
                 master.basePrice,
                 master.maxStock,
                 master.initialStock,
+                master.initialDisplayStock,
                 master.itemIcon,
                 master.itemType,
                 master.itemAttribute,
                 master.requiredLevel,
-                Random.Range(0.3f, 0.7f)
+                Random.Range(0.3f, 0.7f),
+                master.description
             ))
             .ToList();
 
@@ -212,7 +173,8 @@ public class ItemModel
         }
         Debug.Log("Runtime items initialized from master.");
     }
-
+    
+    //マスターからスプライトデータを収集
     private Sprite SearchSpriteFromMaster(string itemId)
     {
         var master = GetMasterItem(itemId);
@@ -222,13 +184,30 @@ public class ItemModel
         return null;
     }
 
-    public List<RuntimeItemData> CreateItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype ,int currentLevel)
+    //ランタイムを作成(タイプごとに選出してくれます)
+    public List<RuntimeItemData> PickItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype ,int currentLevel)
     {
         List<RuntimeItemData> list = new List<RuntimeItemData>();
         foreach (var runtimeItem in runtimeItems)
         {
             if (runtimeItem.ItemType == itemtype && 
                 runtimeItem.RequiredLevel.Value <= currentLevel)
+            {
+                list.Add(runtimeItem);
+                Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
+            }
+        }
+        
+        return list;
+    }
+    
+    //所持数のアイテムの数で選出
+    public List<RuntimeItemData> PickItemRuntimeListForStock(List<RuntimeItemData> runtimeItems　,int minStock=0 ,int maxStock=99)
+    {
+        List<RuntimeItemData> list = new List<RuntimeItemData>();
+        foreach (var runtimeItem in runtimeItems)
+        {
+            if (runtimeItem.Stock.Value >= minStock && runtimeItem.Stock.Value <= maxStock)
             {
                 list.Add(runtimeItem);
                 Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
