@@ -37,6 +37,11 @@ public class BattleManager : MonoBehaviour
     public Subject<(string armor,string weapon)> OnWin = new Subject<(string armor, string weapon)>();
     public Subject<(string armor,string weapon)> OnDefeat = new Subject<(string armor, string weapon)>();
 
+    private void Start()
+    {
+        BattleStart();
+    }
+
     public async void BattleStart()
     {
         if (testStageData != null)
@@ -225,6 +230,11 @@ public class BattleManager : MonoBehaviour
 
     private async UniTask DefeatPhase(CancellationToken token)
     {
+        if (hero == null) { Debug.LogError("★エラー調査: hero が null でした！"); return; }
+        if (hero.HeroData == null) { Debug.LogError("★エラー調査: hero.HeroData が null でした！"); return; }
+        if (hero.HeroData.armorId == null) { Debug.LogError("★エラー調査: hero.HeroData.armorId が null でした！"); return; }
+        if (hero.HeroData.weaponId == null) { Debug.LogError("★エラー調査: hero.HeroData.weaponId が null でした！"); return; }
+
         if (battleEnded.Value) return;
         battleEnded.Value = true;
         OnDefeat.OnNext((hero.HeroData.armorId.Value, hero.HeroData.weaponId.Value));
