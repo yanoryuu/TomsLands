@@ -1,6 +1,6 @@
 using UnityEngine;
 using TMPro;
-using Cysharp.Threading.Tasks; // UniTask を使うために必要
+using Cysharp.Threading.Tasks;
 
 /// <summary>
 /// ダメージ数値を上へフェードアウトさせながら表示し、完了後に自身を破棄します。
