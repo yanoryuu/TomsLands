@@ -5,7 +5,8 @@ using R3;
 
 public class BattleCharacter : MonoBehaviour
 {
-    [Header("キャラクター種別")] public bool isHero { get; private set; } = false;
+    [Header("キャラクター種別")] 
+    [SerializeField] private bool isHero = false;
 
     // --- イベント定義 ---
     public event Action<int, int,BattleCharacter> OnHpChanged;
