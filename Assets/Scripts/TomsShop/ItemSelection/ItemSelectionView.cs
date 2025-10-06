@@ -15,6 +15,10 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private Button weaponPanelButton;
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
     [SerializeField] private Image itemIcon;
+
+    [SerializeField] private GameObject weaponTab;
+    [SerializeField] private GameObject armorTab;
+    [SerializeField] private GameObject toolTab;
     public Subject<Unit> OnCloseRequested { get; } = new();
     private readonly List<GameObject> activeSlots = new();
     public Subject<Unit> OnArmorPanelRequested { get; private set; } = new();
@@ -40,12 +44,12 @@ public class ItemSelectionView : MonoBehaviour
 
     public void Show()
     {
-        gameObject.SetActive(true);
+        itemSelectionPanel.SetActive(true);
     }
 
     public void Hide()
     {
-        gameObject.SetActive(false);
+        itemSelectionPanel.SetActive(false);
     }
 
     /// <summary>
@@ -77,5 +81,21 @@ public class ItemSelectionView : MonoBehaviour
             activeSlots.Add(slotObj);
         }
         return slots;
+    }
+
+    public void SortItemTab(ItemTypeData.ItemType type)
+    {
+        switch (type)
+        {
+            case ItemTypeData.ItemType.Weapon:
+                weaponTab.transform.SetAsLastSibling();
+                break;
+            case ItemTypeData.ItemType.Armor:
+                armorTab.transform.SetAsLastSibling();
+                break;
+            case ItemTypeData.ItemType.Tool:
+                toolTab.transform.SetAsLastSibling();
+                break;
+        }
     }
 }

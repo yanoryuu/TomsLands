@@ -22,6 +22,6 @@ MonoBehaviour:
   requiredAttribute: 0
   dungeonMonsters: []
   dungeonBoss: 
-  currentDungeonLevel: 0
+  currentDungeonLevel: 1
   rewardGold: 0
   dungeonStatus: 2

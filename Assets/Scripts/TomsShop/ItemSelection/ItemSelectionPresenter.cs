@@ -17,13 +17,13 @@ public class ItemSelectionPresenter :IDisposable
         this.selectionView = selectionView;
         this.itemModel = itemModel;
         this.tomsShopModel = tomsShopModel;
+        Bind();
     }
 
     public void OnOpenSelectionPanel()
     {
         selectionView.Show();
         SetRuntimeItems();
-        Bind();
     }
 
     //画面を閉じるとき
@@ -49,7 +49,8 @@ public class ItemSelectionPresenter :IDisposable
         selectionView.OnArmorPanelRequested
             .Subscribe(_ =>
             {
-                ChangeSelectionPanel(selectionModel.AarmorRuntimeItems);
+                ChangeSelectionPanel(selectionModel.AarmorRuntimeItems , ItemTypeData.ItemType.Armor);
+                
             })
             .AddTo(disposables);
         
@@ -57,12 +58,12 @@ public class ItemSelectionPresenter :IDisposable
         selectionView.OnWeaponPanelRequested
             .Subscribe(_ =>
             {
-                ChangeSelectionPanel(selectionModel.WeaponRuntimeItems);
+                ChangeSelectionPanel(selectionModel.WeaponRuntimeItems,ItemTypeData.ItemType.Weapon);
             })
             .AddTo(disposables);
     }
 
-    private void ChangeSelectionPanel(List<RuntimeItemData> items)
+    private void ChangeSelectionPanel(List<RuntimeItemData> items,ItemTypeData.ItemType itemType)
     {
         var itemSlots = selectionView.PopulateItemList(items);
         
@@ -119,6 +120,8 @@ public class ItemSelectionPresenter :IDisposable
                 })
                 .AddTo(disposables);
         }
+        
+        selectionView.SortItemTab(itemType);
     }
 
     private void SetRuntimeItems()
@@ -132,6 +135,8 @@ public class ItemSelectionPresenter :IDisposable
             tomsShopModel.BlacksmithLevel.Value);
         
         selectionModel.SetRuntimeItems(armorRuntimeItems,weaponRuntimeItems);
+        
+        ChangeSelectionPanel(weaponRuntimeItems,ItemTypeData.ItemType.Weapon);
     }
 
     public void Dispose()

@@ -49,6 +49,11 @@ public class TomsShopPresenter : IDisposable, IPresenter
         tomsShopView.OnSetItemClicked
             .Subscribe(_ => OpenSelectionPanel())
             .AddTo(disposables);
+        
+        //　マップボタン
+        tomsShopView.OnMapClicked
+            .Subscribe(_ => stateManager.ChangePhase(GamePhase.Map))
+            .AddTo(disposables);
     }
     
     public void Entry()
