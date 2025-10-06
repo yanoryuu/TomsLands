@@ -26,7 +26,7 @@ public class ItemShopPresenter : IDisposable, IPresenter
         itemShopView.OnWeaponPanelRequested
             .Subscribe(tuple =>
             {
-                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithWeaponParent);
+                itemShopView.PopulateItemList(itemModel.PickItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Weapon,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithWeaponParent);
                 // Debug.Log(itemModel.WeaponItem.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(true);
                 itemShopView.BlackSmithArmorPanel.SetActive(false);
@@ -37,7 +37,7 @@ public class ItemShopPresenter : IDisposable, IPresenter
         itemShopView.OnArmorPanelRequested
             .Subscribe(_ =>
             {
-                itemShopView.PopulateItemList(itemModel.CreateItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Armor,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithArmorParent);
+                itemShopView.PopulateItemList(itemModel.PickItemRuntimeList(itemModel.RuntimeItems,ItemTypeData.ItemType.Armor,tomsShopModel.BlacksmithLevel.Value),itemShopView.BlackSmithArmorParent);
                 // Debug.Log(itemModel.ArmorItems.Count);
                 itemShopView.BlackSmithWeaponPanel.SetActive(false);
                 itemShopView.BlackSmithArmorPanel.SetActive(true);

@@ -14,6 +14,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject infoBrokerPanel;
     [SerializeField] private GameObject endPhasePanel;
     [SerializeField] private GameObject streamingResultPanel;
+    [SerializeField] private GameObject commonPanel;
     
     
     public void ShowPanel(GamePhase gamePhase)
@@ -31,6 +32,7 @@ public class GamePanelManager : MonoBehaviour
         endPhasePanel.SetActive(false);
         preparationPanel.SetActive(false);
         streamingResultPanel.SetActive(false);
+        commonPanel.SetActive(false);
         
         switch (gamePhase)
         {
@@ -45,18 +47,25 @@ public class GamePanelManager : MonoBehaviour
             //トムの店ここから色々な画面へ遷移
             case GamePhase.TomsShop:
                 tomsShopPanel.SetActive(true);
+                commonPanel.SetActive(true);
                 break;
             //鍛冶屋武器を仕入れる
             case GamePhase.BlackSmith:
                 blackSmithPanel.SetActive(true);
+                commonPanel.SetActive(true);
                 break;
             //道具屋で道具を仕入れる
             case GamePhase.ToolShop:
                 toolShopPanel.SetActive(true);
+                commonPanel.SetActive(true);
                 break;
             //情報屋
             case GamePhase.InfoBroker:
                 infoBrokerPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case GamePhase.Map:
+                mapPanel.SetActive(true);
                 break;
             //配信(勇者がダンジョンの潜りながらリアルタイムで売買
             case GamePhase.Streaming:
