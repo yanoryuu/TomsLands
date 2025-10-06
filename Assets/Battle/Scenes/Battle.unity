@@ -579,7 +579,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_TargetDisplay: 0
 --- !u!1 &255296753
 GameObject:
@@ -622,6 +622,8 @@ GameObject:
   m_Component:
   - component: {fileID: 268228821}
   - component: {fileID: 268228820}
+  - component: {fileID: 268228822}
+  - component: {fileID: 268228823}
   m_Layer: 0
   m_Name: BattleManager
   m_TagString: Untagged
@@ -666,6 +668,32 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &268228822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 268228819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50e25a65906f05247be82ee4d0aeb2df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _dialogPrefab: {fileID: 8637338896541858572, guid: de24388786f13ed4ea27260dc3d1b2bc, type: 3}
+  _canvasTransform: {fileID: 1572025365}
+--- !u!114 &268228823
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 268228819}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7c68c1b98444848bc0c8ec16f67b6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &444309281
 GameObject:
   m_ObjectHideFlags: 0
@@ -723,7 +751,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: aaaaaaaaa
+  m_text: "\u3042\u3042\u3042\u3042\u3042\u3042\u3042"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b33a3b48dac304369957d24a2d4f7c61, type: 2}
   m_sharedMaterial: {fileID: 2947449917503803492, guid: b33a3b48dac304369957d24a2d4f7c61, type: 2}
@@ -750,8 +778,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -932,7 +960,6 @@ GameObject:
   m_Component:
   - component: {fileID: 598750670}
   - component: {fileID: 598750671}
-  - component: {fileID: 598750672}
   m_Layer: 5
   m_Name: SpeechParent
   m_TagString: Untagged
@@ -976,18 +1003,6 @@ MonoBehaviour:
   speechBubbles:
   - {fileID: 179880117}
   - {fileID: 1710505159}
---- !u!114 &598750672
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 598750669}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c7c68c1b98444848bc0c8ec16f67b6f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &797484739
 GameObject:
   m_ObjectHideFlags: 0
@@ -1879,7 +1894,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: -5
+  m_SortingOrder: 0
   m_TargetDisplay: 0
 --- !u!1 &1572890880
 GameObject:
@@ -2053,7 +2068,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   logText: {fileID: 1057862173}
-  maxLogLines: 20
+  maxLogLines: 15
 --- !u!114 &1610135752
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2327,7 +2342,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: aaaaaaaaa
+  m_text: "\u3042\u3042\u3042\u3042\u3042\u3042\u3042\u3042"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: b33a3b48dac304369957d24a2d4f7c61, type: 2}
   m_sharedMaterial: {fileID: 2947449917503803492, guid: b33a3b48dac304369957d24a2d4f7c61, type: 2}
@@ -2354,8 +2369,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 30
+  m_fontSizeBase: 30
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -2766,7 +2781,7 @@ GameObject:
   - component: {fileID: 6730960883751239773}
   - component: {fileID: 8488475720711643806}
   m_Layer: 0
-  m_Name: UICanvas
+  m_Name: HeroDamageCanvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

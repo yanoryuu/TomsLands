@@ -223,7 +223,7 @@ public class BattleManager : MonoBehaviour
     {
         if (battleEnded.Value) return;
         battleEnded.Value = true;
-        OnWin.OnNext((hero.HeroData.armorId.Value, hero.HeroData.weaponId.Value));
+        //OnWin.OnNext((hero.HeroData.armorId.Value, hero.HeroData.weaponId.Value));
         OnLogMessage?.Invoke("★★★★★★ 完全勝利！ ★★★★★★");
         await UniTask.Yield(token);
     }
