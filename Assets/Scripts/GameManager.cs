@@ -6,7 +6,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] private ItemShopView itemShopView;
+    [SerializeField] private BlackSmithView blackSmithView;
     [SerializeField] private PreparationView preparationView;
     [SerializeField] private StreamingView streamingView;
     [SerializeField] private EndPhaseView endPhaseView;
@@ -24,7 +24,8 @@ public class GameManager : MonoBehaviour
  
     private ItemModel itemModel;
     private TomsShopModel tomsShopModel;
-    private ItemShopPresenter itemShopPresenter;
+    private BlackSmithPresenter blackSmithPresenter;
+    private BlackSmithModel blackSmithModel;
     private StateManager stateManager;
     private TomsShopPresenter tomsShopPresenter;
     private ItemSelectionPresenter itemSelectionPresenter;
@@ -71,14 +72,10 @@ public class GameManager : MonoBehaviour
         heroModel.LoadHeroData();
         
         mapModel = new MapModel();
-
-        //Prenseter
-
-        itemShopPresenter = new ItemShopPresenter(tomsShopModel, itemModel, itemShopView);
-
+        
         stateManager = new StateManager(
             streamingItemPresenter,
-            itemShopView,
+            blackSmithView,
             preparationView,
             streamingView,
             endPhaseView,
@@ -87,6 +84,11 @@ public class GameManager : MonoBehaviour
             titleView,
             gamePanelManager
         );
+
+        //Prenseter
+
+        blackSmithPresenter = new BlackSmithPresenter(tomsShopModel, itemModel, blackSmithView, stateManager,blackSmithModel);;
+
 
         itemSelectionPresenter =
             new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel, tomsShopModel);

@@ -8,7 +8,7 @@ public class StateManager : IDisposable
 
     // --- Dependencies (null 許容: 未実装の画面は後で差し替え可能) ---
     private readonly StreamingItemPresenter streamingItemPresenter;
-    private readonly ItemShopView itemShopView;
+    private readonly BlackSmithView itemShopView;
     private readonly PreparationView preparationView;
     private readonly StreamingView streamingView;
     private readonly EndPhaseView endPhaseView;
@@ -25,7 +25,7 @@ public class StateManager : IDisposable
 
     public StateManager(
         StreamingItemPresenter streamingItemPresenter,
-        ItemShopView itemShopView,
+        BlackSmithView itemShopView,
         PreparationView preparationView,
         StreamingView streamingView,
         EndPhaseView endPhaseView,

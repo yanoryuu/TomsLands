@@ -1,7 +1,7 @@
 using R3;
 using UnityEngine;
 
-public class MapPresenter
+public class MapPresenter : IPresenter
 {
     private CompositeDisposable disposable;
     private MapModel mapModel;
@@ -21,6 +21,11 @@ public class MapPresenter
         this.stateManager = stateManager;
         
         Bind();
+    }
+
+    public void Entry()
+    {
+        mapView.SetDungeonStatus(dungeonRepository.availableDungeons);
     }
 
     private void Bind()
