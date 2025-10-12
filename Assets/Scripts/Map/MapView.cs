@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class MapView : MonoBehaviour
 {
@@ -49,33 +50,41 @@ public class MapView : MonoBehaviour
             switch (data.key) // data.key が DungeonName
             {
                 case DungeonName.GreenRest:
+                    SetDungeonIcon(greenRestButton.gameObject, data.dungeonStatus);
                     break;
-
                 case DungeonName.FrostReach:
+                    SetDungeonIcon(frostReachButton.gameObject, data.dungeonStatus);
                     break;
-
                 case DungeonName.DuskHeaven:
+                    SetDungeonIcon(duskHeavenButton.gameObject, data.dungeonStatus);
                     break;
 
                 case DungeonName.CenterCity:
+                    SetDungeonIcon(centerCity.gameObject, data.dungeonStatus);
                     break;
 
                 case DungeonName.MausoleumOblivion:
+                    SetDungeonIcon(mausoleumOblivion.gameObject, data.dungeonStatus);
                     break;
 
                 case DungeonName.ScorchingVolcanoPrison:
+                    SetDungeonIcon(scorchingVolcanoPrison.gameObject, data.dungeonStatus);
                     break;
 
                 case DungeonName.IceMistCave:
+                    SetDungeonIcon(iceMistCave.gameObject, data.dungeonStatus);
                     break;
 
                 case DungeonName.DeepGreenBeastForest:
+                    SetDungeonIcon(deepGreenBeastForest.gameObject, data.dungeonStatus);   ;
                     break;
 
                 case DungeonName.AncientMechanicalCastle:
+                    SetDungeonIcon(ancientMechanicalCastle.gameObject, data.dungeonStatus); 
                     break;
 
                 case DungeonName.DemonKingCastle:
+                    SetDungeonIcon(demonKingsCastle.gameObject, data.dungeonStatus);
                     break;
 
                 default:
@@ -87,10 +96,8 @@ public class MapView : MonoBehaviour
         }
     }
     
-    private void DungeonIcon(GameObject dungeonIcon, DungeonStatus status)
+    private void SetDungeonIcon(GameObject dungeonIcon, DungeonStatus status)
     {
-        // ここでアイコンの見た目を変更するロジックを実装
-        // 例: クリア済みならチェックマークを表示、未クリアならグレーアウトなど
         switch (status)
         {
             case DungeonStatus.Clear:
@@ -101,6 +108,9 @@ public class MapView : MonoBehaviour
                 break;
             case DungeonStatus.Still:
                 // 進行中の見た目に設定
+                dungeonIcon.transform.DOLocalMoveY(dungeonIcon.transform.localPosition.y + 40, 1f)
+                    .SetEase(Ease.OutBack)
+                    .SetLoops(-1, LoopType.Yoyo);
                 break;
             default:
                 // フォールバック（想定外の値）

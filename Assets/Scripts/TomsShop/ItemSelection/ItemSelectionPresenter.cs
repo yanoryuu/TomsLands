@@ -62,6 +62,7 @@ public class ItemSelectionPresenter :IDisposable
             })
             .AddTo(disposables);
     }
+    
 
     private void ChangeSelectionPanel(List<RuntimeItemData> items,ItemTypeData.ItemType itemType)
     {

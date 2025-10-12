@@ -7,18 +7,22 @@ public class ItemShopSlot : MonoBehaviour
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI priceText;
-    [SerializeField] private TextMeshProUGUI stockText;
     [SerializeField] private Button purchaseButton;
-    [SerializeField] private Slider amountSlider;
-    [SerializeField] private TextMeshProUGUI amountText;
-    // [SerializeField] private GameObject popularIcon;
-    // [SerializeField] private Button sellButton;
-    // [SerializeField] private TMP_InputField quantityInput;
+    [SerializeField] private Button minusButton;
+    [SerializeField] private Button pulusButton;
+    [SerializeField] private Button infoButton;
+    [SerializeField] private Slider quantitySlider;
+    [SerializeField] private TextMeshProUGUI quantityText;
+    
+    public string itemId { get; private set; }
+    
+    private int maxQuantity;
 
-    public Subject<int> OnPurchaseClicked { get; } = new();
-    public Subject<int> OnSellClicked { get; } = new();
+    public Subject<string> OnPurchaseClicked { get; } = new();
+    public Subject<int> OnDisplayQuantityChanged { get; } = new();
+    public Subject<string> OnInfoRequested { get; } = new();
+    
 
-    private string itemId;
 
     public void SetItem(string itemId, Sprite icon, int price,int maxStock, int stock, bool isPopular)
     {
@@ -27,58 +31,53 @@ public class ItemShopSlot : MonoBehaviour
         Debug.Log(itemId);
         priceText.text = $"{price} G";
         
-        UpdateMaxStock(maxStock,stock);
+        quantitySlider.onValueChanged.AddListener(v => OnDisplayQuantityChanged.OnNext((int)v));
         
-        // stockText.text = $"在庫: {stock}";
-        // popularIcon.SetActive(isPopular);
-
-        purchaseButton.onClick.AddListener(() =>
+        purchaseButton.onClick.AddListener(() =>OnPurchaseClicked.OnNext(itemId));
+        
+        pulusButton.onClick.AddListener(() =>
         {
-            int quantity = ParseQuantity();
-            Debug.Log($"Item: {itemId}, Quantity: {quantity},Price: {price}");
-            OnPurchaseClicked.OnNext(quantity);
+            OnDisplayQuantityChanged.OnNext(ParseQuantity(1));
         });
         
-        amountText.text = $"{amountSlider.value} amount";
-        
-        amountSlider.onValueChanged.AsObservable()
-            .Subscribe(v=>amountText.text = $"{v} amount"); 
-        
-        // sellButton.onClick.AddListener(() =>
-        // {
-        //     int quantity = ParseQuantity();
-        //     OnSellClicked.OnNext(quantity);
-        // });
-    }
-    
-     public void UpdateStock(int stock)
-     {
-         stockText.text = $"Stock: {stock}";
-     }
-
-    public void UpdatePrice(int price)
-    {
-        priceText.text = $"{price} G";
-    }
-
-    public void UpdateMaxStock(int maxStock,int stock)
-    {
-        amountSlider.maxValue = maxStock - stock;
-    }
-
-
-    /*private int ParseQuantity()
-    {
-        if (int.TryParse(quantityInput.text, out int quantity))
+        minusButton.onClick.AddListener(() =>
         {
-            return Mathf.Max(1, quantity);
-        }
-        return 1;
-    }*/
+            OnDisplayQuantityChanged.OnNext(ParseQuantity(-1));
+        });
+        
+        infoButton.onClick.AddListener(() =>
+        {
+            OnInfoRequested.OnNext(itemId);
+        });
+    }
+    private int ParseQuantity(int changeValue)
+    {
+        if(quantitySlider.value + changeValue < 0|| quantitySlider.value + changeValue > maxQuantity) return (int)quantitySlider.value;
+        
+        return (int)(quantitySlider.value + changeValue);
+    }
+
+    
+    public void SetDisplayQuantity(int quantity)
+    {
+        quantitySlider.value = Mathf.Clamp(quantity, 0, maxQuantity);
+        quantityText.text = quantity.ToString();
+    }
+
+    public void SetMaxDisplayQuantity(int maxQuantity)
+    {
+        quantitySlider.maxValue = maxQuantity;
+        this.maxQuantity = maxQuantity;
+    }
+
+    public void SetPrice(float price)
+    {
+        priceText.text = price.ToString();
+    }
 
     private int ParseQuantity()
     {
-        return (int)amountSlider.value;
+        return (int)quantitySlider.value;
     }
     
 }
