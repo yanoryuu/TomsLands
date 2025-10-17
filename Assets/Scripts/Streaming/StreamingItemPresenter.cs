@@ -9,7 +9,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
     private StreamingSettingModel streamingSettingModel;
     private ItemModel            itemModel;
     private StreamingView        streamingView;
-    private TomsShopModel        tomsShopModel;
+    private TomsModel        tomsModel;
     private BattleManager       battleManager;
     private CompositeDisposable  disposables = new CompositeDisposable();
 
@@ -23,7 +23,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         StreamingView         streamingView,
         ItemModel             itemModel,
         StreamingSettingModel settingModel,
-        TomsShopModel         tomsShopModel,
+        TomsModel         tomsShopModel,
         BattleManager battleManager
         )
     {
@@ -31,7 +31,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         this.streamingView        = streamingView;
         this.itemModel            = itemModel;
         this.streamingSettingModel= settingModel;
-        this.tomsShopModel        = tomsShopModel;
+        this.tomsModel        = tomsShopModel;
         this.battleManager        = battleManager;
         disposables = new CompositeDisposable();
     }
@@ -57,7 +57,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
 
         // 全体ステマ
         streamingView.OnBasicStealthRequested
-            .Subscribe(_ => streamingItemModel.ApplyBasicStealth(tomsShopModel))
+            .Subscribe(_ => streamingItemModel.ApplyBasicStealth(tomsModel))
             .AddTo(disposables);
         
         for(int i = 0; i < streamingItemModel.runtimeStreamingItems.Count; i++)
@@ -98,7 +98,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
                         itemModel.Settlement(item.itemId, soldQuantity);
                 
                         // TomsShopModelに販売処理を反映
-                        tomsShopModel.Settlement(item.price.Value, soldQuantity);
+                        // tomsShopModel.Settlement(item.price.Value, soldQuantity);
                     }
                 }
                 //勝利時に装備していた装備の値段をあげる
@@ -119,7 +119,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
                         itemModel.Settlement(item.itemId, soldQuantity);
                 
                         // TomsShopModelに販売処理を反映
-                        tomsShopModel.Settlement(item.price.Value, soldQuantity);
+                        // tomsShopModel.Settlement(item.price.Value, soldQuantity);
                     }
                 }
                 //敗北時に装備していた装備の値段を下げる

@@ -46,7 +46,7 @@ public class StreamingItemModel
         itemData.isSell.Value = isSell;
     }
 
-    public void ApplyBasicStealth(TomsShopModel shop)
+    public void ApplyBasicStealth(TomsModel shop)
         => stealthMarketingModel.PerformBasic(runtimeStreamingItems, shop);
 
     // public void ApplyFocusedStealth(string itemId, TomsShopModel shop)

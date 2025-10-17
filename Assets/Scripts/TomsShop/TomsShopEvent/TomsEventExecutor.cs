@@ -2,12 +2,12 @@ using UnityEngine;
 
 public class TomsEventExecutor
 {
-    private TomsShopModel player;
+    private TomsModel player;
     private ItemModel itemModel;
     private DarkShopManager darkShopManager;
     private EventFragManager eventFragManager;
 
-    public TomsEventExecutor(TomsShopModel player, ItemModel itemModel, DarkShopManager darkShopManager,EventFragManager eventFragManager)
+    public TomsEventExecutor(TomsModel player, ItemModel itemModel, DarkShopManager darkShopManager,EventFragManager eventFragManager)
     {
         this.player = player;
         this.itemModel = itemModel;

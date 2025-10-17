@@ -9,102 +9,179 @@ public class BlackSmithPresenter : IDisposable, IPresenter
     private readonly ItemModel itemModel;
     private readonly BlackSmithView blackSmithView;
     private readonly StateManager stateManager;
-    private readonly TomsShopModel tomsShopModel;
-    
+    private readonly TomsModel tomsModel;
+
     private readonly CompositeDisposable disposables = new();
-    public BlackSmithPresenter(TomsShopModel tomsShopModel, ItemModel itemModel, BlackSmithView blackSmithView, StateManager stateManager,BlackSmithModel blackSmithModel)
+    private CompositeDisposable panelDisposables = new();
+
+    public BlackSmithPresenter(
+        TomsModel tomsModel,
+        ItemModel itemModel,
+        BlackSmithView blackSmithView,
+        StateManager stateManager,
+        BlackSmithModel blackSmithModel)
     {
         this.blackSmithModel = blackSmithModel;
-        this.tomsShopModel = tomsShopModel;
+        this.tomsModel = tomsModel;
         this.itemModel = itemModel;
         this.blackSmithView = blackSmithView;
         this.stateManager = stateManager;
+        
+        stateManager.RegisterOnEnter(GamePhase.BlackSmith, Entry);
         Bind();
     }
-    
+
     public void Entry()
     {
-        //ここにこの画面に移動した時にここを呼び出す。
+        blackSmithModel.SetRuntimeItems(
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
+        );
+        ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, BlackSmithTab.Weapon);
     }
 
-    public void Bind()
+    private void Bind()
     {
         blackSmithView.OnCloseRequested.Subscribe(_ =>
         {
             stateManager.ChangePhase(GamePhase.TomsShop);
         }).AddTo(disposables);
 
-        blackSmithView.OnWeaponPanelRequested.Subscribe(_ =>
-        {
-            // ChangePurchasePanel();
-        }).AddTo(disposables);
+        blackSmithView.OnChangePanel
+            .Subscribe(type =>
+            {
+                switch (type)
+                {
+                    case BlackSmithTab.Weapon:
+                        ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, type);
+                        break;
+                    case BlackSmithTab.Armor:
+                        ChangePurchasePanel(blackSmithModel.armorRuntimeItems, type);
+                        break;
+                    case BlackSmithTab.Development:
+                        ShowDevelopmentPanel();
+                        break;
+                }
+            })
+            .AddTo(disposables);
     }
 
     private void HandlePurchase(string itemId, int quantity)
     {
-        Debug.Log(itemId);
         var item = itemModel.GetRuntimeItem(itemId);
         int totalPrice = item.CurrentPrice.Value * quantity;
-        if (tomsShopModel.PlayerMoney.Value >= totalPrice)
+        
+        if (tomsModel.PlayerMoney.Value >= totalPrice)
         {
-            tomsShopModel.PlayerMoney.Value -= totalPrice;
+            Debug.Log($"{totalPrice}分のアイテムを購入");
             itemModel.PurchaseItem(itemId, quantity);
+            tomsModel.PurchaseItem(totalPrice);
         }
         else
         {
             Debug.Log("お金が足りません！");
         }
     }
-    
-    private void ChangePurchasePanel(List<RuntimeItemData> items,BlackSmithTab itemType)
+
+    private void ChangePurchasePanel(List<RuntimeItemData> items, BlackSmithTab itemType)
+{
+
+    panelDisposables.Dispose();
+    panelDisposables = new CompositeDisposable();
+
+    var itemSlots = blackSmithView.PopulateItemList(items);
+
+    foreach (var slot in itemSlots)
     {
-        var itemSlots = blackSmithView.PopulateItemList(items);
-        
-        foreach (var slot  in itemSlots)
-        {
-            var itemdata = itemModel.GetRuntimeItem(slot.itemId);
+        var itemdata = itemModel.GetRuntimeItem(slot.itemId);
 
-            //アイテムの情報に保存されているストック情報をuIに反映
-            itemdata.DisplayStock.Subscribe(x =>
-                {
-                    slot.SetDisplayQuantity(x);
-                })
-                .AddTo(disposables);
+        slot.SetItem(
+            itemdata.ItemId,
+            itemdata.ItemIcon,
+            itemdata.CurrentPrice.Value,
+            itemdata.MaxStock.Value,
+            itemdata.Stock.Value,
+            itemdata.IsPopular.Value
+        );
 
-            //99から現在の所持ストックを引いた数が残り買える個数
-            itemdata.Stock.Subscribe(x =>
-                {
-                    slot.SetMaxDisplayQuantity(x);
-                })
-                .AddTo(disposables);
-            
-            //購入の数がUI側で変更されれば変更
-            slot.OnDisplayQuantityChanged.Subscribe(x =>
-                {
-                    
-                })
-                .AddTo(disposables);
-            
-            //アイテムの現在の売値価格
-            itemdata.CurrentPrice.Subscribe(x =>
-                {
-                    slot.SetPrice(x);
-                })
-                .AddTo(disposables);
-            
-            //アイテムの説明を
-            slot.OnInfoRequested.Subscribe(id =>
-                {
-                    blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription);
-                })
-                .AddTo(disposables);
-        }
-        
-        blackSmithView.SortItemTab(itemType);
+        // 残り購入可能数を取得
+        int initialMax = itemdata.RemainToMax();
+
+        // BlackSmithModel内に購入予定数・残りmaxを登録
+        blackSmithModel.SetItemCount(slot.itemId, 0, initialMax);
+
+        // 以下、各種購読（Subscribe）処理が続く ↓
+        blackSmithModel.itemCount[slot.itemId].count
+            .Subscribe(count => slot.SetDisplayQuantity(count))
+            .AddTo(panelDisposables);
+
+        itemdata.Stock
+            .Subscribe(_ =>
+            {
+                int remainMax = itemdata.RemainToMax();
+                blackSmithModel.SetItemCount(
+                    slot.itemId,
+                    Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
+                    remainMax
+                );
+            })
+            .AddTo(panelDisposables);
+
+        itemdata.MaxStock
+            .Subscribe(_ =>
+            {
+                int remainMax = itemdata.RemainToMax();
+                blackSmithModel.SetItemCount(
+                    slot.itemId,
+                    Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
+                    remainMax
+                );
+            })
+            .AddTo(panelDisposables);
+
+        blackSmithModel.itemCount[slot.itemId].maxCount
+            .Subscribe(max => slot.SetMaxDisplayQuantity(max))
+            .AddTo(panelDisposables);
+
+        slot.OnDisplayQuantityChanged
+            .Subscribe(x =>
+            {
+                int remainMax = itemdata.RemainToMax();
+                blackSmithModel.SetItemCount(slot.itemId, x, remainMax);
+            })
+            .AddTo(panelDisposables);
+
+        itemdata.CurrentPrice
+            .Subscribe(price => slot.SetPrice(price))
+            .AddTo(panelDisposables);
+
+        slot.OnInfoRequested
+            .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
+            .AddTo(panelDisposables);
+
+        slot.OnPurchaseClicked
+            .Subscribe(_ =>
+            {
+                int reserved = blackSmithModel.itemCount[slot.itemId].count.Value;
+                int afterRemain = Mathf.Max(0, itemdata.MaxStock.Value - (itemdata.Stock.Value + reserved));
+
+                int quantity = blackSmithModel.PurchaseItem(slot.itemId, afterRemain);
+                HandlePurchase(itemdata.ItemId, quantity);
+            })
+            .AddTo(panelDisposables);
+    }
+
+    blackSmithView.SortItemTab(itemType);
+}
+
+    private void ShowDevelopmentPanel()
+    {
+        blackSmithView.SortItemTab(BlackSmithTab.Development);
     }
 
     public void Dispose()
     {
+        panelDisposables.Dispose();
         disposables.Dispose();
     }
 }

@@ -11,5 +11,6 @@ public enum GamePhase
     ToolShop,
     InfoBroker,
     Setting,
-    StreamingResult
+    StreamingResult,
+    Result
 }

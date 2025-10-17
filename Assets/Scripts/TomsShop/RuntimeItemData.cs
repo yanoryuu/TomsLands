@@ -21,13 +21,24 @@ public class RuntimeItemData
     public ItemTypeData.ItemAttribute ItemAttribute { get; private set; }
     
     public string ItemDescription { get; private set; }
-    public RuntimeItemData(string itemId, int currentPrice,int maxstock, int stock,int displayStock, Sprite icon, ItemTypeData.ItemType itemType,ItemTypeData.ItemAttribute itemAttribute,int requiredLevel, float demand = 0.5f ,string description = "")
+    public RuntimeItemData(
+        string itemId,
+        int currentPrice,
+        int maxStock, 
+        int stock,
+        int displayStock,
+        Sprite icon, 
+        ItemTypeData.ItemType itemType,
+        ItemTypeData.ItemAttribute itemAttribute,
+        int requiredLevel, 
+        float demand = 0.5f ,
+        string description = "")
     {
         ItemId = itemId;
         CurrentPrice = new ReactiveProperty<int>(currentPrice);
         Stock = new ReactiveProperty<int>(stock);
         DisplayStock = new ReactiveProperty<int>(displayStock);
-        MaxStock = new ReactiveProperty<int>(maxstock);
+        MaxStock = new ReactiveProperty<int>(maxStock);
         ItemIcon = icon;
         Demand = new ReactiveProperty<float>(demand);
         IsPopular = new ReactiveProperty<bool>(demand >= 0.8f);
@@ -38,16 +49,21 @@ public class RuntimeItemData
         ItemDescription = description;
     }
 
+    // 保存→復元CTor（Plain→Runtime）
     public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon)
     {
         ItemId = plainData.itemId;
         CurrentPrice = new ReactiveProperty<int>(plainData.currentPrice);
-        Stock = new ReactiveProperty<int>(plainData.stock);
-        DisplayStock = new ReactiveProperty<int>(plainData.displayStock);
-        Demand = new ReactiveProperty<float>(plainData.demand);
-        IsPopular = new ReactiveProperty<bool>(plainData.demand >= 0.8f);
-        ItemIcon = icon;
-        ItemAttribute = plainData.itemAttribute;
+        MaxStock     = new ReactiveProperty<int>(Mathf.Max(0, plainData.maxStock));
+        Stock        = new ReactiveProperty<int>(Mathf.Clamp(plainData.stock, 0, MaxStock.Value));
+        DisplayStock = new ReactiveProperty<int>(Mathf.Max(0, plainData.displayStock)); // 互換
+        Demand       = new ReactiveProperty<float>(Mathf.Clamp01(plainData.demand));
+        IsPopular    = new ReactiveProperty<bool>(plainData.isPopular || Demand.Value >= 0.8f);
+        ItemIcon       = icon;
+        ItemType       = plainData.itemType;
+        ItemAttribute  = plainData.itemAttribute;
+        RequiredLevel  = new ReactiveProperty<int>(Mathf.Max(0, plainData.requiredLevel));
+        IsDisplay      = new ReactiveProperty<bool>(plainData.isDisplay);
         ItemDescription = plainData.description;
     }
 
@@ -63,7 +79,7 @@ public class RuntimeItemData
 
     public void UpdateStock(int stock)
     {
-        Stock.Value = stock;
+        Stock.Value = Mathf.Clamp(stock, 0, MaxStock.Value);
     }
 
     public void UpdateDisplayStock(int stock)
@@ -85,6 +101,9 @@ public class RuntimeItemData
     {
         IsDisplay.Value = isDisplay;
     }
+    
+    // 便利：残り購入可能数（BlackSmithはこれのみでOK）
+    public int RemainToMax() => Mathf.Max(0, MaxStock.Value - Stock.Value);
 
     public RuntimeItemDataPlain ToPlainData()
     {
@@ -110,11 +129,13 @@ public class RuntimeItemDataPlain
     public string itemId;
     public int currentPrice;
     public int stock;
-    public int displayStock;
+    public int maxStock;         // ★ 追加：上限を永続化
+    public int displayStock;     // 互換のため残す（BlackSmithは未使用）
     public float demand;
     public bool isPopular;
     public ItemTypeData.ItemType itemType;
     public ItemTypeData.ItemAttribute itemAttribute;
+    public int requiredLevel;    // ★ 追加：必要Lvを永続化
     public bool isDisplay;
     public string description;
 }

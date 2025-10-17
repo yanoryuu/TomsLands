@@ -11464,7 +11464,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 8898949569490961123, guid: 958407df1b6b74fb89d5e65d07d06797, type: 3}
+  m_Sprite: {fileID: -4065163604099250824, guid: e25260a53e7a143d98d2c767189b9718, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -16908,6 +16908,7 @@ GameObject:
   - component: {fileID: 1551144274}
   - component: {fileID: 1551144273}
   - component: {fileID: 1551144272}
+  - component: {fileID: 1551144275}
   m_Layer: 5
   m_Name: InfoBroker
   m_TagString: Untagged
@@ -17006,6 +17007,24 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &1551144275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1551144270}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899eaa7779beefb458f9d20462d5e1ed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  messageParent: {fileID: 0}
+  messageSlotPrefab: {fileID: 0}
+  closeButton: {fileID: 0}
+  refreshButton: {fileID: 0}
+  brokerNameText: {fileID: 0}
+  greetingText: {fileID: 0}
 --- !u!1 &1557585056
 GameObject:
   m_ObjectHideFlags: 0
@@ -17267,7 +17286,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1587241425
 RectTransform:
   m_ObjectHideFlags: 0
@@ -17351,7 +17370,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 8898949569490961123, guid: 958407df1b6b74fb89d5e65d07d06797, type: 3}
+  m_Sprite: {fileID: -1033954846786358928, guid: d05f36f80c27949db9d631bc193aa1c1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -18696,13 +18715,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 049b97b2073a46a4cb0d2f59068499c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blackSmithView: {fileID: 0}
+  blackSmithView: {fileID: 787651104}
   preparationView: {fileID: 234997436}
   streamingView: {fileID: 1397295508}
   endPhaseView: {fileID: 1623092367}
   tomsShopView: {fileID: 511830820}
   itemSelectionView: {fileID: 511830821}
   streamingSettingView: {fileID: 664819658}
+  infoBrokerView: {fileID: 0}
   commonView: {fileID: 114203534}
   battleCharacter: {fileID: 269408643}
   battleManager: {fileID: 1779197069}

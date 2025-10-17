@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TomsShopView tomsShopView;
     [SerializeField] private ItemSelectionView itemSelectionView;
     [SerializeField] private StreamingSettingView streamingSettingView;
+    // [SerializeField] private InfoBrokerView infoBrokerView;
     [SerializeField] private CommonView commonView;
     [SerializeField] private BattleCharacter battleCharacter;
     [SerializeField] private BattleManager battleManager;
@@ -23,7 +24,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private MapView mapView;
  
     private ItemModel itemModel;
-    private TomsShopModel tomsShopModel;
+    private TomsModel tomsModel;
     private BlackSmithPresenter blackSmithPresenter;
     private BlackSmithModel blackSmithModel;
     private StateManager stateManager;
@@ -34,6 +35,8 @@ public class GameManager : MonoBehaviour
     private StreamingItemPresenter streamingItemPresenter;
     private StreamingSettingModel streamingSettingModel;
     private StreamingSettingPresenter streamingSettingPresenter;
+    // private InfoBrokerPresenter infoBrokerPresenter;
+    // private InfoBrokerModel infoBrokerModel;
     private HeroModel heroModel;
     private TitlePresenter titlePresenter;
     private DungeonCatalog dungeonCatalog;
@@ -57,9 +60,9 @@ public class GameManager : MonoBehaviour
         //Model
         
         // TomsShopModel初期化
-        tomsShopModel = new TomsShopModel();
-        tomsShopModel.Initialize();
-        tomsShopModel.LoadPlayerMoney();
+        tomsModel = new TomsModel();
+        tomsModel.Initialize();
+        tomsModel.LoadPlayerMoney();
         
         
         itemSelectionModel = new ItemSelectionModel();
@@ -73,31 +76,26 @@ public class GameManager : MonoBehaviour
         
         mapModel = new MapModel();
         
+        blackSmithModel = new BlackSmithModel();
+        
+        
         stateManager = new StateManager(
-            streamingItemPresenter,
-            blackSmithView,
-            preparationView,
-            streamingView,
-            endPhaseView,
-            tomsShopView,
-            battleManager,
-            titleView,
             gamePanelManager
         );
 
         //Prenseter
 
-        blackSmithPresenter = new BlackSmithPresenter(tomsShopModel, itemModel, blackSmithView, stateManager,blackSmithModel);;
+        blackSmithPresenter = new BlackSmithPresenter(tomsModel, itemModel, blackSmithView, stateManager,blackSmithModel);;
 
 
         itemSelectionPresenter =
-            new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel, tomsShopModel);
+            new ItemSelectionPresenter(itemSelectionModel, itemSelectionView, itemModel, tomsModel);
 
         tomsShopPresenter = new TomsShopPresenter(
             tomsShopView,
             itemSelectionPresenter,
             itemModel,
-            tomsShopModel,
+            tomsModel,
             commonView,
             stateManager
         );
@@ -107,14 +105,14 @@ public class GameManager : MonoBehaviour
         //battleCharacterに勇者のデータを注入
         battleCharacter.HeroData = heroModel.heroData;
         
-        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsShopModel,battleManager);
+        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsModel,battleManager);
 
         streamingSettingPresenter =
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);
         
         titlePresenter = new TitlePresenter(titleView, stateManager);
         
-        commonPresenter = new CommonPresenter(commonView, tomsShopModel);
+        commonPresenter = new CommonPresenter(commonView, tomsModel);
     }
 
     private void OnDestroy()
@@ -126,7 +124,7 @@ public class GameManager : MonoBehaviour
     private void OnApplicationQuit()
     {
         itemModel.SaveData();
-        tomsShopModel.SavePlayerMoney();
+        tomsModel.SavePlayerMoney();
     }
     
     private void DeleteAllSaveFiles()
@@ -134,7 +132,7 @@ public class GameManager : MonoBehaviour
         string dir = Application.persistentDataPath;
         string[] files = {
             "itemData.json",
-            "tomsShopData.json",
+            "tomsData.json",
             "displayItemData.json",
             "heroData.json",
         };

@@ -22,25 +22,18 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Button specialWeaponButton;
     
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
-
-    public Subject<(string itemId, int quantity)> OnPurchaseRequested { get; } = new();
-    public Subject<Unit> OnCloseRequested { get; } = new();
-    public Subject<Unit> OnWeaponPanelRequested { get; } = new();
-    public Subject<Unit> OnArmorPanelRequested { get; } = new();
-    
-    public Subject<Unit> OnDevelopRequested { get; } = new();
-    
-    public Subject<Unit> OnSpecialRequested { get; } = new();
+    public Subject<Unit> OnCloseRequested { get; private set; } = new();
+    public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
     
     private readonly List<ItemShopSlot> activeSlots = new();
 
     private void Awake()
     {
         closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
-        weaponButton.onClick.AddListener(()=>OnWeaponPanelRequested.OnNext(Unit.Default));
-        armorButton.onClick.AddListener(()=>OnArmorPanelRequested.OnNext(Unit.Default));
-        developButton.onClick.AddListener(() => OnDevelopRequested.OnNext(Unit.Default));
-        specialWeaponButton.onClick.AddListener(() => OnSpecialRequested.OnNext(Unit.Default));
+        weaponButton.onClick.AddListener(()=>OnChangePanel.OnNext(BlackSmithTab.Weapon));
+        armorButton.onClick.AddListener(()=>OnChangePanel.OnNext(BlackSmithTab.Armor));
+        developButton.onClick.AddListener(() => OnChangePanel.OnNext(BlackSmithTab.Development));
+        specialWeaponButton.onClick.AddListener(() => OnChangePanel.OnNext(BlackSmithTab.Special));
     }
     
     /// <summary>
@@ -48,10 +41,10 @@ public class BlackSmithView : MonoBehaviour
     /// </summary>
     public List<ItemShopSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // 既存スロットを削除
-        foreach (var slotObj in activeSlots)
+        foreach (var slot in activeSlots)
         {
-            Destroy(slotObj);
+            if (slot != null)
+                Destroy(slot.gameObject); 
         }
         activeSlots.Clear();
 

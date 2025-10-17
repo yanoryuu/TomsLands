@@ -19,7 +19,6 @@ public class GamePanelManager : MonoBehaviour
     
     public void ShowPanel(GamePhase gamePhase)
     {
-        Debug.Log($"{gamePhase}画面に移動");
         titlePanel.SetActive(false);
         streamingPanel.SetActive(false);
         tomsShopPanel.SetActive(false);

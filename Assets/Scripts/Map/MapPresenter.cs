@@ -20,6 +20,7 @@ public class MapPresenter : IPresenter
         this.dungeonInfoView = dungeonInfoView;
         this.stateManager = stateManager;
         
+        stateManager.RegisterOnEnter(GamePhase.Map,Entry);
         Bind();
     }
 
