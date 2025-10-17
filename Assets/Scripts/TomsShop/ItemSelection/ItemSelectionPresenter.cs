@@ -1,22 +1,21 @@
 using System;
 using System.Collections.Generic;
 using R3;
-using Unity.VisualScripting;
 
 public class ItemSelectionPresenter :IDisposable
 {
     private readonly ItemSelectionModel selectionModel;
     private readonly ItemSelectionView selectionView;
     private readonly ItemModel itemModel;
-    private readonly TomsShopModel tomsShopModel;
+    private readonly TomsModel tomsModel;
     private readonly CompositeDisposable disposables = new();
 
-    public ItemSelectionPresenter(ItemSelectionModel selectionModel, ItemSelectionView selectionView, ItemModel itemModel,TomsShopModel tomsShopModel)
+    public ItemSelectionPresenter(ItemSelectionModel selectionModel, ItemSelectionView selectionView, ItemModel itemModel,TomsModel tomsModel)
     {
         this.selectionModel = selectionModel;
         this.selectionView = selectionView;
         this.itemModel = itemModel;
-        this.tomsShopModel = tomsShopModel;
+        this.tomsModel = tomsModel;
         Bind();
     }
 
@@ -130,10 +129,10 @@ public class ItemSelectionPresenter :IDisposable
         var isStockRuntimeItems = itemModel.PickItemRuntimeListForStock(itemModel.RuntimeItems);
 
         var armorRuntimeItems = itemModel.PickItemRuntimeList(isStockRuntimeItems, ItemTypeData.ItemType.Armor,
-            tomsShopModel.BlacksmithLevel.Value);
+            tomsModel.BlacksmithLevel.Value);
 
         var weaponRuntimeItems = itemModel.PickItemRuntimeList(isStockRuntimeItems, ItemTypeData.ItemType.Weapon,
-            tomsShopModel.BlacksmithLevel.Value);
+            tomsModel.BlacksmithLevel.Value);
         
         selectionModel.SetRuntimeItems(armorRuntimeItems,weaponRuntimeItems);
         

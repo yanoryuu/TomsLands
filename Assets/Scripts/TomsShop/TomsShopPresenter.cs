@@ -6,7 +6,7 @@ public class TomsShopPresenter : IDisposable, IPresenter
     private readonly TomsShopView tomsShopView;
     private readonly ItemSelectionPresenter itemSelectionPresenter;
     private readonly ItemModel itemModel;
-    private readonly TomsShopModel tomsShopModel;
+    private readonly TomsModel tomsShopModel;
     private readonly CompositeDisposable disposables = new();
     private readonly CommonView commonView;
     private readonly StateManager stateManager;
@@ -15,7 +15,7 @@ public class TomsShopPresenter : IDisposable, IPresenter
         TomsShopView tomsShopView,
         ItemSelectionPresenter itemSelectionPresenter,
         ItemModel itemModel,
-        TomsShopModel tomsShopModel,
+        TomsModel tomsShopModel,
         CommonView commonView,
         StateManager stateManager)
     {
@@ -25,6 +25,9 @@ public class TomsShopPresenter : IDisposable, IPresenter
         this.tomsShopModel = tomsShopModel;
         this.commonView = commonView;
         this.stateManager = stateManager;
+        
+        stateManager.RegisterOnEnter(GamePhase.TomsShop,Entry);
+        
         Bind();
     }
 
@@ -60,7 +63,6 @@ public class TomsShopPresenter : IDisposable, IPresenter
     {
         //ここにこの画面に移動した時にここを呼び出す。
         Initialize();
-        
     }
     
     //初期化

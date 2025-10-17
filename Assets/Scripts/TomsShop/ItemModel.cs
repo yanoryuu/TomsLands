@@ -1,10 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using R3;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 public class ItemModel
 {
@@ -187,6 +184,7 @@ public class ItemModel
     //ランタイムを作成(タイプごとに選出してくれます)
     public List<RuntimeItemData> PickItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype ,int currentLevel)
     {
+        Debug.Log($"Itemのストック{runtimeItems}");
         List<RuntimeItemData> list = new List<RuntimeItemData>();
         foreach (var runtimeItem in runtimeItems)
         {
@@ -197,7 +195,6 @@ public class ItemModel
                 Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
             }
         }
-        
         return list;
     }
     

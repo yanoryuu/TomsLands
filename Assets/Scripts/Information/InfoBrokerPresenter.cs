@@ -2,19 +2,31 @@
 using System;
 using R3;
 
-public class InfoBrokerPresenter : IDisposable
+public class InfoBrokerPresenter : IDisposable,IPresenter
 {
     private readonly InfoBrokerModel infoBrokerModel;
     private readonly InfoBrokerView infoBrokerView;
     private readonly ItemModel itemModel;
     private readonly CompositeDisposable disposables = new();
-
-    public InfoBrokerPresenter(InfoBrokerModel model, InfoBrokerView view, ItemModel itemModel)
+    private readonly StateManager stateManager;
+    public InfoBrokerPresenter(InfoBrokerModel infoBrokerModel, InfoBrokerView infoBrokerView, ItemModel itemModel,StateManager stateManager)
     {
-        this.infoBrokerModel = model;
-        this.infoBrokerView = view;
+        this.infoBrokerModel = infoBrokerModel;
+        this.infoBrokerView = infoBrokerView;
         this.itemModel = itemModel;
+        this.stateManager = stateManager;
+        stateManager.RegisterOnEnter(GamePhase.InfoBroker,Entry);
+        Bind();
+    }
 
+    
+    public void Entry()
+    {
+        
+    }
+    private void Bind()
+    {
+        
         // ビューのイベント購読
         infoBrokerView.OnCloseRequested
             .Subscribe(_ => infoBrokerView.Hide())

@@ -29,7 +29,7 @@ public class StealthMarketingModel : IDisposable
 
     public bool CanPerform => CooldownRemaining.Value <= 0f;
 
-    public bool PerformBasic(IEnumerable<StreamingItemPlain> items, TomsShopModel shop)
+    public bool PerformBasic(IEnumerable<StreamingItemPlain> items, TomsModel shop)
     {
         if (!CanPerform || shop.PlayerMoney.Value < Cost.Value) return false;
 
@@ -45,7 +45,7 @@ public class StealthMarketingModel : IDisposable
         return true;
     }
 
-    public bool PerformFocused(StreamingItemPlain item, TomsShopModel shop)
+    public bool PerformFocused(StreamingItemPlain item, TomsModel shop)
     {
         if (!CanPerform || shop.PlayerMoney.Value < Cost.Value || item == null) return false;
 

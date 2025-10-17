@@ -1,7 +1,7 @@
 using R3;
 using UnityEngine;
 
-public class TitlePresenter
+public class TitlePresenter : IPresenter
 {
     private TitleView titleView;
     private CompositeDisposable disposable = new CompositeDisposable();
@@ -12,6 +12,13 @@ public class TitlePresenter
         this.titleView = titleView;
         this.stateManager = stateManager;
         Bind();
+        
+        stateManager.RegisterOnEnter(GamePhase.Title,Entry);
+    }
+
+    public void Entry()
+    {
+        
     }
 
     private void Bind()
