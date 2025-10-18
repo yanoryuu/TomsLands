@@ -15,8 +15,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private StreamingSettingView streamingSettingView;
     // [SerializeField] private InfoBrokerView infoBrokerView;
     [SerializeField] private CommonView commonView;
-    [SerializeField] private BattleCharacter battleCharacter;
-    [SerializeField] private BattleManager battleManager;
+    [SerializeField] private BattleSequencer battleSequencer;
     [SerializeField] private TitleView titleView;
     [SerializeField] private GamePanelManager gamePanelManager;
     [SerializeField] private DungeonRepository dungeonRepository;
@@ -101,11 +100,8 @@ public class GameManager : MonoBehaviour
         );
 
         mapPresenter = new MapPresenter(mapModel, mapView, dungeonRepository, dungeonInfoView, stateManager);
-
-        //battleCharacterに勇者のデータを注入
-        battleCharacter.HeroData = heroModel.heroData;
         
-        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsModel,battleManager);
+        streamingItemPresenter = new StreamingItemPresenter(streamingItemModel, streamingView ,itemModel,streamingSettingModel,tomsModel,battleSequencer);
 
         streamingSettingPresenter =
             new StreamingSettingPresenter(streamingSettingModel, streamingSettingView, itemModel);

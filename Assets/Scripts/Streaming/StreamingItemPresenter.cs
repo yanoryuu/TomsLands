@@ -10,7 +10,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
     private ItemModel            itemModel;
     private StreamingView        streamingView;
     private TomsModel        tomsModel;
-    private BattleManager       battleManager;
+    private BattleSequencer     battleSequencer;
     private CompositeDisposable  disposables = new CompositeDisposable();
 
     public void Entry()
@@ -24,7 +24,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         ItemModel             itemModel,
         StreamingSettingModel settingModel,
         TomsModel         tomsShopModel,
-        BattleManager battleManager
+        BattleSequencer battleSequencer
         )
     {
         this.streamingItemModel   = streamingItemModel;
@@ -32,7 +32,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         this.itemModel            = itemModel;
         this.streamingSettingModel= settingModel;
         this.tomsModel        = tomsShopModel;
-        this.battleManager        = battleManager;
+        this.battleSequencer      = battleSequencer;
         disposables = new CompositeDisposable();
     }
 
@@ -86,7 +86,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         //     .AddTo(disposables);
         
         
-        battleManager.OnWin
+        battleSequencer.OnBattleWin
             .Subscribe(win =>
             {
                 foreach (var item in streamingItemModel.runtimeStreamingItems)
@@ -102,12 +102,12 @@ public class StreamingItemPresenter : IDisposable , IPresenter
                     }
                 }
                 //勝利時に装備していた装備の値段をあげる
-                itemModel.BattleWinBonus(win.armor,5);
-                itemModel.BattleWinBonus(win.weapon,5);
+                itemModel.BattleWinBonus(win.armorId,5);
+                itemModel.BattleWinBonus(win.weaponId,5);
             })
             .AddTo(disposables);
         
-        battleManager.OnDefeat
+        battleSequencer.OnBattleDefeat
             .Subscribe(defeat =>
             {
                 foreach (var item in streamingItemModel.runtimeStreamingItems)
@@ -123,26 +123,44 @@ public class StreamingItemPresenter : IDisposable , IPresenter
                     }
                 }
                 //敗北時に装備していた装備の値段を下げる
-                itemModel.BattleDefeatPenalty(defeat.armor,2);
-                itemModel.BattleDefeatPenalty(defeat.weapon,2);
+                itemModel.BattleDefeatPenalty(defeat.armorId,2);
+                itemModel.BattleDefeatPenalty(defeat.weaponId,2);
             })
             .AddTo(disposables);
 
-        foreach (var enemy in battleManager.enemies)
+        foreach (var characterPresenter in battleSequencer.CharacterPresenters)
         {
-            enemy.OnTakeDamage.Subscribe(isHero =>
+            characterPresenter.OnTakeDamage.Subscribe(attackerModel =>
             {
-                if (isHero)
+                var targetModel = characterPresenter.GetModel();
+
+                // --- 勇者がダメージを受けた時の処理 ---
+                if (targetModel.Type == CharacterType.Hero)
                 {
-                    var item = streamingItemModel.runtimeStreamingItems.Find(item =>
-                        item.itemId == enemy.HeroData.armorId.Value);
-                    streamingItemModel.UpdateStreamingItems(enemy.HeroData.armorId.Value,Mathf.RoundToInt(item.price.Value*1.1f));
+                    // 勇者が装備している防具のIDを取得
+                    string armorId = targetModel.EquippedArmor?.itemId;
+                    if (!string.IsNullOrEmpty(armorId))
+                    {
+                        var item = streamingItemModel.runtimeStreamingItems.Find(i => i.itemId == armorId);
+                        if (item != null)
+                        {
+                            streamingItemModel.UpdateStreamingItems(armorId, Mathf.RoundToInt(item.price.Value * 1.1f));
+                        }
+                    }
                 }
-                else
+                // --- 敵がダメージを受けた時の処理 ---
+                else if (targetModel.Type == CharacterType.Enemy)
                 {
-                    var item = streamingItemModel.runtimeStreamingItems.Find(item =>
-                        item.itemId == enemy.HeroData.armorId.Value);
-                    streamingItemModel.UpdateStreamingItems(enemy.HeroData.weaponId.Value,Mathf.RoundToInt(item.price.Value*1.1f));
+                    // 勇者(攻撃者)が装備している武器のIDを取得
+                    string weaponId = attackerModel.EquippedWeapon?.itemId;
+                    if (!string.IsNullOrEmpty(weaponId))
+                    {
+                        var item = streamingItemModel.runtimeStreamingItems.Find(i => i.itemId == weaponId);
+                        if (item != null)
+                        {
+                            streamingItemModel.UpdateStreamingItems(weaponId, Mathf.RoundToInt(item.price.Value * 1.1f));
+                        }
+                    }
                 }
             })
             .AddTo(disposables);
