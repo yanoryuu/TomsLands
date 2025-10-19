@@ -169,6 +169,7 @@ public class ItemModel
             Debug.Log(runtimeItem.ItemId);   
         }
         Debug.Log("Runtime items initialized from master.");
+
     }
     
     //マスターからスプライトデータを収集
