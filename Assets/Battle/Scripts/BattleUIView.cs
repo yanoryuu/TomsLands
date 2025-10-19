@@ -11,27 +11,31 @@ public class BattleUIView : MonoBehaviour
 {
     [Header("ログ表示関連")]
     [SerializeField] private TMP_Text logText;
-    [SerializeField] private int maxLogLines = 16;
+    [SerializeField] private int maxLogLines = 8;
+    [SerializeField] private float logDisplayDuration = 0.5f;
 
-    // 元のLogManagerが持っていたメッセージキューを、このクラスが管理
-    private readonly Queue<string> logMessages = new Queue<string>();
+    // 各要素は "1メッセージ（改行を含む）" を単位として保持
+    private readonly List<string> logLines = new List<string>();
 
-    /// <summary>
-    /// バトルログに新しいメッセージを追加します
-    /// </summary>
+
     public async UniTask AddLogAsync(string message, CancellationToken token)
     {
-        logMessages.Enqueue(message);
-        if (logMessages.Count > maxLogLines)
+        logLines.Add(message);
+
+        // テキストを更新してレンダリング情報を強制更新
+        logText.text = string.Join("\n", logLines);
+        // ForceMeshUpdate を呼ばないと textInfo が古いままなので必ず呼ぶ
+        logText.ForceMeshUpdate();
+
+        while (logText.textInfo.lineCount > maxLogLines && logLines.Count > 0)
         {
-            logMessages.Dequeue();
+            // 古いメッセージを削除して再描画→再評価
+            logLines.RemoveAt(0);
+            logText.text = string.Join("\n", logLines);
+            logText.ForceMeshUpdate();
         }
 
-        // UIを更新します
-        logText.text = string.Join("\n", logMessages);
-
-        // ログが流れるように少し待機します
-        await UniTask.Delay(500, cancellationToken: token);
+        // 4) ログが流れるように少し待機（キャンセル対応）
+        await UniTask.Delay(System.TimeSpan.FromSeconds(logDisplayDuration), cancellationToken: token);
     }
-
 }

@@ -25,10 +25,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ba1a37558b33af24ebb0f59f71669ca9, type: 2}
   - {fileID: 11400000, guid: 1c1c4b15f8c537c43857bd2e1a87f2a0, type: 2}
   - {fileID: 11400000, guid: 3156644aed38cc8438c2aa4eeda3c169, type: 2}
-  - {fileID: 11400000, guid: 3156644aed38cc8438c2aa4eeda3c169, type: 2}
   - {fileID: 11400000, guid: e4626c8a44d0a7348a307a9a33cc02ef, type: 2}
   - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-  dungeonBoss: Basilisk
+  dungeonBoss: "\u30D0\u30B8\u30EA\u30B9\u30AF"
   currentDungeonLevel: 1
   rewardGold: 0
   dungeonStatus: 2

@@ -586,6 +586,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   logText: {fileID: 1057862173}
   maxLogLines: 16
+  logDisplayDuration: 0.5
 --- !u!114 &268228825
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -600,7 +601,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   heroData: {fileID: 11400000, guid: 5177f0fe31e60cc47907a934d4fc8f85, type: 2}
   heroPrefab: {fileID: -2755470240156017309, guid: cbc48ffd52ba8e3498624be433c8da51, type: 3}
-  enemyPrefab: {fileID: 8644692598747334158, guid: 385ee18e9b15a344a8b937a0dc81f344, type: 3}
+  enemyPrefab: {fileID: 1158098068643089911, guid: 385ee18e9b15a344a8b937a0dc81f344, type: 3}
   heroSpawnPoint: {fileID: 1497527456}
   enemySpawnPoints:
   - {fileID: 255296754}
@@ -620,8 +621,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterFactory: {fileID: 268228825}
   battleUIView: {fileID: 268228824}
-  totalNormalEnemies: 10
-  maxConcurrentEnemies: 3
   currentDungeon: {fileID: 11400000, guid: 66619d79d7f761143b678a08cc7e89f1, type: 2}
 --- !u!1 &444309281
 GameObject:

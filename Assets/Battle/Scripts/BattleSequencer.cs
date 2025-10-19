@@ -12,9 +12,9 @@ public class BattleSequencer : MonoBehaviour
 
     [Header("戦闘ルール設定")]
     [Tooltip("この戦闘で倒すべき通常モンスターの総数")]
-    [SerializeField] private int totalNormalEnemies = 10;
+    [SerializeField] private const int totalNormalEnemies = 10;
     [Tooltip("フィールドに同時に出現できる敵の最大数")]
-    [SerializeField] private int maxConcurrentEnemies = 3;
+    [SerializeField] private const int maxConcurrentEnemies = 3;
 
     [Header("ステージデータ")]
     [SerializeField] private DungeonInfoScriptableObj currentDungeon;

@@ -6,7 +6,11 @@ public class BattleContext
 {
     public DungeonInfoScriptableObj CurrentStage { get; }
     public CharacterPresenter HeroPresenter { get; set; }
-    public List<CharacterPresenter> EnemyPresenters { get; } = new List<CharacterPresenter>();
+
+    private readonly List<CharacterPresenter> _enemyPresenters = new List<CharacterPresenter>();
+
+    // IReadOnlyListとして、安全に公開する
+    public IReadOnlyList<CharacterPresenter> EnemyPresenters => _enemyPresenters;
     public ReactiveProperty<CharacterPresenter> SelectedTarget { get; } = new();
 
     // ★ 戦闘ルールを保持する変数
@@ -19,12 +23,25 @@ public class BattleContext
 
     private readonly Dictionary<int, CharacterPresenter> occupiedSpawnPoints = new Dictionary<int, CharacterPresenter>();
 
-    // ★ コンストラクタで戦闘ルールを受け取ります
+    // コンストラクタで戦闘ルールを受け取る
     public BattleContext(DungeonInfoScriptableObj stageData, int totalEnemies, int maxConcurrent)
     {
         CurrentStage = stageData;
         TotalNormalEnemies = totalEnemies;
         MaxConcurrentEnemies = maxConcurrent;
+    }
+
+    public void AddEnemy(CharacterPresenter enemy)
+    {
+        _enemyPresenters.Add(enemy);
+    }
+
+    public void RemoveEnemies(IEnumerable<CharacterPresenter> enemiesToRemove)
+    {
+        foreach (var enemy in enemiesToRemove.ToList()) // ToList()で安全にループ
+        {
+            _enemyPresenters.Remove(enemy);
+        }
     }
 
     public List<CharacterPresenter> GetAllPresenters()

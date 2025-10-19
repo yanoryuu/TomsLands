@@ -2,12 +2,17 @@ using R3;
 using System;
 using UnityEngine;
 
-public class CharacterPresenter : IDisposable
+public class CharacterPresenter : IDisposable, IBattleCharacterViewModel
 {
     private readonly CharacterModel model;
     private readonly CharacterView view;
     private readonly BattleSequencer sequencer;
     private readonly CompositeDisposable disposables = new CompositeDisposable();
+
+    public ReadOnlyReactiveProperty<int> CurrentHp => model.CurrentHp;
+    public ReadOnlyReactiveProperty<int> CurrentMp => model.CurrentMp;
+    public int MaxHp => model.MaxHp;
+    public int MaxMp => model.MaxMp;
 
     public Subject<CharacterModel> OnTakeDamage { get; } = new Subject<CharacterModel>();
     public CharacterModel GetModel() => model;

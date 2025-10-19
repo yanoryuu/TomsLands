@@ -30,29 +30,23 @@ public class CharacterStatusView : MonoBehaviour
     }
 
     /// <summary>
-    /// Presenterを受け取り、ModelのHPとMPを監視する設定を行う
+    /// ViewModelを受け取り、ModelのHPとMPを監視する設定を行う
     /// </summary>
-    public void Initialize(CharacterPresenter presenter)
+    public void Initialize(IBattleCharacterViewModel viewModel)
     {
         subscriptions.Clear();
 
-        var model = presenter.GetModel();
-
-        // --- HPの購読 ---
-        // HPが変更されたらHandleHpChangedを呼び出すように設定
-        model.CurrentHp.Pairwise() // (前回値, 現在値)のペアで受け取り
+        // viewModelが誰であろうと、契約通りにHPとMPのデータをもらうだけです
+        viewModel.CurrentHp.Pairwise()
             .Subscribe(pair => HandleHpChanged(pair.Current, pair.Previous))
-            .AddTo(subscriptions); // 購読をリストに追加
+            .AddTo(subscriptions);
 
-        // --- MPの購読 ---
-        // MPが変更されたらUpdateMpTextを呼び出すように設定
-        model.CurrentMp
+        viewModel.CurrentMp
             .Subscribe(mp => UpdateMpText(mp))
-            .AddTo(subscriptions); // 購読をリストに追加
+            .AddTo(subscriptions);
 
-        // --- 初期値の表示 ---
-        UpdateHpText(model.CurrentHp.CurrentValue);
-        UpdateMpText(model.CurrentMp.CurrentValue);
+        UpdateHpText(viewModel.CurrentHp.CurrentValue);
+        UpdateMpText(viewModel.CurrentMp.CurrentValue);
     }
 
     // HPが変更された時に呼ばれる処理
