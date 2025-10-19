@@ -2,121 +2,99 @@ using UnityEngine;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using System;
+using R3;
 
-/// <summary>
-/// キャラクターのステータス表示とダメージポップアップ管理
-/// </summary>
 public class CharacterStatusView : MonoBehaviour
 {
     [Header("UI参照")]
     [SerializeField] private TMP_Text hpText;
-    [SerializeField] private TMP_Text attackText;
-    [SerializeField] private TMP_Text defenseText;
+    [SerializeField] private TMP_Text mpText;
 
     [Header("ポップアップ設定")]
     [SerializeField] private DamagePopup damagePopupPrefab;
     [SerializeField] private Transform popupContainer;
 
     private SpriteRenderer characterSpriteRenderer;
+    private CompositeDisposable subscriptions = new CompositeDisposable(); // 複数の購読をまとめる用
 
-    private BattleCharacter target;
-    private int prevHp;
-    
     private void Awake()
     {
-        characterSpriteRenderer = GetComponent<SpriteRenderer>();
+        // 親オブジェクトからSpriteRendererを探してキャッシュ
+        characterSpriteRenderer = GetComponentInParent<SpriteRenderer>();
     }
 
     private void OnDestroy()
     {
-        UnsubscribeFromTarget();
-    }
-
-    public void Initialize(BattleCharacter character)
-    {
-        UnsubscribeFromTarget();
-
-        target = character;
-        if (target != null)
-        {
-            prevHp = target.CurrentHp;
-            target.OnHpChanged += HandleHpChanged;
-            UpdateHpText(target.CurrentHp);
-            UpdateAttackText(target.AttackPower);
-            UpdateDefenseText(target.DefensePower);
-        }
-    }
-
-    // HP変更時のコールバック
-    private void HandleHpChanged(int current, int max ,BattleCharacter character)
-    {
-        int delta = prevHp - current;
-        
-        
-
-        // ダメージを受けた場合
-        if (delta > 0)
-        {
-            // ダメージポップアップ表示を開始（完了を待たない）
-            if (damagePopupPrefab != null && popupContainer != null)
-            {
-                DamagePopup popup = Instantiate(damagePopupPrefab, popupContainer);
-                popup.ShowAsync(delta).Forget(); // .Forget()で「撃ちっぱなし」にする
-            }
-
-            // ダメージフラッシュ効果を開始（完了を待たない）
-            PlayDamageFlash().Forget();
-        }
-
-        // HPテキストは即座に更新する
-        UpdateHpText(current);
-        prevHp = current;
+        // このオブジェクトが破棄される時に、全ての購読をまとめて停止
+        subscriptions.Dispose();
     }
 
     /// <summary>
-    /// キャラクターを短時間赤く点滅させる
+    /// ViewModelを受け取り、ModelのHPとMPを監視する設定を行う
     /// </summary>
+    public void Initialize(IBattleCharacterViewModel viewModel)
+    {
+        subscriptions.Clear();
+
+        // viewModelが誰であろうと、契約通りにHPとMPのデータをもらうだけです
+        viewModel.CurrentHp.Pairwise()
+            .Subscribe(pair => HandleHpChanged(pair.Current, pair.Previous))
+            .AddTo(subscriptions);
+
+        viewModel.CurrentMp
+            .Subscribe(mp => UpdateMpText(mp))
+            .AddTo(subscriptions);
+
+        UpdateHpText(viewModel.CurrentHp.CurrentValue);
+        UpdateMpText(viewModel.CurrentMp.CurrentValue);
+    }
+
+    // HPが変更された時に呼ばれる処理
+    private void HandleHpChanged(int current, int previous)
+    {
+        int damage = previous - current;
+        if (damage > 0)
+        {
+            // ダメージポップアップとフラッシュ効果を再生
+            PlayDamageEffects(damage);
+        }
+
+        // HPテキストを更新
+        UpdateHpText(current);
+    }
+
+    // ダメージ演出（ポップアップとフラッシュ）
+    public void PlayDamageEffects(int damageAmount)
+    {
+        if (damagePopupPrefab != null && popupContainer != null)
+        {
+            DamagePopup popup = Instantiate(damagePopupPrefab, popupContainer);
+            popup.ShowAsync(damageAmount).Forget();
+        }
+        PlayDamageFlash().Forget();
+    }
+
+    // キャラクターが赤く光るフラッシュ効果
     private async UniTaskVoid PlayDamageFlash()
     {
-        // スプライトが設定されていなければ何もしない
         if (characterSpriteRenderer == null) return;
-
-        // 元の色を保存しておく（通常は白）
         Color originalColor = characterSpriteRenderer.color;
-
-        // 赤色に変更
         characterSpriteRenderer.color = Color.red;
-
-        // 0.15秒待機
         await UniTask.Delay(TimeSpan.FromMilliseconds(150));
-
-        // 元の色に戻す
         characterSpriteRenderer.color = originalColor;
     }
 
+    // HPテキストを更新する処理
     private void UpdateHpText(int current)
     {
         if (hpText != null)
             hpText.text = $"{current}";
     }
 
-    private void UpdateAttackText(int attack)
+    // MPテキストを更新する処理
+    private void UpdateMpText(int current)
     {
-        if (attackText != null)
-            attackText.text = $"{attack}";
-    }
-
-    private void UpdateDefenseText(int defense)
-    {
-        if (defenseText != null)
-            defenseText.text = $"{defense}";
-    }
-    
-    private void UnsubscribeFromTarget()
-    {
-        if (target != null)
-        {
-            target.OnHpChanged -= HandleHpChanged;
-        }
+        if (mpText != null)
+            mpText.text = $"{current}";
     }
 }

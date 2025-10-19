@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-// --- これもお馴染み、アセット作成メニューを追加する魔法です ---
 [CreateAssetMenu(fileName = "New SkillData", menuName = "Battle/SkillData")]
 public class SkillData : ScriptableObject
 {

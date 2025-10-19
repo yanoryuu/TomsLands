@@ -12,8 +12,8 @@ public class DamagePopup : MonoBehaviour
     [SerializeField] private TMP_Text damageText;
 
     [Header("アニメーション設定")]
-    [SerializeField] private float moveDistance = 50f;
-    [SerializeField] private float duration = 0.5f;
+    [SerializeField] private const float moveDistance = 50f;
+    [SerializeField] private const float duration = 0.5f;
 
     private Vector3 startLocalPos;
     private CanvasGroup canvasGroup;
