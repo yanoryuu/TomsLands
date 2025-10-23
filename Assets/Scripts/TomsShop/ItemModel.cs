@@ -13,6 +13,7 @@ public class ItemModel
     {
         this.masterItems = masterItems;
         InitializeRuntimeItemsFromMaster();
+        LoadData();
     }
 
     public ItemData GetMasterItem(string itemId) =>

@@ -73,7 +73,7 @@ public class BlackSmithPresenter : IDisposable, IPresenter
         
         if (tomsModel.PlayerMoney.Value >= totalPrice)
         {
-            Debug.Log($"{totalPrice}分のアイテムを購入");
+            Debug.Log($"{totalPrice}ゴールドのアイテムを購入");
             itemModel.PurchaseItem(itemId, quantity);
             tomsModel.PurchaseItem(totalPrice);
         }

@@ -49,7 +49,6 @@ public class ItemSelectionPresenter :IDisposable
             .Subscribe(_ =>
             {
                 ChangeSelectionPanel(selectionModel.AarmorRuntimeItems , ItemTypeData.ItemType.Armor);
-                
             })
             .AddTo(disposables);
         

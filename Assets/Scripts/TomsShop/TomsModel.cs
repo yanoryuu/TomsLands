@@ -2,7 +2,7 @@ using System.IO;
 using UnityEngine;
 using R3;
 
-public class TomsModel : MonoBehaviour
+public class TomsModel
 {
     public ReactiveProperty<int> PlayerMoney { get; private set; }
     
@@ -15,6 +15,13 @@ public class TomsModel : MonoBehaviour
     public ReactiveProperty<float> Trust { get; private set; }
     
     public ReactiveProperty<int> CurrentTurn { get; private set; }
+
+    public TomsModel()
+    {
+        Initialize();
+        LoadPlayerMoney();
+        
+    }
 
     public void Initialize(int defaultMoney = GameConst.InitMoney, int defaultBlacksmithLevel = 1,int defaultToolLevel = 1,int defaultInfoBrokerLevel = 1, float defaultTrust = 1 ,int defaultTurn =1)
     {
@@ -65,5 +72,6 @@ public class TomsModel : MonoBehaviour
     {
         //購入処理
         PlayerMoney.Value -= price;
+        Debug.Log(PlayerMoney.Value);
     }
 }

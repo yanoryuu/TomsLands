@@ -8,6 +8,11 @@ public class HeroModel
     public List<string> EquippedItemIds { get; private set; } = new List<string>();
 
     public RuntimeHeroData heroData { get; private set; }
+
+    public HeroModel()
+    {
+        LoadHeroData();
+    }
     public void EquipItem(string itemId)
     {
         if (!EquippedItemIds.Contains(itemId))
