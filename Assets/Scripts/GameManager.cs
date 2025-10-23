@@ -51,18 +51,14 @@ public class GameManager : MonoBehaviour
         // マスターItemDataロード
         var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
         itemModel = new ItemModel(masterItems);
-        itemModel.LoadData();
 
         dungeonCatalog = dungeonRepository.CreateCatalog();
         dungeonRepository.SetCatalog(dungeonCatalog);
 
         //Model
         
-        // TomsShopModel初期化
+        // TomsModel初期化
         tomsModel = new TomsModel();
-        tomsModel.Initialize();
-        tomsModel.LoadPlayerMoney();
-        
         
         itemSelectionModel = new ItemSelectionModel();
         
@@ -71,7 +67,6 @@ public class GameManager : MonoBehaviour
         streamingItemModel = new StreamingItemModel();
         
         heroModel = new HeroModel();
-        heroModel.LoadHeroData();
         
         mapModel = new MapModel();
         

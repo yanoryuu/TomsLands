@@ -68,9 +68,9 @@ public class TomsShopPresenter : IDisposable, IPresenter
     //初期化
     private void Initialize()
     {
-        tomsShopView.Initialize();
-        tomsShopModel.Initialize();
-        itemSelectionPresenter.Initialize();
+        // tomsShopView.Initialize();
+        // tomsShopModel.Initialize();
+        // itemSelectionPresenter.Initialize();
     }
 
     //陳列画面を表示

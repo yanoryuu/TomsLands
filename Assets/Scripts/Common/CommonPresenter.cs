@@ -10,11 +10,12 @@ public class CommonPresenter
     {
         this.commonView = commonView;
         this.tomsModel = tomsModel;
-        
         Bind();
     }
     private void Bind()
     {
+        
+        Debug.Log("CommonPresenter.Bind");
         // 所持金更新（ModelのデータからViewへ）
         tomsModel.PlayerMoney
             .Subscribe(money =>
