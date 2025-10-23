@@ -18696,7 +18696,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 049b97b2073a46a4cb0d2f59068499c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blackSmithView: {fileID: 0}
+  blackSmithView: {fileID: 787651104}
   preparationView: {fileID: 234997436}
   streamingView: {fileID: 1397295508}
   endPhaseView: {fileID: 1623092367}

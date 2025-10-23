@@ -213,7 +213,6 @@ public class ItemModel
                 Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
             }
         }
-        
         return list;
     }
 }
