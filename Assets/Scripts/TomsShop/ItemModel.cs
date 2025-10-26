@@ -152,6 +152,7 @@ public class ItemModel
         RuntimeItems = masterItems
             .Select(master => new RuntimeItemData(
                 master.itemId,
+                master.itemName,
                 master.basePrice,
                 master.maxStock,
                 master.initialStock,

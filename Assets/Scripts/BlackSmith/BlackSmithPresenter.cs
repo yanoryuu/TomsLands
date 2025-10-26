@@ -26,7 +26,7 @@ public class BlackSmithPresenter : IDisposable, IPresenter
         this.itemModel = itemModel;
         this.blackSmithView = blackSmithView;
         this.stateManager = stateManager;
-        
+
         stateManager.RegisterOnEnter(GamePhase.BlackSmith, Entry);
         Bind();
     }
@@ -70,7 +70,7 @@ public class BlackSmithPresenter : IDisposable, IPresenter
     {
         var item = itemModel.GetRuntimeItem(itemId);
         int totalPrice = item.CurrentPrice.Value * quantity;
-        
+
         if (tomsModel.PlayerMoney.Value >= totalPrice)
         {
             Debug.Log($"{totalPrice}ゴールドのアイテムを購入");
@@ -84,95 +84,113 @@ public class BlackSmithPresenter : IDisposable, IPresenter
     }
 
     private void ChangePurchasePanel(List<RuntimeItemData> items, BlackSmithTab itemType)
-{
-
-    panelDisposables.Dispose();
-    panelDisposables = new CompositeDisposable();
-
-    var itemSlots = blackSmithView.PopulateItemList(items);
-
-    foreach (var slot in itemSlots)
     {
-        var itemdata = itemModel.GetRuntimeItem(slot.itemId);
+        panelDisposables.Dispose();
+        panelDisposables = new CompositeDisposable();
 
-        slot.SetItem(
-            itemdata.ItemId,
-            itemdata.ItemIcon,
-            itemdata.CurrentPrice.Value,
-            itemdata.MaxStock.Value,
-            itemdata.Stock.Value,
-            itemdata.IsPopular.Value
-        );
+        var itemSlots = blackSmithView.PopulateItemList(items);
 
-        // 残り購入可能数を取得
-        int initialMax = itemdata.RemainToMax();
+        foreach (var slot in itemSlots)
+        {
+            var itemdata = itemModel.GetRuntimeItem(slot.itemId);
 
-        // BlackSmithModel内に購入予定数・残りmaxを登録
-        blackSmithModel.SetItemCount(slot.itemId, 0, initialMax);
+            slot.SetItem(
+                itemdata.ItemId,
+                itemdata.ItemName,
+                itemdata.ItemIcon,
+                itemdata.CurrentPrice.Value,
+                itemdata.MaxStock.Value,
+                itemdata.Stock.Value,
+                itemdata.IsPopular.Value
+            );
 
-        // 以下、各種購読（Subscribe）処理が続く ↓
-        blackSmithModel.itemCount[slot.itemId].count
-            .Subscribe(count => slot.SetDisplayQuantity(count))
-            .AddTo(panelDisposables);
+            // 残り購入可能数
+            int initialMax = itemdata.RemainToMax();
 
-        itemdata.Stock
-            .Subscribe(_ =>
-            {
-                int remainMax = itemdata.RemainToMax();
-                blackSmithModel.SetItemCount(
-                    slot.itemId,
-                    Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
-                    remainMax
-                );
-            })
-            .AddTo(panelDisposables);
+            // Model 内に初期登録
+            blackSmithModel.SetItemCount(slot.itemId, 0, initialMax);
 
-        itemdata.MaxStock
-            .Subscribe(_ =>
-            {
-                int remainMax = itemdata.RemainToMax();
-                blackSmithModel.SetItemCount(
-                    slot.itemId,
-                    Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
-                    remainMax
-                );
-            })
-            .AddTo(panelDisposables);
+            // --- 購読: Model → View (予約数の反映) ---
+            blackSmithModel.itemCount[slot.itemId].count
+                .Subscribe(count => slot.SetDisplayQuantity(count))
+                .AddTo(panelDisposables);
 
-        blackSmithModel.itemCount[slot.itemId].maxCount
-            .Subscribe(max => slot.SetMaxDisplayQuantity(max))
-            .AddTo(panelDisposables);
+            // 残りmaxの変化（在庫やMaxStockの変動時）
+            itemdata.Stock
+                .Subscribe(_ =>
+                {
+                    int remainMax = itemdata.RemainToMax();
+                    // 既存の予約数が上限を超えないようにクランプ
+                    blackSmithModel.SetItemCount(
+                        slot.itemId,
+                        Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
+                        remainMax
+                    );
+                    slot.SetCurrentStock(itemdata.Stock.Value);
+                })
+                .AddTo(panelDisposables);
 
-        slot.OnDisplayQuantityChanged
-            .Subscribe(x =>
-            {
-                int remainMax = itemdata.RemainToMax();
-                blackSmithModel.SetItemCount(slot.itemId, x, remainMax);
-            })
-            .AddTo(panelDisposables);
+            itemdata.MaxStock
+                .Subscribe(_ =>
+                {
+                    int remainMax = itemdata.RemainToMax();
+                    blackSmithModel.SetItemCount(
+                        slot.itemId,
+                        Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
+                        remainMax
+                    );
+                })
+                .AddTo(panelDisposables);
 
-        itemdata.CurrentPrice
-            .Subscribe(price => slot.SetPrice(price))
-            .AddTo(panelDisposables);
+            // --- 購読: Model → View (上限の反映) ---
+            blackSmithModel.itemCount[slot.itemId].maxCount
+                .Subscribe(max => slot.SetMaxDisplayQuantity(max))
+                .AddTo(panelDisposables);
 
-        slot.OnInfoRequested
-            .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
-            .AddTo(panelDisposables);
+            // --- 購読: View → Model (スライダー変更) ---
+            slot.OnDisplayQuantityChanged
+                .Subscribe(x =>
+                {
+                    int remainMax = itemdata.RemainToMax();
+                    blackSmithModel.SetItemCount(slot.itemId, x, remainMax);
+                })
+                .AddTo(panelDisposables);
 
-        slot.OnPurchaseClicked
-            .Subscribe(_ =>
-            {
-                int reserved = blackSmithModel.itemCount[slot.itemId].count.Value;
-                int afterRemain = Mathf.Max(0, itemdata.MaxStock.Value - (itemdata.Stock.Value + reserved));
+            // --- 購読: View → Model（＋／－ボタン） ---
+            slot.OnStepClicked
+                .Subscribe(step =>
+                {
+                    // step は +1 or -1
+                    blackSmithModel.AddToCount(slot.itemId, step);
+                    // AddToCount により ReactiveProperty が発火 → slot.SetDisplayQuantity に反映される
+                })
+                .AddTo(panelDisposables);
 
-                int quantity = blackSmithModel.PurchaseItem(slot.itemId, afterRemain);
-                HandlePurchase(itemdata.ItemId, quantity);
-            })
-            .AddTo(panelDisposables);
+            // 価格の変化
+            itemdata.CurrentPrice
+                .Subscribe(price => slot.SetPrice(price))
+                .AddTo(panelDisposables);
+
+            // 情報パネル
+            slot.OnInfoRequested
+                .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
+                .AddTo(panelDisposables);
+
+            // 購入確定
+            slot.OnPurchaseClicked
+                .Subscribe(_ =>
+                {
+                    int reserved = blackSmithModel.itemCount[slot.itemId].count.Value;
+                    int afterRemain = Mathf.Max(0, itemdata.MaxStock.Value - (itemdata.Stock.Value + reserved));
+
+                    int quantity = blackSmithModel.PurchaseItem(slot.itemId, afterRemain);
+                    HandlePurchase(itemdata.ItemId, quantity);
+                })
+                .AddTo(panelDisposables);
+        }
+
+        blackSmithView.SortItemTab(itemType);
     }
-
-    blackSmithView.SortItemTab(itemType);
-}
 
     private void ShowDevelopmentPanel()
     {

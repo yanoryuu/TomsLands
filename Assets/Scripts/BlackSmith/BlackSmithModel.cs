@@ -14,7 +14,7 @@ public class BlackSmithModel
     {
         armorRuntimeItems  = new List<RuntimeItemData>();
         weaponRuntimeItems = new List<RuntimeItemData>();
-        itemCount          = new Dictionary<string, BlackSmithItemData>(); // ★ 追加
+        itemCount          = new Dictionary<string, BlackSmithItemData>();
     }
 
     public void SetRuntimeItems(List<RuntimeItemData> weaponRuntimeItems, List<RuntimeItemData> armorRuntimeItems)
@@ -32,19 +32,52 @@ public class BlackSmithModel
         }
         else if (itemCount.TryGetValue(key, out var value))
         {
-            value.maxCount.Value  = maxCount; // ★ 追加：max も更新
-            value.count.Value     = Mathf.Clamp(count, 0, value.maxCount.Value); // ★ Mathf.Clamp
+            value.maxCount.Value = maxCount;
+            value.count.Value    = Mathf.Clamp(count, 0, value.maxCount.Value);
             Debug.Log($"アイテム{key}の数を{value.count.Value}に変更 (max {value.maxCount.Value})");
         }
     }
 
-    // 計算済みmaxを受け取り、countを0に戻す
+    /// <summary>
+    /// 予約数を加算/減算（0〜maxCountにクランプして保存）
+    /// 戻り値：更新後の予約数
+    /// </summary>
+    public int AddToCount(string itemId, int delta)
+    {
+        if (!itemCount.TryGetValue(itemId, out var value))
+            return 0;
+
+        int next = Mathf.Clamp(value.count.Value + delta, 0, value.maxCount.Value);
+        if (next != value.count.Value)
+        {
+            value.count.Value = next; // ReactiveProperty → 購読者(ビュー等)に通知
+        }
+        return next;
+    }
+
+    /// <summary>
+    /// 直接指定（0〜maxにクランプ）
+    /// </summary>
+    public int SetCountClamped(string itemId, int newValue)
+    {
+        if (!itemCount.TryGetValue(itemId, out var value))
+            return 0;
+
+        int next = Mathf.Clamp(newValue, 0, value.maxCount.Value);
+        if (next != value.count.Value)
+        {
+            value.count.Value = next;
+        }
+        return next;
+    }
+
+    // 購入確定：現在の予約数を返し、count=0、maxCountを購入後残量に更新
     public int PurchaseItem(string itemId, int maxStockAfter)
     {
         if (itemCount.TryGetValue(itemId, out var value))
         {
             var count = value.count.Value;
-            SetItemCount(itemId, 0, maxStockAfter); // ★ 購入後の残りmaxで更新
+            SetItemCount(itemId, 0, maxStockAfter);
             return count;
         }
         return 0;
@@ -53,11 +86,12 @@ public class BlackSmithModel
 
 public class BlackSmithItemData
 {
-    public ReactiveProperty<int> count {get;private set;}
-    public ReactiveProperty<int> maxCount {get;private set;}
+    public ReactiveProperty<int> count { get; private set; }
+    public ReactiveProperty<int> maxCount { get; private set; }
+
     public BlackSmithItemData(int count, int maxCount)
     {
-        this.count = new ReactiveProperty<int>(count);
+        this.count    = new ReactiveProperty<int>(count);
         this.maxCount = new ReactiveProperty<int>(maxCount);
     }
 }
