@@ -17,7 +17,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5137088651479379305
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1629,6 +1629,8 @@ MonoBehaviour:
   quantityText: {fileID: 3771440067830512467}
   infoButton: {fileID: 7639474776566039050}
   purchaseButton: {fileID: 9145168474632828777}
+  plusButton: {fileID: 2609142872756814945}
+  minusButton: {fileID: 6873835396062084059}
 --- !u!1 &9219565775492033638
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,6 +5,9 @@ using UnityEngine;
 public class RuntimeItemData
 {
     public string ItemId { get; private set; }
+    
+    public string ItemName { get; private set; }
+    
     public ReactiveProperty<int> CurrentPrice { get; private set; }
     public ReactiveProperty<int> Stock { get; private set; }
     
@@ -23,6 +26,7 @@ public class RuntimeItemData
     public string ItemDescription { get; private set; }
     public RuntimeItemData(
         string itemId,
+        string itemName,
         int currentPrice,
         int maxStock, 
         int stock,
