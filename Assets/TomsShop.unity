@@ -7622,7 +7622,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &529239203
 Transform:
   m_ObjectHideFlags: 0
@@ -10356,6 +10356,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae6c2719da7537e4d89043c2db7819be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  scrollRect: {fileID: 0}
   blackSmithContent: {fileID: 2116309723}
   weaponTab: {fileID: 712889033}
   armorTab: {fileID: 1941978163}
@@ -11067,7 +11068,7 @@ RectTransform:
   m_Father: {fileID: 881573894}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 15, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -17454,7 +17455,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1615768171
 Transform:
   m_ObjectHideFlags: 0
@@ -21311,7 +21312,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 103, y: -0.00001335144}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 74.3}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &2116309725
 MonoBehaviour:
