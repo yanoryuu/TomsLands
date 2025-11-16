@@ -22,32 +22,25 @@ public class InfoBrokerPresenter : IDisposable,IPresenter
     
     public void Entry()
     {
-        
+        infoBrokerModel.UpdateInfoMessages();
     }
     private void Bind()
     {
-        
-        // ビューのイベント購読
-        infoBrokerView.OnCloseRequested
-            .Subscribe(_ => infoBrokerView.Hide())
-            .AddTo(disposables);
-
         infoBrokerView.OnRefreshRequested
             .Subscribe(_ => infoBrokerModel.UpdateInfoMessages())
+            .AddTo(disposables);
+        
+        infoBrokerView.OnCloseRequested
+            .Subscribe(_ => stateManager.ChangePhase(GamePhase.TomsShop))
             .AddTo(disposables);
 
         // モデルの変更を監視
         infoBrokerModel.CurrentInfoMessages
             .Subscribe(messages => infoBrokerView.DisplayInfoMessages(messages))
             .AddTo(disposables);
+        
     }
-
-    public void ShowInfoBroker()
-    {
-        infoBrokerModel.UpdateInfoMessages();
-        infoBrokerView.Show();
-    }
-
+    
     public void RecordHeroPurchase(string itemId, int quantity, int price)
     {
         infoBrokerModel.RecordHeroPurchase(itemId, quantity, price);

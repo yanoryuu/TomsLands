@@ -78,16 +78,20 @@ public class BlackSmithView : MonoBehaviour
         switch (type)
         {
             case BlackSmithTab.Weapon:
-                weaponTab.transform.SetAsLastSibling();
+                var weaponPos = weaponTab.transform.localPosition;
+                weaponTab.transform.localPosition = new Vector3(weaponPos.x,weaponPos.y+13,weaponPos.z); 
                 break;
             case BlackSmithTab.Armor:
-                armorTab.transform.SetAsLastSibling();
+                var armorPos = armorTab.transform.localPosition;
+                armorTab.transform.localPosition = new Vector3(armorPos.x,armorPos.y+13,armorPos.z);
                 break;
             case BlackSmithTab.Development:
-                developmentTab.transform.SetAsLastSibling();
+                var developPos = developmentTab.transform.localPosition;
+                developmentTab.transform.localPosition = new Vector3(developPos.x,developPos.y+13,developPos.z);
                 break;
             case BlackSmithTab.Special:
-                specialTab.transform.SetAsLastSibling();
+                var specialPos = specialTab.transform.localPosition;
+                specialTab.transform.localPosition = new Vector3(specialPos.x,specialPos.y+13,specialPos.z);
                 break;
         }
     }

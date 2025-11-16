@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise">
+    <file url="file://$PROJECT_DIR$/Assets/Scripts/InfoBroker/InfoBrokerModel.cs" charset="Shift_JIS" />
+    <file url="file://$PROJECT_DIR$/Assets/Scripts/InfoBroker/InfoBrokerPresenter.cs" charset="Shift_JIS" />
+    <file url="file://$PROJECT_DIR$/Assets/Scripts/InfoBroker/InfoBrokerView.cs" charset="Shift_JIS" />
+    <file url="file://$PROJECT_DIR$/Assets/Scripts/InfoBroker/InfoMessage.cs" charset="Shift_JIS" />
     <file url="file://$PROJECT_DIR$/Assets/Scripts/Information/InfoBrokerModel.cs" charset="Shift_JIS" />
     <file url="file://$PROJECT_DIR$/Assets/Scripts/Information/InfoBrokerPresenter.cs" charset="Shift_JIS" />
   </component>
