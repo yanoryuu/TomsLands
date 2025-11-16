@@ -17,4 +17,4 @@ MonoBehaviour:
   mp: 40
   attackPower: 60
   defensePower: 15
-  heroSprite: {fileID: 7997861982340740961, guid: fffd00cb5ad951e4daf427e6b09abe32, type: 3}
+  heroSprite: {fileID: 4402643728588245356, guid: 58221fbc1c6307b4aa2197e6bfe666a7, type: 3}

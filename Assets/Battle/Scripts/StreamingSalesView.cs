@@ -18,7 +18,6 @@ public class StreamingSalesView : MonoBehaviour
     /// </summary>
     public void DisplayItems(List<RuntimeItemData> items)
     {
-
         Debug.Log($"yStreamingSalesViewzDisplayItems‚ªŒÄ‚Î‚ê‚Ü‚µ‚½BŒ»İ¤•i”: {items.Count}");
         for (int i = 0; i < itemSlots.Count; i++)
         {
