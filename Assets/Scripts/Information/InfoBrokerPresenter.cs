@@ -29,7 +29,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter
         
         // ビューのイベント購読
         infoBrokerView.OnCloseRequested
-            .Subscribe(_ => infoBrokerView.Hide())
+            .Subscribe(_ => stateManager.ChangePhase(GamePhase.TomsShop))
             .AddTo(disposables);
 
         infoBrokerView.OnRefreshRequested
@@ -45,7 +45,6 @@ public class InfoBrokerPresenter : IDisposable,IPresenter
     public void ShowInfoBroker()
     {
         infoBrokerModel.UpdateInfoMessages();
-        infoBrokerView.Show();
     }
 
     public void RecordHeroPurchase(string itemId, int quantity, int price)
