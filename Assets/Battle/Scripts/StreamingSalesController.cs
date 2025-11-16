@@ -1,34 +1,38 @@
-using Cysharp.Threading.Tasks;
+ï»¿using Cysharp.Threading.Tasks;
 using System.Linq;
 using UnityEngine;
+using System;
+using System.Collections.Generic;
+using R3;
 
 public class StreamingSalesController : MonoBehaviour
 {
-    [Header("İ’è")]
+    [Header("è¨­å®š")]
     [SerializeField] private float baseSalesInterval = 15f;
     [SerializeField] private float intervalRandomness = 3f;
     [SerializeField] private int maxItemsToSell = 5;
 
-    [Header("QÆ")]
+    [Header("å‚ç…§")]
     [SerializeField] private StreamingSalesView view;
+
+    [Header("Inventory (UI)")]
+    [SerializeField] private List<ItemSlotView> inventorySlotViews; // åœ¨åº«å´ã®ã‚¹ãƒ­ãƒƒãƒˆï¼ˆã‚·ãƒ¼ãƒ³ä¸Šã® 10 ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ï¼‰
+    private List<RuntimeItemData> inventorySlotItemRefs = new List<RuntimeItemData>(); // åœ¨åº«ã‚¹ãƒ­ãƒƒãƒˆãŒå‚ç…§ã—ã¦ã„ã‚‹ RuntimeItemData
 
     private ItemModel _mainItemModel;
     private StreamingSalesPresenter _presenter;
     private StreamingSalesModel _model;
 
-    // ## ƒeƒXƒg—p ##
+    // ## ãƒ†ã‚¹ãƒˆç”¨ ##
     private void Start()
     {
-        Debug.LogWarning("--- ƒeƒXƒgƒ‚[ƒh‚ÅÀs’† ---");
+        Debug.LogWarning("--- ãƒ†ã‚¹ãƒˆãƒ¢ãƒ¼ãƒ‰ã§å®Ÿè¡Œä¸­ ---");
 
-        // Project“à‚ÌƒAƒZƒbƒg‚ğ‘S‚Ä“Ç‚İ‚İ
         var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
 
         var realItemModel = new ItemModel(masterItems);
         StartStreamingPhase(realItemModel);
     }
-
-    // ## ƒeƒXƒg—pƒƒ\ƒbƒh‚ÌI‚í‚è ##
 
     public void StartStreamingPhase(ItemModel itemModel)
     {
@@ -42,26 +46,89 @@ public class StreamingSalesController : MonoBehaviour
         _presenter = new StreamingSalesPresenter(_model, view);
         _presenter.Bind();
 
-        // OnItemDropped‚ğA‚±‚ÌController‚ªw“Ç
         ItemSlotView.OnItemDropped += HandleItemSwap;
 
+        InitializeInventorySlots(itemModel, itemsForSale);
+
         _model.StartSalesLoopAsync(_mainItemModel, this.GetCancellationTokenOnDestroy()).Forget();
-        Debug.Log($"‰c‹ÆŠJnI {itemsForSale.Count}í—Ş‚Ì¤•i‚ğ”„‚è‚Éo‚µ‚Ü‚·B");
+        Debug.Log($"å–¶æ¥­é–‹å§‹ï¼ {itemsForSale.Count}ç¨®é¡ã®å•†å“ã‚’å£²ã‚Šã«å‡ºã—ã¾ã™ã€‚");
+    }
+
+    private void InitializeInventorySlots(ItemModel itemModel, List<RuntimeItemData> itemsForSale)
+    {
+        inventorySlotItemRefs = new List<RuntimeItemData>(new RuntimeItemData[inventorySlotViews.Count]);
+
+        var candidates = itemModel.RuntimeItems.Where(r => !itemsForSale.Contains(r)).ToList();
+
+        for (int i = 0; i < inventorySlotViews.Count; i++)
+        {
+            RuntimeItemData assign = i < candidates.Count ? candidates[i] : null;
+            inventorySlotItemRefs[i] = assign;
+            inventorySlotViews[i].SetItem(assign);
+        }
     }
 
     private void HandleItemSwap(ItemSlotView fromSlot, ItemSlotView toSlot)
     {
-        // ‚Ç‚ÌƒXƒƒbƒg‚Æ‚Ç‚ÌƒXƒƒbƒg‚ª“ü‚ê‘Ö‚í‚Á‚½‚©AƒCƒ“ƒfƒbƒNƒX‚ğæ“¾
-        int fromIndex = view.GetSlotIndex(fromSlot);
-        int toIndex = view.GetSlotIndex(toSlot);
+        if (fromSlot == null || toSlot == null) return;
 
-        if (fromIndex == -1 || toIndex == -1) return;
+        int fromSellIndex = view.GetSlotIndex(fromSlot); // -1 if not sell slot
+        int toSellIndex = view.GetSlotIndex(toSlot);
 
-        Debug.Log($"ƒAƒCƒeƒ€‚ğ“ü‚ê‘Ö‚¦: {fromIndex}”Ô–Ú ‚Æ {toIndex}”Ô–Ú");
+        int fromInvIndex = inventorySlotViews != null ? inventorySlotViews.IndexOf(fromSlot) : -1;
+        int toInvIndex = inventorySlotViews != null ? inventorySlotViews.IndexOf(toSlot) : -1;
 
-        // Model‚ÉƒŠƒXƒg‚Ì‡”Ô‚ğ“ü‚ê‘Ö‚¦–½—ß
-        _model.SwapItems(fromIndex, toIndex);
+        // 1) å£²ã‚Šå ´å†…ã®å…¥ã‚Œæ›¿ãˆ
+        if (fromSellIndex != -1 && toSellIndex != -1)
+        {
+            Debug.Log($"å£²ã‚Šå ´å†…ã‚¹ãƒ¯ãƒƒãƒ—: {fromSellIndex} <-> {toSellIndex}");
+            _model.SwapItems(fromSellIndex, toSellIndex);
+            return;
+        }
+
+        // 2) åœ¨åº«å†…ã®å…¥ã‚Œæ›¿ãˆ
+        if (fromInvIndex != -1 && toInvIndex != -1)
+        {
+            Debug.Log($"åœ¨åº«å†…ã‚¹ãƒ¯ãƒƒãƒ—: {fromInvIndex} <-> {toInvIndex}");
+            var tmp = inventorySlotItemRefs[toInvIndex];
+            inventorySlotItemRefs[toInvIndex] = inventorySlotItemRefs[fromInvIndex];
+            inventorySlotItemRefs[fromInvIndex] = tmp;
+
+            inventorySlotViews[toInvIndex].SetItem(inventorySlotItemRefs[toInvIndex]);
+            inventorySlotViews[fromInvIndex].SetItem(inventorySlotItemRefs[fromInvIndex]);
+            return;
+        }
+
+        // 3) å£²ã‚Šå ´ <-> åœ¨åº« ã®äº¤æ›
+        if ((fromSellIndex != -1 && toInvIndex != -1) || (toSellIndex != -1 && fromInvIndex != -1))
+        {
+            int sellIndex = fromSellIndex != -1 ? fromSellIndex : toSellIndex;
+            int invIndex = fromInvIndex != -1 ? fromInvIndex : toInvIndex;
+
+            Debug.Log($"å£²å ´ â‡„ åœ¨åº« ã‚¹ãƒ¯ãƒƒãƒ—: sellIndex={sellIndex}, invIndex={invIndex}");
+
+            var sellRef = _model.ItemsForSale.Count > sellIndex ? _model.ItemsForSale[sellIndex] : null;
+            var invRef = inventorySlotItemRefs.Count > invIndex ? inventorySlotItemRefs[invIndex] : null;
+
+            if (_model.ItemsForSale.Count > sellIndex)
+                _model.ItemsForSale[sellIndex] = invRef;
+            inventorySlotItemRefs[invIndex] = sellRef;
+
+            view.DisplayItems(_model.ItemsForSale);
+
+            for (int i = 0; i < inventorySlotViews.Count; i++)
+            {
+                inventorySlotViews[i].SetItem(inventorySlotItemRefs[i]);
+            }
+
+            _model.OnItemsReordered.OnNext(Unit.Default);
+
+            return;
+        }
+
+        Debug.LogWarning("HandleItemSwap: ã©ã®é ˜åŸŸã§ã‚‚ãªã„ã‚¹ãƒ¯ãƒƒãƒ—ãŒç™ºç”Ÿã—ã¾ã—ãŸï¼ˆç„¡è¦–ï¼‰");
     }
+
     private void OnDestroy()
     {
         _presenter?.Dispose();
