@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using R3;
 using TMPro;
 
@@ -36,6 +37,8 @@ public class BlackSmithView : MonoBehaviour
     // ★ タブごとのスクロール位置を保持（任意）
     private readonly Dictionary<BlackSmithTab, Vector2> _scrollPerTab = new();
     private BlackSmithTab _currentTab = BlackSmithTab.Weapon;
+    
+    private readonly Dictionary<BlackSmithTab, Vector3> initTabPos = new();
 
     private void Awake()
     {
@@ -50,6 +53,11 @@ public class BlackSmithView : MonoBehaviour
         _scrollPerTab[BlackSmithTab.Armor] = new Vector2(0, 1);
         _scrollPerTab[BlackSmithTab.Development] = new Vector2(0, 1);
         _scrollPerTab[BlackSmithTab.Special] = new Vector2(0, 1);
+        
+        initTabPos[BlackSmithTab.Weapon] = weaponTab.transform.localPosition;
+        initTabPos[BlackSmithTab.Armor] = armorTab.transform.localPosition;
+        initTabPos[BlackSmithTab.Development] = developmentTab.transform.localPosition;
+        initTabPos[BlackSmithTab.Special] = specialTab.transform.localPosition;
 
         // 念のため整数スクロール向けセットアップ
         if (scrollRect && scrollRect.content)
@@ -115,20 +123,29 @@ public class BlackSmithView : MonoBehaviour
 
     public void SortItemTab(BlackSmithTab type)
     {
+        var weaponSeq =  weaponTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Weapon].y, 0.1f);
+        var armorSeq = armorTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Armor].y, 0.1f);
+        var developmentSeq = developmentTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Development].y, 0.1f);
+        var specialSeq = specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y, 0.1f);
+        
         // タブを一番上に持ってくる動作はそのまま
         switch (type)
         {
             case BlackSmithTab.Weapon:
-                weaponTab.transform.SetAsLastSibling();
+                weaponSeq.Kill();
+                weaponTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Weapon].y+10, 0.2f);
                 break;
             case BlackSmithTab.Armor:
-                armorTab.transform.SetAsLastSibling();
+                armorSeq.Kill();
+                armorTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Armor].y + 10, 0.2f);
                 break;
             case BlackSmithTab.Development:
-                developmentTab.transform.SetAsLastSibling();
+                developmentSeq.Kill();
+                developmentTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Development].y + 10, 0.2f);
                 break;
             case BlackSmithTab.Special:
-                specialTab.transform.SetAsLastSibling();
+                specialSeq.Kill();
+                specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y + 10, 0.2f);
                 break;
         }
 

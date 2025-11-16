@@ -1,26 +1,28 @@
-
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using System.Linq;
+using DG.Tweening; // ★ これを忘れずに
 using R3;
 
 public class InfoBrokerView : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Transform messageParent;
-    [SerializeField] private GameObject messageSlotPrefab;
     [SerializeField] private Button closeButton;
     [SerializeField] private Button refreshButton;
     [SerializeField] private TextMeshProUGUI brokerNameText;
-    [SerializeField] private TextMeshProUGUI greetingText;
+    [SerializeField] private GameObject heroTab;
+    [SerializeField] private GameObject mapTab;
+    [SerializeField] private GameObject guessTab;
+    [SerializeField] private TextMeshProUGUI messageText;
 
     public Subject<Unit> OnCloseRequested { get; } = new();
     public Subject<Unit> OnRefreshRequested { get; } = new();
 
-    private readonly List<GameObject> activeMessageSlots = new();
+    private readonly Dictionary<InfoBrokerTab, Vector3> initTabPos = new();
+    
 
-    // カジュアルな挨拶メッセージ
     private readonly List<string> greetingMessages = new()
     {
         "よう！何か聞きたいことあるかい？",
@@ -31,59 +33,71 @@ public class InfoBrokerView : MonoBehaviour
         "お疲れ様！今日も色々見てきたよ"
     };
 
+    private System.Random random = new System.Random();
+
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         refreshButton.onClick.AddListener(() => OnRefreshRequested.OnNext(Unit.Default));
+        
+        initTabPos[InfoBrokerTab.Hero] = heroTab.transform.localPosition;
+        initTabPos[InfoBrokerTab.Map] = mapTab.transform.localPosition;
+        initTabPos[InfoBrokerTab.Guess] = guessTab.transform.localPosition;
 
         brokerNameText.text = "情報屋";
         ShowRandomGreeting();
     }
 
-    public void Show()
-    {
-        gameObject.SetActive(true);
-        ShowRandomGreeting();
-    }
-
-    public void Hide()
-    {
-        gameObject.SetActive(false);
-    }
-
     private void ShowRandomGreeting()
     {
-        var random = new System.Random();
         var greeting = greetingMessages[random.Next(greetingMessages.Count)];
-        greetingText.text = greeting;
+        messageText.text = greeting;
     }
 
+    /// <summary>
+    /// Model から受け取った InfoMessage 一覧を messageText に表示
+    /// </summary>
     public void DisplayInfoMessages(List<InfoMessage> messages)
     {
-        // 既存メッセージをクリア
-        foreach (var slot in activeMessageSlots)
+        if (messages == null || messages.Count == 0)
         {
-            Destroy(slot);
-        }
-        activeMessageSlots.Clear();
-
-        if (messages.Count == 0)
-        {
-            // メッセージがない場合のデフォルトメッセージ
-            var defaultSlot = Instantiate(messageSlotPrefab, messageParent);
-            var defaultSlotComponent = defaultSlot.GetComponent<InfoMessageSlot>();
-            var defaultMessage = new InfoMessage("特に変わったことはないかな。また後で来てよ。", InfoType.General, 0.5f);
-            defaultSlotComponent.SetMessage(defaultMessage);
-            activeMessageSlots.Add(defaultSlot);
+            // メッセージがないときのデフォルト
+            messageText.text = "特に変わったことはないかな。また後で来てよ。";
             return;
         }
 
-        foreach (var message in messages)
+        // InfoMessage.message を改行区切りで並べる
+        var lines = messages.Select(m => m.message).ToList();
+        messageText.text = string.Join("\n", lines);
+    }
+    
+    public void SortItemTab(InfoBrokerTab type)
+    {
+        var heroSeq =  heroTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Hero].y, 0.1f);
+        var mapSeq = mapTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Map].y, 0.1f);
+        var guessSeq = guessTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Guess].y, 0.1f);
+        // タブを一番上に持ってくる動作はそのまま
+        switch (type)
         {
-            var slotObj = Instantiate(messageSlotPrefab, messageParent);
-            var slot = slotObj.GetComponent<InfoMessageSlot>();
-            slot.SetMessage(message);
-            activeMessageSlots.Add(slotObj);
+            case InfoBrokerTab.Hero:
+                heroSeq.Kill();
+                heroTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Hero].y+10, 0.2f);
+                break;
+            case InfoBrokerTab.Map:
+                mapSeq.Kill();
+                mapTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Map].y + 10, 0.2f);
+                break;
+            case InfoBrokerTab.Guess:
+                guessSeq.Kill();
+                guessTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Guess].y + 10, 0.2f);
+                break;
         }
     }
+}
+
+public enum InfoBrokerTab
+{
+    Hero,
+    Map,
+    Guess
 }
