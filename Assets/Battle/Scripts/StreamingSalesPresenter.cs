@@ -1,4 +1,4 @@
-using R3;
+ï»¿using R3;
 using System;
 
 public class StreamingSalesPresenter : IDisposable
@@ -15,15 +15,15 @@ public class StreamingSalesPresenter : IDisposable
 
     public void Bind()
     {
-        // Model‚Ì‘”„ã‚ª•ÏX‚³‚ê‚½‚çA©“®“I‚ÉView‚Ì•\¦‚ğXV‚·‚é‚æ‚¤‚Éw“Ç
+        // Modelã®ç·å£²ä¸ŠãŒå¤‰æ›´ã•ã‚ŒãŸã‚‰ã€è‡ªå‹•çš„ã«Viewã®è¡¨ç¤ºã‚’æ›´æ–°ã™ã‚‹ã‚ˆã†ã«è³¼èª­
         model.TotalSales
             .Subscribe(amount => view.UpdateTotalSales(amount))
             .AddTo(disposables);
 
-        // Å‰‚É”„‚èê‚Ì¤•i‚ğ•\¦‚µ‚Ü‚·
+        // æœ€åˆã«å£²ã‚Šå ´ã®å•†å“ã‚’è¡¨ç¤ºã—ã¾ã™
         view.DisplayItems(model.ItemsForSale);
 
-        // ”„‚ê‚½ƒXƒƒbƒg‚Ì’Ê’m‚ğw“Ç‚µ‚ÄAİŒÉ•\¦XV‚Æ”„‚ê‚½ƒAƒjƒ‚ğÀs‚·‚é
+        // å£²ã‚ŒãŸã‚¹ãƒ­ãƒƒãƒˆã®é€šçŸ¥ã‚’è³¼èª­ã—ã¦ã€åœ¨åº«è¡¨ç¤ºæ›´æ–°ã¨å£²ã‚ŒãŸã‚¢ãƒ‹ãƒ¡ã‚’å®Ÿè¡Œã™ã‚‹
         model.OnItemSold
             .Subscribe(slotIndex =>
             {
@@ -32,10 +32,10 @@ public class StreamingSalesPresenter : IDisposable
 
                 var item = model.ItemsForSale[slotIndex];
 
-                // İŒÉ•\¦‚ÌXViView ‘¤‚ÌİŒÉw“Ç‚à‚ ‚é‚ªA‘¦”½‰f‚³‚¹‚½‚¢‚Ì‚Å–¾¦XVj
+                // åœ¨åº«è¡¨ç¤ºã®æ›´æ–°ï¼ˆView å´ã®åœ¨åº«è³¼èª­ã‚‚ã‚ã‚‹ãŒã€å³æ™‚åæ˜ ã•ã›ãŸã„ã®ã§æ˜ç¤ºæ›´æ–°ï¼‰
                 view.UpdateItemStock(slotIndex, item.Stock.Value);
 
-                // ”„‚ê‚½ƒGƒtƒFƒNƒgÄ¶
+                // å£²ã‚ŒãŸã‚¨ãƒ•ã‚§ã‚¯ãƒˆå†ç”Ÿ
                 view.PlaySoldAnimation(slotIndex);
             })
             .AddTo(disposables);
@@ -46,7 +46,7 @@ public class StreamingSalesPresenter : IDisposable
             })
             .AddTo(disposables);
 
-        // ¤•iƒŠƒXƒg‚ªXV‚³‚ê‚½‚çAView‚Ì•\¦‚ğXV
+        // å•†å“ãƒªã‚¹ãƒˆãŒæ›´æ–°ã•ã‚ŒãŸã‚‰ã€Viewã®è¡¨ç¤ºã‚’æ›´æ–°
         view.DisplayItems(model.ItemsForSale);
     }
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
@@ -14,11 +14,11 @@ public class StreamingSalesView : MonoBehaviour
     }
 
     /// <summary>
-    /// ”„‚èê‚Ì¤•i‚ğ‰Šú•\¦
+    /// å£²ã‚Šå ´ã®å•†å“ã‚’åˆæœŸè¡¨ç¤º
     /// </summary>
     public void DisplayItems(List<RuntimeItemData> items)
     {
-        Debug.Log($"yStreamingSalesViewzDisplayItems‚ªŒÄ‚Î‚ê‚Ü‚µ‚½BŒ»İ¤•i”: {items.Count}");
+        Debug.Log($"ã€StreamingSalesViewã€‘DisplayItemsãŒå‘¼ã°ã‚Œã¾ã—ãŸã€‚ç¾åœ¨å•†å“æ•°: {items.Count}");
         for (int i = 0; i < itemSlots.Count; i++)
         {
             if (i < items.Count)
@@ -34,7 +34,7 @@ public class StreamingSalesView : MonoBehaviour
     }
 
     /// <summary>
-    /// “Á’è‚ÌƒXƒƒbƒg‚ÌİŒÉ•\¦‚¾‚¯‚ğXV
+    /// ç‰¹å®šã®ã‚¹ãƒ­ãƒƒãƒˆã®åœ¨åº«è¡¨ç¤ºã ã‘ã‚’æ›´æ–°
     /// </summary>
     public void UpdateItemStock(int slotIndex, int newStock)
     {
@@ -48,7 +48,7 @@ public class StreamingSalesView : MonoBehaviour
     }
 
     /// <summary>
-    /// “Á’è‚ÌƒXƒƒbƒg‚ÅA”„‚ê‚½ƒAƒjƒ[ƒVƒ‡ƒ“‚ğÄ¶
+    /// ç‰¹å®šã®ã‚¹ãƒ­ãƒƒãƒˆã§ã€å£²ã‚ŒãŸã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’å†ç”Ÿ
     /// </summary>
     public void PlaySoldAnimation(int slotIndex)
     {

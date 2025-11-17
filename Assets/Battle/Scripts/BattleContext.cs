@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using System.Linq;
 using R3;
 
@@ -9,11 +9,11 @@ public class BattleContext
 
     private readonly List<CharacterPresenter> _enemyPresenters = new List<CharacterPresenter>();
 
-    // IReadOnlyList‚Æ‚µ‚ÄAˆÀ‘S‚ÉŒöŠJ‚·‚é
+    // IReadOnlyListã¨ã—ã¦ã€å®‰å…¨ã«å…¬é–‹ã™ã‚‹
     public IReadOnlyList<CharacterPresenter> EnemyPresenters => _enemyPresenters;
     public ReactiveProperty<CharacterPresenter> SelectedTarget { get; } = new();
 
-    // š í“¬ƒ‹[ƒ‹‚ğ•Û‚·‚é•Ï”
+    // â˜… æˆ¦é—˜ãƒ«ãƒ¼ãƒ«ã‚’ä¿æŒã™ã‚‹å¤‰æ•°
     public int TotalNormalEnemies { get; }
     public int MaxConcurrentEnemies { get; }
 
@@ -23,7 +23,7 @@ public class BattleContext
 
     private readonly Dictionary<int, CharacterPresenter> occupiedSpawnPoints = new Dictionary<int, CharacterPresenter>();
 
-    // ƒRƒ“ƒXƒgƒ‰ƒNƒ^‚Åí“¬ƒ‹[ƒ‹‚ğó‚¯æ‚é
+    // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã§æˆ¦é—˜ãƒ«ãƒ¼ãƒ«ã‚’å—ã‘å–ã‚‹
     public BattleContext(DungeonInfoScriptableObj stageData, int totalEnemies, int maxConcurrent)
     {
         CurrentStage = stageData;
@@ -38,7 +38,7 @@ public class BattleContext
 
     public void RemoveEnemies(IEnumerable<CharacterPresenter> enemiesToRemove)
     {
-        foreach (var enemy in enemiesToRemove.ToList()) // ToList()‚ÅˆÀ‘S‚Éƒ‹[ƒv
+        foreach (var enemy in enemiesToRemove.ToList()) // ToList()ã§å®‰å…¨ã«ãƒ«ãƒ¼ãƒ—
         {
             _enemyPresenters.Remove(enemy);
         }

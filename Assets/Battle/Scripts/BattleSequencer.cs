@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Cysharp.Threading.Tasks;
 using R3;
 using System.Collections.Generic;
@@ -6,17 +6,17 @@ using System.Threading;
 
 public class BattleSequencer : MonoBehaviour
 {
-    [Header("í“¬Œn‚Ìƒ}ƒl[ƒWƒƒ[")]
+    [Header("æˆ¦é—˜ç³»ã®ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼")]
     [SerializeField] private CharacterFactory characterFactory;
     [SerializeField] private BattleUIView battleUIView;
 
-    [Header("í“¬ƒ‹[ƒ‹İ’è")]
-    [Tooltip("‚±‚Ìí“¬‚Å“|‚·‚×‚«’Êíƒ‚ƒ“ƒXƒ^[‚Ì‘”")]
+    [Header("æˆ¦é—˜ãƒ«ãƒ¼ãƒ«è¨­å®š")]
+    [Tooltip("ã“ã®æˆ¦é—˜ã§å€’ã™ã¹ãé€šå¸¸ãƒ¢ãƒ³ã‚¹ã‚¿ãƒ¼ã®ç·æ•°")]
     [SerializeField] private const int totalNormalEnemies = 10;
-    [Tooltip("ƒtƒB[ƒ‹ƒh‚É“¯‚ÉoŒ»‚Å‚«‚é“G‚ÌÅ‘å”")]
+    [Tooltip("ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ã«åŒæ™‚ã«å‡ºç¾ã§ãã‚‹æ•µã®æœ€å¤§æ•°")]
     [SerializeField] private const int maxConcurrentEnemies = 3;
 
-    [Header("ƒXƒe[ƒWƒf[ƒ^")]
+    [Header("ã‚¹ãƒ†ãƒ¼ã‚¸ãƒ‡ãƒ¼ã‚¿")]
     [SerializeField] private DungeonInfoScriptableObj currentDungeon;
 
     private BattleContext battleContext;
@@ -27,10 +27,10 @@ public class BattleSequencer : MonoBehaviour
         battleContext?.GetAllPresenters() ?? new List<CharacterPresenter>();
     public Subject<(CharacterModel attacker, CharacterModel target)> OnCharacterDamaged { get; } = new();
 
-    // ƒeƒXƒg—p‚ÉStart()‚Å©“®ŠJn‚µ‚Ü‚·
+    // ãƒ†ã‚¹ãƒˆç”¨ã«Start()ã§è‡ªå‹•é–‹å§‹ã—ã¾ã™
     private void Start()
     {
-        Debug.LogWarning("š@ƒeƒXƒgƒ‚[ƒh‚Åí“¬‚ğŠJn");
+        Debug.LogWarning("â˜…ã€€ãƒ†ã‚¹ãƒˆãƒ¢ãƒ¼ãƒ‰ã§æˆ¦é—˜ã‚’é–‹å§‹");
         var testHeroModel = new HeroModel();
         StartBattle(testHeroModel);
     }
@@ -43,11 +43,11 @@ public class BattleSequencer : MonoBehaviour
 
     private async UniTaskVoid BattleStartAsync(HeroModel heroModel, CancellationToken token)
     {
-        // š ‚±‚±‚Åí“¬ƒ‹[ƒ‹‚ğContext‚É“n‚·
+        // â˜… ã“ã“ã§æˆ¦é—˜ãƒ«ãƒ¼ãƒ«ã‚’Contextã«æ¸¡ã™
         battleContext = new BattleContext(currentDungeon, totalNormalEnemies, maxConcurrentEnemies);
         var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this);
 
         await flowManager.ExecuteBattleAsync(heroModel, token);
-        Debug.Log("í“¬‚ªI—¹‚µ‚Ü‚µ‚½B (BattleSequencer)");
+        Debug.Log("æˆ¦é—˜ãŒçµ‚äº†ã—ã¾ã—ãŸã€‚ (BattleSequencer)");
     }
 }

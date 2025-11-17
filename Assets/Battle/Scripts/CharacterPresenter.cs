@@ -1,4 +1,4 @@
-using R3;
+ï»¿using R3;
 using System;
 using UnityEngine;
 
@@ -31,7 +31,7 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel
         view.Initialize(this, model.Name, model.CharacterSprite);
 
         view.OnClicked
-            .Subscribe(_ => Debug.Log($"{model.Name} ‚ªƒNƒŠƒbƒN‚³‚ê‚Ü‚µ‚½I(Presenter‚ªŒŸ’m)"))
+            .Subscribe(_ => Debug.Log($"{model.Name} ãŒã‚¯ãƒªãƒƒã‚¯ã•ã‚Œã¾ã—ãŸï¼(PresenterãŒæ¤œçŸ¥)"))
             .AddTo(disposables);
     }
 

@@ -1,11 +1,11 @@
-using Cysharp.Threading.Tasks;
+ï»¿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
 
 /// <summary>
-/// í“¬’†‚Ì‹ï‘Ì“I‚ÈƒAƒNƒVƒ‡ƒ“‚ÌÀs‚¾‚¯‚ğ’S“–
+/// æˆ¦é—˜ä¸­ã®å…·ä½“çš„ãªã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã®å®Ÿè¡Œã ã‘ã‚’æ‹…å½“
 /// </summary>
 public class BattleActionExecutor
 {
@@ -16,7 +16,7 @@ public class BattleActionExecutor
     }
 
     /// <summary>
-    /// 1ƒ^[ƒ“•ª‚ÌƒLƒƒƒ‰ƒNƒ^[‚Ìs“®‚ğÀs‚µ‚Ü‚·
+    /// 1ã‚¿ãƒ¼ãƒ³åˆ†ã®ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®è¡Œå‹•ã‚’å®Ÿè¡Œã—ã¾ã™
     /// </summary>
     public async UniTask ExecuteTurnActionsAsync(BattleUIView uiView, CancellationToken token)
     {
@@ -30,7 +30,7 @@ public class BattleActionExecutor
             if (targetPresenter != null)
             {
                 int damageDealt = presenter.PerformAttack(targetPresenter);
-                string logMessage = $"{presenter.GetModel().Name} ‚ÌUŒ‚I {targetPresenter.GetModel().Name} ‚É {damageDealt} ‚Ìƒ_ƒ[ƒWI";
+                string logMessage = $"{presenter.GetModel().Name} ã®æ”»æ’ƒï¼ {targetPresenter.GetModel().Name} ã« {damageDealt} ã®ãƒ€ãƒ¡ãƒ¼ã‚¸ï¼";
                 await uiView.AddLogAsync(logMessage, token);
             }
 
@@ -39,7 +39,7 @@ public class BattleActionExecutor
     }
 
     /// <summary>
-    /// ƒ^[ƒ“I—¹‚Ì•]‰¿‚ğÀs‚µ‚Ü‚·
+    /// ã‚¿ãƒ¼ãƒ³çµ‚äº†æ™‚ã®è©•ä¾¡ã‚’å®Ÿè¡Œã—ã¾ã™
     /// </summary>
     public async UniTask EvaluateEndOfTurnAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token)
     {
@@ -60,7 +60,7 @@ public class BattleActionExecutor
         {
             foreach (var deadEnemy in deadEnemies)
             {
-                await uiView.AddLogAsync($"{deadEnemy.GetModel().Name} ‚ğ“|‚µ‚½I", token);
+                await uiView.AddLogAsync($"{deadEnemy.GetModel().Name} ã‚’å€’ã—ãŸï¼", token);
                 Object.Destroy(deadEnemy.GetView().gameObject);
                 deadEnemy.Dispose();
             }
@@ -89,7 +89,7 @@ public class BattleActionExecutor
             if (SpawnRandomEnemy(factory, sequencer))
             {
                 int delayTime = 500;
-                await uiView.AddLogAsync("“G‚Ì‘‰‡‚ªŒ»‚ê‚½I", token);
+                await uiView.AddLogAsync("æ•µã®å¢—æ´ãŒç¾ã‚ŒãŸï¼", token);
                 await UniTask.Delay(delayTime, cancellationToken: token);
             }
             else
@@ -102,7 +102,7 @@ public class BattleActionExecutor
     private async UniTask SpawnBossAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token)
     {
         context.IsBossPhase = true;
-        await uiView.AddLogAsync("III•s‹C–¡‚È‹C”z‚ª‚·‚éIII", token);
+        await uiView.AddLogAsync("ï¼ï¼ï¼ä¸æ°—å‘³ãªæ°—é…ãŒã™ã‚‹ï¼ï¼ï¼", token);
         var bossData = context.CurrentStage.dungeonMonsters.FirstOrDefault(m => m.enemyName == context.CurrentStage.dungeonBoss);
         if (bossData != null)
         {
@@ -112,7 +112,7 @@ public class BattleActionExecutor
                 var bossPresenter = factory.CreateEnemy(bossData, spawnIndex.Value, sequencer);
                 context.AddEnemy(bossPresenter);
                 context.OccupySpawnPoint(spawnIndex.Value, bossPresenter);
-                await uiView.AddLogAsync($"ƒ{ƒXy{bossData.enemyName}z‚ªoŒ»‚µ‚½I", token);
+                await uiView.AddLogAsync($"ãƒœã‚¹ã€{bossData.enemyName}ã€‘ãŒå‡ºç¾ã—ãŸï¼", token);
             }
         }
     }

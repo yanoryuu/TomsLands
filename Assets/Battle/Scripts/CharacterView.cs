@@ -1,17 +1,17 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using R3;
 
 public class CharacterView : MonoBehaviour
 {
-    [Header("ƒRƒ“ƒ|[ƒlƒ“ƒgQÆ")]
+    [Header("ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆå‚ç…§")]
     [SerializeField] private SpriteRenderer characterSpriteRenderer;
-    [SerializeField] private CharacterStatusView statusView; // š CharacterStatusView‚Ö‚ÌQÆ‚ğ‚Â
+    [SerializeField] private CharacterStatusView statusView; // â˜… CharacterStatusViewã¸ã®å‚ç…§ã‚’æŒã¤
 
-    // ‚±‚ÌView‚ªƒNƒŠƒbƒN‚³‚ê‚½‚±‚Æ‚ğPresenter‚É’Ê’m‚·‚é‚½‚ß‚Ìd‘g‚İ
+    // ã“ã®ViewãŒã‚¯ãƒªãƒƒã‚¯ã•ã‚ŒãŸã“ã¨ã‚’Presenterã«é€šçŸ¥ã™ã‚‹ãŸã‚ã®ä»•çµ„ã¿
     public Subject<Unit> OnClicked { get; } = new Subject<Unit>();
 
     /// <summary>
-    /// Presenter‚©‚ç‚Ìw¦‚Å‰Šúİ’è‚ğs‚¤
+    /// Presenterã‹ã‚‰ã®æŒ‡ç¤ºã§åˆæœŸè¨­å®šã‚’è¡Œã†
     /// </summary>
     public void Initialize(CharacterPresenter presenter, string characterName, Sprite sprite)
     {
@@ -21,21 +21,21 @@ public class CharacterView : MonoBehaviour
             characterSpriteRenderer.sprite = sprite;
         }
 
-        // š CharacterStatusView‚É‚à‰Šú‰»‚ğw¦
-        //    Presenter‚ğ“n‚µ‚ÄAUI‚ÌƒCƒxƒ“ƒgw“Ç‚È‚Ç‚ğİ’è‚³‚¹‚é
+        // â˜… CharacterStatusViewã«ã‚‚åˆæœŸåŒ–ã‚’æŒ‡ç¤º
+        //    Presenterã‚’æ¸¡ã—ã¦ã€UIã®ã‚¤ãƒ™ãƒ³ãƒˆè³¼èª­ãªã©ã‚’è¨­å®šã•ã›ã‚‹
         statusView.Initialize(presenter);
     }
 
     /// <summary>
-    /// Presenter‚©‚ç‚Ìw¦‚Åƒ_ƒ[ƒWƒGƒtƒFƒNƒg‚ÌÄ¶‚ğ–½—ß‚·‚é
+    /// Presenterã‹ã‚‰ã®æŒ‡ç¤ºã§ãƒ€ãƒ¡ãƒ¼ã‚¸ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã®å†ç”Ÿã‚’å‘½ä»¤ã™ã‚‹
     /// </summary>
     public void PlayDamageEffect(int damageAmount)
     {
-        // š CharacterStatusView‚ª‚ÂƒGƒtƒFƒNƒgÄ¶ˆ—‚ğŒÄ‚Ño‚·
+        // â˜… CharacterStatusViewãŒæŒã¤ã‚¨ãƒ•ã‚§ã‚¯ãƒˆå†ç”Ÿå‡¦ç†ã‚’å‘¼ã³å‡ºã™
         statusView.PlayDamageEffects(damageAmount);
     }
 
-    // ƒ}ƒEƒXƒNƒŠƒbƒN‚ğŒŸ’m‚µ‚ÄPresenter‚É’Ê’m‚·‚é
+    // ãƒã‚¦ã‚¹ã‚¯ãƒªãƒƒã‚¯ã‚’æ¤œçŸ¥ã—ã¦Presenterã«é€šçŸ¥ã™ã‚‹
     private void OnMouseDown()
     {
         OnClicked.OnNext(Unit.Default);

@@ -1,10 +1,10 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 [CreateAssetMenu(fileName = "New HeroData", menuName = "Battle/HeroData")]
 public class HeroData : ScriptableObject
 {
-    [Header("Šî–{ƒXƒe[ƒ^ƒX")]
-    public string heroName = "—EÒ";
+    [Header("åŸºæœ¬ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹")]
+    public string heroName = "å‹‡è€…";
     public int hp = 300;
     public int mp = 40;
     public int attackPower = 60;

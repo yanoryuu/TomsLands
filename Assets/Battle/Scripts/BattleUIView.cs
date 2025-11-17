@@ -1,20 +1,20 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
 /// <summary>
-/// í“¬’†‚ÌUI—v‘f‚Ì•\¦EXV‚ğ‘S‚Ä’S“–‚·‚éƒNƒ‰ƒX
+/// æˆ¦é—˜ä¸­ã®UIè¦ç´ ã®è¡¨ç¤ºãƒ»æ›´æ–°ã‚’å…¨ã¦æ‹…å½“ã™ã‚‹ã‚¯ãƒ©ã‚¹
 /// </summary>
 public class BattleUIView : MonoBehaviour
 {
-    [Header("ƒƒO•\¦ŠÖ˜A")]
+    [Header("ãƒ­ã‚°è¡¨ç¤ºé–¢é€£")]
     [SerializeField] private TMP_Text logText;
     [SerializeField] private int maxLogLines = 8;
     [SerializeField] private float logDisplayDuration = 0.5f;
 
-    // Še—v‘f‚Í "1ƒƒbƒZ[ƒWi‰üs‚ğŠÜ‚Şj" ‚ğ’PˆÊ‚Æ‚µ‚Ä•Û
+    // å„è¦ç´ ã¯ "1ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ï¼ˆæ”¹è¡Œã‚’å«ã‚€ï¼‰" ã‚’å˜ä½ã¨ã—ã¦ä¿æŒ
     private readonly List<string> logLines = new List<string>();
 
 
@@ -22,20 +22,20 @@ public class BattleUIView : MonoBehaviour
     {
         logLines.Add(message);
 
-        // ƒeƒLƒXƒg‚ğXV‚µ‚ÄƒŒƒ“ƒ_ƒŠƒ“ƒOî•ñ‚ğ‹­§XV
+        // ãƒ†ã‚­ã‚¹ãƒˆã‚’æ›´æ–°ã—ã¦ãƒ¬ãƒ³ãƒ€ãƒªãƒ³ã‚°æƒ…å ±ã‚’å¼·åˆ¶æ›´æ–°
         logText.text = string.Join("\n", logLines);
-        // ForceMeshUpdate ‚ğŒÄ‚Î‚È‚¢‚Æ textInfo ‚ªŒÃ‚¢‚Ü‚Ü‚È‚Ì‚Å•K‚¸ŒÄ‚Ô
+        // ForceMeshUpdate ã‚’å‘¼ã°ãªã„ã¨ textInfo ãŒå¤ã„ã¾ã¾ãªã®ã§å¿…ãšå‘¼ã¶
         logText.ForceMeshUpdate();
 
         while (logText.textInfo.lineCount > maxLogLines && logLines.Count > 0)
         {
-            // ŒÃ‚¢ƒƒbƒZ[ƒW‚ğíœ‚µ‚ÄÄ•`‰æ¨Ä•]‰¿
+            // å¤ã„ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å‰Šé™¤ã—ã¦å†æç”»â†’å†è©•ä¾¡
             logLines.RemoveAt(0);
             logText.text = string.Join("\n", logLines);
             logText.ForceMeshUpdate();
         }
 
-        // 4) ƒƒO‚ª—¬‚ê‚é‚æ‚¤‚É­‚µ‘Ò‹@iƒLƒƒƒ“ƒZƒ‹‘Î‰j
+        // 4) ãƒ­ã‚°ãŒæµã‚Œã‚‹ã‚ˆã†ã«å°‘ã—å¾…æ©Ÿï¼ˆã‚­ãƒ£ãƒ³ã‚»ãƒ«å¯¾å¿œï¼‰
         await UniTask.Delay(System.TimeSpan.FromSeconds(logDisplayDuration), cancellationToken: token);
     }
 }

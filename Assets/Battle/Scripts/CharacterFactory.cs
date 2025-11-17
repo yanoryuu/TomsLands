@@ -1,31 +1,31 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class CharacterFactory : MonoBehaviour
 {
-    [Header("ƒf[ƒ^")]
+    [Header("ãƒ‡ãƒ¼ã‚¿")]
     [SerializeField] private HeroData heroData;
 
     [Header("Prefab")]
     [SerializeField] private CharacterView heroPrefab;
     [SerializeField] private CharacterView enemyPrefab;
 
-    [Header("¶¬êŠ")]
+    [Header("ç”Ÿæˆå ´æ‰€")]
     [SerializeField] private Transform heroSpawnPoint;
     [SerializeField] private Transform[] enemySpawnPoints;
 
     /// <summary>
-    /// —EÒ‚ğ¶¬‚µA‚»‚ÌPresenter‚ğ•Ô‚·
+    /// å‹‡è€…ã‚’ç”Ÿæˆã—ã€ãã®Presenterã‚’è¿”ã™
     /// </summary>
     public CharacterPresenter CreateHero(HeroModel savedHeroModel, BattleSequencer sequencer)
     {
-        // 1. —EÒ‚Ìƒf[ƒ^(Model)‚ğAƒ}ƒXƒ^[ƒf[ƒ^(HeroData)‚Æ
-        //    ƒZ[ƒuƒf[ƒ^(HeroModel)‚Ì—¼•û‚ğg‚Á‚Ä¶¬‚·‚é
+        // 1. å‹‡è€…ã®ãƒ‡ãƒ¼ã‚¿(Model)ã‚’ã€ãƒã‚¹ã‚¿ãƒ¼ãƒ‡ãƒ¼ã‚¿(HeroData)ã¨
+        //    ã‚»ãƒ¼ãƒ–ãƒ‡ãƒ¼ã‚¿(HeroModel)ã®ä¸¡æ–¹ã‚’ä½¿ã£ã¦ç”Ÿæˆã™ã‚‹
         var model = new CharacterModel(heroData, savedHeroModel);
 
-        // 2. —EÒ‚ÌŒ©‚½–Ú(View)‚ğPrefab‚©‚ç¶¬‚·‚é
+        // 2. å‹‡è€…ã®è¦‹ãŸç›®(View)ã‚’Prefabã‹ã‚‰ç”Ÿæˆã™ã‚‹
         CharacterView view = Instantiate(heroPrefab, heroSpawnPoint.position, Quaternion.identity);
 
-        // 3. Model‚ÆView‚ğŒq‚®Presenter‚ğ¶¬‚µ‚Ä•Ô‚·
+        // 3. Modelã¨Viewã‚’ç¹‹ãPresenterã‚’ç”Ÿæˆã—ã¦è¿”ã™
         var presenter = new CharacterPresenter(model, view, sequencer);
         return presenter;
     }
@@ -34,7 +34,7 @@ public class CharacterFactory : MonoBehaviour
     {
         if (spawnIndex < 0 || spawnIndex >= enemySpawnPoints.Length)
         {
-            Debug.LogError($"–³Œø‚ÈƒXƒ|[ƒ“’n“_ƒCƒ“ƒfƒbƒNƒX({spawnIndex})‚ªw’è‚³‚ê‚Ü‚µ‚½I", this);
+            Debug.LogError($"ç„¡åŠ¹ãªã‚¹ãƒãƒ¼ãƒ³åœ°ç‚¹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹({spawnIndex})ãŒæŒ‡å®šã•ã‚Œã¾ã—ãŸï¼", this);
             return null;
         }
         Transform spawnPoint = enemySpawnPoints[spawnIndex];
