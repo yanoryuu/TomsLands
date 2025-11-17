@@ -1,10 +1,10 @@
-using Cysharp.Threading.Tasks;
+ï»¿using Cysharp.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
 
 /// <summary>
-/// í“¬‚Ì‘å‚«‚È—¬‚êií—ªj‚¾‚¯‚ğŠÇ—‚·‚é
+/// æˆ¦é—˜ã®å¤§ããªæµã‚Œï¼ˆæˆ¦ç•¥ï¼‰ã ã‘ã‚’ç®¡ç†ã™ã‚‹
 /// </summary>
 public class BattleFlowManager
 {
@@ -24,19 +24,19 @@ public class BattleFlowManager
     }
 
     /// <summary>
-    /// í“¬‚Ì‘S‘Ì‚Ì—¬‚ê‚ğwŠö‚µ‚Ü‚·
+    /// æˆ¦é—˜ã®å…¨ä½“ã®æµã‚Œã‚’æŒ‡æ®ã—ã¾ã™
     /// </summary>
     public async UniTask ExecuteBattleAsync(HeroModel heroModel, CancellationToken token)
     {
-        // --- €”õƒtƒF[ƒY ---
-        await uiView.AddLogAsync("--- í“¬ŠJnI ---", token);
+        // --- æº–å‚™ãƒ•ã‚§ãƒ¼ã‚º ---
+        await uiView.AddLogAsync("--- æˆ¦é—˜é–‹å§‹ï¼ ---", token);
         SetupCharacters(heroModel);
 
-        // --- ÀsƒtƒF[ƒY ---
+        // --- å®Ÿè¡Œãƒ•ã‚§ãƒ¼ã‚º ---
         int turnCount = 1;
         while (!executor.IsBattleEnded())
         {
-            await uiView.AddLogAsync($"--- ƒ^[ƒ“ {turnCount} ---", token);
+            await uiView.AddLogAsync($"--- ã‚¿ãƒ¼ãƒ³ {turnCount} ---", token);
 
             await executor.ExecuteTurnActionsAsync(uiView, token);
             await executor.EvaluateEndOfTurnAsync(factory, uiView, sequencer, token);
@@ -44,12 +44,12 @@ public class BattleFlowManager
             turnCount++;
         }
 
-        // --- Œ‹‰ÊƒtƒF[ƒY ---
+        // --- çµæœãƒ•ã‚§ãƒ¼ã‚º ---
         await ResultPhaseAsync(heroModel, token);
     }
 
     /// <summary>
-    /// ƒLƒƒƒ‰ƒNƒ^[‚Ì‰Šú”z’u‚ğs‚¢‚Ü‚·
+    /// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®åˆæœŸé…ç½®ã‚’è¡Œã„ã¾ã™
     /// </summary>
     private void SetupCharacters(HeroModel heroModel)
     {
@@ -77,7 +77,7 @@ public class BattleFlowManager
     }
 
     /// <summary>
-    /// í“¬Œ‹‰Ê‚ğ”»’è‚µAƒƒO•\¦‚ÆƒCƒxƒ“ƒg”­s‚ğs‚¢‚Ü‚·
+    /// æˆ¦é—˜çµæœã‚’åˆ¤å®šã—ã€ãƒ­ã‚°è¡¨ç¤ºã¨ã‚¤ãƒ™ãƒ³ãƒˆç™ºè¡Œã‚’è¡Œã„ã¾ã™
     /// </summary>
     private async UniTask ResultPhaseAsync(HeroModel heroModel, CancellationToken token)
     {
@@ -86,12 +86,12 @@ public class BattleFlowManager
 
         if (context.HeroPresenter.GetModel().IsDead)
         {
-            await uiView.AddLogAsync("------ ”s–kc ------", token);
+            await uiView.AddLogAsync("------ æ•—åŒ—â€¦ ------", token);
             sequencer.OnBattleDefeat.OnNext((weaponId: equippedWeaponId, armorId: equippedArmorId));
         }
         else
         {
-            await uiView.AddLogAsync("šššššš Š®‘SŸ—˜I šššššš", token);
+            await uiView.AddLogAsync("â˜…â˜…â˜…â˜…â˜…â˜… å®Œå…¨å‹åˆ©ï¼ â˜…â˜…â˜…â˜…â˜…â˜…", token);
             sequencer.OnBattleWin.OnNext((weaponId: equippedWeaponId, armorId: equippedArmorId));
         }
     }
