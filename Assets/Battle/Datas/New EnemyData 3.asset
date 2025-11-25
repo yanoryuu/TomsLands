@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: New EnemyData 3
   m_EditorClassIdentifier: 
-  enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
-  hp: 100
+  enemyName: undead4
+  hp: 50
   attackPower: 10
-  defensePower: 5
+  defensePower: 8
   elementType: 0
-  enemySprite: {fileID: 0}
+  enemySprite: {fileID: 21300000, guid: 0aa09f06c69024e5a9c50f1f11a807c7, type: 3}
   skills: []
