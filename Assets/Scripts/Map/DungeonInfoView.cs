@@ -19,6 +19,8 @@ public class DungeonInfoView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dungeonLevelText;
     [SerializeField] private TextMeshProUGUI dungeonDescriptionText;
     [SerializeField] private TextMeshProUGUI dungeonRewardText;
+
+    [SerializeField] private GameObject notPurchasedInfoUI;
     
     [SerializeField] private Button closeButton;
     
@@ -36,17 +38,25 @@ public class DungeonInfoView : MonoBehaviour
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
     }
     
-    public void ShowDungeonInfo(DungeonData dungeonData)
+    public void ShowDungeonInfo(DungeonData dungeonData,bool isUnlocked)
     {
-        SetDungeonInfo(dungeonData);
-        dungeonInfoPanel.SetActive(true);
+        if (isUnlocked)
+        {
+            SetDungeonInfo(dungeonData);
+            dungeonInfoPanel.SetActive(true);
+        }
+        else
+        {
+            notPurchasedInfoUI.SetActive(true);
+        }
+        
     }
 
     public void HideDungeonInfo()
     {
         dungeonInfoPanel.SetActive(false);
     }
-
+    
     private void SetDungeonInfo(DungeonData　d)
     {
         if(d==null)return;

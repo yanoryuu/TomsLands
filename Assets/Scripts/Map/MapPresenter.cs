@@ -39,9 +39,14 @@ public class MapPresenter : IPresenter
 
         mapView.OnMapIcon.Subscribe(key =>
         {
-            var data = dungeonRepository.GetById(key);
+            var unlocked = mapModel.isDungeonInfoUnlocked[key];
+
             
-            dungeonInfoView.ShowDungeonInfo(data);
+            var data = dungeonRepository.GetById(key);
+            dungeonInfoView.ShowDungeonInfo(data,unlocked);
+            
+            Debug.Log($"{key}の情報は{unlocked}です");
+            
         }).AddTo(disposable);
 
         mapView.OnBackRequested.Subscribe(_ =>
