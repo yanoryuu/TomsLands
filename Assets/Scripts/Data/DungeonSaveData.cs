@@ -8,8 +8,4 @@ public class DungeonSaveData
     public int currentDungeonLevel;
 }
 
-[Serializable]
-public class GameSaveData
-{
-    public List<DungeonSaveData> dungeons = new();
-}
+

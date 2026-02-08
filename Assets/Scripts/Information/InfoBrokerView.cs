@@ -10,8 +10,7 @@ public class InfoBrokerView : MonoBehaviour
 {
     [Header("UI References")]
     [SerializeField] private Button closeButton;
-    [SerializeField] private Button refreshButton;
-    [SerializeField] private TextMeshProUGUI brokerNameText;
+    // [SerializeField] private Button refreshButton;
     [SerializeField] private GameObject heroTab;
     [SerializeField] private GameObject mapTab;
     [SerializeField] private GameObject guessTab;
@@ -38,13 +37,13 @@ public class InfoBrokerView : MonoBehaviour
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
-        refreshButton.onClick.AddListener(() => OnRefreshRequested.OnNext(Unit.Default));
+        // refreshButton.onClick.AddListener(() => OnRefreshRequested.OnNext(Unit.Default));
         
         initTabPos[InfoBrokerTab.Hero] = heroTab.transform.localPosition;
         initTabPos[InfoBrokerTab.Map] = mapTab.transform.localPosition;
         initTabPos[InfoBrokerTab.Guess] = guessTab.transform.localPosition;
 
-        brokerNameText.text = "î•ñ‰®";
+        // brokerNameText.text = "î•ñ‰®";
         ShowRandomGreeting();
     }
 

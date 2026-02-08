@@ -1,7 +1,9 @@
 using R3;
 using System;
 using System.Linq;
-public class StreamingSettingPresenter : IDisposable,IPresenter
+using VContainer.Unity;
+
+public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
 {
     private readonly StreamingSettingModel _model;
     private readonly StreamingSettingView  _view;
@@ -16,7 +18,10 @@ public class StreamingSettingPresenter : IDisposable,IPresenter
         _model     = model;
         _view      = view;
         _itemModel = itemModel;
+    }
 
+    private void Bind()
+    {
         // 1) ロードして左パネルに再表示
         _model.LoadData();
         _view.PopulateSelected(_model.Selected, _itemModel);
@@ -78,4 +83,8 @@ public class StreamingSettingPresenter : IDisposable,IPresenter
     public void Show() => _view.Show();
     public void Hide() { _model.SaveData(); _view.Hide(); }
     public void Dispose() => _d.Dispose();
+    public void Start()
+    {
+        Bind();
+    }
 }

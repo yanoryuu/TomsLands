@@ -46,7 +46,6 @@ public class HeroModel
             InitializeRuntimeHeroFromMaster();
             return;
         }
-
         string json = File.ReadAllText(path);
         var dataList = JsonUtility.FromJson<RuntimeHeroData>(json);
         heroData = dataList;

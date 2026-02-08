@@ -1,7 +1,8 @@
 using System;
 using R3;
+using VContainer.Unity;
 
-public class TomsShopPresenter : IDisposable, IPresenter
+public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 {
     private readonly TomsShopView tomsShopView;
     private readonly ItemSelectionPresenter itemSelectionPresenter;
@@ -27,8 +28,11 @@ public class TomsShopPresenter : IDisposable, IPresenter
         this.stateManager = stateManager;
         
         stateManager.RegisterOnEnter(GamePhase.TomsShop,Entry);
-        
-        Bind();
+    }
+    
+    public void Start()
+    {
+        Bind();   
     }
 
     private void Bind()

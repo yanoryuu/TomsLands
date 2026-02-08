@@ -1,3 +1,4 @@
+// csharp
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,10 +14,16 @@ public class DungeonRepository : MonoBehaviour
     public List<DungeonData> availableDungeons { get; private set; } = new();
 
     // カタログは FromSave 時に必要
-    private IDungeonCatalog catalog; 
+    private IDungeonCatalog catalog;
 
     private void Awake()
     {
+        // カタログが設定されていなければ作成してセット（TryLoadAndRebuild が catalog を使うため）
+        if (catalog == null)
+        {
+            SetCatalog(CreateCatalog());
+        }
+
         // セーブがあればロード復元、無ければ SO から初期化
         if (!TryLoadAndRebuild())
         {
@@ -120,13 +127,13 @@ public class DungeonRepository : MonoBehaviour
     {
         Save();
     }
-    
+
     // すべて（読み取り専用）
-    public ReadOnlyCollection<DungeonData> GetAll() 
+    public ReadOnlyCollection<DungeonData> GetAll()
         => availableDungeons.AsReadOnly();
 
     // idで1件
-    public DungeonData GetById(DungeonName key) 
+    public DungeonData GetById(DungeonName key)
         => availableDungeons.FirstOrDefault(d => d.key == key);
 
     // 安全取得

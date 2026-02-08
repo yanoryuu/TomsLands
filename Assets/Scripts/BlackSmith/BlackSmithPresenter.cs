@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using R3;
 using UnityEngine;
+using VContainer.Unity;
 
-public class BlackSmithPresenter : IDisposable, IPresenter
+public class BlackSmithPresenter : IDisposable, IStartable
 {
     private readonly BlackSmithModel blackSmithModel;
     private readonly ItemModel itemModel;
@@ -28,6 +29,10 @@ public class BlackSmithPresenter : IDisposable, IPresenter
         this.stateManager = stateManager;
 
         stateManager.RegisterOnEnter(GamePhase.BlackSmith, Entry);
+    }
+    
+    public void Start()
+    {
         Bind();
     }
 

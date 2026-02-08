@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using R3;
+using VContainer.Unity;
 
-public class ItemSelectionPresenter :IDisposable
+public class ItemSelectionPresenter :IDisposable,IStartable
 {
     private readonly ItemSelectionModel selectionModel;
     private readonly ItemSelectionView selectionView;
@@ -16,6 +17,11 @@ public class ItemSelectionPresenter :IDisposable
         this.selectionView = selectionView;
         this.itemModel = itemModel;
         this.tomsModel = tomsModel;
+        
+    }
+    
+    public void Start()
+    {
         Bind();
     }
 

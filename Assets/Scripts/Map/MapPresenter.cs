@@ -1,7 +1,9 @@
+using System;
 using R3;
 using UnityEngine;
+using VContainer.Unity;
 
-public class MapPresenter : IPresenter
+public class MapPresenter : IPresenter, IStartable,IDisposable
 {
     private CompositeDisposable disposable;
     private MapModel mapModel;
@@ -21,7 +23,15 @@ public class MapPresenter : IPresenter
         this.stateManager = stateManager;
         
         stateManager.RegisterOnEnter(GamePhase.Map,Entry);
+    }
+
+    public void Start()
+    {
         Bind();
+    }
+    public void Dispose()
+    {
+        disposable.Dispose();
     }
 
     public void Entry()
