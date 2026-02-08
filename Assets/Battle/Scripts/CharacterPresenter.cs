@@ -1,8 +1,9 @@
 ﻿using R3;
 using System;
 using UnityEngine;
+using VContainer.Unity;
 
-public class CharacterPresenter : IDisposable, IBattleCharacterViewModel
+public class CharacterPresenter : IDisposable, IBattleCharacterViewModel,IStartable
 {
     private readonly CharacterModel model;
     private readonly CharacterView view;
@@ -23,6 +24,12 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel
         this.model = model;
         this.view = view;
         this.sequencer = sequencer;
+        
+    }
+    
+    public void Start()
+    {
+        // 初期化処理が必要な場合はここに記述
         Bind();
     }
 

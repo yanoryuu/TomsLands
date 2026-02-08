@@ -53,7 +53,7 @@ public class DungeonInfoView : MonoBehaviour
         
         dungeonNameImage.sprite = d.dungeonImage;
         dungeonDescriptionText.text = d.dungeonDescription;
-        dungeonLevelText.text = d.currentDungeonLevel.ToString();
+        dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
         dungeonRewardText.text = d.rewardGold.ToString();
 
         //すでにある前のモンスターデータを削除

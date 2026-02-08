@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
+using VContainer.Unity;
 
-public class ResultPresenter : IPresenter
+public class ResultPresenter : IPresenter, IDisposable, IStartable
 {
     private readonly ResultView resultView;
     private readonly ResultModel resultModel;
@@ -11,7 +13,6 @@ public class ResultPresenter : IPresenter
         this.resultModel = resultModel; 
         this.stateManager = stateManager;
         stateManager.RegisterOnEnter(GamePhase.Result,Entry);
-        Bind();
     }
 
     private void Bind()
@@ -22,5 +23,14 @@ public class ResultPresenter : IPresenter
     public void Entry()
     {
         //ここにこの画面に移動した時にここを呼び出す。
+    }
+    
+    public void Start()
+    {
+        Bind();
+    }
+    public void Dispose()
+    {
+        
     }
 }

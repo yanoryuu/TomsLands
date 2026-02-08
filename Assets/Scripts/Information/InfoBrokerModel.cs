@@ -10,7 +10,7 @@ public class InfoBrokerModel
     public List<HeroPurchaseHistory> heroPurchaseHistory { get; private set; } = new();
     public List<DungeonData> availableDungeons { get; private set; } = new();
     public RuntimeHeroData currentHeroData { get; private set; }
-
+    
     public ReactiveProperty<List<InfoMessage>> CurrentInfoMessages { get; private set; } = new();
 
     private readonly ItemModel itemModel;
@@ -92,10 +92,9 @@ public class InfoBrokerModel
     };
 
     //コンストラクタ
-    public InfoBrokerModel(ItemModel itemModel, RuntimeHeroData heroData)
+    public InfoBrokerModel(ItemModel itemModel)
     {
         this.itemModel = itemModel;
-        this.currentHeroData = heroData;
         InitializeDungeons();
     }
 

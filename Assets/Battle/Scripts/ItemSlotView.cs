@@ -57,6 +57,7 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public void SetItem(RuntimeItemData item)
     {
         CurrentItem = item;
+        
 
         if (item != null)
         {
@@ -64,6 +65,10 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             {
                 itemIcon.enabled = true;
                 itemIcon.sprite = item.ItemIcon;
+                // 色も確実にリセット
+                var color = itemIcon.color;
+                color.a = 1.0f;
+                itemIcon.color = color;
             }
             if (stockText != null)
             {
@@ -76,7 +81,14 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             if (itemIcon != null) itemIcon.enabled = false;
             if (stockText != null) stockText.gameObject.SetActive(false);
         }
+
+        // canvasGroup の alpha もリセット
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 1.0f;
+        }
     }
+
 
     public void UpdateStock(int stock)
     {
@@ -117,7 +129,19 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         ghostIcon.rectTransform.sizeDelta = this.GetComponent<RectTransform>().sizeDelta;
         ghostIcon.gameObject.SetActive(true);
 
-        if (canvasGroup != null) canvasGroup.alpha = 0.5f;
+        // 元のアイコンを半透明にする（非表示にしない）
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 0.5f;
+        }
+        else
+        {
+            // canvasGroup がない場合は itemIcon の色を調整
+            var color = itemIcon.color;
+            color.a = 0.5f;
+            itemIcon.color = color;
+        }
+
         draggedItem = this;
     }
 
@@ -133,7 +157,19 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             ghostIcon.gameObject.SetActive(false);
         }
-        if (canvasGroup != null) canvasGroup.alpha = 1.0f;
+
+        // 元のアイコンを完全に表示に戻す
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 1.0f;
+        }
+        else
+        {
+            var color = itemIcon.color;
+            color.a = 1.0f;
+            itemIcon.color = color;
+        }
+
         draggedItem = null;
     }
 
@@ -165,25 +201,21 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             arrowTweener = rt.DOLocalMoveY(targetY, 0.45f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
         }
 
+        // CurrentItem が null なら価格表示をスキップ
+        if (CurrentItem == null) return;
+
         // ドラッグ中で、ドラッグ元が売り場なら在庫の価格表示を抑制する
         if (draggedItem != null && draggedItem.IsSellSlot) return;
 
-        // それ以外（在庫側など）は価格表示
-        // 直接参照で価格を取得（まずは CurrentPrice.Value を優先、その次に BasePrice）
-        string priceStr = null;
-        priceStr = $"{CurrentItem.CurrentPrice.Value} G";
+        // priceTargetText が設定されていない場合もスキップ
+        if (priceTargetText == null) return;
 
-        if (string.IsNullOrEmpty(priceStr))
-        {
-            Debug.LogWarning($"[ItemSlotView] Price not found for item {CurrentItem?.ItemId ?? "<unknown>"} on {gameObject.name}");
-            priceTargetText.text = "—";
-        }
-        else
-        {
-            priceTargetText.text = priceStr;
-        }
+        // 価格表示
+        string priceStr = $"{CurrentItem.CurrentPrice.Value} G";
+        priceTargetText.text = priceStr;
         priceTargetText.gameObject.SetActive(true);
     }
+
 
     public void OnPointerExit(PointerEventData eventData)
     {
