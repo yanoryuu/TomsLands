@@ -4,7 +4,7 @@ using R3;
 using UnityEngine;
 using VContainer.Unity;
 
-public class BlackSmithPresenter : IDisposable, IStartable
+public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 {
     private readonly BlackSmithModel blackSmithModel;
     private readonly ItemModel itemModel;

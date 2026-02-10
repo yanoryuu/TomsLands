@@ -1,6 +1,9 @@
+using System;
 using UnityEngine;
 using R3;
-public class CommonPresenter
+using VContainer.Unity;
+
+public class CommonPresenter:IStartable,IDisposable
 {
     private readonly CommonView commonView;
     private readonly TomsModel tomsModel;
@@ -10,8 +13,17 @@ public class CommonPresenter
     {
         this.commonView = commonView;
         this.tomsModel = tomsModel;
+    }
+    
+    public void Start()
+    {
         Bind();
     }
+    public void Dispose()
+    {
+        disposables.Dispose();
+    }
+    
     private void Bind()
     {
         

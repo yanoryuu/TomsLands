@@ -12857,7 +12857,7 @@ MonoBehaviour:
   newGameButton: {fileID: 767429257}
   loadGameButton: {fileID: 1698907243}
   titleIcon: {fileID: 374793722}
-  titleScreen: {fileID: 0}
+  titleScreen: {fileID: 2035301310}
 --- !u!1 &1001342954
 GameObject:
   m_ObjectHideFlags: 0
@@ -19619,7 +19619,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1635009240
 RectTransform:
   m_ObjectHideFlags: 0
@@ -23026,7 +23026,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &2094956524
 RectTransform:
   m_ObjectHideFlags: 0

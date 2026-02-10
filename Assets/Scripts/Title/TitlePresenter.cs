@@ -1,7 +1,9 @@
+using System;
 using R3;
 using UnityEngine;
+using VContainer.Unity;
 
-public class TitlePresenter : IPresenter
+public class TitlePresenter : IPresenter,IStartable,IDisposable
 {
     private TitleView titleView;
     private CompositeDisposable disposable = new CompositeDisposable();
@@ -11,12 +13,21 @@ public class TitlePresenter : IPresenter
     {
         this.titleView = titleView;
         this.stateManager = stateManager;
-        Bind();
         
         stateManager.RegisterOnEnter(GamePhase.Title,Entry);
     }
 
     public void Entry()
+    {
+        
+    }
+    
+    public void Start()
+    {
+        Bind();
+    }
+
+    public void Dispose()
     {
         
     }
@@ -33,6 +44,7 @@ public class TitlePresenter : IPresenter
         {
             // ロード処理
             stateManager.ChangePhase(GamePhase.TomsShop);
+            Debug.Log("ロード処理");
         }).AddTo(disposable);
     }
 }
