@@ -5,12 +5,10 @@ using VContainer.Unity;
 public class GameFlowManager : IDisposable, IStartable
 {
     private GameFlow _gameFlow;
-    
-    private GameFlowGenerator _gameFlowGenerator;
 
-    public GameFlowManager(GameFlowGenerator gameFlowGenerator)
+    public GameFlowManager()
     {
-        _gameFlowGenerator = gameFlowGenerator;
+        
     }
     
     public void Start()

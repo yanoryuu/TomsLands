@@ -19,6 +19,7 @@ MonoBehaviour:
   itemIcon: {fileID: 21300000, guid: 207695b1214594af2accf84249fe1ab7, type: 3}
   initialStock: 0
   maxStock: 100
+  initialDisplayStock: 0
   itemType: 1
   itemAttribute: 2
   requiredLevel: 1
