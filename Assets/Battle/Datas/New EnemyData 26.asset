@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
-  m_Name: New EnemyData 7
+  m_Name: New EnemyData 26
   m_EditorClassIdentifier: 
-  enemyName: jungle3
-  hp: 40
-  attackPower: 10
+  enemyName: sea308
+  hp: 50
+  attackPower: 20
   defensePower: 5
   elementType: 0
-  enemySprite: {fileID: 21300000, guid: 270256878f55b42568990f9adc726934, type: 3}
+  enemySprite: {fileID: 21300000, guid: 75c3f93916f574d87955f6adc0241d08, type: 3}
   skills: []
