@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 using System.Linq;
-using DG.Tweening; // š ‚±‚ê‚ğ–Y‚ê‚¸‚É
+using DG.Tweening; // DOTween å¿˜ã‚Œãšã«
 using R3;
 
 public class InfoBrokerView : MonoBehaviour
@@ -13,23 +13,35 @@ public class InfoBrokerView : MonoBehaviour
     // [SerializeField] private Button refreshButton;
     [SerializeField] private GameObject heroTab;
     [SerializeField] private GameObject mapTab;
-    [SerializeField] private GameObject guessTab;
+    // [SerializeField] private GameObject guessTab;
     [SerializeField] private TextMeshProUGUI messageText;
+
+    [Header("Tab Buttons (å·¦ã‹ã‚‰ åœ°å›³, å‹‡è€…, äºˆæ¸¬)")]
+    [SerializeField] private Button mapButton;
+    [SerializeField] private Button heroButton;
+    // [SerializeField] private Button guessButton;
+
+    [Header("Content Panels")]
+    [SerializeField] private GameObject mapPanel;
+    [SerializeField] private GameObject heroPanel;
+    // [SerializeField] private GameObject guessPanel;
 
     public Subject<Unit> OnCloseRequested { get; } = new();
     public Subject<Unit> OnRefreshRequested { get; } = new();
+    public Subject<InfoBrokerTab> OnChangePanel { get; } = new();
 
     private readonly Dictionary<InfoBrokerTab, Vector3> initTabPos = new();
+    private InfoBrokerTab _currentTab = InfoBrokerTab.Map;
     
 
     private readonly List<string> greetingMessages = new()
     {
-        "‚æ‚¤I‰½‚©•·‚«‚½‚¢‚±‚Æ‚ ‚é‚©‚¢H",
-        "‚â‚ A¡“ú‚àî•ñûW‚µ‚Ä‚é‚æ",
-        "‚¨‚Â‚©‚ê‚³‚ñI–Ê”’‚¢˜b‚ª‚ ‚é‚ñ‚¾",
-        "‚±‚ñ‚É‚¿‚ÍI—EÒ‚Ì“®ŒüA‹C‚É‚È‚éH",
-        "‚æ‚¤IÅ‹ß‚Ì—EÒ‚Ì—lqA‹³‚¦‚Ä‚â‚ë‚¤‚©H",
-        "‚¨”æ‚ê—lI¡“ú‚àFXŒ©‚Ä‚«‚½‚æ"
+        "ã‚ˆã†ï¼ä½•ã‹çŸ¥ã‚ŠãŸã„ã“ã¨ãŒã‚ã‚‹ã‹ã„ï¼Ÿ",
+        "ã‚„ã‚ã€ã„ã„æƒ…å ±ã‚’é›†ã‚ã¦ã‚‹ã‚ˆ",
+        "ã„ã‚‰ã£ã—ã‚ƒã„ï¼ç‰¹å£²ã®è©±ãŒã‚ã‚Šã¾ã™ã‚ˆ",
+        "ãŠã¾ãˆã«ã‚‚ï¼å‹‡è€…ã®å‹•ãã€æ°—ã«ãªã‚‹ï¼Ÿ",
+        "ã‚ˆã†ï¼æœ€è¿‘ã®å‹‡è€…ã®æ§˜å­ã€çŸ¥ã£ã¦ã‚‹ã ã‚ã†ï¼Ÿ",
+        "æ—…ã®äººï¼æƒ…å ±ã‚’è‰²ã€…æŒã£ã¦ã‚‹ã‚ˆ"
     };
 
     private System.Random random = new System.Random();
@@ -38,44 +50,62 @@ public class InfoBrokerView : MonoBehaviour
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         // refreshButton.onClick.AddListener(() => OnRefreshRequested.OnNext(Unit.Default));
+
+        mapButton.onClick.AddListener(() => { _currentTab = InfoBrokerTab.Map; OnChangePanel.OnNext(InfoBrokerTab.Map); });
+        heroButton.onClick.AddListener(() => { _currentTab = InfoBrokerTab.Hero; OnChangePanel.OnNext(InfoBrokerTab.Hero); });
+        // guessButton.onClick.AddListener(() => { _currentTab = InfoBrokerTab.Guess; OnChangePanel.OnNext(InfoBrokerTab.Guess); });
         
         initTabPos[InfoBrokerTab.Hero] = heroTab.transform.localPosition;
         initTabPos[InfoBrokerTab.Map] = mapTab.transform.localPosition;
-        initTabPos[InfoBrokerTab.Guess] = guessTab.transform.localPosition;
+        // initTabPos[InfoBrokerTab.Guess] = guessTab.transform.localPosition;
 
-        // brokerNameText.text = "î•ñ‰®";
-        ShowRandomGreeting();
+        // brokerNameText.text = "æƒ…å ±å±‹";
+        // ShowRandomGreeting();
+        
+        // åˆæœŸè¡¨ç¤º: åœ°å›³ã‚¿ãƒ–ã‚’é¸æŠ
+        ShowPanel(InfoBrokerTab.Map);
+        SortItemTab(InfoBrokerTab.Map);
     }
 
-    private void ShowRandomGreeting()
-    {
-        var greeting = greetingMessages[random.Next(greetingMessages.Count)];
-        messageText.text = greeting;
-    }
+    // private void ShowRandomGreeting()
+    // {
+    //     var greeting = greetingMessages[random.Next(greetingMessages.Count)];
+    //     messageText.text = greeting;
+    // }
 
+    // /// <summary>
+    // /// Model ã‹ã‚‰å—ã‘å–ã£ãŸ InfoMessage ä¸€è¦§ã‚’ messageText ã«è¡¨ç¤º
+    // /// </summary>
+    // public void DisplayInfoMessages(List<InfoMessage> messages)
+    // {
+    //     if (messages == null || messages.Count == 0)
+    //     {
+    //         // ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãŒãªã„ã¨ãã®ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ
+    //         messageText.text = "ç‰¹ã«å¤‰ã‚ã£ãŸã“ã¨ã¯ãªã„ãªãã€‚ã¾ãŸæ¥ã¦ãã‚Œã€‚";
+    //         return;
+    //     }
+    //
+    //     // InfoMessage.message ã‚’æ”¹è¡ŒåŒºåˆ‡ã‚Šã§ä¸¦ã¹ã‚‹
+    //     var lines = messages.Select(m => m.message).ToList();
+    //     messageText.text = string.Join("\n", lines);
+    // }
+    
     /// <summary>
-    /// Model ‚©‚çó‚¯æ‚Á‚½ InfoMessage ˆê——‚ğ messageText ‚É•\¦
+    /// ã‚¿ãƒ–ã«å¯¾å¿œã™ã‚‹ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ãƒ‘ãƒãƒ«ã®è¡¨ç¤ºã‚’åˆ‡ã‚Šæ›¿ãˆ
     /// </summary>
-    public void DisplayInfoMessages(List<InfoMessage> messages)
+    public void ShowPanel(InfoBrokerTab tab)
     {
-        if (messages == null || messages.Count == 0)
-        {
-            // ƒƒbƒZ[ƒW‚ª‚È‚¢‚Æ‚«‚ÌƒfƒtƒHƒ‹ƒg
-            messageText.text = "“Á‚É•Ï‚í‚Á‚½‚±‚Æ‚Í‚È‚¢‚©‚ÈB‚Ü‚½Œã‚Å—ˆ‚Ä‚æB";
-            return;
-        }
-
-        // InfoMessage.message ‚ğ‰üs‹æØ‚è‚Å•À‚×‚é
-        var lines = messages.Select(m => m.message).ToList();
-        messageText.text = string.Join("\n", lines);
+        if (mapPanel) mapPanel.SetActive(tab == InfoBrokerTab.Map);
+        if (heroPanel) heroPanel.SetActive(tab == InfoBrokerTab.Hero);
+        // if (guessPanel) guessPanel.SetActive(tab == InfoBrokerTab.Guess);
     }
     
     public void SortItemTab(InfoBrokerTab type)
     {
         var heroSeq =  heroTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Hero].y, 0.1f);
         var mapSeq = mapTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Map].y, 0.1f);
-        var guessSeq = guessTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Guess].y, 0.1f);
-        // ƒ^ƒu‚ğˆê”Ôã‚É‚Á‚Ä‚­‚é“®ì‚Í‚»‚Ì‚Ü‚Ü
+        // var guessSeq = guessTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Guess].y, 0.1f);
+        // ã‚¿ãƒ–ã‚’ä¸€ç•ªä¸Šã«æŒã£ã¦ãã‚‹å‹•ä½œã¯ãã®ã¾ã¾
         switch (type)
         {
             case InfoBrokerTab.Hero:
@@ -86,10 +116,10 @@ public class InfoBrokerView : MonoBehaviour
                 mapSeq.Kill();
                 mapTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Map].y + 10, 0.2f);
                 break;
-            case InfoBrokerTab.Guess:
-                guessSeq.Kill();
-                guessTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Guess].y + 10, 0.2f);
-                break;
+            // case InfoBrokerTab.Guess:
+            //     guessSeq.Kill();
+            //     guessTab.transform.DOLocalMoveY(initTabPos[InfoBrokerTab.Guess].y + 10, 0.2f);
+            //     break;
         }
     }
 }

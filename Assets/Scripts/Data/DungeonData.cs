@@ -37,6 +37,7 @@ public class DungeonData
     public int currentDungeonLevel;   // 周回・進行度
     public int rewardGold;            // 魔王軍勝利時の報酬
     public DungeonStatus dungeonStatus; // 未攻略 / クリア / 失敗 など
+    public bool isShowedInfo;           // 情報を購入済みかどうか
 
     // ----------------------
     // ScriptableObject からの注入
@@ -66,6 +67,9 @@ public class DungeonData
         currentDungeonLevel = so.currentDungeonLevel;
         rewardGold          = so.rewardGold;
         dungeonStatus       = so.dungeonStatus;
+        
+        // マップに表示するかどうかは、初期状態では false に設定
+        isShowedInfo        = false;
     }
 }
 

@@ -17,6 +17,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private TitleView titleView;
     [SerializeField] private DungeonInfoView dungeonInfoView;
     [SerializeField] private MapView mapView;
+    [SerializeField] private MapInfoView mapInfoView;
 
     [Header("Other References")]
     [SerializeField] private BattleSequencer battleSequencer;
@@ -61,6 +62,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterComponent(titleView);
         builder.RegisterComponent(dungeonInfoView);
         builder.RegisterComponent(mapView);
+        builder.RegisterComponent(mapInfoView);
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化

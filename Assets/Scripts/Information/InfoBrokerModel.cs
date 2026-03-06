@@ -11,9 +11,16 @@ public class InfoBrokerModel
     public List<DungeonData> availableDungeons { get; private set; } = new();
     public RuntimeHeroData currentHeroData { get; private set; }
     
+    // 勇者情報が購入済みかどうか
+    public bool IsHeroInfoPurchased { get; private set; } = false;
+    
     public ReactiveProperty<List<InfoMessage>> CurrentInfoMessages { get; private set; } = new();
 
     private readonly ItemModel itemModel;
+    private readonly DungeonRepository dungeonRepository;
+    private readonly HeroModel heroModel;
+
+    private readonly Dictionary<DungeonName, int[]> dungeonInfoCosts;
 
     //メッセージテンプレート
     private readonly List<string> equipmentMessageTemplates = new()
@@ -92,10 +99,93 @@ public class InfoBrokerModel
     };
 
     //コンストラクタ
-    public InfoBrokerModel(ItemModel itemModel)
+    public InfoBrokerModel(ItemModel itemModel, DungeonRepository dungeonRepository, HeroModel heroModel)
     {
         this.itemModel = itemModel;
+        this.dungeonRepository = dungeonRepository;
+        this.heroModel = heroModel;
+        this.currentHeroData = heroModel.heroData;
+        dungeonInfoCosts = LoadDungeonInfoCostsFromCSV("DungeonInfoCosts");
         InitializeDungeons();
+    }
+
+    /// <summary>
+    /// CSVからダンジョン情報コストを読み込む
+    /// CSVフォーマット: DungeonName,Cost1,Cost2,Cost3
+    /// </summary>
+    private Dictionary<DungeonName, int[]> LoadDungeonInfoCostsFromCSV(string csvFileName)
+    {
+        var result = new Dictionary<DungeonName, int[]>();
+
+        TextAsset csvFile = Resources.Load<TextAsset>(csvFileName);
+        if (csvFile == null)
+        {
+            Debug.LogError($"CSV file not found: {csvFileName}");
+            return result;
+        }
+
+        string[] lines = csvFile.text.Split('\n');
+
+        // ヘッダー行をスキップ (i = 1から開始)
+        for (int i = 1; i < lines.Length; i++)
+        {
+            string line = lines[i].Trim();
+            if (string.IsNullOrEmpty(line)) continue;
+
+            string[] values = line.Split(',');
+            if (values.Length < 2) continue;
+
+            // DungeonName列をEnumにパース
+            if (!Enum.TryParse<DungeonName>(values[0].Trim(), out var dungeonName))
+            {
+                Debug.LogWarning($"Unknown DungeonName in CSV row {i}: {values[0]}");
+                continue;
+            }
+
+            // Cost列（2列目以降）をint配列に変換
+            var costs = new List<int>();
+            for (int j = 1; j < values.Length; j++)
+            {
+                if (int.TryParse(values[j].Trim(), out int cost))
+                {
+                    costs.Add(cost);
+                }
+            }
+
+            result[dungeonName] = costs.ToArray();
+        }
+
+        Debug.Log($"Loaded {result.Count} dungeon info costs from CSV.");
+        return result;
+    }
+
+    /// <summary>
+    /// ダンジョン情報コストの辞書を取得
+    /// </summary>
+    public Dictionary<DungeonName, int[]> GetDungeonInfoCosts()
+    {
+        return dungeonInfoCosts;
+    }
+
+    /// <summary>
+    /// 勇者データを最新の状態に更新
+    /// </summary>
+    public void RefreshHeroData()
+    {
+        if (heroModel != null)
+        {
+            currentHeroData = heroModel.heroData;
+        }
+    }
+
+    /// <summary>
+    /// 勇者情報を購入する
+    /// </summary>
+    public void PurchaseHeroInfo()
+    {
+        IsHeroInfoPurchased = true;
+        RefreshHeroData();
+        Debug.Log("勇者情報を購入しました。");
     }
 
     public void RecordHeroPurchase(string itemId, int quantity, int price)
@@ -103,6 +193,22 @@ public class InfoBrokerModel
         var history = new HeroPurchaseHistory(itemId, quantity, price);
         heroPurchaseHistory.Add(history);
         UpdateInfoMessages();
+    }
+
+    /// <summary>
+    /// ダンジョン情報を購入し、isShowedInfo を true にする
+    /// </summary>
+    public void PurchaseDungeonInfo(DungeonName dungeonName)
+    {
+        var dungeon = dungeonRepository.GetById(dungeonName);
+        if (dungeon == null)
+        {
+            Debug.LogWarning($"Dungeon not found: {dungeonName}");
+            return;
+        }
+
+        dungeon.isShowedInfo = true;
+        Debug.Log($"Purchased dungeon info: {dungeonName}");
     }
 
     public void UpdateInfoMessages()
