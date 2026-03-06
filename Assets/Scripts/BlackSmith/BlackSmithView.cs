@@ -9,8 +9,8 @@ using TMPro;
 public class BlackSmithView : MonoBehaviour
 {
     [Header("ScrollView")]
-    [SerializeField] private ScrollRect scrollRect;            // ★ 追加
-    [SerializeField] private GameObject blackSmithContent;     // scrollRect.content と一致させるのが望ましい
+    [SerializeField] private ScrollRect scrollRect;           
+    [SerializeField] private GameObject blackSmithContent;    
 
     [Header("Tabs")]
     [SerializeField] private GameObject weaponTab;
@@ -34,7 +34,6 @@ public class BlackSmithView : MonoBehaviour
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
-    // ★ タブごとのスクロール位置を保持（任意）
     private readonly Dictionary<BlackSmithTab, Vector2> _scrollPerTab = new();
     private BlackSmithTab _currentTab = BlackSmithTab.Weapon;
     
@@ -109,7 +108,6 @@ public class BlackSmithView : MonoBehaviour
             activeSlots.Add(slot);
         }
 
-        // ★ 2) レイアウトを確定させ、次のフレームでスクロール位置を復元
         if (scrollRect)
             StartCoroutine(RestoreScrollNextFrame(GetSavedScrollForTab(_currentTab)));
 
@@ -149,7 +147,6 @@ public class BlackSmithView : MonoBehaviour
                 break;
         }
 
-        // ★ タブ切替直後に、保存してあるスクロール位置へ復元
         if (scrollRect)
             StartCoroutine(RestoreScrollNextFrame(GetSavedScrollForTab(type)));
     }
@@ -170,7 +167,6 @@ public class BlackSmithView : MonoBehaviour
 
     private IEnumerator RestoreScrollNextFrame(Vector2 pos)
     {
-        // レイアウト確定 → 次フレームで反映（Immediate だけだと戻ることがある）
         yield return null; // 1 frame 待つ
         Canvas.ForceUpdateCanvases();
         if (scrollRect)

@@ -40,7 +40,9 @@ public class DungeonInfoScriptableObj : ScriptableObject
     [Tooltip("難易度（1～10）")]
     [Range(1, 10)]
     public int difficulty;
-
+    
+    [Tooltip("ダンジョンの情報を購入するための価格のリスト")]
+    public List<int> purchasePrices;
 
     // ----------------------
     // 入場条件

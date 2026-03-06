@@ -17,6 +17,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private TitleView titleView;
     [SerializeField] private DungeonInfoView dungeonInfoView;
     [SerializeField] private MapView mapView;
+    [SerializeField] private MapInfoView mapInfoView;
 
     [Header("Other References")]
     [SerializeField] private BattleSequencer battleSequencer;
@@ -47,7 +48,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<MapModel>(Lifetime.Singleton);
         builder.Register<BlackSmithModel>(Lifetime.Singleton);
         builder.Register<StateManager>(Lifetime.Singleton);
-
+        builder.Register<MapInfoModel>(Lifetime.Singleton);
+        
         // --- 3. Views (Components) ---
         // Scene上にあるViewを登録
         builder.RegisterComponent(blackSmithView);
@@ -61,6 +63,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterComponent(titleView);
         builder.RegisterComponent(dungeonInfoView);
         builder.RegisterComponent(mapView);
+        builder.RegisterComponent(mapInfoView);
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -74,6 +77,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<CommonPresenter>();
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>();
+        builder.RegisterEntryPoint<MapInfoPresenter>();
 
         // --- 5. System Logic (Save/Delete) ---
         // セーブ削除や保存ロジックを独立したクラスとして登録

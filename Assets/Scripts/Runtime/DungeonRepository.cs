@@ -5,7 +5,7 @@ using System.Collections.ObjectModel;
 using UnityEngine;
 using System.Linq;
 
-public class DungeonRepository : MonoBehaviour
+public class DungeonRepository : SingletonMonoBehaviour<DungeonRepository>
 {
     // 初期ビルド時のマスター（SO）
     [SerializeField] private List<DungeonInfoScriptableObj> dungeonInfos;

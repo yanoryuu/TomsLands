@@ -5,8 +5,6 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using R3;
 using TMPro;
-using UnityEngine;
-using UnityEngine.UI;
 
 public class DungeonInfoView : MonoBehaviour
 {

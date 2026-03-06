@@ -37,6 +37,9 @@ public class DungeonData
     public int currentDungeonLevel;   // 周回・進行度
     public int rewardGold;            // 魔王軍勝利時の報酬
     public DungeonStatus dungeonStatus; // 未攻略 / クリア / 失敗 など
+    public bool isShow;
+    public List<int> purchasePrices;
+    
 
     // ----------------------
     // ScriptableObject からの注入
@@ -66,6 +69,27 @@ public class DungeonData
         currentDungeonLevel = so.currentDungeonLevel;
         rewardGold          = so.rewardGold;
         dungeonStatus       = so.dungeonStatus;
+        purchasePrices     = so.purchasePrices != null
+            ? new List<int>(so.purchasePrices)
+            : new List<int>();
+    }
+
+    public int GetPurchasePrice(int currentTurn)
+    {
+        if (purchasePrices == null || purchasePrices.Count == 0)
+        {
+            Debug.LogWarning($"[DungeonData] No purchase prices defined for dungeon: {key}");
+            return 0;
+        }
+
+        // 現在のターン数に基づいて価格を決定（例: ターン数が価格リストの範囲を超えた場合、最後の価格を使用）
+        int index = Mathf.Clamp(currentTurn, 0, purchasePrices.Count - 1);
+        return purchasePrices[index];
+    }
+    
+    public void SetShow(bool show)
+    {
+        isShow = show;
     }
 }
 
