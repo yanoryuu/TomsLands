@@ -24,8 +24,20 @@ public class HeroInfoView : MonoBehaviour
         purchaseButton.onClick.AddListener(() => OnPurchaseButtonClicked.OnNext(Unit.Default));
     }
     
-    public void UpdateHeroInfo(RuntimeHeroData heroInfo)
+    public void UpdateHeroInfo(RuntimeHeroData heroInfo, bool isPurchased)
     {
+        if (!isPurchased)
+        {
+            // 未購入時は「???」を表示
+            heroLvText.text = "Lv: ???";
+            heroHpText.text = "HP: ???";
+            heroMpText.text = "MP: ???";
+            weaponText.text = "Weapon: ???";
+            heroTacticsText.text = "Tactics: ???";
+            return;
+        }
+
+        // 購入済み：実際のデータを表示
         heroLvText.text = $"Lv: {heroInfo.level.Value}";
         // heroExpText.text = $"Exp: {heroInfo.Experience}/{heroInfo.ExpToNextLevel}";
         heroHpText.text = $"HP: {heroInfo.hp.Value}";

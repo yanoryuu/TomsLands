@@ -52,9 +52,21 @@ public class DungeonInfoView : MonoBehaviour
         if(d==null)return;
         
         dungeonNameImage.sprite = d.dungeonImage;
-        dungeonDescriptionText.text = d.dungeonDescription;
-        dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
-        dungeonRewardText.text = d.rewardGold.ToString();
+        
+        if (d.isShowedInfo)
+        {
+            // 情報購入済み：実際のデータを表示
+            dungeonDescriptionText.text = d.dungeonDescription;
+            dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
+            dungeonRewardText.text = d.rewardGold.ToString();
+        }
+        else
+        {
+            // 情報未購入：???で表示
+            dungeonDescriptionText.text = "？？？";
+            dungeonLevelText.text = "Lv.？？？";
+            dungeonRewardText.text = "？？？";
+        }
 
         //すでにある前のモンスターデータを削除
         if (dungeonMonsterPanels.Count > 0)
@@ -66,16 +78,20 @@ public class DungeonInfoView : MonoBehaviour
             dungeonMonsterPanels = new();
         }
         
-        foreach (var monster in d.dungeonMonsters)
+        // 情報購入済みの場合のみモンスター情報を表示
+        if (d.isShowedInfo)
         {
-            var panel = Instantiate(dungeonMonsterPanelSlot, Vector3.zero, Quaternion.identity,
-                dungeonMonsterBarTransform);
-            
-            panel.transform.localPosition = Vector3.zero;
-            
-            panel.GetComponent<DungeonMonsterSlot>().SetMonsterData(monster);
-            
-            dungeonMonsterPanels.Add(panel);
-        }   
+            foreach (var monster in d.dungeonMonsters)
+            {
+                var panel = Instantiate(dungeonMonsterPanelSlot, Vector3.zero, Quaternion.identity,
+                    dungeonMonsterBarTransform);
+                
+                panel.transform.localPosition = Vector3.zero;
+                
+                panel.GetComponent<DungeonMonsterSlot>().SetMonsterData(monster);
+                
+                dungeonMonsterPanels.Add(panel);
+            }
+        }
     }
 }
