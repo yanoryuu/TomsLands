@@ -15,24 +15,35 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject endPhasePanel;
     [SerializeField] private GameObject streamingResultPanel;
     [SerializeField] private GameObject commonPanel;
-    
-    
-    public void ShowPanel(GamePhase gamePhase)
+
+    /// <summary>
+    /// 全パネルを非表示にする
+    /// </summary>
+    private void HideAll()
     {
         titlePanel.SetActive(false);
-        streamingPanel.SetActive(false);
+        preparationPanel.SetActive(false);
         tomsShopPanel.SetActive(false);
-        streamingSettingPanel.SetActive(false);
-        mapPanel.SetActive(false);
-        settingPanel.SetActive(false);
         blackSmithPanel.SetActive(false);
         toolShopPanel.SetActive(false);
         infoBrokerPanel.SetActive(false);
-        endPhasePanel.SetActive(false);
-        preparationPanel.SetActive(false);
+        mapPanel.SetActive(false);
+        streamingSettingPanel.SetActive(false);
+        streamingPanel.SetActive(false);
         streamingResultPanel.SetActive(false);
+        endPhasePanel.SetActive(false);
+        settingPanel.SetActive(false);
         commonPanel.SetActive(false);
-        
+    }
+
+    /// <summary>
+    /// メインフェーズ切替時に呼ばれる。大枠のパネルを制御。
+    /// TomsShop/Streamingに入った場合、サブフェーズ側でさらにパネルが切り替わる。
+    /// </summary>
+    public void ShowPanel(GamePhase gamePhase)
+    {
+        HideAll();
+
         switch (gamePhase)
         {
             //タイトル
@@ -43,48 +54,73 @@ public class GamePanelManager : MonoBehaviour
             case GamePhase.Preparation:
                 preparationPanel.SetActive(true);
                 break;
-            //トムの店ここから色々な画面へ遷移
+            //トムの店（サブフェーズ側で細かいパネルを切り替える）
             case GamePhase.TomsShop:
-                tomsShopPanel.SetActive(true);
-                commonPanel.SetActive(true);
+                // サブフェーズのShowTomsShopPanelで個別パネルを表示
                 break;
-            //鍛冶屋武器を仕入れる
-            case GamePhase.BlackSmith:
-                blackSmithPanel.SetActive(true);
-                commonPanel.SetActive(true);
-                break;
-            //道具屋で道具を仕入れる
-            case GamePhase.ToolShop:
-                toolShopPanel.SetActive(true);
-                commonPanel.SetActive(true);
-                break;
-            //情報屋
-            case GamePhase.InfoBroker:
-                infoBrokerPanel.SetActive(true);
-                commonPanel.SetActive(true);
-                break;
-            case GamePhase.Map:
-                mapPanel.SetActive(true);
-                break;
-            //配信(勇者がダンジョンの潜りながらリアルタイムで売買
+            //配信（サブフェーズ側で細かいパネルを切り替える）
             case GamePhase.Streaming:
-                streamingPanel.SetActive(true);
+                // サブフェーズのShowStreamingPanelで個別パネルを表示
                 break;
-            //配信の準備(品出しする武器を３つ選択）
-            case GamePhase.StreamingSetting:
-                streamingSettingPanel.SetActive(true);
-                break;
-            //配信画面のリザルト
-            case GamePhase.StreamingResult:
-                streamingResultPanel.SetActive(true);
+            //リザルト画面
+            case GamePhase.Result:
+                endPhasePanel.SetActive(true);
                 break;
             //音量などのシステム的な各所設定
             case GamePhase.Setting:
                 settingPanel.SetActive(true);
                 break;
-            //リザルト画面
-            case GamePhase.End:
-                endPhasePanel.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// トムの店サブフェーズ切替時に呼ばれる
+    /// </summary>
+    public void ShowTomsShopPanel(TomsShopGamePhase subPhase)
+    {
+        HideAll();
+
+        switch (subPhase)
+        {
+            case TomsShopGamePhase.Shop:
+                tomsShopPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.BlackSmith:
+                blackSmithPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.ToolShop:
+                toolShopPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.Broker:
+                infoBrokerPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.Map:
+                mapPanel.SetActive(true);
+                break;
+        }
+    }
+
+    /// <summary>
+    /// 配信サブフェーズ切替時に呼ばれる
+    /// </summary>
+    public void ShowStreamingPanel(StreamingGamePhase subPhase)
+    {
+        HideAll();
+
+        switch (subPhase)
+        {
+            case StreamingGamePhase.StreamingSetting:
+                streamingSettingPanel.SetActive(true);
+                break;
+            case StreamingGamePhase.Streaming:
+                streamingPanel.SetActive(true);
+                break;
+            case StreamingGamePhase.StreamingResult:
+                streamingResultPanel.SetActive(true);
                 break;
         }
     }

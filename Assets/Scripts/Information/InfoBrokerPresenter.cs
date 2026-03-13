@@ -22,7 +22,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
         this.stateManager = stateManager;
         this.heroInfoView = heroInfoView;
         this.mapInfoView = mapInfoView;
-        stateManager.RegisterOnEnter(GamePhase.InfoBroker,Entry);
+        stateManager.RegisterOnEnter(TomsShopGamePhase.Broker,Entry);
     }
 
     public void Start()
@@ -33,23 +33,23 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     
     public void Entry()
     {
-        // 初期タブ（地図）を表示
+        // ?????^?u?i?n?}?j??\??
         infoBrokerView.ShowPanel(InfoBrokerTab.Map);
         infoBrokerView.SortItemTab(InfoBrokerTab.Map);
         OnTabChanged(InfoBrokerTab.Map);
     }
     private void Bind()
     {
-        // ビューのイベント購読
+        // ?r???[??C?x???g?w??
         infoBrokerView.OnCloseRequested
-            .Subscribe(_ => stateManager.ChangePhase(GamePhase.TomsShop))
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
             .AddTo(disposables);
 
         infoBrokerView.OnRefreshRequested
             .Subscribe(_ => infoBrokerModel.UpdateInfoMessages())
             .AddTo(disposables);
 
-        // // タブ切り替えイベント
+        // // ?^?u??????C?x???g
         infoBrokerView.OnChangePanel
             .Subscribe(tab =>
             {
@@ -59,21 +59,21 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
             })
             .AddTo(disposables);
 
-        // // [Guess] モデルの変更を監視
+        // // [Guess] ???f?????X?????
         // infoBrokerModel.CurrentInfoMessages
         //     .Subscribe(messages => infoBrokerView.DisplayInfoMessages(messages))
         //     .AddTo(disposables);
         
         heroInfoView.OnPurchaseButtonClicked.Subscribe(_ =>
         {
-            // 勇者情報を購入
+            // ?E??????w??
             infoBrokerModel.PurchaseHeroInfo();
-            // 表示を更新
+            // ?\?????X?V
             UpdateHeroInfo();
         })
         .AddTo(disposables);
         
-        // マップ情報購入イベント
+        // ?}?b?v???w???C?x???g
         mapInfoView.OnMapPurchaseClicked
             .Subscribe(dungeonName =>
             {
@@ -83,7 +83,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     }
 
     /// <summary>
-    /// タブ切り替え時の処理
+    /// ?^?u????????????
     /// </summary>
     private void OnTabChanged(InfoBrokerTab tab)
     {
@@ -106,7 +106,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     
     public void UpdateHeroInfo()
     {
-        // 最新の勇者データを取得
+        // ??V??E??f?[?^???擾
         infoBrokerModel.RefreshHeroData();
         
         if (infoBrokerModel.currentHeroData == null)
@@ -115,7 +115,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
             return;
         }
         
-        // 購入済みフラグと共に表示を更新
+        // ?w?????t???O?????\?????X?V
         heroInfoView.UpdateHeroInfo(infoBrokerModel.currentHeroData, infoBrokerModel.IsHeroInfoPurchased);
     }
 

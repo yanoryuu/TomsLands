@@ -22,7 +22,7 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
         this.dungeonInfoView = dungeonInfoView;
         this.stateManager = stateManager;
         
-        stateManager.RegisterOnEnter(GamePhase.Map,Entry);
+        stateManager.RegisterOnEnter(TomsShopGamePhase.Map,Entry);
     }
 
     public void Start()
@@ -56,7 +56,7 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
 
         mapView.OnBackRequested.Subscribe(_ =>
         {
-            stateManager.ChangePhase(GamePhase.TomsShop);
+            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
         }).AddTo(disposable);
 
     }

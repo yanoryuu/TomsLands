@@ -28,7 +28,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.blackSmithView = blackSmithView;
         this.stateManager = stateManager;
 
-        stateManager.RegisterOnEnter(GamePhase.BlackSmith, Entry);
+        stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
     
     public void Start()
@@ -49,7 +49,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         blackSmithView.OnCloseRequested.Subscribe(_ =>
         {
-            stateManager.ChangePhase(GamePhase.TomsShop);
+            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
         }).AddTo(disposables);
 
         blackSmithView.OnChangePanel

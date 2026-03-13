@@ -1,0 +1,11 @@
+/// <summary>
+/// トムの店フェーズ内のサブステート
+/// </summary>
+public enum TomsShopGamePhase
+{
+    Shop,       // トムの店メイン画面
+    BlackSmith, // 鍛冶屋：武器・防具を仕入れる
+    ToolShop,   // 道具屋：道具を仕入れる
+    Broker,     // 情報屋：情報を買う
+    Map,        // マップ：ダンジョン選択
+}

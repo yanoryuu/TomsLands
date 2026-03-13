@@ -27,7 +27,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.commonView = commonView;
         this.stateManager = stateManager;
         
-        stateManager.RegisterOnEnter(GamePhase.TomsShop,Entry);
+        stateManager.RegisterOnEnter(TomsShopGamePhase.Shop,Entry);
     }
     
     public void Start()
@@ -39,17 +39,17 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     {
         // 「鍛冶屋」ボタン
         tomsShopView.OnBlacksmithClicked
-            .Subscribe(_ => stateManager.ChangePhase(GamePhase.BlackSmith))
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.BlackSmith))
             .AddTo(disposables);
         
         //　情報屋ボタン
         tomsShopView.OnInfoClicked
-            .Subscribe(_=> stateManager.ChangePhase(GamePhase.InfoBroker))
+            .Subscribe(_=> stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Broker))
             .AddTo(disposables);
         
         //　道具屋ボタン
         tomsShopView.OnToolClicked
-            .Subscribe(_=> stateManager.ChangePhase(GamePhase.ToolShop))
+            .Subscribe(_=> stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ToolShop))
             .AddTo(disposables);
 
         // 「陳列設定」ボタン
@@ -59,7 +59,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         
         //　マップボタン
         tomsShopView.OnMapClicked
-            .Subscribe(_ => stateManager.ChangePhase(GamePhase.Map))
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Map))
             .AddTo(disposables);
     }
     
