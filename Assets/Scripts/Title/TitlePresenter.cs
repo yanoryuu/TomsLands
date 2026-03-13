@@ -43,7 +43,7 @@ public class TitlePresenter : IPresenter,IStartable,IDisposable
         titleView.OnLoadGameRequested.Subscribe(_ =>
         {
             // ロード処理
-            stateManager.ChangePhase(GamePhase.TomsShop);
+            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
             Debug.Log("ロード処理");
         }).AddTo(disposable);
     }

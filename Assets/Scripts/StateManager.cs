@@ -12,8 +12,20 @@ public class StateManager : IDisposable
     /// <summary>現在のフェーズ</summary>
     public ReactiveProperty<GamePhase> CurrentPhase { get; private set; }
 
+    /// <summary>トムの店フェーズ内の現在のサブフェーズ</summary>
+    public ReactiveProperty<TomsShopGamePhase> CurrentTomsShopPhase { get; private set; }
+
+    /// <summary>配信フェーズ内の現在のサブフェーズ</summary>
+    public ReactiveProperty<StreamingGamePhase> CurrentStreamingPhase { get; private set; }
+
     /// <summary>フェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<GamePhase, Action> onEnter = new();
+
+    /// <summary>トムの店サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
+    private readonly Dictionary<TomsShopGamePhase, Action> onEnterTomsShop = new();
+
+    /// <summary>配信サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
+    private readonly Dictionary<StreamingGamePhase, Action> onEnterStreaming = new();
 
     private readonly CompositeDisposable disposables = new();
 
@@ -28,6 +40,8 @@ public class StateManager : IDisposable
     {
         this.gamePanelManager = gamePanelManager;
         CurrentPhase = new ReactiveProperty<GamePhase>(GamePhase.Title);
+        CurrentTomsShopPhase = new ReactiveProperty<TomsShopGamePhase>(TomsShopGamePhase.Shop);
+        CurrentStreamingPhase = new ReactiveProperty<StreamingGamePhase>(StreamingGamePhase.StreamingSetting);
         Bind();
         ChangePhase(GamePhase.Title);
     }
@@ -59,6 +73,48 @@ public class StateManager : IDisposable
                 }
             })
             .AddTo(disposables);
+
+        CurrentTomsShopPhase
+            .Subscribe(subPhase =>
+            {
+                try
+                {
+                    gamePanelManager?.ShowTomsShopPanel(subPhase);
+
+                    if (onEnterTomsShop.TryGetValue(subPhase, out var handler))
+                    {
+                        handler?.Invoke();
+                    }
+
+                    Debug.Log($"[StateManager] TomsShop sub-phase changed to {subPhase}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[StateManager] OnEnter error at TomsShop.{subPhase}: {e}");
+                }
+            })
+            .AddTo(disposables);
+
+        CurrentStreamingPhase
+            .Subscribe(subPhase =>
+            {
+                try
+                {
+                    gamePanelManager?.ShowStreamingPanel(subPhase);
+
+                    if (onEnterStreaming.TryGetValue(subPhase, out var handler))
+                    {
+                        handler?.Invoke();
+                    }
+
+                    Debug.Log($"[StateManager] Streaming sub-phase changed to {subPhase}");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"[StateManager] OnEnter error at Streaming.{subPhase}: {e}");
+                }
+            })
+            .AddTo(disposables);
     }
 
     /// <summary>
@@ -68,11 +124,41 @@ public class StateManager : IDisposable
     {
         if (onEnter.ContainsKey(phase))
         {
-            onEnter[phase] += handler; // 追加登録（複数OK）
+            onEnter[phase] += handler;
         }
         else
         {
             onEnter[phase] = handler;
+        }
+    }
+
+    /// <summary>
+    /// トムの店サブフェーズのOnEnter登録。
+    /// </summary>
+    public void RegisterOnEnter(TomsShopGamePhase subPhase, Action handler)
+    {
+        if (onEnterTomsShop.ContainsKey(subPhase))
+        {
+            onEnterTomsShop[subPhase] += handler;
+        }
+        else
+        {
+            onEnterTomsShop[subPhase] = handler;
+        }
+    }
+
+    /// <summary>
+    /// 配信サブフェーズのOnEnter登録。
+    /// </summary>
+    public void RegisterOnEnter(StreamingGamePhase subPhase, Action handler)
+    {
+        if (onEnterStreaming.ContainsKey(subPhase))
+        {
+            onEnterStreaming[subPhase] += handler;
+        }
+        else
+        {
+            onEnterStreaming[subPhase] = handler;
         }
     }
 
@@ -84,6 +170,45 @@ public class StateManager : IDisposable
         if (CurrentPhase.Value == nextPhase) return;
         Debug.Log($"[StateManager] Changing phase: {CurrentPhase.Value} → {nextPhase}");
         CurrentPhase.Value = nextPhase;
+    }
+
+    /// <summary>
+    /// トムの店サブフェーズを変更。メインフェーズがTomsShopでない場合は自動遷移。
+    /// </summary>
+    public void ChangeTomsShopPhase(TomsShopGamePhase nextSubPhase)
+    {
+        if (CurrentPhase.Value != GamePhase.TomsShop)
+        {
+            ChangePhase(GamePhase.TomsShop);
+        }
+
+        if (CurrentTomsShopPhase.Value == nextSubPhase)
+        {
+            // 同じ値でも強制発火させたい場合はForceNotifyを使う
+            CurrentTomsShopPhase.ForceNotify();
+            return;
+        }
+        Debug.Log($"[StateManager] Changing TomsShop sub-phase: {CurrentTomsShopPhase.Value} → {nextSubPhase}");
+        CurrentTomsShopPhase.Value = nextSubPhase;
+    }
+
+    /// <summary>
+    /// 配信サブフェーズを変更。メインフェーズがStreamingでない場合は自動遷移。
+    /// </summary>
+    public void ChangeStreamingPhase(StreamingGamePhase nextSubPhase)
+    {
+        if (CurrentPhase.Value != GamePhase.Streaming)
+        {
+            ChangePhase(GamePhase.Streaming);
+        }
+
+        if (CurrentStreamingPhase.Value == nextSubPhase)
+        {
+            CurrentStreamingPhase.ForceNotify();
+            return;
+        }
+        Debug.Log($"[StateManager] Changing Streaming sub-phase: {CurrentStreamingPhase.Value} → {nextSubPhase}");
+        CurrentStreamingPhase.Value = nextSubPhase;
     }
 
     public void Dispose()
