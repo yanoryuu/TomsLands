@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: SH1
   m_EditorClassIdentifier: 
   itemId: SH1
-  itemName: Shield_1
+  itemName: "\u8056\u5149\u306E\u76FE"
   basePrice: 500
-  description: "\u76FE"
+  description: "\u95C7\u5C5E\u6027\u306E\u653B\u6483\u3092\u5F3E\u304D\u8FD4\u3059\u76FE\u3002\u9632\u3044\u3060\u6642\u306B\u653E\u3064\u9583\u5149\u306E\u7F8E\u3057\u3055\u304C\u5192\u967A\u8005\u306E\u9593\u3067\u8A71\u984C\u306B\u306A\u3063\u3066\u3044\u308B\u3002"
   itemIcon: {fileID: 21300000, guid: 5364a532c77cd43bc8549a556cb49758, type: 3}
   initialStock: 0
   maxStock: 100
+  initialDisplayStock: 0
   itemType: 0
   itemAttribute: 4
   requiredLevel: 1

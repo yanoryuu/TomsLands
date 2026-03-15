@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: HE8
   m_EditorClassIdentifier: 
   itemId: HE8
-  itemName: Helmet_8
+  itemName: "\u75BE\u98A8\u306E\u515C"
   basePrice: 1800
-  description: "\u30D8\u30EB\u30E0"
+  description: "\u571F\u5C5E\u6027\u653B\u6483\u3092\u53D7\u3051\u6D41\u3059\u7A7A\u529B\u8A2D\u8A08\u306E\u515C\u3002\u571F\u5C5E\u6027\u3078\u306E\u8010\u6027\u304C\u3042\u308A\u306A\u304C\u3089\u52D5\u304D\u3092\u59A8\u3052\u306A\u3044\u3002"
   itemIcon: {fileID: 21300000, guid: 1f8c2d6ce27ef4cdb897e65adb057a03, type: 3}
   initialStock: 0
   maxStock: 100
+  initialDisplayStock: 0
   itemType: 1
   itemAttribute: 3
   requiredLevel: 4
