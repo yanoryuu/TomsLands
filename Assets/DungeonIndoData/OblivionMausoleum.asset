@@ -15,12 +15,14 @@ MonoBehaviour:
   key: 4
   dungeonName: "\u5FD8\u5374\u306E\u970A\u5EDF"
   dungeonDescription: "\u304B\u3064\u3066\u306E\u5049\u5927\u306A\u308B\u738B\u304C\u7720\u308B\u5DE8\u5927\u306A\u5730\u4E0B\u5893\u5730\u3002\u95C7\u306B\u9B45\u5165\u3089\u308C\u305F\u6B7B\u8005\u305F\u3061\u304C\u3055\u307E\u3088\u3044\u3001\u8A2A\u308C\u3057\u3082\u306E\u305F\u3061\u306E\u7CBE\u795E\u3092\u8755\u3080\u3002"
-  dungeonImage: {fileID: 0}
+  dungeonImage: {fileID: -4862453905761702663, guid: 544e6742b55244e0f8e214fa735515e0, type: 3}
   initDungeonLevel: 1
   recommendedLevel: 7
   difficulty: 7
   requiredAttribute: 0
-  dungeonMonsters: []
+  dungeonMonsters:
+  - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
+  - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
   dungeonBoss: 
   currentDungeonLevel: 1
   rewardGold: 0

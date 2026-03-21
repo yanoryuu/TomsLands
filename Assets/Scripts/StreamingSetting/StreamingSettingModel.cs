@@ -5,12 +5,13 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// 最大3つまで選択可能なアイテム＋数量を管理し、
+/// 最大8つまで選択可能なアイテム＋数量を管理し、
 /// JSON で永続化するモデル。
+/// 8つ以下であれば何個でも確定可能。
 /// </summary>
 public class StreamingSettingModel
 {
-    private const int MaxSelection = 3;
+    private const int MaxSelection = 8;
     private const string FileName = "streamingSelection.json";
     private readonly Dictionary<string, int> _selected = new Dictionary<string, int>(MaxSelection);
 
@@ -56,6 +57,28 @@ public class StreamingSettingModel
         foreach (var item in dto.items)
             _selected[item.itemId] = Mathf.Max(1, item.quantity);
         Debug.Log("Streaming selection loaded.");
+    }
+
+    /// <summary>
+    /// 在庫が0以下のアイテムをSelected から除外する。
+    /// LoadData() の後に呼び出す。
+    /// </summary>
+    public void CleanupUnavailableItems(ItemModel itemModel)
+    {
+        var toRemove = new List<string>();
+        foreach (var kv in _selected)
+        {
+            var runtime = itemModel.GetRuntimeItem(kv.Key);
+            if (runtime == null || runtime.Stock.Value <= 0)
+            {
+                toRemove.Add(kv.Key);
+            }
+        }
+        foreach (var id in toRemove)
+        {
+            _selected.Remove(id);
+            Debug.Log($"[StreamingSettingModel] Removed unavailable item from selection: {id}");
+        }
     }
 
     public List<StreamingItemPlain> GetSelectedRuntimeItemData(ItemModel itemModel)

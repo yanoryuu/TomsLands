@@ -18,19 +18,28 @@ public class TomsModel
 
     public TomsModel()
     {
-        Initialize();
+        // ReactivePropertyの初回作成（一度だけ）
+        PlayerMoney = new ReactiveProperty<int>(GameConst.InitMoney);
+        BlacksmithLevel = new ReactiveProperty<int>(1);
+        ToolShopLevel = new ReactiveProperty<int>(1);
+        InfoBrokerLevel = new ReactiveProperty<int>(1);
+        Trust = new ReactiveProperty<float>(1f);
+        CurrentTurn = new ReactiveProperty<int>(1);
+
         LoadPlayerMoney();
-        
     }
 
+    /// <summary>
+    /// 値をリセットする。ReactivePropertyのインスタンスは維持し、既存のSubscribeを壊さない。
+    /// </summary>
     public void Initialize(int defaultMoney = GameConst.InitMoney, int defaultBlacksmithLevel = 1,int defaultToolLevel = 1,int defaultInfoBrokerLevel = 1, float defaultTrust = 1 ,int defaultTurn =1)
     {
-        PlayerMoney = new ReactiveProperty<int>(defaultMoney);
-        BlacksmithLevel = new ReactiveProperty<int>(defaultBlacksmithLevel);
-        ToolShopLevel = new ReactiveProperty<int>(defaultToolLevel);
-        InfoBrokerLevel = new ReactiveProperty<int>(defaultInfoBrokerLevel);
-        Trust = new ReactiveProperty<float>(defaultTrust);
-        CurrentTurn = new ReactiveProperty<int>(defaultTurn);
+        PlayerMoney.Value = defaultMoney;
+        BlacksmithLevel.Value = defaultBlacksmithLevel;
+        ToolShopLevel.Value = defaultToolLevel;
+        InfoBrokerLevel.Value = defaultInfoBrokerLevel;
+        Trust.Value = defaultTrust;
+        CurrentTurn.Value = defaultTurn;
     }
 
     public void SavePlayerMoney()

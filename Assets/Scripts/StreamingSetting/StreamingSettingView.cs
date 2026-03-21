@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using R3;
@@ -10,15 +11,30 @@ public class StreamingSettingView : MonoBehaviour
     [SerializeField] private GameObject availableSlotPrefab;
     [SerializeField] private GameObject selectedSlotPrefab;
 
+    [Header("確定ボタン")]
+    [SerializeField] private Button confirmButton;
+
     public Subject<string> OnItemSelected     { get; } = new Subject<string>();
     public Subject<string> OnItemDeselected   { get; } = new Subject<string>();
     public Subject<(string id, int qty)> OnQuantityChanged { get; } = new Subject<(string, int)>();
+    public Subject<Unit> OnConfirmClicked     { get; } = new Subject<Unit>();
+
+    private void Awake()
+    {
+        if (confirmButton != null)
+        {
+            confirmButton.onClick.AddListener(() => OnConfirmClicked.OnNext(Unit.Default));
+        }
+    }
 
     public void PopulateAvailable(IEnumerable<RuntimeItemData> items)
     {
         foreach (Transform t in availablePanel) Destroy(t.gameObject);
         foreach (var item in items)
         {
+            // 所持数が0以下のアイテムは表示しない
+            if (item.Stock.Value <= 0) continue;
+
             var go   = Instantiate(availableSlotPrefab, availablePanel);
             var slot = go.GetComponent<AvailableItemSlot>();
             slot.Initialize(item.ItemId, item.ItemIcon, item.ItemId);

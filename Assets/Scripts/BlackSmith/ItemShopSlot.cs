@@ -55,7 +55,7 @@ public class ItemShopSlot : MonoBehaviour
         if (icon) icon.sprite = sprite;
         if (nameText) nameText.text = itemName;
         SetPrice(price);
-        stockText?.SetText($"所持: {currentStock}");
+        stockText?.SetText($"{currentStock}");
 
         SetMaxDisplayQuantity(Mathf.Max(0, maxStock));
         SetDisplayQuantity(0);
@@ -85,7 +85,7 @@ public class ItemShopSlot : MonoBehaviour
 
     public void SetCurrentStock(int currentStock)
     {
-        stockText?.SetText($"所持: {currentStock}");
+        stockText?.SetText($"{currentStock}");
     }
 
     // === 最大値変更（通知しない） ===

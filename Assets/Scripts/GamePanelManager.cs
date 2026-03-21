@@ -2,8 +2,6 @@ using UnityEngine;
 
 public class GamePanelManager : MonoBehaviour
 {
-    [SerializeField] private GameObject titlePanel;
-    [SerializeField] private GameObject preparationPanel;
     [SerializeField] private GameObject streamingPanel;
     [SerializeField] private GameObject tomsShopPanel;
     [SerializeField] private GameObject streamingSettingPanel;
@@ -21,8 +19,6 @@ public class GamePanelManager : MonoBehaviour
     /// </summary>
     private void HideAll()
     {
-        titlePanel.SetActive(false);
-        preparationPanel.SetActive(false);
         tomsShopPanel.SetActive(false);
         blackSmithPanel.SetActive(false);
         toolShopPanel.SetActive(false);
@@ -46,14 +42,6 @@ public class GamePanelManager : MonoBehaviour
 
         switch (gamePhase)
         {
-            //タイトル
-            case GamePhase.Title:
-                titlePanel.SetActive(true);
-                break;
-            //ゲーム開始前の準備（前回の報酬で初めのブースト選択など
-            case GamePhase.Preparation:
-                preparationPanel.SetActive(true);
-                break;
             //トムの店（サブフェーズ側で細かいパネルを切り替える）
             case GamePhase.TomsShop:
                 // サブフェーズのShowTomsShopPanelで個別パネルを表示

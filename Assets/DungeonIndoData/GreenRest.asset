@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
+  m_Name: GreenRest
+  m_EditorClassIdentifier: 
+  key: 0
+  dungeonName: "\u7DD1\u306E\u61A9\u3044\u306E\u5730"
+  dungeonDescription: "\u7A4F\u3084\u304B\u306A\u68EE\u306E\u4E2D\u306B\u4F4D\u7F6E\u3059\u308B\u521D\u5FC3\u8005\u5411\u3051\u306E\u30C0\u30F3\u30B8\u30E7\u30F3\u3002\u5F31\u3044\u9B54\u7269\u304C\u7528\u5FC3\u3092\u3057\u3066\u3044\u308B\u3002"
+  dungeonImage: {fileID: -6253423525840006010, guid: 6789be21c92f344bd92a2ca35ab4544f, type: 3}
+  initDungeonLevel: 1
+  recommendedLevel: 1
+  difficulty: 1
+  requiredAttribute: 0
+  dungeonMonsters:
+  - {fileID: 11400000, guid: 1c1c4b15f8c537c43857bd2e1a87f2a0, type: 2}
+  - {fileID: 11400000, guid: ba1a37558b33af24ebb0f59f71669ca9, type: 2}
+  dungeonBoss: 
+  currentDungeonLevel: 1
+  rewardGold: 100
+  dungeonStatus: 2

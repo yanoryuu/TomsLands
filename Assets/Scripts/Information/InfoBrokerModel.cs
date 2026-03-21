@@ -11,7 +11,7 @@ public class InfoBrokerModel
     public List<DungeonData> availableDungeons { get; private set; } = new();
     public RuntimeHeroData currentHeroData { get; private set; }
     
-    // —EŽÒî•ñ‚ªw“üÏ‚Ý‚©‚Ç‚¤‚©
+    // ï¿½Eï¿½Òï¿½ñ‚ªwï¿½ï¿½ï¿½Ï‚Ý‚ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½
     public bool IsHeroInfoPurchased { get; private set; } = false;
     
     public ReactiveProperty<List<InfoMessage>> CurrentInfoMessages { get; private set; } = new();
@@ -22,83 +22,83 @@ public class InfoBrokerModel
 
     private readonly Dictionary<DungeonName, int[]> dungeonInfoCosts;
 
-    //ƒƒbƒZ[ƒWƒeƒ“ƒvƒŒ[ƒg
+    //ï¿½ï¿½ï¿½bï¿½Zï¿½[ï¿½Wï¿½eï¿½ï¿½ï¿½vï¿½ï¿½ï¿½[ï¿½g
     private readonly List<string> equipmentMessageTemplates = new()
     {
-        "{0}”ƒ‚Á‚Ä‚½‚æB‚ ‚ê‘•”õ‚·‚é‚©‚à‚Ë",
-        "{0}‚É‹»–¡Ž¦‚µ‚Ä‚½‚ÈB‘½•ª‘•”õ‚·‚é",
-        "‚³‚Á‚«{0}Œ©‚Ä‚½‚©‚çA‚«‚Á‚Æ‘•”õ‚·‚é‚æ",
-        "{0}‚Ì’l’i•·‚¢‚Ä‚½‚µA‘•”õ‚·‚é‹C‚¾‚ÆŽv‚¤",
-        @"{0}Žè‚ÉŽæ‚Á‚Ä‚½‚©‚çA‘•”õ‚·‚é‰Â”\«‚‚¢‚Ë",
-        "—EŽÒ‚³‚ñA{0}‹C‚É“ü‚Á‚Ä‚½‚Ý‚½‚¢B‘•”õ‚·‚é‚©‚à",
-        "{0}‚É‚Â‚¢‚ÄŽ¿–â‚µ‚Ä‚½‚©‚çA‘•”õŒŸ“¢‚µ‚Ä‚é‚Ë"
+        "{0}ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Bï¿½ï¿½ï¿½ê‘•ï¿½ï¿½ï¿½ï¿½ï¿½é‚©ï¿½ï¿½ï¿½ï¿½",
+        "{0}ï¿½É‹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ÈBï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½{0}ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Æ‘ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "{0}ï¿½Ì’lï¿½iï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+        @"{0}ï¿½ï¿½ÉŽï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â”\ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½Cï¿½É“ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½Ý‚ï¿½ï¿½ï¿½ï¿½Bï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é‚©ï¿½ï¿½",
+        "{0}ï¿½É‚Â‚ï¿½ï¿½ÄŽï¿½ï¿½â‚µï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½"
     };
 
-    // ƒ_ƒ“ƒWƒ‡ƒ“•Ê‚ÌƒƒbƒZ[ƒWƒeƒ“ƒvƒŒ[ƒg
+    // ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Ê‚Ìƒï¿½ï¿½bï¿½Zï¿½[ï¿½Wï¿½eï¿½ï¿½ï¿½vï¿½ï¿½ï¿½[ï¿½g
     private readonly Dictionary<string, List<string>> specialDungeonMessages = new()
     {
         ["dungeon_ice_mist"] = new List<string>
         {
-            "{0}‚ÌŠ¦‚³‚É‚Â‚¢‚Ä•·‚¢‚Ä‚½‚æB–hŠ¦‘Îô‚µ‚Ä‚é‚Ì‚©‚È",
-            "{0}‚Ì•XŒ‹‘Îô’²‚×‚Ä‚½‚µA’§í‚·‚é‹C‚¾‚ÆŽv‚¤",
-            "—EŽÒ‚³‚ñA{0}‚Ì‹ÉŠ¦ƒGƒŠƒA‚Ì‚±‚ÆS”z‚µ‚Ä‚½‚Ë"
+            "{0}ï¿½ÌŠï¿½ï¿½ï¿½ï¿½É‚Â‚ï¿½ï¿½Ä•ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Bï¿½hï¿½ï¿½ï¿½Îô‚µ‚Ä‚ï¿½Ì‚ï¿½ï¿½ï¿½",
+            "{0}ï¿½Ì•Xï¿½ï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½×‚Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½í‚·ï¿½ï¿½Cï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+            "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½Ì‹ÉŠï¿½ï¿½Gï¿½ï¿½ï¿½Aï¿½Ì‚ï¿½ï¿½ÆSï¿½zï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½"
         },
         ["dungeon_beast_forest"] = new List<string>
         {
-            "{0}‚Ìb‚½‚¿‚É‚Â‚¢‚Ä’²‚×‚Ä‚½‚©‚çA’§í‚·‚é‚©‚à",
-            "{0}‚Ì–À˜Hƒ}ƒbƒvŒ©‚Ä‚½‚µA€”õ‚µ‚Ä‚é‚Ë",
-            "—EŽÒ‚³‚ñA{0}‚Ì–Ø‘®«ƒ‚ƒ“ƒXƒ^[‘Îôl‚¦‚Ä‚½‚æ"
+            "{0}ï¿½Ìbï¿½ï¿½ï¿½ï¿½ï¿½É‚Â‚ï¿½ï¿½Ä’ï¿½ï¿½×‚Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½í‚·ï¿½é‚©ï¿½ï¿½",
+            "{0}ï¿½Ì–ï¿½ï¿½Hï¿½}ï¿½bï¿½vï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½",
+            "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½Ì–Ø‘ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½^ï¿½[ï¿½Îï¿½lï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½"
         },
         ["dungeon_volcano_prison"] = new List<string>
         {
-            "{0}‚Ìƒ}ƒOƒ}‘Îô‚É‚Â‚¢‚ÄŽ¿–â‚µ‚Ä‚½‚©‚çAs‚­‹C‚¾‚ÆŽv‚¤",
-            "{0}‚Ì‰ÎŽR‚Ì”M‚É‚Â‚¢‚Ä’²‚×‚Ä‚½‚æB’§í‚·‚é‚©‚à‚Ë",
-            "—EŽÒ‚³‚ñA{0}‚Ìƒhƒ‰ƒSƒ“‚Ì‚±‚Æ‹C‚É‚µ‚Ä‚½‚È"
+            "{0}ï¿½Ìƒ}ï¿½Oï¿½}ï¿½Îï¿½É‚Â‚ï¿½ï¿½ÄŽï¿½ï¿½â‚µï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½sï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+            "{0}ï¿½Ì‰ÎŽRï¿½Ì”Mï¿½É‚Â‚ï¿½ï¿½Ä’ï¿½ï¿½×‚Ä‚ï¿½ï¿½ï¿½Bï¿½ï¿½ï¿½í‚·ï¿½é‚©ï¿½ï¿½ï¿½ï¿½",
+            "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½Ìƒhï¿½ï¿½ï¿½Sï¿½ï¿½ï¿½Ì‚ï¿½ï¿½Æ‹Cï¿½É‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½"
         },
         ["dungeon_forgotten_mausoleum"] = new List<string>
         {
-            "{0}‚Ì–S—ì‘Îô•·‚¢‚Ä‚½‚µA’§í‚·‚é‹C‚¾‚ÆŽv‚¤",
-            "{0}‚Ì‹°•|ó‘Ô‚É‚Â‚¢‚Ä’²‚×‚Ä‚½‚©‚çAs‚­€”õ‚µ‚Ä‚é‚Ë",
-            "—EŽÒ‚³‚ñA{0}‚ÌŒõ‘®«•Ší‚Ì‚±‚Æ•·‚¢‚Ä‚½‚æ"
+            "{0}ï¿½Ì–Sï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½í‚·ï¿½ï¿½Cï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+            "{0}ï¿½Ì‹ï¿½ï¿½|ï¿½ï¿½Ô‚É‚Â‚ï¿½ï¿½Ä’ï¿½ï¿½×‚Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½",
+            "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½ÌŒï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½Æ•ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½"
         },
         ["dungeon_metalion"] = new List<string>
         {
-            "{0}‚Ì‹@ŠBƒgƒ‰ƒbƒv‚É‚Â‚¢‚Ä’²‚×‚Ä‚½‚©‚çA’§í‚·‚é‚©‚à",
-            "{0}‚Ì—‹‘®«‘Îô•·‚¢‚Ä‚½‚µAs‚­‹C‚¾‚ÆŽv‚¤",
-            "—EŽÒ‚³‚ñA{0}‚ÌŒÃ‘ã‹Zp‚É‹»–¡’ÃX‚¾‚Á‚½‚Ë"
+            "{0}ï¿½Ì‹@ï¿½Bï¿½gï¿½ï¿½ï¿½bï¿½vï¿½É‚Â‚ï¿½ï¿½Ä’ï¿½ï¿½×‚Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½í‚·ï¿½é‚©ï¿½ï¿½",
+            "{0}ï¿½Ì—ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½sï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+            "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½ÌŒÃ‘ï¿½Zï¿½pï¿½É‹ï¿½ï¿½ï¿½ï¿½ÃXï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
         }
     };
 
     private readonly List<string> dungeonMessageTemplates = new()
     {
-        "{0}‚Ìî•ñ•·‚¢‚Ä‚½‚æBs‚­‹C‚©‚à‚Ë",
-        "{0}‚É‚Â‚¢‚Ä’²‚×‚Ä‚½‚©‚çA’§í‚·‚é‚©‚à",
-        "‚³‚Á‚«{0}‚Ì˜b‚µ‚Ä‚½‚ÈBs‚­‚Â‚à‚è‚©‚È",
-        "{0}‚ÌU—ª–@•·‚¢‚Ä‚½‚µA’§í‚·‚é‹C‚¾‚ÆŽv‚¤",
-        "—EŽÒ‚³‚ñA{0}‚É‹»–¡’ÃX‚¾‚Á‚½‚æ",
-        "{0}‚Ì“ïˆÕ“xŠm”F‚µ‚Ä‚½‚©‚çAs‚­€”õ‚µ‚Ä‚é‚Ë",
-        "{0}‚Ì‚±‚Æ‹C‚É‚µ‚Ä‚½‚©‚çA‚«‚Á‚Æ’§í‚·‚é"
+        "{0}ï¿½Ìï¿½ñ•·‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Bï¿½sï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "{0}ï¿½É‚Â‚ï¿½ï¿½Ä’ï¿½ï¿½×‚Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½í‚·ï¿½é‚©ï¿½ï¿½",
+        "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½{0}ï¿½Ì˜bï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ÈBï¿½sï¿½ï¿½ï¿½Â‚ï¿½ï¿½è‚©ï¿½ï¿½",
+        "{0}ï¿½ÌUï¿½ï¿½ï¿½@ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½í‚·ï¿½ï¿½Cï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+        "ï¿½Eï¿½Ò‚ï¿½ï¿½ï¿½A{0}ï¿½É‹ï¿½ï¿½ï¿½ï¿½ÃXï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "{0}ï¿½Ì“ï¿½Õ“xï¿½mï¿½Fï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½",
+        "{0}ï¿½Ì‚ï¿½ï¿½Æ‹Cï¿½É‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Æ’ï¿½ï¿½í‚·ï¿½ï¿½"
     };
 
     private readonly List<string> lowConfidenceTemplates = new()
     {
-        "‚Å‚àAŠmM‚Í‚È‚¢‚¯‚Ç‚Ë",
-        @"‚ÜA—\‘z‚¾‚¯‚Ç",
-        "‚»‚ñ‚È‹C‚ª‚·‚é‚¾‚¯‚¾‚¯‚Ç",
-        "‚½‚Ô‚ñ‚¾‚¯‚Ç‚Ë",
-        "‚æ‚­‚í‚©‚ç‚È‚¢‚¯‚ÇA‚»‚ñ‚ÈŠ´‚¶"
+        "ï¿½Å‚ï¿½ï¿½Aï¿½mï¿½Mï¿½Í‚È‚ï¿½ï¿½ï¿½ï¿½Ç‚ï¿½",
+        @"ï¿½ÜAï¿½\ï¿½zï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "ï¿½ï¿½ï¿½ï¿½È‹Cï¿½ï¿½ï¿½ï¿½ï¿½é‚¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "ï¿½ï¿½ï¿½Ô‚ñ‚¾‚ï¿½ï¿½Ç‚ï¿½",
+        "ï¿½æ‚­ï¿½í‚©ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½ÇAï¿½ï¿½ï¿½ï¿½ÈŠï¿½ï¿½ï¿½"
     };
 
     private readonly List<string> highConfidenceTemplates = new()
     {
-        "ŠÔˆá‚¢‚È‚¢‚ÆŽv‚¤",
-        "ŠmŽÀ‚¾‚Ë",
-        "â‘Î‚»‚¤‚¾‚æ",
-        "100%‚»‚¤‚¾‚ÆŽv‚¤",
-        "ŠmM‚µ‚Ä‚é"
+        "ï¿½Ôˆá‚¢ï¿½È‚ï¿½ï¿½ÆŽvï¿½ï¿½",
+        "ï¿½mï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "ï¿½ï¿½Î‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½",
+        "100%ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÆŽvï¿½ï¿½",
+        "ï¿½mï¿½Mï¿½ï¿½ï¿½Ä‚ï¿½"
     };
 
-    //ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    //ï¿½Rï¿½ï¿½ï¿½Xï¿½gï¿½ï¿½ï¿½Nï¿½^
     public InfoBrokerModel(ItemModel itemModel, DungeonRepository dungeonRepository, HeroModel heroModel)
     {
         this.itemModel = itemModel;
@@ -110,8 +110,8 @@ public class InfoBrokerModel
     }
 
     /// <summary>
-    /// CSV‚©‚çƒ_ƒ“ƒWƒ‡ƒ“î•ñƒRƒXƒg‚ð“Ç‚Ýž‚Þ
-    /// CSVƒtƒH[ƒ}ƒbƒg: DungeonName,Cost1,Cost2,Cost3
+    /// CSVï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½Xï¿½gï¿½ï¿½Ç‚Ýï¿½ï¿½ï¿½
+    /// CSVï¿½tï¿½Hï¿½[ï¿½}ï¿½bï¿½g: DungeonName,Cost1,Cost2,Cost3
     /// </summary>
     private Dictionary<DungeonName, int[]> LoadDungeonInfoCostsFromCSV(string csvFileName)
     {
@@ -126,7 +126,7 @@ public class InfoBrokerModel
 
         string[] lines = csvFile.text.Split('\n');
 
-        // ƒwƒbƒ_[s‚ðƒXƒLƒbƒv (i = 1‚©‚çŠJŽn)
+        // ï¿½wï¿½bï¿½_ï¿½[ï¿½sï¿½ï¿½ï¿½Xï¿½Lï¿½bï¿½v (i = 1ï¿½ï¿½ï¿½ï¿½Jï¿½n)
         for (int i = 1; i < lines.Length; i++)
         {
             string line = lines[i].Trim();
@@ -135,14 +135,14 @@ public class InfoBrokerModel
             string[] values = line.Split(',');
             if (values.Length < 2) continue;
 
-            // DungeonName—ñ‚ðEnum‚Éƒp[ƒX
+            // DungeonNameï¿½ï¿½ï¿½Enumï¿½Éƒpï¿½[ï¿½X
             if (!Enum.TryParse<DungeonName>(values[0].Trim(), out var dungeonName))
             {
                 Debug.LogWarning($"Unknown DungeonName in CSV row {i}: {values[0]}");
                 continue;
             }
 
-            // Cost—ñi2—ñ–ÚˆÈ~j‚ðint”z—ñ‚É•ÏŠ·
+            // Costï¿½ï¿½i2ï¿½ï¿½ÚˆÈ~ï¿½jï¿½ï¿½intï¿½zï¿½ï¿½É•ÏŠï¿½
             var costs = new List<int>();
             for (int j = 1; j < values.Length; j++)
             {
@@ -160,7 +160,7 @@ public class InfoBrokerModel
     }
 
     /// <summary>
-    /// ƒ_ƒ“ƒWƒ‡ƒ“î•ñƒRƒXƒg‚ÌŽ«‘‚ðŽæ“¾
+    /// ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Rï¿½Xï¿½gï¿½ÌŽï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ“¾
     /// </summary>
     public Dictionary<DungeonName, int[]> GetDungeonInfoCosts()
     {
@@ -168,7 +168,7 @@ public class InfoBrokerModel
     }
 
     /// <summary>
-    /// —EŽÒƒf[ƒ^‚ðÅV‚Ìó‘Ô‚ÉXV
+    /// ï¿½Eï¿½Òƒfï¿½[ï¿½^ï¿½ï¿½ï¿½ÅVï¿½Ìï¿½Ô‚ÉXï¿½V
     /// </summary>
     public void RefreshHeroData()
     {
@@ -179,13 +179,13 @@ public class InfoBrokerModel
     }
 
     /// <summary>
-    /// —EŽÒî•ñ‚ðw“ü‚·‚é
+    /// ï¿½Eï¿½Òï¿½ï¿½ï¿½ï¿½wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /// </summary>
     public void PurchaseHeroInfo()
     {
         IsHeroInfoPurchased = true;
         RefreshHeroData();
-        Debug.Log("—EŽÒî•ñ‚ðw“ü‚µ‚Ü‚µ‚½B");
+        Debug.Log("ï¿½Eï¿½Òï¿½ï¿½ï¿½ï¿½wï¿½ï¿½ï¿½ï¿½ï¿½Ü‚ï¿½ï¿½ï¿½ï¿½B");
     }
 
     public void RecordHeroPurchase(string itemId, int quantity, int price)
@@ -196,7 +196,7 @@ public class InfoBrokerModel
     }
 
     /// <summary>
-    /// ƒ_ƒ“ƒWƒ‡ƒ“î•ñ‚ðw“ü‚µAisShowedInfo ‚ð true ‚É‚·‚é
+    /// ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½wï¿½ï¿½ï¿½ï¿½ï¿½AisShowedInfo ï¿½ï¿½ true ï¿½É‚ï¿½ï¿½ï¿½
     /// </summary>
     public void PurchaseDungeonInfo(DungeonName dungeonName)
     {
@@ -275,7 +275,7 @@ public class InfoBrokerModel
         return messages;
     }
 
-    // ‘•”õŠmM“xŒvŽZi‘®«‘Š«‚ð‹­‰»j
+    // ï¿½ï¿½ï¿½ï¿½ï¿½mï¿½Mï¿½xï¿½vï¿½Zï¿½iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½j
     private float CalculateEquipmentConfidence(RuntimeItemData item, HeroPurchaseHistory purchase)
     {
         float baseConfidence = 0.5f;
@@ -304,46 +304,46 @@ public class InfoBrokerModel
             levelFactor = levelDiff <= 2 ? 1.3f : levelDiff <= 5 ? 1.0f : 0.7f;
         }
 
-        // ƒ_ƒ“ƒWƒ‡ƒ“‘Š«ƒ{[ƒiƒX
+        // ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½{ï¿½[ï¿½iï¿½X
         float dungeonCompatibilityFactor = CalculateDungeonCompatibilityBonus(item);
 
         return Mathf.Clamp01(baseConfidence * timeFactor * quantityFactor * typeFactor * levelFactor * dungeonCompatibilityFactor);
     }
 
-    // w“ü‚µ‚½ƒAƒCƒeƒ€‚ª‚Ç‚Ìƒ_ƒ“ƒWƒ‡ƒ“‚É“K‚µ‚Ä‚¢‚é‚©ƒ{[ƒiƒXŒvŽZ
+    // ï¿½wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½ï¿½ï¿½Ç‚Ìƒ_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½É“Kï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‚©ï¿½{ï¿½[ï¿½iï¿½Xï¿½vï¿½Z
     private float CalculateDungeonCompatibilityBonus(RuntimeItemData item)
     {
         var masterItem = itemModel.GetMasterItem(item.ItemId);
         if (masterItem == null) return 1.0f;
 
-        // —EŽÒ‚ÌƒŒƒxƒ‹‚É“K‚µ‚½ƒ_ƒ“ƒWƒ‡ƒ“‚ð“Á’è
+        // ï¿½Eï¿½Ò‚Ìƒï¿½ï¿½xï¿½ï¿½ï¿½É“Kï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         var suitableDungeons = availableDungeons
             .Where(d => Math.Abs(currentHeroData.level.Value - d.recommendedLevel) <= 5)
             .ToList();
 
-        // w“üƒAƒCƒeƒ€‚Ì‘®«‚ª‚»‚ê‚ç‚Ìƒ_ƒ“ƒWƒ‡ƒ“‚É—LŒø‚©ƒ`ƒFƒbƒN
+        // ï¿½wï¿½ï¿½ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½Ì‘ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ìƒ_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½É—Lï¿½ï¿½ï¿½ï¿½ï¿½`ï¿½Fï¿½bï¿½N
         foreach (var dungeon in suitableDungeons)
         {
             if (IsItemEffectiveForDungeon(masterItem, dungeon))
             {
-                return 1.2f; // ƒ_ƒ“ƒWƒ‡ƒ“U—ª‚É“K‚µ‚½ƒAƒCƒeƒ€‚È‚çŠmM“xƒAƒbƒv
+                return 1.2f; // ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Uï¿½ï¿½ï¿½É“Kï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½È‚ï¿½mï¿½Mï¿½xï¿½Aï¿½bï¿½v
             }
         }
 
         return 1.0f;
     }
 
-    // ƒAƒCƒeƒ€‚ªƒ_ƒ“ƒWƒ‡ƒ“‚É—LŒø‚©‚Ç‚¤‚©‚Ì”»’è
+    // ï¿½Aï¿½Cï¿½eï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½É—Lï¿½ï¿½ï¿½ï¿½ï¿½Ç‚ï¿½ï¿½ï¿½ï¿½Ì”ï¿½ï¿½ï¿½
     private bool IsItemEffectiveForDungeon(ItemData item, DungeonData dungeon)
     {
-        // Šeƒ_ƒ“ƒWƒ‡ƒ“‚ÌŽã“_‘®«’è‹`
+        // ï¿½eï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ÌŽï¿½_ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½`
         var effectiveAttributes = dungeon.key switch
         {
-            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Fire }, // •X‚É‰Î‚ª—LŒø
-            DungeonName.DeepGreenBeastForest => new[] { ItemTypeData.ItemAttribute.Fire, ItemTypeData.ItemAttribute.Light }, // –Ø‚É‰ÎAˆÅ‚ÉŒõ
-            DungeonName.ScorchingVolcanoPrison => new[] { ItemTypeData.ItemAttribute.Water }, // ‰Î‚É…‚ª—LŒø
-            DungeonName.MausoleumOblivion => new[] { ItemTypeData.ItemAttribute.Light }, // ˆÅ‚ÉŒõ‚ª—LŒø
-             // => new[] { ItemTypeData.ItemAttribute.Water, ItemTypeData.ItemAttribute.Earth }, // ‹@ŠB‚É…E“y‚ª—LŒø
+            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Fire }, // ï¿½Xï¿½É‰Î‚ï¿½ï¿½Lï¿½ï¿½
+            DungeonName.DeepGreenBeastForest => new[] { ItemTypeData.ItemAttribute.Fire, ItemTypeData.ItemAttribute.Light }, // ï¿½Ø‚É‰ÎAï¿½Å‚ÉŒï¿½
+            DungeonName.ScorchingVolcanoPrison => new[] { ItemTypeData.ItemAttribute.Water }, // ï¿½Î‚Éï¿½ï¿½ï¿½ï¿½Lï¿½ï¿½
+            DungeonName.MausoleumOblivion => new[] { ItemTypeData.ItemAttribute.Light }, // ï¿½Å‚ÉŒï¿½ï¿½ï¿½ï¿½Lï¿½ï¿½
+             // => new[] { ItemTypeData.ItemAttribute.Water, ItemTypeData.ItemAttribute.Earth }, // ï¿½@ï¿½Bï¿½Éï¿½ï¿½Eï¿½yï¿½ï¿½ï¿½Lï¿½ï¿½
             _ => new ItemTypeData.ItemAttribute[] { }
         };
 
@@ -354,35 +354,35 @@ public class InfoBrokerModel
     {
         float baseConfidence = 0.4f;
 
-        // ƒŒƒxƒ‹“K³ŒvŽZ
+        // ï¿½ï¿½ï¿½xï¿½ï¿½ï¿½Kï¿½ï¿½ï¿½vï¿½Z
         int levelDiff = currentHeroData.level.Value - dungeon.recommendedLevel;
         float levelFactor = levelDiff >= 3 ? 1.4f :
                            levelDiff >= 0 ? 1.1f :
                            levelDiff >= -3 ? 0.8f :
                            0.4f;
 
-        // ‘•”õ‘Š«ŒvŽZ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½vï¿½Z
         float equipmentFactor = CalculateEquipmentCompatibility(dungeon);
 
-        // w“üŒXŒüŒvŽZ
+        // ï¿½wï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½vï¿½Z
         float purchaseFactor = CalculateRecentPurchaseFactor(dungeon);
 
-        // V‹@”\Fƒ_ƒ“ƒWƒ‡ƒ“ŒÅ—L‚ÌƒŠƒXƒN•]‰¿
+        // ï¿½Vï¿½@ï¿½\ï¿½Fï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Å—Lï¿½Ìƒï¿½ï¿½Xï¿½Nï¿½]ï¿½ï¿½
         float riskFactor = CalculateDungeonRiskFactor(dungeon);
 
         return Mathf.Clamp01(baseConfidence * levelFactor * equipmentFactor * purchaseFactor * riskFactor);
     }
 
-    // ƒ_ƒ“ƒWƒ‡ƒ“ŒÅ—L‚ÌƒŠƒXƒN•]‰¿
+    // ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Å—Lï¿½Ìƒï¿½ï¿½Xï¿½Nï¿½]ï¿½ï¿½
     private float CalculateDungeonRiskFactor(DungeonData dungeon)
     {
         return dungeon.key switch
         {
-            DungeonName.IceMistCave => 0.9f,        // ‹ÉŠ¦ƒ_ƒ[ƒW‚Å‚â‚âŠëŒ¯
-            DungeonName.DeepGreenBeastForest => 1.0f,    // •W€“I‚ÈŠëŒ¯“x
-            DungeonName.ScorchingVolcanoPrison => 0.8f,  // ƒ}ƒOƒ}ƒ_ƒ[ƒW‚ÅŠëŒ¯
-            DungeonName.MausoleumOblivion => 0.7f, // ‹°•|ó‘Ô‚Å”ñí‚ÉŠëŒ¯
-            // "dungeon_metalion" => 0.6f,        // ‹@ŠBƒgƒ‰ƒbƒv‚ÅÅ‚àŠëŒ¯
+            DungeonName.IceMistCave => 0.9f,        // ï¿½ÉŠï¿½ï¿½_ï¿½ï¿½ï¿½[ï¿½Wï¿½Å‚ï¿½ï¿½ëŒ¯
+            DungeonName.DeepGreenBeastForest => 1.0f,    // ï¿½Wï¿½ï¿½ï¿½Iï¿½ÈŠëŒ¯ï¿½x
+            DungeonName.ScorchingVolcanoPrison => 0.8f,  // ï¿½}ï¿½Oï¿½}ï¿½_ï¿½ï¿½ï¿½[ï¿½Wï¿½ÅŠëŒ¯
+            DungeonName.MausoleumOblivion => 0.7f, // ï¿½ï¿½ï¿½|ï¿½ï¿½Ô‚Å”ï¿½ï¿½ÉŠëŒ¯
+            // "dungeon_metalion" => 0.6f,        // ï¿½@ï¿½Bï¿½gï¿½ï¿½ï¿½bï¿½vï¿½ÅÅ‚ï¿½ï¿½ëŒ¯
             _ => 1.0f
         };
     }
@@ -394,7 +394,7 @@ public class InfoBrokerModel
 
         float compatibility = 1.0f;
 
-        // ƒ_ƒ“ƒWƒ‡ƒ“•Ê‚Ì—LŒø‘®«ƒ`ƒFƒbƒN
+        // ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½Ê‚Ì—Lï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½`ï¿½Fï¿½bï¿½N
         if (IsItemEffectiveForDungeon(currentWeapon, dungeon))
             compatibility += 0.3f;
         if (IsItemEffectiveForDungeon(currentArmor, dungeon))
@@ -433,27 +433,27 @@ public class InfoBrokerModel
         if (confidence > 0.8f)
         {
             var highTemplate = highConfidenceTemplates[random.Next(highConfidenceTemplates.Count)];
-            return $"{mainMessage}B{highTemplate}I";
+            return $"{mainMessage}ï¿½B{highTemplate}ï¿½I";
         }
         else if (confidence < 0.5f)
         {
             var lowTemplate = lowConfidenceTemplates[random.Next(lowConfidenceTemplates.Count)];
-            return $"{mainMessage}B{lowTemplate}B";
+            return $"{mainMessage}ï¿½B{lowTemplate}ï¿½B";
         }
         else
         {
-            return $"{mainMessage}B";
+            return $"{mainMessage}ï¿½B";
         }
     }
 
-    // ƒ_ƒ“ƒWƒ‡ƒ““Á•ÊƒƒbƒZ[ƒW
+    // ï¿½_ï¿½ï¿½ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êƒï¿½ï¿½bï¿½Zï¿½[ï¿½W
     private string GenerateDungeonMessageText(string dungeonName, string dungeonId, float confidence)
     {
         var random = new System.Random();
 
-        // “Á•ÊƒƒbƒZ[ƒW‚ª‚ ‚é‚©ƒ`ƒFƒbƒN
+        // ï¿½ï¿½ï¿½Êƒï¿½ï¿½bï¿½Zï¿½[ï¿½Wï¿½ï¿½ï¿½ï¿½ï¿½é‚©ï¿½`ï¿½Fï¿½bï¿½N
         string mainMessage;
-        if (specialDungeonMessages.ContainsKey(dungeonId) && random.NextDouble() < 0.4) // 40%‚ÌŠm—¦‚Å“Á•ÊƒƒbƒZ[ƒW
+        if (specialDungeonMessages.ContainsKey(dungeonId) && random.NextDouble() < 0.4) // 40%ï¿½ÌŠmï¿½ï¿½ï¿½Å“ï¿½ï¿½Êƒï¿½ï¿½bï¿½Zï¿½[ï¿½W
         {
             var specialTemplates = specialDungeonMessages[dungeonId];
             var specialTemplate = specialTemplates[random.Next(specialTemplates.Count)];
@@ -461,7 +461,7 @@ public class InfoBrokerModel
         }
         else
         {
-            // ’ÊíƒƒbƒZ[ƒW
+            // ï¿½Êíƒï¿½bï¿½Zï¿½[ï¿½W
             var template = dungeonMessageTemplates[random.Next(dungeonMessageTemplates.Count)];
             mainMessage = string.Format(template, dungeonName);
         }
@@ -469,38 +469,31 @@ public class InfoBrokerModel
         if (confidence > 0.8f)
         {
             var highTemplate = highConfidenceTemplates[random.Next(highConfidenceTemplates.Count)];
-            return $"{mainMessage}B{highTemplate}I";
+            return $"{mainMessage}ï¿½B{highTemplate}ï¿½I";
         }
         else if (confidence < 0.5f)
         {
             var lowTemplate = lowConfidenceTemplates[random.Next(lowConfidenceTemplates.Count)];
-            return $"{mainMessage}B{lowTemplate}B";
+            return $"{mainMessage}ï¿½B{lowTemplate}ï¿½B";
         }
         else
         {
-            return $"{mainMessage}B";
+            return $"{mainMessage}ï¿½B";
         }
     }
 
-    //ƒ_ƒ“ƒWƒ‡ƒ“ƒf[ƒ^
-    private void InitializeDungeons()
+    // ãƒ€ãƒ³ã‚¸ãƒ§ãƒ³ãƒ‡ãƒ¼ã‚¿ã‚’ DungeonRepository ã‹ã‚‰å–å¾—
+    public void InitializeDungeons()
     {
-        availableDungeons = new List<DungeonData>
-    {
-        // //•X–¶‚Ì“´ŒA
-        // new DungeonData(),
-        //
-        // //[—Î‚Ìb—Ñ
-        // new DungeonData(),
-        //
-        // // ŽÜ”M‚Ì‰ÎŽR˜S
-        // new DungeonData(),
-        //
-        // // –Y‹p‚Ì—ì•_
-        // new DungeonData(),
-        //
-        // //ŒÃ‘ã‹@\éƒƒ^ƒŠƒIƒ“
-        // new DungeonData()
-    };
+        if (dungeonRepository != null && dungeonRepository.availableDungeons != null)
+        {
+            availableDungeons = new List<DungeonData>(dungeonRepository.availableDungeons);
+            Debug.Log($"[InfoBrokerModel] {availableDungeons.Count} ä»¶ã®ãƒ€ãƒ³ã‚¸ãƒ§ãƒ³ã‚’èª­ã¿è¾¼ã¿ã¾ã—ãŸ");
+        }
+        else
+        {
+            availableDungeons = new List<DungeonData>();
+            Debug.LogWarning("[InfoBrokerModel] DungeonRepository ãŒ null ã¾ãŸã¯ç©ºã§ã™");
+        }
     }
 }

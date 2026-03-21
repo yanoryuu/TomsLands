@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
+  m_Name: FrostReach
+  m_EditorClassIdentifier: 
+  key: 1
+  dungeonName: "\u6C37\u7D50\u306E\u9054\u5730"
+  dungeonDescription: "\u51B7\u305F\u3044\u98A8\u304C\u5439\u304D\u3059\u3055\u3076\u51CD\u3066\u3064\u3044\u305F\u5927\u5730\u3002\u6C37\u306E\u9B54\u7269\u305F\u3061\u304C\u5F98\u5F8A\u3057\u3066\u3044\u308B\u3002"
+  dungeonImage: {fileID: -2670746174323389601, guid: 511774859ee7f414e8b69fe60fa718b2, type: 3}
+  initDungeonLevel: 1
+  recommendedLevel: 2
+  difficulty: 2
+  requiredAttribute: 0
+  dungeonMonsters:
+  - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
+  - {fileID: 11400000, guid: ba1a37558b33af24ebb0f59f71669ca9, type: 2}
+  dungeonBoss: 
+  currentDungeonLevel: 1
+  rewardGold: 150
+  dungeonStatus: 2

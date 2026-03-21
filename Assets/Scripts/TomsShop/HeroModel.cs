@@ -13,6 +13,17 @@ public class HeroModel
     {
         LoadHeroData();
     }
+
+    /// <summary>
+    /// バトルシーン用。ロード済みのヒーローデータに装備だけを上書きする。
+    /// </summary>
+    public void ApplyEquippedItems(IEnumerable<string> equippedItemIds)
+    {
+        EquippedItemIds = equippedItemIds != null
+            ? new List<string>(equippedItemIds)
+            : new List<string>();
+    }
+
     public void EquipItem(string itemId)
     {
         if (!EquippedItemIds.Contains(itemId))
@@ -56,4 +67,3 @@ public class HeroModel
         
     }
 }
-

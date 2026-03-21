@@ -30,7 +30,7 @@ public class MapPurchaseSlot : MonoBehaviour
     {
         if (icon) icon.sprite = sprite;
         if (nameText) nameText.text = itemName;
-        if (dungeonName != null) dungeonKey = dungeonName;
+        dungeonKey = dungeonName;
         SetPrice(price);
     }
 

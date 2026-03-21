@@ -3,7 +3,7 @@
   <component name="Encoding" addBOMForNewFiles="with BOM under Windows, with no BOM otherwise">
     <file url="file://$PROJECT_DIR$/Assets/Battle/Scripts/BattleActionExecutor.cs" charset="Shift_JIS" />
     <file url="file://$PROJECT_DIR$/Assets/Battle/Scripts/BattleUIView.cs" charset="Shift_JIS" />
-    <file url="file://$PROJECT_DIR$/Assets/Scripts/Information/InfoBrokerModel.cs" charset="Shift_JIS" />
+    <file url="file://$PROJECT_DIR$/Assets/Scripts/Information/InfoBrokerModel.cs" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/Assets/Scripts/Information/InfoBrokerPresenter.cs" charset="Shift_JIS" />
     <file url="file://$PROJECT_DIR$/Assets/Scripts/Information/InfoBrokerView.cs" charset="UTF-8" />
   </component>

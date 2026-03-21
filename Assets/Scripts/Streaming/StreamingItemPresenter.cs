@@ -10,7 +10,6 @@ public class StreamingItemPresenter : IDisposable , IPresenter
     private ItemModel            itemModel;
     private StreamingView        streamingView;
     private TomsModel        tomsModel;
-    private BattleSequencer     battleSequencer;
     private CompositeDisposable  disposables = new CompositeDisposable();
 
     public void Entry()
@@ -23,8 +22,7 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         StreamingView         streamingView,
         ItemModel             itemModel,
         StreamingSettingModel settingModel,
-        TomsModel         tomsShopModel,
-        BattleSequencer battleSequencer
+        TomsModel         tomsShopModel
         )
     {
         this.streamingItemModel   = streamingItemModel;
@@ -32,7 +30,6 @@ public class StreamingItemPresenter : IDisposable , IPresenter
         this.itemModel            = itemModel;
         this.streamingSettingModel= settingModel;
         this.tomsModel        = tomsShopModel;
-        this.battleSequencer      = battleSequencer;
         disposables = new CompositeDisposable();
     }
 
@@ -84,87 +81,9 @@ public class StreamingItemPresenter : IDisposable , IPresenter
          // streamingView.OnFocusedStealthRequested
         //     .Subscribe(id => streamingItemModel.ApplyFocusedStealth(id, tomsShopModel))
         //     .AddTo(disposables);
-        
-        
-        battleSequencer.OnBattleWin
-            .Subscribe(win =>
-            {
-                foreach (var item in streamingItemModel.runtimeStreamingItems)
-                {
-                    int soldQuantity = Mathf.RoundToInt(item.quantity * item.demand);
-                    if (soldQuantity > 0)
-                    {
-                        // アイテムモデルに販売数量を反映
-                        itemModel.Settlement(item.itemId, soldQuantity);
-                
-                        // TomsShopModelに販売処理を反映
-                        // tomsShopModel.Settlement(item.price.Value, soldQuantity);
-                    }
-                }
-                //勝利時に装備していた装備の値段をあげる
-                itemModel.BattleWinBonus(win.armorId,5);
-                itemModel.BattleWinBonus(win.weaponId,5);
-            })
-            .AddTo(disposables);
-        
-        battleSequencer.OnBattleDefeat
-            .Subscribe(defeat =>
-            {
-                foreach (var item in streamingItemModel.runtimeStreamingItems)
-                {
-                    int soldQuantity = Mathf.RoundToInt(item.quantity * item.demand);
-                    if (soldQuantity > 0)
-                    {
-                        // アイテムモデルに販売数量を反映
-                        itemModel.Settlement(item.itemId, soldQuantity);
-                
-                        // TomsShopModelに販売処理を反映
-                        // tomsShopModel.Settlement(item.price.Value, soldQuantity);
-                    }
-                }
-                //敗北時に装備していた装備の値段を下げる
-                itemModel.BattleDefeatPenalty(defeat.armorId,2);
-                itemModel.BattleDefeatPenalty(defeat.weaponId,2);
-            })
-            .AddTo(disposables);
 
-        foreach (var characterPresenter in battleSequencer.CharacterPresenters)
-        {
-            characterPresenter.OnTakeDamage.Subscribe(attackerModel =>
-            {
-                var targetModel = characterPresenter.GetModel();
-
-                // --- 勇者がダメージを受けた時の処理 ---
-                if (targetModel.Type == CharacterType.Hero)
-                {
-                    // 勇者が装備している防具のIDを取得
-                    string armorId = targetModel.EquippedArmor?.itemId;
-                    if (!string.IsNullOrEmpty(armorId))
-                    {
-                        var item = streamingItemModel.runtimeStreamingItems.Find(i => i.itemId == armorId);
-                        if (item != null)
-                        {
-                            streamingItemModel.UpdateStreamingItems(armorId, Mathf.RoundToInt(item.price.Value * 1.1f));
-                        }
-                    }
-                }
-                // --- 敵がダメージを受けた時の処理 ---
-                else if (targetModel.Type == CharacterType.Enemy)
-                {
-                    // 勇者(攻撃者)が装備している武器のIDを取得
-                    string weaponId = attackerModel.EquippedWeapon?.itemId;
-                    if (!string.IsNullOrEmpty(weaponId))
-                    {
-                        var item = streamingItemModel.runtimeStreamingItems.Find(i => i.itemId == weaponId);
-                        if (item != null)
-                        {
-                            streamingItemModel.UpdateStreamingItems(weaponId, Mathf.RoundToInt(item.price.Value * 1.1f));
-                        }
-                    }
-                }
-            })
-            .AddTo(disposables);
-        }
+        // ※ 戦闘結果の処理（勝敗ボーナス/ペナルティ・売上精算）は
+        //    BattleResultHandler に移行済み。戦闘は FightScene で実行される。
     }
     
 

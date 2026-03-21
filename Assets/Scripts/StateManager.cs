@@ -32,18 +32,29 @@ public class StateManager : IDisposable
     /// <summary>UI全体のパネル制御を担当するマネージャー（任意）</summary>
     private readonly GamePanelManager gamePanelManager;
 
+    /// <summary>シーン間で渡される開始モード</summary>
+    private readonly StartModeData _startModeData;
+
     /// <summary>
     /// コンストラクタ
     /// </summary>
     /// <param name="gamePanelManager">UI表示を統合的に制御するマネージャー</param>
-    public StateManager(GamePanelManager gamePanelManager)
+    /// <param name="startModeData">タイトルシーンから渡される開始モード</param>
+    public StateManager(GamePanelManager gamePanelManager, StartModeData startModeData)
     {
         this.gamePanelManager = gamePanelManager;
-        CurrentPhase = new ReactiveProperty<GamePhase>(GamePhase.Title);
+        _startModeData = startModeData;
+
+        // タイトルシーンからどちらのモードで来ても、TomsShopシーン内では常にTomsShopフェーズから開始
+        // （Preparationは別シーンに分離済み）
+        CurrentPhase = new ReactiveProperty<GamePhase>(GamePhase.TomsShop);
         CurrentTomsShopPhase = new ReactiveProperty<TomsShopGamePhase>(TomsShopGamePhase.Shop);
         CurrentStreamingPhase = new ReactiveProperty<StreamingGamePhase>(StreamingGamePhase.StreamingSetting);
         Bind();
-        ChangePhase(GamePhase.Title);
+        // 初期フェーズを確実に発火させる（同値ガードを回避）
+        CurrentPhase.ForceNotify();
+
+        Debug.Log($"[StateManager] Initialized with StartMode={_startModeData.Mode}, InitialPhase=TomsShop");
     }
 
     /// <summary>
@@ -65,6 +76,16 @@ public class StateManager : IDisposable
                         handler?.Invoke();
                     }
 
+                    // サブフェーズを持つフェーズに入ったら、サブフェーズを強制発火してパネルを表示させる
+                    if (phase == GamePhase.Streaming)
+                    {
+                        CurrentStreamingPhase.ForceNotify();
+                    }
+                    else if (phase == GamePhase.TomsShop)
+                    {
+                        CurrentTomsShopPhase.ForceNotify();
+                    }
+
                     Debug.Log($"[StateManager] Phase changed to {phase}");
                 }
                 catch (Exception e)
@@ -77,6 +98,9 @@ public class StateManager : IDisposable
         CurrentTomsShopPhase
             .Subscribe(subPhase =>
             {
+                // メインフェーズがTomsShopでなければパネル切替しない
+                if (CurrentPhase.Value != GamePhase.TomsShop) return;
+
                 try
                 {
                     gamePanelManager?.ShowTomsShopPanel(subPhase);
@@ -98,6 +122,9 @@ public class StateManager : IDisposable
         CurrentStreamingPhase
             .Subscribe(subPhase =>
             {
+                // メインフェーズがStreamingでなければパネル切替しない
+                if (CurrentPhase.Value != GamePhase.Streaming) return;
+
                 try
                 {
                     gamePanelManager?.ShowStreamingPanel(subPhase);
