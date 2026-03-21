@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: AR1
   m_EditorClassIdentifier: 
   itemId: AR1
-  itemName: Armor
+  itemName: "\u5CA9\u77F3\u306E\u93A7"
   basePrice: 700
-  description: "\u93A7"
+  description: "\u5CA9\u306E\u3088\u3046\u306A\u786C\u5EA6\u3092\u6301\u3064\u93A7\u3002\u6C34\u5C5E\u6027\u306E\u653B\u6483\u3092\u5F3E\u304D\u8FD4\u3059\u5BC6\u5EA6\u304C\u5192\u967A\u8005\u306B\u652F\u6301\u3055\u308C\u3066\u3044\u308B\u3002"
   itemIcon: {fileID: 21300000, guid: 207695b1214594af2accf84249fe1ab7, type: 3}
   initialStock: 0
   maxStock: 100

@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: HE2
   m_EditorClassIdentifier: 
   itemId: HE2
-  itemName: Helmet_2
+  itemName: "\u708E\u306E\u515C"
   basePrice: 700
-  description: "\u30D8\u30EB\u30E0"
+  description: "\u98A8\u5C5E\u6027\u306E\u653B\u6483\u3092\u53D7\u3051\u6B62\u3081\u308B\u515C\u3002\u88C5\u5099\u3059\u308B\u3068\u708E\u306E\u3088\u3046\u306A\u95D8\u5FD7\u304C\u6E67\u3044\u3066\u304F\u308B\u3068\u8A55\u5224\u3002"
   itemIcon: {fileID: 21300000, guid: 9eeb20468ab8448d6aa001c44dfc7b16, type: 3}
   initialStock: 0
   maxStock: 100
+  initialDisplayStock: 0
   itemType: 1
   itemAttribute: 0
   requiredLevel: 2

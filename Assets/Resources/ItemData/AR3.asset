@@ -13,12 +13,13 @@ MonoBehaviour:
   m_Name: AR3
   m_EditorClassIdentifier: 
   itemId: AR3
-  itemName: Armor3
+  itemName: "\u75BE\u98A8\u306E\u93A7"
   basePrice: 1500
-  description: "\u93A7"
+  description: "\u6C17\u6D41\u3092\u64CD\u308B\u69CB\u9020\u306E\u6D41\u7DDA\u578B\u30A2\u30FC\u30DE\u30FC\u3002\u571F\u5C5E\u6027\u306E\u653B\u6483\u3092\u98A8\u3067\u53D7\u3051\u6D41\u3059\u3001\u52D5\u304D\u3092\u59A8\u3052\u306A\u3044\u4E00\u7740\u3002"
   itemIcon: {fileID: 21300000, guid: 9ec1b4902ea8a48c6ab5f60fdeb7a138, type: 3}
   initialStock: 0
   maxStock: 100
+  initialDisplayStock: 0
   itemType: 1
   itemAttribute: 3
   requiredLevel: 3
