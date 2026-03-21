@@ -10,9 +10,12 @@ using UnityEngine;
 public class BattleActionExecutor
 {
     private readonly BattleContext context;
-    public BattleActionExecutor(BattleContext ctx)
+    private readonly BattleSequencer sequencer;
+    
+    public BattleActionExecutor(BattleContext ctx, BattleSequencer battleSequencer)
     {
         context = ctx;
+        sequencer = battleSequencer;
     }
 
     /// <summary>
@@ -37,6 +40,13 @@ public class BattleActionExecutor
                 if (targetPresenter.GetModel().IsDead)
                 {
                     await uiView.AddLogAsync($"{targetPresenter.GetModel().Name} を倒した！", token);
+                    
+                    // 敵が倒された場合、撃破イベントを発火（属性相性による価格変動に使用）
+                    if (targetPresenter.GetModel().Type == CharacterType.Enemy)
+                    {
+                        sequencer.OnEnemyDefeated.OnNext(targetPresenter.GetModel());
+                    }
+                    
                     await targetPresenter.GetView().PlayDeathEffectAsync(token);
                 }
             }

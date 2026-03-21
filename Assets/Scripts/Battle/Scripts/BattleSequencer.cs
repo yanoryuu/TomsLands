@@ -9,6 +9,7 @@ public class BattleSequencer : MonoBehaviour
     [Header("戦闘系のマネージャー")]
     [SerializeField] private CharacterFactory characterFactory;
     [SerializeField] private BattleUIView battleUIView;
+    [SerializeField] private StreamingSalesController streamingSalesController;
 
     [Header("戦闘ルール設定")]
     [Tooltip("この戦闘で倒すべき通常モンスターの総数")]
@@ -36,6 +37,11 @@ public class BattleSequencer : MonoBehaviour
     public IReadOnlyList<CharacterPresenter> CharacterPresenters =>
         battleContext?.GetAllPresenters() ?? new List<CharacterPresenter>();
     public Subject<(CharacterModel attacker, CharacterModel target)> OnCharacterDamaged { get; } = new();
+    
+    /// <summary>
+    /// 敵が倒された時に発火するイベント。倒された敵の CharacterModel を通知する。
+    /// </summary>
+    public Subject<CharacterModel> OnEnemyDefeated { get; } = new();
 
 
     public void StartBattle(HeroModel heroModel)
@@ -48,7 +54,7 @@ public class BattleSequencer : MonoBehaviour
     {
         // ★ ここで戦闘ルールをContextに渡す
         battleContext = new BattleContext(currentDungeon, totalNormalEnemies, maxConcurrentEnemies);
-        var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this);
+        var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController);
 
         await flowManager.ExecuteBattleAsync(heroModel, token);
         Debug.Log("戦闘が終了しました。 (BattleSequencer)");

@@ -15,17 +15,12 @@ public class StateManager : IDisposable
     /// <summary>トムの店フェーズ内の現在のサブフェーズ</summary>
     public ReactiveProperty<TomsShopGamePhase> CurrentTomsShopPhase { get; private set; }
 
-    /// <summary>配信フェーズ内の現在のサブフェーズ</summary>
-    public ReactiveProperty<StreamingGamePhase> CurrentStreamingPhase { get; private set; }
-
     /// <summary>フェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<GamePhase, Action> onEnter = new();
 
     /// <summary>トムの店サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<TomsShopGamePhase, Action> onEnterTomsShop = new();
 
-    /// <summary>配信サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
-    private readonly Dictionary<StreamingGamePhase, Action> onEnterStreaming = new();
 
     private readonly CompositeDisposable disposables = new();
 
@@ -49,7 +44,6 @@ public class StateManager : IDisposable
         // （Preparationは別シーンに分離済み）
         CurrentPhase = new ReactiveProperty<GamePhase>(GamePhase.TomsShop);
         CurrentTomsShopPhase = new ReactiveProperty<TomsShopGamePhase>(TomsShopGamePhase.Shop);
-        CurrentStreamingPhase = new ReactiveProperty<StreamingGamePhase>(StreamingGamePhase.StreamingSetting);
         Bind();
         // 初期フェーズを確実に発火させる（同値ガードを回避）
         CurrentPhase.ForceNotify();
@@ -77,11 +71,7 @@ public class StateManager : IDisposable
                     }
 
                     // サブフェーズを持つフェーズに入ったら、サブフェーズを強制発火してパネルを表示させる
-                    if (phase == GamePhase.Streaming)
-                    {
-                        CurrentStreamingPhase.ForceNotify();
-                    }
-                    else if (phase == GamePhase.TomsShop)
+                    if (phase == GamePhase.TomsShop)
                     {
                         CurrentTomsShopPhase.ForceNotify();
                     }
@@ -118,30 +108,6 @@ public class StateManager : IDisposable
                 }
             })
             .AddTo(disposables);
-
-        CurrentStreamingPhase
-            .Subscribe(subPhase =>
-            {
-                // メインフェーズがStreamingでなければパネル切替しない
-                if (CurrentPhase.Value != GamePhase.Streaming) return;
-
-                try
-                {
-                    gamePanelManager?.ShowStreamingPanel(subPhase);
-
-                    if (onEnterStreaming.TryGetValue(subPhase, out var handler))
-                    {
-                        handler?.Invoke();
-                    }
-
-                    Debug.Log($"[StateManager] Streaming sub-phase changed to {subPhase}");
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[StateManager] OnEnter error at Streaming.{subPhase}: {e}");
-                }
-            })
-            .AddTo(disposables);
     }
 
     /// <summary>
@@ -174,20 +140,6 @@ public class StateManager : IDisposable
         }
     }
 
-    /// <summary>
-    /// 配信サブフェーズのOnEnter登録。
-    /// </summary>
-    public void RegisterOnEnter(StreamingGamePhase subPhase, Action handler)
-    {
-        if (onEnterStreaming.ContainsKey(subPhase))
-        {
-            onEnterStreaming[subPhase] += handler;
-        }
-        else
-        {
-            onEnterStreaming[subPhase] = handler;
-        }
-    }
 
     /// <summary>
     /// 現在のフェーズを変更。購読側で自動的に切替・処理が実行される。
@@ -219,24 +171,6 @@ public class StateManager : IDisposable
         CurrentTomsShopPhase.Value = nextSubPhase;
     }
 
-    /// <summary>
-    /// 配信サブフェーズを変更。メインフェーズがStreamingでない場合は自動遷移。
-    /// </summary>
-    public void ChangeStreamingPhase(StreamingGamePhase nextSubPhase)
-    {
-        if (CurrentPhase.Value != GamePhase.Streaming)
-        {
-            ChangePhase(GamePhase.Streaming);
-        }
-
-        if (CurrentStreamingPhase.Value == nextSubPhase)
-        {
-            CurrentStreamingPhase.ForceNotify();
-            return;
-        }
-        Debug.Log($"[StateManager] Changing Streaming sub-phase: {CurrentStreamingPhase.Value} → {nextSubPhase}");
-        CurrentStreamingPhase.Value = nextSubPhase;
-    }
 
     public void Dispose()
     {

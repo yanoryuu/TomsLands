@@ -20,6 +20,7 @@ public class CharacterModel
     public int DefensePower { get; }
     public ItemData EquippedWeapon { get; }
     public ItemData EquippedArmor { get; }
+    public ElementType Element { get; }
     public IReadOnlyList<SkillData> Skills { get; }
     public Observable<Unit> OnDied => CurrentHp.Where(hp => hp <= 0).AsUnitObservable();
     public bool IsDead => CurrentHp.CurrentValue <= 0;
@@ -30,6 +31,7 @@ public class CharacterModel
         Name = data.enemyName;
         Type = CharacterType.Enemy;
         CharacterSprite = data.enemySprite;
+        Element = data.elementType;
         MaxHp = data.hp;
         CurrentHp = new ReactiveProperty<int>(data.hp);
         MaxMp = 0;
@@ -47,6 +49,7 @@ public class CharacterModel
         Name = masterData.heroName;
         Type = CharacterType.Hero;
         CharacterSprite = masterData.heroSprite;
+        Element = ElementType.None;
         MaxHp = masterData.hp;
         CurrentHp = new ReactiveProperty<int>(masterData.hp);
         MaxMp = masterData.mp;

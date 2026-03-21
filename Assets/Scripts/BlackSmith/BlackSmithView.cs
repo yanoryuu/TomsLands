@@ -82,11 +82,10 @@ public class BlackSmithView : MonoBehaviour
             SaveScrollForTab(_currentTab, prePos);
         }
 
-        // 既存スロット破棄
-        foreach (var slot in activeSlots)
+        // 既存スロット破棄（Content配下の全子オブジェクトを削除）
+        for (int i = blackSmithContent.transform.childCount - 1; i >= 0; i--)
         {
-            if (slot != null)
-                Destroy(slot.gameObject);
+            Destroy(blackSmithContent.transform.GetChild(i).gameObject);
         }
         activeSlots.Clear();
 
@@ -172,6 +171,7 @@ public class BlackSmithView : MonoBehaviour
     {
         // レイアウト確定 → 次フレームで反映（Immediate だけだと戻ることがある）
         yield return null; // 1 frame 待つ
+        LayoutRebuilder.ForceRebuildLayoutImmediate(blackSmithContent.GetComponent<RectTransform>());
         Canvas.ForceUpdateCanvases();
         if (scrollRect)
         {

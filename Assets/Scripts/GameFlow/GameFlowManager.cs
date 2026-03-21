@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -9,6 +10,11 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly StateManager _stateManager;
     private readonly DungeonRepository _dungeonRepository;
     private readonly BattleInputData _battleInputData;
+    private readonly ItemModel _itemModel;
+    private readonly ShopEconomySettings _economySettings;
+    private readonly TomsModel _tomsModel;
+    private readonly SceneTransitionService _sceneTransition;
+    private readonly HeroModel _heroModel;
     private int _currentIndex;
 
     /// <summary>
@@ -21,11 +27,18 @@ public class GameFlowManager : IDisposable, IStartable
     /// </summary>
     public int CurrentIndex => _currentIndex;
 
-    public GameFlowManager(StateManager stateManager, DungeonRepository dungeonRepository, BattleInputData battleInputData)
+    public GameFlowManager(StateManager stateManager, DungeonRepository dungeonRepository, BattleInputData battleInputData,
+        ItemModel itemModel, ShopEconomySettings economySettings, TomsModel tomsModel,
+        SceneTransitionService sceneTransition, HeroModel heroModel)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
         _battleInputData = battleInputData;
+        _itemModel = itemModel;
+        _economySettings = economySettings;
+        _tomsModel = tomsModel;
+        _sceneTransition = sceneTransition;
+        _heroModel = heroModel;
         _currentIndex = 0;
     }
 
@@ -63,6 +76,14 @@ public class GameFlowManager : IDisposable, IStartable
         _currentIndex++;
         CurrentTurn.Value = _currentIndex + 1;
 
+        // --- TomsShop の経済更新（S1 + S3 + D2） ---
+        if (_itemModel != null && _economySettings != null && _tomsModel != null)
+        {
+            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value);
+            _itemModel.SaveData();
+            Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
+        }
+
         if (_currentIndex >= _gameFlow.GameFlowStack.Count)
         {
             Debug.Log("[GameFlowManager] All turns completed. Transitioning to Result phase.");
@@ -71,9 +92,8 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         var node = _gameFlow.GameFlowStack[_currentIndex];
-        var nextPhase = ConvertEventToPhase(node.EventType);
 
-        // Battle時はGameFlowNodeに設定されたダンジョン情報をBattleInputDataに渡す
+        // Battle時はBattleInputDataをセットアップしてFightSceneへ直接遷移
         if (node.EventType == GameEvent.Battle)
         {
             var catalog = _dungeonRepository.CreateCatalog();
@@ -87,8 +107,24 @@ public class GameFlowManager : IDisposable, IStartable
             {
                 Debug.LogWarning($"[GameFlowManager] Dungeon not found for key: {node.BattleDungeon}");
             }
+
+            // ItemModel の在庫データを保存してからシーン遷移
+            _itemModel.SaveData();
+
+            // BattleInputData にフロー情報を書き込み
+            _battleInputData.Setup(
+                node.BattleDungeon,
+                new List<string>(_heroModel.EquippedItemIds),
+                new List<BattleInputItem>(),
+                _currentIndex
+            );
+
+            Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → FightScene");
+            _sceneTransition.GoToBattle();
+            return;
         }
 
+        var nextPhase = ConvertEventToPhase(node.EventType);
         Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → phase={nextPhase}");
         _stateManager.ChangePhase(nextPhase);
     }
@@ -101,7 +137,6 @@ public class GameFlowManager : IDisposable, IStartable
         return gameEvent switch
         {
             GameEvent.Start => GamePhase.TomsShop,
-            GameEvent.Battle => GamePhase.Streaming,
             GameEvent.Shop => GamePhase.TomsShop,
             GameEvent.Event => GamePhase.TomsShop,
             GameEvent.End => GamePhase.Result,

@@ -23,10 +23,9 @@ public class MapInfoView : MonoBehaviour
     {
         // 前回のスロット購読と要素を破棄
         slotDisposables.Clear();
-        foreach (var slot in activeSlots)
+        for (int i = mapInfoContent.transform.childCount - 1; i >= 0; i--)
         {
-            if (slot != null)
-                Destroy(slot.gameObject);
+            Destroy(mapInfoContent.transform.GetChild(i).gameObject);
         }
         activeSlots.Clear();
 

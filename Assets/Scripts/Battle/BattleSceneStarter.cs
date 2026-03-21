@@ -1,15 +1,16 @@
-﻿﻿using R3;
+﻿using Cysharp.Threading.Tasks;
+using R3;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using VContainer.Unity;
 
 /// <summary>
 /// FightScene の EntryPoint。
-/// BattleInputData の情報を BattleSequencer に渡して戦闘を開始する。
-/// 戦闘終了後に BattleOutputData に結果を書き込み、TomsShop に戻る。
+/// StreamingSetting → Battle → Result → TomsShop の順にフェーズを制御する。
 /// </summary>
-public class BattleSceneStarter : IStartable
+public class BattleSceneStarter : IAsyncStartable
 {
     private readonly BattleSequencer _battleSequencer;
     private readonly BattleInputData _inputData;
@@ -18,6 +19,8 @@ public class BattleSceneStarter : IStartable
     private readonly IDungeonCatalog _dungeonCatalog;
     private readonly StreamingSalesController _salesController;
     private readonly ItemModel _itemModel;
+    private readonly StreamingSettingPresenter _settingPresenter;
+    private readonly BattleResultView _resultView;
 
     public BattleSceneStarter(
         BattleSequencer battleSequencer,
@@ -26,7 +29,9 @@ public class BattleSceneStarter : IStartable
         SceneTransitionService sceneTransition,
         IDungeonCatalog dungeonCatalog,
         StreamingSalesController salesController,
-        ItemModel itemModel)
+        ItemModel itemModel,
+        StreamingSettingPresenter settingPresenter,
+        BattleResultView resultView)
     {
         _battleSequencer = battleSequencer;
         _inputData = inputData;
@@ -35,15 +40,17 @@ public class BattleSceneStarter : IStartable
         _dungeonCatalog = dungeonCatalog;
         _salesController = salesController;
         _itemModel = itemModel;
+        _settingPresenter = settingPresenter;
+        _resultView = resultView;
     }
 
-    public void Start()
+    public async UniTask StartAsync(CancellationToken cancellation)
     {
-        Debug.Log("[BattleSceneStarter] Starting battle from BattleInputData...");
+        Debug.Log("[BattleSceneStarter] FightScene started. Beginning phase flow...");
 
         if (_battleSequencer == null)
         {
-            Debug.LogError("[BattleSceneStarter] BattleSequencer is null! FightScene の Inspector で BattleSequencer がアサインされているか確認してください。");
+            Debug.LogError("[BattleSceneStarter] BattleSequencer is null!");
             return;
         }
 
@@ -53,38 +60,81 @@ public class BattleSceneStarter : IStartable
             return;
         }
 
+        // --- Phase 1: StreamingSetting（品出し設定） ---
+        Debug.Log("[BattleSceneStarter] Phase 1: StreamingSetting");
+        var selectedItems = await _settingPresenter.RunAsync();
+
+        // 選択結果を BattleInputData に書き込み
+        var battleItems = new List<BattleInputItem>();
+        foreach (var kv in selectedItems)
+        {
+            var runtime = _itemModel.GetRuntimeItem(kv.Key);
+            battleItems.Add(new BattleInputItem
+            {
+                ItemId = kv.Key,
+                Quantity = kv.Value,
+                Price = runtime != null ? runtime.CurrentPrice.Value : 0
+            });
+        }
+        _inputData.SelectedItems = new List<BattleInputItem>(battleItems);
+        Debug.Log($"[BattleSceneStarter] StreamingSetting confirmed. {battleItems.Count} items selected.");
+
+        // --- Phase 2: Battle（配信中・戦闘） ---
+        Debug.Log("[BattleSceneStarter] Phase 2: Battle");
         var targetDungeon = ResolveTargetDungeon();
         if (targetDungeon == null)
         {
-            Debug.LogError($"[BattleSceneStarter] Dungeon not found: {_inputData.DungeonKey}. FightScene の BattleLifetimeScope.dungeonInfos に {_inputData.DungeonKey} の DungeonInfoScriptableObj を追加してください。");
+            Debug.LogError($"[BattleSceneStarter] Dungeon not found: {_inputData.DungeonKey}");
             return;
         }
 
         _battleSequencer.SetDungeon(targetDungeon);
 
-        // BattleInputData の装備情報を使って勇者モデルを構築
+        // 勇者モデルを構築
         var heroModel = new HeroModel();
         heroModel.ApplyEquippedItems(_inputData.EquippedItemIds);
         Debug.Log($"[BattleSceneStarter] Hero equipped items: {_inputData.EquippedItemIds.Count}");
 
-        // BattleInputData のSelectedItemsをStreamingSalesControllerに渡して初期化
+        // StreamingSalesController に選択アイテムを渡して初期化
         if (_salesController != null)
         {
             _salesController.Setup(_itemModel, _inputData.SelectedItems);
             Debug.Log($"[BattleSceneStarter] StreamingSalesController initialized with {_inputData.SelectedItems.Count} items.");
         }
-        else
-        {
-            Debug.LogWarning("[BattleSceneStarter] StreamingSalesController is null. Streaming sales will not work.");
-        }
+
+        // バトル終了を待つための UniTaskCompletionSource
+        var battleTcs = new UniTaskCompletionSource<(BattleResult result, string weaponId, string armorId)>();
 
         _battleSequencer.OnBattleWin
-            .Subscribe(OnWin);
+            .Subscribe(win => battleTcs.TrySetResult((BattleResult.Victory, win.weaponId, win.armorId)));
 
         _battleSequencer.OnBattleDefeat
-            .Subscribe(OnDefeat);
+            .Subscribe(defeat => battleTcs.TrySetResult((BattleResult.Defeat, defeat.weaponId, defeat.armorId)));
 
         _battleSequencer.StartBattle(heroModel);
+
+        // バトル終了待ち
+        var battleResult = await battleTcs.Task;
+        Debug.Log($"[BattleSceneStarter] Battle finished: {battleResult.result}");
+
+        // BattleOutputData に結果を書き込み
+        var soldItems = BuildSoldItems();
+        _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems);
+
+        // --- Phase 3: Result（配信リザルト画面） ---
+        Debug.Log("[BattleSceneStarter] Phase 3: Result");
+        if (_resultView != null)
+        {
+            await _resultView.ShowResultAsync(battleResult.result, soldItems);
+        }
+        else
+        {
+            Debug.LogWarning("[BattleSceneStarter] BattleResultView is null. Skipping result screen.");
+        }
+
+        // --- Phase 4: TomsShop に戻る ---
+        Debug.Log("[BattleSceneStarter] Returning to TomsShop...");
+        _sceneTransition.ReturnToTomsShop();
     }
 
     private DungeonInfoScriptableObj ResolveTargetDungeon()
@@ -98,7 +148,7 @@ public class BattleSceneStarter : IStartable
 
         if (_battleSequencer.CurrentDungeon != null && _battleSequencer.CurrentDungeon.key == _inputData.DungeonKey)
         {
-            Debug.LogWarning($"[BattleSceneStarter] Dungeon {_inputData.DungeonKey} was missing from catalog, but BattleSequencer.CurrentDungeon matched so it will be used as fallback.");
+            Debug.LogWarning($"[BattleSceneStarter] Dungeon {_inputData.DungeonKey} was missing from catalog, using BattleSequencer fallback.");
             return _battleSequencer.CurrentDungeon;
         }
 
@@ -106,27 +156,6 @@ public class BattleSceneStarter : IStartable
         return null;
     }
 
-    private void OnWin((string weaponId, string armorId) win)
-    {
-        var soldItems = BuildSoldItems();
-        _outputData.SetResult(
-            BattleResult.Victory,
-            win.weaponId,
-            win.armorId,
-            soldItems);
-        _sceneTransition.ReturnToTomsShop();
-    }
-
-    private void OnDefeat((string weaponId, string armorId) defeat)
-    {
-        var soldItems = BuildSoldItems();
-        _outputData.SetResult(
-            BattleResult.Defeat,
-            defeat.weaponId,
-            defeat.armorId,
-            soldItems);
-        _sceneTransition.ReturnToTomsShop();
-    }
 
     /// <summary>
     /// BattleInputData の SelectedItems から BattleOutputSoldItem リストを構築する。

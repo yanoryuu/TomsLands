@@ -13,19 +13,25 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly ItemModel _itemModel;
     private readonly StateManager _stateManager;
     private readonly GameFlowManager _gameFlowManager;
+    private readonly ShopEconomySettings _economySettings;
+    private readonly TomsModel _tomsModel;
 
     public BattleResultHandler(
         BattleOutputData outputData,
         BattleInputData inputData,
         ItemModel itemModel,
         StateManager stateManager,
-        GameFlowManager gameFlowManager)
+        GameFlowManager gameFlowManager,
+        ShopEconomySettings economySettings,
+        TomsModel tomsModel)
     {
         _outputData = outputData;
         _inputData = inputData;
         _itemModel = itemModel;
         _stateManager = stateManager;
         _gameFlowManager = gameFlowManager;
+        _economySettings = economySettings;
+        _tomsModel = tomsModel;
     }
 
     public void Start()
@@ -67,6 +73,21 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log("[BattleResultHandler] Defeat penalties applied.");
         }
 
+        // --- 案D1: 戦闘結果の属性波及 ---
+        // 使用装備と同属性の全アイテムに需要を緩やかに波及させる
+        var usedItemIds = new System.Collections.Generic.List<string>();
+        if (!string.IsNullOrEmpty(_outputData.WeaponId)) usedItemIds.Add(_outputData.WeaponId);
+        if (!string.IsNullOrEmpty(_outputData.ArmorId)) usedItemIds.Add(_outputData.ArmorId);
+        if (usedItemIds.Count > 0)
+        {
+            _itemModel.ApplyBattleAttributeSpread(
+                _outputData.Result,
+                usedItemIds,
+                _economySettings,
+                _tomsModel.BlacksmithLevel.Value);
+            Debug.Log("[BattleResultHandler] D1: Attribute spread applied.");
+        }
+
         // 結果をクリア（次回の戦闘まで誤発火しないように）
         _outputData.Clear();
 
@@ -76,4 +97,3 @@ public class BattleResultHandler : IStartable, IDisposable
 
     public void Dispose() { }
 }
-

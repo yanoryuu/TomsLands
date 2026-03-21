@@ -57,7 +57,6 @@ public class ItemModel
 
             float baseMultiplier = phase switch
             {
-                GamePhase.Streaming => Random.Range(0.8f, 1.5f),
                 _ => Random.Range(0.95f, 1.05f)
             };
 
@@ -112,6 +111,147 @@ public class ItemModel
                 : Mathf.Clamp01(runtime.Demand.Value - 0.2f);
 
             runtime.UpdatePopularity();
+        }
+    }
+
+    // ========================================
+    // 案D1: 戦闘結果の属性波及
+    // ========================================
+
+    /// <summary>
+    /// 戦闘で使用した装備と同属性の全アイテムに需要を波及させる。
+    /// BattleResultHandler から戦闘終了後に呼ばれる。
+    /// </summary>
+    public void ApplyBattleAttributeSpread(BattleResult result, List<string> usedItemIds, ShopEconomySettings settings, int blacksmithLevel)
+    {
+        if (settings == null || usedItemIds == null) return;
+
+        // 使用装備の属性を収集
+        var usedAttributes = new HashSet<ItemTypeData.ItemAttribute>();
+        foreach (var id in usedItemIds)
+        {
+            var runtime = GetRuntimeItem(id);
+            if (runtime != null)
+            {
+                usedAttributes.Add(runtime.ItemAttribute);
+            }
+        }
+
+        if (usedAttributes.Count == 0) return;
+
+        // 同属性の全アイテム（鍛冶屋レベル以内）に需要を波及
+        float delta = result == BattleResult.Victory
+            ? settings.victoryAttributeDemandUp
+            : -settings.defeatAttributeDemandDown;
+
+        foreach (var runtime in RuntimeItems)
+        {
+            // 鍛冶屋レベルで未表示のアイテムは除外
+            if (runtime.RequiredLevel.Value > blacksmithLevel) continue;
+            // 使用装備自体は既に ApplyBattleResult で処理済みなのでスキップ
+            if (usedItemIds.Contains(runtime.ItemId)) continue;
+
+            if (usedAttributes.Contains(runtime.ItemAttribute))
+            {
+                runtime.Demand.Value = Mathf.Clamp(runtime.Demand.Value + delta, settings.demandFloor, settings.demandCeiling);
+                runtime.UpdatePopularity();
+                Debug.Log($"[D1] {runtime.ItemId}（{runtime.ItemAttribute}属性）需要波及: {delta:+0.00;-0.00} → {runtime.Demand.Value:F2}");
+            }
+        }
+    }
+
+    // ========================================
+    // ターン毎の経済更新（S1 + S3 + D2）
+    // ========================================
+
+    /// <summary>
+    /// TomsShop のターン切り替え時に呼ばれる経済更新。
+    /// S1: 需要連動型じわじわ価格変動
+    /// S3: 品出し販売結果フィードバック
+    /// D2: 品出し陳列効果（需要変動）
+    /// </summary>
+    public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel)
+    {
+        if (settings == null) return;
+
+        foreach (var runtime in RuntimeItems)
+        {
+            var master = GetMasterItem(runtime.ItemId);
+            if (master == null) continue;
+
+            // 鍛冶屋レベルで未表示のアイテムは価格も需要も変動しない
+            if (runtime.RequiredLevel.Value > blacksmithLevel) continue;
+
+            // ------------------------------------------------
+            // 案D2: 品出し陳列効果（需要変動）
+            // ------------------------------------------------
+            if (runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0)
+            {
+                // 品出し中 → 需要微増
+                runtime.Demand.Value = Mathf.Clamp(
+                    runtime.Demand.Value + settings.displayDemandUp,
+                    settings.demandFloor, settings.demandCeiling);
+            }
+            else
+            {
+                // 品出ししていない → 需要微減
+                runtime.Demand.Value = Mathf.Clamp(
+                    runtime.Demand.Value - settings.notDisplayDemandDown,
+                    settings.demandFloor, settings.demandCeiling);
+            }
+
+            // ------------------------------------------------
+            // 案S1: 需要連動型じわじわ価格変動
+            // ------------------------------------------------
+            float s1Rate;
+            if (runtime.Demand.Value >= settings.highDemandThreshold)
+            {
+                s1Rate = Random.Range(settings.highDemandPriceRateMin, settings.highDemandPriceRateMax);
+            }
+            else if (runtime.Demand.Value <= settings.lowDemandThreshold)
+            {
+                s1Rate = Random.Range(settings.lowDemandPriceRateMin, settings.lowDemandPriceRateMax);
+            }
+            else
+            {
+                s1Rate = Random.Range(settings.normalDemandPriceRateMin, settings.normalDemandPriceRateMax);
+            }
+
+            // ------------------------------------------------
+            // 案S3: 品出し販売結果フィードバック
+            // ------------------------------------------------
+            float s3Rate = 1.0f;
+            if (runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0)
+            {
+                // 品出し中のアイテム：前ターンで在庫が減ったか（売れたか）で判定
+                // 注: Stock < DisplayStock なら「売れた」と判定
+                if (runtime.Stock.Value < runtime.DisplayStock.Value)
+                {
+                    // 売れた → 値上がり
+                    s3Rate = Random.Range(settings.soldPriceRateMin, settings.soldPriceRateMax);
+                    Debug.Log($"[S3] {runtime.ItemId} 品出し中＆売れた → 価格 {s3Rate:P0}");
+                }
+                else
+                {
+                    // 品出しているが売れていない → 値下がり
+                    s3Rate = Random.Range(settings.unsoldPriceRateMin, settings.unsoldPriceRateMax);
+                    Debug.Log($"[S3] {runtime.ItemId} 品出し中＆売れず → 価格 {s3Rate:P0}");
+                }
+            }
+
+            // S1 と S3 を合成して価格を更新
+            float combinedRate = s1Rate * s3Rate;
+            int newPrice = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * combinedRate));
+
+            // ストップ高/ストップ安（元値ベース）
+            int floor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * settings.shopPriceFloorRate));
+            int ceiling = Mathf.RoundToInt(master.basePrice * settings.shopPriceCeilingRate);
+            newPrice = Mathf.Clamp(newPrice, floor, ceiling);
+
+            runtime.CurrentPrice.Value = newPrice;
+            runtime.UpdatePopularity();
+
+            Debug.Log($"[ShopEconomy] {runtime.ItemId}: S1={s1Rate:F3} S3={s3Rate:F3} → price={newPrice} demand={runtime.Demand.Value:F2}");
         }
     }
 

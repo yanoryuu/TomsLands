@@ -57,10 +57,10 @@ public class ItemSelectionView : MonoBehaviour
     /// </summary>
     public List<ItemSelectionSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // 既存スロットを削除
-        foreach (var slotObj in activeSlots)
+        // 既存スロットを削除（Content配下の全子オブジェクトを削除）
+        for (int i = itemListParent.childCount - 1; i >= 0; i--)
         {
-            Destroy(slotObj);
+            Destroy(itemListParent.GetChild(i).gameObject);
         }
         activeSlots.Clear();
 

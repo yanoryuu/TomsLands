@@ -1,43 +1,56 @@
 using R3;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using Cysharp.Threading.Tasks;
 using VContainer.Unity;
 
-public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
+public class StreamingSettingPresenter : IDisposable
 {
     private readonly StreamingSettingModel _model;
     private readonly StreamingSettingView  _view;
     private readonly ItemModel             _itemModel;
-    private readonly HeroModel             _heroModel;
-    private readonly GameFlowManager       _gameFlowManager;
-    private readonly BattleInputData       _battleInputData;
-    private readonly SceneTransitionService _sceneTransition;
-    private readonly StateManager          _stateManager;
     private readonly CompositeDisposable   _d = new CompositeDisposable();
+
+    /// <summary>
+    /// 確定ボタンが押された時に完了する UniTaskCompletionSource。
+    /// BattleSceneStarter から await して品出し確定を待つ。
+    /// </summary>
+    private UniTaskCompletionSource _confirmTcs;
 
     public StreamingSettingPresenter(
         StreamingSettingModel model,
         StreamingSettingView  view,
-        ItemModel             itemModel,
-        HeroModel             heroModel,
-        GameFlowManager       gameFlowManager,
-        BattleInputData       battleInputData,
-        SceneTransitionService sceneTransition,
-        StateManager          stateManager)
+        ItemModel             itemModel)
     {
-        _model           = model;
-        _view            = view;
-        _itemModel       = itemModel;
-        _heroModel       = heroModel;
-        _gameFlowManager = gameFlowManager;
-        _battleInputData = battleInputData;
-        _sceneTransition = sceneTransition;
-        _stateManager    = stateManager;
+        _model     = model;
+        _view      = view;
+        _itemModel = itemModel;
+    }
+
+    /// <summary>
+    /// 品出し設定画面を表示し、確定ボタンが押されるまで待機する。
+    /// 戻り値: 選択されたアイテムの辞書 (itemId → quantity)
+    /// </summary>
+    public async UniTask<IReadOnlyDictionary<string, int>> RunAsync()
+    {
+        _confirmTcs = new UniTaskCompletionSource();
+
+        Bind();
+        Entry();
+        _view.Show();
+
+        // 確定ボタンが押されるまで待機
+        await _confirmTcs.Task;
+
+        _view.Hide();
+
+        return _model.Selected;
     }
 
     private void Bind()
     {
+        _d.Clear();
+
         // 1) ロードして在庫切れアイテムを除外し、左パネルに再表示
         _model.LoadData();
         _model.CleanupUnavailableItems(_itemModel);
@@ -61,13 +74,13 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
             .Subscribe(tuple => { _model.SetQuantity(tuple.id, tuple.qty); _model.SaveData(); })
             .AddTo(_d);
 
-        // 6) 確定ボタン → BattleInputData に書き込み → FightScene へ遷移
+        // 6) 確定ボタン → UniTaskCompletionSource を完了
         _view.OnConfirmClicked
             .Subscribe(_ => HandleConfirm())
             .AddTo(_d);
     }
 
-    public void Entry()
+    private void Entry()
     {
         // StreamingSetting画面に遷移した時にデータを再ロードして表示を更新
         _model.LoadData();
@@ -78,41 +91,13 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
 
     /// <summary>
     /// 確定ボタン押下時の処理。
-    /// 選択アイテム・勇者装備・ダンジョン情報を BattleInputData に書き込み、FightScene へ遷移する。
+    /// 選択データを保存し、UniTaskCompletionSource を完了させる。
     /// </summary>
     private void HandleConfirm()
     {
         _model.SaveData();
-
-        // FightScene側のItemModelが最新の在庫データをロードできるよう、遷移前にセーブ
         _itemModel.SaveData();
-
-        // 選択アイテムを BattleInputItem に変換
-        var selectedItems = new List<BattleInputItem>();
-        foreach (var kv in _model.Selected)
-        {
-            var runtime = _itemModel.GetRuntimeItem(kv.Key);
-            selectedItems.Add(new BattleInputItem
-            {
-                ItemId = kv.Key,
-                Quantity = kv.Value,
-                Price = runtime != null ? runtime.CurrentPrice.Value : 0
-            });
-        }
-
-        // GameFlowManager から現在のダンジョン情報を取得（GameFlowNodeに設定済み）
-        var dungeonKey = _battleInputData.DungeonKey; // GameFlowManager.NextTurn() で既にセット済み
-
-        // BattleInputData に書き込み（GameFlowIndex も保存してシーン復帰時に復元する）
-        _battleInputData.Setup(
-            dungeonKey,
-            new List<string>(_heroModel.EquippedItemIds),
-            selectedItems,
-            _gameFlowManager.CurrentIndex
-        );
-
-        // FightScene へ遷移
-        _sceneTransition.GoToBattle();
+        _confirmTcs?.TrySetResult();
     }
     
     private void HandleSelected(string id)
@@ -129,7 +114,6 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
         _model.SaveData();
     }
 
-
     private void HandleDeselected(string id)
     {
         _model.Remove(id);
@@ -140,9 +124,4 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
     public void Show() => _view.Show();
     public void Hide() { _model.SaveData(); _view.Hide(); }
     public void Dispose() => _d.Dispose();
-    public void Start()
-    {
-        _stateManager.RegisterOnEnter(StreamingGamePhase.StreamingSetting, Entry);
-        Bind();
-    }
 }

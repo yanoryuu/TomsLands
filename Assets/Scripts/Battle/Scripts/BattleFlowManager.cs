@@ -13,14 +13,16 @@ public class BattleFlowManager
     private readonly BattleUIView uiView;
     private readonly BattleSequencer sequencer;
     private readonly BattleActionExecutor executor;
+    private readonly StreamingSalesController salesController;
 
-    public BattleFlowManager(BattleContext ctx, CharacterFactory charaFactory, BattleUIView battleUI, BattleSequencer ownerSequencer)
+    public BattleFlowManager(BattleContext ctx, CharacterFactory charaFactory, BattleUIView battleUI, BattleSequencer ownerSequencer, StreamingSalesController salesCtrl = null)
     {
         context = ctx;
         factory = charaFactory;
         uiView = battleUI;
         sequencer = ownerSequencer;
-        executor = new BattleActionExecutor(ctx);
+        salesController = salesCtrl;
+        executor = new BattleActionExecutor(ctx, ownerSequencer);
     }
 
     /// <summary>
@@ -46,6 +48,12 @@ public class BattleFlowManager
 
             await executor.ExecuteTurnActionsAsync(uiView, token);
             await executor.EvaluateEndOfTurnAsync(factory, uiView, sequencer, token);
+
+            // 毎ターン売買を実行（売り場に出ているアイテムのみ対象）
+            if (salesController != null)
+            {
+                salesController.ExecuteTurnSales();
+            }
 
             turnCount++;
         }

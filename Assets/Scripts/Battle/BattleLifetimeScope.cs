@@ -1,4 +1,4 @@
-﻿﻿using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VContainer;
@@ -13,6 +13,12 @@ public class BattleLifetimeScope : LifetimeScope
     [Header("Scene References")]
     [SerializeField] private BattleSequencer battleSequencer;
     [SerializeField] private StreamingSalesController streamingSalesController;
+
+    [Header("StreamingSetting（品出し設定）")]
+    [SerializeField] private StreamingSettingView streamingSettingView;
+
+    [Header("BattleResult（配信リザルト）")]
+    [SerializeField] private BattleResultView battleResultView;
 
     [Header("ダンジョンデータ（Inspector で設定。不足分は自動補完）")]
     [SerializeField] private List<DungeonInfoScriptableObj> dungeonInfos;
@@ -66,7 +72,29 @@ public class BattleLifetimeScope : LifetimeScope
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
-        // 戦闘開始の EntryPoint
+        // StreamingSetting（品出し設定）
+        builder.Register<StreamingSettingModel>(Lifetime.Singleton);
+        if (streamingSettingView != null)
+        {
+            builder.RegisterComponent(streamingSettingView);
+        }
+        else
+        {
+            Debug.LogWarning("[BattleLifetimeScope] StreamingSettingView が未設定です。FightScene に StreamingSettingView を配置して Inspector で設定してください。");
+        }
+        builder.Register<StreamingSettingPresenter>(Lifetime.Singleton);
+
+        // BattleResultView（配信リザルト画面）
+        if (battleResultView != null)
+        {
+            builder.RegisterComponent(battleResultView);
+        }
+        else
+        {
+            Debug.LogWarning("[BattleLifetimeScope] BattleResultView が未設定です。FightScene に BattleResultView を配置して Inspector で設定してください。");
+        }
+
+        // 戦闘開始の EntryPoint（IAsyncStartable）
         builder.RegisterEntryPoint<BattleSceneStarter>();
 
         Debug.Log($"[BattleLifetimeScope] Configured. Dungeon catalog size: {allDungeons.Count}");

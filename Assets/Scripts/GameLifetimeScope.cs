@@ -9,8 +9,6 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private BlackSmithView blackSmithView;
     [SerializeField] private TomsShopView tomsShopView;
     [SerializeField] private ItemSelectionView itemSelectionView;
-    [SerializeField] private StreamingView streamingView;
-    [SerializeField] private StreamingSettingView streamingSettingView;
     [SerializeField] private InfoBrokerView infoBrokerView;
     [SerializeField] private HeroInfoView heroInfoView;
     [SerializeField] private CommonView commonView;
@@ -47,6 +45,15 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
 
+        // ShopEconomySettings のロードと登録
+        var shopEconomySettings = Resources.Load<ShopEconomySettings>("ShopEconomySettings");
+        if (shopEconomySettings == null)
+        {
+            shopEconomySettings = ScriptableObject.CreateInstance<ShopEconomySettings>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/ShopEconomySettings.asset が見つかりません。デフォルト値で生成しました。Unity メニューから Create > ScriptableObjects > ShopEconomySettings で作成してください。");
+        }
+        builder.RegisterInstance(shopEconomySettings);
+
         // シーン間共有データ（StartModeData）のロードと登録
         var startModeData = Resources.Load<StartModeData>("SceneData/StartModeData");
         if (startModeData == null)
@@ -65,8 +72,6 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<ItemModel>(Lifetime.Singleton);
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<ItemSelectionModel>(Lifetime.Singleton);
-        builder.Register<StreamingItemModel>(Lifetime.Singleton);
-        builder.Register<StreamingSettingModel>(Lifetime.Singleton);
         builder.Register<InfoBrokerModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);
         builder.Register<MapModel>(Lifetime.Singleton);
@@ -81,8 +86,6 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, blackSmithView, nameof(blackSmithView));
         RegisterComponentSafe(builder, tomsShopView, nameof(tomsShopView));
         RegisterComponentSafe(builder, itemSelectionView, nameof(itemSelectionView));
-        RegisterComponentSafe(builder, streamingView, nameof(streamingView));
-        RegisterComponentSafe(builder, streamingSettingView, nameof(streamingSettingView));
         RegisterComponentSafe(builder, infoBrokerView, nameof(infoBrokerView));
         RegisterComponentSafe(builder, heroInfoView, nameof(heroInfoView));
         RegisterComponentSafe(builder, commonView, nameof(commonView));
@@ -96,8 +99,6 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<ItemSelectionPresenter>().AsSelf();
         builder.RegisterEntryPoint<TomsShopPresenter>();
         builder.RegisterEntryPoint<MapPresenter>();
-        builder.RegisterEntryPoint<StreamingItemPresenter>();
-        builder.RegisterEntryPoint<StreamingSettingPresenter>();
         builder.RegisterEntryPoint<CommonPresenter>();
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>().AsSelf();
