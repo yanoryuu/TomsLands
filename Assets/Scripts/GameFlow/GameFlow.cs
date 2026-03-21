@@ -15,6 +15,9 @@ public class GameFlowNode
     
     [ConditionalHide("EventType", (int)GameEvent.Event)]
     public string EventData;
+    
+    [ConditionalHide("EventType", (int)GameEvent.Battle)]
+    public DungeonName BattleDungeon;
 }
 
 public enum GameEvent

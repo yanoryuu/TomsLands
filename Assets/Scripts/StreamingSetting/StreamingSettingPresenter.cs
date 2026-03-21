@@ -1,14 +1,21 @@
 using R3;
 using System;
-using System.Linq;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using VContainer.Unity;
 
-public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
+public class StreamingSettingPresenter : IDisposable
 {
     private readonly StreamingSettingModel _model;
     private readonly StreamingSettingView  _view;
     private readonly ItemModel             _itemModel;
     private readonly CompositeDisposable   _d = new CompositeDisposable();
+
+    /// <summary>
+    /// 確定ボタンが押された時に完了する UniTaskCompletionSource。
+    /// BattleSceneStarter から await して品出し確定を待つ。
+    /// </summary>
+    private UniTaskCompletionSource _confirmTcs;
 
     public StreamingSettingPresenter(
         StreamingSettingModel model,
@@ -20,13 +27,36 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
         _itemModel = itemModel;
     }
 
+    /// <summary>
+    /// 品出し設定画面を表示し、確定ボタンが押されるまで待機する。
+    /// 戻り値: 選択されたアイテムの辞書 (itemId → quantity)
+    /// </summary>
+    public async UniTask<IReadOnlyDictionary<string, int>> RunAsync()
+    {
+        _confirmTcs = new UniTaskCompletionSource();
+
+        Bind();
+        Entry();
+        _view.Show();
+
+        // 確定ボタンが押されるまで待機
+        await _confirmTcs.Task;
+
+        _view.Hide();
+
+        return _model.Selected;
+    }
+
     private void Bind()
     {
-        // 1) ロードして左パネルに再表示
+        _d.Clear();
+
+        // 1) ロードして在庫切れアイテムを除外し、左パネルに再表示
         _model.LoadData();
+        _model.CleanupUnavailableItems(_itemModel);
         _view.PopulateSelected(_model.Selected, _itemModel);
 
-        // 2) 利用可能アイテム一覧
+        // 2) 利用可能アイテム一覧（所持数0のアイテムはView側でフィルタ）
         _view.PopulateAvailable(_itemModel.RuntimeItems);
 
         // 3) 選択
@@ -43,35 +73,46 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
         _view.OnQuantityChanged
             .Subscribe(tuple => { _model.SetQuantity(tuple.id, tuple.qty); _model.SaveData(); })
             .AddTo(_d);
+
+        // 6) 確定ボタン → UniTaskCompletionSource を完了
+        _view.OnConfirmClicked
+            .Subscribe(_ => HandleConfirm())
+            .AddTo(_d);
     }
 
-    // StreamingSettingPresenter.cs
-
-    public void Entry()
+    private void Entry()
     {
-        //ここにこの画面に移動した時にここを呼び出す。
+        // StreamingSetting画面に遷移した時にデータを再ロードして表示を更新
+        _model.LoadData();
+        _model.CleanupUnavailableItems(_itemModel);
+        _view.PopulateSelected(_model.Selected, _itemModel);
+        _view.PopulateAvailable(_itemModel.RuntimeItems);
+    }
+
+    /// <summary>
+    /// 確定ボタン押下時の処理。
+    /// 選択データを保存し、UniTaskCompletionSource を完了させる。
+    /// </summary>
+    private void HandleConfirm()
+    {
+        _model.SaveData();
+        _itemModel.SaveData();
+        _confirmTcs?.TrySetResult();
     }
     
     private void HandleSelected(string id)
     {
+        // 在庫が0のアイテムは選択不可
+        var runtime = _itemModel.GetRuntimeItem(id);
+        if (runtime == null || runtime.Stock.Value <= 0) return;
+
         if (!_model.TryAdd(id)) return;
 
-        // モデルから在庫数を取得
-        int maxQty = _itemModel.GetRuntimeItem(id).Stock.Value;
-        int current = _model.Selected[id];
-
-        // 左パネルを再描画
-        _view.PopulateSelected(_model.Selected, _itemModel); // 既存の全件再描画
-        // もしくは個別で追加:
-        _view.AddSelectedItem(id,
-            _itemModel.GetMasterItem(id).itemIcon,
-            _itemModel.GetMasterItem(id).itemName,
-            current,
-            maxQty);
+        // 左パネルを全件再描画のみ（AddSelectedItemとの二重追加を防止）
+        _view.PopulateSelected(_model.Selected, _itemModel);
 
         _model.SaveData();
     }
-
 
     private void HandleDeselected(string id)
     {
@@ -83,8 +124,4 @@ public class StreamingSettingPresenter : IDisposable,IPresenter,IStartable
     public void Show() => _view.Show();
     public void Hide() { _model.SaveData(); _view.Hide(); }
     public void Dispose() => _d.Dispose();
-    public void Start()
-    {
-        Bind();
-    }
 }

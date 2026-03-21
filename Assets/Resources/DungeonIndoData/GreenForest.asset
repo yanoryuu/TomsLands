@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
+  m_Name: GreenForest
+  m_EditorClassIdentifier: 
+  key: 7
+  dungeonName: "\u6DF1\u7DD1\u306E\u7363\u6797"
+  dungeonDescription: "\u5149\u304C\u5DEE\u3057\u8FBC\u307E\u306A\u3044\u9B31\u84BC\u3068\u3057\u305F\u68EE\u3002\u9B54\u7363\u3068\u6728\u306E\u9B54\u7269\u306E\u5DE3\u7A9F\u3067\u3001\n\u591A\u304F\u306E\u65B0\u4EBA\u5192\u967A\u8005\u304C\u3053\u306E\u5730\u3092\u8A2A\u308C\u308B\u3002"
+  dungeonImage: {fileID: -8509122445249010030, guid: 92d107dd264a94c72b5819124b15ae56, type: 3}
+  initDungeonLevel: 1
+  recommendedLevel: 1
+  difficulty: 1
+  requiredAttribute: 0
+  dungeonMonsters:
+  - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
+  - {fileID: 11400000, guid: 3156644aed38cc8438c2aa4eeda3c169, type: 2}
+  dungeonBoss: 
+  currentDungeonLevel: 1
+  rewardGold: 0
+  dungeonStatus: 2

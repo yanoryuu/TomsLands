@@ -11,6 +11,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly CompositeDisposable disposables = new();
     private readonly CommonView commonView;
     private readonly StateManager stateManager;
+    private readonly GameFlowManager gameFlowManager;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -18,7 +19,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         ItemModel itemModel,
         TomsModel tomsShopModel,
         CommonView commonView,
-        StateManager stateManager)
+        StateManager stateManager,
+        GameFlowManager gameFlowManager)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -26,6 +28,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.tomsShopModel = tomsShopModel;
         this.commonView = commonView;
         this.stateManager = stateManager;
+        this.gameFlowManager = gameFlowManager;
         
         stateManager.RegisterOnEnter(TomsShopGamePhase.Shop,Entry);
     }
@@ -60,6 +63,22 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         //　マップボタン
         tomsShopView.OnMapClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Map))
+            .AddTo(disposables);
+        
+        //　次のターンに進むボタン
+        tomsShopView.OnNextTurnClicked
+            .Subscribe(_ => gameFlowManager.NextTurn())
+            .AddTo(disposables);
+        
+        //　ターン表示の更新（CommonView）
+        gameFlowManager.CurrentTurn
+            .Subscribe(turn => commonView.UpdateCurrentTurn(turn))
+            .AddTo(disposables);
+        
+        //　ターン切り替え演出（初期値はスキップ）
+        gameFlowManager.CurrentTurn
+            .Skip(1)
+            .Subscribe(turn => tomsShopView.ShowTurnAnnounce(turn))
             .AddTo(disposables);
     }
     

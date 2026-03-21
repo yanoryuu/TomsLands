@@ -13,8 +13,9 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     private readonly HeroInfoView heroInfoView;
     private readonly HeroModel heroModel;
     private readonly MapInfoView mapInfoView;
+    private readonly TomsModel tomsModel;
     public InfoBrokerPresenter(InfoBrokerModel infoBrokerModel, InfoBrokerView infoBrokerView, ItemModel itemModel,StateManager stateManager
-    , HeroInfoView heroInfoView,HeroModel heroModel, MapInfoView mapInfoView)
+    , HeroInfoView heroInfoView,HeroModel heroModel, MapInfoView mapInfoView, TomsModel tomsModel)
     {
         this.infoBrokerModel = infoBrokerModel;
         this.infoBrokerView = infoBrokerView;
@@ -22,6 +23,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
         this.stateManager = stateManager;
         this.heroInfoView = heroInfoView;
         this.mapInfoView = mapInfoView;
+        this.tomsModel = tomsModel;
         stateManager.RegisterOnEnter(TomsShopGamePhase.Broker,Entry);
     }
 
@@ -33,7 +35,10 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     
     public void Entry()
     {
-        // ?????^?u?i?n?}?j??\??
+        // ダンジョンデータを最新の状態に更新
+        infoBrokerModel.InitializeDungeons();
+        
+        // 初期タブ（マップ）を表示
         infoBrokerView.ShowPanel(InfoBrokerTab.Map);
         infoBrokerView.SortItemTab(InfoBrokerTab.Map);
         OnTabChanged(InfoBrokerTab.Map);
@@ -73,11 +78,34 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
         })
         .AddTo(disposables);
         
-        // ?}?b?v???w???C?x???g
+        // マップ情報の購入イベント
         mapInfoView.OnMapPurchaseClicked
             .Subscribe(dungeonName =>
             {
+                var costs = infoBrokerModel.GetDungeonInfoCosts();
+                if (!costs.ContainsKey(dungeonName))
+                {
+                    Debug.LogWarning($"[InfoBrokerPresenter] コストが見つかりません: {dungeonName}");
+                    return;
+                }
+
+                int currentTurn = tomsModel.CurrentTurn.Value;
+                int[] costArray = costs[dungeonName];
+                int cost = (costArray.Length >= currentTurn && currentTurn > 0)
+                    ? costArray[currentTurn - 1]
+                    : costArray[costArray.Length - 1];
+
+                if (tomsModel.PlayerMoney.Value < cost)
+                {
+                    Debug.Log($"[InfoBrokerPresenter] お金が足りません！ 必要: {cost}G, 所持: {tomsModel.PlayerMoney.Value}G");
+                    return;
+                }
+
+                // 所持金を減らす
+                tomsModel.PurchaseItem(cost);
+                // ダンジョン情報を購入済みにする
                 infoBrokerModel.PurchaseDungeonInfo(dungeonName);
+                Debug.Log($"[InfoBrokerPresenter] {dungeonName} の情報を {cost}G で購入しました。残金: {tomsModel.PlayerMoney.Value}G");
             })
             .AddTo(disposables);
     }
@@ -106,7 +134,7 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     
     public void UpdateHeroInfo()
     {
-        // ??V??E??f?[?^???擾
+        // ??V??E??f?[?^?????
         infoBrokerModel.RefreshHeroData();
         
         if (infoBrokerModel.currentHeroData == null)

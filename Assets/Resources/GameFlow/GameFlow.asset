@@ -12,4 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22fd0cef948fdce4e9a33d5e3f5de923, type: 3}
   m_Name: GameFlow
   m_EditorClassIdentifier: 
-  GameFlowStack: []
+  GameFlowStack:
+  - EventType: 0
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 001
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 1Event
+    BattleDungeon: 0
+  - EventType: 1
+    EventData: 1Event
+    BattleDungeon: 6
+  - EventType: 2
+    EventData: 1Event
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 1Event
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 1Event
+    BattleDungeon: 0

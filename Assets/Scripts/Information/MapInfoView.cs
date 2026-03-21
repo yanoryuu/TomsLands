@@ -9,7 +9,7 @@ public class MapInfoView : MonoBehaviour
     [SerializeField] private ScrollRect scrollRect;
     [SerializeField] private GameObject mapInfoContent;
 
-    [SerializeField] private MapPurchaseSlot mapPurchaseSlot;
+    [SerializeField] private GameObject mapPurchaseSlotPrefab;
 
     /// <summary>
     /// いずれかのスロットで購入ボタンが押されたときに発火する
@@ -23,33 +23,36 @@ public class MapInfoView : MonoBehaviour
     {
         // 前回のスロット購読と要素を破棄
         slotDisposables.Clear();
-        foreach (var slot in activeSlots)
+        for (int i = mapInfoContent.transform.childCount - 1; i >= 0; i--)
         {
-            if (slot != null)
-                Destroy(slot.gameObject);
+            Destroy(mapInfoContent.transform.GetChild(i).gameObject);
         }
         activeSlots.Clear();
-
-        // スクロール位置をリセット
-        if (scrollRect)
-        {
-            scrollRect.normalizedPosition = new Vector2(0, 1);
-        }
 
         for (int i = 0; i < maps.Count; i++)
         {
             DungeonData data = maps[i];
-            MapPurchaseSlot slot = Instantiate(mapPurchaseSlot, mapInfoContent.transform);
+
+            // コスト辞書にキーがなければスキップ
+            if (!mapCosts.ContainsKey(data.key))
+            {
+                Debug.LogWarning($"[MapInfoView] mapCosts にキー {data.key} が見つかりません。スキップします。");
+                continue;
+            }
+
+            GameObject slotObj = Instantiate(mapPurchaseSlotPrefab, mapInfoContent.transform);
+            MapPurchaseSlot slot = slotObj.GetComponent<MapPurchaseSlot>();
 
             int mapCost;
-            
-            if(mapCosts[data.key].Length <= currentTurn)
+            int[] costs = mapCosts[data.key];
+
+            if (costs.Length >= currentTurn && currentTurn > 0)
             {
-                mapCost = mapCosts[data.key][currentTurn - 1];
+                mapCost = costs[currentTurn - 1];
             }
             else
             {
-                mapCost = mapCosts[data.key][mapCosts[data.key].Length - 1];
+                mapCost = costs[costs.Length - 1];
             }
             
             slot.SetMapInfo(data.key, data.dungeonName, data.dungeonImage, mapCost);
@@ -59,6 +62,12 @@ public class MapInfoView : MonoBehaviour
             slot.OnPurchaseClicked
                 .Subscribe(key => OnMapPurchaseClicked.OnNext(key))
                 .AddTo(slotDisposables);
+        }
+
+        // スロット生成後にレイアウトを確定させる
+        if (mapInfoContent)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(mapInfoContent.GetComponent<RectTransform>());
         }
     }
 

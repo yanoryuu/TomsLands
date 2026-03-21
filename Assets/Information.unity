@@ -4745,8 +4745,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemListParent: {fileID: 769563608}
   itemSelectionSlotPrefab: {fileID: 7753781545435805142, guid: c7cc6ab04af013a4babd7eba825ce011, type: 3}
-  confirmButton: {fileID: 1960442832}
   closeButton: {fileID: 816007801}
+  itemSelectionPanel: {fileID: 0}
+  armorPanelButton: {fileID: 0}
+  weaponPanelButton: {fileID: 0}
+  itemDescriptionText: {fileID: 0}
+  itemIcon: {fileID: 0}
+  weaponTab: {fileID: 0}
+  armorTab: {fileID: 0}
+  toolTab: {fileID: 0}
 --- !u!114 &500342588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5625,18 +5632,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae6c2719da7537e4d89043c2db7819be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerMoneyText: {fileID: 1322356699}
-  BlackSmithWeaponParent: {fileID: 32403266}
-  BlackSmithArmorParent: {fileID: 1109147883}
-  ToolParent: {fileID: 1002989207}
-  BlackSmithWeaponPanel: {fileID: 268703815}
-  BlackSmithArmorPanel: {fileID: 555659684}
-  ToolPanel: {fileID: 1237285005}
+  scrollRect: {fileID: 0}
+  blackSmithContent: {fileID: 0}
+  weaponTab: {fileID: 0}
+  armorTab: {fileID: 0}
+  developmentTab: {fileID: 0}
+  specialTab: {fileID: 0}
   itemShopSlotPrefab: {fileID: 8491496294157470544, guid: 9d82188e07814554cbf5847af58ae4d5, type: 3}
   closeButton: {fileID: 1252078863}
   weaponButton: {fileID: 450545412}
   armorButton: {fileID: 1537372733}
-  toolButton: {fileID: 1799932111}
+  developButton: {fileID: 0}
+  specialWeaponButton: {fileID: 0}
+  itemDescriptionText: {fileID: 0}
 --- !u!114 &787651105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5884,9 +5892,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d28b1a4d589147f4e882af1d8bc81b4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerMoneyText: {fileID: 603725570}
-  PurchaseButton: {fileID: 982089084}
+  BlaskSmithButton: {fileID: 0}
   SetItemButton: {fileID: 956564187}
+  InfoButton: {fileID: 0}
+  ToolButton: {fileID: 0}
+  StartShopButton: {fileID: 0}
+  MapButton: {fileID: 0}
+  NextTurnButton: {fileID: 0}
+  turnAnnounceView: {fileID: 0}
 --- !u!222 &843842626
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -11316,6 +11329,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0182cbf5de91aaa478c3f66c17bac7e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  stealthCostText: {fileID: 0}
+  stealthCooldownText: {fileID: 0}
+  selectedItemsPriceTexts: []
+  basicStealthButton: {fileID: 0}
+  focusedStealthButton: {fileID: 0}
+  sellingItemIcons: []
+  sellingItemToggles: []
+  sellingItemIds: []
 --- !u!114 &1851955568
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -15,35 +15,40 @@ public class StateManager : IDisposable
     /// <summary>トムの店フェーズ内の現在のサブフェーズ</summary>
     public ReactiveProperty<TomsShopGamePhase> CurrentTomsShopPhase { get; private set; }
 
-    /// <summary>配信フェーズ内の現在のサブフェーズ</summary>
-    public ReactiveProperty<StreamingGamePhase> CurrentStreamingPhase { get; private set; }
-
     /// <summary>フェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<GamePhase, Action> onEnter = new();
 
     /// <summary>トムの店サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<TomsShopGamePhase, Action> onEnterTomsShop = new();
 
-    /// <summary>配信サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
-    private readonly Dictionary<StreamingGamePhase, Action> onEnterStreaming = new();
 
     private readonly CompositeDisposable disposables = new();
 
     /// <summary>UI全体のパネル制御を担当するマネージャー（任意）</summary>
     private readonly GamePanelManager gamePanelManager;
 
+    /// <summary>シーン間で渡される開始モード</summary>
+    private readonly StartModeData _startModeData;
+
     /// <summary>
     /// コンストラクタ
     /// </summary>
     /// <param name="gamePanelManager">UI表示を統合的に制御するマネージャー</param>
-    public StateManager(GamePanelManager gamePanelManager)
+    /// <param name="startModeData">タイトルシーンから渡される開始モード</param>
+    public StateManager(GamePanelManager gamePanelManager, StartModeData startModeData)
     {
         this.gamePanelManager = gamePanelManager;
-        CurrentPhase = new ReactiveProperty<GamePhase>(GamePhase.Title);
+        _startModeData = startModeData;
+
+        // タイトルシーンからどちらのモードで来ても、TomsShopシーン内では常にTomsShopフェーズから開始
+        // （Preparationは別シーンに分離済み）
+        CurrentPhase = new ReactiveProperty<GamePhase>(GamePhase.TomsShop);
         CurrentTomsShopPhase = new ReactiveProperty<TomsShopGamePhase>(TomsShopGamePhase.Shop);
-        CurrentStreamingPhase = new ReactiveProperty<StreamingGamePhase>(StreamingGamePhase.StreamingSetting);
         Bind();
-        ChangePhase(GamePhase.Title);
+        // 初期フェーズを確実に発火させる（同値ガードを回避）
+        CurrentPhase.ForceNotify();
+
+        Debug.Log($"[StateManager] Initialized with StartMode={_startModeData.Mode}, InitialPhase=TomsShop");
     }
 
     /// <summary>
@@ -65,6 +70,12 @@ public class StateManager : IDisposable
                         handler?.Invoke();
                     }
 
+                    // サブフェーズを持つフェーズに入ったら、サブフェーズを強制発火してパネルを表示させる
+                    if (phase == GamePhase.TomsShop)
+                    {
+                        CurrentTomsShopPhase.ForceNotify();
+                    }
+
                     Debug.Log($"[StateManager] Phase changed to {phase}");
                 }
                 catch (Exception e)
@@ -77,6 +88,9 @@ public class StateManager : IDisposable
         CurrentTomsShopPhase
             .Subscribe(subPhase =>
             {
+                // メインフェーズがTomsShopでなければパネル切替しない
+                if (CurrentPhase.Value != GamePhase.TomsShop) return;
+
                 try
                 {
                     gamePanelManager?.ShowTomsShopPanel(subPhase);
@@ -91,27 +105,6 @@ public class StateManager : IDisposable
                 catch (Exception e)
                 {
                     Debug.LogError($"[StateManager] OnEnter error at TomsShop.{subPhase}: {e}");
-                }
-            })
-            .AddTo(disposables);
-
-        CurrentStreamingPhase
-            .Subscribe(subPhase =>
-            {
-                try
-                {
-                    gamePanelManager?.ShowStreamingPanel(subPhase);
-
-                    if (onEnterStreaming.TryGetValue(subPhase, out var handler))
-                    {
-                        handler?.Invoke();
-                    }
-
-                    Debug.Log($"[StateManager] Streaming sub-phase changed to {subPhase}");
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"[StateManager] OnEnter error at Streaming.{subPhase}: {e}");
                 }
             })
             .AddTo(disposables);
@@ -147,20 +140,6 @@ public class StateManager : IDisposable
         }
     }
 
-    /// <summary>
-    /// 配信サブフェーズのOnEnter登録。
-    /// </summary>
-    public void RegisterOnEnter(StreamingGamePhase subPhase, Action handler)
-    {
-        if (onEnterStreaming.ContainsKey(subPhase))
-        {
-            onEnterStreaming[subPhase] += handler;
-        }
-        else
-        {
-            onEnterStreaming[subPhase] = handler;
-        }
-    }
 
     /// <summary>
     /// 現在のフェーズを変更。購読側で自動的に切替・処理が実行される。
@@ -192,24 +171,6 @@ public class StateManager : IDisposable
         CurrentTomsShopPhase.Value = nextSubPhase;
     }
 
-    /// <summary>
-    /// 配信サブフェーズを変更。メインフェーズがStreamingでない場合は自動遷移。
-    /// </summary>
-    public void ChangeStreamingPhase(StreamingGamePhase nextSubPhase)
-    {
-        if (CurrentPhase.Value != GamePhase.Streaming)
-        {
-            ChangePhase(GamePhase.Streaming);
-        }
-
-        if (CurrentStreamingPhase.Value == nextSubPhase)
-        {
-            CurrentStreamingPhase.ForceNotify();
-            return;
-        }
-        Debug.Log($"[StateManager] Changing Streaming sub-phase: {CurrentStreamingPhase.Value} → {nextSubPhase}");
-        CurrentStreamingPhase.Value = nextSubPhase;
-    }
 
     public void Dispose()
     {

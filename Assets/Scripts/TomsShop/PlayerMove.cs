@@ -59,6 +59,6 @@ public class PlayerMove : MonoBehaviour
 
     private void OnDestroy()
     {
-        moveDisposables.Dispose();
+        moveDisposables?.Dispose();
     }
 }
