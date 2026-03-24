@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
-  m_Name: "undead\uFF11"
+  m_Name: jungle boss Lv2
   m_EditorClassIdentifier: 
-  enemyName: "undead\uFF11"
-  hp: 20
-  attackPower: 10
-  defensePower: 8
-  elementType: 0
-  enemySprite: {fileID: 21300000, guid: 75b73ed42062340c1a13fdf450695eb1, type: 3}
+  enemyName: jungle boss Lv2
+  hp: 70
+  attackPower: 15
+  defensePower: 10
+  elementType: 3
+  enemySprite: {fileID: 21300000, guid: dca118eabeb334aa2baa927af2339ae0, type: 3}
   skills: []

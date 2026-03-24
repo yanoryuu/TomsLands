@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
-  m_Name: New EnemyData 16
+  m_Name: undead5
   m_EditorClassIdentifier: 
-  enemyName: jungle12 boss
-  hp: 100
-  attackPower: 45
-  defensePower: 60
+  enemyName: undead5
+  hp: 50
+  attackPower: 10
+  defensePower: 10
   elementType: 0
-  enemySprite: {fileID: 21300000, guid: dca118eabeb334aa2baa927af2339ae0, type: 3}
+  enemySprite: {fileID: 21300000, guid: d66b1b50975144cc48c093d58375112f, type: 3}
   skills: []

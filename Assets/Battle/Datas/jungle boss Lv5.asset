@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
-  m_Name: New EnemyData 19
+  m_Name: jungle boss Lv5
   m_EditorClassIdentifier: 
-  enemyName: sea301
-  hp: 30
-  attackPower: 5
-  defensePower: 10
-  elementType: 1
-  enemySprite: {fileID: 21300000, guid: 358b80e8e30f14e4c8f0679a413501f3, type: 3}
+  enemyName: jungle boss Lv5
+  hp: 200
+  attackPower: 30
+  defensePower: 40
+  elementType: 3
+  enemySprite: {fileID: 21300000, guid: dca118eabeb334aa2baa927af2339ae0, type: 3}
   skills: []

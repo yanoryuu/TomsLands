@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
-  m_Name: New EnemyData 18
+  m_Name: sea302
   m_EditorClassIdentifier: 
-  enemyName: undead6
-  hp: 70
-  attackPower: 30
-  defensePower: 20
+  enemyName: sea302
+  hp: 35
+  attackPower: 10
+  defensePower: 5
   elementType: 0
-  enemySprite: {fileID: 21300000, guid: a4be9ad3c7b764e4298bd0d18ca01521, type: 3}
+  enemySprite: {fileID: 21300000, guid: f2c475f93997d4c0f92c4250bb1273e4, type: 3}
   skills: []

@@ -15,7 +15,7 @@ MonoBehaviour:
   enemyName: jungle1
   hp: 25
   attackPower: 8
-  defensePower: 8
-  elementType: 0
+  defensePower: 3
+  elementType: 3
   enemySprite: {fileID: 21300000, guid: 98ed54a0334334a59be42cc42b353045, type: 3}
   skills: []
