@@ -25,6 +25,7 @@ public class TomsEventExecutor
             {
                 case "ChangeMoney":
                     player.PlayerMoney.Value += int.Parse(cmd.parameters["price"]);
+                    player.SavePlayerMoney();
                     break;
 
                 case "ChangeTrust":
@@ -33,6 +34,7 @@ public class TomsEventExecutor
 
                 case "AddItem":
                     itemModel.PurchaseItem(cmd.parameters["itemId"], 1);
+                    itemModel.SaveData();
                     break;
 
                 case "SetFlag":

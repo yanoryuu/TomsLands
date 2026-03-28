@@ -7,10 +7,6 @@ using DG.Tweening;
 public class MapView : MonoBehaviour
 {
     [Header("ダンジョン")]
-    [SerializeField] private Button greenRestButton;
-    [SerializeField] private Button frostReachButton;
-    [SerializeField] private Button duskHeavenButton;
-    [SerializeField] private Button centerCity;
     [SerializeField] private Button mausoleumOblivion;
     [SerializeField] private Button scorchingVolcanoPrison;
     [SerializeField] private Button iceMistCave;
@@ -30,10 +26,6 @@ public class MapView : MonoBehaviour
 
     private void Bind()
     {
-        greenRestButton.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.GreenRest));
-        frostReachButton.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.FrostReach));
-        duskHeavenButton.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.DuskHeaven));
-        centerCity.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.CenterCity));
         mausoleumOblivion.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.MausoleumOblivion));
         scorchingVolcanoPrison.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.ScorchingVolcanoPrison));
         iceMistCave.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.IceMistCave));
@@ -49,19 +41,6 @@ public class MapView : MonoBehaviour
         {
             switch (data.key) // data.key が DungeonName
             {
-                case DungeonName.GreenRest:
-                    SetDungeonIcon(greenRestButton.gameObject, data.dungeonStatus);
-                    break;
-                case DungeonName.FrostReach:
-                    SetDungeonIcon(frostReachButton.gameObject, data.dungeonStatus);
-                    break;
-                case DungeonName.DuskHeaven:
-                    SetDungeonIcon(duskHeavenButton.gameObject, data.dungeonStatus);
-                    break;
-
-                case DungeonName.CenterCity:
-                    SetDungeonIcon(centerCity.gameObject, data.dungeonStatus);
-                    break;
 
                 case DungeonName.MausoleumOblivion:
                     SetDungeonIcon(mausoleumOblivion.gameObject, data.dungeonStatus);

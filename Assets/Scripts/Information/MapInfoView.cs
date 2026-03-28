@@ -55,7 +55,7 @@ public class MapInfoView : MonoBehaviour
                 mapCost = costs[costs.Length - 1];
             }
             
-            slot.SetMapInfo(data.key, data.dungeonName, data.dungeonImage, mapCost);
+            slot.SetMapInfo(data.key, data.dungeonName, data.dungeonIcon, mapCost);
             activeSlots.Add(slot);
 
             // スロットの購入イベントを集約

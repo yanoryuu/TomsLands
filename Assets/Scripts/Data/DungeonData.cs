@@ -16,6 +16,8 @@ public class DungeonData
     // ----------------------
     public string dungeonDescription;
     public Sprite dungeonImage;
+    public Sprite dungeonIcon;
+    public Sprite dungeonNameImage;
 
     // ----------------------
     // レベル・難易度
@@ -51,6 +53,8 @@ public class DungeonData
         // 表示情報
         dungeonDescription = so.dungeonDescription;
         dungeonImage       = so.dungeonImage;
+        dungeonIcon        = so.dungeonIcon;
+        dungeonNameImage   = so.dungeonNameImage;
 
         // レベル・難易度
         initDungeonLevel   = so.initDungeonLevel;
@@ -76,10 +80,6 @@ public class DungeonData
 [Serializable]
 public enum DungeonName
 {
-    GreenRest,
-    FrostReach,
-    DuskHeaven,
-    CenterCity,
     MausoleumOblivion,
     ScorchingVolcanoPrison,
     IceMistCave,
