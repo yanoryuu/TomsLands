@@ -15,6 +15,8 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly TomsModel _tomsModel;
     private readonly SceneTransitionService _sceneTransition;
     private readonly HeroModel _heroModel;
+    private readonly EventInputData _eventInputData;
+    private readonly EventOutputData _eventOutputData;
     private int _currentIndex;
 
     /// <summary>
@@ -29,7 +31,8 @@ public class GameFlowManager : IDisposable, IStartable
 
     public GameFlowManager(StateManager stateManager, DungeonRepository dungeonRepository, BattleInputData battleInputData,
         ItemModel itemModel, ShopEconomySettings economySettings, TomsModel tomsModel,
-        SceneTransitionService sceneTransition, HeroModel heroModel)
+        SceneTransitionService sceneTransition, HeroModel heroModel,
+        EventInputData eventInputData, EventOutputData eventOutputData)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -39,6 +42,8 @@ public class GameFlowManager : IDisposable, IStartable
         _tomsModel = tomsModel;
         _sceneTransition = sceneTransition;
         _heroModel = heroModel;
+        _eventInputData = eventInputData;
+        _eventOutputData = eventOutputData;
         _currentIndex = 0;
     }
 
@@ -48,8 +53,27 @@ public class GameFlowManager : IDisposable, IStartable
     public void RestoreIndex(int index)
     {
         _currentIndex = index;
-        CurrentTurn.Value = _currentIndex + 1;
+        // ターン番号はEventノードを除外してカウント
+        CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
         Debug.Log($"[GameFlowManager] Index restored to {_currentIndex}, turn={CurrentTurn.Value}");
+    }
+
+    /// <summary>
+    /// 指定インデックスまでのEvent以外のノード数からターン番号を計算する
+    /// </summary>
+    private int CalculateTurnNumber(int upToIndex)
+    {
+        if (_gameFlow == null) return upToIndex + 1;
+
+        int turn = 1; // 初期ターン
+        for (int i = 1; i <= upToIndex && i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType != GameEvent.Event)
+            {
+                turn++;
+            }
+        }
+        return turn;
     }
     
     public void Start()
@@ -74,15 +98,6 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         _currentIndex++;
-        CurrentTurn.Value = _currentIndex + 1;
-
-        // --- TomsShop の経済更新（S1 + S3 + D2） ---
-        if (_itemModel != null && _economySettings != null && _tomsModel != null)
-        {
-            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value);
-            _itemModel.SaveData();
-            Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
-        }
 
         if (_currentIndex >= _gameFlow.GameFlowStack.Count)
         {
@@ -92,6 +107,25 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         var node = _gameFlow.GameFlowStack[_currentIndex];
+
+        // Event時はターン番号も経済更新も進めず、EventSceneへ遷移する
+        if (node.EventType == GameEvent.Event)
+        {
+            Debug.Log($"[GameFlowManager] Event node detected at index={_currentIndex}. Turn does NOT advance.");
+            ProcessEventNode(node);
+            return;
+        }
+
+        // Event以外のノードではターン番号を進める
+        CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
+
+        // --- TomsShop の経済更新（S1 + S3 + D2）--- Event以外のターンで実行
+        if (_itemModel != null && _economySettings != null && _tomsModel != null)
+        {
+            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value);
+            _itemModel.SaveData();
+            Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
+        }
 
         // Battle時はBattleInputDataをセットアップしてFightSceneへ直接遷移
         if (node.EventType == GameEvent.Battle)
@@ -127,6 +161,49 @@ public class GameFlowManager : IDisposable, IStartable
         var nextPhase = ConvertEventToPhase(node.EventType);
         Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → phase={nextPhase}");
         _stateManager.ChangePhase(nextPhase);
+    }
+
+    /// <summary>
+    /// Eventノードを処理する。ターンは進めずEventSceneへ遷移する。
+    /// </summary>
+    private void ProcessEventNode(GameFlowNode node)
+    {
+        var eventId = node.EventData;
+        if (string.IsNullOrEmpty(eventId))
+        {
+            Debug.LogWarning("[GameFlowManager] Event node has no EventData. Skipping to next turn.");
+            NextTurn();
+            return;
+        }
+
+        // CSVからイベントデータを検索
+        var tomsEvent = EventDataLoader.FindById(eventId);
+        if (tomsEvent == null)
+        {
+            Debug.LogWarning($"[GameFlowManager] Event not found in CSV: {eventId}. Skipping.");
+            NextTurn();
+            return;
+        }
+
+        // EventInputData にデータを書き込み
+        // コマンドデータはCSVから再ロードするのでCommandsJsonは空でよい
+        _eventInputData.Setup(
+            tomsEvent.id,
+            tomsEvent.title,
+            tomsEvent.description,
+            "",
+            _currentIndex
+        );
+
+        // EventOutputData をクリア
+        _eventOutputData.Clear();
+
+        // データを保存してからシーン遷移
+        _itemModel.SaveData();
+        _tomsModel.SavePlayerMoney();
+
+        Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event=Event({eventId}) → EventScene");
+        _sceneTransition.GoToEvent();
     }
 
     /// <summary>

@@ -24,7 +24,7 @@ public class TomsEventExecutor
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                    player.PlayerMoney.Value += int.Parse(cmd.parameters["price"]);
+                    player.PlayerMoney.Value += int.Parse(cmd.parameters["amount"]);
                     player.SavePlayerMoney();
                     break;
 

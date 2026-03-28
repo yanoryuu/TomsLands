@@ -45,6 +45,24 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
 
+        // EventInputData / EventOutputData のロードと登録
+        var eventInputData = Resources.Load<EventInputData>("SceneData/EventInputData");
+        if (eventInputData == null)
+        {
+            eventInputData = ScriptableObject.CreateInstance<EventInputData>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+        }
+
+        var eventOutputData = Resources.Load<EventOutputData>("SceneData/EventOutputData");
+        if (eventOutputData == null)
+        {
+            eventOutputData = ScriptableObject.CreateInstance<EventOutputData>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventOutputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+        }
+
+        builder.RegisterInstance(eventInputData);
+        builder.RegisterInstance(eventOutputData);
+
         // ShopEconomySettings のロードと登録
         var shopEconomySettings = Resources.Load<ShopEconomySettings>("ShopEconomySettings");
         if (shopEconomySettings == null)
@@ -109,6 +127,9 @@ public class GameLifetimeScope : LifetimeScope
         
         // 戦闘結果の処理ハンドラ（BattleScene から帰還時に自動実行）
         builder.RegisterEntryPoint<BattleResultHandler>();
+
+        // イベント結果の処理ハンドラ（EventScene から帰還時に自動実行）
+        builder.RegisterEntryPoint<EventResultHandler>();
         
         Debug.Log($"GameLifetimeScope configured.");
     }

@@ -50,17 +50,30 @@ public class CharacterModel
         Type = CharacterType.Hero;
         CharacterSprite = masterData.heroSprite;
         Element = ElementType.None;
-        MaxHp = masterData.hp;
-        CurrentHp = new ReactiveProperty<int>(masterData.hp);
-        MaxMp = masterData.mp;
-        CurrentMp = new ReactiveProperty<int>(masterData.mp);
 
-        AttackPower = masterData.attackPower;
-        DefensePower = masterData.defensePower;
-
-        // TODO: ここで装備情報を設定する (今はまだ仮)
-        // EquippedWeapon = savedHeroModel.GetEquippedWeaponItemData();
-        // EquippedArmor = savedHeroModel.GetEquippedArmorItemData();
+        // RuntimeHeroData (CSV由来) からステータスを取得
+        var runtime = savedHeroModel?.heroData;
+        if (runtime != null)
+        {
+            MaxHp = runtime.hp.Value;
+            CurrentHp = new ReactiveProperty<int>(runtime.hp.Value);
+            MaxMp = runtime.mp.Value;
+            CurrentMp = new ReactiveProperty<int>(runtime.mp.Value);
+            AttackPower = runtime.attackPower.Value;
+            DefensePower = runtime.defensePower.Value;
+            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower}");
+        }
+        else
+        {
+            // フォールバック: ScriptableObject のデフォルト値を使用
+            MaxHp = masterData.hp;
+            CurrentHp = new ReactiveProperty<int>(masterData.hp);
+            MaxMp = masterData.mp;
+            CurrentMp = new ReactiveProperty<int>(masterData.mp);
+            AttackPower = masterData.attackPower;
+            DefensePower = masterData.defensePower;
+            Debug.LogWarning("[CharacterModel] RuntimeHeroData が null のため、HeroData ScriptableObject のデフォルト値を使用します。");
+        }
 
         Skills = new List<SkillData>();
     }

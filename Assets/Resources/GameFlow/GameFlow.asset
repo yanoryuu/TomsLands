@@ -29,7 +29,7 @@ MonoBehaviour:
     EventData: 1Event
     BattleDungeon: 0
   - EventType: 3
-    EventData: 1Event
+    EventData: 001
     BattleDungeon: 0
   - EventType: 2
     EventData: 1Event

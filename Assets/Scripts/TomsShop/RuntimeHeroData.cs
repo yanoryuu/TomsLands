@@ -36,4 +36,56 @@ public class RuntimeHeroData
             tactics: HeroTactics.Balanced
         );
     }
+
+    /// <summary>
+    /// HeroLevelData (CSV由来) から RuntimeHeroData を生成する
+    /// </summary>
+    public static RuntimeHeroData CreateFromLevelData(HeroLevelData levelData)
+    {
+        return new RuntimeHeroData(
+            level: levelData.Level,
+            hp: levelData.MaxHp,
+            mp: 0,
+            weaponId: "",
+            armorId: "",
+            attackPower: levelData.Attack,
+            defensePower: levelData.Defense,
+            tactics: HeroTactics.Balanced
+        );
+    }
+
+    /// <summary>
+    /// JSON保存用の HeroSaveData に変換する
+    /// </summary>
+    public HeroSaveData ToSaveData()
+    {
+        return new HeroSaveData
+        {
+            level = this.level.Value,
+            hp = this.hp.Value,
+            mp = this.mp.Value,
+            weaponId = this.weaponId.Value,
+            armorId = this.armorId.Value,
+            attackPower = this.attackPower.Value,
+            defensePower = this.defensePower.Value,
+            tactics = (int)this.tactics.Value
+        };
+    }
+
+    /// <summary>
+    /// JSON読み込み後の HeroSaveData から RuntimeHeroData を復元する
+    /// </summary>
+    public static RuntimeHeroData CreateFromSaveData(HeroSaveData save)
+    {
+        return new RuntimeHeroData(
+            level: save.level,
+            hp: save.hp,
+            mp: save.mp,
+            weaponId: save.weaponId ?? "",
+            armorId: save.armorId ?? "",
+            attackPower: save.attackPower,
+            defensePower: save.defensePower,
+            tactics: (HeroTactics)save.tactics
+        );
+    }
 }
