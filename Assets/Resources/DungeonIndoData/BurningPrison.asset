@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
   m_Name: BurningPrison
   m_EditorClassIdentifier: 
-  key: 5
+  key: 1
   dungeonName: "\u707C\u71B1\u306E\u706B\u5C71\u7262"
   dungeonDescription: "\u30DE\u30B0\u30DE\u304C\u6D41\u308C\u308B\u706B\u5C71\u306E\u4E2D\u306B\u7BC9\u304B\u308C\u305F\u53E4\u4EE3\u306E\u76E3\u7344\u3002\u4ECA\u3084\u708E\u3092\u307E\u3068\u3046\u9B54\u7269\u305F\u3061\u304C\u8DCB\u6248\u3059\u308B\u7121\u6CD5\u5730\u5E2F\u3068\u5316\u3057\u3066\u3044\u308B\u3002"
-  dungeonImage: {fileID: -6253423525840006010, guid: 6789be21c92f344bd92a2ca35ab4544f, type: 3}
+  dungeonImage: {fileID: 1922632494855408113, guid: bf8270235a42442f39968a6d7fa17b82, type: 3}
+  dungeonIcon: {fileID: -6239665522273766676, guid: acf1ad346f434485188b62d6dbfd7897, type: 3}
+  dungeonNameImage: {fileID: 1008162555512007096, guid: 36eea121f53f74ff7942af7a8e257b81, type: 3}
   initDungeonLevel: 1
   recommendedLevel: 5
   difficulty: 5

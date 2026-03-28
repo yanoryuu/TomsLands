@@ -39,6 +39,7 @@ public class RuntimeItemData
         string description = "")
     {
         ItemId = itemId;
+        ItemName = itemName;
         CurrentPrice = new ReactiveProperty<int>(currentPrice);
         Stock = new ReactiveProperty<int>(stock);
         DisplayStock = new ReactiveProperty<int>(displayStock);
@@ -57,6 +58,7 @@ public class RuntimeItemData
     public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon)
     {
         ItemId = plainData.itemId;
+        ItemName = plainData.itemName;
         CurrentPrice = new ReactiveProperty<int>(plainData.currentPrice);
         MaxStock     = new ReactiveProperty<int>(Mathf.Max(0, plainData.maxStock));
         Stock        = new ReactiveProperty<int>(Mathf.Clamp(plainData.stock, 0, MaxStock.Value));
@@ -114,7 +116,9 @@ public class RuntimeItemData
         return new RuntimeItemDataPlain
         {
             itemId = ItemId,
+            itemName = ItemName,
             currentPrice = CurrentPrice.Value,
+            maxStock = MaxStock.Value,
             stock = Stock.Value,
             demand = Demand.Value,
             isPopular = IsPopular.Value,
@@ -122,6 +126,7 @@ public class RuntimeItemData
             itemAttribute = ItemAttribute,
             displayStock = DisplayStock.Value,
             isDisplay =  IsDisplay.Value,
+            requiredLevel = RequiredLevel.Value,
             description = ItemDescription
         };
     }
@@ -131,6 +136,7 @@ public class RuntimeItemData
 public class RuntimeItemDataPlain
 {
     public string itemId;
+    public string itemName;
     public int currentPrice;
     public int stock;
     public int maxStock;         // ★ 追加：上限を永続化

@@ -280,7 +280,18 @@ public class ItemModel
         var dataList = JsonUtility.FromJson<RuntimeItemDataList>(json);
         
         RuntimeItems = dataList.items
-            .Select(item => new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId)))
+            .Select(item =>
+            {
+                // 古いセーブデータとの互換: maxStock/requiredLevel/itemName がデフォルト値ならマスターから復元
+                var master = GetMasterItem(item.itemId);
+                if (master != null)
+                {
+                    if (item.maxStock <= 0) item.maxStock = master.maxStock;
+                    if (item.requiredLevel <= 0) item.requiredLevel = master.requiredLevel;
+                    if (string.IsNullOrEmpty(item.itemName)) item.itemName = master.itemName;
+                }
+                return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId));
+            })
             .ToList();
 
         Debug.Log("Item data loaded.");

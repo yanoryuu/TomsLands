@@ -35,10 +35,10 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
     
     public void Entry()
     {
-        // ダンジョンデータを最新の状態に更新
+        // ?_???W?????f?[?^????V?????X?V
         infoBrokerModel.InitializeDungeons();
         
-        // 初期タブ（マップ）を表示
+        // ?????^?u?i?}?b?v?j??\??
         infoBrokerView.ShowPanel(InfoBrokerTab.Map);
         infoBrokerView.SortItemTab(InfoBrokerTab.Map);
         OnTabChanged(InfoBrokerTab.Map);
@@ -78,14 +78,14 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
         })
         .AddTo(disposables);
         
-        // マップ情報の購入イベント
+        // ?}?b?v????w???C?x???g
         mapInfoView.OnMapPurchaseClicked
             .Subscribe(dungeonName =>
             {
                 var costs = infoBrokerModel.GetDungeonInfoCosts();
                 if (!costs.ContainsKey(dungeonName))
                 {
-                    Debug.LogWarning($"[InfoBrokerPresenter] コストが見つかりません: {dungeonName}");
+                    Debug.LogWarning($"[InfoBrokerPresenter] ?R?X?g?????????????: {dungeonName}");
                     return;
                 }
 
@@ -97,15 +97,16 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
 
                 if (tomsModel.PlayerMoney.Value < cost)
                 {
-                    Debug.Log($"[InfoBrokerPresenter] お金が足りません！ 必要: {cost}G, 所持: {tomsModel.PlayerMoney.Value}G");
+                    Debug.Log($"[InfoBrokerPresenter] ??????????????I ?K?v: {cost}G, ????: {tomsModel.PlayerMoney.Value}G");
                     return;
                 }
 
-                // 所持金を減らす
+                // ????????????
                 tomsModel.PurchaseItem(cost);
-                // ダンジョン情報を購入済みにする
+                tomsModel.SavePlayerMoney();
+                // ?_???W?????????w?????????
                 infoBrokerModel.PurchaseDungeonInfo(dungeonName);
-                Debug.Log($"[InfoBrokerPresenter] {dungeonName} の情報を {cost}G で購入しました。残金: {tomsModel.PlayerMoney.Value}G");
+                Debug.Log($"[InfoBrokerPresenter] {dungeonName} ????? {cost}G ??w??????????B?c??: {tomsModel.PlayerMoney.Value}G");
             })
             .AddTo(disposables);
     }

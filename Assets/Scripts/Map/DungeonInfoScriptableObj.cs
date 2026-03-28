@@ -23,8 +23,14 @@ public class DungeonInfoScriptableObj : ScriptableObject
     [TextArea]
     public string dungeonDescription;
 
-    [Tooltip("ダンジョンのイメージ画像")]
+    [Tooltip("ダンジョンの背景画像（FightScene用）")]
     public Sprite dungeonImage;
+
+    [Tooltip("ダンジョンのアイコン画像（マップ・情報画面用）")]
+    public Sprite dungeonIcon;
+
+    [Tooltip("ダンジョン名の画像（ダンジョン情報パネル用）")]
+    public Sprite dungeonNameImage;
 
 
     // ----------------------

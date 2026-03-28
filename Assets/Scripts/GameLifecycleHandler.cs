@@ -106,6 +106,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
             "tomsData.json",
             "displayItemData.json",
             "heroData.json",
+            "streamingSelection.json",
         };
 
         foreach (var filename in files)

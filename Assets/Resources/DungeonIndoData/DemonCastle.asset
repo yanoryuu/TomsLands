@@ -12,10 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
   m_Name: DemonCastle
   m_EditorClassIdentifier: 
-  key: 9
+  key: 5
   dungeonName: "\u9B54\u738B\u57CE"
   dungeonDescription: "\u4E16\u754C\u306E\u9802\u3001\u7A7A\u306E\u679C\u3066\u3002\u305D\u3053\u304C\u6700\u5F8C\u306E\u6C7A\u6226\u306E\u5730\u3001\u9B54\u738B\u57CE\u3002\u57CE\u306E\u5468\u56F2\u3092\u8986\u3046\u90AA\u60AA\u306A\u5149\u304C\u3001\u9B54\u738B\u306E\u5F37\u5927\u306A\u529B\u3092\u7269\u8A9E\u3063\u3066\u3044\u308B\u3002"
   dungeonImage: {fileID: 4143201501449483532, guid: dce46941f1efd4173abb9890013b3ecc, type: 3}
+  dungeonIcon: {fileID: 6556482357240470286, guid: 930b64ac5f12a4457a203011facdbaf5, type: 3}
+  dungeonNameImage: {fileID: 5706667888650075947, guid: 00d8e6be2d5ba48b59b2e19725547181, type: 3}
   initDungeonLevel: 1
   recommendedLevel: 10
   difficulty: 10

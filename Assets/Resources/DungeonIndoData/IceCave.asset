@@ -10,12 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 81e6ee067effe4d779ac475583ad3f17, type: 3}
-  m_Name: IceCave_test
+  m_Name: IceCave
   m_EditorClassIdentifier: 
-  key: 6
+  key: 2
   dungeonName: "\u6C37\u9727\u306E\u6D1E\u7A9F"
   dungeonDescription: "\u96EA\u3068\u6C37\u306B\u9589\u3056\u3055\u308C\u305F\u6D1E\u7A9F\u3002\u8996\u754C\u306E\u60AA\u3055\u306B\u52A0\u3048\u3001\u808C\u3092\u523A\u3059\u3088\u3046\u306A\u5BD2\u3055\u304C\u5192\u967A\u8005\u3092\u8972\u3046\u3002\u6ED1\u308A\u3084\u3059\u3044\u6C37\u306E\u5E8A\u306B\u3082\u6CE8\u610F\u304C\u5FC5\u8981\u3060\u3002"
   dungeonImage: {fileID: -2670746174323389601, guid: 511774859ee7f414e8b69fe60fa718b2, type: 3}
+  dungeonIcon: {fileID: 4745306496784495246, guid: ec380b178d3ea43f7b322f4a654914da, type: 3}
+  dungeonNameImage: {fileID: 1188139782618668236, guid: c542096f29b3148aeb23e9313dee081d, type: 3}
   initDungeonLevel: 1
   recommendedLevel: 3
   difficulty: 3

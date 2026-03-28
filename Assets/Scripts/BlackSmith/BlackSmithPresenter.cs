@@ -81,6 +81,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             Debug.Log($"{totalPrice}ゴールドのアイテムを購入");
             itemModel.PurchaseItem(itemId, quantity);
             tomsModel.PurchaseItem(totalPrice);
+            
+            // 購入結果を即座に永続化
+            itemModel.SaveData();
+            tomsModel.SavePlayerMoney();
         }
         else
         {

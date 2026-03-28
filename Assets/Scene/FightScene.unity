@@ -3744,12 +3744,8 @@ MonoBehaviour:
   battleResultView: {fileID: 617668661}
   dungeonInfos:
   - {fileID: 11400000, guid: 382eb4d9f7099a242ba4b30bf458c6c9, type: 2}
-  - {fileID: 11400000, guid: 99d9aff821e2472184cd5f888bec1a82, type: 2}
   - {fileID: 11400000, guid: 8fcdf7e7ace52e2489792f11fca1fc56, type: 2}
-  - {fileID: 11400000, guid: f56c5ac86f4c4e0da01dfae2e21df85e, type: 2}
-  - {fileID: 11400000, guid: 9b25d75d13c140128fa6d56f9d9666ba, type: 2}
   - {fileID: 11400000, guid: 0d1f8886c1c140f4085e9daf6b97a64c, type: 2}
-  - {fileID: 11400000, guid: 96ad7db554d14689ad821b89d151b77c, type: 2}
   - {fileID: 11400000, guid: 66619d79d7f761143b678a08cc7e89f1, type: 2}
   - {fileID: 11400000, guid: 4865d36be90517b4c82451040bdf3b55, type: 2}
   - {fileID: 11400000, guid: 2451a56cf709fec49a12967d4c26ca9f, type: 2}

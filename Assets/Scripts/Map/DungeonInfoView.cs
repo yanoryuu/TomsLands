@@ -1,8 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-
-using System.Collections.Generic;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -11,6 +7,7 @@ using UnityEngine.UI;
 public class DungeonInfoView : MonoBehaviour
 {
     [SerializeField] private Image dungeonNameImage;
+    [SerializeField] private Image dungeonIconImage;
     
     [SerializeField] private GameObject dungeonInfoPanel;
     
@@ -51,7 +48,8 @@ public class DungeonInfoView : MonoBehaviour
     {
         if(d==null)return;
         
-        dungeonNameImage.sprite = d.dungeonImage;
+        dungeonNameImage.sprite = d.dungeonNameImage;
+        if (dungeonIconImage) dungeonIconImage.sprite = d.dungeonIcon;
         
         if (d.isShowedInfo)
         {
