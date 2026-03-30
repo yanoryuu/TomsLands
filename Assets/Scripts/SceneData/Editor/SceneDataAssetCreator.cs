@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+﻿﻿#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -14,6 +14,8 @@ public static class SceneDataAssetCreator
         CreateAssetIfNotExists<BattleInputData>("Assets/Resources/SceneData/BattleInputData.asset");
         CreateAssetIfNotExists<BattleOutputData>("Assets/Resources/SceneData/BattleOutputData.asset");
         CreateAssetIfNotExists<StartModeData>("Assets/Resources/SceneData/StartModeData.asset");
+        CreateAssetIfNotExists<EventInputData>("Assets/Resources/SceneData/EventInputData.asset");
+        CreateAssetIfNotExists<EventOutputData>("Assets/Resources/SceneData/EventOutputData.asset");
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[SceneDataAssetCreator] Scene data assets created/verified.");

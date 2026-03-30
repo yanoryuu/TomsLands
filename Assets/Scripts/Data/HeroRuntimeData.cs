@@ -19,10 +19,9 @@ using UnityEngine;
             public void UpdateFromLevelData(HeroLevelData levelData)
             {
                 Level = levelData.Level;
-                ExpToNextLevel = levelData.ExpToNextLevel;
                 MaxHp = levelData.MaxHp;
                 Attack = levelData.Attack;
-                Mp = levelData.MaxMp;
+                DefencePower = levelData.Defense;
                 CurrentHp = MaxHp;
             }
         

@@ -23,15 +23,14 @@ public class HeroLevelDataLoader
             if (string.IsNullOrEmpty(line)) continue;
 
             string[] values = line.Split(',');
-            if (values.Length < 5) continue;
+            if (values.Length < 4) continue;
 
             HeroLevelData data = new HeroLevelData
             {
                 Level = int.Parse(values[0]),
-                ExpToNextLevel = int.Parse(values[1]),
-                MaxHp = int.Parse(values[2]),
-                Attack = int.Parse(values[3]),
-                MaxMp = int.Parse(values[4])
+                MaxHp = int.Parse(values[1]),
+                Attack = int.Parse(values[2]),
+                Defense = int.Parse(values[3])
             };
 
             _levelDataMap[data.Level] = data;

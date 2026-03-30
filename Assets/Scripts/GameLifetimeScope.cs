@@ -15,6 +15,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private DungeonInfoView dungeonInfoView;
     [SerializeField] private MapView mapView;
     [SerializeField] private MapInfoView mapInfoView;
+    [SerializeField] private TurnEndSummaryView turnEndSummaryView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -44,6 +45,24 @@ public class GameLifetimeScope : LifetimeScope
 
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
+
+        // EventInputData / EventOutputData のロードと登録
+        var eventInputData = Resources.Load<EventInputData>("SceneData/EventInputData");
+        if (eventInputData == null)
+        {
+            eventInputData = ScriptableObject.CreateInstance<EventInputData>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+        }
+
+        var eventOutputData = Resources.Load<EventOutputData>("SceneData/EventOutputData");
+        if (eventOutputData == null)
+        {
+            eventOutputData = ScriptableObject.CreateInstance<EventOutputData>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventOutputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+        }
+
+        builder.RegisterInstance(eventInputData);
+        builder.RegisterInstance(eventOutputData);
 
         // ShopEconomySettings のロードと登録
         var shopEconomySettings = Resources.Load<ShopEconomySettings>("ShopEconomySettings");
@@ -92,11 +111,13 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, dungeonInfoView, nameof(dungeonInfoView));
         RegisterComponentSafe(builder, mapView, nameof(mapView));
         RegisterComponentSafe(builder, mapInfoView, nameof(mapInfoView));
+        RegisterComponentSafe(builder, turnEndSummaryView, nameof(turnEndSummaryView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
         builder.RegisterEntryPoint<BlackSmithPresenter>();
         builder.RegisterEntryPoint<ItemSelectionPresenter>().AsSelf();
+        builder.RegisterEntryPoint<TurnEndSummaryPresenter>().AsSelf();
         builder.RegisterEntryPoint<TomsShopPresenter>();
         builder.RegisterEntryPoint<MapPresenter>();
         builder.RegisterEntryPoint<CommonPresenter>();
@@ -109,6 +130,9 @@ public class GameLifetimeScope : LifetimeScope
         
         // 戦闘結果の処理ハンドラ（BattleScene から帰還時に自動実行）
         builder.RegisterEntryPoint<BattleResultHandler>();
+
+        // イベント結果の処理ハンドラ（EventScene から帰還時に自動実行）
+        builder.RegisterEntryPoint<EventResultHandler>();
         
         Debug.Log($"GameLifetimeScope configured.");
     }

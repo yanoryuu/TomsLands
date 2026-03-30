@@ -3,9 +3,10 @@
 /// </summary>
 public enum TomsShopGamePhase
 {
-    Shop,       // トムの店メイン画面
-    BlackSmith, // 鍛冶屋：武器・防具を仕入れる
-    ToolShop,   // 道具屋：道具を仕入れる
-    Broker,     // 情報屋：情報を買う
-    Map,        // マップ：ダンジョン選択
+    Shop,            // トムの店メイン画面
+    BlackSmith,      // 鍛冶屋：武器・防具を仕入れる
+    ToolShop,        // 道具屋：道具を仕入れる
+    Broker,          // 情報屋：情報を買う
+    Map,             // マップ：ダンジョン選択
+    TurnEndSummary,  // ターン終了サマリー：売上・トレンド・次配信までの日数
 }

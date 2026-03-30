@@ -44,9 +44,10 @@ public class HeroModel
 
     public void SaveHeroData()
     {
-        string json = JsonUtility.ToJson(heroData, true);
+        var saveData = heroData.ToSaveData();
+        string json = JsonUtility.ToJson(saveData, true);
         File.WriteAllText(Application.persistentDataPath + "/heroData.json", json);
-        Debug.Log("Hero data saved.");
+        Debug.Log($"[HeroModel] Hero data saved. Lv={saveData.level}, HP={saveData.hp}, AT={saveData.attackPower}, DF={saveData.defensePower}");
     }
 
     public void LoadHeroData()
@@ -58,12 +59,26 @@ public class HeroModel
             return;
         }
         string json = File.ReadAllText(path);
-        var dataList = JsonUtility.FromJson<RuntimeHeroData>(json);
-        heroData = dataList;
+        var saveData = JsonUtility.FromJson<HeroSaveData>(json);
+        heroData = RuntimeHeroData.CreateFromSaveData(saveData);
+        Debug.Log($"[HeroModel] Hero data loaded from JSON. Lv={saveData.level}, HP={saveData.hp}, AT={saveData.attackPower}, DF={saveData.defensePower}");
     }
 
     public void InitializeRuntimeHeroFromMaster()
     {
-        
+        var loader = new HeroLevelDataLoader();
+        loader.LoadFromCSV("HeroStatusData");
+
+        var levelData = loader.GetLevelData(1);
+        if (levelData != null)
+        {
+            heroData = RuntimeHeroData.CreateFromLevelData(levelData);
+            Debug.Log($"[HeroModel] Initialized hero from CSV: Lv={levelData.Level}, HP={levelData.MaxHp}, AT={levelData.Attack}, DF={levelData.Defense}");
+        }
+        else
+        {
+            heroData = RuntimeHeroData.CreateDefault();
+            Debug.LogWarning("[HeroModel] HeroStatusData のレベル1が見つかりません。デフォルト値を使用します。");
+        }
     }
 }

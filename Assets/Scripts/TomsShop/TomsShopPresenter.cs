@@ -12,6 +12,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly CommonView commonView;
     private readonly StateManager stateManager;
     private readonly GameFlowManager gameFlowManager;
+    private readonly TurnEndSummaryPresenter turnEndSummaryPresenter;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -20,7 +21,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         TomsModel tomsShopModel,
         CommonView commonView,
         StateManager stateManager,
-        GameFlowManager gameFlowManager)
+        GameFlowManager gameFlowManager,
+        TurnEndSummaryPresenter turnEndSummaryPresenter)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -29,6 +31,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.commonView = commonView;
         this.stateManager = stateManager;
         this.gameFlowManager = gameFlowManager;
+        this.turnEndSummaryPresenter = turnEndSummaryPresenter;
         
         stateManager.RegisterOnEnter(TomsShopGamePhase.Shop,Entry);
     }
@@ -65,9 +68,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Map))
             .AddTo(disposables);
         
-        //　次のターンに進むボタン
+        //　次のターンに進むボタン → サマリーパネルを表示
         tomsShopView.OnNextTurnClicked
-            .Subscribe(_ => gameFlowManager.NextTurn())
+            .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())
             .AddTo(disposables);
         
         //　ターン表示の更新（CommonView）

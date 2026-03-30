@@ -1,4 +1,4 @@
-﻿﻿using UnityEngine;
+﻿﻿﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -14,6 +14,15 @@ public class SceneTransitionService
     {
         _battleInputData = battleInputData;
         _battleOutputData = battleOutputData;
+    }
+
+    /// <summary>
+    /// EventScene へ遷移する。事前に EventInputData を書き込んでおくこと。
+    /// </summary>
+    public void GoToEvent()
+    {
+        Debug.Log("[SceneTransition] Loading EventScene...");
+        SceneManager.LoadScene("EventScene");
     }
 
     /// <summary>
