@@ -221,6 +221,34 @@ public class GameFlowManager : IDisposable, IStartable
         };
     }
 
+    /// <summary>
+    /// 現在のインデックスから次のBattleノードまでの非Eventターン数を返す。
+    /// Battleが見つからない場合は -1 を返す。
+    /// </summary>
+    public int GetTurnsUntilNextBattle()
+    {
+        if (_gameFlow == null) return -1;
+
+        int turnsCount = 0;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var node = _gameFlow.GameFlowStack[i];
+
+            if (node.EventType == GameEvent.Battle)
+            {
+                return turnsCount;
+            }
+
+            // Eventノードはターンとしてカウントしない
+            if (node.EventType != GameEvent.Event)
+            {
+                turnsCount++;
+            }
+        }
+
+        return -1; // Battleノードが見つからない
+    }
+
     public void Dispose()
     {
 

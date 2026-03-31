@@ -10,6 +10,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject infoBrokerPanel;
     [SerializeField] private GameObject endPhasePanel;
     [SerializeField] private GameObject commonPanel;
+    [SerializeField] private GameObject turnEndSummaryPanel;
 
     /// <summary>
     /// 全パネルを非表示にする
@@ -24,6 +25,7 @@ public class GamePanelManager : MonoBehaviour
         endPhasePanel.SetActive(false);
         settingPanel.SetActive(false);
         commonPanel.SetActive(false);
+        turnEndSummaryPanel.SetActive(false);
     }
 
     /// <summary>
@@ -78,6 +80,10 @@ public class GamePanelManager : MonoBehaviour
                 break;
             case TomsShopGamePhase.Map:
                 mapPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.TurnEndSummary:
+                turnEndSummaryPanel.SetActive(true);
+                commonPanel.SetActive(true);
                 break;
         }
     }
