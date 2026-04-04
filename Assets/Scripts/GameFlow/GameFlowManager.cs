@@ -17,6 +17,7 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly HeroModel _heroModel;
     private readonly EventInputData _eventInputData;
     private readonly EventOutputData _eventOutputData;
+    private readonly PendingEventData _pendingEventData;
     private int _currentIndex;
 
     /// <summary>
@@ -32,7 +33,8 @@ public class GameFlowManager : IDisposable, IStartable
     public GameFlowManager(StateManager stateManager, DungeonRepository dungeonRepository, BattleInputData battleInputData,
         ItemModel itemModel, ShopEconomySettings economySettings, TomsModel tomsModel,
         SceneTransitionService sceneTransition, HeroModel heroModel,
-        EventInputData eventInputData, EventOutputData eventOutputData)
+        EventInputData eventInputData, EventOutputData eventOutputData,
+        PendingEventData pendingEventData)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -44,6 +46,7 @@ public class GameFlowManager : IDisposable, IStartable
         _heroModel = heroModel;
         _eventInputData = eventInputData;
         _eventOutputData = eventOutputData;
+        _pendingEventData = pendingEventData;
         _currentIndex = 0;
     }
 
@@ -164,7 +167,9 @@ public class GameFlowManager : IDisposable, IStartable
     }
 
     /// <summary>
-    /// Eventノードを処理する。ターンは進めずEventSceneへ遷移する。
+    /// Eventノードを処理する。ターンは進めない。
+    /// UseInlineEventPopup=true の場合、PendingEventDataにセットしてTomsShop内ポップアップで表示する。
+    /// UseInlineEventPopup=false の場合、EventSceneへシーン遷移する（将来用）。
     /// </summary>
     private void ProcessEventNode(GameFlowNode node)
     {
@@ -185,8 +190,20 @@ public class GameFlowManager : IDisposable, IStartable
             return;
         }
 
+        // --- インラインポップアップモード（TomsShop内で表示）---
+        if (_pendingEventData.UseInlineEventPopup)
+        {
+            Debug.Log($"[GameFlowManager] Inline event popup: {eventId}. Storing as pending event.");
+            _pendingEventData.Set(tomsEvent, _currentIndex);
+
+            // ターンを進めずに次のフローノードへ進む
+            // 次がShopノードならTomsShopのEntryでポップアップが表示される
+            NextTurn();
+            return;
+        }
+
+        // --- EventSceneモード（将来用：シーン遷移して表示）---
         // EventInputData にデータを書き込み
-        // コマンドデータはCSVから再ロードするのでCommandsJsonは空でよい
         _eventInputData.Setup(
             tomsEvent.id,
             tomsEvent.title,

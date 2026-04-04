@@ -6,25 +6,32 @@ using VContainer.Unity;
 /// TomsShop シーン復帰時に EventOutputData を読み取り、
 /// イベント結果を処理するハンドラ。
 /// イベント後はターンを進めず、次のGameFlowノードへ進む。
+/// インラインポップアップモード時はスキップする（TomsShopPresenterが処理するため）。
 /// </summary>
 public class EventResultHandler : IStartable, IDisposable
 {
     private readonly EventOutputData _outputData;
     private readonly EventInputData _inputData;
     private readonly GameFlowManager _gameFlowManager;
+    private readonly PendingEventData _pendingEventData;
 
     public EventResultHandler(
         EventOutputData outputData,
         EventInputData inputData,
-        GameFlowManager gameFlowManager)
+        GameFlowManager gameFlowManager,
+        PendingEventData pendingEventData)
     {
         _outputData = outputData;
         _inputData = inputData;
         _gameFlowManager = gameFlowManager;
+        _pendingEventData = pendingEventData;
     }
 
     public void Start()
     {
+        // インラインポップアップモードの場合はEventScene経由の結果処理は不要
+        if (_pendingEventData.UseInlineEventPopup) return;
+
         // イベント結果がない場合（初回起動時など）はスキップ
         if (!_outputData.HasResult) return;
 

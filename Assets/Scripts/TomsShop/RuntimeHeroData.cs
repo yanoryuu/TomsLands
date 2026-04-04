@@ -77,6 +77,11 @@ public class RuntimeHeroData
     /// </summary>
     public static RuntimeHeroData CreateFromSaveData(HeroSaveData save)
     {
+        if (save == null)
+        {
+            UnityEngine.Debug.LogWarning("[RuntimeHeroData] HeroSaveData が null です。デフォルト値を使用します。");
+            return CreateDefault();
+        }
         return new RuntimeHeroData(
             level: save.level,
             hp: save.hp,

@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
 using R3;
+using UnityEngine;
 using VContainer.Unity;
 
 public class TomsShopPresenter : IDisposable, IPresenter, IStartable
@@ -13,6 +16,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly StateManager stateManager;
     private readonly GameFlowManager gameFlowManager;
     private readonly TurnEndSummaryPresenter turnEndSummaryPresenter;
+    private readonly PendingEventData pendingEventData;
+    private readonly EventView eventView;
+    private readonly TomsEventExecutor tomsEventExecutor;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -22,7 +28,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         CommonView commonView,
         StateManager stateManager,
         GameFlowManager gameFlowManager,
-        TurnEndSummaryPresenter turnEndSummaryPresenter)
+        TurnEndSummaryPresenter turnEndSummaryPresenter,
+        PendingEventData pendingEventData,
+        EventView eventView,
+        TomsEventExecutor tomsEventExecutor,
+        GamePanelManager gamePanelManager)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -32,6 +42,12 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.stateManager = stateManager;
         this.gameFlowManager = gameFlowManager;
         this.turnEndSummaryPresenter = turnEndSummaryPresenter;
+        this.pendingEventData = pendingEventData;
+        this.eventView = eventView;
+        this.tomsEventExecutor = tomsEventExecutor;
+        
+        // EventViewにGamePanelManagerを注入
+        eventView.Initialize(gamePanelManager);
         
         stateManager.RegisterOnEnter(TomsShopGamePhase.Shop,Entry);
     }
@@ -83,12 +99,20 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Skip(1)
             .Subscribe(turn => tomsShopView.ShowTurnAnnounce(turn))
             .AddTo(disposables);
+
+        // イベントポップアップの確認ボタン押下時
+        eventView.OnConfirmClicked
+            .Subscribe(_ => OnEventPopupConfirmed())
+            .AddTo(disposables);
     }
     
     public void Entry()
     {
         //ここにこの画面に移動した時にここを呼び出す。
         Initialize();
+        
+        // 保留イベントがあればポップアップを表示
+        ShowPendingEventIfExists();
     }
     
     //初期化
@@ -97,6 +121,79 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // tomsShopView.Initialize();
         // tomsShopModel.Initialize();
         // itemSelectionPresenter.Initialize();
+    }
+
+    /// <summary>
+    /// 保留中のイベントがあればポップアップを表示する
+    /// </summary>
+    private void ShowPendingEventIfExists()
+    {
+        if (!pendingEventData.HasPendingEvent) return;
+
+        var tomsEvent = pendingEventData.PendingEvent;
+        Debug.Log($"[TomsShopPresenter] Showing pending event popup: {tomsEvent.title}");
+
+        // エフェクトテキストを構築
+        string effectText = BuildEffectText(tomsEvent.commands);
+
+        // ポップアップを表示
+        eventView.ShowEvent(tomsEvent.title, tomsEvent.description, effectText);
+    }
+
+    /// <summary>
+    /// イベントポップアップの確認ボタンが押された時の処理
+    /// </summary>
+    private void OnEventPopupConfirmed()
+    {
+        if (!pendingEventData.HasPendingEvent) return;
+
+        var tomsEvent = pendingEventData.PendingEvent;
+        Debug.Log($"[TomsShopPresenter] Event popup confirmed: {tomsEvent.title}");
+
+        // コマンドを実行
+        tomsEventExecutor.Execute(tomsEvent);
+
+        // 保留データをクリア
+        pendingEventData.Clear();
+    }
+
+    /// <summary>
+    /// コマンドの効果をテキストとして構築する
+    /// </summary>
+    private string BuildEffectText(List<TomsEventCommand> commands)
+    {
+        var sb = new StringBuilder();
+
+        foreach (var cmd in commands)
+        {
+            switch (cmd.command)
+            {
+                case "ChangeMoney":
+                    if (cmd.parameters.TryGetValue("amount", out var moneyStr))
+                    {
+                        int amount = int.Parse(moneyStr);
+                        sb.AppendLine(amount >= 0 ? $"所持金 +{amount}G" : $"所持金 {amount}G");
+                    }
+                    break;
+
+                case "ChangeTrust":
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr))
+                    {
+                        float trustAmount = float.Parse(trustStr);
+                        sb.AppendLine(trustAmount >= 0 ? $"信頼度 +{trustAmount}" : $"信頼度 {trustAmount}");
+                    }
+                    break;
+
+                case "AddItem":
+                    if (cmd.parameters.TryGetValue("itemId", out var itemId))
+                    {
+                        sb.AppendLine($"アイテム獲得: {itemId}");
+                    }
+                    break;
+            }
+        }
+
+        return sb.ToString().TrimEnd();
     }
 
     //陳列画面を表示

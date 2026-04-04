@@ -16,6 +16,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private MapView mapView;
     [SerializeField] private MapInfoView mapInfoView;
     [SerializeField] private TurnEndSummaryView turnEndSummaryView;
+    [SerializeField] private EventView eventView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -97,6 +98,12 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<BlackSmithModel>(Lifetime.Singleton);
         builder.Register<StateManager>(Lifetime.Singleton);
 
+        // イベント関連
+        builder.Register<PendingEventData>(Lifetime.Singleton);
+        builder.Register<TomsEventExecutor>(Lifetime.Singleton);
+        builder.Register<DarkShopManager>(Lifetime.Singleton);
+        builder.Register<EventFragManager>(Lifetime.Singleton);
+
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
@@ -112,6 +119,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, mapView, nameof(mapView));
         RegisterComponentSafe(builder, mapInfoView, nameof(mapInfoView));
         RegisterComponentSafe(builder, turnEndSummaryView, nameof(turnEndSummaryView));
+        RegisterComponentSafe(builder, eventView, nameof(eventView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
