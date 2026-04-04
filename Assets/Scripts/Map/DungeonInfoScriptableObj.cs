@@ -57,14 +57,46 @@ public class DungeonInfoScriptableObj : ScriptableObject
 
 
     // ----------------------
-    // 敵データ
+    // 敵データ（レベル別）
     // ----------------------
-    [Header("敵データ")]
-    [Tooltip("出現するモンスター一覧")]
-    public List<EnemyData> dungeonMonsters;
+    [Header("敵データ（レベル別）")]
+    [Tooltip("レベル1～5ごとの出現モンスター・ボスデータ")]
+    public DungeonLevelData[] levelDataList = new DungeonLevelData[5];
 
-    [Tooltip("ダンジョンのボス名")]
-    public string dungeonBoss;
+    /// <summary>
+    /// 指定レベル（1～5）のデータを取得する。範囲外はクランプ。
+    /// </summary>
+    public DungeonLevelData GetLevelData(int level)
+    {
+        int index = Mathf.Clamp(level, 1, 5) - 1;
+        if (levelDataList == null || levelDataList.Length == 0) return null;
+        if (index >= levelDataList.Length) return null;
+        return levelDataList[index];
+    }
+
+    /// <summary>
+    /// 現在レベルのモンスター一覧（後方互換プロパティ）
+    /// </summary>
+    public List<EnemyData> dungeonMonsters
+    {
+        get
+        {
+            var data = GetLevelData(currentDungeonLevel);
+            return data?.monsters ?? new List<EnemyData>();
+        }
+    }
+
+    /// <summary>
+    /// 現在レベルのボス名（後方互換プロパティ）
+    /// </summary>
+    public string dungeonBoss
+    {
+        get
+        {
+            var data = GetLevelData(currentDungeonLevel);
+            return data?.bossName ?? "";
+        }
+    }
 
 
     // ----------------------

@@ -52,16 +52,7 @@ public class HeroModel
 
     public void LoadHeroData()
     {
-        string path = Application.persistentDataPath + "/heroData.json";
-        if (!File.Exists(path))
-        {
-            InitializeRuntimeHeroFromMaster();
-            return;
-        }
-        string json = File.ReadAllText(path);
-        var saveData = JsonUtility.FromJson<HeroSaveData>(json);
-        heroData = RuntimeHeroData.CreateFromSaveData(saveData);
-        Debug.Log($"[HeroModel] Hero data loaded from JSON. Lv={saveData.level}, HP={saveData.hp}, AT={saveData.attackPower}, DF={saveData.defensePower}");
+        InitializeRuntimeHeroFromMaster();
     }
 
     public void InitializeRuntimeHeroFromMaster()

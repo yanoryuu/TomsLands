@@ -25,7 +25,7 @@ MonoBehaviour:
   dungeonMonsters:
   - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
   - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-  dungeonBoss: 
+  dungeonBoss: jungle5
   currentDungeonLevel: 1
   rewardGold: 0
   dungeonStatus: 2

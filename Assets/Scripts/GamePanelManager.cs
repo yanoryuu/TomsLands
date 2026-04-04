@@ -11,6 +11,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject endPhasePanel;
     [SerializeField] private GameObject commonPanel;
     [SerializeField] private GameObject turnEndSummaryPanel;
+    [SerializeField] private GameObject eventPanel;
 
     /// <summary>
     /// 全パネルを非表示にする
@@ -26,6 +27,7 @@ public class GamePanelManager : MonoBehaviour
         settingPanel.SetActive(false);
         commonPanel.SetActive(false);
         turnEndSummaryPanel.SetActive(false);
+        eventPanel.SetActive(false);
     }
 
     /// <summary>
@@ -88,4 +90,25 @@ public class GamePanelManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// イベントポップアップパネルを表示する
+    /// </summary>
+    public void ShowEventPanel()
+    {
+        if (eventPanel != null)
+        {
+            eventPanel.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// イベントポップアップパネルを非表示にする
+    /// </summary>
+    public void HideEventPanel()
+    {
+        if (eventPanel != null)
+        {
+            eventPanel.SetActive(false);
+        }
+    }
 }

@@ -1,4 +1,4 @@
-﻿﻿using Cysharp.Threading.Tasks;
+﻿﻿﻿using Cysharp.Threading.Tasks;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
@@ -47,6 +47,10 @@ public class BattleFlowManager
             await uiView.AddLogAsync($"--- ターン {turnCount} ---", token);
 
             await executor.ExecuteTurnActionsAsync(uiView, token);
+
+            // 戦闘が決着していたら、増援スポーンや売買処理をスキップして即結果へ
+            if (executor.IsBattleEnded()) break;
+
             await executor.EvaluateEndOfTurnAsync(factory, uiView, sequencer, token);
 
             // 毎ターン売買を実行（売り場に出ているアイテムのみ対象）
