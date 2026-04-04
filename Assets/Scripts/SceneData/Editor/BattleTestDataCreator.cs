@@ -34,15 +34,32 @@ public static class BattleTestDataCreator
             var so = AssetDatabase.LoadAssetAtPath<DungeonInfoScriptableObj>(path);
             if (so == null) continue;
 
-            if (so.dungeonMonsters == null || so.dungeonMonsters.Count == 0)
+            // levelDataList を初期化（nullや空なら5要素で確保）
+            if (so.levelDataList == null || so.levelDataList.Length < 5)
             {
-                so.dungeonMonsters = new List<EnemyData>(normalEnemies);
-                // ボスも追加
-                so.dungeonMonsters.Add(boss);
-                so.dungeonBoss = boss.enemyName;
+                so.levelDataList = new DungeonLevelData[5];
+            }
+
+            bool needsUpdate = false;
+            for (int lv = 0; lv < 5; lv++)
+            {
+                if (so.levelDataList[lv] == null)
+                    so.levelDataList[lv] = new DungeonLevelData();
+
+                if (so.levelDataList[lv].monsters == null || so.levelDataList[lv].monsters.Count == 0)
+                {
+                    so.levelDataList[lv].monsters = new List<EnemyData>(normalEnemies);
+                    so.levelDataList[lv].monsters.Add(boss);
+                    so.levelDataList[lv].bossName = boss.enemyName;
+                    needsUpdate = true;
+                }
+            }
+
+            if (needsUpdate)
+            {
                 EditorUtility.SetDirty(so);
                 updated++;
-                Debug.Log($"[BattleTestDataCreator] Updated dungeon: {so.key} ({so.dungeonName}) with {so.dungeonMonsters.Count} enemies");
+                Debug.Log($"[BattleTestDataCreator] Updated dungeon: {so.key} ({so.dungeonName}) with level-based enemy data");
             }
         }
 

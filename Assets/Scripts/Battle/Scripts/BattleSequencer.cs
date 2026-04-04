@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿﻿using UnityEngine;
 using Cysharp.Threading.Tasks;
 using R3;
 using System.Collections.Generic;
@@ -52,11 +52,28 @@ public class BattleSequencer : MonoBehaviour
 
     private async UniTaskVoid BattleStartAsync(HeroModel heroModel, CancellationToken token)
     {
-        // ★ ここで戦闘ルールをContextに渡す
-        battleContext = new BattleContext(currentDungeon, totalNormalEnemies, maxConcurrentEnemies);
-        var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController);
+        try
+        {
+            // ★ ここで戦闘ルールをContextに渡す
+            battleContext = new BattleContext(currentDungeon, totalNormalEnemies, maxConcurrentEnemies);
+            var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController);
 
-        await flowManager.ExecuteBattleAsync(heroModel, token);
-        Debug.Log("戦闘が終了しました。 (BattleSequencer)");
+            await flowManager.ExecuteBattleAsync(heroModel, token);
+            Debug.Log("戦闘が終了しました。 (BattleSequencer)");
+        }
+        catch (System.OperationCanceledException)
+        {
+            // シーン破棄による正常キャンセル
+            Debug.Log("[BattleSequencer] 戦闘がキャンセルされました。");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[BattleSequencer] 戦闘中に例外が発生しました: {ex}");
+
+            // 例外時でも結果を通知して、リザルト画面→シーン遷移が行われるようにする
+            var weaponId = heroModel.EquippedItemIds.Count > 0 ? heroModel.EquippedItemIds[0] : "";
+            var armorId  = heroModel.EquippedItemIds.Count > 1 ? heroModel.EquippedItemIds[1] : "";
+            OnBattleDefeat.OnNext((weaponId, armorId));
+        }
     }
 }

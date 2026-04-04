@@ -1,4 +1,4 @@
-﻿using Cysharp.Threading.Tasks;
+﻿﻿using Cysharp.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -27,31 +27,32 @@ public class BattleActionExecutor
 
         foreach (var presenter in turnOrder)
         {
+            // 戦闘が既に決着している場合は即座にループを抜ける
+            if (IsBattleEnded()) break;
+
             if (presenter.GetModel().IsDead) continue;
 
             var targetPresenter = GetAttackTarget(presenter);
-            if (targetPresenter != null)
+            // ターゲットが既に死亡している場合はスキップ
+            if (targetPresenter == null || targetPresenter.GetModel().IsDead) continue;
+
+            int damageDealt = presenter.PerformAttack(targetPresenter);
+            string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
+            await uiView.AddLogAsync(logMessage, token);
+
+            // HPが0以下になった時点で即座に点滅→非表示
+            if (targetPresenter.GetModel().IsDead)
             {
-                int damageDealt = presenter.PerformAttack(targetPresenter);
-                string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
-                await uiView.AddLogAsync(logMessage, token);
-
-                // HPが0以下になった時点で即座に点滅→非表示
-                if (targetPresenter.GetModel().IsDead)
+                await uiView.AddLogAsync($"{targetPresenter.GetModel().Name} を倒した！", token);
+                
+                // 敵が倒された場合、撃破イベントを発火（属性相性による価格変動に使用）
+                if (targetPresenter.GetModel().Type == CharacterType.Enemy)
                 {
-                    await uiView.AddLogAsync($"{targetPresenter.GetModel().Name} を倒した！", token);
-                    
-                    // 敵が倒された場合、撃破イベントを発火（属性相性による価格変動に使用）
-                    if (targetPresenter.GetModel().Type == CharacterType.Enemy)
-                    {
-                        sequencer.OnEnemyDefeated.OnNext(targetPresenter.GetModel());
-                    }
-                    
-                    await targetPresenter.GetView().PlayDeathEffectAsync(token);
+                    sequencer.OnEnemyDefeated.OnNext(targetPresenter.GetModel());
                 }
+                
+                await targetPresenter.GetView().PlayDeathEffectAsync(token);
             }
-
-            if (IsBattleEnded()) break;
         }
     }
 
