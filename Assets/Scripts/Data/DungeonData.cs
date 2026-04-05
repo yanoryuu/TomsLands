@@ -71,9 +71,32 @@ public class DungeonData
     // 進行状況・報酬
     // ----------------------
     public int currentDungeonLevel;   // 周回・進行度
-    public int rewardGold;            // 魔王軍勝利時の報酬
     public DungeonStatus dungeonStatus; // 未攻略 / クリア / 失敗 など
     public bool isShowedInfo;           // 情報を購入済みかどうか
+
+    /// <summary>
+    /// 現在レベルの報酬ゴールド（勇者敗北時にプレイヤーが受け取る）
+    /// </summary>
+    public int rewardGold
+    {
+        get
+        {
+            var data = GetLevelData(currentDungeonLevel);
+            return data?.rewardGold ?? 0;
+        }
+    }
+
+    /// <summary>
+    /// 現在レベルから次レベルへのレベルアップ費用。最大レベル時は 0。
+    /// </summary>
+    public int levelUpCost
+    {
+        get
+        {
+            var data = GetLevelData(currentDungeonLevel);
+            return data?.levelUpCost ?? 0;
+        }
+    }
 
     // ----------------------
     // ScriptableObject からの注入
@@ -110,7 +133,9 @@ public class DungeonData
                         monsters = src.monsters != null
                             ? new List<EnemyData>(src.monsters)
                             : new List<EnemyData>(),
-                        bossName = src.bossName
+                        bossName = src.bossName,
+                        rewardGold = src.rewardGold,
+                        levelUpCost = src.levelUpCost
                     };
                 }
                 else
@@ -126,9 +151,8 @@ public class DungeonData
                 levelDataList[i] = new DungeonLevelData();
         }
 
-        currentDungeonLevel = so.currentDungeonLevel;
-        rewardGold          = so.rewardGold;
-        dungeonStatus       = so.dungeonStatus;
+        currentDungeonLevel = so.initDungeonLevel;
+        dungeonStatus       = DungeonStatus.Still; // 初期状態は未攻略
         
         // マップに表示するかどうかは、初期状態では false に設定
         isShowedInfo        = false;

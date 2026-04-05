@@ -29,6 +29,7 @@ public class StreamingSettingPresenter : IDisposable
 
     /// <summary>
     /// 品出し設定画面を表示し、確定ボタンが押されるまで待機する。
+    /// パネルの表示/非表示は BattlePanelManager が管理するため、ここでは制御しない。
     /// 戻り値: 選択されたアイテムの辞書 (itemId → quantity)
     /// </summary>
     public async UniTask<IReadOnlyDictionary<string, int>> RunAsync()
@@ -37,12 +38,10 @@ public class StreamingSettingPresenter : IDisposable
 
         Bind();
         Entry();
-        _view.Show();
 
         // 確定ボタンが押されるまで待機
         await _confirmTcs.Task;
 
-        _view.Hide();
 
         return _model.Selected;
     }

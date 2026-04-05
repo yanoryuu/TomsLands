@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GameConst : MonoBehaviour
 {
-    public const int MaxDungeonLevel = 10;
+    public const int MaxDungeonLevel = 5;
     
     public const int MaxBlackSmithLevel = 5;
     

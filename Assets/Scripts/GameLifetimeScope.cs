@@ -17,6 +17,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private MapInfoView mapInfoView;
     [SerializeField] private TurnEndSummaryView turnEndSummaryView;
     [SerializeField] private EventView eventView;
+    [SerializeField] private DungeonLevelUpView dungeonLevelUpView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -120,6 +121,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, mapInfoView, nameof(mapInfoView));
         RegisterComponentSafe(builder, turnEndSummaryView, nameof(turnEndSummaryView));
         RegisterComponentSafe(builder, eventView, nameof(eventView));
+        RegisterComponentSafe(builder, dungeonLevelUpView, nameof(dungeonLevelUpView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -128,6 +130,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<TurnEndSummaryPresenter>().AsSelf();
         builder.RegisterEntryPoint<TomsShopPresenter>();
         builder.RegisterEntryPoint<MapPresenter>();
+        builder.RegisterEntryPoint<DungeonLevelUpPresenter>();
         builder.RegisterEntryPoint<CommonPresenter>();
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>().AsSelf();

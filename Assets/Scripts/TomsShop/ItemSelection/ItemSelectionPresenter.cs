@@ -87,6 +87,7 @@ public class ItemSelectionPresenter :IDisposable,IStartable
             itemdata.Stock.Subscribe(x =>
                 {
                     slot.SetMaxDisplayQuantity(x);
+                    slot.SetStock(x);
                 })
                 .AddTo(disposables);
             
@@ -131,7 +132,7 @@ public class ItemSelectionPresenter :IDisposable,IStartable
 
     private void SetRuntimeItems()
     {
-        var isStockRuntimeItems = itemModel.PickItemRuntimeListForStock(itemModel.RuntimeItems);
+        var isStockRuntimeItems = itemModel.PickItemRuntimeListForStock(itemModel.RuntimeItems, minStock: 1);
 
         var armorRuntimeItems = itemModel.PickItemRuntimeList(isStockRuntimeItems, ItemTypeData.ItemType.Armor,
             tomsModel.BlacksmithLevel.Value);

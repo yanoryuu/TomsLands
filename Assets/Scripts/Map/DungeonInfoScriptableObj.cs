@@ -74,46 +74,7 @@ public class DungeonInfoScriptableObj : ScriptableObject
         return levelDataList[index];
     }
 
-    /// <summary>
-    /// 現在レベルのモンスター一覧（後方互換プロパティ）
-    /// </summary>
-    public List<EnemyData> dungeonMonsters
-    {
-        get
-        {
-            var data = GetLevelData(currentDungeonLevel);
-            return data?.monsters ?? new List<EnemyData>();
-        }
-    }
-
-    /// <summary>
-    /// 現在レベルのボス名（後方互換プロパティ）
-    /// </summary>
-    public string dungeonBoss
-    {
-        get
-        {
-            var data = GetLevelData(currentDungeonLevel);
-            return data?.bossName ?? "";
-        }
-    }
-
-
     // ----------------------
-    // プレイ進行状況
+    // 魔王軍が勝った時の報酬（※レベルごとに DungeonLevelData.rewardGold で設定）
     // ----------------------
-    [Header("進行状況")]
-    [Tooltip("現在のダンジョンレベル（周回や進行度で変化）")]
-    public int currentDungeonLevel;
-    
-    // ----------------------
-    // 魔王軍が勝った時の報酬
-    // ----------------------
-    [Header("魔王軍勝利時の報酬")]
-    [Tooltip("魔王軍勝利時の報酬(プレイヤーの支援によって増減")]
-    public int rewardGold;
-    
-    [Header("ダンジョンの状態(クリア、失敗、未攻略")]
-    [Tooltip("ダンジョンの状態(クリア、失敗、未攻略")]
-    public DungeonStatus dungeonStatus;
 }

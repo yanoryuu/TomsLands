@@ -36,11 +36,11 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
 
     public void Start()
     {
-        // 確認ボタンが押されたらShopフェーズに戻してNextTurnを実行
+        // 確認ボタンが押されたらNextTurnを実行
+        // （NextTurn内でChangeTomsShopPhaseが呼ばれ、Shop画面のEntry()が発火する）
         view.OnConfirmClicked
             .Subscribe(_ =>
             {
-                stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
                 gameFlowManager.NextTurn();
             })
             .AddTo(disposables);

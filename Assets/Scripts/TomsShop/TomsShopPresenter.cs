@@ -84,6 +84,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Map))
             .AddTo(disposables);
         
+        //　ダンジョンレベルアップボタン
+        tomsShopView.OnDungeonLevelUpClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.DungeonLevelUp))
+            .AddTo(disposables);
+        
         //　次のターンに進むボタン → サマリーパネルを表示
         tomsShopView.OnNextTurnClicked
             .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())

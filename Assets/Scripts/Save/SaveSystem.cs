@@ -22,7 +22,8 @@ public static class SaveSystem
             game.dungeons.Add(new DungeonSaveData
             {
                 dungeonKey = d.dungeonName,
-                currentDungeonLevel = d.currentDungeonLevel
+                currentDungeonLevel = d.currentDungeonLevel,
+                dungeonStatus = d.dungeonStatus
             });
         }
 

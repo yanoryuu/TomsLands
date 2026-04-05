@@ -22,11 +22,25 @@ MonoBehaviour:
   recommendedLevel: 5
   difficulty: 5
   requiredAttribute: 0
-  dungeonMonsters:
-  - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-  - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-  - {fileID: 11400000, guid: f12c359ffd8a3a54db9186a0d78be1cf, type: 2}
-  dungeonBoss: 
-  currentDungeonLevel: 1
-  rewardGold: 0
+  levelDataList:
+  - monsters: []
+    bossName: 
+    rewardGold: 0
+    levelUpCost: 0
+  - monsters: []
+    bossName: 
+    rewardGold: 0
+    levelUpCost: 0
+  - monsters: []
+    bossName: 
+    rewardGold: 0
+    levelUpCost: 0
+  - monsters: []
+    bossName: 
+    rewardGold: 0
+    levelUpCost: 0
+  - monsters: []
+    bossName: 
+    rewardGold: 0
+    levelUpCost: 0
   dungeonStatus: 2

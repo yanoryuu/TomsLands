@@ -6,6 +6,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 配信リザルト画面。勝敗・売上サマリーを表示し、確認ボタンで次へ進む。
+/// パネルの表示/非表示は BattlePanelManager が管理する。
 /// </summary>
 public class BattleResultView : MonoBehaviour
 {
@@ -22,11 +23,12 @@ public class BattleResultView : MonoBehaviour
         {
             confirmButton.onClick.AddListener(OnConfirmClicked);
         }
-        gameObject.SetActive(false);
+        // パネルの表示/非表示は BattlePanelManager が管理するため、ここでは制御しない
     }
 
     /// <summary>
-    /// リザルト画面を表示し、確認ボタンが押されるまで待機する。
+    /// リザルト画面のコンテンツを設定し、確認ボタンが押されるまで待機する。
+    /// パネルの表示/非表示は BattlePanelManager が事前に行う。
     /// </summary>
     public async UniTask ShowResultAsync(BattleResult result, List<BattleOutputSoldItem> soldItems)
     {
@@ -54,12 +56,8 @@ public class BattleResultView : MonoBehaviour
             resultDetailText.text = $"販売数: {totalSold} 個\n売上: {totalRevenue} G";
         }
 
-        gameObject.SetActive(true);
-
         // 確認ボタン待ち
         await _confirmTcs.Task;
-
-        gameObject.SetActive(false);
     }
 
     private void OnConfirmClicked()

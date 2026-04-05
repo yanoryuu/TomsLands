@@ -84,13 +84,13 @@ public class BattleFlowManager
             return;
         }
 
-        if (context.CurrentStage.dungeonMonsters == null || context.CurrentStage.dungeonMonsters.Count == 0)
+        if (context.DungeonMonsters == null || context.DungeonMonsters.Count == 0)
         {
-            Debug.LogError($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' (key={context.CurrentStage.key}) の dungeonMonsters が空です！Unity メニュー Tools > Battle > Setup Test Enemies を実行してテストデータを追加してください。");
+            Debug.LogError($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' (key={context.CurrentStage.key}) のモンスターデータが見つかりません。ダンジョンSOの Inspector で levelDataList を設定するか、Resources/EnemyData に EnemyData アセットを配置してください。");
             return;
         }
 
-        Debug.Log($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' にモンスター {context.CurrentStage.dungeonMonsters.Count} 種、ボス '{context.CurrentStage.dungeonBoss}' を検出。");
+        Debug.Log($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' にモンスター {context.DungeonMonsters.Count} 種、ボス '{context.DungeonBoss}' を検出。");
 
         int initialSpawnCount = Mathf.Min(context.MaxConcurrentEnemies, context.TotalNormalEnemies);
         for (int i = 0; i < initialSpawnCount; i++)
@@ -98,7 +98,7 @@ public class BattleFlowManager
             int? spawnIndex = context.FindEmptySpawnPoint();
             if (!spawnIndex.HasValue) continue;
 
-            var normalEnemies = context.CurrentStage.dungeonMonsters.Where(m => m.enemyName != context.CurrentStage.dungeonBoss).ToList();
+            var normalEnemies = context.DungeonMonsters.Where(m => m.enemyName != context.DungeonBoss).ToList();
             if (!normalEnemies.Any()) continue;
 
             var enemyData = normalEnemies[Random.Range(0, normalEnemies.Count)];
