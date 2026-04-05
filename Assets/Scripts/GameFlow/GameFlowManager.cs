@@ -149,8 +149,11 @@ public class GameFlowManager : IDisposable, IStartable
             _itemModel.SaveData();
 
             // BattleInputData にフロー情報を書き込み
+            var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
+            int dungeonLevel = dungeonData?.currentDungeonLevel ?? 1;
             _battleInputData.Setup(
                 node.BattleDungeon,
+                dungeonLevel,
                 new List<string>(_heroModel.EquippedItemIds),
                 new List<BattleInputItem>(),
                 _currentIndex
@@ -163,7 +166,17 @@ public class GameFlowManager : IDisposable, IStartable
 
         var nextPhase = ConvertEventToPhase(node.EventType);
         Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → phase={nextPhase}");
-        _stateManager.ChangePhase(nextPhase);
+
+        // TomsShop→TomsShop の場合、ChangePhase の同値ガードで Entry() が発火しないため
+        // ChangeTomsShopPhase を使って ForceNotify で確実に Entry() を呼ぶ
+        if (nextPhase == GamePhase.TomsShop)
+        {
+            _stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
+        }
+        else
+        {
+            _stateManager.ChangePhase(nextPhase);
+        }
     }
 
     /// <summary>

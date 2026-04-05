@@ -12,6 +12,9 @@ public class BattleInputData : ScriptableObject
     [Header("ダンジョン情報")]
     public DungeonName DungeonKey;
 
+    [Tooltip("現在のダンジョンレベル（1～5）")]
+    public int DungeonLevel = 1;
+
     [Header("勇者の装備")]
     public List<string> EquippedItemIds = new();
 
@@ -25,18 +28,20 @@ public class BattleInputData : ScriptableObject
     /// <summary>
     /// 戦闘前にデータを書き込む
     /// </summary>
-    public void Setup(DungeonName dungeonKey, List<string> equippedItemIds, List<BattleInputItem> selectedItems, int gameFlowIndex)
+    public void Setup(DungeonName dungeonKey, int dungeonLevel, List<string> equippedItemIds, List<BattleInputItem> selectedItems, int gameFlowIndex)
     {
         DungeonKey = dungeonKey;
+        DungeonLevel = Mathf.Clamp(dungeonLevel, 1, 5);
         EquippedItemIds = new List<string>(equippedItemIds);
         SelectedItems = new List<BattleInputItem>(selectedItems);
         GameFlowIndex = gameFlowIndex;
-        Debug.Log($"[BattleInputData] Setup: dungeon={dungeonKey}, equipped={equippedItemIds.Count}, items={selectedItems.Count}, flowIndex={gameFlowIndex}");
+        Debug.Log($"[BattleInputData] Setup: dungeon={dungeonKey}, level={DungeonLevel}, equipped={equippedItemIds.Count}, items={selectedItems.Count}, flowIndex={gameFlowIndex}");
     }
 
     public void Clear()
     {
         DungeonKey = default;
+        DungeonLevel = 1;
         EquippedItemIds.Clear();
         SelectedItems.Clear();
         GameFlowIndex = 0;

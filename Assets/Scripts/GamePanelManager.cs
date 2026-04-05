@@ -11,6 +11,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject endPhasePanel;
     [SerializeField] private GameObject commonPanel;
     [SerializeField] private GameObject turnEndSummaryPanel;
+    [SerializeField] private GameObject dungeonLevelUpPanel;
     [SerializeField] private GameObject eventPanel;
 
     /// <summary>
@@ -27,6 +28,7 @@ public class GamePanelManager : MonoBehaviour
         settingPanel.SetActive(false);
         commonPanel.SetActive(false);
         turnEndSummaryPanel.SetActive(false);
+        dungeonLevelUpPanel.SetActive(false);
         eventPanel.SetActive(false);
     }
 
@@ -82,6 +84,10 @@ public class GamePanelManager : MonoBehaviour
                 break;
             case TomsShopGamePhase.Map:
                 mapPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.DungeonLevelUp:
+                dungeonLevelUpPanel.SetActive(true);
+                commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.TurnEndSummary:
                 turnEndSummaryPanel.SetActive(true);

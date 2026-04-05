@@ -12,6 +12,7 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button StartShopButton;
     [SerializeField] private Button MapButton;
     [SerializeField] private Button NextTurnButton;
+    [SerializeField] private Button DungeonLevelUpButton;
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     
     //鍛冶屋を開く
@@ -26,6 +27,8 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnStartShopClicked { get; } = new();
     //マップ画面を開く
     public Subject<Unit> OnMapClicked { get; } = new();
+    //ダンジョンレベルアップ画面を開く
+    public Subject<Unit> OnDungeonLevelUpClicked { get; } = new();
     //次のターンに進む
     public Subject<Unit> OnNextTurnClicked { get; } = new();
 
@@ -37,6 +40,7 @@ public class TomsShopView : MonoBehaviour
         ToolButton.onClick.AddListener(() => OnToolClicked.OnNext(Unit.Default));
         StartShopButton.onClick.AddListener(() => OnStartShopClicked.OnNext(Unit.Default));
         MapButton.onClick.AddListener(() => OnMapClicked.OnNext(Unit.Default));
+        DungeonLevelUpButton.onClick.AddListener(() => OnDungeonLevelUpClicked.OnNext(Unit.Default));
         NextTurnButton.onClick.AddListener(() => OnNextTurnClicked.OnNext(Unit.Default));
     }
 

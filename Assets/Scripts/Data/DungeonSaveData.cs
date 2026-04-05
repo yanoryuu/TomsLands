@@ -6,6 +6,7 @@ public class DungeonSaveData
 {
     public string dungeonKey;
     public int currentDungeonLevel;
+    public DungeonStatus dungeonStatus;
 }
 
 

@@ -11,6 +11,7 @@ public class ItemSelectionSlot : MonoBehaviour
     [SerializeField] private Toggle selectToggle;
     [SerializeField] private Slider quantitySlider;
     [SerializeField] private TextMeshProUGUI quantityText;
+    [SerializeField] private TextMeshProUGUI stockText;
     [SerializeField] private Button pulusButton;
     [SerializeField] private Button minusButton;
     [SerializeField] private Button infoButton;
@@ -30,6 +31,7 @@ public class ItemSelectionSlot : MonoBehaviour
         itemIconImage.sprite = icon;
         itemNameText.text = name;
         priceText.text = $"{price} G";
+        SetStock(stock);
         
         selectToggle.onValueChanged.AddListener(isOn => OnToggleChanged.OnNext(isOn));
         quantitySlider.onValueChanged.AddListener(v => OnDisplayQuantityChanged.OnNext((int)v));
@@ -76,5 +78,11 @@ public class ItemSelectionSlot : MonoBehaviour
     public void SetSelectToggle(bool isOn)
     {
         selectToggle.isOn = isOn;
+    }
+
+    public void SetStock(int stock)
+    {
+        if (stockText != null)
+            stockText.text = $"{stock}";
     }
 }

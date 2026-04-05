@@ -8,5 +8,6 @@ public enum TomsShopGamePhase
     ToolShop,        // 道具屋：道具を仕入れる
     Broker,          // 情報屋：情報を買う
     Map,             // マップ：ダンジョン選択
+    DungeonLevelUp,  // ダンジョンレベルアップ：ダンジョンのレベルを上げる
     TurnEndSummary,  // ターン終了サマリー：売上・トレンド・次配信までの日数
 }

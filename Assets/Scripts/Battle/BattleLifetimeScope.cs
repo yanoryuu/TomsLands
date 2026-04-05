@@ -14,6 +14,9 @@ public class BattleLifetimeScope : LifetimeScope
     [SerializeField] private BattleSequencer battleSequencer;
     [SerializeField] private StreamingSalesController streamingSalesController;
 
+    [Header("パネル管理")]
+    [SerializeField] private BattlePanelManager battlePanelManager;
+
     [Header("StreamingSetting（品出し設定）")]
     [SerializeField] private StreamingSettingView streamingSettingView;
 
@@ -53,6 +56,16 @@ public class BattleLifetimeScope : LifetimeScope
 
         // BattleSequencer をコンポーネントとして登録
         builder.RegisterComponent(battleSequencer);
+
+        // BattlePanelManager をコンポーネントとして登録
+        if (battlePanelManager != null)
+        {
+            builder.RegisterComponent(battlePanelManager);
+        }
+        else
+        {
+            Debug.LogWarning("[BattleLifetimeScope] BattlePanelManager が未設定です。FightScene に BattlePanelManager を配置して Inspector で設定してください。");
+        }
 
         // StreamingSalesController をコンポーネントとして登録
         if (streamingSalesController != null)

@@ -121,7 +121,7 @@ public class BattleActionExecutor
     {
         context.IsBossPhase = true;
         await uiView.AddLogAsync("！！！不気味な気配がする！！！", token);
-        var bossData = context.CurrentStage.dungeonMonsters.FirstOrDefault(m => m.enemyName == context.CurrentStage.dungeonBoss);
+        var bossData = context.DungeonMonsters.FirstOrDefault(m => m.enemyName == context.DungeonBoss);
         if (bossData != null)
         {
             int? spawnIndex = context.FindEmptySpawnPoint(isBoss: true);
@@ -140,7 +140,7 @@ public class BattleActionExecutor
         int? spawnIndex = context.FindEmptySpawnPoint();
         if (!spawnIndex.HasValue) return false;
 
-        var normalEnemies = context.CurrentStage.dungeonMonsters.Where(m => m.enemyName != context.CurrentStage.dungeonBoss).ToList();
+        var normalEnemies = context.DungeonMonsters.Where(m => m.enemyName != context.DungeonBoss).ToList();
         if (!normalEnemies.Any()) return false;
 
         var enemyData = normalEnemies[Random.Range(0, normalEnemies.Count)];

@@ -9,6 +9,7 @@ using VContainer.Unity;
 /// <summary>
 /// FightScene の EntryPoint。
 /// StreamingSetting → Battle → Result → TomsShop の順にフェーズを制御する。
+/// パネルの表示/非表示は BattlePanelManager が一元管理する。
 /// </summary>
 public class BattleSceneStarter : IAsyncStartable
 {
@@ -21,6 +22,7 @@ public class BattleSceneStarter : IAsyncStartable
     private readonly ItemModel _itemModel;
     private readonly StreamingSettingPresenter _settingPresenter;
     private readonly BattleResultView _resultView;
+    private readonly BattlePanelManager _panelManager;
 
     public BattleSceneStarter(
         BattleSequencer battleSequencer,
@@ -31,7 +33,8 @@ public class BattleSceneStarter : IAsyncStartable
         StreamingSalesController salesController,
         ItemModel itemModel,
         StreamingSettingPresenter settingPresenter,
-        BattleResultView resultView)
+        BattleResultView resultView,
+        BattlePanelManager panelManager)
     {
         _battleSequencer = battleSequencer;
         _inputData = inputData;
@@ -42,6 +45,7 @@ public class BattleSceneStarter : IAsyncStartable
         _itemModel = itemModel;
         _settingPresenter = settingPresenter;
         _resultView = resultView;
+        _panelManager = panelManager;
     }
 
     public async UniTask StartAsync(CancellationToken cancellation)
@@ -62,6 +66,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         // --- Phase 1: StreamingSetting（品出し設定） ---
         Debug.Log("[BattleSceneStarter] Phase 1: StreamingSetting");
+        _panelManager?.ShowPanel(StreamingGamePhase.StreamingSetting);
         var selectedItems = await _settingPresenter.RunAsync();
 
         // 選択結果を BattleInputData に書き込み
@@ -81,6 +86,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         // --- Phase 2: Battle（配信中・戦闘） ---
         Debug.Log("[BattleSceneStarter] Phase 2: Battle");
+        _panelManager?.ShowPanel(StreamingGamePhase.Streaming);
         var targetDungeon = ResolveTargetDungeon();
         if (targetDungeon == null)
         {
@@ -88,7 +94,7 @@ public class BattleSceneStarter : IAsyncStartable
             return;
         }
 
-        _battleSequencer.SetDungeon(targetDungeon);
+        _battleSequencer.SetDungeon(targetDungeon, _inputData.DungeonLevel);
 
         // 勇者モデルを構築
         var heroModel = new HeroModel();
@@ -123,6 +129,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
+        _panelManager?.ShowPanel(StreamingGamePhase.StreamingResult);
         if (_resultView != null)
         {
             await _resultView.ShowResultAsync(battleResult.result, soldItems);

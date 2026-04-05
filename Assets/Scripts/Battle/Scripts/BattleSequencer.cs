@@ -19,15 +19,17 @@ public class BattleSequencer : MonoBehaviour
 
     [Header("ステージデータ")]
     [SerializeField] private DungeonInfoScriptableObj currentDungeon;
+    private int currentDungeonLevel = 1;
 
     public DungeonInfoScriptableObj CurrentDungeon => currentDungeon;
 
     /// <summary>
     /// 外部からダンジョンを設定する（GameFlowManagerから呼ばれる）
     /// </summary>
-    public void SetDungeon(DungeonInfoScriptableObj dungeon)
+    public void SetDungeon(DungeonInfoScriptableObj dungeon, int dungeonLevel = 1)
     {
         currentDungeon = dungeon;
+        currentDungeonLevel = Mathf.Clamp(dungeonLevel, 1, 5);
     }
 
     private BattleContext battleContext;
@@ -55,7 +57,7 @@ public class BattleSequencer : MonoBehaviour
         try
         {
             // ★ ここで戦闘ルールをContextに渡す
-            battleContext = new BattleContext(currentDungeon, totalNormalEnemies, maxConcurrentEnemies);
+            battleContext = new BattleContext(currentDungeon, currentDungeonLevel, totalNormalEnemies, maxConcurrentEnemies);
             var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController);
 
             await flowManager.ExecuteBattleAsync(heroModel, token);

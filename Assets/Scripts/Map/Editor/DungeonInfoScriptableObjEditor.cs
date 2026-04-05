@@ -21,9 +21,6 @@ public class DungeonInfoScriptableObjEditor : Editor
     private SerializedProperty difficultyProp;
     private SerializedProperty requiredAttributeProp;
     private SerializedProperty levelDataListProp;
-    private SerializedProperty currentDungeonLevelProp;
-    private SerializedProperty rewardGoldProp;
-    private SerializedProperty dungeonStatusProp;
 
     private void OnEnable()
     {
@@ -38,9 +35,6 @@ public class DungeonInfoScriptableObjEditor : Editor
         difficultyProp = serializedObject.FindProperty("difficulty");
         requiredAttributeProp = serializedObject.FindProperty("requiredAttribute");
         levelDataListProp = serializedObject.FindProperty("levelDataList");
-        currentDungeonLevelProp = serializedObject.FindProperty("currentDungeonLevel");
-        rewardGoldProp = serializedObject.FindProperty("rewardGold");
-        dungeonStatusProp = serializedObject.FindProperty("dungeonStatus");
     }
 
     public override void OnInspectorGUI()
@@ -98,28 +92,19 @@ public class DungeonInfoScriptableObjEditor : Editor
 
             var monstersProp = levelDataProp.FindPropertyRelative("monsters");
             var bossNameProp = levelDataProp.FindPropertyRelative("bossName");
+            var rewardGoldProp = levelDataProp.FindPropertyRelative("rewardGold");
+            var levelUpCostProp = levelDataProp.FindPropertyRelative("levelUpCost");
 
             EditorGUILayout.PropertyField(monstersProp, new GUIContent("出現モンスター"), true);
             EditorGUILayout.PropertyField(bossNameProp, new GUIContent("ボス名"));
+            EditorGUILayout.PropertyField(rewardGoldProp, new GUIContent("勇者敗北時の報酬（G）"));
+            EditorGUILayout.PropertyField(levelUpCostProp, new GUIContent("次レベルへの費用（G）"));
 
             EditorGUILayout.EndVertical();
         }
 
         EditorGUILayout.Space();
 
-        // ===== 進行状況 =====
-        EditorGUILayout.LabelField("進行状況", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(currentDungeonLevelProp);
-        EditorGUILayout.Space();
-
-        // ===== 報酬 =====
-        EditorGUILayout.LabelField("魔王軍勝利時の報酬", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(rewardGoldProp);
-        EditorGUILayout.Space();
-
-        // ===== ダンジョン状態 =====
-        EditorGUILayout.LabelField("ダンジョンの状態", EditorStyles.boldLabel);
-        EditorGUILayout.PropertyField(dungeonStatusProp);
 
         serializedObject.ApplyModifiedProperties();
     }
