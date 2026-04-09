@@ -99,6 +99,7 @@ public class BlackSmithView : MonoBehaviour
                 item.ItemId,
                 item.ItemName,
                 item.ItemIcon,
+                item.ItemBackground,
                 item.CurrentPrice.Value,
                 item.MaxStock.Value,
                 item.Stock.Value,

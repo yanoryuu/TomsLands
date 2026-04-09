@@ -73,6 +73,7 @@ public class ItemSelectionView : MonoBehaviour
             slot.SetItem(
                 item.ItemId,
                 item.ItemIcon,
+                item.ItemBackground,
                 item.ItemId,
                 item.CurrentPrice.Value,
                 item.Stock.Value

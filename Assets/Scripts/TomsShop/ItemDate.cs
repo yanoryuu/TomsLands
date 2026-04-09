@@ -14,4 +14,9 @@ public class ItemData : ScriptableObject
     public ItemTypeData.ItemType itemType;
     public ItemTypeData.ItemAttribute itemAttribute;
     public int requiredLevel = 1;
+
+    [Header("売れやすさ")]
+    [Tooltip("アイテム固有の売れやすさ倍率。1.0が標準。高いほど1ターンで多く売れる")]
+    [Range(0.1f, 5.0f)]
+    public float salesRate = 1.0f;
 }

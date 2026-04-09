@@ -75,6 +75,15 @@ public class GameLifetimeScope : LifetimeScope
         }
         builder.RegisterInstance(shopEconomySettings);
 
+        // ItemVisualSettings のロードと登録
+        var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
+        if (itemVisualSettings == null)
+        {
+            itemVisualSettings = ScriptableObject.CreateInstance<ItemVisualSettings>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/ItemVisualSettings.asset が見つかりません。Create > Settings > Item Visual Settings で作成してください。");
+        }
+        builder.RegisterInstance(itemVisualSettings);
+
         // シーン間共有データ（StartModeData）のロードと登録
         var startModeData = Resources.Load<StartModeData>("SceneData/StartModeData");
         if (startModeData == null)

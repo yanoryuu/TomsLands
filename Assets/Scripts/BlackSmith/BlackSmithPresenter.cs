@@ -107,6 +107,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 itemdata.ItemId,
                 itemdata.ItemName,
                 itemdata.ItemIcon,
+                itemdata.ItemBackground,
                 itemdata.CurrentPrice.Value,
                 itemdata.MaxStock.Value,
                 itemdata.Stock.Value,

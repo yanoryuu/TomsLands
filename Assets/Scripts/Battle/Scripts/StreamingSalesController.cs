@@ -41,9 +41,6 @@ public class StreamingSalesController : MonoBehaviour
     [SerializeField] private List<ItemSlotView> inventorySlotViews; // 在庫側のスロット（シーン上の 10 インスタンス）
     private List<RuntimeItemData> inventorySlotItemRefs = new List<RuntimeItemData>(); // 在庫スロットが参照している RuntimeItemData
 
-    [Header("BattleDemand — 基本設定")]
-    [Tooltip("1ターンに1アイテムあたり最大何個売れるか")]
-    [SerializeField] private int maxSellPerTurn = 5;
 
     [Header("BattleDemand — 案A: 属性相性で需要変動")]
     [Tooltip("有利属性の敵を撃破した時の需要UP量")]
@@ -140,9 +137,8 @@ public class StreamingSalesController : MonoBehaviour
         if (inventoryItems != null) allItems.AddRange(inventoryItems);
         _demandTracker.Initialize(allItems);
 
-        // Model に BattleDemandTracker と maxSellPerTurn を設定
+        // Model に BattleDemandTracker を設定
         _model.DemandTracker = _demandTracker;
-        _model.MaxSellPerTurn = maxSellPerTurn;
 
         _presenter = new StreamingSalesPresenter(_model, view);
         _presenter.Bind();

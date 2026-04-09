@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
@@ -8,6 +8,7 @@ using UnityEngine.EventSystems;
 public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image itemIcon;
+    [SerializeField] private Image backgroundImage;
     [SerializeField] private TMP_Text stockText;
     [SerializeField] private CanvasGroup canvasGroup;
 
@@ -70,6 +71,18 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
                 color.a = 1.0f;
                 itemIcon.color = color;
             }
+            if (backgroundImage != null)
+            {
+                if (item.ItemBackground != null)
+                {
+                    backgroundImage.sprite = item.ItemBackground;
+                    backgroundImage.enabled = true;
+                }
+                else
+                {
+                    backgroundImage.enabled = false;
+                }
+            }
             if (stockText != null)
             {
                 stockText.gameObject.SetActive(true);
@@ -79,6 +92,7 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         else
         {
             if (itemIcon != null) itemIcon.enabled = false;
+            if (backgroundImage != null) backgroundImage.enabled = false;
             if (stockText != null) stockText.gameObject.SetActive(false);
         }
 

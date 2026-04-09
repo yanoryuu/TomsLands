@@ -80,6 +80,16 @@ public class BattleLifetimeScope : LifetimeScope
         // ItemModel（マスターデータ）を構築して登録
         var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
         builder.RegisterInstance(masterItems);
+
+        // ItemVisualSettings のロードと登録
+        var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
+        if (itemVisualSettings == null)
+        {
+            itemVisualSettings = ScriptableObject.CreateInstance<ItemVisualSettings>();
+            Debug.LogWarning("[BattleLifetimeScope] Resources/ItemVisualSettings.asset が見つかりません。");
+        }
+        builder.RegisterInstance(itemVisualSettings);
+
         builder.Register<ItemModel>(Lifetime.Singleton);
 
         // シーン遷移サービス

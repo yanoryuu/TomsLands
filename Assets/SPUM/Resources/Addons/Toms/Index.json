@@ -1,0 +1,57 @@
+{
+    "Name": "Toms",
+    "Path": "Assets/SPUM/Resources/Addons",
+    "Version": "",
+    "CreationDate": "2026-04-09 14:13:57",
+    "SpumAnimationData": [],
+    "SpumTextureData": [
+        {
+            "Name": "Tom_Hair",
+            "UnitType": "Unit",
+            "PartType": "TomHairpng",
+            "SubType": "Hair",
+            "PartSubType": "",
+            "Path": "Addons/Toms/0_Unit/0_Hair/Tom_Hair"
+        },
+        {
+            "Name": "Tom_Body",
+            "UnitType": "Unit",
+            "PartType": "TomBodypng",
+            "SubType": "L_Arm",
+            "PartSubType": "",
+            "Path": "Addons/Toms/0_Unit/2_Cloth/Tom_Body"
+        },
+        {
+            "Name": "Tom_Body",
+            "UnitType": "Unit",
+            "PartType": "TomBodypng",
+            "SubType": "Body",
+            "PartSubType": "",
+            "Path": "Addons/Toms/0_Unit/2_Cloth/Tom_Body"
+        },
+        {
+            "Name": "Tom_Body",
+            "UnitType": "Unit",
+            "PartType": "TomBodypng",
+            "SubType": "R_Arm",
+            "PartSubType": "",
+            "Path": "Addons/Toms/0_Unit/2_Cloth/Tom_Body"
+        },
+        {
+            "Name": "Tom_Leg",
+            "UnitType": "Unit",
+            "PartType": "TomLegpng",
+            "SubType": "Tom_Leg",
+            "PartSubType": "",
+            "Path": "Addons/Toms/0_Unit/3_Pant/Tom_Leg"
+        },
+        {
+            "Name": "Tom_Leg",
+            "UnitType": "Unit",
+            "PartType": "TomLegpng",
+            "SubType": "R_Foot",
+            "PartSubType": "",
+            "Path": "Addons/Toms/0_Unit/3_Pant/Tom_Leg"
+        }
+    ]
+}

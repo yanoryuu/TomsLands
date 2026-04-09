@@ -22,11 +22,6 @@ public class StreamingSalesModel
     /// </summary>
     public BattleDemandTracker DemandTracker { get; set; }
 
-    /// <summary>
-    /// 1ターンに1アイテムあたり最大何個売れるか。
-    /// BattleDemand × MaxSellPerTurn で販売数が決まる。
-    /// </summary>
-    public int MaxSellPerTurn { get; set; } = 5;
 
     public Subject<Unit> OnItemsReordered { get; } = new Subject<Unit>();
 
@@ -200,8 +195,9 @@ public class StreamingSalesModel
 
     /// <summary>
     /// 商品を売る具体的な処理。
-    /// BattleDemandTracker が設定されている場合は BattleDemand に基づいて販売数量を決定する。
-    /// 設定されていない場合は既存の Demand ベースの確率判定で 1個ずつ販売する（フォールバック）。
+    /// BattleDemandTracker が設定されている場合は BattleDemand × SalesRate × DisplayStock で販売数量を決定する。
+    /// 設定されていない場合は Demand × SalesRate × DisplayStock のフォールバックで販売数を決定する。
+    /// 販売数の上限は在庫数のみで制限される。
     /// </summary>
     private void ProcessSingleItemSale(ItemModel mainItemModel, int itemIndex)
     {
@@ -211,15 +207,17 @@ public class StreamingSalesModel
             return;
         }
 
+        int displayStock = Mathf.Max(1, item.DisplayStock.Value);
+        float salesRate = item.SalesRate;
         int quantitySold;
 
         if (DemandTracker != null)
         {
-            // BattleDemand ベース: 需要度 × MaxSellPerTurn で販売数を決定
+            // BattleDemand × SalesRate × DisplayStock で販売数を決定（上限なし、在庫までClamp）
             DemandTracker.EnsureTracked(item);
             float battleDemand = DemandTracker.GetDemand(item.ItemId);
             quantitySold = Mathf.Clamp(
-                Mathf.FloorToInt(battleDemand * MaxSellPerTurn),
+                Mathf.FloorToInt(battleDemand * salesRate * displayStock),
                 0,
                 item.Stock.Value
             );
@@ -228,12 +226,15 @@ public class StreamingSalesModel
         }
         else
         {
-            // フォールバック: 既存の確率ベース判定
-            if (UnityEngine.Random.value >= Mathf.Clamp01(item.Demand.Value))
-            {
-                return;
-            }
-            quantitySold = 1;
+            // フォールバック: Demand × SalesRate × DisplayStock で販売数を決定
+            float demand = Mathf.Clamp01(item.Demand.Value);
+            quantitySold = Mathf.Clamp(
+                Mathf.FloorToInt(demand * salesRate * displayStock),
+                0,
+                item.Stock.Value
+            );
+
+            if (quantitySold <= 0) return;
         }
 
         int earnings = quantitySold * item.CurrentPrice.Value;
@@ -269,6 +270,6 @@ public class StreamingSalesModel
             DemandTracker.RecordSale(item.ItemId);
         }
 
-        Debug.Log($"[販売] {item.ItemId} × {quantitySold}個 = {earnings}G (BattleDemand={DemandTracker?.GetDemand(item.ItemId):F2})");
+        Debug.Log($"[販売] {item.ItemId} × {quantitySold}個 = {earnings}G (BattleDemand={DemandTracker?.GetDemand(item.ItemId):F2}, SalesRate={salesRate:F2}, DisplayStock={displayStock})");
     }
 }

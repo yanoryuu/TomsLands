@@ -8,6 +8,7 @@ using TMPro;
 public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;
+    [SerializeField] private Image backgroundImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI amountText;
     [SerializeField] private Slider qtySlider;
@@ -22,10 +23,22 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
     /// <summary>
     /// 初期化。アイコン、表示名、初期数量、在庫上限を設定。
     /// </summary>
-    public void Initialize(string itemId, Sprite sprite, string displayName, int initialQty, int maxQty)
+    public void Initialize(string itemId, Sprite sprite, Sprite background, string displayName, int initialQty, int maxQty)
     {
         _itemId = itemId;
         icon.sprite = sprite;
+        if (backgroundImage != null)
+        {
+            if (background != null)
+            {
+                backgroundImage.sprite = background;
+                backgroundImage.enabled = true;
+            }
+            else
+            {
+                backgroundImage.enabled = false;
+            }
+        }
         if (nameText != null) nameText.text = displayName;
 
         // スライダー設定

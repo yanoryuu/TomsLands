@@ -2,7 +2,7 @@
     "Name": "Ver300",
     "Path": "Assets/SPUM/Resources/Addons",
     "Version": "",
-    "CreationDate": "2024-09-20 16:37:48",
+    "CreationDate": "2026-04-09 14:21:01",
     "SpumAnimationData": [
         {
             "index": 0,
@@ -439,6 +439,14 @@
             "Name": "New_Cloth_11",
             "UnitType": "Unit",
             "PartType": "Cloth",
+            "SubType": "Right",
+            "PartSubType": "",
+            "Path": "Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11"
+        },
+        {
+            "Name": "New_Cloth_11",
+            "UnitType": "Unit",
+            "PartType": "Cloth",
             "SubType": "Body",
             "PartSubType": "",
             "Path": "Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11"
@@ -448,14 +456,6 @@
             "UnitType": "Unit",
             "PartType": "Cloth",
             "SubType": "Left",
-            "PartSubType": "",
-            "Path": "Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11"
-        },
-        {
-            "Name": "New_Cloth_11",
-            "UnitType": "Unit",
-            "PartType": "Cloth",
-            "SubType": "Right",
             "PartSubType": "",
             "Path": "Addons/Ver300/0_Unit/0_Sprite/4_Cloth/New_Cloth_11"
         },

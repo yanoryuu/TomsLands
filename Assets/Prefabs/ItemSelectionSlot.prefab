@@ -1626,6 +1626,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   itemIconImage: {fileID: 4660175465148540716}
+  backgroundImage: {fileID: 7411438930716211346}
   itemNameText: {fileID: 3955320961639262602}
   priceText: {fileID: 4263095691205557426}
   selectToggle: {fileID: 963637838928208504}

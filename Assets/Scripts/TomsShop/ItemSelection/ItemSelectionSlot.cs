@@ -6,6 +6,7 @@ using R3;
 public class ItemSelectionSlot : MonoBehaviour
 {
     [SerializeField] private Image itemIconImage;
+    [SerializeField] private Image backgroundImage;
     [SerializeField] private TextMeshProUGUI itemNameText;
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private Toggle selectToggle;
@@ -25,10 +26,22 @@ public class ItemSelectionSlot : MonoBehaviour
     
     private int maxQuantity;
 
-    public void SetItem(string itemId, Sprite icon, string name, int price, int stock)
+    public void SetItem(string itemId, Sprite icon, Sprite background, string name, int price, int stock)
     {
         this.itemId = itemId;
         itemIconImage.sprite = icon;
+        if (backgroundImage)
+        {
+            if (background != null)
+            {
+                backgroundImage.sprite = background;
+                backgroundImage.enabled = true;
+            }
+            else
+            {
+                backgroundImage.enabled = false;
+            }
+        }
         itemNameText.text = name;
         priceText.text = $"{price} G";
         SetStock(stock);

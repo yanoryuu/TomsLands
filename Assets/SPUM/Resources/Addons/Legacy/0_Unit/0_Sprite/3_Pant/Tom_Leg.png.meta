@@ -40,7 +40,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -54,7 +54,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -142,15 +142,15 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: "\u30C8\u3099\u30C3\u30C8\u30CF\u309A\u30FC\u30C43_0"
+      name: L_Foot
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 5
+        width: 4
         height: 6
-      alignment: 0
-      pivot: {x: 0, y: 0}
+      alignment: 9
+      pivot: {x: 0.49031025, y: 0.68087953}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -164,16 +164,16 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: "\u30C8\u3099\u30C3\u30C8\u30CF\u309A\u30FC\u30C43_1"
+      name: R_Foot
       rect:
         serializedVersion: 2
         x: 7
         y: 0
         width: 5
         height: 6
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
+      alignment: 9
+      pivot: {x: 0.60852814, y: 0.6679595}
+      border: {x: 1, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
@@ -189,7 +189,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: f2c22bd98625a4960970be1cb1298ebe
     internalID: 0
     vertices: []
     indices: 
@@ -199,8 +199,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      "\u30C8\u3099\u30C3\u30C8\u30CF\u309A\u30FC\u30C43_0": 795150525781489437
-      "\u30C8\u3099\u30C3\u30C8\u30CF\u309A\u30FC\u30C43_1": 515365625652767587
+      L_Foot: 795150525781489437
+      R_Foot: 515365625652767587
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

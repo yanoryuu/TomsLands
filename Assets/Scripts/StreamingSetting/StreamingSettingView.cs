@@ -37,7 +37,7 @@ public class StreamingSettingView : MonoBehaviour
 
             var go   = Instantiate(availableSlotPrefab, availablePanel);
             var slot = go.GetComponent<AvailableItemSlot>();
-            slot.Initialize(item.ItemId, item.ItemIcon, item.ItemName);
+            slot.Initialize(item.ItemId, item.ItemIcon, item.ItemBackground, item.ItemName);
             slot.OnItemSelected += id => OnItemSelected.OnNext(id);
         }
     }
@@ -63,6 +63,7 @@ public class StreamingSettingView : MonoBehaviour
             slot.Initialize(
                 id,
                 master.itemIcon,
+                runtime.ItemBackground,
                 master.itemName,
                 qty,
                 maxQty
@@ -77,11 +78,11 @@ public class StreamingSettingView : MonoBehaviour
     /// <summary>
     /// 個別追加用。（必要であればこちらも同様に maxQty を渡す）
     /// </summary>
-    public void AddSelectedItem(string id, Sprite icon, string name, int qty, int maxQty)
+    public void AddSelectedItem(string id, Sprite icon, Sprite background, string name, int qty, int maxQty)
     {
         var go   = Instantiate(selectedSlotPrefab, selectedPanel);
         var slot = go.GetComponent<SelectedItemSlot>();
-        slot.Initialize(id, icon, name, qty, maxQty);
+        slot.Initialize(id, icon, background, name, qty, maxQty);
         slot.OnQuantityChanged += (itemId, newQty) => 
             OnQuantityChanged.OnNext((itemId, newQty));
         slot.OnItemDeselected += itemId => 

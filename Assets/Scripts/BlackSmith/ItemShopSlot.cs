@@ -7,6 +7,7 @@ public class ItemShopSlot : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private Image icon;
+    [SerializeField] private Image backgroundImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private TextMeshProUGUI stockText;
@@ -49,10 +50,22 @@ public class ItemShopSlot : MonoBehaviour
         if (minusButton) minusButton.onClick.AddListener(() => OnStepClicked.OnNext(-1));
     }
 
-    public void SetItem(string itemId,string itemName, Sprite sprite, int price, int maxStock, int currentStock, bool isPopular)
+    public void SetItem(string itemId,string itemName, Sprite sprite, Sprite background, int price, int maxStock, int currentStock, bool isPopular)
     {
         this.itemId = itemId;
         if (icon) icon.sprite = sprite;
+        if (backgroundImage)
+        {
+            if (background != null)
+            {
+                backgroundImage.sprite = background;
+                backgroundImage.enabled = true;
+            }
+            else
+            {
+                backgroundImage.enabled = false;
+            }
+        }
         if (nameText) nameText.text = itemName;
         SetPrice(price);
         stockText?.SetText($"{currentStock}");

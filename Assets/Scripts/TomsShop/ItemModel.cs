@@ -6,12 +6,14 @@ using UnityEngine;
 public class ItemModel
 {
     public readonly List<ItemData> masterItems;
+    private readonly ItemVisualSettings visualSettings;
 
     public List<RuntimeItemData> RuntimeItems { get; private set; } = new();
 
-    public ItemModel(List<ItemData> masterItems)
+    public ItemModel(List<ItemData> masterItems, ItemVisualSettings visualSettings = null)
     {
         this.masterItems = masterItems;
+        this.visualSettings = visualSettings;
         InitializeRuntimeItemsFromMaster();
         LoadData();
     }
@@ -290,7 +292,7 @@ public class ItemModel
                     if (item.requiredLevel <= 0) item.requiredLevel = master.requiredLevel;
                     if (string.IsNullOrEmpty(item.itemName)) item.itemName = master.itemName;
                 }
-                return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId));
+                return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId), SearchBackgroundSpriteFromMaster(item.requiredLevel));
             })
             .ToList();
 
@@ -309,11 +311,13 @@ public class ItemModel
                 master.initialStock,
                 master.initialDisplayStock,
                 master.itemIcon,
+                SearchBackgroundSpriteFromMaster(master.requiredLevel),
                 master.itemType,
                 master.itemAttribute,
                 master.requiredLevel,
                 Random.Range(0.3f, 0.7f),
-                master.description
+                master.description,
+                master.salesRate
             ))
             .ToList();
 
@@ -333,6 +337,13 @@ public class ItemModel
 
         Debug.LogWarning($"Master item not found for ID: {itemId}");
         return null;
+    }
+
+    //レベルに応じた背景スプライトを取得
+    private Sprite SearchBackgroundSpriteFromMaster(int requiredLevel)
+    {
+        if (visualSettings == null) return null;
+        return visualSettings.GetBackground(requiredLevel);
     }
 
     //ランタイムを作成(タイプごとに選出してくれます)
