@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
-  m_Name: New EnemyData 23
+  m_Name: undead boss Lv2
   m_EditorClassIdentifier: 
-  enemyName: sea305
-  hp: 40
+  enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
+  hp: 100
   attackPower: 10
-  defensePower: 8
+  defensePower: 5
   elementType: 0
-  enemySprite: {fileID: 21300000, guid: 47201bf0ccae740efa4edf2617b1bc43, type: 3}
+  enemySprite: {fileID: 0}
   skills: []
