@@ -74,7 +74,7 @@ public class ItemSelectionView : MonoBehaviour
                 item.ItemId,
                 item.ItemIcon,
                 item.ItemBackground,
-                item.ItemId,
+                item.ItemName,
                 item.CurrentPrice.Value,
                 item.Stock.Value
             );

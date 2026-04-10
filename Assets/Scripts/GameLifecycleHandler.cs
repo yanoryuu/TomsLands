@@ -84,17 +84,23 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _tomsModel.LoadPlayerMoney();
         _heroModel.LoadHeroData();
 
-        Debug.Log("[GameLifecycleHandler] 続きから: セーブデータをロードして復帰");
+        // GameFlowManagerのインデックスを復元（セーブデータから読み込んだ値を使用）
+        _gameFlowManager.RestoreIndex(_tomsModel.GameFlowIndex);
+
+        Debug.Log($"[GameLifecycleHandler] 続きから: セーブデータをロードして復帰 (FlowIndex={_tomsModel.GameFlowIndex})");
     }
 
     public void Dispose()
     {
+        // GameFlowManagerの現在インデックスをTomsModelに反映してから保存
+        _tomsModel.GameFlowIndex = _gameFlowManager.CurrentIndex;
+
         // アプリ終了時・シーン破棄時に呼ばれる保存処理
         _itemModel.SaveData();
         _tomsModel.SavePlayerMoney();
         _heroModel.SaveHeroData();
 
-        Debug.Log("Game Data Saved & Disposed");
+        Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
     }
 
     // ファイル削除ロジック

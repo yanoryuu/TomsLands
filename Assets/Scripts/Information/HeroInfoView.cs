@@ -32,8 +32,8 @@ public class HeroInfoView : MonoBehaviour
             heroLvText.text = "Lv: ???";
             heroHpText.text = "HP: ???";
             heroMpText.text = "MP: ???";
-            weaponText.text = "Weapon: ???";
-            heroTacticsText.text = "Tactics: ???";
+            weaponText.text = "???";
+            heroTacticsText.text = "???";
             return;
         }
 
@@ -43,9 +43,9 @@ public class HeroInfoView : MonoBehaviour
         heroHpText.text = $"HP: {heroInfo.hp.Value}";
         // heroAttackText.text = $"Attack: {heroInfo.Attack}";
         heroMpText.text = $"MP: {heroInfo.mp.Value}";
-        weaponText.text = $"Weapon: {heroInfo.weaponId.Value}";
+        weaponText.text = $"{heroInfo.weaponName.Value}";
         // heroArmorText.text = $"Armor: {heroInfo.EquippedArmor}";
-        heroTacticsText.text = $"Tactics: {heroInfo.tactics.Value}";
+        heroTacticsText.text = $"{heroInfo.tactics.Value}";
         //flavorText.text = heroInfo.flavorText;
     }
 }

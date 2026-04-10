@@ -4894,7 +4894,6 @@ MonoBehaviour:
   - {fileID: 2126818651}
   - {fileID: 1748960443}
   - {fileID: 1696905351}
-  maxSellPerTurn: 5
   demandEffectiveAttributeUp: 0.2
   demandWeakAttributeDown: 0.1
   buzzBonus2Turn: 0.05

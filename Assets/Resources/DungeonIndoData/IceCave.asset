@@ -26,27 +26,32 @@ MonoBehaviour:
   - monsters:
     - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
     - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: add37f85b021fcb4196d62f500afd57c, type: 2}
+    - {fileID: 11400000, guid: 126ff0e47eddd714ea67ab0493a82251, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
+    rewardGold: 0
+    levelUpCost: 0
   - monsters:
     - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
     - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: add37f85b021fcb4196d62f500afd57c, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
+    rewardGold: 0
+    levelUpCost: 0
   - monsters:
     - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
     - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
     - {fileID: 11400000, guid: ba1a37558b33af24ebb0f59f71669ca9, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-  - monsters:
-    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: add37f85b021fcb4196d62f500afd57c, type: 2}
-    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-    bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
+    rewardGold: 0
+    levelUpCost: 0
   - monsters:
     - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
     - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-    - {fileID: 11400000, guid: add37f85b021fcb4196d62f500afd57c, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-  rewardGold: 0
-  dungeonStatus: 2
+    rewardGold: 0
+    levelUpCost: 0
+  - monsters:
+    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
+    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
+    bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
+    rewardGold: 0
+    levelUpCost: 0

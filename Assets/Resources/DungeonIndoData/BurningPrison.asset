@@ -43,4 +43,3 @@ MonoBehaviour:
     bossName: 
     rewardGold: 0
     levelUpCost: 0
-  dungeonStatus: 2

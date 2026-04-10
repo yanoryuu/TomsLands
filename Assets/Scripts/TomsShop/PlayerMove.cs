@@ -15,9 +15,12 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private Animator animator;
 
     private CompositeDisposable moveDisposables;
+    
+    private Vector3 playerStartScale;
 
     private void Start()
     {
+        playerStartScale = transform.localScale;
         moveDisposables = new CompositeDisposable();
         moveInput = new ReactiveProperty<Vector2>();
         moveInput
@@ -48,12 +51,12 @@ public class PlayerMove : MonoBehaviour
         if (moveInput.Value.x > 0)
         {
             // 右向き
-            transform.localScale = new Vector3(-1f, 1f, 1f);
+            transform.localScale = new Vector3(-playerStartScale.x ,playerStartScale.y, playerStartScale.z);
         }
         else if (moveInput.Value.x < 0)
         {
             // 左向き（X軸反転）
-            transform.localScale = new Vector3(1f, 1f, 1f);
+            transform.localScale = new Vector3(playerStartScale.x, playerStartScale.y, playerStartScale.z);
         }
     }
 

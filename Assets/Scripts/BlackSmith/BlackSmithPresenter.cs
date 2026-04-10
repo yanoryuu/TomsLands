@@ -69,6 +69,11 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 }
             })
             .AddTo(disposables);
+
+        // 鍛冶屋レベルアップボタン
+        blackSmithView.OnLevelUpRequested
+            .Subscribe(_ => HandleBlackSmithLevelUp())
+            .AddTo(disposables);
     }
 
     private void HandlePurchase(string itemId, int quantity)
@@ -204,7 +209,66 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     private void ShowDevelopmentPanel()
     {
+        panelDisposables.Dispose();
+        panelDisposables = new CompositeDisposable();
+
+        blackSmithView.ShowDevelopmentPanel();
         blackSmithView.SortItemTab(BlackSmithTab.Development);
+
+        // 初回表示
+        RefreshDevelopmentPanel();
+
+        // 所持金が変わったらボタン有効/無効を再評価
+        tomsModel.PlayerMoney
+            .Subscribe(_ => RefreshDevelopmentPanel())
+            .AddTo(panelDisposables);
+
+        // 鍛冶屋レベルが変わったら再描画
+        tomsModel.BlacksmithLevel
+            .Subscribe(_ => RefreshDevelopmentPanel())
+            .AddTo(panelDisposables);
+    }
+
+    /// <summary>
+    /// 開発パネルの表示を最新状態に更新する
+    /// </summary>
+    private void RefreshDevelopmentPanel()
+    {
+        int currentLevel = tomsModel.BlacksmithLevel.Value;
+        int cost = GameConst.GetBlackSmithLevelUpCost(currentLevel);
+        if (cost < 0) cost = 0; // MAX時
+
+        blackSmithView.UpdateDevelopmentPanel(
+            currentLevel,
+            GameConst.MaxBlackSmithLevel,
+            cost,
+            tomsModel.PlayerMoney.Value
+        );
+    }
+
+    /// <summary>
+    /// 鍛冶屋レベルアップ処理
+    /// </summary>
+    private void HandleBlackSmithLevelUp()
+    {
+        int prevLevel = tomsModel.BlacksmithLevel.Value;
+
+        if (!tomsModel.UpgradeBlacksmith())
+        {
+            Debug.Log("[BlackSmith] レベルアップ失敗（資金不足 or 最大レベル）");
+            return;
+        }
+
+        Debug.Log($"[BlackSmith] 鍛冶屋 Lv.{prevLevel} → Lv.{tomsModel.BlacksmithLevel.Value}");
+
+        // レベルが上がったので商品ラインナップを更新
+        blackSmithModel.SetRuntimeItems(
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
+        );
+
+        // パネル表示を再更新（ReactivePropertyの購読でも更新されるが念のため）
+        RefreshDevelopmentPanel();
     }
 
     public void Dispose()

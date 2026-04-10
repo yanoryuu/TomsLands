@@ -52,5 +52,14 @@ public class SceneTransitionService
         Debug.Log("[SceneTransition] Returning to Title (Start)...");
         SceneManager.LoadScene("Start");
     }
+
+    /// <summary>
+    /// ResultScene へ遷移する。事前にセーブデータを保存しておくこと。
+    /// </summary>
+    public void GoToResult()
+    {
+        Debug.Log("[SceneTransition] Loading ResultScene...");
+        SceneManager.LoadScene("ResultScene");
+    }
 }
 

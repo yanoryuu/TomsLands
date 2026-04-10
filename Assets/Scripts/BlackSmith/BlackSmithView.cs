@@ -29,8 +29,16 @@ public class BlackSmithView : MonoBehaviour
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
 
+    [Header("Development Panel")]
+    [SerializeField] private GameObject developmentPanel;         // 開発タブ専用パネル（レベルアップUI）
+    [SerializeField] private TextMeshProUGUI blackSmithLevelText; // 現在レベル表示
+    [SerializeField] private TextMeshProUGUI levelUpCostText;     // レベルアップ費用表示
+    [SerializeField] private Button levelUpButton;                // レベルアップボタン
+    [SerializeField] private TextMeshProUGUI levelUpButtonText;   // ボタン内テキスト
+
     public Subject<Unit> OnCloseRequested { get; private set; } = new();
     public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
+    public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
@@ -47,6 +55,13 @@ public class BlackSmithView : MonoBehaviour
         armorButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Armor; OnChangePanel.OnNext(BlackSmithTab.Armor); });
         developButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Development; OnChangePanel.OnNext(BlackSmithTab.Development); });
         specialWeaponButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Special; OnChangePanel.OnNext(BlackSmithTab.Special); });
+
+        if (levelUpButton)
+            levelUpButton.onClick.AddListener(() => OnLevelUpRequested.OnNext(Unit.Default));
+
+        // 開発パネルは初期非表示
+        if (developmentPanel)
+            developmentPanel.SetActive(false);
 
         // 初期スクロール位置（未保存タブは右上(1,1)=先頭）にしておく
         _scrollPerTab[BlackSmithTab.Weapon] = new Vector2(0, 1);
@@ -72,6 +87,9 @@ public class BlackSmithView : MonoBehaviour
     /// </summary>
     public List<ItemShopSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
+        // 開発パネルを非表示にし、商品リストを表示
+        HideDevelopmentPanel();
+
         // ★ 1) いまのスクロール位置を保存
         var prePos = GetSavedScrollForTab(_currentTab);
 
@@ -152,6 +170,52 @@ public class BlackSmithView : MonoBehaviour
         // ★ タブ切替直後に、保存してあるスクロール位置へ復元
         if (scrollRect)
             StartCoroutine(RestoreScrollNextFrame(GetSavedScrollForTab(type)));
+    }
+
+    // ===== 開発パネル =====
+
+    /// <summary>
+    /// 開発パネルを表示し、商品スクロールを非表示にする
+    /// </summary>
+    public void ShowDevelopmentPanel()
+    {
+        // 商品リストの子オブジェクトを非表示
+        if (scrollRect) scrollRect.gameObject.SetActive(false);
+
+        if (developmentPanel) developmentPanel.SetActive(true);
+    }
+
+    /// <summary>
+    /// 開発パネルを非表示にし、商品スクロールを復元する
+    /// </summary>
+    public void HideDevelopmentPanel()
+    {
+        if (developmentPanel) developmentPanel.SetActive(false);
+        if (scrollRect) scrollRect.gameObject.SetActive(true);
+    }
+
+    /// <summary>
+    /// 開発パネルのレベル・コスト表示を更新する
+    /// </summary>
+    public void UpdateDevelopmentPanel(int currentLevel, int maxLevel, int cost, int playerMoney)
+    {
+        bool isMax = currentLevel >= maxLevel;
+
+        if (blackSmithLevelText)
+            blackSmithLevelText.text = $"鍛冶屋 Lv.{currentLevel}";
+
+        if (isMax)
+        {
+            if (levelUpCostText) levelUpCostText.text = "MAX";
+            if (levelUpButtonText) levelUpButtonText.text = "最大レベル";
+            if (levelUpButton) levelUpButton.interactable = false;
+        }
+        else
+        {
+            if (levelUpCostText) levelUpCostText.text = $"{cost}G";
+            if (levelUpButtonText) levelUpButtonText.text = "レベルアップ";
+            if (levelUpButton) levelUpButton.interactable = playerMoney >= cost;
+        }
     }
 
     // ===== スクロール保存・復元ユーティリティ =====

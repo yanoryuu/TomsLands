@@ -17,9 +17,10 @@ MonoBehaviour:
   basePrice: 700
   description: "\u93A7"
   itemIcon: {fileID: 21300000, guid: f17058e2bd3c44745bd37eb71c41adf1, type: 3}
-  initialStock: 10
+  initialStock: 0
   maxStock: 100
-  initialDisplayStock: 10
+  initialDisplayStock: 0
   itemType: 1
   itemAttribute: 2
   requiredLevel: 1
+  salesRate: 1

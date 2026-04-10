@@ -104,8 +104,8 @@ public class GameFlowManager : IDisposable, IStartable
 
         if (_currentIndex >= _gameFlow.GameFlowStack.Count)
         {
-            Debug.Log("[GameFlowManager] All turns completed. Transitioning to Result phase.");
-            _stateManager.ChangePhase(GamePhase.Result);
+            Debug.Log("[GameFlowManager] All turns completed. Transitioning to ResultScene.");
+            TransitionToResult();
             return;
         }
 
@@ -122,7 +122,6 @@ public class GameFlowManager : IDisposable, IStartable
         // Event以外のノードではターン番号を進める
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
 
-        // --- TomsShop の経済更新（S1 + S3 + D2）--- Event以外のターンで実行
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value);
@@ -148,6 +147,10 @@ public class GameFlowManager : IDisposable, IStartable
             // ItemModel の在庫データを保存してからシーン遷移
             _itemModel.SaveData();
 
+            // GameFlowIndexをTomsModelに反映して保存
+            _tomsModel.GameFlowIndex = _currentIndex;
+            _tomsModel.SavePlayerMoney();
+
             // BattleInputData にフロー情報を書き込み
             var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
             int dungeonLevel = dungeonData?.currentDungeonLevel ?? 1;
@@ -165,6 +168,15 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         var nextPhase = ConvertEventToPhase(node.EventType);
+
+        // End ノードの場合はリザルトシーンへ遷移
+        if (node.EventType == GameEvent.End)
+        {
+            Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event=End → ResultScene");
+            TransitionToResult();
+            return;
+        }
+
         Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → phase={nextPhase}");
 
         // TomsShop→TomsShop の場合、ChangePhase の同値ガードで Entry() が発火しないため
@@ -230,6 +242,7 @@ public class GameFlowManager : IDisposable, IStartable
 
         // データを保存してからシーン遷移
         _itemModel.SaveData();
+        _tomsModel.GameFlowIndex = _currentIndex;
         _tomsModel.SavePlayerMoney();
 
         Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event=Event({eventId}) → EventScene");
@@ -277,6 +290,23 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         return -1; // Battleノードが見つからない
+    }
+
+    /// <summary>
+    /// リザルトシーンへ遷移する。遷移前にデータを保存する。
+    /// </summary>
+    private void TransitionToResult()
+    {
+        // 現在のターン番号を TomsModel に反映
+        _tomsModel.CurrentTurn.Value = CurrentTurn.Value;
+        _tomsModel.GameFlowIndex = _currentIndex;
+
+        // データを保存してからシーン遷移
+        _itemModel.SaveData();
+        _tomsModel.SavePlayerMoney();
+
+        Debug.Log($"[GameFlowManager] Saving data and transitioning to ResultScene. Turn={CurrentTurn.Value}");
+        _sceneTransition.GoToResult();
     }
 
     public void Dispose()
