@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: ShopEconomySettings
   m_EditorClassIdentifier: 
   highDemandThreshold: 0.7
-  highDemandPriceRateMin: 1.01
-  highDemandPriceRateMax: 1.03
+  highDemandPriceRateMin: 1.1
+  highDemandPriceRateMax: 1.3
   lowDemandThreshold: 0.3
   lowDemandPriceRateMin: 0.97
   lowDemandPriceRateMax: 0.99

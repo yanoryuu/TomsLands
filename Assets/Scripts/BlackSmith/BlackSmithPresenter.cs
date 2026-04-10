@@ -102,6 +102,9 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         panelDisposables.Dispose();
         panelDisposables = new CompositeDisposable();
 
+        // 購入パネルを表示、開発パネルを非表示
+        blackSmithView.SwitchPanel(itemType);
+
         var itemSlots = blackSmithView.PopulateItemList(items);
 
         foreach (var slot in itemSlots)
@@ -212,7 +215,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         panelDisposables.Dispose();
         panelDisposables = new CompositeDisposable();
 
-        blackSmithView.ShowDevelopmentPanel();
+        // 開発パネルを表示、購入パネルを非表示
+        blackSmithView.SwitchPanel(BlackSmithTab.Development);
         blackSmithView.SortItemTab(BlackSmithTab.Development);
 
         // 初回表示

@@ -87,9 +87,6 @@ public class BlackSmithView : MonoBehaviour
     /// </summary>
     public List<ItemShopSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // 開発パネルを非表示にし、商品リストを表示
-        HideDevelopmentPanel();
-
         // ★ 1) いまのスクロール位置を保存
         var prePos = GetSavedScrollForTab(_currentTab);
 
@@ -172,26 +169,12 @@ public class BlackSmithView : MonoBehaviour
             StartCoroutine(RestoreScrollNextFrame(GetSavedScrollForTab(type)));
     }
 
-    // ===== 開発パネル =====
-
-    /// <summary>
-    /// 開発パネルを表示し、商品スクロールを非表示にする
-    /// </summary>
-    public void ShowDevelopmentPanel()
+    public void SwitchPanel(BlackSmithTab tab)
     {
-        // 商品リストの子オブジェクトを非表示
-        if (scrollRect) scrollRect.gameObject.SetActive(false);
+        bool isDevelopment = tab == BlackSmithTab.Development;
 
-        if (developmentPanel) developmentPanel.SetActive(true);
-    }
-
-    /// <summary>
-    /// 開発パネルを非表示にし、商品スクロールを復元する
-    /// </summary>
-    public void HideDevelopmentPanel()
-    {
-        if (developmentPanel) developmentPanel.SetActive(false);
-        if (scrollRect) scrollRect.gameObject.SetActive(true);
+        if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
+        if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
     }
 
     /// <summary>
