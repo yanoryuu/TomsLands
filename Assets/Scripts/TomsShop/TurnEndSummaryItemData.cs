@@ -1,6 +1,5 @@
-/// <summary>
-/// ターン終了サマリーの1行分のデータ
-/// </summary>
+using UnityEngine;
+
 public class TurnEndSummaryItemData
 {
     public string ItemName { get; set; }
@@ -9,6 +8,7 @@ public class TurnEndSummaryItemData
     public int Price { get; set; }
     public float Demand { get; set; }
     public DemandTrend Trend { get; set; }
+    public Sprite ItemIcon { get; set; }
 }
 
 /// <summary>

@@ -51,7 +51,11 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     /// </summary>
     public void Entry()
     {
-        var items = BuildSummaryItems();
+        // 1. 通常営業の販売シミュレーションを実行（Stock が減少する）
+        var salesResult = itemModel.SimulateShopSales();
+
+        // 2. 販売結果からサマリーを構築
+        var items = BuildSummaryItems(salesResult);
         int totalRevenue = 0;
         int totalSoldCount = 0;
 
@@ -59,6 +63,13 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         {
             totalRevenue += item.Revenue;
             totalSoldCount += item.SoldCount;
+        }
+
+        // 3. 売上を所持金に加算
+        if (totalRevenue > 0)
+        {
+            tomsModel.PlayerMoney.Value += totalRevenue;
+            Debug.Log($"[TurnEndSummary] 所持金に {totalRevenue}G を加算 → {tomsModel.PlayerMoney.Value}G");
         }
 
         int daysUntilBattle = gameFlowManager.GetTurnsUntilNextBattle();
@@ -78,9 +89,10 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     }
 
     /// <summary>
-    /// 品出し中のアイテムから売上データを集計する
+    /// 品出し中のアイテムから売上データを集計する。
+    /// SimulateShopSales の結果（itemId → soldCount）を使って正確な販売数を取得する。
     /// </summary>
-    private List<TurnEndSummaryItemData> BuildSummaryItems()
+    private List<TurnEndSummaryItemData> BuildSummaryItems(Dictionary<string, int> salesResult)
     {
         var result = new List<TurnEndSummaryItemData>();
 
@@ -90,8 +102,8 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
             if (!runtime.IsDisplay.Value || runtime.DisplayStock.Value <= 0)
                 continue;
 
-            // 販売数量 = DisplayStock - Stock（DisplayStockが元の出品数、Stockが現在の残り）
-            int soldCount = Mathf.Max(0, runtime.DisplayStock.Value - runtime.Stock.Value);
+            // シミュレーション結果から販売数を取得
+            int soldCount = salesResult.TryGetValue(runtime.ItemId, out var count) ? count : 0;
             int revenue = soldCount * runtime.CurrentPrice.Value;
 
             // 需要トレンドの判定
@@ -111,7 +123,8 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
                 Revenue = revenue,
                 Price = runtime.CurrentPrice.Value,
                 Demand = demand,
-                Trend = trend
+                Trend = trend,
+                ItemIcon = runtime.ItemIcon
             });
         }
 

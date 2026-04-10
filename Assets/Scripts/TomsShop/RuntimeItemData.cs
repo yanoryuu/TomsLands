@@ -30,6 +30,12 @@ public class RuntimeItemData
     /// アイテム固有の売れやすさ倍率。1.0が標準。高いほど1ターンで多く売れる。
     /// </summary>
     public float SalesRate { get; private set; }
+
+    /// <summary>
+    /// 前ターンの通常営業で売れたかどうか（S3 品出し販売結果フィードバック用）。
+    /// シリアライズ不要（毎ターン SimulateShopSales で更新される）。
+    /// </summary>
+    public bool WasSoldLastTurn { get; set; }
     public RuntimeItemData(
         string itemId,
         string itemName,
