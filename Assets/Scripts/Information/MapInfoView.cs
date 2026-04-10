@@ -33,6 +33,9 @@ public class MapInfoView : MonoBehaviour
         {
             DungeonData data = maps[i];
 
+            // 既に購入済みのダンジョンはスキップ
+            if (data.isShowedInfo) continue;
+
             // コスト辞書にキーがなければスキップ
             if (!mapCosts.ContainsKey(data.key))
             {
@@ -68,6 +71,25 @@ public class MapInfoView : MonoBehaviour
         if (mapInfoContent)
         {
             LayoutRebuilder.ForceRebuildLayoutImmediate(mapInfoContent.GetComponent<RectTransform>());
+        }
+    }
+
+    /// <summary>
+    /// 指定したダンジョンのスロットを削除する
+    /// </summary>
+    public void RemoveSlot(DungeonName dungeonName)
+    {
+        var slot = activeSlots.Find(s => s.DungeonKey == dungeonName);
+        if (slot != null)
+        {
+            activeSlots.Remove(slot);
+            Destroy(slot.gameObject);
+
+            // レイアウトを再構築
+            if (mapInfoContent)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(mapInfoContent.GetComponent<RectTransform>());
+            }
         }
     }
 

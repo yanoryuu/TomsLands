@@ -21,6 +21,11 @@ public class MapPurchaseSlot : MonoBehaviour
     private bool suppress;
     private DungeonName dungeonKey;
 
+    public DungeonName DungeonKey
+    {
+        get { return dungeonKey; }
+    }
+
     private void Awake()
     {
         purchaseButton?.onClick.AddListener(() => OnPurchaseClicked.OnNext(dungeonKey));
