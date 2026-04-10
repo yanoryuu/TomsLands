@@ -117,6 +117,73 @@ public class ItemModel
     }
 
     // ========================================
+    // 通常営業時の販売シミュレーション
+    // ========================================
+
+    /// <summary>
+    /// 通常営業ターン終了時の販売シミュレーション。
+    /// 品出し中の全アイテムについて Demand × SalesRate × DisplayStock で販売数を算出し、
+    /// Stock を減少させる。
+    /// </summary>
+    /// <returns>itemId → soldCount の辞書</returns>
+    public Dictionary<string, int> SimulateShopSales()
+    {
+        var salesResult = new Dictionary<string, int>();
+
+        foreach (var runtime in RuntimeItems)
+        {
+            // 品出し中かつ在庫ありのアイテムのみ対象
+            if (!runtime.IsDisplay.Value || runtime.DisplayStock.Value <= 0 || runtime.Stock.Value <= 0)
+            {
+                runtime.WasSoldLastTurn = false;
+                continue;
+            }
+
+            float demand = Mathf.Clamp01(runtime.Demand.Value);
+            int displayStock = runtime.DisplayStock.Value;
+            float salesRate = runtime.SalesRate;
+
+            // 売れる上限 = 在庫と品出し数の小さい方
+            int maxSellable = Mathf.Min(runtime.Stock.Value, displayStock);
+
+            // 販売数を算出（Demand × SalesRate × DisplayStock）
+            float rawSold = demand * salesRate * displayStock;
+            int quantitySold;
+
+            if (rawSold >= 1f)
+            {
+                quantitySold = Mathf.FloorToInt(rawSold);
+            }
+            else if (rawSold > 0f)
+            {
+                // 端数は確率的に1個売れるかどうかを判定
+                quantitySold = Random.value < rawSold ? 1 : 0;
+            }
+            else
+            {
+                quantitySold = 0;
+            }
+
+            quantitySold = Mathf.Clamp(quantitySold, 0, maxSellable);
+
+            if (quantitySold <= 0)
+            {
+                runtime.WasSoldLastTurn = false;
+                continue;
+            }
+
+            runtime.Stock.Value -= quantitySold;
+            runtime.WasSoldLastTurn = true;
+            salesResult[runtime.ItemId] = quantitySold;
+
+            Debug.Log($"[ShopSales] {runtime.ItemId} × {quantitySold}個 " +
+                      $"(Demand={demand:F2}, SalesRate={salesRate:F2}, DisplayStock={displayStock})");
+        }
+
+        return salesResult;
+    }
+
+    // ========================================
     // 案D1: 戦闘結果の属性波及
     // ========================================
 
@@ -225,9 +292,8 @@ public class ItemModel
             float s3Rate = 1.0f;
             if (runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0)
             {
-                // 品出し中のアイテム：前ターンで在庫が減ったか（売れたか）で判定
-                // 注: Stock < DisplayStock なら「売れた」と判定
-                if (runtime.Stock.Value < runtime.DisplayStock.Value)
+                // 品出し中のアイテム：前ターンで売れたかどうかで判定
+                if (runtime.WasSoldLastTurn)
                 {
                     // 売れた → 値上がり
                     s3Rate = Random.Range(settings.soldPriceRateMin, settings.soldPriceRateMax);

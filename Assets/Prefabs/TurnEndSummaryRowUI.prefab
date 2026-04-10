@@ -661,6 +661,7 @@ MonoBehaviour:
   soldCountText: {fileID: 3486171456766842085}
   revenueText: {fileID: 863476284628198749}
   trendText: {fileID: 1038657889057767959}
+  itemIcon: {fileID: 1172889484313606003}
 --- !u!1 &7177217306291759529
 GameObject:
   m_ObjectHideFlags: 0

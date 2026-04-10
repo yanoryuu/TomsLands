@@ -126,6 +126,7 @@ public class GameFlowManager : IDisposable, IStartable
         {
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value);
             _itemModel.SaveData();
+            _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
         }
 

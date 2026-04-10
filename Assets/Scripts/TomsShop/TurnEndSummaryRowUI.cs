@@ -1,3 +1,4 @@
+using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ public class TurnEndSummaryRowUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI soldCountText;
     [SerializeField] private TextMeshProUGUI revenueText;
     [SerializeField] private TextMeshProUGUI trendText;
+    [SerializeField] private Image itemIcon;
 
     /// <summary>
     /// 行データを設定して表示を更新する
@@ -24,6 +26,9 @@ public class TurnEndSummaryRowUI : MonoBehaviour
 
         if (revenueText != null)
             revenueText.text = $"{data.Revenue}G";
+        
+        if (itemIcon != null)
+            itemIcon.sprite = data.ItemIcon;
 
         if (trendText != null)
         {
