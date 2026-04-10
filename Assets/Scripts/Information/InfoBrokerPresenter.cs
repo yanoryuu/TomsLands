@@ -106,6 +106,8 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
                 tomsModel.SavePlayerMoney();
                 // ?_???W?????????w?????????
                 infoBrokerModel.PurchaseDungeonInfo(dungeonName);
+                // w“üÏ‚İƒXƒƒbƒg‚ğíœ
+                mapInfoView.RemoveSlot(dungeonName);
                 Debug.Log($"[InfoBrokerPresenter] {dungeonName} ????? {cost}G ??w??????????B?c??: {tomsModel.PlayerMoney.Value}G");
             })
             .AddTo(disposables);
