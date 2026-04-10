@@ -16,6 +16,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly DungeonRepository _dungeonRepository;
     private readonly StartModeData _startModeData;
     private readonly GameFlowManager _gameFlowManager;
+    private readonly BattleOutputData _battleOutputData;
+    private readonly EventOutputData _eventOutputData;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -24,7 +26,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         HeroModel heroModel,
         DungeonRepository dungeonRepository,
         StartModeData startModeData,
-        GameFlowManager gameFlowManager)
+        GameFlowManager gameFlowManager,
+        BattleOutputData battleOutputData,
+        EventOutputData eventOutputData)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -32,6 +36,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _dungeonRepository = dungeonRepository;
         _startModeData = startModeData;
         _gameFlowManager = gameFlowManager;
+        _battleOutputData = battleOutputData;
+        _eventOutputData = eventOutputData;
     }
 
     public void Start()
@@ -40,7 +46,16 @@ public class GameLifecycleHandler : IStartable, IDisposable
         var dungeonCatalog = _dungeonRepository.CreateCatalog();
         _dungeonRepository.SetCatalog(dungeonCatalog);
 
-        if (_startModeData.Mode == StartMode.NewGame)
+        // FightScene / EventScene から帰還した場合は、
+        // StartModeData に関わらず必ずセーブデータをロードする
+        bool isReturningFromScene = _battleOutputData.HasResult || _eventOutputData.HasResult;
+
+        if (isReturningFromScene)
+        {
+            Debug.Log("[GameLifecycleHandler] 戦闘/イベントシーンから帰還 → セーブデータをロード");
+            InitializeContinue();
+        }
+        else if (_startModeData.Mode == StartMode.NewGame)
         {
             InitializeNewGame();
         }
@@ -49,7 +64,11 @@ public class GameLifecycleHandler : IStartable, IDisposable
             InitializeContinue();
         }
 
-        Debug.Log($"[GameLifecycleHandler] Initialized (Mode={_startModeData.Mode})");
+        // 以降のシーン再読み込み（FightScene→TomsShop等）で
+        // NewGame 扱いにならないよう Continue に切り替える
+        _startModeData.SetContinue();
+
+        Debug.Log($"[GameLifecycleHandler] Initialized (Mode={_startModeData.Mode}, returningFromScene={isReturningFromScene})");
     }
 
     /// <summary>
