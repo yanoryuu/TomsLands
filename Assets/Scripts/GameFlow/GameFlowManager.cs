@@ -18,6 +18,7 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly EventInputData _eventInputData;
     private readonly EventOutputData _eventOutputData;
     private readonly PendingEventData _pendingEventData;
+    private readonly MarketingFacade _marketingFacade;
     private int _currentIndex;
 
     /// <summary>
@@ -34,7 +35,7 @@ public class GameFlowManager : IDisposable, IStartable
         ItemModel itemModel, ShopEconomySettings economySettings, TomsModel tomsModel,
         SceneTransitionService sceneTransition, HeroModel heroModel,
         EventInputData eventInputData, EventOutputData eventOutputData,
-        PendingEventData pendingEventData)
+        PendingEventData pendingEventData, MarketingFacade marketingFacade)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -47,6 +48,7 @@ public class GameFlowManager : IDisposable, IStartable
         _eventInputData = eventInputData;
         _eventOutputData = eventOutputData;
         _pendingEventData = pendingEventData;
+        _marketingFacade = marketingFacade;
         _currentIndex = 0;
     }
 
@@ -128,6 +130,16 @@ public class GameFlowManager : IDisposable, IStartable
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
+        }
+
+        // マーケティングシステムのターン処理（バズ判定・持続効果適用）
+        if (_marketingFacade != null)
+        {
+            var buzzResult = _marketingFacade.ProcessTurn();
+            if (buzzResult.NewBuzzOccurred)
+            {
+                Debug.Log($"[GameFlowManager] バズ発生: {buzzResult.NewBuzzType}");
+            }
         }
 
         // Battle時はBattleInputDataをセットアップしてFightSceneへ直接遷移

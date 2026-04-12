@@ -10,4 +10,5 @@ public enum TomsShopGamePhase
     Map,             // マップ：ダンジョン選択
     DungeonLevelUp,  // ダンジョンレベルアップ：ダンジョンのレベルを上げる
     TurnEndSummary,  // ターン終了サマリー：売上・トレンド・次配信までの日数
+    Advertisement,   // 広告購入：マーケティング広告を購入してステータスを上げる
 }

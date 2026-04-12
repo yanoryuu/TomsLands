@@ -16,6 +16,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     private readonly GameFlowManager gameFlowManager;
     private readonly TomsModel tomsModel;
     private readonly StateManager stateManager;
+    private readonly MarketingFacade marketingFacade;
     private readonly CompositeDisposable disposables = new();
 
     public TurnEndSummaryPresenter(
@@ -23,13 +24,15 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         ItemModel itemModel,
         GameFlowManager gameFlowManager,
         TomsModel tomsModel,
-        StateManager stateManager)
+        StateManager stateManager,
+        MarketingFacade marketingFacade)
     {
         this.view = view;
         this.itemModel = itemModel;
         this.gameFlowManager = gameFlowManager;
         this.tomsModel = tomsModel;
         this.stateManager = stateManager;
+        this.marketingFacade = marketingFacade;
         
         stateManager.RegisterOnEnter(TomsShopGamePhase.TurnEndSummary, Entry);
     }
@@ -56,16 +59,29 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
 
         // 2. 販売結果からサマリーを構築
         var items = BuildSummaryItems(salesResult);
-        int totalRevenue = 0;
+        int baseRevenue = 0;
         int totalSoldCount = 0;
 
         foreach (var item in items)
         {
-            totalRevenue += item.Revenue;
+            baseRevenue += item.Revenue;
             totalSoldCount += item.SoldCount;
         }
 
-        // 3. 売上を所持金に加算
+        // 3. マーケティングボーナスを適用した最終売上を計算
+        //    バズ倍率 × フォロワーボーナスを乗算
+        int totalRevenue = baseRevenue;
+        if (marketingFacade != null)
+        {
+            totalRevenue = marketingFacade.CalculateFinalRevenue(baseRevenue);
+            if (totalRevenue != baseRevenue)
+            {
+                var breakdown = marketingFacade.GetSalesBreakdown(baseRevenue);
+                Debug.Log($"[TurnEndSummary] マーケティングボーナス適用: {breakdown}");
+            }
+        }
+
+        // 4. 売上を所持金に加算
         if (totalRevenue > 0)
         {
             tomsModel.PlayerMoney.Value += totalRevenue;
@@ -74,7 +90,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
 
         int daysUntilBattle = gameFlowManager.GetTurnsUntilNextBattle();
 
-        Debug.Log($"[TurnEndSummary] 売上合計: {totalRevenue}G, 売れた数: {totalSoldCount}, 次の配信まで: {daysUntilBattle}ターン");
+        Debug.Log($"[TurnEndSummary] 売上合計: {totalRevenue}G（基本: {baseRevenue}G）, 売れた数: {totalSoldCount}, 次の配信まで: {daysUntilBattle}ターン");
 
         view.UpdateContent(items, totalRevenue, totalSoldCount, daysUntilBattle);
     }

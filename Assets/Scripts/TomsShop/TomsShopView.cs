@@ -13,7 +13,9 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button MapButton;
     [SerializeField] private Button NextTurnButton;
     [SerializeField] private Button DungeonLevelUpButton;
+    [SerializeField] private Button AdvertisementButton;
     [SerializeField] private TurnAnnounceView turnAnnounceView;
+    [SerializeField] private BuzzAnnounceView buzzAnnounceView;
     
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
@@ -29,6 +31,8 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnMapClicked { get; } = new();
     //ダンジョンレベルアップ画面を開く
     public Subject<Unit> OnDungeonLevelUpClicked { get; } = new();
+    //広告購入画面を開く
+    public Subject<Unit> OnAdvertisementClicked { get; } = new();
     //次のターンに進む
     public Subject<Unit> OnNextTurnClicked { get; } = new();
 
@@ -41,6 +45,8 @@ public class TomsShopView : MonoBehaviour
         StartShopButton.onClick.AddListener(() => OnStartShopClicked.OnNext(Unit.Default));
         MapButton.onClick.AddListener(() => OnMapClicked.OnNext(Unit.Default));
         DungeonLevelUpButton.onClick.AddListener(() => OnDungeonLevelUpClicked.OnNext(Unit.Default));
+        if (AdvertisementButton != null)
+            AdvertisementButton.onClick.AddListener(() => OnAdvertisementClicked.OnNext(Unit.Default));
         NextTurnButton.onClick.AddListener(() => OnNextTurnClicked.OnNext(Unit.Default));
     }
 
@@ -56,5 +62,27 @@ public class TomsShopView : MonoBehaviour
     public void ShowTurnAnnounce(int turn)
     {
         turnAnnounceView.Show(turn);
+    }
+
+    /// <summary>
+    /// バズ発生演出を再生する。
+    /// ターン開始時にバズが発生した場合に呼び出される。
+    /// </summary>
+    /// <param name="buzzType">発生したバズの種類</param>
+    public void ShowBuzzAnnounce(BuzzType buzzType)
+    {
+        if (buzzAnnounceView != null)
+            buzzAnnounceView.ShowBuzzOccurred(buzzType);
+    }
+
+    /// <summary>
+    /// バズ終了演出を再生する。
+    /// ターン開始時にバズが終了した場合に呼び出される。
+    /// </summary>
+    /// <param name="endedBuzzType">終了したバズの種類</param>
+    public void ShowBuzzEndedAnnounce(BuzzType endedBuzzType)
+    {
+        if (buzzAnnounceView != null)
+            buzzAnnounceView.ShowBuzzEnded(endedBuzzType);
     }
 }

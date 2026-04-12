@@ -19,6 +19,10 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly PendingEventData pendingEventData;
     private readonly EventView eventView;
     private readonly TomsEventExecutor tomsEventExecutor;
+    private readonly MarketingFacade marketingFacade;
+
+    /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
+    private int _lastKnownTurn = -1;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -32,7 +36,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         PendingEventData pendingEventData,
         EventView eventView,
         TomsEventExecutor tomsEventExecutor,
-        GamePanelManager gamePanelManager)
+        GamePanelManager gamePanelManager,
+        MarketingFacade marketingFacade)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -45,6 +50,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.pendingEventData = pendingEventData;
         this.eventView = eventView;
         this.tomsEventExecutor = tomsEventExecutor;
+        this.marketingFacade = marketingFacade;
         
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
@@ -89,6 +95,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.DungeonLevelUp))
             .AddTo(disposables);
         
+        //　広告購入画面ボタン
+        tomsShopView.OnAdvertisementClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Advertisement))
+            .AddTo(disposables);
+        
         //　次のターンに進むボタン → サマリーパネルを表示
         tomsShopView.OnNextTurnClicked
             .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())
@@ -98,12 +109,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         gameFlowManager.CurrentTurn
             .Subscribe(turn => commonView.UpdateCurrentTurn(turn))
             .AddTo(disposables);
-        
-        //　ターン切り替え演出（初期値はスキップ）
-        gameFlowManager.CurrentTurn
-            .Skip(1)
-            .Subscribe(turn => tomsShopView.ShowTurnAnnounce(turn))
-            .AddTo(disposables);
+
+        // ※ターン切り替え演出は Entry() 内で一元管理する
+        //   バズ発生時はバズ演出のみ表示し、ターン演出はスキップするため
 
         // イベントポップアップの確認ボタン押下時
         eventView.OnConfirmClicked
@@ -118,6 +126,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         
         // 保留イベントがあればポップアップを表示
         ShowPendingEventIfExists();
+
+        // ターン変更を検出し、バズ演出またはターン演出を表示する
+        ShowTurnOrBuzzAnnounce();
     }
     
     //初期化
@@ -126,6 +137,55 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // tomsShopView.Initialize();
         // tomsShopModel.Initialize();
         // itemSelectionPresenter.Initialize();
+    }
+
+    /// <summary>
+    /// ターン変更を検出し、バズ演出またはターン演出のどちらかを表示する。
+    /// 
+    /// 【排他制御】
+    /// - バズ発生/終了時 → バズ演出のみ表示（ターン演出はスキップ）
+    /// - バズなし → 通常のターン切り替え演出を表示
+    /// - 初回Entry（_lastKnownTurn == -1） → 演出なし（初期表示時はスキップ）
+    /// - サブフェーズ間遷移（ターン番号変化なし） → 演出なし
+    /// </summary>
+    private void ShowTurnOrBuzzAnnounce()
+    {
+        int currentTurn = gameFlowManager.CurrentTurn.Value;
+        bool turnChanged = _lastKnownTurn != -1 && _lastKnownTurn != currentTurn;
+        _lastKnownTurn = currentTurn;
+
+        // ターンが変わっていなければ演出不要（サブフェーズ間の遷移など）
+        if (!turnChanged)
+        {
+            // バズ結果が残っていれば消費だけして捨てる
+            marketingFacade?.ConsumeLastBuzzResult();
+            return;
+        }
+
+        // バズ結果を消費型で取得
+        var buzzResult = marketingFacade?.ConsumeLastBuzzResult();
+        bool hasBuzzEvent = buzzResult != null && (buzzResult.NewBuzzOccurred || buzzResult.BuzzEnded);
+
+        if (hasBuzzEvent)
+        {
+            // バズ演出を表示（ターン演出はスキップ）
+            if (buzzResult.BuzzEnded)
+            {
+                Debug.Log($"[TomsShopPresenter] バズ終了演出表示: {buzzResult.EndedBuzzType}");
+                tomsShopView.ShowBuzzEndedAnnounce(buzzResult.EndedBuzzType);
+            }
+
+            if (buzzResult.NewBuzzOccurred)
+            {
+                Debug.Log($"[TomsShopPresenter] バズ発生演出表示: {buzzResult.NewBuzzType}");
+                tomsShopView.ShowBuzzAnnounce(buzzResult.NewBuzzType);
+            }
+        }
+        else
+        {
+            // バズなし → 通常のターン切り替え演出
+            tomsShopView.ShowTurnAnnounce(currentTurn);
+        }
     }
 
     /// <summary>
