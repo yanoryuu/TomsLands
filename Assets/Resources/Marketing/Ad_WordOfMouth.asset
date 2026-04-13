@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d834a110ee1d436abfafc4fad32dcfe3, type: 3}
+  m_Name: Ad_WordOfMouth
+  m_EditorClassIdentifier: 
+  advertisementName: "\u53E3\u30B3\u30DF\u30AD\u30E3\u30F3\u30DA\u30FC\u30F3"
+  icon: {fileID: 6556482357240470286, guid: 930b64ac5f12a4457a203011facdbaf5, type: 3}
+  selectedBackground: {fileID: 4143201501449483532, guid: dce46941f1efd4173abb9890013b3ecc, type: 3}
+  cost: 1500
+  trustGain: 40
+  attentionGain: 0
+  spreadGain: 20
+  retentionGain: 0
+  followerGain: 0

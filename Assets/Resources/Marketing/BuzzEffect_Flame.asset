@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e7cdadaa2684f9e98c871ac9025c955, type: 3}
+  m_Name: BuzzEffect_Flame
+  m_EditorClassIdentifier: 
+  buzzType: 0
+  immediateRevenueMultiplierBase: 0.5
+  immediateRevenueSpreadCoeff: 0
+  immediateTrustChange: -30
+  immediateAttentionChange: 20
+  immediateFollowerBase: -500
+  immediateFollowerSpreadCoeff: 0
+  immediateFollowerFixed: 1
+  durationBase: 3
+  durationRetentionDivisor: 25
+  sustainedAllStatGain: 0
+  sustainedFollowerGain: 0
+  sustainedTrustChange: -5
+  sustainedRevenueMultiplier: 0.5
+  sustainedAdDiscountRate: 0
+  afterTrustChange: 0
+  afterAttentionChange: -10
+  afterGrantFreeMarketing: 0
+  afterFreeMarketingData: {fileID: 0}

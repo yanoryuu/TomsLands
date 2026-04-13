@@ -18,6 +18,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private TurnEndSummaryView turnEndSummaryView;
     [SerializeField] private EventView eventView;
     [SerializeField] private DungeonLevelUpView dungeonLevelUpView;
+    [SerializeField] private AdvertisementView advertisementView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -75,6 +76,74 @@ public class GameLifetimeScope : LifetimeScope
         }
         builder.RegisterInstance(shopEconomySettings);
 
+        // =====================================================
+        // マーケティングシステムのデータ登録
+        // =====================================================
+
+        // GameBalanceData のロードと登録
+        var gameBalanceData = Resources.Load<GameBalanceData>("Marketing/GameBalanceData");
+        if (gameBalanceData == null)
+        {
+            gameBalanceData = ScriptableObject.CreateInstance<GameBalanceData>();
+            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/GameBalanceData.asset が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
+        }
+        builder.RegisterInstance(gameBalanceData);
+
+        // 広告データのロードと登録（Resourcesフォルダから全件ロード）
+        var advertisementDataList = Resources.LoadAll<AdvertisementData>("Marketing").ToList();
+        if (advertisementDataList.Count == 0)
+        {
+            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に AdvertisementData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
+        }
+        builder.RegisterInstance(advertisementDataList);
+
+        // フォロワーマイルストーンデータのロードと登録
+        var milestoneDataList = Resources.LoadAll<FollowerMilestoneData>("Marketing").ToList();
+        if (milestoneDataList.Count == 0)
+        {
+            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に FollowerMilestoneData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
+        }
+        builder.RegisterInstance(milestoneDataList);
+
+        // バズ効果データのロードと登録（タイプ別に個別登録）
+        var allBuzzEffects = Resources.LoadAll<BuzzEffectData>("Marketing");
+        BuzzEffectData flameBuzzData = null;
+        BuzzEffectData normalBuzzData = null;
+        BuzzEffectData bigBuzzData = null;
+
+        foreach (var buzz in allBuzzEffects)
+        {
+            switch (buzz.buzzType)
+            {
+                case BuzzType.Flame: flameBuzzData = buzz; break;
+                case BuzzType.Normal: normalBuzzData = buzz; break;
+                case BuzzType.Big: bigBuzzData = buzz; break;
+            }
+        }
+
+        // null の場合はデフォルトインスタンスを生成
+        if (flameBuzzData == null)
+        {
+            flameBuzzData = ScriptableObject.CreateInstance<BuzzEffectData>();
+            flameBuzzData.buzzType = BuzzType.Flame;
+            Debug.LogWarning("[GameLifetimeScope] 炎上バズデータが見つかりません。デフォルト値で生成しました。");
+        }
+        if (normalBuzzData == null)
+        {
+            normalBuzzData = ScriptableObject.CreateInstance<BuzzEffectData>();
+            normalBuzzData.buzzType = BuzzType.Normal;
+            Debug.LogWarning("[GameLifetimeScope] 通常バズデータが見つかりません。デフォルト値で生成しました。");
+        }
+        if (bigBuzzData == null)
+        {
+            bigBuzzData = ScriptableObject.CreateInstance<BuzzEffectData>();
+            bigBuzzData.buzzType = BuzzType.Big;
+            Debug.LogWarning("[GameLifetimeScope] 大バズデータが見つかりません。デフォルト値で生成しました。");
+        }
+
+        // BuzzEffectData は BuzzSystem の WithParameter で名前付き注入する
+        // （同じ型が3つあるため、RegisterInstance では区別できない）
+
         // ItemVisualSettings のロードと登録
         var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
         if (itemVisualSettings == null)
@@ -114,6 +183,18 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<DarkShopManager>(Lifetime.Singleton);
         builder.Register<EventFragManager>(Lifetime.Singleton);
 
+        // =====================================================
+        // マーケティングシステム（Models / Systems）
+        // =====================================================
+        builder.Register<ShopStatusModel>(Lifetime.Singleton);
+        builder.Register<FollowerSystem>(Lifetime.Singleton);
+        builder.Register<AdvertisementSystem>(Lifetime.Singleton);
+        builder.Register<BuzzSystem>(Lifetime.Singleton)
+            .WithParameter("flameData", flameBuzzData)
+            .WithParameter("normalBuzzData", normalBuzzData)
+            .WithParameter("bigBuzzData", bigBuzzData);
+        builder.Register<SalesCalculator>(Lifetime.Singleton);
+
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
@@ -131,6 +212,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, turnEndSummaryView, nameof(turnEndSummaryView));
         RegisterComponentSafe(builder, eventView, nameof(eventView));
         RegisterComponentSafe(builder, dungeonLevelUpView, nameof(dungeonLevelUpView));
+        RegisterComponentSafe(builder, advertisementView, nameof(advertisementView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -144,6 +226,9 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>().AsSelf();
 
+        // 広告購入画面
+        builder.RegisterEntryPoint<AdvertisementPresenter>();
+
         // --- 5. System Logic (Save/Delete) ---
         // セーブ削除や保存ロジックを独立したクラスとして登録
         builder.RegisterEntryPoint<GameLifecycleHandler>();
@@ -153,6 +238,9 @@ public class GameLifetimeScope : LifetimeScope
 
         // イベント結果の処理ハンドラ（EventScene から帰還時に自動実行）
         builder.RegisterEntryPoint<EventResultHandler>();
+
+        // マーケティングシステムのファサード（統合窓口）
+        builder.RegisterEntryPoint<MarketingFacade>().AsSelf();
         
         Debug.Log($"GameLifetimeScope configured.");
     }

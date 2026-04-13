@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e7cdadaa2684f9e98c871ac9025c955, type: 3}
+  m_Name: BuzzEffect_Big
+  m_EditorClassIdentifier: 
+  buzzType: 2
+  immediateRevenueMultiplierBase: 2.5
+  immediateRevenueSpreadCoeff: 0.01
+  immediateTrustChange: 15
+  immediateAttentionChange: 20
+  immediateFollowerBase: 0
+  immediateFollowerSpreadCoeff: 30
+  immediateFollowerFixed: 0
+  durationBase: 3
+  durationRetentionDivisor: 25
+  sustainedAllStatGain: 5
+  sustainedFollowerGain: 300
+  sustainedTrustChange: 0
+  sustainedRevenueMultiplier: 0
+  sustainedAdDiscountRate: 0.3
+  afterTrustChange: 20
+  afterAttentionChange: 0
+  afterGrantFreeMarketing: 1
+  afterFreeMarketingData: {fileID: 11400000, guid: 32f8c6c39672e844fbf58c042b40b593, type: 2}
