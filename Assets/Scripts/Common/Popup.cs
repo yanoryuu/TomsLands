@@ -24,7 +24,6 @@ public class Popup : MonoBehaviour
             confirmButton.onClick.AddListener(() =>
             {
                 data.OnConfirm?.Invoke();
-                Destroy(gameObject); // ポップアップを閉じる
             });
         }
 
@@ -33,7 +32,6 @@ public class Popup : MonoBehaviour
             cancelButton.onClick.AddListener(() =>
             {
                 data.OnCancel?.Invoke();
-                Destroy(gameObject); // ポップアップを閉じる
             });
         }
     }

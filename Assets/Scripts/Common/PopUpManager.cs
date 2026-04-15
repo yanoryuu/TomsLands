@@ -37,6 +37,22 @@ public class PopUpManager
     {
         if (isLoading) return;
 
+        // 元のコールバックをラップし、実行後に自動で Close() を呼ぶ
+        var originalOnConfirm = data.OnConfirm;
+        var originalOnCancel  = data.OnCancel;
+
+        data.OnConfirm = () =>
+        {
+            originalOnConfirm?.Invoke();
+            Close();
+        };
+
+        data.OnCancel = () =>
+        {
+            originalOnCancel?.Invoke();
+            Close();
+        };
+
         CurrentData = data;
         isLoading = true;
 
