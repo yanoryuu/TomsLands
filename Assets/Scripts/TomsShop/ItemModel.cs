@@ -252,6 +252,12 @@ public class ItemModel
             if (runtime.RequiredLevel.Value > blacksmithLevel) continue;
 
             // ------------------------------------------------
+            // 需要・価格のスナップショット保存（ポップアップ表示用）
+            // ------------------------------------------------
+            runtime.PreviousDemand = runtime.Demand.Value;
+            runtime.PreviousPrice = runtime.CurrentPrice.Value;
+
+            // ------------------------------------------------
             // 案D2: 品出し陳列効果（需要変動）
             // ------------------------------------------------
             if (runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0)

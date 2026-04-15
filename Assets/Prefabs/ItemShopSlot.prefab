@@ -1632,6 +1632,7 @@ MonoBehaviour:
   purchaseButton: {fileID: 9145168474632828777}
   plusButton: {fileID: 2609142872756814945}
   minusButton: {fileID: 6873835396062084059}
+  iconButton: {fileID: 7639474776566039050}
 --- !u!1 &9219565775492033638
 GameObject:
   m_ObjectHideFlags: 0

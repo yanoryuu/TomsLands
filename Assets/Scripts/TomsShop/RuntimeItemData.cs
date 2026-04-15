@@ -36,19 +36,32 @@ public class RuntimeItemData
     /// シリアライズ不要（毎ターン SimulateShopSales で更新される）。
     /// </summary>
     public bool WasSoldLastTurn { get; set; }
+
+    /// <summary>
+    /// 前ターンの需要値（需要変動幅の表示用）。
+    /// ApplyShopTurnEconomy の冒頭でスナップショットされる。
+    /// </summary>
+    public float PreviousDemand { get; set; }
+
+    /// <summary>
+    /// 前ターンの価格（価格変動幅の表示用）。
+    /// ApplyShopTurnEconomy の冒頭でスナップショットされる。
+    /// </summary>
+    public int PreviousPrice { get; set; }
+
     public RuntimeItemData(
         string itemId,
         string itemName,
         int currentPrice,
-        int maxStock, 
+        int maxStock,
         int stock,
         int displayStock,
         Sprite icon,
         Sprite backgroundSprite,
         ItemTypeData.ItemType itemType,
         ItemTypeData.ItemAttribute itemAttribute,
-        int requiredLevel, 
-        float demand = 0.5f ,
+        int requiredLevel,
+        float demand = 0.5f,
         string description = "",
         float salesRate = 1.0f)
     {
@@ -63,11 +76,13 @@ public class RuntimeItemData
         Demand = new ReactiveProperty<float>(demand);
         IsPopular = new ReactiveProperty<bool>(demand >= 0.8f);
         ItemType = itemType;
-        ItemAttribute = itemAttribute; 
+        ItemAttribute = itemAttribute;
         RequiredLevel = new ReactiveProperty<int>(requiredLevel);
         IsDisplay = new ReactiveProperty<bool>(false);
         ItemDescription = description;
         SalesRate = salesRate;
+        PreviousDemand = demand;
+        PreviousPrice = currentPrice;
     }
 
     // 保存→復元CTor（Plain→Runtime）
@@ -89,6 +104,9 @@ public class RuntimeItemData
         IsDisplay      = new ReactiveProperty<bool>(plainData.isDisplay);
         ItemDescription = plainData.description;
         SalesRate = plainData.salesRate;
+        // 古いセーブデータ互換: previousDemand が 0 以下なら現在値をコピー
+        PreviousDemand = plainData.previousDemand > 0f ? plainData.previousDemand : Demand.Value;
+        PreviousPrice = plainData.previousPrice > 0 ? plainData.previousPrice : CurrentPrice.Value;
     }
 
     public void UpdatePopularity()
@@ -146,7 +164,9 @@ public class RuntimeItemData
             isDisplay =  IsDisplay.Value,
             requiredLevel = RequiredLevel.Value,
             description = ItemDescription,
-            salesRate = SalesRate
+            salesRate = SalesRate,
+            previousDemand = PreviousDemand,
+            previousPrice = PreviousPrice
         };
     }
 }
@@ -168,6 +188,8 @@ public class RuntimeItemDataPlain
     public bool isDisplay;
     public string description;
     public float salesRate;
+    public float previousDemand;
+    public int previousPrice;
 }
 
 public class ItemTypeData

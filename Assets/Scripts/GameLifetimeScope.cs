@@ -201,6 +201,9 @@ public class GameLifetimeScope : LifetimeScope
         // ポップアップ管理（Additive ロードされる PopupScene にデータを渡す中継役）
         builder.Register<PopUpManager>(Lifetime.Singleton);
 
+        // アイテム市場分析ポップアップ管理（Additive ロードされる ItemPopupScene にデータを渡す中継役）
+        builder.Register<ItemPopUpManager>(Lifetime.Singleton);
+
         // --- 3. Views (Components) ---
         // Scene上にあるViewを登録（null の場合はエラーログを出力）
         RegisterComponentSafe(builder, blackSmithView, nameof(blackSmithView));
