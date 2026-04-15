@@ -198,6 +198,9 @@ public class GameLifetimeScope : LifetimeScope
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
+        // ポップアップ管理（Additive ロードされる PopupScene にデータを渡す中継役）
+        builder.Register<PopUpManager>(Lifetime.Singleton);
+
         // --- 3. Views (Components) ---
         // Scene上にあるViewを登録（null の場合はエラーログを出力）
         RegisterComponentSafe(builder, blackSmithView, nameof(blackSmithView));
