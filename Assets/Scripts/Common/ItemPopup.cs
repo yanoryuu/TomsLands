@@ -27,7 +27,6 @@ public class ItemPopup : MonoBehaviour
     [SerializeField] private TextMeshProUGUI stockText;
     [Header("Sales")]
     [SerializeField] private TextMeshProUGUI salesRateText;
-    [SerializeField] private TextMeshProUGUI soldLastTurnText;
 
     [Header("Recommendation")]
     [SerializeField] private TextMeshProUGUI recommendationText;
@@ -163,21 +162,6 @@ public class ItemPopup : MonoBehaviour
             {
                 salesRateText.text = "売れにくい";
                 salesRateText.color = new Color32(255, 68, 68, 255);
-            }
-        }
-
-        // ---- 前ターン販売実績 ----
-        if (soldLastTurnText)
-        {
-            if (data.WasSoldLastTurn)
-            {
-                soldLastTurnText.text = "売れた";
-                soldLastTurnText.color = new Color32(0, 204, 0, 255);
-            }
-            else
-            {
-                soldLastTurnText.text = "売れていない";
-                soldLastTurnText.color = new Color32(170, 170, 170, 255);
             }
         }
 

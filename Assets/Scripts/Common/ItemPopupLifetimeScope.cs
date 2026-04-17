@@ -15,6 +15,7 @@ public class ItemPopupLifetimeScope : LifetimeScope
     protected override void Configure(IContainerBuilder builder)
     {
         // View の登録
+        // 親コンテナの ItemPopUpManager は EnqueueParent により自動的に解決される
         if (itemPopUpView != null)
         {
             builder.RegisterComponent(itemPopUpView);

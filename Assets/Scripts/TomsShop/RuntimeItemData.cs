@@ -122,6 +122,11 @@ public class RuntimeItemData
     public void UpdateStock(int stock)
     {
         Stock.Value = Mathf.Clamp(stock, 0, MaxStock.Value);
+        // 在庫が減った場合、品出し数が在庫を超えないようにクランプ
+        if (DisplayStock.Value > Stock.Value)
+        {
+            DisplayStock.Value = Stock.Value;
+        }
     }
 
     public void UpdateDisplayStock(int stock)
