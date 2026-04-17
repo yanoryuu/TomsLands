@@ -173,6 +173,11 @@ public class ItemModel
             }
 
             runtime.Stock.Value -= quantitySold;
+            // 在庫が減ったら品出し数もクランプ
+            if (runtime.DisplayStock.Value > runtime.Stock.Value)
+            {
+                runtime.DisplayStock.Value = runtime.Stock.Value;
+            }
             runtime.WasSoldLastTurn = true;
             salesResult[runtime.ItemId] = quantitySold;
 

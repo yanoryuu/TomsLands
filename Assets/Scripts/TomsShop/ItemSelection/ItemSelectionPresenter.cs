@@ -76,18 +76,18 @@ public class ItemSelectionPresenter :IDisposable,IStartable
         {
             var itemdata = itemModel.GetRuntimeItem(slot.itemId);
 
-            //アイテムの情報に保存されているストック情報をuIに反映
-            itemdata.DisplayStock.Subscribe(x =>
-                {
-                    slot.SetDisplayQuantity(x);
-                })
-                .AddTo(disposables);
-
-            //現在の所持ストックがSlotの最大品出し数
+            //現在の所持ストックがSlotの最大品出し数（DisplayStockより先に設定する）
             itemdata.Stock.Subscribe(x =>
                 {
                     slot.SetMaxDisplayQuantity(x);
                     slot.SetStock(x);
+                })
+                .AddTo(disposables);
+
+            //アイテムの情報に保存されているストック情報をuIに反映
+            itemdata.DisplayStock.Subscribe(x =>
+                {
+                    slot.SetDisplayQuantity(x);
                 })
                 .AddTo(disposables);
             

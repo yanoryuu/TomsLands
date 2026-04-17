@@ -15,6 +15,15 @@ EditorBuildSettings:
     path: Assets/Scene/FightScene.unity
     guid: d4d0fe2076664db498bf20fabd03dbb6
   - enabled: 1
+    path: Assets/Scene/PreparationScene.unity
+    guid: aa7607d5311b67a42aa4210b9dacb52b
+  - enabled: 1
+    path: Assets/Scene/ItemPopupScene.unity
+    guid: 66a7cfa5b5f154fdda1a339ff3ec2b7a
+  - enabled: 1
+    path: Assets/Scene/PopupScene.unity
+    guid: 2c77f5b242b414fe5af4a948a59833c5
+  - enabled: 1
     path: Assets/Scene/ResultScene.unity
     guid: 8dfeb32cf729d0647a7af00a22058496
   m_configObjects:

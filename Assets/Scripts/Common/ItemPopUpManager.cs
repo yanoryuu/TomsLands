@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using VContainer.Unity;
 
 /// <summary>
 /// アイテム市場分析ポップアップの表示・非表示を管理する。
@@ -8,6 +9,12 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class ItemPopUpManager
 {
+    private readonly LifetimeScope parentScope;
+
+    public ItemPopUpManager(LifetimeScope parentScope)
+    {
+        this.parentScope = parentScope;
+    }
     /// <summary>
     /// ポップアップシーンに渡すデータを一時保持するプロパティ。
     /// シーンロード完了後に ItemPopUpView がここからデータを読み取る。
@@ -35,10 +42,14 @@ public class ItemPopUpManager
         CurrentData = data;
         isLoading = true;
 
-        var op = SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);
-        if (op != null)
+        // 子シーンの LifetimeScope が親コンテナを参照できるようにする
+        using (LifetimeScope.EnqueueParent(parentScope))
         {
-            op.completed += _ => isLoading = false;
+            var op = SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);
+            if (op != null)
+            {
+                op.completed += _ => isLoading = false;
+            }
         }
     }
 
