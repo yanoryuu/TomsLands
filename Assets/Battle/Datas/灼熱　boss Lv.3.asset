@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
   hp: 100
-  attackPower: 10
-  defensePower: 5
+  attackPower: 20
+  defensePower: 15
   elementType: 0
   enemySprite: {fileID: 0}
   skills: []

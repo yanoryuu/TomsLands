@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: "\u30E1\u30C0\u30EA\u30AA\u30F33"
   m_EditorClassIdentifier: 
   enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
-  hp: 100
+  hp: 30
   attackPower: 10
   defensePower: 5
-  elementType: 0
-  enemySprite: {fileID: 0}
+  elementType: 4
+  enemySprite: {fileID: 21300000, guid: 5239110c281ef40dda2ba995c429ff4a, type: 3}
   skills: []
   description: 
   isBoss: 0

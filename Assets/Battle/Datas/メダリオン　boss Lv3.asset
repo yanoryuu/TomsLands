@@ -14,10 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
   hp: 100
-  attackPower: 10
-  defensePower: 5
-  elementType: 0
-  enemySprite: {fileID: 0}
+  attackPower: 20
+  defensePower: 15
+  elementType: 4
+  enemySprite: {fileID: 21300000, guid: ff5124bfb7f0e4eb7b18a1c1e9ca3283, type: 3}
   skills: []
   description: 
-  isBoss: 0
+  isBoss: 1

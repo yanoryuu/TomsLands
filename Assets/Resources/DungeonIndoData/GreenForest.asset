@@ -28,34 +28,34 @@ MonoBehaviour:
     - {fileID: 11400000, guid: f86d30530f0ca6c44824ce52129e09a6, type: 2}
     - {fileID: 11400000, guid: f12c359ffd8a3a54db9186a0d78be1cf, type: 2}
     bossName: jungle boss Lv1
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 10000
+    levelUpCost: 5000
   - monsters:
     - {fileID: 11400000, guid: 54a7722b5b682dd4d96b221a44ce9ed9, type: 2}
     - {fileID: 11400000, guid: 4dcf65ea8c7800d459788907a373ad58, type: 2}
     - {fileID: 11400000, guid: 7362fe1b8453bad4ba8c6ad963a61ee7, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 20000
+    levelUpCost: 10000
   - monsters:
     - {fileID: 11400000, guid: c720060011b73ad448076bc71553dd37, type: 2}
     - {fileID: 11400000, guid: f346bd03f474c514ea0968a6ca83bc83, type: 2}
     - {fileID: 11400000, guid: bc04d3b6b4c9570418b31ed69bd1a9bc, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 40000
+    levelUpCost: 20000
   - monsters:
     - {fileID: 11400000, guid: 18596072c3f3aa945ad3a1649228c08b, type: 2}
     - {fileID: 11400000, guid: 5fe4462174d82e74ba0c02a9989703fd, type: 2}
     - {fileID: 11400000, guid: 335b91dbeae0eae45a0f35032d7cc706, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 80000
+    levelUpCost: 40000
   - monsters:
     - {fileID: 11400000, guid: 126ff0e47eddd714ea67ab0493a82251, type: 2}
     - {fileID: 11400000, guid: 1501b8c4a75c32746b77fe193d6ed059, type: 2}
     - {fileID: 11400000, guid: 279d1db8b5f69064e8439ea8f3361f15, type: 2}
     - {fileID: 11400000, guid: e45d4447f23ac254db880bc5248fbf4a, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 200000
+    levelUpCost: 100000

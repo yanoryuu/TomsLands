@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: "\u707C\u71B1\u3000boss Lv.1"
   m_EditorClassIdentifier: 
   enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
-  hp: 100
-  attackPower: 10
-  defensePower: 5
-  elementType: 0
+  hp: 55
+  attackPower: 13
+  defensePower: 10
+  elementType: 2
   enemySprite: {fileID: 0}
   skills: []
   description: 

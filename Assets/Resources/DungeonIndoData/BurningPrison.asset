@@ -23,23 +23,39 @@ MonoBehaviour:
   difficulty: 5
   requiredAttribute: 0
   levelDataList:
-  - monsters: []
+  - monsters:
+    - {fileID: 11400000, guid: 333885e59c466354b800e9b5c680fb09, type: 2}
+    - {fileID: 11400000, guid: a227a5f43aafb88448aacbcc70825c5d, type: 2}
+    - {fileID: 11400000, guid: dbfdc83aef2fe0342975ad0b58b9280b, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
-  - monsters: []
+    rewardGold: 5000
+    levelUpCost: 10000
+  - monsters:
+    - {fileID: 11400000, guid: 9c4e6f0a989577e4f94005c5cd56b686, type: 2}
+    - {fileID: 11400000, guid: 866ce5d1bc445b040a6c2f676eb23d69, type: 2}
+    - {fileID: 11400000, guid: 80a201ca0fad0a347abc1ef90b042c9b, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
-  - monsters: []
+    rewardGold: 20000
+    levelUpCost: 10000
+  - monsters:
+    - {fileID: 11400000, guid: a96ba68d75b13b04a8901d1df52523e6, type: 2}
+    - {fileID: 11400000, guid: 2dc73cdd2d6ff3c499611af19f945106, type: 2}
+    - {fileID: 11400000, guid: 26d5433288f9a3345a790f760b06ac69, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
-  - monsters: []
+    rewardGold: 40000
+    levelUpCost: 20000
+  - monsters:
+    - {fileID: 11400000, guid: 83fcd5f375d3e044b955e432127cccea, type: 2}
+    - {fileID: 11400000, guid: c4ca11f5ae703a04288fbf79a2f4e2ea, type: 2}
+    - {fileID: 11400000, guid: a31cda73bf8aae447aaaaab880d0d53d, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
-  - monsters: []
+    rewardGold: 80000
+    levelUpCost: 40000
+  - monsters:
+    - {fileID: 11400000, guid: 095b9606dbffd614bbdf4688cbd609f7, type: 2}
+    - {fileID: 11400000, guid: bc78b6bb57a83b64089223993b58bf2a, type: 2}
+    - {fileID: 11400000, guid: 1998c2a547a8ded47bfde0030e65f7ed, type: 2}
+    - {fileID: 11400000, guid: fa0df457ca60dfb4e9df9e2c57d7c7ad, type: 2}
     bossName: 
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 200000
+    levelUpCost: 100000
