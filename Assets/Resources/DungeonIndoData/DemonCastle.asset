@@ -22,10 +22,24 @@ MonoBehaviour:
   recommendedLevel: 10
   difficulty: 10
   requiredAttribute: 0
-  dungeonMonsters:
-  - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-  - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-  dungeonBoss: 
-  currentDungeonLevel: 1
-  rewardGold: 0
-  dungeonStatus: 2
+  levelDataList:
+  - monsters: []
+    bossName: 
+    rewardGold: 10000
+    levelUpCost: 5000
+  - monsters: []
+    bossName: 
+    rewardGold: 20000
+    levelUpCost: 10000
+  - monsters: []
+    bossName: 
+    rewardGold: 40000
+    levelUpCost: 20000
+  - monsters: []
+    bossName: 
+    rewardGold: 80000
+    levelUpCost: 40000
+  - monsters: []
+    bossName: 
+    rewardGold: 200000
+    levelUpCost: 100000

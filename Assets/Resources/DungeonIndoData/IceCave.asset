@@ -21,37 +21,41 @@ MonoBehaviour:
   initDungeonLevel: 1
   recommendedLevel: 3
   difficulty: 3
-  requiredAttribute: 0
+  requiredAttribute: 2
   levelDataList:
   - monsters:
-    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: 126ff0e47eddd714ea67ab0493a82251, type: 2}
+    - {fileID: 11400000, guid: 17bd9d947df5b0f45b5da4e4e575410b, type: 2}
+    - {fileID: 11400000, guid: c34f0d98df3f0454d94214d9c52676bd, type: 2}
+    - {fileID: 11400000, guid: dbd8332ae9496474cba7546266b62a0a, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 10000
+    levelUpCost: 5000
   - monsters:
-    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
+    - {fileID: 11400000, guid: e3dc7dbcbe914434f854bb8ff4422136, type: 2}
+    - {fileID: 11400000, guid: 84c9f95fc17af6d4a836ec676c70aab7, type: 2}
+    - {fileID: 11400000, guid: 8e41645af40e1b743a08d04029e7709f, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 20000
+    levelUpCost: 10000
   - monsters:
-    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
-    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: ba1a37558b33af24ebb0f59f71669ca9, type: 2}
+    - {fileID: 11400000, guid: 1ea0e5e6f901e0a4a96408317204a490, type: 2}
+    - {fileID: 11400000, guid: ba16821a7cd19724da48ffb708178fe0, type: 2}
+    - {fileID: 11400000, guid: 31c6b84eb4788ab4f8e95644c45af124, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 40000
+    levelUpCost: 20000
   - monsters:
-    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
+    - {fileID: 11400000, guid: fed8e2fec145a7f469e4780599b11948, type: 2}
+    - {fileID: 11400000, guid: 839d3d9307cea1748acdcaa560f06fd7, type: 2}
+    - {fileID: 11400000, guid: fc2fc525287d2ca4ea4b0e47702d6d19, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 80000
+    levelUpCost: 40000
   - monsters:
-    - {fileID: 11400000, guid: 265373c4b8b08464eace7fe54ef5dd79, type: 2}
-    - {fileID: 11400000, guid: e43182b3dd9f9904abf927283e447e02, type: 2}
+    - {fileID: 11400000, guid: b319d3f6112e24042a9c7a7584e62029, type: 2}
+    - {fileID: 11400000, guid: 2f809b7c52454294b8a3f14c07f0ab7a, type: 2}
+    - {fileID: 11400000, guid: 919d93649e2a76644966fffdbba61f43, type: 2}
+    - {fileID: 11400000, guid: 354c395594e042e499606d13afbbd6f1, type: 2}
     bossName: "\u30D0\u30B8\u30EA\u30B9\u30AF"
-    rewardGold: 0
-    levelUpCost: 0
+    rewardGold: 200000
+    levelUpCost: 100000
