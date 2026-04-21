@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: "\u707C\u71B15"
   m_EditorClassIdentifier: 
-  enemyName: "\u30E2\u30F3\u30B9\u30BF\u30FC"
+  enemyName: "\u707C\u71B15"
   hp: 40
   attackPower: 12
   defensePower: 8
   elementType: 2
-  enemySprite: {fileID: 0}
+  enemySprite: {fileID: 21300000, guid: 50e54a5be45d84ccdbc2bbebe5aac55b, type: 3}
   skills: []
   description: 
   isBoss: 0
