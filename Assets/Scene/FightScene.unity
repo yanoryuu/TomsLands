@@ -4889,8 +4889,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4b0c9958a3a3494bb58dc682c7a2fbe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  availablePanel: {fileID: 0}
-  selectedPanel: {fileID: 0}
+  availablePanel: {fileID: 1931250853}
+  selectedPanel: {fileID: 8573614289707046220}
   availableSlotPrefab: {fileID: 8448175552804354539, guid: 9f0a7e905b18a7147b6476f9f22971f8, type: 3}
   selectedSlotPrefab: {fileID: 8448175552804354539, guid: ca44d8c67dd6f4757821bcffdf921d64, type: 3}
   confirmButton: {fileID: 2081098538}
@@ -7254,6 +7254,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5180091095046237469, guid: 90658a36a2740480aa18ccb536b54880, type: 3}
   m_PrefabInstance: {fileID: 1931250851}
   m_PrefabAsset: {fileID: 0}
+--- !u!224 &1931250853 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8182196444715594881, guid: 90658a36a2740480aa18ccb536b54880, type: 3}
+  m_PrefabInstance: {fileID: 1931250851}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1949823721
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7502,7 +7507,7 @@ GameObject:
   - component: {fileID: 2081098539}
   - component: {fileID: 2081098538}
   m_Layer: 5
-  m_Name: Button
+  m_Name: StartStreaming
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8362,6 +8367,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 90658a36a2740480aa18ccb536b54880, type: 3}
+--- !u!224 &8573614289707046220 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 8182196444715594881, guid: 90658a36a2740480aa18ccb536b54880, type: 3}
+  m_PrefabInstance: {fileID: 8573614289707046219}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

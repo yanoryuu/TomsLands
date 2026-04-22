@@ -1453,7 +1453,7 @@ GameObject:
   - component: {fileID: 7875064005661542375}
   - component: {fileID: 3310394115477805746}
   - component: {fileID: 303061192882948882}
-  - component: {fileID: 963637838928208504}
+  - component: {fileID: 399884931776606134}
   m_Layer: 5
   m_Name: Naraberu
   m_TagString: Untagged
@@ -1518,7 +1518,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &963637838928208504
+--- !u!114 &399884931776606134
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1527,7 +1527,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 7615737372328117609}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
@@ -1537,7 +1537,7 @@ MonoBehaviour:
     m_SelectOnDown: {fileID: 0}
     m_SelectOnLeft: {fileID: 0}
     m_SelectOnRight: {fileID: 0}
-  m_Transition: 2
+  m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
     m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
@@ -1547,9 +1547,9 @@ MonoBehaviour:
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
-    m_HighlightedSprite: {fileID: 3325436695404339019, guid: 4f1a36bba13a6422bbb0194498164957, type: 3}
-    m_PressedSprite: {fileID: 3325436695404339019, guid: 4f1a36bba13a6422bbb0194498164957, type: 3}
-    m_SelectedSprite: {fileID: -5890933135280289554, guid: 7cd78f614b52042a7922c9fc9d203392, type: 3}
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
     m_NormalTrigger: Normal
@@ -1559,13 +1559,9 @@ MonoBehaviour:
     m_DisabledTrigger: Disabled
   m_Interactable: 1
   m_TargetGraphic: {fileID: 303061192882948882}
-  toggleTransition: 1
-  graphic: {fileID: 0}
-  m_Group: {fileID: 0}
-  onValueChanged:
+  m_OnClick:
     m_PersistentCalls:
       m_Calls: []
-  m_IsOn: 0
 --- !u!1 &7753781545435805142
 GameObject:
   m_ObjectHideFlags: 0
@@ -1630,7 +1626,7 @@ MonoBehaviour:
   backgroundImage: {fileID: 7411438930716211346}
   itemNameText: {fileID: 3955320961639262602}
   priceText: {fileID: 4263095691205557426}
-  selectToggle: {fileID: 963637838928208504}
+  selectButton: {fileID: 399884931776606134}
   quantitySlider: {fileID: 9055286790144743683}
   quantityText: {fileID: 3771440067830512467}
   stockText: {fileID: 1006006757505959308}
@@ -1640,7 +1636,10 @@ MonoBehaviour:
   slotBackground: {fileID: 7411438930716211346}
   displayingColor: {r: 0.6, g: 1, b: 0.6, a: 1}
   notDisplayingColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}
-  displayingIndicator: {fileID: 0}
+  displayingIndicator: {fileID: 7954347248974390883}
+  selectButtonBackground: {fileID: 0}
+  selectedButtonColor: {r: 0.4, g: 0.8, b: 0.4, a: 1}
+  deselectedButtonColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1 &7954347248974390883
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,14 +7,18 @@ using TMPro;
 public class ItemSelectionView : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Transform itemListParent;                   // スロットを並べる親
-    [SerializeField] private GameObject itemSelectionSlotPrefab;         // スロットプレハブ
+    [SerializeField] private Transform itemListParent;
+    [SerializeField] private GameObject itemSelectionSlotPrefab;
     [SerializeField] private Button closeButton;
-    [SerializeField] private GameObject itemSelectionPanel;          // アイテム選択パネル
+    [SerializeField] private GameObject itemSelectionPanel;
     [SerializeField] private Button armorPanelButton;
     [SerializeField] private Button weaponPanelButton;
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
     [SerializeField] private Image itemIcon;
+
+    [Header("陳列パネル")]
+    [SerializeField] private Transform displayListParent;
+    [SerializeField] private GameObject itemDisplaySlotPrefab;
 
     [SerializeField] private GameObject weaponTab;
     [SerializeField] private GameObject armorTab;
@@ -23,6 +27,8 @@ public class ItemSelectionView : MonoBehaviour
     private readonly List<GameObject> activeSlots = new();
     public Subject<Unit> OnArmorPanelRequested { get; private set; } = new();
     public Subject<Unit> OnWeaponPanelRequested { get; private set; } = new();
+
+    private readonly Dictionary<string, ItemDisplaySlot> displaySlots = new();
 
     private void Awake()
     {
@@ -98,5 +104,31 @@ public class ItemSelectionView : MonoBehaviour
                 toolTab.transform.SetAsLastSibling();
                 break;
         }
+    }
+
+    public ItemDisplaySlot EnsureDisplaySlot(string itemId, Sprite icon, int quantity)
+    {
+        if (displaySlots.TryGetValue(itemId, out var existing))
+            return existing;
+
+        var slotObj = Instantiate(itemDisplaySlotPrefab, displayListParent);
+        var slot = slotObj.GetComponent<ItemDisplaySlot>();
+        slot.SetItem(itemId, icon, quantity);
+        displaySlots[itemId] = slot;
+        return slot;
+    }
+
+    public void RemoveDisplaySlot(string itemId)
+    {
+        if (!displaySlots.TryGetValue(itemId, out var slot)) return;
+        Destroy(slot.gameObject);
+        displaySlots.Remove(itemId);
+    }
+
+    public void ClearDisplaySlots()
+    {
+        foreach (var slot in displaySlots.Values)
+            Destroy(slot.gameObject);
+        displaySlots.Clear();
     }
 }
