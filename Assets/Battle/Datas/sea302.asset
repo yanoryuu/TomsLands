@@ -13,9 +13,11 @@ MonoBehaviour:
   m_Name: sea302
   m_EditorClassIdentifier: 
   enemyName: sea302
-  hp: 35
-  attackPower: 10
-  defensePower: 5
-  elementType: 0
+  hp: 25
+  attackPower: 8
+  defensePower: 3
+  elementType: 1
   enemySprite: {fileID: 21300000, guid: f2c475f93997d4c0f92c4250bb1273e4, type: 3}
   skills: []
+  description: 
+  isBoss: 0
