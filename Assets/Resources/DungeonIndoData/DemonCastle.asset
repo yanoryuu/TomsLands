@@ -21,25 +21,41 @@ MonoBehaviour:
   initDungeonLevel: 1
   recommendedLevel: 10
   difficulty: 10
-  requiredAttribute: 0
+  requiredAttribute: 4
   levelDataList:
-  - monsters: []
-    bossName: 
+  - monsters:
+    - {fileID: 11400000, guid: 966f7cbb65cc7504c8b2779ec1dda38c, type: 2}
+    - {fileID: 11400000, guid: 68a0ef4bd1a342a4db19f7132e690f24, type: 2}
+    - {fileID: 11400000, guid: e9890eb43469c4641afa7dc4f046e25e, type: 2}
+    bossName: "\u9B54\u738B\u57CE boss v.1"
     rewardGold: 10000
     levelUpCost: 5000
-  - monsters: []
-    bossName: 
+  - monsters:
+    - {fileID: 11400000, guid: 974848ff848092e46977ab7016ad25b6, type: 2}
+    - {fileID: 11400000, guid: ae2ccda13ab4073498c1767e0e60cf3a, type: 2}
+    - {fileID: 11400000, guid: 2ce8e57e4d3c08b478a52e7eba02b2a5, type: 2}
+    bossName: "\u9B54\u738B\u57CE boss v.2"
     rewardGold: 20000
     levelUpCost: 10000
-  - monsters: []
-    bossName: 
+  - monsters:
+    - {fileID: 11400000, guid: bf49df7eef53987429aa8153b345a2cb, type: 2}
+    - {fileID: 11400000, guid: 78ebabf98ac173546b902589de645062, type: 2}
+    - {fileID: 11400000, guid: 2f12d88c5f38b1d4fbc019690075683e, type: 2}
+    bossName: "\u9B54\u738B\u57CE boss v.3"
     rewardGold: 40000
     levelUpCost: 20000
-  - monsters: []
-    bossName: 
+  - monsters:
+    - {fileID: 11400000, guid: 6bf0a07611b5cb74785dbbcc1cc93738, type: 2}
+    - {fileID: 11400000, guid: c74d256a582fecc4ca14592561e4ed8f, type: 2}
+    - {fileID: 11400000, guid: 49a5d83c48a93d545987c5ea16bfb3e2, type: 2}
+    bossName: "\u9B54\u738B\u57CE boss v.4"
     rewardGold: 80000
     levelUpCost: 40000
-  - monsters: []
-    bossName: 
+  - monsters:
+    - {fileID: 11400000, guid: 03611816773d2cb43b6e1ea2c4b18a0e, type: 2}
+    - {fileID: 11400000, guid: 221c48447a86b32488d93e9e81c2ecff, type: 2}
+    - {fileID: 11400000, guid: 2549580db431f2b41bbe338a11fbbfae, type: 2}
+    - {fileID: 11400000, guid: a036bd32814acc64c8fb5dc8efc661b7, type: 2}
+    bossName: "\u9B54\u738B\u57CE boss v.5"
     rewardGold: 200000
     levelUpCost: 100000

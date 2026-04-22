@@ -19,3 +19,5 @@ MonoBehaviour:
   elementType: 3
   enemySprite: {fileID: 21300000, guid: dca118eabeb334aa2baa927af2339ae0, type: 3}
   skills: []
+  description: 
+  isBoss: 1
