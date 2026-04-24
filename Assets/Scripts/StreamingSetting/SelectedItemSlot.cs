@@ -8,12 +8,16 @@ using TMPro;
 public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] private Image icon;
-    [SerializeField] private Image backgroundImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI amountText;
     [SerializeField] private Slider qtySlider;
 
+    [Header("Step Buttons")]
+    [SerializeField] private Button plusButton;
+    [SerializeField] private Button minusButton;
+
     private string _itemId;
+    private bool _suppress;
 
     /// <summary>数量変更時：(itemId, quantity)</summary>
     public event Action<string, int> OnQuantityChanged;
@@ -27,18 +31,6 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
     {
         _itemId = itemId;
         icon.sprite = sprite;
-        if (backgroundImage != null)
-        {
-            if (background != null)
-            {
-                backgroundImage.sprite = background;
-                backgroundImage.enabled = true;
-            }
-            else
-            {
-                backgroundImage.enabled = false;
-            }
-        }
         if (nameText != null) nameText.text = displayName;
 
         // スライダー設定
@@ -51,14 +43,40 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
         if (amountText != null)
             amountText.text = qtySlider.value.ToString();
 
-        // 値変更時のイベント登録
+        // スライダー値変更時のイベント登録
         qtySlider.onValueChanged.AddListener(v =>
         {
+            if (_suppress) return;
             int qty = Mathf.FloorToInt(v);
             if (amountText != null)
                 amountText.text = qty.ToString();
             OnQuantityChanged?.Invoke(_itemId, qty);
+            UpdateButtonsInteractable();
         });
+
+        // +/-ボタン
+        if (plusButton) plusButton.onClick.AddListener(() => Step(+1));
+        if (minusButton) minusButton.onClick.AddListener(() => Step(-1));
+
+        UpdateButtonsInteractable();
+    }
+
+    private void Step(int delta)
+    {
+        int next = Mathf.Clamp(Mathf.RoundToInt(qtySlider.value) + delta, (int)qtySlider.minValue, (int)qtySlider.maxValue);
+        _suppress = true;
+        qtySlider.value = next;
+        _suppress = false;
+        if (amountText != null) amountText.text = next.ToString();
+        OnQuantityChanged?.Invoke(_itemId, next);
+        UpdateButtonsInteractable();
+    }
+
+    private void UpdateButtonsInteractable()
+    {
+        int current = Mathf.RoundToInt(qtySlider.value);
+        if (plusButton) plusButton.interactable = current < (int)qtySlider.maxValue;
+        if (minusButton) minusButton.interactable = current > (int)qtySlider.minValue;
     }
 
     /// <summary>
@@ -68,5 +86,12 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
     {
         if (eventData.button == PointerEventData.InputButton.Right)
             OnItemDeselected?.Invoke(_itemId);
+    }
+
+    private void OnDestroy()
+    {
+        qtySlider?.onValueChanged.RemoveAllListeners();
+        plusButton?.onClick.RemoveAllListeners();
+        minusButton?.onClick.RemoveAllListeners();
     }
 }
