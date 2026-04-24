@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using VContainer;
 
 /// <summary>
 /// 配信リザルト画面。勝敗・売上サマリーを表示し、確認ボタンで次へ進む。
@@ -15,7 +16,18 @@ public class BattleResultView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI resultDetailText;
     [SerializeField] private Button confirmButton;
 
+    [Header("売れたアイテム一覧")]
+    [SerializeField] private BattleResultSoldItemSlot soldItemSlotPrefab;
+    [SerializeField] private Transform soldItemContainer;
+
     private UniTaskCompletionSource _confirmTcs;
+    private ItemModel _itemModel;
+
+    [Inject]
+    public void Construct(ItemModel itemModel)
+    {
+        _itemModel = itemModel;
+    }
 
     private void Awake()
     {
@@ -44,20 +56,43 @@ public class BattleResultView : MonoBehaviour
         if (resultDetailText != null)
         {
             int totalRevenue = 0;
-            int totalSold = 0;
             if (soldItems != null)
             {
                 foreach (var item in soldItems)
                 {
                     totalRevenue += item.SoldPrice * item.SoldQuantity;
-                    totalSold += item.SoldQuantity;
                 }
             }
-            resultDetailText.text = $"販売数: {totalSold} 個\n売上: {totalRevenue} G";
+            resultDetailText.text = $"売上: {totalRevenue} G";
         }
+
+        // 売れたアイテムスロット生成
+        PopulateSoldItemSlots(soldItems);
 
         // 確認ボタン待ち
         await _confirmTcs.Task;
+    }
+
+    private void PopulateSoldItemSlots(List<BattleOutputSoldItem> soldItems)
+    {
+        if (soldItemSlotPrefab == null || soldItemContainer == null) return;
+
+        // 既存スロットを削除
+        foreach (Transform child in soldItemContainer)
+            Destroy(child.gameObject);
+
+        if (soldItems == null) return;
+
+        foreach (var soldItem in soldItems)
+        {
+            if (soldItem.SoldQuantity <= 0) continue;
+
+            var runtimeItem = _itemModel?.GetRuntimeItem(soldItem.ItemId);
+            if (runtimeItem == null) continue;
+
+            var slot = Instantiate(soldItemSlotPrefab, soldItemContainer);
+            slot.Setup(runtimeItem.ItemIcon, soldItem.SoldQuantity);
+        }
     }
 
     private void OnConfirmClicked()
