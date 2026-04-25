@@ -99,6 +99,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         tomsShopView.OnAdvertisementClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Advertisement))
             .AddTo(disposables);
+
+        //　預言者画面ボタン
+        tomsShopView.OnProphetClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Prophet))
+            .AddTo(disposables);
         
         //　次のターンに進むボタン → サマリーパネルを表示
         tomsShopView.OnNextTurnClicked

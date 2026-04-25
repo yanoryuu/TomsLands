@@ -15,6 +15,10 @@ public class PopUpData
     public Action OnConfirm;
     public Action OnCancel;
     public PopupSizeEnum Size;
+    /// <summary>
+    /// true のとき「閉じる」ボタンのみ表示し、キャンセルボタンを非表示にする。
+    /// </summary>
+    public bool IsCloseOnly;
 }
 
 public class PopUpManager

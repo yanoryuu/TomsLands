@@ -19,6 +19,7 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly EventOutputData _eventOutputData;
     private readonly PendingEventData _pendingEventData;
     private readonly MarketingFacade _marketingFacade;
+    private readonly ShopStatusModel _shopStatusModel;
     private int _currentIndex;
 
     /// <summary>
@@ -35,7 +36,8 @@ public class GameFlowManager : IDisposable, IStartable
         ItemModel itemModel, ShopEconomySettings economySettings, TomsModel tomsModel,
         SceneTransitionService sceneTransition, HeroModel heroModel,
         EventInputData eventInputData, EventOutputData eventOutputData,
-        PendingEventData pendingEventData, MarketingFacade marketingFacade)
+        PendingEventData pendingEventData, MarketingFacade marketingFacade,
+        ShopStatusModel shopStatusModel)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -49,6 +51,7 @@ public class GameFlowManager : IDisposable, IStartable
         _eventOutputData = eventOutputData;
         _pendingEventData = pendingEventData;
         _marketingFacade = marketingFacade;
+        _shopStatusModel = shopStatusModel;
         _currentIndex = 0;
     }
 
@@ -126,7 +129,7 @@ public class GameFlowManager : IDisposable, IStartable
 
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {
-            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value);
+            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
@@ -303,6 +306,23 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         return -1; // Battleノードが見つからない
+    }
+
+    /// <summary>
+    /// 現在のインデックスから次のBattleノードのDungeonNameを返す。
+    /// Battleが見つからない場合は null を返す。
+    /// </summary>
+    public DungeonName? GetNextBattleDungeon()
+    {
+        if (_gameFlow == null) return null;
+
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var node = _gameFlow.GameFlowStack[i];
+            if (node.EventType == GameEvent.Battle)
+                return node.BattleDungeon;
+        }
+        return null;
     }
 
     /// <summary>

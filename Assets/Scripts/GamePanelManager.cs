@@ -14,6 +14,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject dungeonLevelUpPanel;
     [SerializeField] private GameObject eventPanel;
     [SerializeField] private GameObject advertisementPanel;
+    [SerializeField] private GameObject prophetPanel;
 
     /// <summary>
     /// 全パネルを非表示にする
@@ -32,6 +33,7 @@ public class GamePanelManager : MonoBehaviour
         dungeonLevelUpPanel.SetActive(false);
         eventPanel.SetActive(false);
         if (advertisementPanel != null) advertisementPanel.SetActive(false);
+        if (prophetPanel != null) prophetPanel.SetActive(false);
     }
 
     /// <summary>
@@ -97,6 +99,10 @@ public class GamePanelManager : MonoBehaviour
                 break;
             case TomsShopGamePhase.Advertisement:
                 if (advertisementPanel != null) advertisementPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.Prophet:
+                if (prophetPanel != null) prophetPanel.SetActive(true);
                 commonPanel.SetActive(true);
                 break;
         }

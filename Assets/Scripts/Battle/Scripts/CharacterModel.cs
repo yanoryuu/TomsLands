@@ -10,6 +10,7 @@ public enum CharacterType
 
 public class CharacterModel
 {
+    public string Id { get; }
     public string Name { get; }
     public CharacterType Type { get; }
     public ReactiveProperty<int> CurrentHp { get; }
@@ -28,6 +29,7 @@ public class CharacterModel
 
     public CharacterModel(EnemyData data)
     {
+        Id = data.enemyId;
         Name = data.enemyName;
         Type = CharacterType.Enemy;
         CharacterSprite = data.enemySprite;

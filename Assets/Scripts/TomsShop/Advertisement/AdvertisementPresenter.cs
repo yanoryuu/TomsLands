@@ -107,7 +107,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
         {
             Title = title,
             Message = message,
-            ConfirmButtonText = "OK",
+            IsCloseOnly = true,
             Size = PopupSizeEnum.Medium
         };
 

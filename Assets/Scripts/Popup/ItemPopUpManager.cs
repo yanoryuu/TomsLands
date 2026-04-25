@@ -62,4 +62,3 @@ public class ItemPopUpManager
         SceneManager.UnloadSceneAsync(SceneName);
     }
 }
-

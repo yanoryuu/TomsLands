@@ -11,4 +11,5 @@ public enum TomsShopGamePhase
     DungeonLevelUp,  // ダンジョンレベルアップ：ダンジョンのレベルを上げる
     TurnEndSummary,  // ターン終了サマリー：売上・トレンド・次配信までの日数
     Advertisement,   // 広告購入：マーケティング広告を購入してステータスを上げる
+    Prophet,         // 預言者：トレンド・価格ランキング・ダンジョン情報・おすすめ武器を表示
 }

@@ -6,7 +6,8 @@ using System.Collections.Generic;
 public class EnemyData : ScriptableObject
 {
     [Header("基本ステータス")]
-    public string enemyName = "モンスター"; // 敵の名前
+    public string enemyId = "";              // 判別用ID
+    public string enemyName = "モンスター"; // 表示用の名前
     public int hp = 100;                   // HP
     public int attackPower = 10;           // 攻撃力
     public int defensePower = 5;           // 防御力

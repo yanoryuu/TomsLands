@@ -49,6 +49,12 @@ public class RuntimeItemData
     /// </summary>
     public int PreviousPrice { get; set; }
 
+    /// <summary>
+    /// 流行度（−1.0〜+1.0）。需要が自然と向かう均衡値を決める。
+    /// Trend=0 → naturalDemand=0.5 で中性。毎ターンランダムウォーク＋0への減衰。
+    /// </summary>
+    public float Trend { get; set; }
+
     public RuntimeItemData(
         string itemId,
         string itemName,
@@ -83,6 +89,7 @@ public class RuntimeItemData
         SalesRate = salesRate;
         PreviousDemand = demand;
         PreviousPrice = currentPrice;
+        Trend = 0f;
     }
 
     // 保存→復元CTor（Plain→Runtime）
@@ -107,6 +114,7 @@ public class RuntimeItemData
         // 古いセーブデータ互換: previousDemand が 0 以下なら現在値をコピー
         PreviousDemand = plainData.previousDemand > 0f ? plainData.previousDemand : Demand.Value;
         PreviousPrice = plainData.previousPrice > 0 ? plainData.previousPrice : CurrentPrice.Value;
+        Trend = plainData.trend;
     }
 
     public void UpdatePopularity()
@@ -171,7 +179,8 @@ public class RuntimeItemData
             description = ItemDescription,
             salesRate = SalesRate,
             previousDemand = PreviousDemand,
-            previousPrice = PreviousPrice
+            previousPrice = PreviousPrice,
+            trend = Trend
         };
     }
 }
@@ -195,6 +204,7 @@ public class RuntimeItemDataPlain
     public float salesRate;
     public float previousDemand;
     public int previousPrice;
+    public float trend;
 }
 
 public class ItemTypeData

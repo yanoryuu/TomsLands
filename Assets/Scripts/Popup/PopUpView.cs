@@ -46,6 +46,8 @@ public class PopUpView : MonoBehaviour
             Debug.LogError("[PopUpView] PopUpData が設定されていません。PopUpManager.Show() を経由せずにシーンが読み込まれた可能性があります。");
             return;
         }
+        
+        Debug.Log(data.Size);
 
         foreach (var popup in popups)
         {

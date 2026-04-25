@@ -93,6 +93,7 @@ public static class BattleTestDataCreator
         }
 
         var enemy = ScriptableObject.CreateInstance<EnemyData>();
+        enemy.enemyId = fileName;
         enemy.enemyName = displayName;
         enemy.hp = hp;
         enemy.attackPower = atk;
