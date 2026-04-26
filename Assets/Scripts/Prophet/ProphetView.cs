@@ -25,10 +25,15 @@ public class ProphetView : MonoBehaviour
     [SerializeField] private Transform recommendedRowParent;
     [SerializeField] private ProphetTrendRowUI recommendedRowPrefab;
 
+    [Header("セリフ")]
+    [SerializeField] private TMP_Text dialogueText;
+
     [Header("操作")]
     [SerializeField] private Button closeButton;
 
     public Subject<Unit> OnCloseClicked { get; } = new();
+    public Subject<string> OnRowHoverEnter { get; } = new();
+    public Subject<Unit> OnRowHoverExit { get; } = new();
 
     private void Awake()
     {
@@ -38,20 +43,26 @@ public class ProphetView : MonoBehaviour
     public void ShowTrendRows(List<(Sprite icon, string name, float trend, float demand)> items)
     {
         ClearChildren(trendRowParent);
-        foreach (var item in items)
+        for (int i = 0; i < items.Count; i++)
         {
+            var item = items[i];
             var row = Instantiate(trendRowPrefab, trendRowParent);
-            row.SetData(item.icon, item.name, item.trend, item.demand);
+            row.SetData(item.icon, item.name, item.trend, item.demand, $"trend_{i + 1}");
+            row.OnHoverEnter += id => OnRowHoverEnter.OnNext(id);
+            row.OnHoverExit += () => OnRowHoverExit.OnNext(Unit.Default);
         }
     }
 
     public void ShowRankingRows(List<(int rank, Sprite icon, string name, int price)> items)
     {
         ClearChildren(rankingRowParent);
-        foreach (var item in items)
+        for (int i = 0; i < items.Count; i++)
         {
+            var item = items[i];
             var row = Instantiate(rankingRowPrefab, rankingRowParent);
-            row.SetData(item.rank, item.icon, item.name, item.price);
+            row.SetData(item.rank, item.icon, item.name, item.price, $"ranking_{i + 1}");
+            row.OnHoverEnter += id => OnRowHoverEnter.OnNext(id);
+            row.OnHoverExit += () => OnRowHoverExit.OnNext(Unit.Default);
         }
     }
 
@@ -67,11 +78,19 @@ public class ProphetView : MonoBehaviour
     public void ShowRecommendedRows(List<(Sprite icon, string name, float trend, float demand)> items)
     {
         ClearChildren(recommendedRowParent);
-        foreach (var item in items)
+        for (int i = 0; i < items.Count; i++)
         {
+            var item = items[i];
             var row = Instantiate(recommendedRowPrefab, recommendedRowParent);
-            row.SetData(item.icon, item.name, item.trend, item.demand);
+            row.SetData(item.icon, item.name, item.trend, item.demand, $"recommended_{i + 1}");
+            row.OnHoverEnter += id => OnRowHoverEnter.OnNext(id);
+            row.OnHoverExit += () => OnRowHoverExit.OnNext(Unit.Default);
         }
+    }
+
+    public void ShowDialogue(string message)
+    {
+        if (dialogueText != null) dialogueText.text = message;
     }
 
     private static void ClearChildren(Transform parent)
