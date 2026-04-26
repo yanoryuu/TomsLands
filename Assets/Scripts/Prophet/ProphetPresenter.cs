@@ -55,12 +55,12 @@ public class ProphetPresenter : IDisposable, IStartable
         prophetView.ShowTrendRows(rows);
     }
 
-    // 現在価格の高い順に上位5件を表示
+    // 現在価格の高い順に上位3件を表示
     private void ShowPriceRanking()
     {
         var sorted = itemModel.RuntimeItems
             .OrderByDescending(r => r.CurrentPrice.Value)
-            .Take(5)
+            .Take(3)
             .ToList();
 
         var rows = new List<(int, Sprite, string, int)>();
