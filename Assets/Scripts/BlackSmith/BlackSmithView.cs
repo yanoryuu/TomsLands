@@ -26,6 +26,9 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Button developButton;
     [SerializeField] private Button specialWeaponButton;
 
+    [Header("Dialogue")]
+    [SerializeField] private TextMeshProUGUI dialogueText;
+
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
 
@@ -106,9 +109,14 @@ public class BlackSmithView : MonoBehaviour
         return slots;
     }
 
+    public void ShowDialogue(string message)
+    {
+        if (dialogueText != null) dialogueText.text = message;
+    }
+
     public void SetDescription(string description)
     {
-        itemDescriptionText.text = description;
+        if (itemDescriptionText != null) itemDescriptionText.text = description;
     }
 
     public void SortItemTab(BlackSmithTab type)

@@ -41,6 +41,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     public void Entry()
     {
+        blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("open"));
         blackSmithModel.SetRuntimeItems(
             itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
             itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
@@ -61,12 +62,15 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 switch (type)
                 {
                     case BlackSmithTab.Weapon:
+                        blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("weapon"));
                         ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, type);
                         break;
                     case BlackSmithTab.Armor:
+                        blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("armor"));
                         ChangePurchasePanel(blackSmithModel.armorRuntimeItems, type);
                         break;
                     case BlackSmithTab.Development:
+                        blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("development"));
                         ShowDevelopmentPanel();
                         break;
                 }
@@ -192,9 +196,18 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 .Subscribe(price => slot.SetPrice(price))
                 .AddTo(panelDisposables);
 
-            // 情報パネル
+            // 情報パネル（infoボタン）
             slot.OnInfoRequested
                 .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
+                .AddTo(panelDisposables);
+
+            // ホバーでアイテム説明を表示
+            slot.OnHoverEnter
+                .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
+                .AddTo(panelDisposables);
+
+            slot.OnHoverExit
+                .Subscribe(_ => blackSmithView.SetDescription(string.Empty))
                 .AddTo(panelDisposables);
 
             // アイコンクリック → 市場分析ポップアップ

@@ -1,13 +1,15 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using R3;
 
-public class ItemShopSlot : MonoBehaviour
+public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("UI")]
     [SerializeField] private Image icon;
     [SerializeField] private Image backgroundImage;
+    [SerializeField] private Image rowBackground;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private TextMeshProUGUI stockText;
@@ -30,6 +32,8 @@ public class ItemShopSlot : MonoBehaviour
     public Subject<string> OnInfoRequested { get; } = new();
     public Subject<Unit> OnPurchaseClicked { get; } = new();
     public Subject<string> OnIconClicked { get; } = new();         // アイコン押下 → 市場分析ポップアップ
+    public Subject<string> OnHoverEnter { get; } = new();          // ホバー開始 → アイテムID
+    public Subject<Unit> OnHoverExit { get; } = new();             // ホバー終了
 
     // 内部状態（UI表示用）
     private int displayQuantity;
@@ -156,6 +160,9 @@ public class ItemShopSlot : MonoBehaviour
         if (minusButton)
             minusButton.interactable = displayQuantity > 0;
     }
+
+    public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter.OnNext(itemId);
+    public void OnPointerExit(PointerEventData eventData) => OnHoverExit.OnNext(Unit.Default);
 
     private void OnDestroy()
     {
