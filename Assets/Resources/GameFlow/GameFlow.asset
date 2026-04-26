@@ -17,47 +17,155 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 2
-    EventData: 1Event
+    EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 1Event
+    EventData: 
     BattleDungeon: 0
   - EventType: 2
-    EventData: 001
+    EventData: 
     BattleDungeon: 0
   - EventType: 2
-    EventData: 1Event
+    EventData: 
     BattleDungeon: 0
   - EventType: 1
-    EventData: 1Event
+    EventData: 
     BattleDungeon: 3
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
   - EventType: 3
-    EventData: 1Event
-    BattleDungeon: 2
+    EventData: 
+    BattleDungeon: 0
   - EventType: 2
-    EventData: 1Event
-    BattleDungeon: 2
+    EventData: 
+    BattleDungeon: 0
   - EventType: 2
-    EventData: 002
-    BattleDungeon: 2
-  - EventType: 1
-    EventData: 002
-    BattleDungeon: 2
-  - EventType: 2
-    EventData: 002
-    BattleDungeon: 2
+    EventData: 
+    BattleDungeon: 0
   - EventType: 3
-    EventData: 002
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 1
+    EventData: 
     BattleDungeon: 2
   - EventType: 2
-    EventData: 002
-    BattleDungeon: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
   - EventType: 1
-    EventData: 002
+    EventData: 
+    BattleDungeon: 2
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 1
+    EventData: 
+    BattleDungeon: 1
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 1
+    EventData: 
     BattleDungeon: 1
   - EventType: 2
     EventData: 002
     BattleDungeon: 2
   - EventType: 4
-    EventData: 002
-    BattleDungeon: 2
+    EventData: 
+    BattleDungeon: 0
