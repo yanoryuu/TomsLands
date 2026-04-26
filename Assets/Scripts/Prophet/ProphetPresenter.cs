@@ -12,6 +12,7 @@ public class ProphetPresenter : IDisposable, IStartable
     private readonly GameFlowManager gameFlowManager;
     private readonly DungeonRepository dungeonRepository;
     private readonly StateManager stateManager;
+    private readonly TomsModel tomsModel;
     private readonly CompositeDisposable disposables = new();
 
     public ProphetPresenter(
@@ -19,13 +20,15 @@ public class ProphetPresenter : IDisposable, IStartable
         ItemModel itemModel,
         GameFlowManager gameFlowManager,
         DungeonRepository dungeonRepository,
-        StateManager stateManager)
+        StateManager stateManager,
+        TomsModel tomsModel)
     {
         this.prophetView = prophetView;
         this.itemModel = itemModel;
         this.gameFlowManager = gameFlowManager;
         this.dungeonRepository = dungeonRepository;
         this.stateManager = stateManager;
+        this.tomsModel = tomsModel;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Prophet, Entry);
     }
@@ -35,21 +38,32 @@ public class ProphetPresenter : IDisposable, IStartable
         prophetView.OnCloseClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
             .AddTo(disposables);
+
+        prophetView.OnRowHoverEnter
+            .Subscribe(id => prophetView.ShowDialogue(ProphetDialogueLoader.Get(id)))
+            .AddTo(disposables);
+
+        prophetView.OnRowHoverExit
+            .Subscribe(_ => prophetView.ShowDialogue(ProphetDialogueLoader.GetDefault()))
+            .AddTo(disposables);
     }
 
     private void Entry()
     {
+        prophetView.ShowDialogue(ProphetDialogueLoader.GetDefault());
         ShowTrend();
         ShowPriceRanking();
         ShowDungeonInfo();
     }
 
-    // トレンド上位5件をTrend値降順で表示
+    // トレンド上位3件をTrend値降順で表示
     private void ShowTrend()
     {
+        int level = tomsModel.BlacksmithLevel.Value;
         var rows = itemModel.RuntimeItems
+            .Where(r => r.RequiredLevel.Value <= level)
             .OrderByDescending(r => r.Trend)
-            .Take(5)
+            .Take(3)
             .Select(r => (r.ItemIcon, r.ItemName, r.Trend, r.Demand.Value))
             .ToList();
         prophetView.ShowTrendRows(rows);
@@ -58,7 +72,9 @@ public class ProphetPresenter : IDisposable, IStartable
     // 現在価格の高い順に上位3件を表示
     private void ShowPriceRanking()
     {
+        int level = tomsModel.BlacksmithLevel.Value;
         var sorted = itemModel.RuntimeItems
+            .Where(r => r.RequiredLevel.Value <= level)
             .OrderByDescending(r => r.CurrentPrice.Value)
             .Take(3)
             .ToList();
@@ -93,12 +109,13 @@ public class ProphetPresenter : IDisposable, IStartable
             return;
         }
 
-        string attributeName = AttributeToJapanese(dungeon.requiredAttribute);
+        string attributeName = $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}";
         prophetView.ShowDungeonInfo(dungeon.dungeonName, attributeName, dungeon.difficulty, turnsUntil, dungeon.dungeonIcon);
 
         // 同属性アイテムをTrend+Demand合計で降順→上位3件
+        int level = tomsModel.BlacksmithLevel.Value;
         var recommended = itemModel.RuntimeItems
-            .Where(r => r.ItemAttribute == dungeon.requiredAttribute)
+            .Where(r => r.ItemAttribute == dungeon.requiredAttribute && r.RequiredLevel.Value <= level)
             .OrderByDescending(r => r.Trend + r.Demand.Value)
             .Take(3)
             .Select(r => (r.ItemIcon, r.ItemName, r.Trend, r.Demand.Value))

@@ -89,7 +89,7 @@ public class RuntimeItemData
         SalesRate = salesRate;
         PreviousDemand = demand;
         PreviousPrice = currentPrice;
-        Trend = 0f;
+        Trend = UnityEngine.Random.Range(-0.5f, 0.5f);
     }
 
     // 保存→復元CTor（Plain→Runtime）
