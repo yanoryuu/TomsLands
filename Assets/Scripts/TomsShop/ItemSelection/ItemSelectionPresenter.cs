@@ -10,6 +10,7 @@ public class ItemSelectionPresenter :IDisposable,IStartable
     private readonly ItemModel itemModel;
     private readonly TomsModel tomsModel;
     private readonly CompositeDisposable disposables = new();
+    private readonly Dictionary<string, CompositeDisposable> displaySlotDisposables = new();
 
     public ItemSelectionPresenter(ItemSelectionModel selectionModel, ItemSelectionView selectionView, ItemModel itemModel,TomsModel tomsModel)
     {
@@ -76,18 +77,18 @@ public class ItemSelectionPresenter :IDisposable,IStartable
         {
             var itemdata = itemModel.GetRuntimeItem(slot.itemId);
 
-            //アイテムの情報に保存されているストック情報をuIに反映
-            itemdata.DisplayStock.Subscribe(x =>
-                {
-                    slot.SetDisplayQuantity(x);
-                })
-                .AddTo(disposables);
-
-            //現在の所持ストックがSlotの最大品出し数
+            //現在の所持ストックがSlotの最大品出し数（DisplayStockより先に設定する）
             itemdata.Stock.Subscribe(x =>
                 {
                     slot.SetMaxDisplayQuantity(x);
                     slot.SetStock(x);
+                })
+                .AddTo(disposables);
+
+            //アイテムの情報に保存されているストック情報をuIに反映
+            itemdata.DisplayStock.Subscribe(x =>
+                {
+                    slot.SetDisplayQuantity(x);
                 })
                 .AddTo(disposables);
             
@@ -98,17 +99,42 @@ public class ItemSelectionPresenter :IDisposable,IStartable
                 })
                 .AddTo(disposables);
 
-            //スロットのトグルが変更されれば変更
+            //選択ボタンが押されれば陳列状態を切り替え
             slot.OnToggleChanged.Subscribe(x =>
                 {
                     itemdata.UpdateIsDisplay(x);
                 })
                 .AddTo(disposables);
 
-            //アイテムデータのトグルとUIを同期
+            //陳列状態が変わったらPanel1のビジュアル更新とPanel2の追加/削除を行う
             itemdata.IsDisplay.Subscribe(x =>
                 {
                     slot.SetSelectToggle(x);
+                    if (x)
+                    {
+                        if (!displaySlotDisposables.ContainsKey(slot.itemId))
+                        {
+                            var d = new CompositeDisposable();
+                            displaySlotDisposables[slot.itemId] = d;
+                            d.AddTo(disposables);
+
+                            var displaySlot = selectionView.EnsureDisplaySlot(slot.itemId, itemdata.ItemIcon, itemdata.DisplayStock.Value);
+                            itemdata.DisplayStock.Subscribe(count => displaySlot.SetQuantity(count)).AddTo(d);
+                            displaySlot.OnRemoveRequested.Subscribe(_ =>
+                            {
+                                itemdata.UpdateIsDisplay(false);
+                            }).AddTo(d);
+                        }
+                    }
+                    else
+                    {
+                        if (displaySlotDisposables.TryGetValue(slot.itemId, out var d))
+                        {
+                            d.Dispose();
+                            displaySlotDisposables.Remove(slot.itemId);
+                        }
+                        selectionView.RemoveDisplaySlot(slot.itemId);
+                    }
                 })
                 .AddTo(disposables);
             
@@ -147,6 +173,9 @@ public class ItemSelectionPresenter :IDisposable,IStartable
 
     public void Dispose()
     {
+        foreach (var d in displaySlotDisposables.Values)
+            d.Dispose();
+        displaySlotDisposables.Clear();
         disposables.Dispose();
     }
 }

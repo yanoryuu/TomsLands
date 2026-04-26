@@ -42,8 +42,6 @@ public class BlackSmithView : MonoBehaviour
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
-    // ★ タブごとのスクロール位置を保持（任意）
-    private readonly Dictionary<BlackSmithTab, Vector2> _scrollPerTab = new();
     private BlackSmithTab _currentTab = BlackSmithTab.Weapon;
     
     private readonly Dictionary<BlackSmithTab, Vector3> initTabPos = new();
@@ -63,40 +61,17 @@ public class BlackSmithView : MonoBehaviour
         if (developmentPanel)
             developmentPanel.SetActive(false);
 
-        // 初期スクロール位置（未保存タブは右上(1,1)=先頭）にしておく
-        _scrollPerTab[BlackSmithTab.Weapon] = new Vector2(0, 1);
-        _scrollPerTab[BlackSmithTab.Armor] = new Vector2(0, 1);
-        _scrollPerTab[BlackSmithTab.Development] = new Vector2(0, 1);
-        _scrollPerTab[BlackSmithTab.Special] = new Vector2(0, 1);
-        
         initTabPos[BlackSmithTab.Weapon] = weaponTab.transform.localPosition;
         initTabPos[BlackSmithTab.Armor] = armorTab.transform.localPosition;
         initTabPos[BlackSmithTab.Development] = developmentTab.transform.localPosition;
         initTabPos[BlackSmithTab.Special] = specialTab.transform.localPosition;
-
-        // 念のため整数スクロール向けセットアップ
-        if (scrollRect && scrollRect.content)
-        {
-            // content の pivot は (0.5, 1) 推奨（上基準の縦リスト）
-            // scrollRect.content.pivot = new Vector2(0.5f, 1f); // 既に設定済みなら不要
-        }
     }
 
     /// <summary>
-    /// 商品リストを表示（スクロール位置を保存・復元）
+    /// 商品リストを表示
     /// </summary>
     public List<ItemShopSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // ★ 1) いまのスクロール位置を保存
-        var prePos = GetSavedScrollForTab(_currentTab);
-
-        if (scrollRect)
-        {
-            // 最新の実位置を保存（保存済みより優先）
-            prePos = scrollRect.normalizedPosition;
-            SaveScrollForTab(_currentTab, prePos);
-        }
-
         // 既存スロット破棄（Content配下の全子オブジェクトを削除）
         for (int i = blackSmithContent.transform.childCount - 1; i >= 0; i--)
         {
@@ -124,9 +99,9 @@ public class BlackSmithView : MonoBehaviour
             activeSlots.Add(slot);
         }
 
-        // ★ 2) レイアウトを確定させ、次のフレームでスクロール位置を復元
+        // スクロール位置を先頭にリセット
         if (scrollRect)
-            StartCoroutine(RestoreScrollNextFrame(GetSavedScrollForTab(_currentTab)));
+            scrollRect.normalizedPosition = new Vector2(0, 1);
 
         return slots;
     }
@@ -163,10 +138,6 @@ public class BlackSmithView : MonoBehaviour
                 specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y + 10, 0.2f);
                 break;
         }
-
-        // ★ タブ切替直後に、保存してあるスクロール位置へ復元
-        if (scrollRect)
-            StartCoroutine(RestoreScrollNextFrame(GetSavedScrollForTab(type)));
     }
 
     public void SwitchPanel(BlackSmithTab tab)
@@ -198,36 +169,6 @@ public class BlackSmithView : MonoBehaviour
             if (levelUpCostText) levelUpCostText.text = $"{cost}G";
             if (levelUpButtonText) levelUpButtonText.text = "レベルアップ";
             if (levelUpButton) levelUpButton.interactable = playerMoney >= cost;
-        }
-    }
-
-    // ===== スクロール保存・復元ユーティリティ =====
-
-    private void SaveScrollForTab(BlackSmithTab tab, Vector2 pos)
-    {
-        _scrollPerTab[tab] = pos;
-    }
-
-    private Vector2 GetSavedScrollForTab(BlackSmithTab tab)
-    {
-        if (_scrollPerTab.TryGetValue(tab, out var pos))
-            return pos;
-        return new Vector2(0, 1); // 右上（縦スクの先頭）
-    }
-
-    private IEnumerator RestoreScrollNextFrame(Vector2 pos)
-    {
-        // レイアウト確定 → 次フレームで反映（Immediate だけだと戻ることがある）
-        yield return null; // 1 frame 待つ
-        LayoutRebuilder.ForceRebuildLayoutImmediate(blackSmithContent.GetComponent<RectTransform>());
-        Canvas.ForceUpdateCanvases();
-        if (scrollRect)
-        {
-            scrollRect.normalizedPosition = pos;
-            // 念押し（まだコンテンツが伸びる UI の場合）
-            yield return null;
-            Canvas.ForceUpdateCanvases();
-            scrollRect.normalizedPosition = pos;
         }
     }
 }

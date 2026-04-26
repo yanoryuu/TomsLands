@@ -1,4 +1,4 @@
-﻿﻿﻿using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -50,7 +50,7 @@ public class SceneTransitionService
     public void GoToTitle()
     {
         Debug.Log("[SceneTransition] Returning to Title (Start)...");
-        SceneManager.LoadScene("Start");
+        SceneManager.LoadScene("TitleScene");
     }
 
     /// <summary>

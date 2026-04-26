@@ -11,6 +11,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private readonly BlackSmithView blackSmithView;
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
+    private readonly ItemPopUpManager itemPopUpManager;
 
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable panelDisposables = new();
@@ -20,13 +21,15 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         ItemModel itemModel,
         BlackSmithView blackSmithView,
         StateManager stateManager,
-        BlackSmithModel blackSmithModel)
+        BlackSmithModel blackSmithModel,
+        ItemPopUpManager itemPopUpManager)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
         this.itemModel = itemModel;
         this.blackSmithView = blackSmithView;
         this.stateManager = stateManager;
+        this.itemPopUpManager = itemPopUpManager;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -194,6 +197,11 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
                 .AddTo(panelDisposables);
 
+            // アイコンクリック → 市場分析ポップアップ
+            slot.OnIconClicked
+                .Subscribe(id => ShowMarketAnalysisPopup(id))
+                .AddTo(panelDisposables);
+
             // 購入確定
             slot.OnPurchaseClicked
                 .Subscribe(_ =>
@@ -208,6 +216,52 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         }
 
         blackSmithView.SortItemTab(itemType);
+    }
+
+    /// <summary>
+    /// アイテムの市場分析ポップアップを表示する
+    /// </summary>
+    private void ShowMarketAnalysisPopup(string itemId)
+    {
+        var runtime = itemModel.GetRuntimeItem(itemId);
+        if (runtime == null) return;
+
+        var master = itemModel.GetMasterItem(itemId);
+        if (master == null) return;
+
+        var data = new ItemPopUpData
+        {
+            // 基本情報
+            ItemName        = runtime.ItemName,
+            Description     = runtime.ItemDescription,
+            Icon            = runtime.ItemIcon,
+            ItemType        = runtime.ItemType,
+            ItemAttribute   = runtime.ItemAttribute,
+
+            // 需要
+            Demand          = runtime.Demand.Value,
+            PreviousDemand  = runtime.PreviousDemand,
+
+            // 価格
+            CurrentPrice    = runtime.CurrentPrice.Value,
+            BasePrice       = master.basePrice,
+            PreviousPrice   = runtime.PreviousPrice,
+
+            // 在庫
+            Stock           = runtime.Stock.Value,
+            MaxStock        = runtime.MaxStock.Value,
+
+            // 売れやすさ・販売実績
+            SalesRate       = runtime.SalesRate,
+            WasSoldLastTurn = runtime.WasSoldLastTurn,
+            IsPopular       = runtime.IsPopular.Value,
+
+            // ボタン
+            ConfirmButtonText = "閉じる",
+            OnConfirm       = null
+        };
+
+        itemPopUpManager.Show(data);
     }
 
     private void ShowDevelopmentPanel()

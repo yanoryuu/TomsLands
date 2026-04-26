@@ -27,16 +27,6 @@ public class ShopEconomySettings : ScriptableObject
     [Tooltip("普通の商品（中間Demand）の価格変動率の上限")]
     public float normalDemandPriceRateMax = 1.01f;
 
-    [Header("案S3: 品出し販売結果フィードバック")]
-    [Tooltip("前ターンで品出しして売れた時の価格上昇率の下限")]
-    public float soldPriceRateMin = 1.01f;
-    [Tooltip("前ターンで品出しして売れた時の価格上昇率の上限")]
-    public float soldPriceRateMax = 1.02f;
-    [Tooltip("前ターンで品出しして売れなかった時の価格下落率の下限")]
-    public float unsoldPriceRateMin = 0.98f;
-    [Tooltip("前ターンで品出しして売れなかった時の価格下落率の上限")]
-    public float unsoldPriceRateMax = 0.99f;
-
     [Header("価格の上下限（元値に対する倍率）")]
     [Tooltip("価格の下限（例: 0.3 = 元値の30%）")]
     public float shopPriceFloorRate = 0.3f;
@@ -60,5 +50,58 @@ public class ShopEconomySettings : ScriptableObject
     public float demandFloor = 0.05f;
     [Tooltip("需要の上限")]
     public float demandCeiling = 1.0f;
+
+    // ====================================================================
+    // 広告ステータス連動係数（役割分担方式）
+    // Trust/Attention/Spread/Retention/Followers が 0 のとき従来挙動と
+    // 完全一致するよう、すべての係数は加算/乗算前の補正項として設計する。
+    // ====================================================================
+
+    [Header("案A1: Trust → 価格Floor底上げ")]
+    [Tooltip("信頼度MAX(100)時にFloor倍率に加算される量。例: 0.4 → Floor 30% が 70% まで底上げ。" +
+             "Trust=0 のときは加算 0（従来挙動）。想定レンジ: 0.0〜0.7")]
+    public float trustFloorBoost = 0.4f;
+
+    [Header("案A2: Attention → S1上振れ増幅")]
+    [Tooltip("注目度MAX(100)時に S1 価格上昇率の上限を引き上げる追加倍率。" +
+             "例: 0.5 → s1Max 1.03 が 1.03 × 1.5 = 1.545 まで増幅。Attention=0 のときは増幅 0。想定レンジ: 0.0〜1.0")]
+    public float attentionPriceAmplify = 0.5f;
+    [Tooltip("Attention 増幅を low 需要レンジの max にも適用するか。" +
+             "false なら高需要・通常需要レンジの max のみ増幅（= 上振れだけ強化）。")]
+    public bool attentionAffectsLowDemand;
+
+    [Header("案A3: Spread → D2品出し変動増幅")]
+    [Tooltip("拡散力MAX(100)時に displayDemandUp / notDisplayDemandDown を何倍にするかの追加分。" +
+             "例: 1.0 → +0.02 が +0.04 / -0.01 が -0.02 に増幅。Spread=0 のときは増幅 0。想定レンジ: 0.0〜2.0")]
+    public float spreadDemandAmplify = 1.0f;
+
+    [Header("案A4: Retention → 価格率を1.0へ寄せる安定化")]
+    [Tooltip("顧客維持力MAX(100)時に S1/S3 価格率を Mathf.Lerp(rate, 1.0, t) で 1.0 寄りに引き寄せる強度 t。" +
+             "例: 0.6 → 1.05 が 1.02 程度まで圧縮（= 常連は安定価格）。Retention=0 のときは 0（無圧縮）。想定レンジ: 0.0〜0.9")]
+    public float retentionStabilizer = 0.6f;
+
+    [Header("案A5: Followers → 需要ベース底上げ")]
+    [Tooltip("フォロワー数による需要ベースシフトの強度係数。最終加算量は " +
+             "followerWeight * Log10(1 + Followers / followerScale)。" +
+             "例: weight=0.1, scale=1000, Followers=1000 → +0.1 * Log10(2) ≒ +0.030。" +
+             "Followers=0 のときは 0。想定レンジ: 0.0〜0.3")]
+    public float followerWeight = 0.1f;
+    [Tooltip("Followers の対数スケール基準。例: 1000 にすると 1000フォロワーで Log10(2)≒0.301、" +
+             "10000 で Log10(11)≒1.041。値を大きくするほど効きが緩やかになる。想定レンジ: 100〜10000")]
+    public float followerScale = 1000f;
+
+    [Header("流行度（Trend）自然需要収束モデル")]
+    [Tooltip("Trend=±1.0 のとき naturalDemand が 0.5 からどれだけずれるか。" +
+             "例: 0.30 → Trend=+1 で naturalDemand=0.80 / Trend=−1 で 0.20。想定レンジ: 0.1〜0.5")]
+    public float trendAmplitude = 0.30f;
+    [Tooltip("毎ターン需要が naturalDemand へ近づく速度（Lerp の t）。" +
+             "例: 0.15 → 毎ターン差分の 15% だけ均衡値へ引き寄せる。想定レンジ: 0.05〜0.30")]
+    public float trendConvergenceRate = 0.15f;
+    [Tooltip("毎ターンの Trend ランダムウォーク幅の最大値。" +
+             "例: 0.12 → ±0.12 の一様乱数で漂流。想定レンジ: 0.05〜0.20")]
+    public float trendDriftMax = 0.12f;
+    [Tooltip("毎ターン Trend が 0 へ戻る減衰率（現在 Trend への比率）。" +
+             "例: 0.10 → 現在値の 10% 分だけ 0 方向へ引き戻す。想定レンジ: 0.05〜0.20")]
+    public float trendDecayRate = 0.10f;
 }
 

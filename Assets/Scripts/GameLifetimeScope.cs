@@ -19,6 +19,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private EventView eventView;
     [SerializeField] private DungeonLevelUpView dungeonLevelUpView;
     [SerializeField] private AdvertisementView advertisementView;
+    [SerializeField] private ProphetView prophetView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -198,6 +199,13 @@ public class GameLifetimeScope : LifetimeScope
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
+        // ポップアップ管理（Additive ロードされる PopupScene にデータを渡す中継役）
+        builder.Register<PopUpManager>(Lifetime.Singleton);
+
+        // アイテム市場分析ポップアップ管理（Additive ロードされる ItemPopupScene にデータを渡す中継役）
+        builder.Register<ItemPopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
+
         // --- 3. Views (Components) ---
         // Scene上にあるViewを登録（null の場合はエラーログを出力）
         RegisterComponentSafe(builder, blackSmithView, nameof(blackSmithView));
@@ -213,6 +221,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, eventView, nameof(eventView));
         RegisterComponentSafe(builder, dungeonLevelUpView, nameof(dungeonLevelUpView));
         RegisterComponentSafe(builder, advertisementView, nameof(advertisementView));
+        RegisterComponentSafe(builder, prophetView, nameof(prophetView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -228,6 +237,9 @@ public class GameLifetimeScope : LifetimeScope
 
         // 広告購入画面
         builder.RegisterEntryPoint<AdvertisementPresenter>();
+
+        // 預言者画面
+        builder.RegisterEntryPoint<ProphetPresenter>();
 
         // --- 5. System Logic (Save/Delete) ---
         // セーブ削除や保存ロジックを独立したクラスとして登録

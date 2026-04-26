@@ -36,19 +36,38 @@ public class RuntimeItemData
     /// シリアライズ不要（毎ターン SimulateShopSales で更新される）。
     /// </summary>
     public bool WasSoldLastTurn { get; set; }
+
+    /// <summary>
+    /// 前ターンの需要値（需要変動幅の表示用）。
+    /// ApplyShopTurnEconomy の冒頭でスナップショットされる。
+    /// </summary>
+    public float PreviousDemand { get; set; }
+
+    /// <summary>
+    /// 前ターンの価格（価格変動幅の表示用）。
+    /// ApplyShopTurnEconomy の冒頭でスナップショットされる。
+    /// </summary>
+    public int PreviousPrice { get; set; }
+
+    /// <summary>
+    /// 流行度（−1.0〜+1.0）。需要が自然と向かう均衡値を決める。
+    /// Trend=0 → naturalDemand=0.5 で中性。毎ターンランダムウォーク＋0への減衰。
+    /// </summary>
+    public float Trend { get; set; }
+
     public RuntimeItemData(
         string itemId,
         string itemName,
         int currentPrice,
-        int maxStock, 
+        int maxStock,
         int stock,
         int displayStock,
         Sprite icon,
         Sprite backgroundSprite,
         ItemTypeData.ItemType itemType,
         ItemTypeData.ItemAttribute itemAttribute,
-        int requiredLevel, 
-        float demand = 0.5f ,
+        int requiredLevel,
+        float demand = 0.5f,
         string description = "",
         float salesRate = 1.0f)
     {
@@ -63,11 +82,14 @@ public class RuntimeItemData
         Demand = new ReactiveProperty<float>(demand);
         IsPopular = new ReactiveProperty<bool>(demand >= 0.8f);
         ItemType = itemType;
-        ItemAttribute = itemAttribute; 
+        ItemAttribute = itemAttribute;
         RequiredLevel = new ReactiveProperty<int>(requiredLevel);
         IsDisplay = new ReactiveProperty<bool>(false);
         ItemDescription = description;
         SalesRate = salesRate;
+        PreviousDemand = demand;
+        PreviousPrice = currentPrice;
+        Trend = 0f;
     }
 
     // 保存→復元CTor（Plain→Runtime）
@@ -89,6 +111,10 @@ public class RuntimeItemData
         IsDisplay      = new ReactiveProperty<bool>(plainData.isDisplay);
         ItemDescription = plainData.description;
         SalesRate = plainData.salesRate;
+        // 古いセーブデータ互換: previousDemand が 0 以下なら現在値をコピー
+        PreviousDemand = plainData.previousDemand > 0f ? plainData.previousDemand : Demand.Value;
+        PreviousPrice = plainData.previousPrice > 0 ? plainData.previousPrice : CurrentPrice.Value;
+        Trend = plainData.trend;
     }
 
     public void UpdatePopularity()
@@ -104,6 +130,11 @@ public class RuntimeItemData
     public void UpdateStock(int stock)
     {
         Stock.Value = Mathf.Clamp(stock, 0, MaxStock.Value);
+        // 在庫が減った場合、品出し数が在庫を超えないようにクランプ
+        if (DisplayStock.Value > Stock.Value)
+        {
+            DisplayStock.Value = Stock.Value;
+        }
     }
 
     public void UpdateDisplayStock(int stock)
@@ -146,7 +177,10 @@ public class RuntimeItemData
             isDisplay =  IsDisplay.Value,
             requiredLevel = RequiredLevel.Value,
             description = ItemDescription,
-            salesRate = SalesRate
+            salesRate = SalesRate,
+            previousDemand = PreviousDemand,
+            previousPrice = PreviousPrice,
+            trend = Trend
         };
     }
 }
@@ -168,6 +202,9 @@ public class RuntimeItemDataPlain
     public bool isDisplay;
     public string description;
     public float salesRate;
+    public float previousDemand;
+    public int previousPrice;
+    public float trend;
 }
 
 public class ItemTypeData

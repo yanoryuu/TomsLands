@@ -24,6 +24,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
     private readonly MarketingFacade marketingFacade;
     private readonly TomsModel tomsModel;
     private readonly StateManager stateManager;
+    private readonly PopUpManager popUpManager;
     private readonly CompositeDisposable disposables = new();
 
     /// <summary>現在選択中のスロット（2タップ目判定用）</summary>
@@ -33,12 +34,14 @@ public class AdvertisementPresenter : IStartable, IDisposable
         AdvertisementView view,
         MarketingFacade marketingFacade,
         TomsModel tomsModel,
-        StateManager stateManager)
+        StateManager stateManager,
+        PopUpManager popUpManager)
     {
         this.view = view;
         this.marketingFacade = marketingFacade;
         this.tomsModel = tomsModel;
         this.stateManager = stateManager;
+        this.popUpManager = popUpManager;
 
         // サブフェーズ遷移時にEntry()を呼ぶ
         stateManager.RegisterOnEnter(TomsShopGamePhase.Advertisement, Entry);
@@ -86,6 +89,29 @@ public class AdvertisementPresenter : IStartable, IDisposable
         status.Followers
             .Subscribe(v => view.UpdateFollowers(v))
             .AddTo(disposables);
+
+        // ステータス説明ボタン → 説明Popup表示
+        view.OnStatusInfoClicked
+            .Subscribe(ShowStatusDescription)
+            .AddTo(disposables);
+    }
+
+    /// <summary>
+    /// ステータスの説明Popupを表示する
+    /// </summary>
+    private void ShowStatusDescription(StatusType type)
+    {
+        var (title, message) = StatusDescriptionLoader.Get(type);
+
+        var data = new PopUpData
+        {
+            Title = title,
+            Message = message,
+            IsCloseOnly = true,
+            Size = PopupSizeEnum.Medium
+        };
+
+        popUpManager.Show(data);
     }
 
     /// <summary>

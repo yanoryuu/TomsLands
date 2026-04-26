@@ -70,6 +70,25 @@ public class AdvertisementView : MonoBehaviour
     [SerializeField] private Button closeButton;
 
     // =====================================================
+    // ステータス説明ボタン（タップで説明Popup表示）
+    // =====================================================
+    [Header("ステータス説明ボタン")]
+    [Tooltip("信頼度の領域に付けるButton")]
+    [SerializeField] private Button trustInfoButton;
+
+    [Tooltip("注目度の領域に付けるButton")]
+    [SerializeField] private Button attentionInfoButton;
+
+    [Tooltip("拡散力の領域に付けるButton")]
+    [SerializeField] private Button spreadInfoButton;
+
+    [Tooltip("顧客維持力の領域に付けるButton")]
+    [SerializeField] private Button retentionInfoButton;
+
+    [Tooltip("フォロワー数の領域に付けるButton")]
+    [SerializeField] private Button followerInfoButton;
+
+    // =====================================================
     // 選択時の背景演出
     // =====================================================
     [Header("選択時背景")]
@@ -86,6 +105,9 @@ public class AdvertisementView : MonoBehaviour
     /// <summary>閉じるボタンが押された</summary>
     public Subject<Unit> OnCloseClicked { get; } = new();
 
+    /// <summary>ステータス説明ボタンが押された（引数は押されたステータスの種類）</summary>
+    public Subject<StatusType> OnStatusInfoClicked { get; } = new();
+
     /// <summary>生成された広告スロットのリスト</summary>
     private readonly List<AdvertisementSlotUI> activeSlots = new();
 
@@ -96,6 +118,17 @@ public class AdvertisementView : MonoBehaviour
     {
         if (closeButton != null)
             closeButton.onClick.AddListener(() => OnCloseClicked.OnNext(Unit.Default));
+
+        if (trustInfoButton != null)
+            trustInfoButton.onClick.AddListener(() => OnStatusInfoClicked.OnNext(StatusType.Trust));
+        if (attentionInfoButton != null)
+            attentionInfoButton.onClick.AddListener(() => OnStatusInfoClicked.OnNext(StatusType.Attention));
+        if (spreadInfoButton != null)
+            spreadInfoButton.onClick.AddListener(() => OnStatusInfoClicked.OnNext(StatusType.Spread));
+        if (retentionInfoButton != null)
+            retentionInfoButton.onClick.AddListener(() => OnStatusInfoClicked.OnNext(StatusType.Retention));
+        if (followerInfoButton != null)
+            followerInfoButton.onClick.AddListener(() => OnStatusInfoClicked.OnNext(StatusType.Followers));
     }
 
     // =====================================================

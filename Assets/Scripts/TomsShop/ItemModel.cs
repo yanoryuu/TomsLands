@@ -173,6 +173,11 @@ public class ItemModel
             }
 
             runtime.Stock.Value -= quantitySold;
+            // 在庫が減ったら品出し数もクランプ
+            if (runtime.DisplayStock.Value > runtime.Stock.Value)
+            {
+                runtime.DisplayStock.Value = runtime.Stock.Value;
+            }
             runtime.WasSoldLastTurn = true;
             salesResult[runtime.ItemId] = quantitySold;
 
@@ -236,12 +241,54 @@ public class ItemModel
     /// <summary>
     /// TomsShop のターン切り替え時に呼ばれる経済更新。
     /// S1: 需要連動型じわじわ価格変動
-    /// S3: 品出し販売結果フィードバック
     /// D2: 品出し陳列効果（需要変動）
+    /// A1〜A5: 広告ステータス（Trust/Attention/Spread/Retention/Followers）連動
+    /// status が null または各係数が 0 のとき、従来挙動と完全一致する。
     /// </summary>
-    public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel)
+    public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null)
     {
         if (settings == null) return;
+
+        // ------------------------------------------------
+        // Step 0: 広告ステータスの正規化（status==null なら全部 0 → 中性化）
+        // ------------------------------------------------
+        float trustN     = (status != null) ? Mathf.Clamp01(status.Trust.Value     / 100f) : 0f;
+        float attentionN = (status != null) ? Mathf.Clamp01(status.Attention.Value / 100f) : 0f;
+        float spreadN    = (status != null) ? Mathf.Clamp01(status.Spread.Value    / 100f) : 0f;
+        float retentionN = (status != null) ? Mathf.Clamp01(status.Retention.Value / 100f) : 0f;
+        int   followers  = (status != null) ? Mathf.Max(0, status.Followers.Value) : 0;
+
+        // ------------------------------------------------
+        // Step 1: 案A5 Followers 補正（全アイテム共通の事前計算）
+        //   demandBias = followerWeight * Log10(1 + followers / followerScale)
+        //   followers=0 → Log10(1)=0 で完全に無効化
+        // ------------------------------------------------
+        float safeScale = Mathf.Max(1f, settings.followerScale);
+        float demandBias = settings.followerWeight * Mathf.Log10(1f + followers / safeScale);
+
+        // ------------------------------------------------
+        // Step 2: 案A3 Spread 増幅係数（D2 の Δdemand に乗算）
+        // ------------------------------------------------
+        float spreadFactor = 1f + settings.spreadDemandAmplify * spreadN;
+
+        // ------------------------------------------------
+        // Step 3: 案A4 Retention 安定化強度（S1 を 1.0 へ Lerp する t）
+        // ------------------------------------------------
+        float retentionStability = settings.retentionStabilizer * retentionN;
+
+        // ------------------------------------------------
+        // Step 4: 案A2 Attention 増幅係数（S1 の max 端を引き上げる倍率）
+        // ------------------------------------------------
+        float attentionFactor = 1f + settings.attentionPriceAmplify * attentionN;
+
+        // ------------------------------------------------
+        // Step 5: 案A1 Trust による Floor 倍率の底上げ
+        //   floorRate = shopPriceFloorRate + trustFloorBoost * (Trust/100)
+        //   安全のため Ceiling を超えないように Min クランプ
+        // ------------------------------------------------
+        float floorRate = Mathf.Min(
+            settings.shopPriceFloorRate + settings.trustFloorBoost * trustN,
+            settings.shopPriceCeilingRate);
 
         foreach (var runtime in RuntimeItems)
         {
@@ -252,74 +299,89 @@ public class ItemModel
             if (runtime.RequiredLevel.Value > blacksmithLevel) continue;
 
             // ------------------------------------------------
-            // 案D2: 品出し陳列効果（需要変動）
+            // 需要・価格のスナップショット保存（ポップアップ表示用）
             // ------------------------------------------------
-            if (runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0)
-            {
-                // 品出し中 → 需要微増
-                runtime.Demand.Value = Mathf.Clamp(
-                    runtime.Demand.Value + settings.displayDemandUp,
-                    settings.demandFloor, settings.demandCeiling);
-            }
-            else
-            {
-                // 品出ししていない → 需要微減
-                runtime.Demand.Value = Mathf.Clamp(
-                    runtime.Demand.Value - settings.notDisplayDemandDown,
-                    settings.demandFloor, settings.demandCeiling);
-            }
+            runtime.PreviousDemand = runtime.Demand.Value;
+            runtime.PreviousPrice = runtime.CurrentPrice.Value;
 
             // ------------------------------------------------
-            // 案S1: 需要連動型じわじわ価格変動
+            // 流行度（Trend）の更新: ランダムウォーク + 0 への減衰
             // ------------------------------------------------
-            float s1Rate;
+            float drift = Random.Range(-settings.trendDriftMax, settings.trendDriftMax);
+            float trendDecay = -runtime.Trend * settings.trendDecayRate;
+            runtime.Trend = Mathf.Clamp(runtime.Trend + drift + trendDecay, -1f, 1f);
+
+            // ------------------------------------------------
+            // 案D2 改: 均衡値収束(β Trend) + 品出し効果 + Spread 増幅
+            //   naturalDemand: Trend が引き寄せる均衡需要 (0.5 ± amplitude)
+            //   convergenceDelta: 均衡値への接近分
+            //   displayDelta: 品出し陳列効果（Spread 増幅付き）
+            //   Followers の demandBias は「動的下限の底上げ」モデルで適用する。
+            // ------------------------------------------------
+            bool displaying = runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0;
+
+            float naturalDemand = Mathf.Clamp01(0.5f + runtime.Trend * settings.trendAmplitude);
+            float convergenceDelta = (naturalDemand - runtime.Demand.Value) * settings.trendConvergenceRate;
+            float displayDelta = displaying
+                ? settings.displayDemandUp * spreadFactor
+                : -settings.notDisplayDemandDown * spreadFactor;
+
+            float dynamicDemandFloor = Mathf.Min(
+                settings.demandFloor + demandBias,
+                settings.demandCeiling);
+
+            runtime.Demand.Value = Mathf.Clamp(
+                runtime.Demand.Value + convergenceDelta + displayDelta,
+                dynamicDemandFloor, settings.demandCeiling);
+
+            // ------------------------------------------------
+            // 案S1 改: 需要連動型じわじわ価格変動 + Attention 上振れ増幅
+            //   閾値判定は従来通り。max 端のみ attentionFactor で乗算。
+            //   low 需要レンジは attentionAffectsLowDemand フラグで切替可能。
+            // ------------------------------------------------
+            float s1Min, s1Max;
             if (runtime.Demand.Value >= settings.highDemandThreshold)
             {
-                s1Rate = Random.Range(settings.highDemandPriceRateMin, settings.highDemandPriceRateMax);
+                s1Min = settings.highDemandPriceRateMin;
+                s1Max = settings.highDemandPriceRateMax * attentionFactor;
             }
             else if (runtime.Demand.Value <= settings.lowDemandThreshold)
             {
-                s1Rate = Random.Range(settings.lowDemandPriceRateMin, settings.lowDemandPriceRateMax);
+                s1Min = settings.lowDemandPriceRateMin;
+                s1Max = settings.attentionAffectsLowDemand
+                    ? settings.lowDemandPriceRateMax * attentionFactor
+                    : settings.lowDemandPriceRateMax;
             }
             else
             {
-                s1Rate = Random.Range(settings.normalDemandPriceRateMin, settings.normalDemandPriceRateMax);
+                s1Min = settings.normalDemandPriceRateMin;
+                s1Max = settings.normalDemandPriceRateMax * attentionFactor;
             }
+            // 安全: Attention 増幅で min と max が逆転しないようガード
+            if (s1Max < s1Min) s1Max = s1Min;
+            float s1Rate = Random.Range(s1Min, s1Max);
 
             // ------------------------------------------------
-            // 案S3: 品出し販売結果フィードバック
+            // 案A4: Retention 安定化 — S1 を 1.0 へ Lerp で寄せる
+            //   retentionStability=0 → s1 そのまま（従来挙動）
             // ------------------------------------------------
-            float s3Rate = 1.0f;
-            if (runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0)
-            {
-                // 品出し中のアイテム：前ターンで売れたかどうかで判定
-                if (runtime.WasSoldLastTurn)
-                {
-                    // 売れた → 値上がり
-                    s3Rate = Random.Range(settings.soldPriceRateMin, settings.soldPriceRateMax);
-                    Debug.Log($"[S3] {runtime.ItemId} 品出し中＆売れた → 価格 {s3Rate:P0}");
-                }
-                else
-                {
-                    // 品出しているが売れていない → 値下がり
-                    s3Rate = Random.Range(settings.unsoldPriceRateMin, settings.unsoldPriceRateMax);
-                    Debug.Log($"[S3] {runtime.ItemId} 品出し中＆売れず → 価格 {s3Rate:P0}");
-                }
-            }
+            s1Rate = Mathf.Lerp(s1Rate, 1f, retentionStability);
 
-            // S1 と S3 を合成して価格を更新
-            float combinedRate = s1Rate * s3Rate;
-            int newPrice = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * combinedRate));
+            int newPrice = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * s1Rate));
 
-            // ストップ高/ストップ安（元値ベース）
-            int floor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * settings.shopPriceFloorRate));
+            // ストップ高/ストップ安（元値ベース、Trust で Floor を底上げ）
+            int floor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * floorRate));
             int ceiling = Mathf.RoundToInt(master.basePrice * settings.shopPriceCeilingRate);
             newPrice = Mathf.Clamp(newPrice, floor, ceiling);
 
             runtime.CurrentPrice.Value = newPrice;
             runtime.UpdatePopularity();
 
-            Debug.Log($"[ShopEconomy] {runtime.ItemId}: S1={s1Rate:F3} S3={s3Rate:F3} → price={newPrice} demand={runtime.Demand.Value:F2}");
+            Debug.Log($"[ShopEconomy] {runtime.ItemId}: " +
+                      $"trend={runtime.Trend:F2} natural={naturalDemand:F2} " +
+                      $"S1={s1Rate:F3} (Att×{attentionFactor:F2}, Ret t={retentionStability:F2}) " +
+                      $"→ price={newPrice} demand={runtime.Demand.Value:F2} " +
+                      $"(floor={floor}, demandBias={demandBias:F3}, spread×{spreadFactor:F2})");
         }
     }
 

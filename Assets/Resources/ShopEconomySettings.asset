@@ -16,19 +16,26 @@ MonoBehaviour:
   highDemandPriceRateMin: 1.1
   highDemandPriceRateMax: 1.3
   lowDemandThreshold: 0.3
-  lowDemandPriceRateMin: 0.97
-  lowDemandPriceRateMax: 0.99
-  normalDemandPriceRateMin: 0.99
-  normalDemandPriceRateMax: 1.01
-  soldPriceRateMin: 1.01
-  soldPriceRateMax: 1.02
-  unsoldPriceRateMin: 0.98
-  unsoldPriceRateMax: 0.99
+  lowDemandPriceRateMin: 0.7
+  lowDemandPriceRateMax: 0.9
+  normalDemandPriceRateMin: 0.95
+  normalDemandPriceRateMax: 1.05
   shopPriceFloorRate: 0.3
   shopPriceCeilingRate: 3
-  victoryAttributeDemandUp: 0.05
-  defeatAttributeDemandDown: 0.05
-  displayDemandUp: 0.02
-  notDisplayDemandDown: 0.01
+  victoryAttributeDemandUp: 0.15
+  defeatAttributeDemandDown: 0.15
+  displayDemandUp: 0.03
+  notDisplayDemandDown: 0.03
   demandFloor: 0.05
   demandCeiling: 1
+  trustFloorBoost: 0.4
+  attentionPriceAmplify: 0.5
+  attentionAffectsLowDemand: 0
+  spreadDemandAmplify: 1
+  retentionStabilizer: 0.6
+  followerWeight: 0.1
+  followerScale: 1000
+  trendAmplitude: 0.3
+  trendConvergenceRate: 0.15
+  trendDriftMax: 0.12
+  trendDecayRate: 0.1

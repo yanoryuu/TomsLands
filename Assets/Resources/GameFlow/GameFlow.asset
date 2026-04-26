@@ -55,6 +55,9 @@ MonoBehaviour:
   - EventType: 1
     EventData: 002
     BattleDungeon: 1
+  - EventType: 2
+    EventData: 002
+    BattleDungeon: 2
   - EventType: 4
     EventData: 002
     BattleDungeon: 2

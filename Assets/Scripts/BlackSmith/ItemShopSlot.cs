@@ -19,6 +19,7 @@ public class ItemShopSlot : MonoBehaviour
     [Header("Step Buttons")]
     [SerializeField] private Button plusButton;
     [SerializeField] private Button minusButton;
+    [SerializeField] private Button iconButton; // アイコン画像上に配置する透明ボタン
 
     [Header("Data")]
     public string itemId { get; private set; }
@@ -28,10 +29,12 @@ public class ItemShopSlot : MonoBehaviour
     public Subject<int> OnStepClicked { get; } = new();            // +1 / -1 の要求
     public Subject<string> OnInfoRequested { get; } = new();
     public Subject<Unit> OnPurchaseClicked { get; } = new();
+    public Subject<string> OnIconClicked { get; } = new();         // アイコン押下 → 市場分析ポップアップ
 
     // 内部状態（UI表示用）
     private int displayQuantity;
     private int maxQuantity;
+    private int unitPrice;
     private bool suppress; // UI更新時にイベントを抑止
 
     private void Awake()
@@ -48,6 +51,9 @@ public class ItemShopSlot : MonoBehaviour
         // ＋／－ボタン
         if (plusButton) plusButton.onClick.AddListener(() => OnStepClicked.OnNext(+1));
         if (minusButton) minusButton.onClick.AddListener(() => OnStepClicked.OnNext(-1));
+
+        // アイコンボタン（市場分析ポップアップ）
+        if (iconButton) iconButton.onClick.AddListener(() => OnIconClicked.OnNext(itemId));
     }
 
     public void SetItem(string itemId,string itemName, Sprite sprite, Sprite background, int price, int maxStock, int currentStock, bool isPopular)
@@ -77,7 +83,14 @@ public class ItemShopSlot : MonoBehaviour
 
     public void SetPrice(int price)
     {
-        priceText?.SetText($"{price}G");
+        unitPrice = price;
+        UpdatePriceText();
+    }
+
+    private void UpdatePriceText()
+    {
+        int total = unitPrice * Mathf.Max(displayQuantity, 1);
+        priceText?.SetText($"{total}G");
     }
 
     // === 表示だけ更新（通知しない） ===
@@ -91,6 +104,7 @@ public class ItemShopSlot : MonoBehaviour
             quantitySlider.value = displayQuantity;
         }
         quantityText?.SetText($"{displayQuantity}");
+        UpdatePriceText();
 
         suppress = false;
         UpdateButtonsInteractable();
@@ -125,6 +139,7 @@ public class ItemShopSlot : MonoBehaviour
 
         displayQuantity = next;
         quantityText?.SetText($"{displayQuantity}");
+        UpdatePriceText();
         OnDisplayQuantityChanged.OnNext(displayQuantity);
         UpdateButtonsInteractable();
     }
@@ -149,5 +164,6 @@ public class ItemShopSlot : MonoBehaviour
         purchaseButton?.onClick.RemoveAllListeners();
         plusButton?.onClick.RemoveAllListeners();
         minusButton?.onClick.RemoveAllListeners();
+        iconButton?.onClick.RemoveAllListeners();
     }
 }
