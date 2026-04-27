@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-using TMPro;
-using System.Collections.Generic;
+using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
 
@@ -9,19 +7,24 @@ using System.Threading;
 /// </summary>
 public class BattleUIView : MonoBehaviour
 {
-    [Header("ログ表示関連")]
-    [SerializeField] private TMP_Text logText;
-    [SerializeField] private int maxLogLines = 8;
+    [Header("テンポ設定")]
+    [Tooltip("バトル全体のスピード倍率。大きいほど速い。（0.1〜5.0）")]
+    [SerializeField, Range(0.1f, 5f)] private float battleSpeedMultiplier = 1f;
+    [Tooltip("1メッセージあたりの表示待機秒数（battleSpeedMultiplierで割られる）")]
     [SerializeField] private float logDisplayDuration = 0.5f;
+
+    // ========== バトルの履歴表示機能（コメントアウト） ==========
+    // [Header("ログ表示関連")]
+    // [SerializeField] private TMP_Text logText;
+    // [SerializeField] private int maxLogLines = 8;
+    // private readonly List<string> logLines = new List<string>();
+    // ===========================================================
 
     [Header("背景")]
     [SerializeField] private SpriteRenderer backgroundRenderer;
 
-    // 各要素は "1メッセージ（改行を含む）" を単位として保持
-    private readonly List<string> logLines = new List<string>();
-
     /// <summary>
-    /// ダンジョンの背景画像を設定する。null の場合は非表示にする。
+    /// ダンジョンの背景画像を設定する。null の場合は元の背景をそのまま維持する。
     /// </summary>
     public void SetBackground(Sprite dungeonImage)
     {
@@ -30,33 +33,32 @@ public class BattleUIView : MonoBehaviour
             Debug.LogWarning("[BattleUIView] backgroundRenderer が Inspector で未設定です。FightScene の BattleUIView に SpriteRenderer を設定してください。");
             return;
         }
-
         if (dungeonImage != null)
         {
             backgroundRenderer.sprite = dungeonImage;
         }
-        // dungeonImage が null の場合は元の背景をそのまま維持する
     }
 
+    /// <summary>
+    /// 指定したミリ秒を battleSpeedMultiplier でスケーリングした遅延ミリ秒を返す。
+    /// </summary>
+    public int GetSpeedScaledDelay(int baseDelayMs)
+        => Mathf.Max(0, Mathf.RoundToInt(baseDelayMs / battleSpeedMultiplier));
 
     public async UniTask AddLogAsync(string message, CancellationToken token)
     {
-        logLines.Add(message);
+        // ========== バトルの履歴表示機能（コメントアウト） ==========
+        // logLines.Add(message);
+        // logText.text = string.Join("\n", logLines);
+        // logText.ForceMeshUpdate();
+        // while (logText.textInfo.lineCount > maxLogLines && logLines.Count > 0)
+        // {
+        //     logLines.RemoveAt(0);
+        //     logText.text = string.Join("\n", logLines);
+        //     logText.ForceMeshUpdate();
+        // }
+        // ===========================================================
 
-        // テキストを更新してレンダリング情報を強制更新
-        logText.text = string.Join("\n", logLines);
-        // ForceMeshUpdate を呼ばないと textInfo が古いままなので必ず呼ぶ
-        logText.ForceMeshUpdate();
-
-        while (logText.textInfo.lineCount > maxLogLines && logLines.Count > 0)
-        {
-            // 古いメッセージを削除して再描画→再評価
-            logLines.RemoveAt(0);
-            logText.text = string.Join("\n", logLines);
-            logText.ForceMeshUpdate();
-        }
-
-        // 4) ログが流れるように少し待機（キャンセル対応）
-        await UniTask.Delay(System.TimeSpan.FromSeconds(logDisplayDuration), cancellationToken: token);
+        await UniTask.Delay(System.TimeSpan.FromSeconds(logDisplayDuration / battleSpeedMultiplier), cancellationToken: token);
     }
 }

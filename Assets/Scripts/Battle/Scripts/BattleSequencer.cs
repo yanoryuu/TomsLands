@@ -45,6 +45,11 @@ public class BattleSequencer : MonoBehaviour
     /// </summary>
     public Subject<CharacterModel> OnEnemyDefeated { get; } = new();
 
+    /// <summary>
+    /// ボスが出現した時に発火するイベント。
+    /// </summary>
+    public Subject<Unit> OnBossAppeared { get; } = new();
+
 
     public void StartBattle(HeroModel heroModel)
     {

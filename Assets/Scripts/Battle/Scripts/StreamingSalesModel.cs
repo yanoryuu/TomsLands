@@ -111,6 +111,30 @@ public class StreamingSalesModel
     }
 
     /// <summary>
+    /// 全アイテムの価格を一律に変動させる（配信熱の複利適用など）。
+    /// 売り場（ItemsForSale）と在庫（inventoryItems）の両方に適用。
+    /// </summary>
+    public void AdjustAllPrices(float rate, List<RuntimeItemData> inventoryItems,
+        float priceFloorRate = 0f, float priceCeilingRate = 0f, ItemModel itemModel = null)
+    {
+        ApplyRateToAllItems(ItemsForSale, rate, priceFloorRate, priceCeilingRate, itemModel);
+        ApplyRateToAllItems(inventoryItems, rate, priceFloorRate, priceCeilingRate, itemModel);
+    }
+
+    private void ApplyRateToAllItems(List<RuntimeItemData> items, float rate,
+        float priceFloorRate, float priceCeilingRate, ItemModel itemModel)
+    {
+        if (items == null) return;
+        foreach (var item in items)
+        {
+            if (item == null) continue;
+            int newPrice = Mathf.Max(1, Mathf.RoundToInt(item.CurrentPrice.Value * rate));
+            newPrice = ClampToStopLimits(newPrice, item, priceFloorRate, priceCeilingRate, itemModel);
+            item.CurrentPrice.Value = newPrice;
+        }
+    }
+
+    /// <summary>
     /// 敵の属性に応じて、有利属性のアイテムは値上がり、不利属性のアイテムは値下がりさせる。
     /// 売り場（ItemsForSale）と在庫（inventoryItems）の両方に適用。
     /// </summary>

@@ -55,6 +55,25 @@ public class RuntimeItemData
     /// </summary>
     public float Trend { get; set; }
 
+    /// <summary>
+    /// バトル中の価格履歴（ターンごとの価格スナップショット）。非永続・セーブ対象外。
+    /// インデックス 0 がバトル開始時の価格、以降は各ターン終了後の価格。
+    /// </summary>
+    public System.Collections.Generic.List<int> BattlePriceHistory { get; private set; }
+        = new System.Collections.Generic.List<int>();
+
+    /// <summary>現在の価格を BattlePriceHistory に記録する。</summary>
+    public void RecordBattlePrice()
+    {
+        BattlePriceHistory.Add(CurrentPrice.Value);
+    }
+
+    /// <summary>バトル開始時に価格履歴をリセットする。</summary>
+    public void ClearBattlePriceHistory()
+    {
+        BattlePriceHistory.Clear();
+    }
+
     public RuntimeItemData(
         string itemId,
         string itemName,

@@ -5,7 +5,7 @@ using DG.Tweening;
 using System;
 using UnityEngine.EventSystems;
 
-public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [SerializeField] private Image itemIcon;
     [SerializeField] private Image backgroundImage;
@@ -19,6 +19,9 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     // ドラッグ＆ドロップを全体に通知
     public static event Action<ItemSlotView, ItemSlotView> OnItemDropped;
+
+    // アイテムアイコンクリックを全体に通知（価格グラフ表示用）
+    public static event Action<ItemSlotView> OnItemClicked;
 
     private static ItemSlotView draggedItem;
 
@@ -113,15 +116,37 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public void PlaySoldAnimation()
     {
         if (canvasGroup == null) return;
+
+        // 既存のTweenをすべてキャンセルして初期状態に戻す
         canvasGroup.DOKill();
         canvasGroup.alpha = 1f;
         transform.DOKill();
         transform.localScale = Vector3.one;
-        Sequence sequence = DOTween.Sequence();
-        sequence.Append(transform.DOScale(1.2f, 0.15f));
-        sequence.Join(canvasGroup.DOFade(0.5f, 0.15f));
-        sequence.Append(transform.DOScale(1.0f, 0.2f));
-        sequence.Join(canvasGroup.DOFade(1.0f, 0.2f));
+        if (itemIcon != null)
+        {
+            itemIcon.DOKill();
+            itemIcon.color = Color.white;
+        }
+
+        Sequence seq = DOTween.Sequence();
+
+        // 1. 大きくポップアップ（より派手に）
+        seq.Append(transform.DOScale(1.4f, 0.1f).SetEase(Ease.OutQuad));
+
+        // 2. アイコンを金色にフラッシュ
+        if (itemIcon != null)
+            seq.Join(itemIcon.DOColor(new Color(1f, 0.88f, 0.1f), 0.1f));
+
+        // 3. 半透明にフェード
+        seq.Join(canvasGroup.DOFade(0.3f, 0.1f));
+
+        // 4. バウンスしながら元のサイズに戻す
+        seq.Append(transform.DOScale(1f, 0.3f).SetEase(Ease.OutBounce));
+
+        // 5. アイコン色と透明度を元に戻す
+        if (itemIcon != null)
+            seq.Join(itemIcon.DOColor(Color.white, 0.25f));
+        seq.Join(canvasGroup.DOFade(1f, 0.2f));
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -230,6 +255,14 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         priceTargetText.gameObject.SetActive(true);
     }
 
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // ドラッグ操作中や空スロットはスキップ
+        if (draggedItem != null) return;
+        if (CurrentItem == null) return;
+        OnItemClicked?.Invoke(this);
+    }
 
     public void OnPointerExit(PointerEventData eventData)
     {

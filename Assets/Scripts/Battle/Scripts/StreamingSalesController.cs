@@ -41,6 +41,14 @@ public class StreamingSalesController : MonoBehaviour
     [SerializeField] private List<ItemSlotView> inventorySlotViews; // 在庫側のスロット（シーン上の 10 インスタンス）
     private List<RuntimeItemData> inventorySlotItemRefs = new List<RuntimeItemData>(); // 在庫スロットが参照している RuntimeItemData
 
+    [Header("価格グラフ")]
+    [SerializeField] private ItemPriceGraphView priceGraphView;
+
+    [Header("顧客演出")]
+    [SerializeField] private CustomerManager customerManager;
+
+    [Header("配信熱")]
+    [SerializeField] private StreamingHeatView heatView;
 
     [Header("BattleDemand — 案A: 属性相性で需要変動")]
     [Tooltip("有利属性の敵を撃破した時の需要UP量")]
@@ -66,11 +74,15 @@ public class StreamingSalesController : MonoBehaviour
     [Tooltip("安値時の需要増加率（毎ターン。例: 1.08 = 8%増）")]
     [SerializeField] private float lowPriceDemandGrowth = 1.08f;
 
+    /// <summary>売り場のアイテムが1個以上売れた時に発火する（ShopkeeperCharacter など外部購読用）。</summary>
+    public event System.Action<RuntimeItemData> OnSaleOccurred;
+
     private ItemModel _mainItemModel;
     private StreamingSalesPresenter _presenter;
     private StreamingSalesModel _model;
     private BattleDemandTracker _demandTracker;
     private readonly CompositeDisposable _battleDisposables = new CompositeDisposable();
+    private StreamingHeatModel _heatModel;
 
     /// <summary>
     /// BattleSceneStarterから呼ばれる初期化メソッド。
@@ -144,15 +156,48 @@ public class StreamingSalesController : MonoBehaviour
         _presenter.Bind();
 
         ItemSlotView.OnItemDropped += HandleItemSwap;
+        ItemSlotView.OnItemClicked += HandleItemClicked;
 
         // Inventoryスロットに選択アイテムを配置
         InitializeInventorySlots(itemModel, itemsForSale, inventoryItems);
 
+        // バトル開始時の初期価格を履歴に記録
+        var allItemsList = new List<RuntimeItemData>();
+        if (itemsForSale != null) allItemsList.AddRange(itemsForSale);
+        if (inventoryItems != null) allItemsList.AddRange(inventoryItems);
+        foreach (var item in allItemsList)
+        {
+            if (item == null) continue;
+            item.ClearBattlePriceHistory();
+            item.RecordBattlePrice();
+        }
+
         _model.StartSalesLoopAsync(_mainItemModel, this.GetCancellationTokenOnDestroy()).Forget();
-        
+
+        // アイテムが売れた時の通知（顧客演出・店主演出・外部イベント）
+        _model.OnItemSold
+            .Subscribe(slotIndex =>
+            {
+                if (_model?.ItemsForSale == null) return;
+                if (slotIndex < 0 || slotIndex >= _model.ItemsForSale.Count) return;
+                var soldItem = _model.ItemsForSale[slotIndex];
+                if (soldItem == null) return;
+                customerManager?.RequestCustomer(soldItem);
+                OnSaleOccurred?.Invoke(soldItem);
+            })
+            .AddTo(_battleDisposables);
+
         // 戦闘ダメージイベントを購読して価格変動を適用
         SubscribeToBattleDamageEvents();
-        
+
+        // 配信熱モデルを初期化して UI を購読
+        _heatModel = new StreamingHeatModel();
+        SubscribeToHeatEvents();
+        _heatModel.Heat
+            .Subscribe(h => heatView?.UpdateHeat(h, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier()))
+            .AddTo(_battleDisposables);
+        heatView?.UpdateHeat(_heatModel.Heat.Value, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier());
+
         Debug.Log($"営業開始！ 売り場: {itemsForSale.Count}種, Inventory: {inventoryItems?.Count ?? 0}種");
     }
 
@@ -266,6 +311,46 @@ public class StreamingSalesController : MonoBehaviour
     }
 
     /// <summary>
+    /// 配信熱イベントを購読し、戦闘状況に応じて Heat を変動させる。
+    /// </summary>
+    private void SubscribeToHeatEvents()
+    {
+        if (battleSequencer == null) return;
+
+        // 敵撃破 → +15
+        battleSequencer.OnEnemyDefeated
+            .Subscribe(_ => _heatModel.AddHeat(15f))
+            .AddTo(_battleDisposables);
+
+        // ボス出現 → +40
+        battleSequencer.OnBossAppeared
+            .Subscribe(_ => _heatModel.AddHeat(40f))
+            .AddTo(_battleDisposables);
+
+        // 戦闘ダメージから細かい Heat 変動
+        battleSequencer.OnCharacterDamaged
+            .Subscribe(pair =>
+            {
+                var (attacker, target) = pair;
+
+                // Hero が攻撃を当てたが倒せなかった → +3
+                if (attacker.Type == CharacterType.Hero && !target.IsDead)
+                    _heatModel.AddHeat(3f);
+
+                // Hero がダメージを受けた
+                if (target.Type == CharacterType.Hero)
+                {
+                    int rawDamage = attacker.AttackPower;
+                    if (rawDamage <= target.DefensePower)
+                        _heatModel.AddHeat(5f);   // 防御成功 → +5
+                    else
+                        _heatModel.AddHeat(-8f);  // 被弾 → -8
+                }
+            })
+            .AddTo(_battleDisposables);
+    }
+
+    /// <summary>
     /// 毎ターン呼び出される売買処理。売り場に出ているアイテムのみ販売対象。
     /// 販売後に案C（連続販売トレンド）と案E（価格と需要の逆相関）を適用する。
     /// </summary>
@@ -289,8 +374,48 @@ public class StreamingSalesController : MonoBehaviour
             _demandTracker.ProcessEndOfTurn(_model.ItemsForSale);
         }
 
+        // 配信熱：自然減衰 → 複利価格変動
+        if (_heatModel != null)
+        {
+            _heatModel.ApplyTurnDecay();
+            float mult = _heatModel.GetPriceMultiplier();
+            if (mult != 1f)
+            {
+                _model.AdjustAllPrices(mult, inventorySlotItemRefs, priceFloorRate, priceCeilingRate, _mainItemModel);
+                Debug.Log($"[配信熱] 価格倍率 {mult:F2} 適用 (Heat={_heatModel.Heat.Value:F0})");
+            }
+        }
+
         RefreshAllSlotDisplays();
+        RecordPriceHistory();
         Debug.Log("[StreamingSalesController] ターン売買を実行しました。");
+    }
+
+    /// <summary>
+    /// 売り場・在庫の全アイテムに対して現在の価格を BattlePriceHistory に記録する。
+    /// ターン終了後（価格変動・販売処理の後）に呼ぶ。
+    /// </summary>
+    private void RecordPriceHistory()
+    {
+        if (_model?.ItemsForSale != null)
+        {
+            foreach (var item in _model.ItemsForSale)
+                item?.RecordBattlePrice();
+        }
+        if (inventorySlotItemRefs != null)
+        {
+            foreach (var item in inventorySlotItemRefs)
+                item?.RecordBattlePrice();
+        }
+    }
+
+    /// <summary>
+    /// アイテムアイコンがクリックされた時に価格グラフを表示する。
+    /// </summary>
+    private void HandleItemClicked(ItemSlotView slot)
+    {
+        if (slot == null || slot.CurrentItem == null) return;
+        priceGraphView?.Show(slot.CurrentItem);
     }
 
     /// <summary>
@@ -466,5 +591,6 @@ private void RefreshSellDisplay()
         _presenter?.Dispose();
         _battleDisposables.Dispose();
         ItemSlotView.OnItemDropped -= HandleItemSwap;
+        ItemSlotView.OnItemClicked -= HandleItemClicked;
     }
 }

@@ -1,4 +1,5 @@
 ﻿﻿using Cysharp.Threading.Tasks;
+using R3;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -106,9 +107,8 @@ public class BattleActionExecutor
         {
             if (SpawnRandomEnemy(factory, sequencer))
             {
-                int delayTime = 500;
                 await uiView.AddLogAsync("敵の増援が現れた！", token);
-                await UniTask.Delay(delayTime, cancellationToken: token);
+                await UniTask.Delay(uiView.GetSpeedScaledDelay(500), cancellationToken: token);
             }
             else
             {
@@ -131,6 +131,7 @@ public class BattleActionExecutor
                 context.AddEnemy(bossPresenter);
                 context.OccupySpawnPoint(spawnIndex.Value, bossPresenter);
                 await uiView.AddLogAsync($"ボス【{bossData.enemyName}】が出現した！", token);
+                sequencer.OnBossAppeared.OnNext(Unit.Default);
             }
         }
     }
