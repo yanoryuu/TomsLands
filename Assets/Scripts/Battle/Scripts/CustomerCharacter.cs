@@ -53,14 +53,6 @@ public class CustomerCharacter : MonoBehaviour
         if (itemDisplayRoot != null) itemDisplayRoot.transform.DOKill();
     }
 
-    // ─────────────────────────────────────────
-    //  公開 API
-    // ─────────────────────────────────────────
-
-    /// <summary>
-    /// 購入シーケンスを開始する。CustomerManager から呼ぶ。
-    /// キャラクターの見た目は SPUM GameObject 側で事前設定済みのものを使う。
-    /// </summary>
     public void Play(Sprite itemSprite, Vector3 spawnPos, Vector3 destPos)
     {
         if (itemDisplayRoot != null) itemDisplayRoot.SetActive(false);
@@ -74,25 +66,18 @@ public class CustomerCharacter : MonoBehaviour
         RunAsync(itemSprite, spawnPos, destPos, _cts.Token).Forget();
     }
 
-    // ─────────────────────────────────────────
-    //  内部シーケンス
-    // ─────────────────────────────────────────
-
     private async UniTaskVoid RunAsync(Sprite itemSprite,
                                        Vector3 spawnPos, Vector3 destPos,
                                        CancellationToken token)
     {
         try
         {
-            // 1. 売り場へ入場（歩行アニメーション）
             await MoveToAsync(destPos, token);
 
-            // 2. 購入アイテムを頭上に表示してしばらく停留（アイドルアニメーション）
             PlayState(PlayerState.IDLE);
             ShowItem(itemSprite);
             await UniTask.Delay(TimeSpan.FromSeconds(stopDuration), cancellationToken: token);
 
-            // 3. アイテムを隠して退場
             HideItem();
             FaceToward(spawnPos);
             await MoveToAsync(spawnPos, token);
@@ -158,14 +143,18 @@ public class CustomerCharacter : MonoBehaviour
             });
     }
 
-    // ─────────────────────────────────────────
-    //  ヘルパー
-    // ─────────────────────────────────────────
-
-    /// <summary>SPUM アニメーションを再生する。</summary>
     private void PlayState(PlayerState state)
     {
-        if (spumCharacter == null) return;
+        if (spumCharacter == null)
+        {
+            Debug.LogWarning($"[CustomerCharacter] spumCharacter が未設定です: {gameObject.name}", this);
+            return;
+        }
+        if (!spumCharacter.allListsHaveItemsExist())
+        {
+            Debug.LogWarning($"[CustomerCharacter] SPUM アニメーションリストが空です。SPUM_Prefabs の PopulateAnimationLists を実行してください: {gameObject.name}", this);
+            return;
+        }
         spumCharacter.PlayAnimation(state, 0);
     }
 

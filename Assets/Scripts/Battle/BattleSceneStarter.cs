@@ -125,14 +125,15 @@ public class BattleSceneStarter : IAsyncStartable
 
         // BattleOutputData に結果を書き込み
         var soldItems = BuildSoldItems();
-        _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems);
+        int totalEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
+        _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings);
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
         _panelManager?.ShowPanel(StreamingGamePhase.StreamingResult);
         if (_resultView != null)
         {
-            await _resultView.ShowResultAsync(battleResult.result, soldItems);
+            await _resultView.ShowResultAsync(battleResult.result, soldItems, totalEarnings);
         }
         else
         {
@@ -166,16 +167,20 @@ public class BattleSceneStarter : IAsyncStartable
 
     /// <summary>
     /// BattleInputData の SelectedItems から BattleOutputSoldItem リストを構築する。
+    /// 実際に売れた数 = 持ち込み数 - バトル終了時の残在庫。
     /// </summary>
     private List<BattleOutputSoldItem> BuildSoldItems()
     {
         var soldItems = new List<BattleOutputSoldItem>();
         foreach (var item in _inputData.SelectedItems)
         {
+            var runtime = _itemModel.GetRuntimeItem(item.ItemId);
+            int remainingStock = runtime != null ? runtime.Stock.Value : 0;
+            int actualSold = Mathf.Max(0, item.Quantity - remainingStock);
             soldItems.Add(new BattleOutputSoldItem
             {
                 ItemId = item.ItemId,
-                SoldQuantity = item.Quantity,
+                SoldQuantity = actualSold,
                 SoldPrice = item.Price
             });
         }

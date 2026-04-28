@@ -42,7 +42,7 @@ public class BattleResultView : MonoBehaviour
     /// リザルト画面のコンテンツを設定し、確認ボタンが押されるまで待機する。
     /// パネルの表示/非表示は BattlePanelManager が事前に行う。
     /// </summary>
-    public async UniTask ShowResultAsync(BattleResult result, List<BattleOutputSoldItem> soldItems)
+    public async UniTask ShowResultAsync(BattleResult result, List<BattleOutputSoldItem> soldItems, int totalEarnings = 0)
     {
         _confirmTcs = new UniTaskCompletionSource();
 
@@ -52,18 +52,10 @@ public class BattleResultView : MonoBehaviour
             resultTitleText.text = result == BattleResult.Victory ? "勝利！" : "敗北...";
         }
 
-        // 売上サマリー
+        // 売上サマリー（StreamingSalesModel が集計した正確な金額を使用）
         if (resultDetailText != null)
         {
-            int totalRevenue = 0;
-            if (soldItems != null)
-            {
-                foreach (var item in soldItems)
-                {
-                    totalRevenue += item.SoldPrice * item.SoldQuantity;
-                }
-            }
-            resultDetailText.text = $"売上: {totalRevenue} G";
+            resultDetailText.text = $"売上: {totalEarnings} G";
         }
 
         // 売れたアイテムスロット生成

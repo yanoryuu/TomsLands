@@ -37,7 +37,7 @@ public class StreamingSettingView : MonoBehaviour
 
             var go   = Instantiate(availableSlotPrefab, availablePanel);
             var slot = go.GetComponent<AvailableItemSlot>();
-            slot.Initialize(item.ItemId, item.ItemIcon, item.ItemBackground, item.ItemName);
+            slot.Initialize(item.ItemId, item.ItemIcon, item.ItemName, item.Stock.Value, item.ItemAttribute);
             slot.OnItemSelected += id => OnItemSelected.OnNext(id);
         }
     }

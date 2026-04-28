@@ -77,6 +77,9 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>売り場のアイテムが1個以上売れた時に発火する（ShopkeeperCharacter など外部購読用）。</summary>
     public event System.Action<RuntimeItemData> OnSaleOccurred;
 
+    /// <summary>バトル中の累計売上金額を返す。</summary>
+    public int GetTotalSalesValue() => _model != null ? _model.GetCurrentTotalSales() : 0;
+
     private ItemModel _mainItemModel;
     private StreamingSalesPresenter _presenter;
     private StreamingSalesModel _model;

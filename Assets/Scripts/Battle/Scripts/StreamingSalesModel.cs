@@ -9,6 +9,8 @@ public class StreamingSalesModel
 {
     public ReadOnlyReactiveProperty<int> TotalSales => _totalSales;
     private readonly ReactiveProperty<int> _totalSales = new();
+
+    public int GetCurrentTotalSales() => _totalSales.Value;
     public List<RuntimeItemData> ItemsForSale { get; private set; }
 
     public Subject<int> OnItemSold { get; } = new Subject<int>();
@@ -221,7 +223,7 @@ public class StreamingSalesModel
     /// 商品を売る具体的な処理。
     /// BattleDemandTracker が設定されている場合は BattleDemand × SalesRate × DisplayStock で販売数量を決定する。
     /// 設定されていない場合は Demand × SalesRate × DisplayStock のフォールバックで販売数を決定する。
-    /// 販売数の上限は在庫数のみで制限される。
+    /// 端数は確率的丸め（値が確率として1個売れるか判定）で処理する。
     /// </summary>
     private void ProcessSingleItemSale(ItemModel mainItemModel, int itemIndex)
     {
@@ -233,33 +235,36 @@ public class StreamingSalesModel
 
         int displayStock = Mathf.Max(1, item.DisplayStock.Value);
         float salesRate = item.SalesRate;
-        int quantitySold;
 
+        float demand;
         if (DemandTracker != null)
         {
-            // BattleDemand × SalesRate × DisplayStock で販売数を決定（上限なし、在庫までClamp）
             DemandTracker.EnsureTracked(item);
-            float battleDemand = DemandTracker.GetDemand(item.ItemId);
-            quantitySold = Mathf.Clamp(
-                Mathf.FloorToInt(battleDemand * salesRate * displayStock),
-                0,
-                item.Stock.Value
-            );
-
-            if (quantitySold <= 0) return;
+            demand = DemandTracker.GetDemand(item.ItemId);
         }
         else
         {
-            // フォールバック: Demand × SalesRate × DisplayStock で販売数を決定
-            float demand = Mathf.Clamp01(item.Demand.Value);
-            quantitySold = Mathf.Clamp(
-                Mathf.FloorToInt(demand * salesRate * displayStock),
-                0,
-                item.Stock.Value
-            );
-
-            if (quantitySold <= 0) return;
+            demand = Mathf.Clamp01(item.Demand.Value);
         }
+
+        float rawSold = demand * salesRate * displayStock;
+        int quantitySold;
+        if (rawSold >= 1f)
+        {
+            quantitySold = Mathf.FloorToInt(rawSold);
+        }
+        else if (rawSold > 0f)
+        {
+            // 端数は rawSold を確率として判定（0.7 なら 70% の確率で 1 個売れる）
+            quantitySold = UnityEngine.Random.value < rawSold ? 1 : 0;
+        }
+        else
+        {
+            quantitySold = 0;
+        }
+
+        quantitySold = Mathf.Clamp(quantitySold, 0, item.Stock.Value);
+        if (quantitySold <= 0) return;
 
         int earnings = quantitySold * item.CurrentPrice.Value;
 

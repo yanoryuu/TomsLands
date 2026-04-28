@@ -37,22 +37,18 @@ public class CustomerManager : MonoBehaviour
 
     private void Awake()
     {
+        EnsureCustomerPool();
+
         // 全キャラを非表示にして待機状態にする
         if (customerCharacters != null)
             foreach (var c in customerCharacters)
                 if (c != null) c.gameObject.SetActive(false);
     }
 
-    // ─────────────────────────────────────────
-    //  公開 API
-    // ─────────────────────────────────────────
-
-    /// <summary>
-    /// アイテムが売れた時に StreamingSalesController から呼ぶ。
-    /// キューに積んで順次処理する。
-    /// </summary>
     public void RequestCustomer(RuntimeItemData item)
     {
+        EnsureCustomerPool();
+
         if (customerCharacters == null || customerCharacters.Count == 0) return;
         if (destinationPoints == null || destinationPoints.Count == 0) return;
 
@@ -64,29 +60,32 @@ public class CustomerManager : MonoBehaviour
         if (!_isProcessing) ProcessQueueAsync().Forget();
     }
 
-    // ─────────────────────────────────────────
-    //  内部処理
-    // ─────────────────────────────────────────
 
     private async UniTaskVoid ProcessQueueAsync()
     {
         _isProcessing = true;
         while (_purchaseQueue.Count > 0)
         {
-            SpawnCustomer(_purchaseQueue.Dequeue());
+            if (!TrySpawnCustomer(_purchaseQueue.Peek()))
+            {
+                await UniTask.Delay(TimeSpan.FromSeconds(spawnInterval));
+                continue;
+            }
+
+            _purchaseQueue.Dequeue();
             if (_purchaseQueue.Count > 0)
                 await UniTask.Delay(TimeSpan.FromSeconds(spawnInterval));
         }
         _isProcessing = false;
     }
 
-    private void SpawnCustomer(RuntimeItemData item)
+    private bool TrySpawnCustomer(RuntimeItemData item)
     {
         // 非アクティブなキャラをランダム順で探す
         var available = customerCharacters
             .Where(c => c != null && !c.gameObject.activeSelf)
             .ToList();
-        if (available.Count == 0) return;
+        if (available.Count == 0) return false;
 
         var customer = available[UnityEngine.Random.Range(0, available.Count)];
 
@@ -102,5 +101,29 @@ public class CustomerManager : MonoBehaviour
 
         customer.gameObject.SetActive(true);
         customer.Play(item.ItemIcon, spawnPos, dest.position);
+        return true;
+    }
+
+    private void EnsureCustomerPool()
+    {
+        if (customerCharacters == null)
+        {
+            customerCharacters = new List<CustomerCharacter>();
+        }
+
+        Transform searchRoot = transform.parent != null ? transform.parent : transform;
+        var childCustomers = searchRoot.GetComponentsInChildren<CustomerCharacter>(true);
+        foreach (var customer in childCustomers)
+        {
+            if (customer != null && !customerCharacters.Contains(customer))
+            {
+                customerCharacters.Add(customer);
+            }
+        }
+
+        customerCharacters = customerCharacters
+            .Where(c => c != null)
+            .Distinct()
+            .ToList();
     }
 }

@@ -10,6 +10,7 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
     [SerializeField] private Image icon;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI amountText;
+    [SerializeField] private TextMeshProUGUI stockText;
     [SerializeField] private Slider qtySlider;
 
     [Header("Step Buttons")]
@@ -42,6 +43,8 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
         // 初期表示
         if (amountText != null)
             amountText.text = qtySlider.value.ToString();
+        if (stockText != null)
+            stockText.text = $"在庫: {maxQty}";
 
         // スライダー値変更時のイベント登録
         qtySlider.onValueChanged.AddListener(v =>

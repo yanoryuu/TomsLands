@@ -18,6 +18,7 @@ public class BattleOutputData : ScriptableObject
 
     [Header("販売結果")]
     public List<BattleOutputSoldItem> SoldItems = new();
+    public int TotalEarnings;
 
     [Header("フラグ")]
     public bool HasResult;
@@ -25,14 +26,15 @@ public class BattleOutputData : ScriptableObject
     /// <summary>
     /// 戦闘終了時に結果を書き込む
     /// </summary>
-    public void SetResult(BattleResult result, string weaponId, string armorId, List<BattleOutputSoldItem> soldItems)
+    public void SetResult(BattleResult result, string weaponId, string armorId, List<BattleOutputSoldItem> soldItems, int totalEarnings)
     {
         Result = result;
         WeaponId = weaponId;
         ArmorId = armorId;
         SoldItems = new List<BattleOutputSoldItem>(soldItems);
+        TotalEarnings = totalEarnings;
         HasResult = true;
-        Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}");
+        Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}");
     }
 
     public void Clear()
@@ -41,6 +43,7 @@ public class BattleOutputData : ScriptableObject
         WeaponId = "";
         ArmorId = "";
         SoldItems.Clear();
+        TotalEarnings = 0;
         HasResult = false;
     }
 }

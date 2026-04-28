@@ -44,13 +44,19 @@ public class BattleResultHandler : IStartable, IDisposable
         // GameFlowManager のインデックスを復元（シーン再生成で失われるため）
         _gameFlowManager.RestoreIndex(_inputData.GameFlowIndex);
 
-        // --- 売上処理 ---
+        // --- 売上処理（在庫を減らしてお金を加算）---
         foreach (var soldItem in _outputData.SoldItems)
         {
             if (soldItem.SoldQuantity > 0)
             {
                 _itemModel.Settlement(soldItem.ItemId, soldItem.SoldQuantity);
             }
+        }
+
+        if (_outputData.TotalEarnings > 0)
+        {
+            _tomsModel.Settlement(_outputData.TotalEarnings);
+            Debug.Log($"[BattleResultHandler] Battle earnings added to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
         // --- 勝敗ボーナス/ペナルティ ---
