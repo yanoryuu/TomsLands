@@ -11,6 +11,7 @@ public class TurnEndSummaryRowUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI soldCountText;
     [SerializeField] private TextMeshProUGUI revenueText;
     [SerializeField] private TextMeshProUGUI trendText;
+    [SerializeField] private TextMeshProUGUI causeText;
     [SerializeField] private Image itemIcon;
 
     /// <summary>
@@ -45,6 +46,29 @@ public class TurnEndSummaryRowUI : MonoBehaviour
                 default:
                     trendText.text = "→";
                     trendText.color = Color.gray;
+                    break;
+            }
+        }
+
+        if (causeText != null)
+        {
+            switch (data.Cause)
+            {
+                case DemandChangeCause.TrendUp:
+                    causeText.text = "流行中！";
+                    causeText.color = new Color(1f, 0.55f, 0f);
+                    break;
+                case DemandChangeCause.Displayed:
+                    causeText.text = "陳列効果";
+                    causeText.color = new Color(0.2f, 0.75f, 0.2f);
+                    break;
+                case DemandChangeCause.TrendDown:
+                    causeText.text = "流行下落";
+                    causeText.color = new Color(0.4f, 0.4f, 1f);
+                    break;
+                default:
+                    causeText.text = "安定";
+                    causeText.color = Color.gray;
                     break;
             }
         }

@@ -77,6 +77,9 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>売り場のアイテムが1個以上売れた時に発火する（ShopkeeperCharacter など外部購読用）。</summary>
     public event System.Action<RuntimeItemData> OnSaleOccurred;
 
+    /// <summary>売り場のアイテムの在庫がゼロになった時に発火する。</summary>
+    public R3.Subject<RuntimeItemData> OnItemStockDepleted { get; } = new();
+
     /// <summary>バトル中の累計売上金額を返す。</summary>
     public int GetTotalSalesValue() => _model != null ? _model.GetCurrentTotalSales() : 0;
 
@@ -86,6 +89,10 @@ public class StreamingSalesController : MonoBehaviour
     private BattleDemandTracker _demandTracker;
     private readonly CompositeDisposable _battleDisposables = new CompositeDisposable();
     private StreamingHeatModel _heatModel;
+    private BattlePauseController _pauseController;
+
+    /// <summary>バトル開始前に BattleSceneStarter から設定する。</summary>
+    public void SetPauseController(BattlePauseController pc) => _pauseController = pc;
 
     /// <summary>
     /// BattleSceneStarterから呼ばれる初期化メソッド。
@@ -133,6 +140,7 @@ public class StreamingSalesController : MonoBehaviour
         }
 
         _model = new StreamingSalesModel(baseSalesInterval, intervalRandomness);
+        _model.PauseController = _pauseController;
         _model.SetItemsForSale(itemsForSale);
 
         // BattleDemandTracker を初期化（FightScene 専用の需要度管理）
@@ -188,6 +196,11 @@ public class StreamingSalesController : MonoBehaviour
                 customerManager?.RequestCustomer(soldItem);
                 OnSaleOccurred?.Invoke(soldItem);
             })
+            .AddTo(_battleDisposables);
+
+        // 在庫切れ通知を外部へ転送
+        _model.OnItemStockDepleted
+            .Subscribe(item => OnItemStockDepleted.OnNext(item))
             .AddTo(_battleDisposables);
 
         // 戦闘ダメージイベントを購読して価格変動を適用

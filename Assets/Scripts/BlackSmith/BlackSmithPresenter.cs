@@ -56,6 +56,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
         }).AddTo(disposables);
 
+        blackSmithView.OnAutoBuyRequested.Subscribe(_ => HandleAutoBuy()).AddTo(disposables);
+
         blackSmithView.OnChangePanel
             .Subscribe(type =>
             {
@@ -81,6 +83,23 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithView.OnLevelUpRequested
             .Subscribe(_ => HandleBlackSmithLevelUp())
             .AddTo(disposables);
+    }
+
+    private void HandleAutoBuy()
+    {
+        int budget = tomsModel.PlayerMoney.Value;
+        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel);
+        blackSmithView.ShowAutoBuyResult(results, tomsModel.PlayerMoney.Value);
+
+        // 購入後にスロット表示を更新
+        blackSmithModel.SetRuntimeItems(
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
+        );
+        ChangePurchasePanel(
+            blackSmithModel.weaponRuntimeItems.Count > 0 ? blackSmithModel.weaponRuntimeItems : blackSmithModel.armorRuntimeItems,
+            blackSmithModel.weaponRuntimeItems.Count > 0 ? BlackSmithTab.Weapon : BlackSmithTab.Armor
+        );
     }
 
     private void HandlePurchase(string itemId, int quantity)

@@ -14,6 +14,7 @@ public class StreamingSalesModel
     public List<RuntimeItemData> ItemsForSale { get; private set; }
 
     public Subject<int> OnItemSold { get; } = new Subject<int>();
+    public Subject<RuntimeItemData> OnItemStockDepleted { get; } = new Subject<RuntimeItemData>();
     public event Action<int> OnItemSoldEvent;
 
     private readonly float _baseSalesInterval;
@@ -23,6 +24,11 @@ public class StreamingSalesModel
     /// FightScene 専用の需要度管理。外部から設定する。
     /// </summary>
     public BattleDemandTracker DemandTracker { get; set; }
+
+    /// <summary>
+    /// ポーズ制御。外部から設定する。null の場合はポーズなし。
+    /// </summary>
+    public BattlePauseController PauseController { get; set; }
 
 
     public Subject<Unit> OnItemsReordered { get; } = new Subject<Unit>();
@@ -60,9 +66,9 @@ public class StreamingSalesModel
         {
             try
             {
-                // 1. 次の販売までの待ち時間を計算
+                // 1. 次の販売までの待ち時間を計算（ポーズ中は時間を進めない）
                 float delay = _baseSalesInterval + UnityEngine.Random.Range(-_intervalRandomness, _intervalRandomness);
-                await UniTask.Delay(TimeSpan.FromSeconds(Mathf.Max(0, delay)), cancellationToken: token);
+                await PausableDelayAsync(Mathf.Max(0, delay), token);
 
                 if (ItemsForSale == null || ItemsForSale.Count == 0)
                 {
@@ -299,6 +305,30 @@ public class StreamingSalesModel
             DemandTracker.RecordSale(item.ItemId);
         }
 
+        // 在庫がゼロになったら通知
+        if (item.Stock.Value <= 0)
+            OnItemStockDepleted.OnNext(item);
+
         Debug.Log($"[販売] {item.ItemId} × {quantitySold}個 = {earnings}G (BattleDemand={DemandTracker?.GetDemand(item.ItemId):F2}, SalesRate={salesRate:F2}, DisplayStock={displayStock})");
+    }
+
+    /// <summary>
+    /// ポーズ対応の待機。ポーズ中は経過時間を進めず、解除後に再開する。
+    /// Time.unscaledDeltaTime を使うため Time.timeScale の影響を受けない。
+    /// </summary>
+    private async UniTask PausableDelayAsync(float seconds, CancellationToken token)
+    {
+        float elapsed = 0f;
+        while (elapsed < seconds)
+        {
+            token.ThrowIfCancellationRequested();
+            if (PauseController != null && PauseController.IsPaused)
+            {
+                await PauseController.WaitIfPausedAsync(token);
+                continue;
+            }
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            elapsed += UnityEngine.Time.unscaledDeltaTime;
+        }
     }
 }

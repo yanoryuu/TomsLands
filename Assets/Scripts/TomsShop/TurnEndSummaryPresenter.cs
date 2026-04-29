@@ -132,6 +132,18 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
             else
                 trend = DemandTrend.Flat;
 
+            // 需要変動の主因を判定
+            float demandDelta = runtime.Demand.Value - runtime.PreviousDemand;
+            DemandChangeCause cause;
+            if (runtime.Trend > 0.4f && demandDelta > 0.02f)
+                cause = DemandChangeCause.TrendUp;
+            else if (demandDelta > 0.02f)
+                cause = DemandChangeCause.Displayed;
+            else if (demandDelta < -0.03f)
+                cause = DemandChangeCause.TrendDown;
+            else
+                cause = DemandChangeCause.Stable;
+
             result.Add(new TurnEndSummaryItemData
             {
                 ItemName = runtime.ItemName,
@@ -140,7 +152,9 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
                 Price = runtime.CurrentPrice.Value,
                 Demand = demand,
                 Trend = trend,
-                ItemIcon = runtime.ItemIcon
+                ItemIcon = runtime.ItemIcon,
+                Cause = cause,
+                DemandDelta = demandDelta
             });
         }
 

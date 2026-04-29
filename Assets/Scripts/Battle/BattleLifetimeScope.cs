@@ -23,6 +23,9 @@ public class BattleLifetimeScope : LifetimeScope
     [Header("BattleResult（配信リザルト）")]
     [SerializeField] private BattleResultView battleResultView;
 
+    [Header("バトル操作UI（一時停止・終了・在庫切れ）")]
+    [SerializeField] private BattleControlView battleControlView;
+
     [Header("ダンジョンデータ（Inspector で設定。不足分は自動補完）")]
     [SerializeField] private List<DungeonInfoScriptableObj> dungeonInfos;
 
@@ -91,6 +94,9 @@ public class BattleLifetimeScope : LifetimeScope
         builder.RegisterInstance(itemVisualSettings);
 
         builder.Register<ItemModel>(Lifetime.Singleton);
+        builder.Register<TomsModel>(Lifetime.Singleton);
+        builder.Register<PopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
 
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
@@ -115,6 +121,19 @@ public class BattleLifetimeScope : LifetimeScope
         else
         {
             Debug.LogWarning("[BattleLifetimeScope] BattleResultView が未設定です。FightScene に BattleResultView を配置して Inspector で設定してください。");
+        }
+
+        // BattleControlView（一時停止・配信終了・在庫切れポップアップ）
+        if (battleControlView != null)
+        {
+            builder.RegisterComponent(battleControlView);
+        }
+        else
+        {
+            // 未設定時はダミーを生成してコンテナの解決エラーを防ぐ
+            var dummy = new UnityEngine.GameObject("BattleControlView_Dummy").AddComponent<BattleControlView>();
+            builder.RegisterComponent(dummy);
+            Debug.LogWarning("[BattleLifetimeScope] BattleControlView が未設定のため、一時停止・終了・補充機能は無効です。");
         }
 
         // 戦闘開始の EntryPoint（IAsyncStartable）

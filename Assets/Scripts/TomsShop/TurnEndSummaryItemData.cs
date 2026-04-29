@@ -9,6 +9,8 @@ public class TurnEndSummaryItemData
     public float Demand { get; set; }
     public DemandTrend Trend { get; set; }
     public Sprite ItemIcon { get; set; }
+    public DemandChangeCause Cause { get; set; }
+    public float DemandDelta { get; set; }
 }
 
 /// <summary>
@@ -20,4 +22,16 @@ public enum DemandTrend
     Flat,
     Up
 }
+
+/// <summary>
+/// 需要変動の主因
+/// </summary>
+public enum DemandChangeCause
+{
+    Stable,       // 安定（変動なし）
+    Displayed,    // 陳列効果で上昇
+    TrendUp,      // 流行が後押し
+    TrendDown,    // 流行逆風で下落
+}
+
 

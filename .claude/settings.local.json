@@ -1,9 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -E \"\\\\.cs$\")",
-      "Bash(xargs head *)",
-      "Bash(xargs grep *)"
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

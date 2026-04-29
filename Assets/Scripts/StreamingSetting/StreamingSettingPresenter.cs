@@ -77,6 +77,14 @@ public class StreamingSettingPresenter : IDisposable
         _view.OnConfirmClicked
             .Subscribe(_ => HandleConfirm())
             .AddTo(_d);
+
+        // ④ 前回と同じで確定（保存済み選択をそのまま確定）
+        _view.OnQuickConfirmClicked
+            .Subscribe(_ => HandleConfirm())
+            .AddTo(_d);
+
+        // 前回構成の件数をボタンラベルに反映
+        _view.SetQuickConfirmLabel(_model.Selected.Count);
     }
 
     private void Entry()

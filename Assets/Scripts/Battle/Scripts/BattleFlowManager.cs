@@ -14,14 +14,16 @@ public class BattleFlowManager
     private readonly BattleSequencer sequencer;
     private readonly BattleActionExecutor executor;
     private readonly StreamingSalesController salesController;
+    private readonly BattlePauseController pauseController;
 
-    public BattleFlowManager(BattleContext ctx, CharacterFactory charaFactory, BattleUIView battleUI, BattleSequencer ownerSequencer, StreamingSalesController salesCtrl = null)
+    public BattleFlowManager(BattleContext ctx, CharacterFactory charaFactory, BattleUIView battleUI, BattleSequencer ownerSequencer, StreamingSalesController salesCtrl = null, BattlePauseController pauseCtrl = null)
     {
         context = ctx;
         factory = charaFactory;
         uiView = battleUI;
         sequencer = ownerSequencer;
         salesController = salesCtrl;
+        pauseController = pauseCtrl;
         executor = new BattleActionExecutor(ctx, ownerSequencer);
     }
 
@@ -44,6 +46,10 @@ public class BattleFlowManager
         int turnCount = 1;
         while (!executor.IsBattleEnded())
         {
+            // ターン開始前にポーズチェック（ポーズ中はここで待機）
+            if (pauseController != null)
+                await pauseController.WaitIfPausedAsync(token);
+
             await uiView.AddLogAsync($"--- ターン {turnCount} ---", token);
 
             await executor.ExecuteTurnActionsAsync(uiView, token);

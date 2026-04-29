@@ -17,6 +17,9 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button ProphetButton;
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
+
+    [Header("需要ダッシュボード")]
+    [SerializeField] private Button DashboardButton;
     
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
@@ -38,6 +41,8 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnProphetClicked { get; } = new();
     //次のターンに進む
     public Subject<Unit> OnNextTurnClicked { get; } = new();
+    //需要ダッシュボードを開く
+    public Subject<Unit> OnDashboardClicked { get; } = new();
 
     public void Awake()
     {
@@ -53,6 +58,8 @@ public class TomsShopView : MonoBehaviour
         if (ProphetButton != null)
             ProphetButton.onClick.AddListener(() => OnProphetClicked.OnNext(Unit.Default));
         NextTurnButton.onClick.AddListener(() => OnNextTurnClicked.OnNext(Unit.Default));
+        if (DashboardButton != null)
+            DashboardButton.onClick.AddListener(() => OnDashboardClicked.OnNext(Unit.Default));
     }
 
     public void Initialize()

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using VContainer.Unity;
 
 /// <summary>
 /// ポップアップに渡すデータ。
@@ -23,6 +24,13 @@ public class PopUpData
 
 public class PopUpManager
 {
+    private readonly LifetimeScope parentScope;
+
+    public PopUpManager(LifetimeScope parentScope)
+    {
+        this.parentScope = parentScope;
+    }
+
     /// <summary>
     /// ポップアップシーンに渡すデータを一時保持するプロパティ。
     /// シーンロード完了後に PopUpView がここからデータを読み取る。
@@ -60,10 +68,13 @@ public class PopUpManager
         CurrentData = data;
         isLoading = true;
 
-        var op = SceneManager.LoadSceneAsync(PopUpSceneName, LoadSceneMode.Additive);
-        if (op != null)
+        using (LifetimeScope.EnqueueParent(parentScope))
         {
-            op.completed += _ => isLoading = false;
+            var op = SceneManager.LoadSceneAsync(PopUpSceneName, LoadSceneMode.Additive);
+            if (op != null)
+            {
+                op.completed += _ => isLoading = false;
+            }
         }
     }
 
@@ -72,6 +83,7 @@ public class PopUpManager
     /// </summary>
     public void Close()
     {
+        isLoading = false;
         CurrentData = null;
         SceneManager.UnloadSceneAsync(PopUpSceneName);
     }

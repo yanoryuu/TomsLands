@@ -33,6 +33,10 @@ public class BattleSequencer : MonoBehaviour
     }
 
     private BattleContext battleContext;
+    private BattlePauseController _pauseController;
+
+    /// <summary>バトル開始前に BattleSceneStarter から設定する。</summary>
+    public void SetPauseController(BattlePauseController pc) => _pauseController = pc;
 
     public Subject<(string weaponId, string armorId)> OnBattleWin { get; } = new();
     public Subject<(string weaponId, string armorId)> OnBattleDefeat { get; } = new();
@@ -63,7 +67,7 @@ public class BattleSequencer : MonoBehaviour
         {
             // ★ ここで戦闘ルールをContextに渡す
             battleContext = new BattleContext(currentDungeon, currentDungeonLevel, totalNormalEnemies, maxConcurrentEnemies);
-            var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController);
+            var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController, _pauseController);
 
             await flowManager.ExecuteBattleAsync(heroModel, token);
             Debug.Log("戦闘が終了しました。 (BattleSequencer)");

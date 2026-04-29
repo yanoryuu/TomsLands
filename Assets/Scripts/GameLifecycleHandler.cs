@@ -18,6 +18,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly GameFlowManager _gameFlowManager;
     private readonly BattleOutputData _battleOutputData;
     private readonly EventOutputData _eventOutputData;
+    private readonly ShopStatusModel _shopStatusModel;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -28,7 +29,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         StartModeData startModeData,
         GameFlowManager gameFlowManager,
         BattleOutputData battleOutputData,
-        EventOutputData eventOutputData)
+        EventOutputData eventOutputData,
+        ShopStatusModel shopStatusModel)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -38,6 +40,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _gameFlowManager = gameFlowManager;
         _battleOutputData = battleOutputData;
         _eventOutputData = eventOutputData;
+        _shopStatusModel = shopStatusModel;
     }
 
     public void Start()
@@ -86,6 +89,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // TomsModelを初期値で初期化
         _tomsModel.Initialize();
 
+        // マーケティングステータスをリセット
+        _shopStatusModel.Reset();
+
         // GameFlowManagerのインデックスを先頭に設定
         _gameFlowManager.RestoreIndex(0);
 
@@ -132,6 +138,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
             "displayItemData.json",
             "heroData.json",
             "streamingSelection.json",
+            "shopStatusData.json",
         };
 
         foreach (var filename in files)
