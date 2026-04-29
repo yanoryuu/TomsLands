@@ -187,6 +187,8 @@ MonoBehaviour:
   heroTab: {fileID: 1197819509}
   mapTab: {fileID: 595772869}
   messageText: {fileID: 1142337341}
+  characterImage: {fileID: 0}
+  panelsGroup: {fileID: 0}
   mapButton: {fileID: 595772871}
   heroButton: {fileID: 1197819511}
   mapPanel: {fileID: 2094956523}
@@ -30291,7 +30293,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5575686658447112453, guid: 2e9f4d032f3e4417b9d476d652951eb8, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0.26
+      value: -0.08
       objectReference: {fileID: 0}
     - target: {fileID: 5575686658447112453, guid: 2e9f4d032f3e4417b9d476d652951eb8, type: 3}
       propertyPath: m_AnchoredPosition.y
