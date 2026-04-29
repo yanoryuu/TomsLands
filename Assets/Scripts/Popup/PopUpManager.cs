@@ -24,7 +24,10 @@ public class PopUpData
 
 public class PopUpManager
 {
+    public static PopUpManager ActiveManager { get; private set; }
+
     private readonly LifetimeScope parentScope;
+    private IDisposable parentScopeRegistration;
 
     public PopUpManager(LifetimeScope parentScope)
     {
@@ -66,15 +69,27 @@ public class PopUpManager
         };
 
         CurrentData = data;
+        ActiveManager = this;
         isLoading = true;
 
-        using (LifetimeScope.EnqueueParent(parentScope))
+        parentScopeRegistration?.Dispose();
+        parentScopeRegistration = LifetimeScope.EnqueueParent(parentScope);
+
+        var op = SceneManager.LoadSceneAsync(PopUpSceneName, LoadSceneMode.Additive);
+        if (op != null)
         {
-            var op = SceneManager.LoadSceneAsync(PopUpSceneName, LoadSceneMode.Additive);
-            if (op != null)
+            op.completed += _ =>
             {
-                op.completed += _ => isLoading = false;
-            }
+                parentScopeRegistration?.Dispose();
+                parentScopeRegistration = null;
+                isLoading = false;
+            };
+        }
+        else
+        {
+            parentScopeRegistration?.Dispose();
+            parentScopeRegistration = null;
+            isLoading = false;
         }
     }
 
@@ -83,8 +98,15 @@ public class PopUpManager
     /// </summary>
     public void Close()
     {
+        parentScopeRegistration?.Dispose();
+        parentScopeRegistration = null;
         isLoading = false;
         CurrentData = null;
+        if (ActiveManager == this)
+        {
+            ActiveManager = null;
+        }
+
         SceneManager.UnloadSceneAsync(PopUpSceneName);
     }
 }

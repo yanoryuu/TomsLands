@@ -10,6 +10,7 @@ using VContainer.Unity;
 public class ItemPopUpManager
 {
     private readonly LifetimeScope parentScope;
+    private System.IDisposable parentScopeRegistration;
 
     public ItemPopUpManager(LifetimeScope parentScope)
     {
@@ -43,13 +44,24 @@ public class ItemPopUpManager
         isLoading = true;
 
         // 子シーンの LifetimeScope が親コンテナを参照できるようにする
-        using (LifetimeScope.EnqueueParent(parentScope))
+        parentScopeRegistration?.Dispose();
+        parentScopeRegistration = LifetimeScope.EnqueueParent(parentScope);
+
+        var op = SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);
+        if (op != null)
         {
-            var op = SceneManager.LoadSceneAsync(SceneName, LoadSceneMode.Additive);
-            if (op != null)
+            op.completed += _ =>
             {
-                op.completed += _ => isLoading = false;
-            }
+                parentScopeRegistration?.Dispose();
+                parentScopeRegistration = null;
+                isLoading = false;
+            };
+        }
+        else
+        {
+            parentScopeRegistration?.Dispose();
+            parentScopeRegistration = null;
+            isLoading = false;
         }
     }
 
@@ -58,6 +70,9 @@ public class ItemPopUpManager
     /// </summary>
     public void Close()
     {
+        parentScopeRegistration?.Dispose();
+        parentScopeRegistration = null;
+        isLoading = false;
         CurrentData = null;
         SceneManager.UnloadSceneAsync(SceneName);
     }

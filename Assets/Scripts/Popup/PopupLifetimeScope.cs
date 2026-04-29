@@ -11,7 +11,6 @@ public class PopupLifetimeScope : LifetimeScope
 {
     [Header("Scene References")]
     [SerializeField] private PopUpView popUpView;
-
     protected override void Configure(IContainerBuilder builder)
     {
         // View の登録
