@@ -20,7 +20,7 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 002
     BattleDungeon: 0
   - EventType: 2
     EventData: 
@@ -38,6 +38,18 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
+    EventData: 003
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
+  - EventType: 3
+    EventData: 017
+    BattleDungeon: 0
+  - EventType: 2
     EventData: 
     BattleDungeon: 0
   - EventType: 2
@@ -47,19 +59,7 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
-    BattleDungeon: 0
-  - EventType: 2
-    EventData: 
-    BattleDungeon: 0
-  - EventType: 2
-    EventData: 
-    BattleDungeon: 0
-  - EventType: 2
-    EventData: 
-    BattleDungeon: 0
-  - EventType: 3
-    EventData: 
+    EventData: 004
     BattleDungeon: 0
   - EventType: 1
     EventData: 
@@ -68,13 +68,13 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 001
     BattleDungeon: 0
   - EventType: 2
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 006
     BattleDungeon: 0
   - EventType: 2
     EventData: 
@@ -98,7 +98,7 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 002
     BattleDungeon: 0
   - EventType: 2
     EventData: 
@@ -107,7 +107,7 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 001
     BattleDungeon: 0
   - EventType: 2
     EventData: 
@@ -116,13 +116,13 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 018
     BattleDungeon: 0
   - EventType: 2
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 002
     BattleDungeon: 0
   - EventType: 2
     EventData: 
@@ -140,7 +140,7 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 005
     BattleDungeon: 0
   - EventType: 2
     EventData: 
@@ -149,7 +149,7 @@ MonoBehaviour:
     EventData: 
     BattleDungeon: 0
   - EventType: 3
-    EventData: 
+    EventData: 006
     BattleDungeon: 0
   - EventType: 2
     EventData: 
