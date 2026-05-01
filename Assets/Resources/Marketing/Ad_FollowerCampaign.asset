@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Ad_FollowerCampaign
   m_EditorClassIdentifier: 
   advertisementName: "SNS\u30D5\u30A9\u30ED\u30EF\u30FC\u30AD\u30E3\u30F3\u30DA\u30FC\u30F3"
-  icon: {fileID: -4848210636310060718, guid: 6e663873926f345688bcfaa1919e447d, type: 3}
-  selectedBackground: {fileID: -4862453905761702663, guid: 544e6742b55244e0f8e214fa735515e0, type: 3}
+  icon: {fileID: -9121960828741848742, guid: cb7f76bd929fc8e45a752f4c9c42c563, type: 3}
+  selectedBackground: {fileID: -1843028302627794106, guid: 2f0b892e10da27e43847221aca56d1e3, type: 3}
   cost: 1200
   trustGain: 0
   attentionGain: 10

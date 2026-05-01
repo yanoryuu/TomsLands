@@ -19,11 +19,15 @@ public class StreamingSettingView : MonoBehaviour
     [SerializeField] private Button quickConfirmButton;
     [SerializeField] private TMPro.TextMeshProUGUI quickConfirmLabel;
 
+    [Header("オート陳列")]
+    [SerializeField] private Button autoSelectButton;
+
     public Subject<string> OnItemSelected     { get; } = new Subject<string>();
     public Subject<string> OnItemDeselected   { get; } = new Subject<string>();
     public Subject<(string id, int qty)> OnQuantityChanged { get; } = new Subject<(string, int)>();
     public Subject<Unit> OnConfirmClicked     { get; } = new Subject<Unit>();
     public Subject<Unit> OnQuickConfirmClicked { get; } = new Subject<Unit>();
+    public Subject<Unit> OnAutoSelectClicked { get; } = new Subject<Unit>();
 
     private void Awake()
     {
@@ -32,6 +36,9 @@ public class StreamingSettingView : MonoBehaviour
 
         if (quickConfirmButton != null)
             quickConfirmButton.onClick.AddListener(() => OnQuickConfirmClicked.OnNext(Unit.Default));
+
+        if (autoSelectButton != null)
+            autoSelectButton.onClick.AddListener(() => OnAutoSelectClicked.OnNext(Unit.Default));
     }
 
     /// <summary>

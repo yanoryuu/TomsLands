@@ -24,6 +24,11 @@ public enum DemandTrend
 }
 
 /// <summary>
+/// ターン評価ランク
+/// </summary>
+public enum TurnGrade { E, D, C, B, A, S }
+
+/// <summary>
 /// 需要変動の主因
 /// </summary>
 public enum DemandChangeCause

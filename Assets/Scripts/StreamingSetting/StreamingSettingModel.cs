@@ -34,6 +34,19 @@ public class StreamingSettingModel
     public void Remove(string id) => _selected.Remove(id);
     public void Clear() => _selected.Clear();
 
+    public void ReplaceSelection(IEnumerable<KeyValuePair<string, int>> items)
+    {
+        _selected.Clear();
+        if (items == null) return;
+
+        foreach (var item in items)
+        {
+            if (_selected.Count >= MaxSelection) break;
+            if (string.IsNullOrEmpty(item.Key)) continue;
+            _selected[item.Key] = Mathf.Max(1, item.Value);
+        }
+    }
+
     public void SaveData()
     {
         var plains = _selected.Select(kvp => new StreamingSelectionItemPlain { itemId = kvp.Key, quantity = kvp.Value }).ToList();

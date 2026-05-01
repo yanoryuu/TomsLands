@@ -11,31 +11,12 @@ public class StreamingSalesController : MonoBehaviour
     [SerializeField] private float intervalRandomness = 3f;
     [SerializeField] private int maxItemsToSell = 5;
 
+    [Header("価格設定")]
+    [SerializeField] private BattlePriceSettings battlePriceSettings;
+
     [Header("参照")]
     [SerializeField] private StreamingSalesView view;
     [SerializeField] private BattleSequencer battleSequencer;
-
-    [Header("価格変動設定 — 案1: 戦闘パフォーマンス連動")]
-    [Tooltip("Heroが攻撃を当てた時の武器価格上昇率（例: 1.10 = 10%上昇）")]
-    [SerializeField] private float weaponPriceUpOnHit = 1.10f;
-    [Tooltip("Heroが攻撃を当てたが敵を倒せなかった時の武器価格下落率（例: 0.95 = 5%下落）")]
-    [SerializeField] private float weaponPriceDownOnNonKill = 0.95f;
-    [Tooltip("Heroがダメージを受けた時の防具価格下落率（例: 0.90 = 10%下落）")]
-    [SerializeField] private float armorPriceDownOnHit = 0.90f;
-    [Tooltip("Heroがダメージ0で攻撃を防いだ時の防具価格上昇率（例: 1.10 = 10%上昇）")]
-    [SerializeField] private float armorPriceUpOnBlock = 1.10f;
-
-    [Header("価格変動設定 — 案5: 属性相性連動（敵撃破時）")]
-    [Tooltip("有利属性の装備の価格上昇率（例: 1.30 = 30%上昇）")]
-    [SerializeField] private float effectiveAttributeRate = 1.30f;
-    [Tooltip("不利属性の装備の価格下落率（例: 0.85 = 15%下落）")]
-    [SerializeField] private float weakAttributeRate = 0.85f;
-
-    [Header("ストップ高/ストップ安（元値に対する倍率）")]
-    [Tooltip("価格の下限（元値の何倍まで下がれるか。例: 0.2 = 元値の20%が下限）")]
-    [SerializeField] private float priceFloorRate = 0.2f;
-    [Tooltip("価格の上限（元値の何倍まで上がれるか。例: 5.0 = 元値の5倍が上限）")]
-    [SerializeField] private float priceCeilingRate = 5.0f;
 
     [Header("Inventory (UI)")]
     [SerializeField] private List<ItemSlotView> inventorySlotViews; // 在庫側のスロット（シーン上の 10 インスタンス）
@@ -49,30 +30,6 @@ public class StreamingSalesController : MonoBehaviour
 
     [Header("配信熱")]
     [SerializeField] private StreamingHeatView heatView;
-
-    [Header("BattleDemand — 案A: 属性相性で需要変動")]
-    [Tooltip("有利属性の敵を撃破した時の需要UP量")]
-    [SerializeField] private float demandEffectiveAttributeUp = 0.20f;
-    [Tooltip("不利属性の敵を撃破した時の需要DOWN量")]
-    [SerializeField] private float demandWeakAttributeDown = 0.10f;
-
-    [Header("BattleDemand — 案C: 連続販売トレンド")]
-    [Tooltip("2ターン連続販売時の需要UP量（口コミ効果）")]
-    [SerializeField] private float buzzBonus2Turn = 0.05f;
-    [Tooltip("3ターン以上連続販売時の需要UP量（バズ効果）")]
-    [SerializeField] private float buzzBonus3PlusTurn = 0.10f;
-    [Tooltip("2ターン以上未販売時の需要DOWN量（話題消失）")]
-    [SerializeField] private float unsoldPenalty = 0.08f;
-
-    [Header("BattleDemand — 案E: 価格と需要の逆相関")]
-    [Tooltip("高値判定の閾値（元値の何倍以上で高値とみなすか）")]
-    [SerializeField] private float highPriceThreshold = 2.0f;
-    [Tooltip("安値判定の閾値（元値の何倍以下で安値とみなすか）")]
-    [SerializeField] private float lowPriceThreshold = 0.5f;
-    [Tooltip("高値時の需要減衰率（毎ターン。例: 0.92 = 8%減）")]
-    [SerializeField] private float highPriceDemandDecay = 0.92f;
-    [Tooltip("安値時の需要増加率（毎ターン。例: 1.08 = 8%増）")]
-    [SerializeField] private float lowPriceDemandGrowth = 1.08f;
 
     /// <summary>売り場のアイテムが1個以上売れた時に発火する（ShopkeeperCharacter など外部購読用）。</summary>
     public event System.Action<RuntimeItemData> OnSaleOccurred;
@@ -90,9 +47,37 @@ public class StreamingSalesController : MonoBehaviour
     private readonly CompositeDisposable _battleDisposables = new CompositeDisposable();
     private StreamingHeatModel _heatModel;
     private BattlePauseController _pauseController;
+    private bool _priceSettingsLoadAttempted;
+    private BattlePriceSettings _runtimeDefaultPriceSettings;
+    private HeroTactics _heroTactics = HeroTactics.Balanced;
+
+    private BattlePriceSettings PriceSettings
+    {
+        get
+        {
+            if (battlePriceSettings == null && !_priceSettingsLoadAttempted)
+            {
+                _priceSettingsLoadAttempted = true;
+                battlePriceSettings = Resources.Load<BattlePriceSettings>("BattlePriceSettings");
+            }
+            if (battlePriceSettings != null)
+            {
+                return battlePriceSettings;
+            }
+
+            if (_runtimeDefaultPriceSettings == null)
+            {
+                _runtimeDefaultPriceSettings = ScriptableObject.CreateInstance<BattlePriceSettings>();
+            }
+            return _runtimeDefaultPriceSettings;
+        }
+    }
 
     /// <summary>バトル開始前に BattleSceneStarter から設定する。</summary>
     public void SetPauseController(BattlePauseController pc) => _pauseController = pc;
+
+    /// <summary>バトル開始前に BattleSceneStarter から設定する。</summary>
+    public void SetHeroTactics(HeroTactics tactics) => _heroTactics = tactics;
 
     /// <summary>
     /// BattleSceneStarterから呼ばれる初期化メソッド。
@@ -145,13 +130,13 @@ public class StreamingSalesController : MonoBehaviour
 
         // BattleDemandTracker を初期化（FightScene 専用の需要度管理）
         _demandTracker = new BattleDemandTracker(
-            buzzBonus2Turn: buzzBonus2Turn,
-            buzzBonus3PlusTurn: buzzBonus3PlusTurn,
-            unsoldPenalty: unsoldPenalty,
-            highPriceThreshold: highPriceThreshold,
-            lowPriceThreshold: lowPriceThreshold,
-            highPriceDemandDecay: highPriceDemandDecay,
-            lowPriceDemandGrowth: lowPriceDemandGrowth
+            buzzBonus2Turn: PriceSettings.buzzBonus2Turn,
+            buzzBonus3PlusTurn: PriceSettings.buzzBonus3PlusTurn,
+            unsoldPenalty: PriceSettings.unsoldPenalty,
+            highPriceThreshold: PriceSettings.highPriceThreshold,
+            lowPriceThreshold: PriceSettings.lowPriceThreshold,
+            highPriceDemandDecay: PriceSettings.highPriceDemandDecay,
+            lowPriceDemandGrowth: PriceSettings.lowPriceDemandGrowth
         );
 
         // 売り場と在庫の全アイテムを BattleDemandTracker に登録
@@ -207,7 +192,7 @@ public class StreamingSalesController : MonoBehaviour
         SubscribeToBattleDamageEvents();
 
         // 配信熱モデルを初期化して UI を購読
-        _heatModel = new StreamingHeatModel();
+        _heatModel = new StreamingHeatModel(PriceSettings);
         SubscribeToHeatEvents();
         _heatModel.Heat
             .Subscribe(h => heatView?.UpdateHeat(h, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier()))
@@ -242,16 +227,16 @@ public class StreamingSalesController : MonoBehaviour
                     if (target.IsDead)
                     {
                         // 敵を倒した → 武器価格UP（大きめ）
-                        _model.AdjustPricesByType(ItemTypeData.ItemType.Weapon, weaponPriceUpOnHit, inventorySlotItemRefs,
-                            priceFloorRate, priceCeilingRate, _mainItemModel);
-                        Debug.Log($"[案1] Heroが敵を撃破！武器価格 {weaponPriceUpOnHit:P0} 上昇");
+                        _model.AdjustPricesByType(ItemTypeData.ItemType.Weapon, GetWeaponPriceUpOnHit(), inventorySlotItemRefs,
+                            GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+                        Debug.Log($"[案1] Heroが敵を撃破！武器価格 {GetWeaponPriceUpOnHit():P0} 上昇");
                     }
                     else
                     {
                         // 敵を倒せなかった → 武器価格DOWN
-                        _model.AdjustPricesByType(ItemTypeData.ItemType.Weapon, weaponPriceDownOnNonKill, inventorySlotItemRefs,
-                            priceFloorRate, priceCeilingRate, _mainItemModel);
-                        Debug.Log($"[案1] Heroが攻撃したが倒せず！武器価格 {weaponPriceDownOnNonKill:P0} 下落");
+                        _model.AdjustPricesByType(ItemTypeData.ItemType.Weapon, GetWeaponPriceDownOnNonKill(), inventorySlotItemRefs,
+                            GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+                        Debug.Log($"[案1] Heroが攻撃したが倒せず！武器価格 {GetWeaponPriceDownOnNonKill():P0} 下落");
                     }
                     RefreshAllSlotDisplays();
                 }
@@ -267,16 +252,16 @@ public class StreamingSalesController : MonoBehaviour
                     if (rawDamage <= target.DefensePower)
                     {
                         // 攻撃力 ≤ 防御力 → 防御成功 → 防具価格UP
-                        _model.AdjustPricesByType(ItemTypeData.ItemType.Armor, armorPriceUpOnBlock, inventorySlotItemRefs,
-                            priceFloorRate, priceCeilingRate, _mainItemModel);
-                        Debug.Log($"[案1] Heroが攻撃を防御！防具価格 {armorPriceUpOnBlock:P0} 上昇");
+                        _model.AdjustPricesByType(ItemTypeData.ItemType.Armor, GetArmorPriceUpOnBlock(), inventorySlotItemRefs,
+                            GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+                        Debug.Log($"[案1] Heroが攻撃を防御！防具価格 {GetArmorPriceUpOnBlock():P0} 上昇");
                     }
                     else
                     {
                         // 通常ダメージ → 防具価格DOWN
-                        _model.AdjustPricesByType(ItemTypeData.ItemType.Armor, armorPriceDownOnHit, inventorySlotItemRefs,
-                            priceFloorRate, priceCeilingRate, _mainItemModel);
-                        Debug.Log($"[案1] Heroが被弾！防具価格 {armorPriceDownOnHit:P0} 下落");
+                        _model.AdjustPricesByType(ItemTypeData.ItemType.Armor, GetArmorPriceDownOnHit(), inventorySlotItemRefs,
+                            GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+                        Debug.Log($"[案1] Heroが被弾！防具価格 {GetArmorPriceDownOnHit():P0} 下落");
                     }
                     RefreshAllSlotDisplays();
                 }
@@ -299,26 +284,26 @@ public class StreamingSalesController : MonoBehaviour
                 // --- 案5: 属性相性で価格変動 ---
                 _model.AdjustPricesByElementAffinity(
                     enemyElement,
-                    effectiveAttributeRate,
-                    weakAttributeRate,
+                    GetEffectiveAttributeRate(),
+                    GetWeakAttributeRate(),
                     inventorySlotItemRefs,
-                    priceFloorRate,
-                    priceCeilingRate,
+                    GetPriceFloorRate(),
+                    GetPriceCeilingRate(),
                     _mainItemModel);
 
-                Debug.Log($"[案5] {defeatedEnemy.Name}（{enemyElement}属性）を撃破！有利属性 {effectiveAttributeRate:P0} UP / 不利属性 {weakAttributeRate:P0} DOWN");
+                Debug.Log($"[案5] {defeatedEnemy.Name}（{enemyElement}属性）を撃破！有利属性 {GetEffectiveAttributeRate():P0} UP / 不利属性 {GetWeakAttributeRate():P0} DOWN");
 
                 // --- 案A: 属性相性で需要変動 ---
                 if (_demandTracker != null)
                 {
                     _demandTracker.AdjustDemandByElementAffinity(
                         enemyElement,
-                        demandEffectiveAttributeUp,
-                        -demandWeakAttributeDown,
+                        PriceSettings.demandEffectiveAttributeUp,
+                        -PriceSettings.demandWeakAttributeDown,
                         _model.ItemsForSale,
                         inventorySlotItemRefs);
 
-                    Debug.Log($"[需要A] {defeatedEnemy.Name}（{enemyElement}属性）撃破！有利属性の需要 +{demandEffectiveAttributeUp:F2} / 不利属性の需要 -{demandWeakAttributeDown:F2}");
+                    Debug.Log($"[需要A] {defeatedEnemy.Name}（{enemyElement}属性）撃破！有利属性の需要 +{PriceSettings.demandEffectiveAttributeUp:F2} / 不利属性の需要 -{PriceSettings.demandWeakAttributeDown:F2}");
                 }
 
                 RefreshAllSlotDisplays();
@@ -335,12 +320,12 @@ public class StreamingSalesController : MonoBehaviour
 
         // 敵撃破 → +15
         battleSequencer.OnEnemyDefeated
-            .Subscribe(_ => _heatModel.AddHeat(15f))
+            .Subscribe(_ => AddTacticsAdjustedHeat(15f))
             .AddTo(_battleDisposables);
 
         // ボス出現 → +40
         battleSequencer.OnBossAppeared
-            .Subscribe(_ => _heatModel.AddHeat(40f))
+            .Subscribe(_ => AddTacticsAdjustedHeat(40f))
             .AddTo(_battleDisposables);
 
         // 戦闘ダメージから細かい Heat 変動
@@ -351,16 +336,16 @@ public class StreamingSalesController : MonoBehaviour
 
                 // Hero が攻撃を当てたが倒せなかった → +3
                 if (attacker.Type == CharacterType.Hero && !target.IsDead)
-                    _heatModel.AddHeat(3f);
+                    AddTacticsAdjustedHeat(3f);
 
                 // Hero がダメージを受けた
                 if (target.Type == CharacterType.Hero)
                 {
                     int rawDamage = attacker.AttackPower;
                     if (rawDamage <= target.DefensePower)
-                        _heatModel.AddHeat(5f);   // 防御成功 → +5
+                        AddTacticsAdjustedHeat(5f);   // 防御成功 → +5
                     else
-                        _heatModel.AddHeat(-8f);  // 被弾 → -8
+                        AddTacticsAdjustedHeat(-8f);  // 被弾 → -8
                 }
             })
             .AddTo(_battleDisposables);
@@ -397,7 +382,7 @@ public class StreamingSalesController : MonoBehaviour
             float mult = _heatModel.GetPriceMultiplier();
             if (mult != 1f)
             {
-                _model.AdjustAllPrices(mult, inventorySlotItemRefs, priceFloorRate, priceCeilingRate, _mainItemModel);
+                _model.AdjustAllPrices(mult, inventorySlotItemRefs, GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
                 Debug.Log($"[配信熱] 価格倍率 {mult:F2} 適用 (Heat={_heatModel.Heat.Value:F0})");
             }
         }
@@ -609,4 +594,18 @@ private void RefreshSellDisplay()
         ItemSlotView.OnItemDropped -= HandleItemSwap;
         ItemSlotView.OnItemClicked -= HandleItemClicked;
     }
+
+    private void AddTacticsAdjustedHeat(float baseDelta)
+    {
+        _heatModel?.AddHeat(baseDelta * HeroBattleInfluence.GetHeatMultiplier(_heroTactics));
+    }
+
+    private float GetWeaponPriceUpOnHit() => HeroBattleInfluence.GetWeaponPriceUpOnKill(PriceSettings, _heroTactics);
+    private float GetWeaponPriceDownOnNonKill() => HeroBattleInfluence.GetWeaponPriceDownOnNonKill(PriceSettings, _heroTactics);
+    private float GetArmorPriceDownOnHit() => HeroBattleInfluence.GetArmorPriceDownOnHit(PriceSettings, _heroTactics);
+    private float GetArmorPriceUpOnBlock() => HeroBattleInfluence.GetArmorPriceUpOnBlock(PriceSettings, _heroTactics);
+    private float GetEffectiveAttributeRate() => HeroBattleInfluence.GetEffectiveAttributeRate(PriceSettings, _heroTactics);
+    private float GetWeakAttributeRate() => HeroBattleInfluence.GetWeakAttributeRate(PriceSettings, _heroTactics);
+    private float GetPriceFloorRate() => PriceSettings.priceFloorRate;
+    private float GetPriceCeilingRate() => PriceSettings.priceCeilingRate;
 }

@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff9421c75058aac4bb3f1495f0305fd0, type: 3}
+  m_Name: SoundLibrary
+  m_EditorClassIdentifier: 
+  bgmList:
+  - key: "\u901A\u5E38\u55B6\u696D"
+    clipRef:
+      m_AssetGUID: 07ea969672c25d64ba4e641b173aabf4
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u914D\u4FE1\u30D5\u30A7\u30FC\u30BA"
+    clipRef:
+      m_AssetGUID: c04a16a0e1c9e944fb9792a2ed28d9d3
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  seList:
+  - key: "\u5171\u901ASE/SE_\u9078\u629E_\u623B\u308B\u30FB\u30AD\u30E3\u30F3\u30BB\u30EB"
+    clipRef:
+      m_AssetGUID: d643c4628233bba4da4a8b8a9060376b
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u5171\u901ASE/SE_\u9078\u629E_\u6C7A\u5B9A"
+    clipRef:
+      m_AssetGUID: 35b924f34c8891445b04b4a018529ba6
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u55B6\u696D/SE_\u4ED5\u5165\u308C\u5B8C\u4E86"
+    clipRef:
+      m_AssetGUID: 5458e0fabf225ff469428b017677f623
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u55B6\u696D/SE_\u58F2\u4E0A\u97F3"
+    clipRef:
+      m_AssetGUID: fd24f4a7347a7f142acf1d59895fedfa
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u55B6\u696D/SE_\u6570\u306E\u5897\u6E1B"
+    clipRef:
+      m_AssetGUID: 770826da944cbe64e9184eb124e48090
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u55B6\u696D/SE_\u958B\u767A\u5B8C\u4E86"
+    clipRef:
+      m_AssetGUID: b3004b592a917714ca96ab83421c56cf
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u55B6\u696D/SE_\u958B\u767A\u958B\u59CB"
+    clipRef:
+      m_AssetGUID: 6bd8bc3f65541e14f94ade0432351e2d
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0

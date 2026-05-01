@@ -15,6 +15,8 @@ public class ItemSelectionPresenter : IDisposable, IStartable
     private CompositeDisposable panelDisposables = new();
     private ItemTypeData.ItemType currentItemType = ItemTypeData.ItemType.Weapon;
 
+    public Subject<Unit> OnClosed { get; } = new();
+
     public ItemSelectionPresenter(
         ItemSelectionModel selectionModel,
         ItemSelectionView selectionView,
@@ -42,6 +44,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
     {
         selectionView.Hide();
         itemModel.SaveData();
+        OnClosed.OnNext(Unit.Default);
     }
 
     public void Initialize() { }

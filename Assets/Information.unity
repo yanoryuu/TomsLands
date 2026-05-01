@@ -4751,6 +4751,9 @@ MonoBehaviour:
   weaponPanelButton: {fileID: 0}
   itemDescriptionText: {fileID: 0}
   itemIcon: {fileID: 0}
+  autoDisplayButton: {fileID: 0}
+  displayListParent: {fileID: 0}
+  itemDisplaySlotPrefab: {fileID: 0}
   weaponTab: {fileID: 0}
   armorTab: {fileID: 0}
   toolTab: {fileID: 0}
@@ -5644,7 +5647,15 @@ MonoBehaviour:
   armorButton: {fileID: 1537372733}
   developButton: {fileID: 0}
   specialWeaponButton: {fileID: 0}
+  autoBuyButton: {fileID: 0}
+  autoBuyResultText: {fileID: 0}
+  dialogueText: {fileID: 0}
   itemDescriptionText: {fileID: 0}
+  developmentPanel: {fileID: 0}
+  blackSmithLevelText: {fileID: 0}
+  levelUpCostText: {fileID: 0}
+  levelUpButton: {fileID: 0}
+  levelUpButtonText: {fileID: 0}
 --- !u!114 &787651105
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5893,13 +5904,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   BlaskSmithButton: {fileID: 0}
+  HeroButton: {fileID: 0}
   SetItemButton: {fileID: 956564187}
   InfoButton: {fileID: 0}
   ToolButton: {fileID: 0}
   StartShopButton: {fileID: 0}
   MapButton: {fileID: 0}
   NextTurnButton: {fileID: 0}
+  DungeonLevelUpButton: {fileID: 0}
+  AdvertisementButton: {fileID: 0}
+  ProphetButton: {fileID: 0}
   turnAnnounceView: {fileID: 0}
+  buzzAnnounceView: {fileID: 0}
+  DashboardButton: {fileID: 0}
+  shopDeskDisplay: {fileID: 0}
 --- !u!222 &843842626
 CanvasRenderer:
   m_ObjectHideFlags: 0

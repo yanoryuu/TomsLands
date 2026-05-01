@@ -15,6 +15,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable panelDisposables = new();
+    private int characterTalkIndex;
 
     public BlackSmithPresenter(
         TomsModel tomsModel,
@@ -41,6 +42,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     public void Entry()
     {
+        characterTalkIndex = 0;
         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("open"));
         blackSmithModel.SetRuntimeItems(
             itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
@@ -58,6 +60,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         blackSmithView.OnAutoBuyRequested.Subscribe(_ => HandleAutoBuy()).AddTo(disposables);
 
+        blackSmithView.OnCharacterClicked
+            .Subscribe(_ => blackSmithView.ShowDialogue(GetNextCharacterTalk()))
+            .AddTo(disposables);
+
         blackSmithView.OnChangePanel
             .Subscribe(type =>
             {
@@ -72,6 +78,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                         ChangePurchasePanel(blackSmithModel.armorRuntimeItems, type);
                         break;
                     case BlackSmithTab.Development:
+                        SoundManager.Instance?.PlaySE("営業/SE_開発開始");
                         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("development"));
                         ShowDevelopmentPanel();
                         break;
@@ -85,10 +92,18 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .AddTo(disposables);
     }
 
+    private string GetNextCharacterTalk()
+    {
+        characterTalkIndex = (characterTalkIndex % 3) + 1;
+        return BlackSmithDialogueLoader.Get($"character_talk_{characterTalkIndex}");
+    }
+
     private void HandleAutoBuy()
     {
         int budget = tomsModel.PlayerMoney.Value;
         var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel);
+        if (results.Count > 0)
+            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
         blackSmithView.ShowAutoBuyResult(results, tomsModel.PlayerMoney.Value);
 
         // 購入後にスロット表示を更新
@@ -112,7 +127,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             Debug.Log($"{totalPrice}ゴールドのアイテムを購入");
             itemModel.PurchaseItem(itemId, quantity);
             tomsModel.PurchaseItem(totalPrice);
-            
+            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+
             // 購入結果を即座に永続化
             itemModel.SaveData();
             tomsModel.SavePlayerMoney();
@@ -206,7 +222,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 {
                     // step は +1 or -1
                     blackSmithModel.AddToCount(slot.itemId, step);
-                    // AddToCount により ReactiveProperty が発火 → slot.SetDisplayQuantity に反映される
+                    SoundManager.Instance?.PlaySE("営業/SE_数の増減");
                 })
                 .AddTo(panelDisposables);
 
@@ -349,6 +365,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             return;
         }
 
+        SoundManager.Instance?.PlaySE("営業/SE_開発完了");
         Debug.Log($"[BlackSmith] 鍛冶屋 Lv.{prevLevel} → Lv.{tomsModel.BlacksmithLevel.Value}");
 
         // レベルが上がったので商品ラインナップを更新

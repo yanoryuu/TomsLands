@@ -115,6 +115,7 @@ public class BattleSceneStarter : IAsyncStartable
         // ポーズコントローラーを各コンポーネントへ配布
         _battleSequencer.SetPauseController(_pauseController);
         _salesController?.SetPauseController(_pauseController);
+        _salesController?.SetHeroTactics(heroModel.heroData?.tactics.Value ?? HeroTactics.Balanced);
 
         // StreamingSalesController に選択アイテムを渡して初期化
         if (_salesController != null)
@@ -125,6 +126,8 @@ public class BattleSceneStarter : IAsyncStartable
 
         // バトル終了を待つための UniTaskCompletionSource
         _battleTcs = new UniTaskCompletionSource<(BattleResult result, string weaponId, string armorId)>();
+        int defeatedMobCount = 0;
+        int defeatedBossCount = 0;
 
         // バトル終了時のCancellationTokenSource（ポップアップ等を終わらせるため）
         using var battleCts = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
@@ -137,6 +140,16 @@ public class BattleSceneStarter : IAsyncStartable
 
         _battleSequencer.OnBattleDefeat
             .Subscribe(defeat => _battleTcs.TrySetResult((BattleResult.Defeat, defeat.weaponId, defeat.armorId)))
+            .AddTo(disposables);
+
+        _battleSequencer.OnEnemyDefeated
+            .Subscribe(enemy =>
+            {
+                if (enemy.IsBoss)
+                    defeatedBossCount++;
+                else
+                    defeatedMobCount++;
+            })
             .AddTo(disposables);
 
         // 一時停止ボタン
@@ -174,7 +187,7 @@ public class BattleSceneStarter : IAsyncStartable
         // BattleOutputData に結果を書き込み
         var soldItems = BuildSoldItems();
         int totalEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
-        _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings);
+        _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings, defeatedMobCount, defeatedBossCount);
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
@@ -245,7 +258,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         if (confirmed && canAfford && _tomsModel != null)
         {
-            item.Stock.Value += 10;
+            item.UpdateStock(item.Stock.Value + 10);
             _tomsModel.PlayerMoney.Value -= totalCost;
             _tomsModel.SavePlayerMoney();
             Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +10個, 費用 {totalCost}G");

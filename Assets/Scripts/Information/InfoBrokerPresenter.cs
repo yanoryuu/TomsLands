@@ -1,30 +1,32 @@
-using System;
-using UnityEngine;
+﻿using System;
 using R3;
+using UnityEngine;
 using VContainer.Unity;
 
-public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
+public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
 {
     private readonly InfoBrokerModel infoBrokerModel;
     private readonly InfoBrokerView infoBrokerView;
-    private readonly ItemModel itemModel;
     private readonly CompositeDisposable disposables = new();
     private readonly StateManager stateManager;
-    private readonly HeroInfoView heroInfoView;
-    private readonly HeroModel heroModel;
     private readonly MapInfoView mapInfoView;
     private readonly TomsModel tomsModel;
-    public InfoBrokerPresenter(InfoBrokerModel infoBrokerModel, InfoBrokerView infoBrokerView, ItemModel itemModel,StateManager stateManager
-    , HeroInfoView heroInfoView,HeroModel heroModel, MapInfoView mapInfoView, TomsModel tomsModel)
+    private int characterTalkIndex;
+
+    public InfoBrokerPresenter(
+        InfoBrokerModel infoBrokerModel,
+        InfoBrokerView infoBrokerView,
+        StateManager stateManager,
+        MapInfoView mapInfoView,
+        TomsModel tomsModel)
     {
         this.infoBrokerModel = infoBrokerModel;
         this.infoBrokerView = infoBrokerView;
-        this.itemModel = itemModel;
         this.stateManager = stateManager;
-        this.heroInfoView = heroInfoView;
         this.mapInfoView = mapInfoView;
         this.tomsModel = tomsModel;
-        stateManager.RegisterOnEnter(TomsShopGamePhase.Broker,Entry);
+
+        stateManager.RegisterOnEnter(TomsShopGamePhase.Broker, Entry);
     }
 
     public void Start()
@@ -32,128 +34,89 @@ public class InfoBrokerPresenter : IDisposable,IPresenter,IStartable
         Bind();
     }
 
-    
     public void Entry()
     {
-        // ?_???W?????f?[?^????V?????X?V
+        characterTalkIndex = 0;
         infoBrokerModel.InitializeDungeons();
-        
-        // ?????^?u?i?}?b?v?j??\??
+        infoBrokerView.ShowDialogue(InfoBrokerDialogueLoader.Get("open"));
         infoBrokerView.ShowPanel(InfoBrokerTab.Map);
         infoBrokerView.SortItemTab(InfoBrokerTab.Map);
-        OnTabChanged(InfoBrokerTab.Map);
+        ShowMapInfo();
     }
+
     private void Bind()
     {
-        // ?r???[??C?x???g?w??
         infoBrokerView.OnCloseRequested
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
+            .AddTo(disposables);
+
+        infoBrokerView.OnCharacterClicked
+            .Subscribe(_ => infoBrokerView.ShowDialogue(GetNextCharacterTalk()))
             .AddTo(disposables);
 
         infoBrokerView.OnRefreshRequested
             .Subscribe(_ => infoBrokerModel.UpdateInfoMessages())
             .AddTo(disposables);
 
-        // // ?^?u??????C?x???g
         infoBrokerView.OnChangePanel
             .Subscribe(tab =>
             {
                 infoBrokerView.SortItemTab(tab);
                 infoBrokerView.ShowPanel(tab);
-                OnTabChanged(tab);
+                infoBrokerView.ShowDialogue(InfoBrokerDialogueLoader.Get("map"));
+                if (tab == InfoBrokerTab.Map)
+                {
+                    ShowMapInfo();
+                }
             })
             .AddTo(disposables);
 
-        // // [Guess] ???f?????X?????
-        // infoBrokerModel.CurrentInfoMessages
-        //     .Subscribe(messages => infoBrokerView.DisplayInfoMessages(messages))
-        //     .AddTo(disposables);
-        
-        heroInfoView.OnPurchaseButtonClicked.Subscribe(_ =>
-        {
-            // ?E??????w??
-            infoBrokerModel.PurchaseHeroInfo();
-            // ?\?????X?V
-            UpdateHeroInfo();
-        })
-        .AddTo(disposables);
-        
-        // ?}?b?v????w???C?x???g
         mapInfoView.OnMapPurchaseClicked
-            .Subscribe(dungeonName =>
-            {
-                var costs = infoBrokerModel.GetDungeonInfoCosts();
-                if (!costs.ContainsKey(dungeonName))
-                {
-                    Debug.LogWarning($"[InfoBrokerPresenter] ?R?X?g?????????????: {dungeonName}");
-                    return;
-                }
-
-                int currentTurn = tomsModel.CurrentTurn.Value;
-                int[] costArray = costs[dungeonName];
-                int cost = (costArray.Length >= currentTurn && currentTurn > 0)
-                    ? costArray[currentTurn - 1]
-                    : costArray[costArray.Length - 1];
-
-                if (tomsModel.PlayerMoney.Value < cost)
-                {
-                    Debug.Log($"[InfoBrokerPresenter] ??????????????I ?K?v: {cost}G, ????: {tomsModel.PlayerMoney.Value}G");
-                    return;
-                }
-
-                // ????????????
-                tomsModel.PurchaseItem(cost);
-                tomsModel.SavePlayerMoney();
-                // ?_???W?????????w?????????
-                infoBrokerModel.PurchaseDungeonInfo(dungeonName);
-                // �w���ς݃X���b�g���폜
-                mapInfoView.RemoveSlot(dungeonName);
-                Debug.Log($"[InfoBrokerPresenter] {dungeonName} ????? {cost}G ??w??????????B?c??: {tomsModel.PlayerMoney.Value}G");
-            })
+            .Subscribe(PurchaseDungeonInfo)
             .AddTo(disposables);
     }
 
-    /// <summary>
-    /// ?^?u????????????
-    /// </summary>
-    private void OnTabChanged(InfoBrokerTab tab)
+    private string GetNextCharacterTalk()
     {
-        switch (tab)
-        {
-            case InfoBrokerTab.Map:
-                mapInfoView.SetMapSlot(
-                    infoBrokerModel.availableDungeons,
-                    infoBrokerModel.GetDungeonInfoCosts(),
-                    1);
-                break;
-            case InfoBrokerTab.Hero:
-                UpdateHeroInfo();
-                break;
-            // case InfoBrokerTab.Guess:
-            //     infoBrokerModel.UpdateInfoMessages();
-            //     break;
-        }
+        characterTalkIndex = (characterTalkIndex % 3) + 1;
+        return InfoBrokerDialogueLoader.Get($"character_talk_{characterTalkIndex}");
     }
-    
-    public void UpdateHeroInfo()
+
+    private void ShowMapInfo()
     {
-        // ??V??E??f?[?^?????
-        infoBrokerModel.RefreshHeroData();
-        
-        if (infoBrokerModel.currentHeroData == null)
+        mapInfoView.SetMapSlot(
+            infoBrokerModel.availableDungeons,
+            infoBrokerModel.GetDungeonInfoCosts(),
+            1);
+    }
+
+    private void PurchaseDungeonInfo(DungeonName dungeonName)
+    {
+        var costs = infoBrokerModel.GetDungeonInfoCosts();
+        if (!costs.ContainsKey(dungeonName))
         {
-            Debug.LogWarning("currentHeroData is null. Cannot update hero info.");
+            Debug.LogWarning($"[InfoBrokerPresenter] 情報料が見つかりません: {dungeonName}");
             return;
         }
-        
-        // ?w?????t???O?????\?????X?V
-        heroInfoView.UpdateHeroInfo(infoBrokerModel.currentHeroData, infoBrokerModel.IsHeroInfoPurchased);
-    }
 
-    // public void ShowInfoBroker()
-    // {
-    //     infoBrokerModel.UpdateInfoMessages();
-    // }
+        int currentTurn = tomsModel.CurrentTurn.Value;
+        int[] costArray = costs[dungeonName];
+        int cost = costArray.Length >= currentTurn && currentTurn > 0
+            ? costArray[currentTurn - 1]
+            : costArray[costArray.Length - 1];
+
+        if (tomsModel.PlayerMoney.Value < cost)
+        {
+            Debug.Log($"[InfoBrokerPresenter] 所持金不足: 必要 {cost}G / 所持 {tomsModel.PlayerMoney.Value}G");
+            return;
+        }
+
+        tomsModel.PurchaseItem(cost);
+        tomsModel.SavePlayerMoney();
+        infoBrokerModel.PurchaseDungeonInfo(dungeonName);
+        mapInfoView.RemoveSlot(dungeonName);
+        Debug.Log($"[InfoBrokerPresenter] {dungeonName} の情報を {cost}G で購入しました。残金: {tomsModel.PlayerMoney.Value}G");
+    }
 
     public void RecordHeroPurchase(string itemId, int quantity, int price)
     {

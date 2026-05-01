@@ -54,6 +54,9 @@ public class ShopStatusModel
     /// <summary>フォロワー数（0以上、上限なし）</summary>
     public ReactiveProperty<int> Followers { get; private set; }
 
+    /// <summary>ステータスの最大値（正規化に使用）</summary>
+    public int StatMax => _balanceData != null ? _balanceData.statMax : 100;
+
     /// <summary>バランスデータへの参照（クランプ処理に使用）</summary>
     private readonly GameBalanceData _balanceData;
 

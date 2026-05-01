@@ -108,7 +108,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
             Title = title,
             Message = message,
             IsCloseOnly = true,
-            Size = PopupSizeEnum.Medium
+            Size = PopupSizeEnum.Big
         };
 
         popUpManager.Show(data);

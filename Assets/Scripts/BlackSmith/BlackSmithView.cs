@@ -32,6 +32,7 @@ public class BlackSmithView : MonoBehaviour
 
     [Header("Dialogue")]
     [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private Button characterButton;
 
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
@@ -47,6 +48,7 @@ public class BlackSmithView : MonoBehaviour
     public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
     public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
+    public Subject<Unit> OnCharacterClicked { get; private set; } = new();
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
@@ -67,6 +69,9 @@ public class BlackSmithView : MonoBehaviour
 
         if (autoBuyButton != null)
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
+
+        if (characterButton != null)
+            characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
 
         // 開発パネルは初期非表示
         if (developmentPanel)

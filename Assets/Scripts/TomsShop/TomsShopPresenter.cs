@@ -69,32 +69,41 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         tomsShopView.OnBlacksmithClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.BlackSmith))
             .AddTo(disposables);
-        
+
+        tomsShopView.OnHeroClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Hero))
+            .AddTo(disposables);
+
         //　情報屋ボタン
         tomsShopView.OnInfoClicked
-            .Subscribe(_=> stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Broker))
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Broker))
             .AddTo(disposables);
-        
+
         //　道具屋ボタン
         tomsShopView.OnToolClicked
-            .Subscribe(_=> stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ToolShop))
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ToolShop))
             .AddTo(disposables);
 
         // 「陳列設定」ボタン
         tomsShopView.OnSetItemClicked
             .Subscribe(_ => OpenSelectionPanel())
             .AddTo(disposables);
-        
+
+        // 陳列パネルを閉じたら机の表示を更新
+        itemSelectionPresenter.OnClosed
+            .Subscribe(_ => tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems))
+            .AddTo(disposables);
+
         //　マップボタン
         tomsShopView.OnMapClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Map))
             .AddTo(disposables);
-        
+
         //　ダンジョンレベルアップボタン
         tomsShopView.OnDungeonLevelUpClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.DungeonLevelUp))
             .AddTo(disposables);
-        
+
         //　広告購入画面ボタン
         tomsShopView.OnAdvertisementClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Advertisement))
@@ -105,7 +114,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Prophet))
             .AddTo(disposables);
 
-        
         //　次のターンに進むボタン → サマリーパネルを表示
         tomsShopView.OnNextTurnClicked
             .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())
@@ -129,7 +137,12 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     {
         //ここにこの画面に移動した時にここを呼び出す。
         Initialize();
-        
+
+        SoundManager.Instance?.PlayBGM("通常営業");
+
+        // 机の陳列を更新
+        tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
+
         // 保留イベントがあればポップアップを表示
         ShowPendingEventIfExists();
 

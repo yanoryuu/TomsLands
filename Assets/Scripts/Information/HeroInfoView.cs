@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class HeroInfoView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI heroLvText;
-    // [SerializeField] private TextMeshProUGUI heroExpText;
+    [SerializeField] private TextMeshProUGUI heroExpText;
     [SerializeField] private TextMeshProUGUI heroHpText;
     // [SerializeField] private TextMeshProUGUI heroAttackText;
     [SerializeField] private TextMeshProUGUI heroMpText;
@@ -30,22 +30,35 @@ public class HeroInfoView : MonoBehaviour
         {
             // 未購入時は「???」を表示
             heroLvText.text = "Lv: ???";
+            if (heroExpText != null) heroExpText.text = "Exp: ???";
             heroHpText.text = "HP: ???";
             heroMpText.text = "MP: ???";
             weaponText.text = "???";
             heroTacticsText.text = "???";
+            if (flavorText != null) flavorText.text = "";
             return;
         }
 
         // 購入済み：実際のデータを表示
         heroLvText.text = $"Lv: {heroInfo.level.Value}";
-        // heroExpText.text = $"Exp: {heroInfo.Experience}/{heroInfo.ExpToNextLevel}";
+        if (heroExpText != null)
+        {
+            heroExpText.text = heroInfo.expToNextLevel.Value > 0
+                ? $"Exp: {heroInfo.experience.Value}/{heroInfo.expToNextLevel.Value}"
+                : "Exp: MAX";
+        }
         heroHpText.text = $"HP: {heroInfo.hp.Value}";
         // heroAttackText.text = $"Attack: {heroInfo.Attack}";
         heroMpText.text = $"MP: {heroInfo.mp.Value}";
-        weaponText.text = $"{heroInfo.weaponName.Value}";
+        string weaponName = string.IsNullOrEmpty(heroInfo.weaponName.Value) ? "None" : heroInfo.weaponName.Value;
+        string armorName = string.IsNullOrEmpty(heroInfo.armorName.Value) ? "None" : heroInfo.armorName.Value;
+        weaponText.text = $"Weapon: {weaponName}\nArmor: {armorName}";
         // heroArmorText.text = $"Armor: {heroInfo.EquippedArmor}";
-        heroTacticsText.text = $"{heroInfo.tactics.Value}";
-        //flavorText.text = heroInfo.flavorText;
+        heroTacticsText.text = HeroBattleInfluence.GetDisplayName(heroInfo.tactics.Value);
+        if (flavorText != null)
+        {
+            var settings = Resources.Load<BattlePriceSettings>("BattlePriceSettings");
+            flavorText.text = HeroBattleInfluence.BuildSummary(heroInfo, weaponName, armorName, settings);
+        }
     }
 }

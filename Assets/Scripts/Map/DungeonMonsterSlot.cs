@@ -13,12 +13,23 @@ public class DungeonMonsterSlot : MonoBehaviour
     
     public void SetMonsterData(EnemyData enemyData)
     {
-        monsterNameText.text = enemyData.enemyName;
-        monsterElementText.text = enemyData.elementType.ToString();
+        monsterNameText.text = $"{enemyData.enemyName}";
+        monsterElementText.text = $"属性: {ElementTypeToJapanese(enemyData.elementType)}";
         // monsterDescriptionText.text = enemyData.description;
         monsterIconImage.sprite = enemyData.enemySprite;
         isBoss = enemyData.isBoss;
         
         if(isBoss)isBossImage.gameObject.SetActive(true);
     }
+
+    private static string ElementTypeToJapanese(ElementType elementType) => elementType switch
+    {
+        ElementType.Water => "水",
+        ElementType.Fire => "火",
+        ElementType.Wood => "木",
+        ElementType.Light => "光",
+        ElementType.Dark => "闇",
+        ElementType.None => "なし",
+        _ => elementType.ToString()
+    };
 }

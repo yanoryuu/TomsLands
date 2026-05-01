@@ -8,9 +8,9 @@ public class GameLifetimeScope : LifetimeScope
     [Header("Views")]
     [SerializeField] private BlackSmithView blackSmithView;
     [SerializeField] private TomsShopView tomsShopView;
+    [SerializeField] private HeroPanelView heroPanelView;
     [SerializeField] private ItemSelectionView itemSelectionView;
     [SerializeField] private InfoBrokerView infoBrokerView;
-    [SerializeField] private HeroInfoView heroInfoView;
     [SerializeField] private CommonView commonView;
     [SerializeField] private DungeonInfoView dungeonInfoView;
     [SerializeField] private MapView mapView;
@@ -213,9 +213,12 @@ public class GameLifetimeScope : LifetimeScope
         // Scene上にあるViewを登録（null の場合はエラーログを出力）
         RegisterComponentSafe(builder, blackSmithView, nameof(blackSmithView));
         RegisterComponentSafe(builder, tomsShopView, nameof(tomsShopView));
+        if (heroPanelView != null)
+            builder.RegisterComponent(heroPanelView);
+        else
+            Debug.LogWarning("[GameLifetimeScope] heroPanelView is not assigned. Hero panel is disabled until the TomsShopScene reference is set.");
         RegisterComponentSafe(builder, itemSelectionView, nameof(itemSelectionView));
         RegisterComponentSafe(builder, infoBrokerView, nameof(infoBrokerView));
-        RegisterComponentSafe(builder, heroInfoView, nameof(heroInfoView));
         RegisterComponentSafe(builder, commonView, nameof(commonView));
         RegisterComponentSafe(builder, dungeonInfoView, nameof(dungeonInfoView));
         RegisterComponentSafe(builder, mapView, nameof(mapView));
@@ -241,6 +244,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<ItemSelectionPresenter>().AsSelf();
         builder.RegisterEntryPoint<TurnEndSummaryPresenter>().AsSelf();
         builder.RegisterEntryPoint<TomsShopPresenter>();
+        if (heroPanelView != null)
+            builder.RegisterEntryPoint<HeroPanelPresenter>();
         builder.RegisterEntryPoint<MapPresenter>();
         builder.RegisterEntryPoint<DungeonLevelUpPresenter>();
         builder.RegisterEntryPoint<CommonPresenter>();

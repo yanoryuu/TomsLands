@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: GameBalanceData
   m_EditorClassIdentifier: 
   statMin: 0
-  statMax: 100
+  statMax: 1000
   followerMin: 0
   buzzAttentionCoeff: 0.5
   buzzTrustCoeff: 0.2

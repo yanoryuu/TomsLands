@@ -10,9 +10,14 @@ public class TurnEndSummaryRowUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI itemNameText;
     [SerializeField] private TextMeshProUGUI soldCountText;
     [SerializeField] private TextMeshProUGUI revenueText;
-    [SerializeField] private TextMeshProUGUI trendText;
     [SerializeField] private TextMeshProUGUI causeText;
     [SerializeField] private Image itemIcon;
+
+    [Header("需要トレンドアイコン")]
+    [SerializeField] private Image trendIcon;
+    [SerializeField] private Sprite trendUpSprite;
+    [SerializeField] private Sprite trendDownSprite;
+    [SerializeField] private Sprite trendNeutralSprite;
 
     /// <summary>
     /// 行データを設定して表示を更新する
@@ -31,23 +36,14 @@ public class TurnEndSummaryRowUI : MonoBehaviour
         if (itemIcon != null)
             itemIcon.sprite = data.ItemIcon;
 
-        if (trendText != null)
+        if (trendIcon != null)
         {
-            switch (data.Trend)
+            trendIcon.sprite = data.Trend switch
             {
-                case DemandTrend.Up:
-                    trendText.text = "↑";
-                    trendText.color = Color.red;
-                    break;
-                case DemandTrend.Down:
-                    trendText.text = "↓";
-                    trendText.color = Color.blue;
-                    break;
-                default:
-                    trendText.text = "→";
-                    trendText.color = Color.gray;
-                    break;
-            }
+                DemandTrend.Up   => trendUpSprite,
+                DemandTrend.Down => trendDownSprite,
+                _                => trendNeutralSprite,
+            };
         }
 
         if (causeText != null)

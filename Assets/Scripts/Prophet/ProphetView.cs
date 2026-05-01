@@ -30,14 +30,18 @@ public class ProphetView : MonoBehaviour
 
     [Header("操作")]
     [SerializeField] private Button closeButton;
+    [SerializeField] private Button characterButton;
 
     public Subject<Unit> OnCloseClicked { get; } = new();
+    public Subject<Unit> OnCharacterClicked { get; } = new();
     public Subject<string> OnRowHoverEnter { get; } = new();
     public Subject<Unit> OnRowHoverExit { get; } = new();
 
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseClicked.OnNext(Unit.Default));
+        if (characterButton != null)
+            characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
     }
 
     public void ShowTrendRows(List<(Sprite icon, string name, float trend, float demand)> items)
