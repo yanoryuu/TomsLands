@@ -58,7 +58,17 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
         }).AddTo(disposables);
 
-        blackSmithView.OnAutoBuyRequested.Subscribe(_ => HandleAutoBuy()).AddTo(disposables);
+        blackSmithView.OnAutoBuyRequested
+            .Subscribe(_ => blackSmithView.ShowBudgetPopup(tomsModel.PlayerMoney.Value))
+            .AddTo(disposables);
+
+        blackSmithView.OnAutoBuyBudgetConfirmed
+            .Subscribe(budget =>
+            {
+                blackSmithView.HideBudgetPopup();
+                HandleAutoBuy(budget);
+            })
+            .AddTo(disposables);
 
         blackSmithView.OnCharacterClicked
             .Subscribe(_ => blackSmithView.ShowDialogue(GetNextCharacterTalk()))
@@ -98,9 +108,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         return BlackSmithDialogueLoader.Get($"character_talk_{characterTalkIndex}");
     }
 
-    private void HandleAutoBuy()
+    private void HandleAutoBuy(int budget)
     {
-        int budget = tomsModel.PlayerMoney.Value;
         var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel);
         if (results.Count > 0)
             SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");

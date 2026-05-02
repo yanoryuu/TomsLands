@@ -11,6 +11,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
     private readonly StateManager stateManager;
     private readonly MapInfoView mapInfoView;
     private readonly TomsModel tomsModel;
+    private readonly GameFlowManager gameFlowManager;
     private int characterTalkIndex;
 
     public InfoBrokerPresenter(
@@ -18,13 +19,15 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         InfoBrokerView infoBrokerView,
         StateManager stateManager,
         MapInfoView mapInfoView,
-        TomsModel tomsModel)
+        TomsModel tomsModel,
+        GameFlowManager gameFlowManager)
     {
         this.infoBrokerModel = infoBrokerModel;
         this.infoBrokerView = infoBrokerView;
         this.stateManager = stateManager;
         this.mapInfoView = mapInfoView;
         this.tomsModel = tomsModel;
+        this.gameFlowManager = gameFlowManager;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Broker, Entry);
     }
@@ -87,7 +90,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         mapInfoView.SetMapSlot(
             infoBrokerModel.availableDungeons,
             infoBrokerModel.GetDungeonInfoCosts(),
-            1);
+            gameFlowManager.BattleCount.Value + 1);
     }
 
     private void PurchaseDungeonInfo(DungeonName dungeonName)
@@ -99,10 +102,10 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             return;
         }
 
-        int currentTurn = tomsModel.CurrentTurn.Value;
+        int battleCount = gameFlowManager.BattleCount.Value;
         int[] costArray = costs[dungeonName];
-        int cost = costArray.Length >= currentTurn && currentTurn > 0
-            ? costArray[currentTurn - 1]
+        int cost = costArray.Length > battleCount
+            ? costArray[battleCount]
             : costArray[costArray.Length - 1];
 
         if (tomsModel.PlayerMoney.Value < cost)

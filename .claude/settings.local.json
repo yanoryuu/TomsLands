@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(Get-ChildItem -Recurse -File)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Out-String)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Unity\\\\TomsLands\" -Recurse -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)"
     ]
   }
 }

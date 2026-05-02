@@ -1,7 +1,6 @@
 ﻿DungeonName,Cost1,Cost2,Cost3
-IceMistCave,100,200,500
-DeepGreenBeastForest,120,250,600
-ScorchingVolcanoPrison,150,300,700
-MausoleumOblivion,200,400,900
-AncientMechanicalCastle,250,500,1200
-
+IceMistCave,2000,5000,10000
+DeepGreenBeastForest,2000,5000,10000
+ScorchingVolcanoPrison,2000,5000,10000
+MausoleumOblivion,2000,5000,10000
+AncientMechanicalCastle,2000,5000,10000

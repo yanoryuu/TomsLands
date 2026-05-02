@@ -28,6 +28,11 @@ public class GameFlowManager : IDisposable, IStartable
     public ReactiveProperty<int> CurrentTurn { get; } = new(1);
 
     /// <summary>
+    /// 完了した配信（Battle）の回数
+    /// </summary>
+    public ReactiveProperty<int> BattleCount { get; } = new(0);
+
+    /// <summary>
     /// 現在のGameFlowインデックス（シーン復帰時の保存/復元用）
     /// </summary>
     public int CurrentIndex => _currentIndex;
@@ -63,7 +68,20 @@ public class GameFlowManager : IDisposable, IStartable
         _currentIndex = index;
         // ターン番号はEventノードを除外してカウント
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
-        Debug.Log($"[GameFlowManager] Index restored to {_currentIndex}, turn={CurrentTurn.Value}");
+        BattleCount.Value = CalculateBattleCount(_currentIndex);
+        Debug.Log($"[GameFlowManager] Index restored to {_currentIndex}, turn={CurrentTurn.Value}, battleCount={BattleCount.Value}");
+    }
+
+    private int CalculateBattleCount(int upToIndex)
+    {
+        if (_gameFlow == null) return 0;
+        int count = 0;
+        for (int i = 0; i < upToIndex && i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType == GameEvent.Battle)
+                count++;
+        }
+        return count;
     }
 
     /// <summary>
@@ -126,6 +144,7 @@ public class GameFlowManager : IDisposable, IStartable
 
         // Event以外のノードではターン番号を進める
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
+        BattleCount.Value = CalculateBattleCount(_currentIndex);
 
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {

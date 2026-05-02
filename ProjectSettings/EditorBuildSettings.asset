@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Scene/FightScene.unity
     guid: d4d0fe2076664db498bf20fabd03dbb6
   - enabled: 1
+    path: Assets/Scene/Setting.unity
+    guid: feb6056d97b93f746a137b0f389372e4
+  - enabled: 1
     path: Assets/Scene/PreparationScene.unity
     guid: aa7607d5311b67a42aa4210b9dacb52b
   - enabled: 1

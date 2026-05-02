@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using R3;
+using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
 public class CommonPresenter:IStartable,IDisposable
@@ -43,6 +44,9 @@ public class CommonPresenter:IStartable,IDisposable
                 Debug.Log($"CurrentTurn: {date}");
                 commonView.UpdateCurrentTurn(date);
             })
+            .AddTo(disposables);
+        
+        commonView.OnMenuButtonClicked.Subscribe(_ => SceneManager.LoadScene("Setting",LoadSceneMode.Additive))
             .AddTo(disposables);
     }
 }

@@ -29,6 +29,7 @@ public class BlackSmithView : MonoBehaviour
     [Header("オート購入")]
     [SerializeField] private Button autoBuyButton;
     [SerializeField] private TMPro.TextMeshProUGUI autoBuyResultText;
+    [SerializeField] private AutoBuyBudgetPopup autoBuyBudgetPopup;
 
     [Header("Dialogue")]
     [SerializeField] private TextMeshProUGUI dialogueText;
@@ -49,6 +50,8 @@ public class BlackSmithView : MonoBehaviour
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
     public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
     public Subject<Unit> OnCharacterClicked { get; private set; } = new();
+    /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額を通知する。</summary>
+    public Subject<int> OnAutoBuyBudgetConfirmed { get; private set; } = new();
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
@@ -69,6 +72,9 @@ public class BlackSmithView : MonoBehaviour
 
         if (autoBuyButton != null)
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
+
+        if (autoBuyBudgetPopup != null)
+            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget => OnAutoBuyBudgetConfirmed.OnNext(budget));
 
         if (characterButton != null)
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
@@ -130,6 +136,18 @@ public class BlackSmithView : MonoBehaviour
     public void SetDescription(string description)
     {
         if (itemDescriptionText != null) itemDescriptionText.text = description;
+    }
+
+    public void ShowBudgetPopup(int playerMoney)
+    {
+        if (autoBuyBudgetPopup != null)
+            autoBuyBudgetPopup.Show(playerMoney);
+    }
+
+    public void HideBudgetPopup()
+    {
+        if (autoBuyBudgetPopup != null)
+            autoBuyBudgetPopup.Hide();
     }
 
     public void ShowAutoBuyResult(List<AutoPurchaseResult> results, int playerMoney)
