@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: jungle3
   m_EditorClassIdentifier: 
-  enemyName: jungle3
+  enemyId: jungle3
+  enemyName: "\u30D0\u30A4\u30D1\u30EA\u30B9"
   hp: 25
   attackPower: 8
   defensePower: 3
   elementType: 3
   enemySprite: {fileID: 21300000, guid: 270256878f55b42568990f9adc726934, type: 3}
   skills: []
+  description: 
+  isBoss: 0
