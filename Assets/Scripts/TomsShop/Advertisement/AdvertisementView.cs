@@ -136,27 +136,27 @@ public class AdvertisementView : MonoBehaviour
     // =====================================================
 
     /// <summary>信頼度の表示を更新する</summary>
-    public void UpdateTrust(int value)
+    public void UpdateTrust(int value, int max)
     {
-        if (trustText != null) trustText.text = $"{value}";
+        if (trustText != null) trustText.text = $"{value}/{max}";
     }
 
     /// <summary>注目度の表示を更新する</summary>
-    public void UpdateAttention(int value)
+    public void UpdateAttention(int value, int max)
     {
-        if (attentionText != null) attentionText.text = $"{value}";
+        if (attentionText != null) attentionText.text = $"{value}/{max}";
     }
 
     /// <summary>拡散力の表示を更新する</summary>
-    public void UpdateSpread(int value)
+    public void UpdateSpread(int value, int max)
     {
-        if (spreadText != null) spreadText.text = $"{value}";
+        if (spreadText != null) spreadText.text = $"{value}/{max}";
     }
 
     /// <summary>顧客維持力の表示を更新する</summary>
-    public void UpdateRetention(int value)
+    public void UpdateRetention(int value, int max)
     {
-        if (retentionText != null) retentionText.text = $"{value}";
+        if (retentionText != null) retentionText.text = $"{value}/{max}";
     }
 
     /// <summary>フォロワー数の表示を更新する</summary>

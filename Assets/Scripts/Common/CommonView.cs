@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class CommonView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI playerMoneyText;
-    
+
     [SerializeField] private TextMeshProUGUI currentTurnText;
 
     [SerializeField] private Button menuButton;

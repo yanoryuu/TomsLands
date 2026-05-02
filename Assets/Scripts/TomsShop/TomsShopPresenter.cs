@@ -20,6 +20,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly EventView eventView;
     private readonly TomsEventExecutor tomsEventExecutor;
     private readonly MarketingFacade marketingFacade;
+    private readonly DebtPresenter debtPresenter;
 
     /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
     private int _lastKnownTurn = -1;
@@ -37,7 +38,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         EventView eventView,
         TomsEventExecutor tomsEventExecutor,
         GamePanelManager gamePanelManager,
-        MarketingFacade marketingFacade)
+        MarketingFacade marketingFacade,
+        DebtPresenter debtPresenter)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -51,6 +53,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.eventView = eventView;
         this.tomsEventExecutor = tomsEventExecutor;
         this.marketingFacade = marketingFacade;
+        this.debtPresenter = debtPresenter;
         
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
@@ -60,7 +63,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     
     public void Start()
     {
-        Bind();   
+        SoundManager.Instance?.PlayBGM("通常営業");
+        Bind();
     }
 
     private void Bind()
@@ -118,10 +122,24 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         tomsShopView.OnNextTurnClicked
             .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())
             .AddTo(disposables);
+
+        // 借金返済ボタン → 任意払いパネルを表示
+        tomsShopView.OnDebtPaymentClicked
+            .Subscribe(_ => debtPresenter.ShowVoluntary())
+            .AddTo(disposables);
         
         //　ターン表示の更新（CommonView）
         gameFlowManager.CurrentTurn
             .Subscribe(turn => commonView.UpdateCurrentTurn(turn))
+            .AddTo(disposables);
+
+        // 次回借金返済額と残りターン数の表示（DebtCycle または CurrentTurn が変わるたびに再計算）
+        tomsShopModel.DebtCycle
+            .Subscribe(_ => RefreshNextDebtDisplay())
+            .AddTo(disposables);
+
+        gameFlowManager.CurrentTurn
+            .Subscribe(_ => RefreshNextDebtDisplay())
             .AddTo(disposables);
 
         // ※ターン切り替え演出は Entry() 内で一元管理する
@@ -133,20 +151,33 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .AddTo(disposables);
     }
     
+    private void RefreshNextDebtDisplay()
+    {
+        int cycle = tomsShopModel.DebtCycle.Value;
+        int nextAmount = DebtDataLoader.GetAmount(cycle + 1);
+        int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
+        int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
+        tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);
+    }
+
     public void Entry()
     {
-        //ここにこの画面に移動した時にここを呼び出す。
         Initialize();
 
         SoundManager.Instance?.PlayBGM("通常営業");
 
-        // 机の陳列を更新
         tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
 
-        // 保留イベントがあればポップアップを表示
         ShowPendingEventIfExists();
 
-        // ターン変更を検出し、バズ演出またはターン演出を表示する
+        // 借金返済チェック: 支払うべきサイクル数 > 支払い済みサイクル数 なら強制返済パネルを表示
+        int currentTurn = gameFlowManager.CurrentTurn.Value;
+        if (currentTurn / GameConst.DebtPaymentInterval > tomsShopModel.DebtCycle.Value)
+        {
+            _lastKnownTurn = currentTurn;
+            debtPresenter.ShowForced();
+        }
+
         ShowTurnOrBuzzAnnounce();
     }
     
@@ -202,7 +233,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         }
         else
         {
-            // バズなし → 通常のターン切り替え演出
             tomsShopView.ShowTurnAnnounce(currentTurn);
         }
     }

@@ -61,5 +61,14 @@ public class SceneTransitionService
         Debug.Log("[SceneTransition] Loading ResultScene...");
         SceneManager.LoadScene("ResultScene");
     }
+
+    /// <summary>
+    /// GameOverScene へ遷移する。借金返済不能時に呼び出す。
+    /// </summary>
+    public void GoToGameOver()
+    {
+        Debug.Log("[SceneTransition] Loading GameOverScene...");
+        SceneManager.LoadScene("GameOverScene");
+    }
 }
 

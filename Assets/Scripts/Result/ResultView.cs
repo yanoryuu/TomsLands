@@ -29,6 +29,7 @@ public class ResultView : MonoBehaviour
     [SerializeField] private Button goToTitleButton;
     [SerializeField] private Button retryButton;
 
+
     /// <summary>タイトルへ戻るボタンが押された</summary>
     public Subject<Unit> OnGoToTitleClicked { get; } = new();
 
@@ -50,6 +51,7 @@ public class ResultView : MonoBehaviour
     public void UpdateContent(ResultStatisticsData data)
     {
         if (data == null) return;
+
 
         // --- ランク表示 ---
         if (rankText != null)

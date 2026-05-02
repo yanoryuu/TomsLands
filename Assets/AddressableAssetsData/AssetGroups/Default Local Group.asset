@@ -15,11 +15,6 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 37e73f14ccb9bc2439468569d55785d5
   m_SerializeEntries:
-  - m_GUID: 073ebb884d5da4f4a96cc1f750b28f94
-    m_Address: Assets/Sounds/SoundLibrary.asset
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07ea969672c25d64ba4e641b173aabf4
     m_Address: "\u901A\u5E38\u55B6\u696D"
     m_ReadOnly: 0
@@ -57,6 +52,16 @@ MonoBehaviour:
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d643c4628233bba4da4a8b8a9060376b
     m_Address: "\u5171\u901ASE/SE_\u9078\u629E_\u623B\u308B\u30FB\u30AD\u30E3\u30F3\u30BB\u30EB"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec78988348c972646ac606677ca13b26
+    m_Address: "\u30EA\u30B6\u30EB\u30C8\u753B\u9762"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f6e56befc61b51c44851e22b2505c1d1
+    m_Address: OP
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0

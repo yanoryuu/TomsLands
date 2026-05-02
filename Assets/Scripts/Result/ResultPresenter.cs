@@ -66,6 +66,8 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     {
         Debug.Log("[ResultPresenter] Entry: Building result statistics...");
 
+        SoundManager.Instance?.PlayBGM("リザルト画面");
+
         var statistics = _resultModel.BuildStatistics();
 
         if (_resultView != null)

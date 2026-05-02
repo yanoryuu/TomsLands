@@ -22,6 +22,7 @@ public class TitlePresenter : IStartable, IDisposable
 
     public void Start()
     {
+        SoundManager.Instance?.PlayBGM("OP");
         _titleView.SetContinueButtonVisible(SaveSystem.Exists());
         Bind();
     }
