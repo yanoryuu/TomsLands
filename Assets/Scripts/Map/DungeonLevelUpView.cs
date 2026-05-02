@@ -1,37 +1,109 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using R3;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ダンジョンレベルアップ画面のView。
-/// スクロールリストにダンジョンスロットを生成し、閉じるボタンを提供する。
-/// </summary>
 public class DungeonLevelUpView : MonoBehaviour
 {
-    [Header("Content")]
-    [SerializeField] private Transform slotContainer;
+    [Header("スロットリスト")]
+    [SerializeField] private Transform  slotContainer;
     [SerializeField] private GameObject dungeonLevelUpSlotPrefab;
 
-    [Header("Buttons")]
-    [SerializeField] private Button closeButton;
+    [Header("詳細パネル")]
+    [SerializeField] private TextMeshProUGUI detailDungeonNameText;
+    [SerializeField] private TextMeshProUGUI detailLevelText;
+    [SerializeField] private TextMeshProUGUI detailRewardText;
 
-    /// <summary>閉じるボタンが押された</summary>
+    [Header("モンスター表示")]
+    [SerializeField] private Transform  currentMonsterContainer;
+    [SerializeField] private Transform  nextMonsterContainer;
+    [SerializeField] private GameObject dungeonMonsterSlotPrefab;
+
+    [Header("ボタン・セリフ")]
+    [SerializeField] private Button          closeButton;
+    [SerializeField] private Button          characterButton;
+    [SerializeField] private TextMeshProUGUI dialogueText;
+
     public Subject<Unit> OnCloseRequested { get; } = new();
+    public Subject<Unit> OnCharacterClicked { get; } = new();
 
-    private readonly List<DungeonLevelUpSlot> activeSlots = new();
+    private readonly List<DungeonLevelUpSlot> activeSlots           = new();
+    private readonly List<GameObject>         currentMonsterObjects = new();
+    private readonly List<GameObject>         nextMonsterObjects    = new();
 
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+        if (characterButton != null)
+            characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
         EnsureSingleColumnLayout();
     }
 
-    /// <summary>
-    /// slotContainer のレイアウトを1列に強制する。
-    /// GridLayoutGroup が付いていれば constraintCount=1 に設定し、
-    /// 何も無ければ VerticalLayoutGroup を追加する。
-    /// </summary>
+    public void ShowDialogue(string message)
+    {
+        if (dialogueText != null) dialogueText.text = message;
+    }
+
+    public void ShowDungeonDetail(DungeonLevelUpDetailData detail)
+    {
+        if (detailDungeonNameText) detailDungeonNameText.text = detail.DungeonName;
+        if (detailLevelText)       detailLevelText.text       = detail.LevelText;
+        if (detailRewardText)      detailRewardText.text      = detail.RewardText;
+
+        PopulateMonsterContainer(currentMonsterContainer, currentMonsterObjects, detail.CurrentMonsters);
+        PopulateMonsterContainer(nextMonsterContainer,    nextMonsterObjects,    detail.NextMonsters);
+    }
+
+    public void ClearDungeonDetail()
+    {
+        if (detailDungeonNameText) detailDungeonNameText.text = string.Empty;
+        if (detailLevelText)       detailLevelText.text       = string.Empty;
+        if (detailRewardText)      detailRewardText.text      = string.Empty;
+
+        ClearMonsterObjects(currentMonsterObjects);
+        ClearMonsterObjects(nextMonsterObjects);
+    }
+
+    public List<DungeonLevelUpSlot> PopulateDungeonList(List<DungeonLevelUpSlotData> dungeons)
+    {
+        foreach (var slot in activeSlots)
+            if (slot != null) Destroy(slot.gameObject);
+        activeSlots.Clear();
+
+        var slots = new List<DungeonLevelUpSlot>();
+        foreach (var dungeon in dungeons)
+        {
+            var go   = Instantiate(dungeonLevelUpSlotPrefab, slotContainer);
+            var slot = go.GetComponent<DungeonLevelUpSlot>();
+            slot.SetSlot(dungeon);
+            slots.Add(slot);
+            activeSlots.Add(slot);
+        }
+        return slots;
+    }
+
+    private void PopulateMonsterContainer(Transform container, List<GameObject> objectList, List<EnemyData> monsters)
+    {
+        ClearMonsterObjects(objectList);
+        if (container == null || dungeonMonsterSlotPrefab == null || monsters == null) return;
+
+        foreach (var monster in monsters)
+        {
+            if (monster == null) continue;
+            var go = Instantiate(dungeonMonsterSlotPrefab, container);
+            go.GetComponent<DungeonMonsterSlot>().SetMonsterData(monster);
+            objectList.Add(go);
+        }
+    }
+
+    private static void ClearMonsterObjects(List<GameObject> objectList)
+    {
+        foreach (var go in objectList)
+            if (go != null) Destroy(go);
+        objectList.Clear();
+    }
+
     private void EnsureSingleColumnLayout()
     {
         if (slotContainer == null) return;
@@ -39,59 +111,28 @@ public class DungeonLevelUpView : MonoBehaviour
         var grid = slotContainer.GetComponent<GridLayoutGroup>();
         if (grid != null)
         {
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraint      = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 1;
             return;
         }
 
-        // VerticalLayoutGroup が無ければ追加
         if (slotContainer.GetComponent<VerticalLayoutGroup>() == null)
         {
             var vlg = slotContainer.gameObject.AddComponent<VerticalLayoutGroup>();
-            vlg.childControlWidth = true;
-            vlg.childControlHeight = false;
-            vlg.childForceExpandWidth = true;
+            vlg.childControlWidth      = true;
+            vlg.childControlHeight     = false;
+            vlg.childForceExpandWidth  = true;
             vlg.childForceExpandHeight = false;
             vlg.spacing = 8f;
         }
     }
-
-    /// <summary>
-    /// ダンジョン一覧からスロットを生成して返す。
-    /// </summary>
-    public List<DungeonLevelUpSlot> PopulateDungeonList(List<DungeonData> dungeons)
-    {
-        // 既存スロットを破棄
-        foreach (var slot in activeSlots)
-        {
-            if (slot != null) Destroy(slot.gameObject);
-        }
-        activeSlots.Clear();
-
-        var slots = new List<DungeonLevelUpSlot>();
-
-        foreach (var dungeon in dungeons)
-        {
-            var go = Instantiate(dungeonLevelUpSlotPrefab, slotContainer);
-            var slot = go.GetComponent<DungeonLevelUpSlot>();
-
-            int cost = dungeon.levelUpCost;
-            bool isMax = dungeon.currentDungeonLevel >= GameConst.MaxDungeonLevel;
-
-            slot.SetSlot(
-                dungeon.key,
-                dungeon.dungeonName,
-                dungeon.dungeonIcon,
-                dungeon.currentDungeonLevel,
-                cost,
-                isMax
-            );
-
-            slots.Add(slot);
-            activeSlots.Add(slot);
-        }
-
-        return slots;
-    }
 }
 
+public class DungeonLevelUpDetailData
+{
+    public string          DungeonName;
+    public string          LevelText;
+    public string          RewardText;
+    public List<EnemyData> CurrentMonsters;
+    public List<EnemyData> NextMonsters;
+}

@@ -3,6 +3,7 @@ using UnityEngine;
 public class GamePanelManager : MonoBehaviour
 {
     [SerializeField] private GameObject tomsShopPanel;
+    [SerializeField] private GameObject heroPanel;
     [SerializeField] private GameObject mapPanel;
     [SerializeField] private GameObject settingPanel;
     [SerializeField] private GameObject blackSmithPanel;
@@ -22,6 +23,7 @@ public class GamePanelManager : MonoBehaviour
     private void HideAll()
     {
         tomsShopPanel.SetActive(false);
+        if (heroPanel != null) heroPanel.SetActive(false);
         blackSmithPanel.SetActive(false);
         toolShopPanel.SetActive(false);
         infoBrokerPanel.SetActive(false);
@@ -72,6 +74,10 @@ public class GamePanelManager : MonoBehaviour
         {
             case TomsShopGamePhase.Shop:
                 tomsShopPanel.SetActive(true);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.Hero:
+                if (heroPanel != null) heroPanel.SetActive(true);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.BlackSmith:

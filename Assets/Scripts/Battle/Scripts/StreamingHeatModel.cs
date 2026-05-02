@@ -14,18 +14,20 @@ public class StreamingHeatModel
     public const float MinHeat = 0f;
     public const float MaxHeat = 100f;
 
-    // ティア境界値
-    private const float TierColdMax   = 25f;
-    private const float TierNormalMax = 50f;
-    private const float TierHotMax    = 75f;
-    // 75〜100 = 超人気
+    private readonly BattlePriceSettings _settings;
 
     // ─────────────────────────────────────────
     //  プロパティ
     // ─────────────────────────────────────────
 
     /// <summary>現在の配信熱（0〜100）。UI購読用。</summary>
-    public ReactiveProperty<float> Heat { get; } = new ReactiveProperty<float>(30f);
+    public ReactiveProperty<float> Heat { get; }
+
+    public StreamingHeatModel(BattlePriceSettings settings = null)
+    {
+        _settings = settings;
+        Heat = new ReactiveProperty<float>(Mathf.Clamp(GetInitialHeat(), MinHeat, MaxHeat));
+    }
 
     // ─────────────────────────────────────────
     //  熱量変更
@@ -38,9 +40,9 @@ public class StreamingHeatModel
     }
 
     /// <summary>ターン終了時の自然減衰。毎ターン呼ぶ。</summary>
-    public void ApplyTurnDecay(float decay = 5f)
+    public void ApplyTurnDecay()
     {
-        AddHeat(-decay);
+        AddHeat(-GetHeatTurnDecay());
     }
 
     // ─────────────────────────────────────────
@@ -54,10 +56,10 @@ public class StreamingHeatModel
     public float GetPriceMultiplier()
     {
         float h = Heat.Value;
-        if (h < TierColdMax)   return 0.97f; // 冷え冷え → 価格じわ下がり
-        if (h < TierNormalMax) return 1.00f; // 普通     → 変化なし
-        if (h < TierHotMax)    return 1.02f; // 盛り上がり → じわ上昇
-        return 1.05f;                         // 超人気   → 急上昇
+        if (h < GetColdTierMax()) return GetColdPriceMultiplier();
+        if (h < GetNormalTierMax()) return GetNormalPriceMultiplier();
+        if (h < GetHotTierMax()) return GetHotPriceMultiplier();
+        return GetSuperHotPriceMultiplier();
     }
 
     // ─────────────────────────────────────────
@@ -67,9 +69,9 @@ public class StreamingHeatModel
     public string GetTierLabel()
     {
         float h = Heat.Value;
-        if (h < TierColdMax)   return "冷め気味...";
-        if (h < TierNormalMax) return "普通";
-        if (h < TierHotMax)    return "盛り上がり中！";
+        if (h < GetColdTierMax()) return "冷め気味...";
+        if (h < GetNormalTierMax()) return "普通";
+        if (h < GetHotTierMax()) return "盛り上がり中！";
         return "超人気！";
     }
 
@@ -79,26 +81,40 @@ public class StreamingHeatModel
         float h = Heat.Value;
 
         // 冷え(青) ～ 普通(緑)
-        if (h < TierColdMax)
+        float coldTierMax = GetColdTierMax();
+        float normalTierMax = GetNormalTierMax();
+        float hotTierMax = GetHotTierMax();
+
+        if (h < coldTierMax)
             return Color.Lerp(
                 new Color(0.30f, 0.50f, 1.00f),
                 new Color(0.30f, 0.85f, 0.40f),
-                h / TierColdMax);
+                coldTierMax > 0f ? h / coldTierMax : 1f);
 
         // 普通(緑) ～ 盛り上がり(橙)
-        if (h < TierNormalMax)
+        if (h < normalTierMax)
             return Color.Lerp(
                 new Color(0.30f, 0.85f, 0.40f),
                 new Color(1.00f, 0.60f, 0.10f),
-                (h - TierColdMax) / (TierNormalMax - TierColdMax));
+                Mathf.InverseLerp(coldTierMax, normalTierMax, h));
 
         // 盛り上がり(橙) ～ 超人気(赤)
-        if (h < TierHotMax)
+        if (h < hotTierMax)
             return Color.Lerp(
                 new Color(1.00f, 0.60f, 0.10f),
                 new Color(1.00f, 0.20f, 0.20f),
-                (h - TierNormalMax) / (TierHotMax - TierNormalMax));
+                Mathf.InverseLerp(normalTierMax, hotTierMax, h));
 
         return new Color(1.00f, 0.10f, 0.10f);
     }
+
+    private float GetInitialHeat() => _settings != null ? _settings.initialHeat : 30f;
+    private float GetHeatTurnDecay() => _settings != null ? _settings.heatTurnDecay : 5f;
+    private float GetColdTierMax() => _settings != null ? _settings.coldTierMax : 25f;
+    private float GetNormalTierMax() => _settings != null ? _settings.normalTierMax : 50f;
+    private float GetHotTierMax() => _settings != null ? _settings.hotTierMax : 75f;
+    private float GetColdPriceMultiplier() => _settings != null ? _settings.coldPriceMultiplier : 0.97f;
+    private float GetNormalPriceMultiplier() => _settings != null ? _settings.normalPriceMultiplier : 1.00f;
+    private float GetHotPriceMultiplier() => _settings != null ? _settings.hotPriceMultiplier : 1.02f;
+    private float GetSuperHotPriceMultiplier() => _settings != null ? _settings.superHotPriceMultiplier : 1.05f;
 }

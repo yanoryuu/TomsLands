@@ -7,6 +7,8 @@
 public class HeroSaveData
 {
     public int level;
+    public int experience;
+    public int expToNextLevel;
     public int hp;
     public int mp;
     public string weaponId;

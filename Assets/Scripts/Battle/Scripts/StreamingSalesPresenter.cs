@@ -15,6 +15,8 @@ public class StreamingSalesPresenter : IDisposable
 
     public void Bind()
     {
+        SoundManager.Instance?.PlayBGM("配信フェーズ");
+
         // Modelの総売上が変更されたら、自動的にViewの表示を更新するように購読
         model.TotalSales
             .Subscribe(amount => view.UpdateTotalSales(amount))

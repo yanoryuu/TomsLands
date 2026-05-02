@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
     
 public class HeroLevelDataLoader
@@ -40,5 +41,10 @@ public class HeroLevelDataLoader
     public HeroLevelData GetLevelData(int level)
     {
         return _levelDataMap.TryGetValue(level, out var data) ? data : null;
+    }
+
+    public int GetMaxLevel()
+    {
+        return _levelDataMap.Count > 0 ? _levelDataMap.Keys.Max() : 1;
     }
 }

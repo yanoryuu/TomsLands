@@ -102,6 +102,7 @@ public class DungeonRepository : MonoBehaviour
             var d = new DungeonData(so);
             d.currentDungeonLevel = sd.currentDungeonLevel; // セーブ値で上書き
             d.dungeonStatus = sd.dungeonStatus;             // セーブ値で上書き
+            d.isShowedInfo = sd.isShowedInfo;               // セーブ値で上書き
             rebuilt.Add(d);
         }
 

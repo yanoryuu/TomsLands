@@ -16,6 +16,9 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
     [SerializeField] private Image itemIcon;
 
+    [Header("おすすめ陳列")]
+    [SerializeField] private Button autoDisplayButton;
+
     [Header("陳列パネル")]
     [SerializeField] private Transform displayListParent;
     [SerializeField] private GameObject itemDisplaySlotPrefab;
@@ -27,14 +30,17 @@ public class ItemSelectionView : MonoBehaviour
     private readonly List<GameObject> activeSlots = new();
     public Subject<Unit> OnArmorPanelRequested { get; private set; } = new();
     public Subject<Unit> OnWeaponPanelRequested { get; private set; } = new();
+    public Subject<Unit> OnAutoDisplayRequested { get; private set; } = new();
 
     private readonly Dictionary<string, ItemDisplaySlot> displaySlots = new();
 
     private void Awake()
     {
-        closeButton.onClick.AddListener(() =>OnCloseRequested.OnNext(Unit.Default));
+        closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         armorPanelButton.onClick.AddListener(() => OnArmorPanelRequested.OnNext(Unit.Default));
         weaponPanelButton.onClick.AddListener(() => OnWeaponPanelRequested.OnNext(Unit.Default));
+        if (autoDisplayButton != null)
+            autoDisplayButton.onClick.AddListener(() => OnAutoDisplayRequested.OnNext(Unit.Default));
     }
 
     public void SetDescription(string description, Sprite icon)

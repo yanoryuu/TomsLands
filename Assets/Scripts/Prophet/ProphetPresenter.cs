@@ -14,6 +14,8 @@ public class ProphetPresenter : IDisposable, IStartable
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
     private readonly CompositeDisposable disposables = new();
+    private string currentDialogue = string.Empty;
+    private int characterTalkIndex;
 
     public ProphetPresenter(
         ProphetView prophetView,
@@ -39,21 +41,34 @@ public class ProphetPresenter : IDisposable, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
             .AddTo(disposables);
 
+        prophetView.OnCharacterClicked
+            .Subscribe(_ => ShowCharacterTalk())
+            .AddTo(disposables);
+
         prophetView.OnRowHoverEnter
             .Subscribe(id => prophetView.ShowDialogue(ProphetDialogueLoader.Get(id)))
             .AddTo(disposables);
 
         prophetView.OnRowHoverExit
-            .Subscribe(_ => prophetView.ShowDialogue(ProphetDialogueLoader.GetDefault()))
+            .Subscribe(_ => prophetView.ShowDialogue(currentDialogue))
             .AddTo(disposables);
     }
 
     private void Entry()
     {
-        prophetView.ShowDialogue(ProphetDialogueLoader.GetDefault());
+        characterTalkIndex = 0;
+        currentDialogue = ProphetDialogueLoader.GetDefault();
+        prophetView.ShowDialogue(currentDialogue);
         ShowTrend();
         ShowPriceRanking();
         ShowDungeonInfo();
+    }
+
+    private void ShowCharacterTalk()
+    {
+        characterTalkIndex = (characterTalkIndex % 3) + 1;
+        currentDialogue = ProphetDialogueLoader.Get($"character_talk_{characterTalkIndex}");
+        prophetView.ShowDialogue(currentDialogue);
     }
 
     // トレンド上位3件をTrend値降順で表示

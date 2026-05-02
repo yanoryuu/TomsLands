@@ -25,7 +25,7 @@ MonoBehaviour:
   victoryAttributeDemandUp: 0.15
   defeatAttributeDemandDown: 0.15
   displayDemandUp: 0.03
-  notDisplayDemandDown: 0.03
+  notDisplayDemandDown: 0
   demandFloor: 0.05
   demandCeiling: 1
   trustFloorBoost: 0.4

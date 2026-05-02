@@ -20,6 +20,16 @@ public class TurnEndSummaryView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI totalSoldCountText;
     [SerializeField] private TextMeshProUGUI daysUntilBattleText;
 
+    [Header("ターン評価")]
+    [SerializeField] private UnityEngine.UI.Image gradeImage;
+    [SerializeField] private TextMeshProUGUI gradeCommentText;
+    [SerializeField] private Sprite gradeS;
+    [SerializeField] private Sprite gradeA;
+    [SerializeField] private Sprite gradeB;
+    [SerializeField] private Sprite gradeC;
+    [SerializeField] private Sprite gradeD;
+    [SerializeField] private Sprite gradeE;
+
     [Header("Confirm Button")]
     [SerializeField] private Button confirmButton;
 
@@ -39,6 +49,25 @@ public class TurnEndSummaryView : MonoBehaviour
     /// <summary>
     /// サマリーの内容を更新する
     /// </summary>
+    public void ShowGrade(TurnGrade grade, string comment)
+    {
+        if (gradeImage != null)
+        {
+            gradeImage.sprite = grade switch
+            {
+                TurnGrade.S => gradeS,
+                TurnGrade.A => gradeA,
+                TurnGrade.B => gradeB,
+                TurnGrade.C => gradeC,
+                TurnGrade.D => gradeD,
+                _           => gradeE,
+            };
+        }
+
+        if (gradeCommentText != null)
+            gradeCommentText.text = comment;
+    }
+
     public void UpdateContent(List<TurnEndSummaryItemData> items, int totalRevenue, int totalSoldCount, int daysUntilBattle)
     {
         // 既存の行をクリア

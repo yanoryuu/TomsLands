@@ -1,11 +1,13 @@
+using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class TomsShopView : MonoBehaviour
 {
-    
+
     [SerializeField] private Button BlaskSmithButton;
+    [SerializeField] private Button HeroButton;
     [SerializeField] private Button SetItemButton;
     [SerializeField] private Button InfoButton;
     [SerializeField] private Button ToolButton;
@@ -17,9 +19,16 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button ProphetButton;
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
+
+    [Header("需要ダッシュボード")]
+    [SerializeField] private Button DashboardButton;
+
+    [Header("机の陳列")]
+    [SerializeField] private ShopDeskDisplay shopDeskDisplay;
     
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
+    public Subject<Unit> OnHeroClicked { get; } = new();
     //商品を陳列
     public Subject<Unit> OnSetItemClicked { get; } = new();
     //情報屋を開く
@@ -38,10 +47,14 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnProphetClicked { get; } = new();
     //次のターンに進む
     public Subject<Unit> OnNextTurnClicked { get; } = new();
+    //需要ダッシュボードを開く
+    public Subject<Unit> OnDashboardClicked { get; } = new();
 
     public void Awake()
     {
         BlaskSmithButton.onClick.AddListener(() => OnBlacksmithClicked.OnNext(Unit.Default));
+        if (HeroButton != null)
+            HeroButton.onClick.AddListener(() => OnHeroClicked.OnNext(Unit.Default));
         SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
         InfoButton.onClick.AddListener(() => OnInfoClicked.OnNext(Unit.Default));
         ToolButton.onClick.AddListener(() => OnToolClicked.OnNext(Unit.Default));
@@ -53,11 +66,18 @@ public class TomsShopView : MonoBehaviour
         if (ProphetButton != null)
             ProphetButton.onClick.AddListener(() => OnProphetClicked.OnNext(Unit.Default));
         NextTurnButton.onClick.AddListener(() => OnNextTurnClicked.OnNext(Unit.Default));
+        if (DashboardButton != null)
+            DashboardButton.onClick.AddListener(() => OnDashboardClicked.OnNext(Unit.Default));
     }
 
     public void Initialize()
     {
-        
+
+    }
+
+    public void RefreshDeskDisplay(List<RuntimeItemData> runtimeItems)
+    {
+        shopDeskDisplay?.RefreshDisplay(runtimeItems);
     }
 
 

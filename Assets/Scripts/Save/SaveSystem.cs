@@ -23,7 +23,8 @@ public static class SaveSystem
             {
                 dungeonKey = d.dungeonName,
                 currentDungeonLevel = d.currentDungeonLevel,
-                dungeonStatus = d.dungeonStatus
+                dungeonStatus = d.dungeonStatus,
+                isShowedInfo = d.isShowedInfo
             });
         }
 
@@ -75,6 +76,19 @@ public static class SaveSystem
             }
             return false;
         }
+    }
+
+    public static bool Exists() => File.Exists(SavePath);
+
+    public static void Delete()
+    {
+        foreach (var path in new[] { SavePath, TempPath, BackupPath })
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+#if UNITY_EDITOR
+        Debug.Log("[SaveSystem] Save data deleted.");
+#endif
     }
 
     // 一時ファイル→置換の疑似アトミック書き込み

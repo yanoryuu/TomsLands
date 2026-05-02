@@ -312,14 +312,13 @@ RectTransform:
   m_GameObject: {fileID: 5089074007805009402}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5182127502018053243}
   - {fileID: 6937097259541059769}
   - {fileID: 6039633281705814722}
   - {fileID: 5554333403661673190}
-  - {fileID: 5616965510675189455}
   - {fileID: 4422684572393464766}
   - {fileID: 44526119443220585}
   - {fileID: 6319486736434479092}
@@ -346,6 +345,7 @@ MonoBehaviour:
   dungeonNameText: {fileID: 5697622411917762094}
   currentLevelText: {fileID: 4553052038845360169}
   costText: {fileID: 9178456876128936190}
+  selectButton: {fileID: 6512253096091875830}
   levelUpButton: {fileID: 8510161525874010874}
   levelUpButtonText: {fileID: 390252889380970171}
 --- !u!1 &5657735524956034726
@@ -376,15 +376,16 @@ RectTransform:
   m_GameObject: {fileID: 5657735524956034726}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 1
-  m_Children: []
+  m_Children:
+  - {fileID: 5616965510675189455}
   m_Father: {fileID: 5014929244807787011}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 176.4, y: -21.1}
-  m_SizeDelta: {x: 73, y: 38}
+  m_AnchoredPosition: {x: 116.1, y: -29.3}
+  m_SizeDelta: {x: 620, y: 125}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &798189334656901850
 CanvasRenderer:
@@ -414,8 +415,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -2390414305733435423, guid: 980ba67b75d544b2fa8bbe1d5463c5a1, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 8464668628180671850, guid: 9532e92bfa422104192d347e3c0cc046, type: 3}
+  m_Type: 1
   m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
@@ -886,15 +887,15 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7415108383490981060}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 8.058845}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 26.862814}
+  m_LocalScale: {x: 3.333333, y: 3.333333, z: 3.333333}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 5014929244807787011}
+  m_Father: {fileID: 6319486736434479092}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 76.8, y: -17.4}
+  m_AnchoredPosition: {x: 34.000122, y: 23.333315}
   m_SizeDelta: {x: 157.5, y: 20.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7195390883843137345
@@ -934,8 +935,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4285639393
-  m_fontColor: {r: 0.88235295, g: 0.6666667, b: 0.44313726, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

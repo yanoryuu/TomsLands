@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,4 +11,4 @@ public static class EditorScreenshot
         var savePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + $"\\Screenshot{now.ToFileTime()}.png";
         ScreenCapture.CaptureScreenshot(savePath);
     }
-}
+}*/

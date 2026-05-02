@@ -59,7 +59,8 @@ public static class StatusDescriptionLoader
                 continue;
             }
 
-            _cache[type] = (columns[1].Trim(), columns[2].Trim());
+            var msg = columns[2].Trim().Replace("\\n", "\n");
+            _cache[type] = (columns[1].Trim(), msg);
         }
 
         Debug.Log($"[StatusDescriptionLoader] Loaded {_cache.Count} status descriptions.");

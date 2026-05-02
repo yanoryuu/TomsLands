@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Ad_SNS
   m_EditorClassIdentifier: 
   advertisementName: "SNS\u5E83\u544A"
-  icon: {fileID: -6239665522273766676, guid: acf1ad346f434485188b62d6dbfd7897, type: 3}
-  selectedBackground: {fileID: 1922632494855408113, guid: bf8270235a42442f39968a6d7fa17b82, type: 3}
+  icon: {fileID: -383429797838547754, guid: df7fac4807b58444c9d37ccc35e116b4, type: 3}
+  selectedBackground: {fileID: -1843028302627794106, guid: 2f0b892e10da27e43847221aca56d1e3, type: 3}
   cost: 1000
   trustGain: 0
   attentionGain: 40

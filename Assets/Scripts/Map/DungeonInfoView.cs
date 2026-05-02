@@ -53,10 +53,9 @@ public class DungeonInfoView : MonoBehaviour
         
         if (d.isShowedInfo)
         {
-            // 情報購入済み：実際のデータを表示
             dungeonDescriptionText.text = d.dungeonDescription;
             dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
-            dungeonRewardText.text = d.rewardGold.ToString();
+            dungeonRewardText.text = $"クリア報酬：{d.rewardGold.ToString()}G";
         }
         else
         {

@@ -1,0 +1,73 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_GUID: 37e73f14ccb9bc2439468569d55785d5
+  m_SerializeEntries:
+  - m_GUID: 073ebb884d5da4f4a96cc1f750b28f94
+    m_Address: Assets/Sounds/SoundLibrary.asset
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 07ea969672c25d64ba4e641b173aabf4
+    m_Address: "\u901A\u5E38\u55B6\u696D"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 35b924f34c8891445b04b4a018529ba6
+    m_Address: "\u5171\u901ASE/SE_\u9078\u629E_\u6C7A\u5B9A"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5458e0fabf225ff469428b017677f623
+    m_Address: "\u55B6\u696D/SE_\u4ED5\u5165\u308C\u5B8C\u4E86"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6bd8bc3f65541e14f94ade0432351e2d
+    m_Address: "\u55B6\u696D/SE_\u958B\u767A\u958B\u59CB"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 770826da944cbe64e9184eb124e48090
+    m_Address: "\u55B6\u696D/SE_\u6570\u306E\u5897\u6E1B"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b3004b592a917714ca96ab83421c56cf
+    m_Address: "\u55B6\u696D/SE_\u958B\u767A\u5B8C\u4E86"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c04a16a0e1c9e944fb9792a2ed28d9d3
+    m_Address: "\u914D\u4FE1\u30D5\u30A7\u30FC\u30BA"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d643c4628233bba4da4a8b8a9060376b
+    m_Address: "\u5171\u901ASE/SE_\u9078\u629E_\u623B\u308B\u30FB\u30AD\u30E3\u30F3\u30BB\u30EB"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fd24f4a7347a7f142acf1d59895fedfa
+    m_Address: "\u55B6\u696D/SE_\u58F2\u4E0A\u97F3"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: b669e2faec2592e47a80d19a7080fcc5, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 23302e2b81b1c664093ae80a77292b04, type: 2}
+    - {fileID: 11400000, guid: ee809af1783fbe342bedb6111f7f743a, type: 2}

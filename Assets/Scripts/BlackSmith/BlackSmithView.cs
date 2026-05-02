@@ -26,8 +26,13 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Button developButton;
     [SerializeField] private Button specialWeaponButton;
 
+    [Header("オート購入")]
+    [SerializeField] private Button autoBuyButton;
+    [SerializeField] private TMPro.TextMeshProUGUI autoBuyResultText;
+
     [Header("Dialogue")]
     [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private Button characterButton;
 
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
@@ -42,6 +47,8 @@ public class BlackSmithView : MonoBehaviour
     public Subject<Unit> OnCloseRequested { get; private set; } = new();
     public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
+    public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
+    public Subject<Unit> OnCharacterClicked { get; private set; } = new();
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
@@ -59,6 +66,12 @@ public class BlackSmithView : MonoBehaviour
 
         if (levelUpButton)
             levelUpButton.onClick.AddListener(() => OnLevelUpRequested.OnNext(Unit.Default));
+
+        if (autoBuyButton != null)
+            autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
+
+        if (characterButton != null)
+            characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
 
         // 開発パネルは初期非表示
         if (developmentPanel)
@@ -117,6 +130,27 @@ public class BlackSmithView : MonoBehaviour
     public void SetDescription(string description)
     {
         if (itemDescriptionText != null) itemDescriptionText.text = description;
+    }
+
+    public void ShowAutoBuyResult(List<AutoPurchaseResult> results, int playerMoney)
+    {
+        if (autoBuyResultText == null) return;
+
+        if (results == null || results.Count == 0)
+        {
+            autoBuyResultText.text = "購入できるアイテムがありません";
+            return;
+        }
+
+        int total = 0;
+        var sb = new System.Text.StringBuilder("【オート購入】\n");
+        foreach (var r in results)
+        {
+            sb.AppendLine($"  {r.ItemName} ×{r.Quantity}  {r.TotalCost}G");
+            total += r.TotalCost;
+        }
+        sb.Append($"合計 {total}G  残金 {playerMoney}G");
+        autoBuyResultText.text = sb.ToString();
     }
 
     public void SortItemTab(BlackSmithTab type)

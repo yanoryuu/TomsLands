@@ -21,6 +21,12 @@ public class TitleView : MonoBehaviour
         Bind();
     }
 
+    public void SetContinueButtonVisible(bool visible)
+    {
+        if (loadGameButton != null)
+            loadGameButton.gameObject.SetActive(visible);
+    }
+
     private void Bind()
     {
         titleIcon.transform.DOScale(new Vector3(7.3f,7.3f,1),1f)

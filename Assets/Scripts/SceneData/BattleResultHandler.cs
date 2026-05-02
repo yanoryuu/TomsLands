@@ -15,6 +15,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly GameFlowManager _gameFlowManager;
     private readonly ShopEconomySettings _economySettings;
     private readonly TomsModel _tomsModel;
+    private readonly HeroModel _heroModel;
 
     public BattleResultHandler(
         BattleOutputData outputData,
@@ -23,7 +24,8 @@ public class BattleResultHandler : IStartable, IDisposable
         StateManager stateManager,
         GameFlowManager gameFlowManager,
         ShopEconomySettings economySettings,
-        TomsModel tomsModel)
+        TomsModel tomsModel,
+        HeroModel heroModel)
     {
         _outputData = outputData;
         _inputData = inputData;
@@ -32,6 +34,7 @@ public class BattleResultHandler : IStartable, IDisposable
         _gameFlowManager = gameFlowManager;
         _economySettings = economySettings;
         _tomsModel = tomsModel;
+        _heroModel = heroModel;
     }
 
     public void Start()
@@ -79,6 +82,14 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log("[BattleResultHandler] Defeat penalties applied.");
         }
 
+        int gainedExp = _outputData.DefeatedMobCount * GameConst.HeroExpPerMob
+                      + _outputData.DefeatedBossCount * GameConst.HeroExpPerBoss;
+        if (gainedExp > 0)
+        {
+            int levelUps = _heroModel.AddExperience(gainedExp);
+            Debug.Log($"[BattleResultHandler] Hero gained EXP: {gainedExp} (mobs={_outputData.DefeatedMobCount}, bosses={_outputData.DefeatedBossCount}, levelUps={levelUps})");
+        }
+
         // --- 案D1: 戦闘結果の属性波及 ---
         // 使用装備と同属性の全アイテムに需要を緩やかに波及させる
         var usedItemIds = new System.Collections.Generic.List<string>();
@@ -96,6 +107,9 @@ public class BattleResultHandler : IStartable, IDisposable
 
         // 結果をクリア（次回の戦闘まで誤発火しないように）
         _outputData.Clear();
+
+        // 戦闘結果（在庫減少・需要/価格変動）を永続化
+        _itemModel.SaveData();
 
         // 戦闘結果処理後、次のターンへ進む
         _gameFlowManager.NextTurn();

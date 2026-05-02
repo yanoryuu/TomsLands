@@ -188,6 +188,16 @@ public class InfoBrokerModel
         }
     }
 
+    public string GetHeroInfluenceSummary()
+    {
+        RefreshHeroData();
+
+        string weaponName = currentHeroData?.weaponName.Value ?? "";
+        string armorName = currentHeroData?.armorName.Value ?? "";
+        var settings = Resources.Load<BattlePriceSettings>("BattlePriceSettings");
+        return HeroBattleInfluence.BuildSummary(currentHeroData, weaponName, armorName, settings);
+    }
+
     /// <summary>
     /// ?E??????w??????
     /// </summary>

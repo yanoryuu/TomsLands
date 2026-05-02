@@ -35,6 +35,11 @@ public class PopUpView : MonoBehaviour
     {
         if (popUpManager == null)
         {
+            popUpManager = PopUpManager.ActiveManager;
+        }
+
+        if (popUpManager == null)
+        {
             Debug.LogError("[PopUpView] PopUpManager が注入されていません。PopupLifetimeScope の設定を確認してください。");
             return;
         }

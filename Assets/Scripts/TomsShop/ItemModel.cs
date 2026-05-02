@@ -27,7 +27,7 @@ public class ItemModel
     public void PurchaseItem(string itemId, int quantity)
     {
         var item = GetRuntimeItem(itemId);
-        if (item != null) item.Stock.Value += quantity;
+        if (item != null) item.UpdateStock(item.Stock.Value + quantity);
     }
 
     public void SellItem(string itemId, int quantity)
@@ -43,6 +43,11 @@ public class ItemModel
         if (item != null && item.Stock.Value >= quantity)
         {
             item.Stock.Value -= quantity;
+            if (item.Stock.Value <= 0)
+            {
+                item.IsDisplay.Value = false;
+                item.DisplayStock.Value = 0;
+            }
         }
         else
         {
@@ -252,10 +257,11 @@ public class ItemModel
         // ------------------------------------------------
         // Step 0: 広告ステータスの正規化（status==null なら全部 0 → 中性化）
         // ------------------------------------------------
-        float trustN     = (status != null) ? Mathf.Clamp01(status.Trust.Value     / 100f) : 0f;
-        float attentionN = (status != null) ? Mathf.Clamp01(status.Attention.Value / 100f) : 0f;
-        float spreadN    = (status != null) ? Mathf.Clamp01(status.Spread.Value    / 100f) : 0f;
-        float retentionN = (status != null) ? Mathf.Clamp01(status.Retention.Value / 100f) : 0f;
+        float statMax    = (status != null) ? Mathf.Max(1f, status.StatMax) : 100f;
+        float trustN     = (status != null) ? Mathf.Clamp01(status.Trust.Value     / statMax) : 0f;
+        float attentionN = (status != null) ? Mathf.Clamp01(status.Attention.Value / statMax) : 0f;
+        float spreadN    = (status != null) ? Mathf.Clamp01(status.Spread.Value    / statMax) : 0f;
+        float retentionN = (status != null) ? Mathf.Clamp01(status.Retention.Value / statMax) : 0f;
         int   followers  = (status != null) ? Mathf.Max(0, status.Followers.Value) : 0;
 
         // ------------------------------------------------
@@ -385,6 +391,89 @@ public class ItemModel
         }
     }
 
+    // ========================================
+    // ① オート購入
+    // ========================================
+
+    /// <summary>
+    /// 予算内で需要×SalesRateが高い順にアイテムを自動購入する。
+    /// </summary>
+    public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel)
+    {
+        var results = new List<AutoPurchaseResult>();
+        int remaining = Mathf.Min(budget, tomsModel.PlayerMoney.Value);
+
+        var candidates = RuntimeItems
+            .Where(r => r.RequiredLevel.Value <= blacksmithLevel
+                     && r.RemainToMax() > 0
+                     && r.CurrentPrice.Value > 0)
+            .OrderByDescending(r => r.Demand.Value * r.SalesRate)
+            .ToList();
+
+        foreach (var item in candidates)
+        {
+            if (remaining <= 0) break;
+            int canBuy = Mathf.Min(remaining / item.CurrentPrice.Value, item.RemainToMax());
+            if (canBuy <= 0) continue;
+
+            int cost = canBuy * item.CurrentPrice.Value;
+            item.UpdateStock(item.Stock.Value + canBuy);
+            tomsModel.PlayerMoney.Value -= cost;
+            remaining -= cost;
+            results.Add(new AutoPurchaseResult(item.ItemId, item.ItemName, canBuy, cost));
+            Debug.Log($"[AutoPurchase] {item.ItemName} ×{canBuy} ({cost}G)");
+        }
+
+        if (results.Count > 0)
+        {
+            SaveData();
+            tomsModel.SavePlayerMoney();
+        }
+        return results;
+    }
+
+    // ========================================
+    // ③ おすすめ陳列
+    // ========================================
+
+    /// <summary>
+    /// 期待収益（需要×価格×SalesRate）が高い順に最大maxSlots枠を自動陳列する。
+    /// </summary>
+    public void AutoSetDisplay(int blacksmithLevel, int maxSlots = 8)
+    {
+        foreach (var r in RuntimeItems)
+            r.IsDisplay.Value = false;
+
+        var top = RuntimeItems
+            .Where(r => r.RequiredLevel.Value <= blacksmithLevel && r.Stock.Value > 0)
+            .OrderByDescending(r => r.Demand.Value * r.CurrentPrice.Value * r.SalesRate)
+            .Take(maxSlots);
+
+        foreach (var item in top)
+        {
+            item.IsDisplay.Value = true;
+            item.DisplayStock.Value = item.Stock.Value;
+            Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={item.Demand.Value * item.CurrentPrice.Value * item.SalesRate:F1})");
+        }
+
+        SaveData();
+    }
+
+    // ========================================
+    // ⑤ ダッシュボード用: 期待収益順リスト取得
+    // ========================================
+
+    /// <summary>
+    /// 全アイテムを期待収益（需要×価格×SalesRate）の降順で返す。
+    /// </summary>
+    public List<RuntimeItemData> GetItemsByExpectedRevenue(int blacksmithLevel)
+    {
+        return RuntimeItems
+            .Where(r => r.RequiredLevel.Value <= blacksmithLevel)
+            .OrderByDescending(r => r.Demand.Value * r.CurrentPrice.Value * r.SalesRate)
+            .ToList();
+    }
+
     //セーブ
     public void SaveData()
     {
@@ -416,7 +505,7 @@ public class ItemModel
                 var master = GetMasterItem(item.itemId);
                 if (master != null)
                 {
-                    if (item.maxStock <= 0) item.maxStock = master.maxStock;
+                    item.maxStock = master.maxStock;
                     if (item.requiredLevel <= 0) item.requiredLevel = master.requiredLevel;
                     if (string.IsNullOrEmpty(item.itemName)) item.itemName = master.itemName;
                 }
@@ -492,7 +581,7 @@ public class ItemModel
     }
     
     //所持数のアイテムの数で選出
-    public List<RuntimeItemData> PickItemRuntimeListForStock(List<RuntimeItemData> runtimeItems　,int minStock=0 ,int maxStock=99)
+    public List<RuntimeItemData> PickItemRuntimeListForStock(List<RuntimeItemData> runtimeItems　,int minStock=0 ,int maxStock=int.MaxValue)
     {
         List<RuntimeItemData> list = new List<RuntimeItemData>();
         foreach (var runtimeItem in runtimeItems)
@@ -515,5 +604,21 @@ public class RuntimeItemDataList
     public RuntimeItemDataList(List<RuntimeItemDataPlain> items)
     {
         this.items = items;
+    }
+}
+
+public class AutoPurchaseResult
+{
+    public string ItemId;
+    public string ItemName;
+    public int Quantity;
+    public int TotalCost;
+
+    public AutoPurchaseResult(string itemId, string itemName, int quantity, int totalCost)
+    {
+        ItemId = itemId;
+        ItemName = itemName;
+        Quantity = quantity;
+        TotalCost = totalCost;
     }
 }

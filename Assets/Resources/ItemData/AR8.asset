@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -18,7 +18,7 @@ MonoBehaviour:
   description: "\u7D14\u7C8B\u306A\u5149\u3092\u7D50\u6676\u5316\u3057\u305F\u6700\u9AD8\u5CF0\u306E\u93A7\u3002\u95C7\u5C5E\u6027\u3078\u306E\u5727\u5012\u7684\u306A\u8010\u6027\u3067\u5149\u5C5E\u6027\u4F7F\u3044\u306E\u5192\u967A\u8005\u304B\u3089\u7D76\u5927\u306A\u652F\u6301\u3092\u5F97\u3066\u3044\u308B\u3002"
   itemIcon: {fileID: 21300000, guid: 44e8e277c7fda428ab8f1d9bf05033c7, type: 3}
   initialStock: 0
-  maxStock: 100
+  maxStock: 99
   initialDisplayStock: 0
   itemType: 1
   itemAttribute: 4

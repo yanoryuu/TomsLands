@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using R3;
+using TMPro;
 
 public class StreamingSettingView : MonoBehaviour
 {
@@ -14,17 +15,41 @@ public class StreamingSettingView : MonoBehaviour
     [Header("確定ボタン")]
     [SerializeField] private Button confirmButton;
 
+    [Header("前回と同じで確定")]
+    [SerializeField] private Button quickConfirmButton;
+    [SerializeField] private TMPro.TextMeshProUGUI quickConfirmLabel;
+
+    [Header("オート陳列")]
+    [SerializeField] private Button autoSelectButton;
+
     public Subject<string> OnItemSelected     { get; } = new Subject<string>();
     public Subject<string> OnItemDeselected   { get; } = new Subject<string>();
     public Subject<(string id, int qty)> OnQuantityChanged { get; } = new Subject<(string, int)>();
     public Subject<Unit> OnConfirmClicked     { get; } = new Subject<Unit>();
+    public Subject<Unit> OnQuickConfirmClicked { get; } = new Subject<Unit>();
+    public Subject<Unit> OnAutoSelectClicked { get; } = new Subject<Unit>();
 
     private void Awake()
     {
         if (confirmButton != null)
-        {
             confirmButton.onClick.AddListener(() => OnConfirmClicked.OnNext(Unit.Default));
-        }
+
+        if (quickConfirmButton != null)
+            quickConfirmButton.onClick.AddListener(() => OnQuickConfirmClicked.OnNext(Unit.Default));
+
+        if (autoSelectButton != null)
+            autoSelectButton.onClick.AddListener(() => OnAutoSelectClicked.OnNext(Unit.Default));
+    }
+
+    /// <summary>
+    /// 読み込まれた前回構成の件数を「前回と同じ」ボタンラベルに反映する
+    /// </summary>
+    public void SetQuickConfirmLabel(int count)
+    {
+        if (quickConfirmLabel != null)
+            quickConfirmLabel.text = count > 0 ? $"前回と同じ ({count}種)" : "前回と同じ";
+        if (quickConfirmButton != null)
+            quickConfirmButton.gameObject.SetActive(count > 0);
     }
 
     public void PopulateAvailable(IEnumerable<RuntimeItemData> items)

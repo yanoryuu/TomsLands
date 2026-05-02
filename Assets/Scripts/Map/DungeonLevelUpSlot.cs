@@ -1,74 +1,78 @@
-﻿using R3;
+using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// ダンジョンレベルアップ画面の1行スロット。
-/// ダンジョン名・レベル・コスト・レベルアップボタンを表示する。
-/// </summary>
 public class DungeonLevelUpSlot : MonoBehaviour
 {
-    [SerializeField] private Image dungeonIconImage;
-    [SerializeField] private TextMeshProUGUI dungeonNameText;
-    [SerializeField] private TextMeshProUGUI currentLevelText;
-    [SerializeField] private TextMeshProUGUI costText;
-    [SerializeField] private Button levelUpButton;
-    [SerializeField] private TextMeshProUGUI levelUpButtonText;
+    [SerializeField] private Image             dungeonIconImage;
+    [SerializeField] private TextMeshProUGUI   dungeonNameText;
+    [SerializeField] private TextMeshProUGUI   currentLevelText;
+    [SerializeField] private TextMeshProUGUI   costText;
+    [SerializeField] private Button            selectButton;
+    [SerializeField] private Button            levelUpButton;
+    [SerializeField] private TextMeshProUGUI   levelUpButtonText;
 
-    /// <summary>このスロットが保持するダンジョンキー</summary>
     public DungeonName DungeonKey { get; private set; }
+    private bool isMaxLevel;
 
-    /// <summary>レベルアップボタンが押された時に発火（DungeonNameを通知）</summary>
     public Subject<DungeonName> OnLevelUpClicked { get; } = new();
+    public Subject<DungeonName> OnSlotSelected   { get; } = new();
 
     private void Awake()
     {
         levelUpButton.onClick.AddListener(() => OnLevelUpClicked.OnNext(DungeonKey));
+        if (selectButton != null)
+            selectButton.onClick.AddListener(() => OnSlotSelected.OnNext(DungeonKey));
     }
 
-    /// <summary>
-    /// スロットの表示を設定する
-    /// </summary>
-    public void SetSlot(DungeonName key, string dungeonName, Sprite icon, int currentLevel, int cost, bool isMaxLevel)
+    public void SetSlot(DungeonLevelUpSlotData data)
     {
-        DungeonKey = key;
+        DungeonKey = data.DungeonKey;
 
-        if (dungeonIconImage) dungeonIconImage.sprite = icon;
-        if (dungeonNameText) dungeonNameText.text = dungeonName;
+        if (dungeonIconImage) dungeonIconImage.sprite = data.Icon;
+        if (dungeonNameText)  dungeonNameText.text    = data.DungeonName;
+        if (costText)         costText.text           = data.IsMaxLevel ? "MAX" : $"{data.Cost}G";
 
-        UpdateLevel(currentLevel, cost, isMaxLevel);
+        UpdateLevel(data.CurrentLevel, data.IsMaxLevel);
+        SetAffordable(data.CanAfford);
     }
 
-    /// <summary>
-    /// レベルとコスト表示を更新する
-    /// </summary>
-    public void UpdateLevel(int currentLevel, int cost, bool isMaxLevel)
+    public void UpdateLevel(int currentLevel, bool maxLevel)
     {
-        if (currentLevelText) currentLevelText.text = $"Lv.{currentLevel}";
+        isMaxLevel = maxLevel;
+
+        if (currentLevelText)
+            currentLevelText.text = $"Lv.{currentLevel}";
 
         if (isMaxLevel)
         {
-            if (costText) costText.text = "MAX";
             if (levelUpButtonText) levelUpButtonText.text = "MAX";
-            levelUpButton.interactable = false;
+            if (levelUpButton)     levelUpButton.interactable = false;
         }
         else
         {
-            if (costText) costText.text = $"{cost}G";
             if (levelUpButtonText) levelUpButtonText.text = "レベルアップ";
-            levelUpButton.interactable = true;
+            if (levelUpButton)     levelUpButton.interactable = true;
         }
     }
 
-    /// <summary>
-    /// 資金不足時にボタンを無効化する
-    /// </summary>
     public void SetAffordable(bool canAfford)
     {
-        // MAX時は常に無効
-        if (!levelUpButton.interactable) return;
+        if (levelUpButton == null || isMaxLevel) return;
         levelUpButton.interactable = canAfford;
     }
 }
 
+public class DungeonLevelUpSlotData
+{
+    public DungeonName DungeonKey;
+    public string      DungeonName;
+    public Sprite      Icon;
+    public int         CurrentLevel;
+    public int         NextLevel;
+    public int         Cost;
+    public int         Shortage;
+    public bool        CanAfford;
+    public bool        IsMaxLevel;
+}

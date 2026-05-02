@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Ad_Influencer
   m_EditorClassIdentifier: 
   advertisementName: "\u30A4\u30F3\u30D5\u30EB\u30A8\u30F3\u30B5\u30FC\u8D77\u7528"
-  icon: {fileID: 5206859668457943883, guid: 31802e35c590f42a68ff232333b6d7ba, type: 3}
-  selectedBackground: {fileID: -2670746174323389601, guid: 511774859ee7f414e8b69fe60fa718b2, type: 3}
+  icon: {fileID: 8236580048892429371, guid: 8c67bc9c921622945939e7b223320721, type: 3}
+  selectedBackground: {fileID: -1843028302627794106, guid: 2f0b892e10da27e43847221aca56d1e3, type: 3}
   cost: 2000
   trustGain: 0
   attentionGain: 20

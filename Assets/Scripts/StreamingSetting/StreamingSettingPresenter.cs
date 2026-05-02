@@ -1,7 +1,9 @@
 using R3;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using VContainer.Unity;
 
 public class StreamingSettingPresenter : IDisposable
@@ -9,6 +11,8 @@ public class StreamingSettingPresenter : IDisposable
     private readonly StreamingSettingModel _model;
     private readonly StreamingSettingView  _view;
     private readonly ItemModel             _itemModel;
+    private readonly BattleInputData       _battleInputData;
+    private readonly IDungeonCatalog       _dungeonCatalog;
     private readonly CompositeDisposable   _d = new CompositeDisposable();
 
     /// <summary>
@@ -20,11 +24,15 @@ public class StreamingSettingPresenter : IDisposable
     public StreamingSettingPresenter(
         StreamingSettingModel model,
         StreamingSettingView  view,
-        ItemModel             itemModel)
+        ItemModel             itemModel,
+        BattleInputData       battleInputData,
+        IDungeonCatalog       dungeonCatalog)
     {
-        _model     = model;
-        _view      = view;
-        _itemModel = itemModel;
+        _model           = model;
+        _view            = view;
+        _itemModel       = itemModel;
+        _battleInputData = battleInputData;
+        _dungeonCatalog  = dungeonCatalog;
     }
 
     /// <summary>
@@ -77,6 +85,18 @@ public class StreamingSettingPresenter : IDisposable
         _view.OnConfirmClicked
             .Subscribe(_ => HandleConfirm())
             .AddTo(_d);
+
+        // ④ 前回と同じで確定（保存済み選択をそのまま確定）
+        _view.OnQuickConfirmClicked
+            .Subscribe(_ => HandleConfirm())
+            .AddTo(_d);
+
+        _view.OnAutoSelectClicked
+            .Subscribe(_ => HandleAutoSelect())
+            .AddTo(_d);
+
+        // 前回構成の件数をボタンラベルに反映
+        _view.SetQuickConfirmLabel(_model.Selected.Count);
     }
 
     private void Entry()
@@ -118,6 +138,127 @@ public class StreamingSettingPresenter : IDisposable
         _model.Remove(id);
         _view.PopulateSelected(_model.Selected, _itemModel);
         _model.SaveData();
+    }
+
+    private void HandleAutoSelect()
+    {
+        var selected = BuildAutoSelection();
+        _model.ReplaceSelection(selected);
+        _view.PopulateSelected(_model.Selected, _itemModel);
+        _model.SaveData();
+        _view.SetQuickConfirmLabel(_model.Selected.Count);
+    }
+
+    private List<KeyValuePair<string, int>> BuildAutoSelection()
+    {
+        var dungeonInfoAvailable = TryGetPurchasedDungeonInfo(out var dungeon);
+        var enemyElements = dungeonInfoAvailable
+            ? GetDungeonEnemyElements(dungeon, _battleInputData.DungeonLevel)
+            : new List<ElementType>();
+
+        return _itemModel.RuntimeItems
+            .Where(item => item != null && item.Stock.Value > 0)
+            .Select(item => new
+            {
+                Item = item,
+                Score = CalculateAutoSelectScore(item, dungeonInfoAvailable, dungeon, enemyElements)
+            })
+            .OrderByDescending(x => x.Score)
+            .ThenByDescending(x => x.Item.Stock.Value)
+            .Take(8)
+            .Select(x => new KeyValuePair<string, int>(x.Item.ItemId, x.Item.Stock.Value))
+            .ToList();
+    }
+
+    private float CalculateAutoSelectScore(
+        RuntimeItemData item,
+        bool dungeonInfoAvailable,
+        DungeonInfoScriptableObj dungeon,
+        List<ElementType> enemyElements)
+    {
+        float score = 0f;
+
+        score += item.Demand.Value * 100f;
+        score += item.SalesRate * 30f;
+        score += Mathf.Log10(Mathf.Max(1, item.CurrentPrice.Value)) * 12f;
+        score += Mathf.Min(item.Stock.Value, 20) * 1.5f;
+
+        if (!dungeonInfoAvailable || dungeon == null)
+        {
+            return score;
+        }
+
+        if (item.ItemAttribute == dungeon.requiredAttribute)
+        {
+            score += 20f;
+        }
+
+        foreach (var element in enemyElements)
+        {
+            if (element == ElementType.None) continue;
+
+            if (ElementAttributeMapper.IsEffective(item.ItemAttribute, element))
+            {
+                score += 35f;
+            }
+            else if (ElementAttributeMapper.IsWeak(item.ItemAttribute, element))
+            {
+                score -= 25f;
+            }
+        }
+
+        return score;
+    }
+
+    private bool TryGetPurchasedDungeonInfo(out DungeonInfoScriptableObj dungeon)
+    {
+        dungeon = null;
+        if (_battleInputData == null || _dungeonCatalog == null)
+        {
+            return false;
+        }
+
+        dungeon = _dungeonCatalog.GetDungeon(_battleInputData.DungeonKey);
+        if (dungeon == null)
+        {
+            return false;
+        }
+
+        if (!SaveSystem.TryLoad(out var save) || save?.dungeons == null)
+        {
+            return false;
+        }
+
+        foreach (var savedDungeon in save.dungeons)
+        {
+            if (savedDungeon == null) continue;
+
+            bool sameDungeon =
+                savedDungeon.dungeonKey == _battleInputData.DungeonKey.ToString()
+                || savedDungeon.dungeonKey == dungeon.dungeonName;
+
+            if (sameDungeon)
+            {
+                return savedDungeon.isShowedInfo;
+            }
+        }
+
+        return false;
+    }
+
+    private static List<ElementType> GetDungeonEnemyElements(DungeonInfoScriptableObj dungeon, int dungeonLevel)
+    {
+        var levelData = dungeon?.GetLevelData(dungeonLevel);
+        if (levelData?.monsters == null)
+        {
+            return new List<ElementType>();
+        }
+
+        return levelData.monsters
+            .Where(enemy => enemy != null)
+            .Select(enemy => enemy.elementType)
+            .Where(element => element != ElementType.None)
+            .ToList();
     }
 
     public void Show() => _view.Show();

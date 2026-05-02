@@ -8,9 +8,9 @@ public class GameLifetimeScope : LifetimeScope
     [Header("Views")]
     [SerializeField] private BlackSmithView blackSmithView;
     [SerializeField] private TomsShopView tomsShopView;
+    [SerializeField] private HeroPanelView heroPanelView;
     [SerializeField] private ItemSelectionView itemSelectionView;
     [SerializeField] private InfoBrokerView infoBrokerView;
-    [SerializeField] private HeroInfoView heroInfoView;
     [SerializeField] private CommonView commonView;
     [SerializeField] private DungeonInfoView dungeonInfoView;
     [SerializeField] private MapView mapView;
@@ -20,6 +20,8 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private DungeonLevelUpView dungeonLevelUpView;
     [SerializeField] private AdvertisementView advertisementView;
     [SerializeField] private ProphetView prophetView;
+    [SerializeField] private DemandDashboardView demandDashboardView;
+    [SerializeField] private TurnActionHintView turnActionHintView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -200,7 +202,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
         // ポップアップ管理（Additive ロードされる PopupScene にデータを渡す中継役）
-        builder.Register<PopUpManager>(Lifetime.Singleton);
+        builder.Register<PopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
 
         // アイテム市場分析ポップアップ管理（Additive ロードされる ItemPopupScene にデータを渡す中継役）
         builder.Register<ItemPopUpManager>(Lifetime.Singleton)
@@ -210,9 +213,12 @@ public class GameLifetimeScope : LifetimeScope
         // Scene上にあるViewを登録（null の場合はエラーログを出力）
         RegisterComponentSafe(builder, blackSmithView, nameof(blackSmithView));
         RegisterComponentSafe(builder, tomsShopView, nameof(tomsShopView));
+        if (heroPanelView != null)
+            builder.RegisterComponent(heroPanelView);
+        else
+            Debug.LogWarning("[GameLifetimeScope] heroPanelView is not assigned. Hero panel is disabled until the TomsShopScene reference is set.");
         RegisterComponentSafe(builder, itemSelectionView, nameof(itemSelectionView));
         RegisterComponentSafe(builder, infoBrokerView, nameof(infoBrokerView));
-        RegisterComponentSafe(builder, heroInfoView, nameof(heroInfoView));
         RegisterComponentSafe(builder, commonView, nameof(commonView));
         RegisterComponentSafe(builder, dungeonInfoView, nameof(dungeonInfoView));
         RegisterComponentSafe(builder, mapView, nameof(mapView));
@@ -222,6 +228,15 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, dungeonLevelUpView, nameof(dungeonLevelUpView));
         RegisterComponentSafe(builder, advertisementView, nameof(advertisementView));
         RegisterComponentSafe(builder, prophetView, nameof(prophetView));
+        if (demandDashboardView != null)
+            builder.RegisterComponent(demandDashboardView);
+        else
+            Debug.LogWarning("[GameLifetimeScope] demandDashboardView が未設定のため需要ダッシュボードは無効です。");
+
+        if (turnActionHintView != null)
+            builder.RegisterComponent(turnActionHintView);
+        else
+            Debug.LogWarning("[GameLifetimeScope] turnActionHintView が未設定のためヒントチェックリストは無効です。");
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -229,6 +244,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<ItemSelectionPresenter>().AsSelf();
         builder.RegisterEntryPoint<TurnEndSummaryPresenter>().AsSelf();
         builder.RegisterEntryPoint<TomsShopPresenter>();
+        if (heroPanelView != null)
+            builder.RegisterEntryPoint<HeroPanelPresenter>();
         builder.RegisterEntryPoint<MapPresenter>();
         builder.RegisterEntryPoint<DungeonLevelUpPresenter>();
         builder.RegisterEntryPoint<CommonPresenter>();
@@ -240,6 +257,14 @@ public class GameLifetimeScope : LifetimeScope
 
         // 預言者画面
         builder.RegisterEntryPoint<ProphetPresenter>();
+
+        // ⑤ 需要ダッシュボード（InspectorでdemandDashboardViewを設定した場合のみ有効）
+        if (demandDashboardView != null)
+            builder.RegisterEntryPoint<DemandDashboardPresenter>();
+
+        // ターン行動ヒント（InspectorでturnActionHintViewを設定した場合のみ有効）
+        if (turnActionHintView != null)
+            builder.RegisterEntryPoint<TurnActionHintPresenter>();
 
         // --- 5. System Logic (Save/Delete) ---
         // セーブ削除や保存ロジックを独立したクラスとして登録

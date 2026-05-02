@@ -20,21 +20,27 @@ public class BattleOutputData : ScriptableObject
     public List<BattleOutputSoldItem> SoldItems = new();
     public int TotalEarnings;
 
+    [Header("撃破結果")]
+    public int DefeatedMobCount;
+    public int DefeatedBossCount;
+
     [Header("フラグ")]
     public bool HasResult;
 
     /// <summary>
     /// 戦闘終了時に結果を書き込む
     /// </summary>
-    public void SetResult(BattleResult result, string weaponId, string armorId, List<BattleOutputSoldItem> soldItems, int totalEarnings)
+    public void SetResult(BattleResult result, string weaponId, string armorId, List<BattleOutputSoldItem> soldItems, int totalEarnings, int defeatedMobCount = 0, int defeatedBossCount = 0)
     {
         Result = result;
         WeaponId = weaponId;
         ArmorId = armorId;
         SoldItems = new List<BattleOutputSoldItem>(soldItems);
         TotalEarnings = totalEarnings;
+        DefeatedMobCount = Mathf.Max(0, defeatedMobCount);
+        DefeatedBossCount = Mathf.Max(0, defeatedBossCount);
         HasResult = true;
-        Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}");
+        Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}, mobs={DefeatedMobCount}, bosses={DefeatedBossCount}");
     }
 
     public void Clear()
@@ -44,6 +50,8 @@ public class BattleOutputData : ScriptableObject
         ArmorId = "";
         SoldItems.Clear();
         TotalEarnings = 0;
+        DefeatedMobCount = 0;
+        DefeatedBossCount = 0;
         HasResult = false;
     }
 }

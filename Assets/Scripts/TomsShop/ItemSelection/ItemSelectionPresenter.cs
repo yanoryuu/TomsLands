@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using R3;
 using VContainer.Unity;
 
-public class ItemSelectionPresenter :IDisposable,IStartable
+public class ItemSelectionPresenter : IDisposable, IStartable
 {
     private readonly ItemSelectionModel selectionModel;
     private readonly ItemSelectionView selectionView;
@@ -12,15 +12,23 @@ public class ItemSelectionPresenter :IDisposable,IStartable
     private readonly CompositeDisposable disposables = new();
     private readonly Dictionary<string, CompositeDisposable> displaySlotDisposables = new();
 
-    public ItemSelectionPresenter(ItemSelectionModel selectionModel, ItemSelectionView selectionView, ItemModel itemModel,TomsModel tomsModel)
+    private CompositeDisposable panelDisposables = new();
+    private ItemTypeData.ItemType currentItemType = ItemTypeData.ItemType.Weapon;
+
+    public Subject<Unit> OnClosed { get; } = new();
+
+    public ItemSelectionPresenter(
+        ItemSelectionModel selectionModel,
+        ItemSelectionView selectionView,
+        ItemModel itemModel,
+        TomsModel tomsModel)
     {
         this.selectionModel = selectionModel;
         this.selectionView = selectionView;
         this.itemModel = itemModel;
         this.tomsModel = tomsModel;
-        
     }
-    
+
     public void Start()
     {
         Bind();
@@ -32,149 +40,198 @@ public class ItemSelectionPresenter :IDisposable,IStartable
         SetRuntimeItems();
     }
 
-    //画面を閉じるとき
     public void OnCloseSelectionPanel()
     {
         selectionView.Hide();
         itemModel.SaveData();
+        OnClosed.OnNext(Unit.Default);
     }
 
-    public void Initialize()
-    {
-        
-    }
-    
+    public void Initialize() { }
+
     private void Bind()
     {
-        //陳列アイテムの表示を閉じる
         selectionView.OnCloseRequested
             .Subscribe(_ => OnCloseSelectionPanel())
             .AddTo(disposables);
 
-        //防具画面を表示
         selectionView.OnArmorPanelRequested
-            .Subscribe(_ =>
-            {
-                ChangeSelectionPanel(selectionModel.AarmorRuntimeItems , ItemTypeData.ItemType.Armor);
-            })
+            .Subscribe(_ => ChangeSelectionPanel(selectionModel.AarmorRuntimeItems, ItemTypeData.ItemType.Armor))
             .AddTo(disposables);
-        
-        //武器画面を表示
+
         selectionView.OnWeaponPanelRequested
+            .Subscribe(_ => ChangeSelectionPanel(selectionModel.WeaponRuntimeItems, ItemTypeData.ItemType.Weapon))
+            .AddTo(disposables);
+
+        selectionView.OnAutoDisplayRequested
             .Subscribe(_ =>
             {
-                ChangeSelectionPanel(selectionModel.WeaponRuntimeItems,ItemTypeData.ItemType.Weapon);
+                itemModel.AutoSetDisplay(tomsModel.BlacksmithLevel.Value);
+                RefreshRuntimeItems();
+                RefreshCurrentSelectionPanel();
+                RebuildDisplaySlots();
             })
             .AddTo(disposables);
     }
-    
 
-    private void ChangeSelectionPanel(List<RuntimeItemData> items,ItemTypeData.ItemType itemType)
+    private void ChangeSelectionPanel(List<RuntimeItemData> items, ItemTypeData.ItemType itemType)
     {
+        currentItemType = itemType;
+
+        panelDisposables.Dispose();
+        panelDisposables = new CompositeDisposable();
+
         var itemSlots = selectionView.PopulateItemList(items);
-        
-        foreach (var slot  in itemSlots)
+
+        foreach (var slot in itemSlots)
         {
             var itemdata = itemModel.GetRuntimeItem(slot.itemId);
+            if (itemdata == null) continue;
 
-            //現在の所持ストックがSlotの最大品出し数（DisplayStockより先に設定する）
             itemdata.Stock.Subscribe(x =>
                 {
                     slot.SetMaxDisplayQuantity(x);
                     slot.SetStock(x);
                 })
-                .AddTo(disposables);
+                .AddTo(panelDisposables);
 
-            //アイテムの情報に保存されているストック情報をuIに反映
-            itemdata.DisplayStock.Subscribe(x =>
-                {
-                    slot.SetDisplayQuantity(x);
-                })
-                .AddTo(disposables);
-            
-            //品出し用の数がUI側で変更されれば変更
-            slot.OnDisplayQuantityChanged.Subscribe(x =>
-                {
-                    itemdata.UpdateDisplayStock(x);
-                })
-                .AddTo(disposables);
+            itemdata.DisplayStock.Subscribe(x => slot.SetDisplayQuantity(x))
+                .AddTo(panelDisposables);
 
-            //選択ボタンが押されれば陳列状態を切り替え
-            slot.OnToggleChanged.Subscribe(x =>
-                {
-                    itemdata.UpdateIsDisplay(x);
-                })
-                .AddTo(disposables);
+            slot.OnDisplayQuantityChanged.Subscribe(x => itemdata.UpdateDisplayStock(x))
+                .AddTo(panelDisposables);
 
-            //陳列状態が変わったらPanel1のビジュアル更新とPanel2の追加/削除を行う
+            slot.OnToggleChanged.Subscribe(x => itemdata.UpdateIsDisplay(x))
+                .AddTo(panelDisposables);
+
             itemdata.IsDisplay.Subscribe(x =>
                 {
                     slot.SetSelectToggle(x);
                     if (x)
                     {
-                        if (!displaySlotDisposables.ContainsKey(slot.itemId))
-                        {
-                            var d = new CompositeDisposable();
-                            displaySlotDisposables[slot.itemId] = d;
-                            d.AddTo(disposables);
-
-                            var displaySlot = selectionView.EnsureDisplaySlot(slot.itemId, itemdata.ItemIcon, itemdata.DisplayStock.Value);
-                            itemdata.DisplayStock.Subscribe(count => displaySlot.SetQuantity(count)).AddTo(d);
-                            displaySlot.OnRemoveRequested.Subscribe(_ =>
-                            {
-                                itemdata.UpdateIsDisplay(false);
-                            }).AddTo(d);
-                        }
+                        EnsureDisplaySlotSubscription(itemdata);
                     }
                     else
                     {
-                        if (displaySlotDisposables.TryGetValue(slot.itemId, out var d))
-                        {
-                            d.Dispose();
-                            displaySlotDisposables.Remove(slot.itemId);
-                        }
-                        selectionView.RemoveDisplaySlot(slot.itemId);
+                        RemoveDisplaySlotSubscription(itemdata.ItemId);
                     }
                 })
-                .AddTo(disposables);
-            
-            //アイテムの現在の売値価格
-            itemdata.CurrentPrice.Subscribe(x =>
-                {
-                    slot.SetPrice(x);
-                })
-                .AddTo(disposables);
-            
-            //アイテムの説明を
+                .AddTo(panelDisposables);
+
+            itemdata.CurrentPrice.Subscribe(x => slot.SetPrice(x))
+                .AddTo(panelDisposables);
+
             slot.OnInfoRequested.Subscribe(id =>
                 {
-                    selectionView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription,itemModel.GetRuntimeItem(id).ItemIcon);
+                    var rt = itemModel.GetRuntimeItem(id);
+                    if (rt != null)
+                    {
+                        selectionView.SetDescription(rt.ItemDescription, rt.ItemIcon);
+                    }
                 })
-                .AddTo(disposables);
+                .AddTo(panelDisposables);
         }
-        
+
         selectionView.SortItemTab(itemType);
     }
 
     private void SetRuntimeItems()
     {
-        var isStockRuntimeItems = itemModel.PickItemRuntimeListForStock(itemModel.RuntimeItems, minStock: 1);
+        RefreshRuntimeItems();
+        ChangeSelectionPanel(selectionModel.WeaponRuntimeItems, ItemTypeData.ItemType.Weapon);
+        RebuildDisplaySlots();
+    }
 
-        var armorRuntimeItems = itemModel.PickItemRuntimeList(isStockRuntimeItems, ItemTypeData.ItemType.Armor,
+    private void RefreshRuntimeItems()
+    {
+        var stockItems = itemModel.PickItemRuntimeListForStock(itemModel.RuntimeItems, minStock: 1);
+
+        var armorItems = itemModel.PickItemRuntimeList(
+            stockItems,
+            ItemTypeData.ItemType.Armor,
             tomsModel.BlacksmithLevel.Value);
 
-        var weaponRuntimeItems = itemModel.PickItemRuntimeList(isStockRuntimeItems, ItemTypeData.ItemType.Weapon,
+        var weaponItems = itemModel.PickItemRuntimeList(
+            stockItems,
+            ItemTypeData.ItemType.Weapon,
             tomsModel.BlacksmithLevel.Value);
-        
-        selectionModel.SetRuntimeItems(armorRuntimeItems,weaponRuntimeItems);
-        
-        ChangeSelectionPanel(weaponRuntimeItems,ItemTypeData.ItemType.Weapon);
+
+        selectionModel.SetRuntimeItems(armorItems, weaponItems);
+    }
+
+    private void RefreshCurrentSelectionPanel()
+    {
+        var items = currentItemType == ItemTypeData.ItemType.Armor
+            ? selectionModel.AarmorRuntimeItems
+            : selectionModel.WeaponRuntimeItems;
+
+        ChangeSelectionPanel(items, currentItemType);
+    }
+
+    private void RebuildDisplaySlots()
+    {
+        foreach (var d in displaySlotDisposables.Values)
+        {
+            d.Dispose();
+        }
+
+        displaySlotDisposables.Clear();
+        selectionView.ClearDisplaySlots();
+
+        foreach (var item in itemModel.RuntimeItems)
+        {
+            if (item.IsDisplay.Value)
+            {
+                EnsureDisplaySlotSubscription(item);
+            }
+        }
+    }
+
+    private void EnsureDisplaySlotSubscription(RuntimeItemData itemdata)
+    {
+        if (displaySlotDisposables.ContainsKey(itemdata.ItemId))
+            return;
+
+        var d = new CompositeDisposable();
+        displaySlotDisposables[itemdata.ItemId] = d;
+
+        var displaySlot = selectionView.EnsureDisplaySlot(
+            itemdata.ItemId,
+            itemdata.ItemIcon,
+            itemdata.DisplayStock.Value);
+
+        itemdata.DisplayStock
+            .Subscribe(count => displaySlot.SetQuantity(count))
+            .AddTo(d);
+
+        displaySlot.OnRemoveRequested
+            .Subscribe(_ =>
+            {
+                itemdata.UpdateIsDisplay(false);
+                RemoveDisplaySlotSubscription(itemdata.ItemId);
+            })
+            .AddTo(d);
+    }
+
+    private void RemoveDisplaySlotSubscription(string itemId)
+    {
+        if (displaySlotDisposables.TryGetValue(itemId, out var d))
+        {
+            d.Dispose();
+            displaySlotDisposables.Remove(itemId);
+        }
+
+        selectionView.RemoveDisplaySlot(itemId);
     }
 
     public void Dispose()
     {
+        panelDisposables.Dispose();
         foreach (var d in displaySlotDisposables.Values)
+        {
             d.Dispose();
+        }
+
         displaySlotDisposables.Clear();
         disposables.Dispose();
     }

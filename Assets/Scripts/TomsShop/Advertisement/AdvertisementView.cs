@@ -203,15 +203,10 @@ public class AdvertisementView : MonoBehaviour
     /// </summary>
     private void SelectSlot(AdvertisementSlotUI slot)
     {
-        // 前の選択を解除
-        if (_selectedSlot != null)
-            _selectedSlot.SetSelected(false);
 
         // 新しいスロットを選択
         _selectedSlot = slot;
 
-        if (_selectedSlot != null)
-            _selectedSlot.SetSelected(true);
 
         // 背景Spriteを切り替え（広告データのselectedBackgroundを使用）
         if (selectionBackgroundImage != null)

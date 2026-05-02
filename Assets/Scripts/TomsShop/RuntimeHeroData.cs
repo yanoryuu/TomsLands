@@ -3,19 +3,35 @@ using R3;
 public class RuntimeHeroData
 {
     public ReactiveProperty<int> level { get; private set; }
-    public ReactiveProperty<int> hp {get; private set;}
-    public ReactiveProperty<int> mp {get; private set;}
-    public ReactiveProperty<string> weaponId {get; private set;}
-    public ReactiveProperty<string> weaponName {get; private set;}
-    public ReactiveProperty<string> armorId {get; private set;}
-    public ReactiveProperty<string> armorName {get; private set;}
-    public ReactiveProperty<int> attackPower {get; private set;}
-    public ReactiveProperty<int> defensePower {get; private set;}
-    public ReactiveProperty<HeroTactics> tactics {get; private set;}
+    public ReactiveProperty<int> experience { get; private set; }
+    public ReactiveProperty<int> expToNextLevel { get; private set; }
+    public ReactiveProperty<int> hp { get; private set; }
+    public ReactiveProperty<int> mp { get; private set; }
+    public ReactiveProperty<string> weaponId { get; private set; }
+    public ReactiveProperty<string> weaponName { get; private set; }
+    public ReactiveProperty<string> armorId { get; private set; }
+    public ReactiveProperty<string> armorName { get; private set; }
+    public ReactiveProperty<int> attackPower { get; private set; }
+    public ReactiveProperty<int> defensePower { get; private set; }
+    public ReactiveProperty<HeroTactics> tactics { get; private set; }
 
-    private RuntimeHeroData(int level,int hp ,int mp,string weaponId,string weaponName,string armorId,string armorName,int attackPower,int defensePower, HeroTactics tactics)
+    private RuntimeHeroData(
+        int level,
+        int experience,
+        int expToNextLevel,
+        int hp,
+        int mp,
+        string weaponId,
+        string weaponName,
+        string armorId,
+        string armorName,
+        int attackPower,
+        int defensePower,
+        HeroTactics tactics)
     {
         this.level = new ReactiveProperty<int>(level);
+        this.experience = new ReactiveProperty<int>(experience);
+        this.expToNextLevel = new ReactiveProperty<int>(expToNextLevel);
         this.hp = new ReactiveProperty<int>(hp);
         this.mp = new ReactiveProperty<int>(mp);
         this.weaponId = new ReactiveProperty<string>(weaponId);
@@ -31,25 +47,25 @@ public class RuntimeHeroData
     {
         return new RuntimeHeroData(
             level: 1,
+            experience: 0,
+            expToNextLevel: GameConst.GetHeroExpToNextLevel(1),
             hp: 100,
             mp: 50,
-            weaponId: "weapon_001",
+            weaponId: "",
             weaponName: "",
-            armorId: "armor_001",
+            armorId: "",
             armorName: "",
             attackPower: 10,
             defensePower: 5,
-            tactics: HeroTactics.Balanced
-        );
+            tactics: HeroTactics.Balanced);
     }
 
-    /// <summary>
-    /// HeroLevelData (CSV由来) から RuntimeHeroData を生成する
-    /// </summary>
-    public static RuntimeHeroData CreateFromLevelData(HeroLevelData levelData)
+    public static RuntimeHeroData CreateFromLevelData(HeroLevelData levelData, int experience = 0)
     {
         return new RuntimeHeroData(
             level: levelData.Level,
+            experience: experience,
+            expToNextLevel: GameConst.GetHeroExpToNextLevel(levelData.Level),
             hp: levelData.MaxHp,
             mp: 0,
             weaponId: "",
@@ -58,18 +74,16 @@ public class RuntimeHeroData
             armorName: "",
             attackPower: levelData.Attack,
             defensePower: levelData.Defense,
-            tactics: HeroTactics.Balanced
-        );
+            tactics: HeroTactics.Balanced);
     }
 
-    /// <summary>
-    /// JSON保存用の HeroSaveData に変換する
-    /// </summary>
     public HeroSaveData ToSaveData()
     {
         return new HeroSaveData
         {
             level = this.level.Value,
+            experience = this.experience.Value,
+            expToNextLevel = this.expToNextLevel.Value,
             hp = this.hp.Value,
             mp = this.mp.Value,
             weaponId = this.weaponId.Value,
@@ -82,18 +96,19 @@ public class RuntimeHeroData
         };
     }
 
-    /// <summary>
-    /// JSON読み込み後の HeroSaveData から RuntimeHeroData を復元する
-    /// </summary>
     public static RuntimeHeroData CreateFromSaveData(HeroSaveData save)
     {
         if (save == null)
         {
-            UnityEngine.Debug.LogWarning("[RuntimeHeroData] HeroSaveData が null です。デフォルト値を使用します。");
+            UnityEngine.Debug.LogWarning("[RuntimeHeroData] HeroSaveData was null. Using default values.");
             return CreateDefault();
         }
+
+        int safeLevel = save.level > 0 ? save.level : 1;
         return new RuntimeHeroData(
-            level: save.level,
+            level: safeLevel,
+            experience: save.experience,
+            expToNextLevel: save.expToNextLevel > 0 ? save.expToNextLevel : GameConst.GetHeroExpToNextLevel(safeLevel),
             hp: save.hp,
             mp: save.mp,
             weaponId: save.weaponId ?? "",
@@ -102,7 +117,6 @@ public class RuntimeHeroData
             armorName: save.armorName ?? "",
             attackPower: save.attackPower,
             defensePower: save.defensePower,
-            tactics: (HeroTactics)save.tactics
-        );
+            tactics: (HeroTactics)save.tactics);
     }
 }

@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64fb26f3e02abb740bb593f4a6ada79e, type: 3}
+  m_Name: BattlePriceSettings
+  m_EditorClassIdentifier: 
+  weaponPriceUpOnHit: 1.1
+  weaponPriceDownOnNonKill: 0.95
+  armorPriceDownOnHit: 0.98
+  armorPriceUpOnBlock: 1.05
+  effectiveAttributeRate: 1.1
+  weakAttributeRate: 1
+  priceFloorRate: 0.2
+  priceCeilingRate: 10
+  initialHeat: 30
+  heatTurnDecay: 5
+  coldTierMax: 25
+  normalTierMax: 50
+  hotTierMax: 75
+  coldPriceMultiplier: 0.9
+  normalPriceMultiplier: 1
+  hotPriceMultiplier: 1.1
+  superHotPriceMultiplier: 1.2
+  demandEffectiveAttributeUp: 0.2
+  demandWeakAttributeDown: 0.1
+  buzzBonus2Turn: 0.05
+  buzzBonus3PlusTurn: 0.1
+  unsoldPenalty: 0.08
+  highPriceThreshold: 2
+  lowPriceThreshold: 0.5
+  highPriceDemandDecay: 0.92
+  lowPriceDemandGrowth: 1.08

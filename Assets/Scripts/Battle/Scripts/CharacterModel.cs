@@ -22,6 +22,7 @@ public class CharacterModel
     public ItemData EquippedWeapon { get; }
     public ItemData EquippedArmor { get; }
     public ElementType Element { get; }
+    public bool IsBoss { get; }
     public IReadOnlyList<SkillData> Skills { get; }
     public Observable<Unit> OnDied => CurrentHp.Where(hp => hp <= 0).AsUnitObservable();
     public bool IsDead => CurrentHp.CurrentValue <= 0;
@@ -34,6 +35,7 @@ public class CharacterModel
         Type = CharacterType.Enemy;
         CharacterSprite = data.enemySprite;
         Element = data.elementType;
+        IsBoss = data.isBoss;
         MaxHp = data.hp;
         CurrentHp = new ReactiveProperty<int>(data.hp);
         MaxMp = 0;
@@ -52,6 +54,7 @@ public class CharacterModel
         Type = CharacterType.Hero;
         CharacterSprite = masterData.heroSprite;
         Element = ElementType.None;
+        IsBoss = false;
 
         // RuntimeHeroData (CSV由来) からステータスを取得
         var runtime = savedHeroModel?.heroData;
