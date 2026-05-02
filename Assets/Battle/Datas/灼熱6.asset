@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: "\u707C\u71B16"
   m_EditorClassIdentifier: 
-  enemyName: "\u707C\u71B16"
+  enemyId: fire6
+  enemyName: "\u30DE\u30C3\u30B9\u30EB\u30D9\u30A2"
   hp: 40
   attackPower: 12
   defensePower: 8

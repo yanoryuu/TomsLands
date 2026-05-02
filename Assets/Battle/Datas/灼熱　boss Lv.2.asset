@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: "\u707C\u71B1\u3000boss Lv.2"
   m_EditorClassIdentifier: 
-  enemyName: "\u707C\u71B1\u3000boss Lv.2"
+  enemyId: fire boss lv.2
+  enemyName: "\u30A4\u30EF\u30D5\u30EC\u30A4\u30E0"
   hp: 70
   attackPower: 15
   defensePower: 10

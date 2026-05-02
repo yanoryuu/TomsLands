@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: jungle boss Lv1
   m_EditorClassIdentifier: 
-  enemyName: jungle boss Lv1
+  enemyId: jungle boss Lv1
+  enemyName: "\u30AA\u30AA\u30B5\u30F3\u30D5\u30E9\u30EF\u30FC"
   hp: 55
   attackPower: 13
   defensePower: 10

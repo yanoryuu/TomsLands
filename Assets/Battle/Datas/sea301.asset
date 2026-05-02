@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: sea301
   m_EditorClassIdentifier: 
-  enemyName: sea301
+  enemyId: sea301
+  enemyName: "\u30E4\u30C9\u30AB\u30EA\u30AF\u30F3"
   hp: 25
   attackPower: 8
   defensePower: 3
