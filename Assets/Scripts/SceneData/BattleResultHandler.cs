@@ -56,10 +56,10 @@ public class BattleResultHandler : IStartable, IDisposable
             }
         }
 
-        if (_outputData.TotalEarnings > 0)
+        if (_outputData.TotalEarnings != 0)
         {
             _tomsModel.Settlement(_outputData.TotalEarnings);
-            Debug.Log($"[BattleResultHandler] Battle earnings added to PlayerMoney: {_outputData.TotalEarnings}G");
+            Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
         // --- 勝敗ボーナス/ペナルティ ---

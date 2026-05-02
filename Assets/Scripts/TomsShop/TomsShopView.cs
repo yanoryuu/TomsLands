@@ -104,7 +104,7 @@ public class TomsShopView : MonoBehaviour
     public void UpdateNextDebt(int amount, int remainingTurns)
     {
         if (nextDebtText == null) return;
-        nextDebtText.text = $"次回返済：{amount:#,0}G\nあと{remainingTurns}ターン";
+        nextDebtText.text = $"次回返済\n{amount:#,0}G\nあと{remainingTurns}ターン";
     }
 
     /// <summary>

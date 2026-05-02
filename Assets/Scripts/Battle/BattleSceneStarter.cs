@@ -29,6 +29,7 @@ public class BattleSceneStarter : IAsyncStartable
     // ポーズ・在庫切れ管理
     private readonly BattlePauseController _pauseController = new();
     private bool _isRestockPopupShowing = false;
+    private int _battleSpending = 0; // バトル中の補充購入で使った金額
     private UniTaskCompletionSource<(BattleResult result, string weaponId, string armorId)> _battleTcs;
 
     public BattleSceneStarter(
@@ -173,6 +174,14 @@ public class BattleSceneStarter : IAsyncStartable
                 .AddTo(disposables);
         }
 
+        // 在庫切れスロットをクリックして補充ポップアップを再表示
+        void OnDepletedItemClicked(ItemSlotView slot)
+        {
+            if (slot?.CurrentItem == null || slot.CurrentItem.Stock.Value > 0) return;
+            TryShowRestockAsync(slot.CurrentItem, battleCts.Token).Forget();
+        }
+        ItemSlotView.OnItemClicked += OnDepletedItemClicked;
+
         _battleSequencer.StartBattle(heroModel);
 
         // バトル終了待ち
@@ -182,11 +191,13 @@ public class BattleSceneStarter : IAsyncStartable
         // バトル終了 → ポーズ解除してからループキャンセル（WaitIfPausedAsync が抜けられるように）
         _pauseController.Resume();
         battleCts.Cancel();
+        ItemSlotView.OnItemClicked -= OnDepletedItemClicked;
         disposables.Dispose();
 
         // BattleOutputData に結果を書き込み
         var soldItems = BuildSoldItems();
-        int totalEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
+        int rawSales = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
+        int totalEarnings = rawSales - _battleSpending; // バトル中購入分を差し引いた純利益
         _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings, defeatedMobCount, defeatedBossCount);
 
         // --- Phase 3: Result（配信リザルト画面） ---
@@ -250,18 +261,21 @@ public class BattleSceneStarter : IAsyncStartable
 
         // コスト計算（マスターデータの基本価格 × 10）
         var master = _itemModel.GetMasterItem(item.ItemId);
-        int unitCost   = master != null ? master.basePrice : item.CurrentPrice.Value;
-        int totalCost  = unitCost * 10;
-        bool canAfford = _tomsModel != null && _tomsModel.PlayerMoney.Value >= totalCost;
+        int unitCost  = master != null ? master.basePrice : item.CurrentPrice.Value;
+        int totalCost = unitCost * 10;
+
+        // バトル中獲得金額も含めた利用可能残高で判定
+        int battleEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
+        int availableForPurchase = (_tomsModel != null ? _tomsModel.PlayerMoney.Value : 0) + battleEarnings - _battleSpending;
+        bool canAfford = availableForPurchase >= totalCost;
 
         bool confirmed = await _controlView.ShowRestockPopupAsync(item.ItemName, totalCost, canAfford, token);
 
-        if (confirmed && canAfford && _tomsModel != null)
+        if (confirmed && canAfford)
         {
             item.UpdateStock(item.Stock.Value + 10);
-            _tomsModel.PlayerMoney.Value -= totalCost;
-            _tomsModel.SavePlayerMoney();
-            Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +10個, 費用 {totalCost}G");
+            _battleSpending += totalCost; // バトル中売上から充当（PlayerMoneyは戦闘終了時に精算）
+            Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +10個, 費用 {totalCost}G (利用可能残高: {availableForPurchase}G → {availableForPurchase - totalCost}G)");
         }
 
         // ポーズ状態を元に戻す
