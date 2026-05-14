@@ -22,6 +22,15 @@ public class BattleUIView : MonoBehaviour
 
     [Header("背景")]
     [SerializeField] private SpriteRenderer backgroundRenderer;
+    private Sprite defaultBackgroundSprite;
+
+    private void Awake()
+    {
+        if (backgroundRenderer != null)
+        {
+            defaultBackgroundSprite = backgroundRenderer.sprite;
+        }
+    }
 
     /// <summary>
     /// ダンジョンの背景画像を設定する。null の場合は元の背景をそのまま維持する。
@@ -33,10 +42,16 @@ public class BattleUIView : MonoBehaviour
             Debug.LogWarning("[BattleUIView] backgroundRenderer が Inspector で未設定です。FightScene の BattleUIView に SpriteRenderer を設定してください。");
             return;
         }
-        if (dungeonImage != null)
+        var sprite = dungeonImage != null ? dungeonImage : defaultBackgroundSprite;
+        if (sprite != null)
         {
-            backgroundRenderer.sprite = dungeonImage;
+            backgroundRenderer.sprite = sprite;
         }
+
+        backgroundRenderer.enabled = true;
+        var color = backgroundRenderer.color;
+        color.a = 1f;
+        backgroundRenderer.color = color;
     }
 
     /// <summary>

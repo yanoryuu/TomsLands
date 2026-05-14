@@ -16,6 +16,8 @@ public class GameConst
     
     public const int InitMoney = 10000;
 
+    public const int DebtPaymentInterval = 10;
+
     public const int HeroExpPerMob = 10;
 
     public const int HeroExpPerBoss = 100;

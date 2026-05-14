@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using R3;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -25,6 +26,10 @@ public class TomsShopView : MonoBehaviour
 
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
+
+    [Header("借金情報")]
+    [SerializeField] private TextMeshProUGUI nextDebtText;
+    [SerializeField] private Button debtPaymentButton;
     
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
@@ -49,6 +54,8 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnNextTurnClicked { get; } = new();
     //需要ダッシュボードを開く
     public Subject<Unit> OnDashboardClicked { get; } = new();
+    //借金返済パネルを開く
+    public Subject<Unit> OnDebtPaymentClicked { get; } = new();
 
     public void Awake()
     {
@@ -68,6 +75,8 @@ public class TomsShopView : MonoBehaviour
         NextTurnButton.onClick.AddListener(() => OnNextTurnClicked.OnNext(Unit.Default));
         if (DashboardButton != null)
             DashboardButton.onClick.AddListener(() => OnDashboardClicked.OnNext(Unit.Default));
+        if (debtPaymentButton != null)
+            debtPaymentButton.onClick.AddListener(() => OnDebtPaymentClicked.OnNext(Unit.Default));
     }
 
     public void Initialize()
@@ -87,6 +96,15 @@ public class TomsShopView : MonoBehaviour
     public void ShowTurnAnnounce(int turn)
     {
         turnAnnounceView.Show(turn);
+    }
+
+    /// <summary>
+    /// 次回借金返済額と残りターン数をショップ画面内に表示する
+    /// </summary>
+    public void UpdateNextDebt(int amount, int remainingTurns)
+    {
+        if (nextDebtText == null) return;
+        nextDebtText.text = $"次回返済\n{amount:#,0}G\nあと{remainingTurns}ターン";
     }
 
     /// <summary>

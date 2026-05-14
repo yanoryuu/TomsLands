@@ -44,7 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcd9b5895ad104dd9990942b6c521c7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  library: {fileID: 11400000, guid: 073ebb884d5da4f4a96cc1f750b28f94, type: 2}
+  library: {fileID: 11400000, guid: 6df12262756d6f24c869d5ebd3ea4b91, type: 2}
   bgmVolume: 0.5
   seVolume: 1
   maxSeSources: 8

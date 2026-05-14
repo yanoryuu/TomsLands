@@ -70,20 +70,22 @@ public class AdvertisementPresenter : IStartable, IDisposable
         // マーケティングステータスの変化を監視 → ステータス数値をリアルタイム更新
         var status = marketingFacade.Status;
 
+        int statMax = status.StatMax;
+
         status.Trust
-            .Subscribe(v => view.UpdateTrust(v))
+            .Subscribe(v => view.UpdateTrust(v, statMax))
             .AddTo(disposables);
 
         status.Attention
-            .Subscribe(v => view.UpdateAttention(v))
+            .Subscribe(v => view.UpdateAttention(v, statMax))
             .AddTo(disposables);
 
         status.Spread
-            .Subscribe(v => view.UpdateSpread(v))
+            .Subscribe(v => view.UpdateSpread(v, statMax))
             .AddTo(disposables);
 
         status.Retention
-            .Subscribe(v => view.UpdateRetention(v))
+            .Subscribe(v => view.UpdateRetention(v, statMax))
             .AddTo(disposables);
 
         status.Followers
@@ -209,6 +211,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
         if (success)
         {
             Debug.Log($"[AdvertisementPresenter] 広告実行成功: {adData.advertisementName}");
+            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
 
             // 選択状態をリセット
             _selectedSlot = null;
@@ -239,10 +242,11 @@ public class AdvertisementPresenter : IStartable, IDisposable
     private void UpdateStatusDisplay()
     {
         var status = marketingFacade.Status;
-        view.UpdateTrust(status.Trust.Value);
-        view.UpdateAttention(status.Attention.Value);
-        view.UpdateSpread(status.Spread.Value);
-        view.UpdateRetention(status.Retention.Value);
+        int statMax = status.StatMax;
+        view.UpdateTrust(status.Trust.Value, statMax);
+        view.UpdateAttention(status.Attention.Value, statMax);
+        view.UpdateSpread(status.Spread.Value, statMax);
+        view.UpdateRetention(status.Retention.Value, statMax);
         view.UpdateFollowers(status.Followers.Value);
     }
 

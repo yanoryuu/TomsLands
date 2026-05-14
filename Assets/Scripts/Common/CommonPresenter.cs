@@ -45,7 +45,7 @@ public class CommonPresenter:IStartable,IDisposable
                 commonView.UpdateCurrentTurn(date);
             })
             .AddTo(disposables);
-        
+
         commonView.OnMenuButtonClicked.Subscribe(_ => SceneManager.LoadScene("Setting",LoadSceneMode.Additive))
             .AddTo(disposables);
     }

@@ -22,6 +22,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private ProphetView prophetView;
     [SerializeField] private DemandDashboardView demandDashboardView;
     [SerializeField] private TurnActionHintView turnActionHintView;
+    [SerializeField] private DebtView debtView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -238,6 +239,8 @@ public class GameLifetimeScope : LifetimeScope
         else
             Debug.LogWarning("[GameLifetimeScope] turnActionHintView が未設定のためヒントチェックリストは無効です。");
 
+        RegisterComponentSafe(builder, debtView, nameof(debtView));
+
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
         builder.RegisterEntryPoint<BlackSmithPresenter>();
@@ -257,6 +260,9 @@ public class GameLifetimeScope : LifetimeScope
 
         // 預言者画面
         builder.RegisterEntryPoint<ProphetPresenter>();
+
+        // 借金返済画面（TomsShopPresenter から直接呼び出すため AsSelf で公開）
+        builder.RegisterEntryPoint<DebtPresenter>().AsSelf();
 
         // ⑤ 需要ダッシュボード（InspectorでdemandDashboardViewを設定した場合のみ有効）
         if (demandDashboardView != null)

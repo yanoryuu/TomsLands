@@ -89,6 +89,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // TomsModelを初期値で初期化
         _tomsModel.Initialize();
 
+        _heroModel.InitializeRuntimeHeroFromMaster();
+        _heroModel.SaveHeroData();
+
         // マーケティングステータスをリセット
         _shopStatusModel.Reset();
 

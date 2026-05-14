@@ -16,6 +16,8 @@ public class TomsModel
     
     public ReactiveProperty<int> CurrentTurn { get; private set; }
 
+    public ReactiveProperty<int> DebtCycle { get; private set; }
+
     /// <summary>
     /// GameFlowManagerの現在インデックス（セーブ/ロード用）
     /// </summary>
@@ -30,6 +32,7 @@ public class TomsModel
         InfoBrokerLevel = new ReactiveProperty<int>(1);
         Trust = new ReactiveProperty<float>(1f);
         CurrentTurn = new ReactiveProperty<int>(1);
+        DebtCycle = new ReactiveProperty<int>(0);
         GameFlowIndex = 0;
 
         LoadPlayerMoney();
@@ -38,7 +41,7 @@ public class TomsModel
     /// <summary>
     /// 値をリセットする。ReactivePropertyのインスタンスは維持し、既存のSubscribeを壊さない。
     /// </summary>
-    public void Initialize(int defaultMoney = GameConst.InitMoney, int defaultBlacksmithLevel = 1,int defaultToolLevel = 1,int defaultInfoBrokerLevel = 1, float defaultTrust = 1 ,int defaultTurn =1)
+    public void Initialize(int defaultMoney = GameConst.InitMoney, int defaultBlacksmithLevel = 1, int defaultToolLevel = 1, int defaultInfoBrokerLevel = 1, float defaultTrust = 1, int defaultTurn = 1)
     {
         PlayerMoney.Value = defaultMoney;
         BlacksmithLevel.Value = defaultBlacksmithLevel;
@@ -46,11 +49,20 @@ public class TomsModel
         InfoBrokerLevel.Value = defaultInfoBrokerLevel;
         Trust.Value = defaultTrust;
         CurrentTurn.Value = defaultTurn;
+        DebtCycle.Value = 0;
+    }
+
+    /// <summary>
+    /// 次回返済額を返す（DebtCycle + 1 のサイクル分）。
+    /// </summary>
+    public int GetNextDebtAmount()
+    {
+        return DebtDataLoader.GetAmount(DebtCycle.Value + 1);
     }
 
     public void SavePlayerMoney()
     {
-        var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value);
+        var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value);
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(Application.persistentDataPath + "/tomsData.json", json);
     }
@@ -67,14 +79,16 @@ public class TomsModel
             InfoBrokerLevel.Value = data.infoBrokerLevel;
             CurrentTurn.Value = data.currentTurn;
             GameFlowIndex = data.gameFlowIndex;
+            DebtCycle.Value = data.debtCycle;
         }
         else
         {
-            PlayerMoney.Value = GameConst.InitMoney; // デフォルト資金
-            BlacksmithLevel.Value = 1; // デフォルトの鍛冶屋レベル
+            PlayerMoney.Value = GameConst.InitMoney;
+            BlacksmithLevel.Value = 1;
             ToolShopLevel.Value = 1;
             InfoBrokerLevel.Value = 1;
             GameFlowIndex = 0;
+            DebtCycle.Value = 0;
         }
     }
 

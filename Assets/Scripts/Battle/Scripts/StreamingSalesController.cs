@@ -416,6 +416,7 @@ public class StreamingSalesController : MonoBehaviour
     private void HandleItemClicked(ItemSlotView slot)
     {
         if (slot == null || slot.CurrentItem == null) return;
+        if (slot.CurrentItem.Stock.Value == 0) return; // 在庫切れはBattleSceneStarterの補充ポップアップで処理
         priceGraphView?.Show(slot.CurrentItem);
     }
 
