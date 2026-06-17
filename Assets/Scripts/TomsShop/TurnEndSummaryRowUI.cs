@@ -31,7 +31,7 @@ public class TurnEndSummaryRowUI : MonoBehaviour
             soldCountText.text = $"{data.SoldCount}個";
 
         if (revenueText != null)
-            revenueText.text = $"{data.Revenue}G";
+            revenueText.text = $"{data.Revenue:N0}G";
         
         if (itemIcon != null)
             itemIcon.sprite = data.ItemIcon;

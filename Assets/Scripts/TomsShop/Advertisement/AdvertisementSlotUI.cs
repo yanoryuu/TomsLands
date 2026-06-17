@@ -56,9 +56,9 @@ public class AdvertisementSlotUI : MonoBehaviour
         if (costText == null || AdData == null) return;
 
         if (discountedCost < AdData.cost)
-            costText.text = $"<s>{AdData.cost}G</s> → {discountedCost}G";
+            costText.text = $"<s>{AdData.cost:N0}G</s> → {discountedCost:N0}G";
         else
-            costText.text = $"{discountedCost}G";
+            costText.text = $"{discountedCost:N0}G";
     }
 }
 

@@ -16,7 +16,7 @@ public static class EventDataLoader
     {
         if (_cachedEvents != null) return _cachedEvents;
 
-        var textAsset = Resources.Load<TextAsset>("EventDatas");
+        var textAsset = AddressableLoader.Load<TextAsset>("EventDatas");
         if (textAsset == null)
         {
             Debug.LogError("[EventDataLoader] Resources/EventDatas.csv が見つかりません。");

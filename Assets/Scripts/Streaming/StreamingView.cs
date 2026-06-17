@@ -63,11 +63,11 @@ public class StreamingView : MonoBehaviour
             Debug.LogError($"Invalid item index: {itemIndex}");
             return;
         }
-        selectedItemsPriceTexts[itemIndex].text = $"Price: {price}G";
+        selectedItemsPriceTexts[itemIndex].text = $"Price: {price:N0}G";
     }
 
     public void SetStealthMarketingCost(int cost)
-        => stealthCostText.text = $"Cost: {cost}G";
+        => stealthCostText.text = $"Cost: {cost:N0}G";
     
     public void SetStealthCooldown(float cd)
         => stealthCooldownText.text = cd > 0

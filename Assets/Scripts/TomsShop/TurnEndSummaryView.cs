@@ -88,7 +88,7 @@ public class TurnEndSummaryView : MonoBehaviour
 
         // サマリーテキスト更新
         if (totalRevenueText != null)
-            totalRevenueText.text = $"{totalRevenue}G";
+            totalRevenueText.text = $"{totalRevenue:N0}G";
 
         if (totalSoldCountText != null)
             totalSoldCountText.text = $"{totalSoldCount}個";

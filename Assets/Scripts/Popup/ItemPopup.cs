@@ -93,17 +93,17 @@ public class ItemPopup : MonoBehaviour
         float priceRatio = data.BasePrice > 0 ? (float)data.CurrentPrice / data.BasePrice * 100f : 100f;
         int priceDelta = data.CurrentPrice - data.PreviousPrice;
 
-        if (priceValueText) priceValueText.text = $"{data.CurrentPrice}G";
+        if (priceValueText) priceValueText.text = $"{data.CurrentPrice:N0}G";
         if (priceDeltaText)
         {
             if (priceDelta >= 0)
             {
-                priceDeltaText.text = $"▲ +{priceDelta}G";
+                priceDeltaText.text = $"▲ +{priceDelta:N0}G";
                 priceDeltaText.color = new Color32(0, 204, 0, 255);
             }
             else
             {
-                priceDeltaText.text = $"▼ {priceDelta}G";
+                priceDeltaText.text = $"▼ {priceDelta:N0}G";
                 priceDeltaText.color = new Color32(255, 68, 68, 255);
             }
         }

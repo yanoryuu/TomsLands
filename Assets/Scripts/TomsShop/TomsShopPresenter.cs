@@ -21,9 +21,14 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly TomsEventExecutor tomsEventExecutor;
     private readonly MarketingFacade marketingFacade;
     private readonly DebtPresenter debtPresenter;
+    private readonly TurnPhaseManager turnPhaseManager;
+    private readonly SalesPhaseView salesPhaseView;
 
     /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
     private int _lastKnownTurn = -1;
+
+    /// <summary>初回Entryでターンフェーズを一度だけ開始するためのフラグ。</summary>
+    private bool _turnPhaseInitialized = false;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -39,7 +44,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         TomsEventExecutor tomsEventExecutor,
         GamePanelManager gamePanelManager,
         MarketingFacade marketingFacade,
-        DebtPresenter debtPresenter)
+        DebtPresenter debtPresenter,
+        TurnPhaseManager turnPhaseManager,
+        SalesPhaseView salesPhaseView)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -54,7 +61,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.tomsEventExecutor = tomsEventExecutor;
         this.marketingFacade = marketingFacade;
         this.debtPresenter = debtPresenter;
-        
+        this.turnPhaseManager = turnPhaseManager;
+        this.salesPhaseView = salesPhaseView;
+
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
         
@@ -118,9 +127,13 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Prophet))
             .AddTo(disposables);
 
-        //　次のターンに進むボタン → サマリーパネルを表示
-        tomsShopView.OnNextTurnClicked
-            .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())
+        //　営業フェーズの「営業開始」ボタン → 簡易演出 → サマリー表示
+        tomsShopView.OnStartShopClicked
+            .Subscribe(_ =>
+            {
+                if (turnPhaseManager.CurrentTurnPhase.Value != TurnPhase.Sales) return;
+                salesPhaseView.PlayAndThen(() => turnEndSummaryPresenter.ShowSummary());
+            })
             .AddTo(disposables);
 
         // 借金返済ボタン → 任意払いパネルを表示
@@ -154,7 +167,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private void RefreshNextDebtDisplay()
     {
         int cycle = tomsShopModel.DebtCycle.Value;
-        int nextAmount = DebtDataLoader.GetAmount(cycle + 1);
+        int nextAmount = GameConst.GetDebtAmount(cycle + 1);
         int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
         int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
         tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);
@@ -168,10 +181,13 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
 
+        // ターン変化はフェーズ開始判定に使うため、_lastKnownTurn が他で書き換わる前に捕捉する
+        int currentTurn = gameFlowManager.CurrentTurn.Value;
+        bool turnChanged = _lastKnownTurn != -1 && _lastKnownTurn != currentTurn;
+
         ShowPendingEventIfExists();
 
         // 借金返済チェック: 支払うべきサイクル数 > 支払い済みサイクル数 なら強制返済パネルを表示
-        int currentTurn = gameFlowManager.CurrentTurn.Value;
         if (currentTurn / GameConst.DebtPaymentInterval > tomsShopModel.DebtCycle.Value)
         {
             _lastKnownTurn = currentTurn;
@@ -179,6 +195,19 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         }
 
         ShowTurnOrBuzzAnnounce();
+
+        // --- ターン進行フェーズの開始 / 再適用 ---
+        if (turnChanged || !_turnPhaseInitialized)
+        {
+            // 新ターン（または初回Entry）: イベントフェーズから開始
+            _turnPhaseInitialized = true;
+            turnPhaseManager.BeginTurnPhases();
+        }
+        else
+        {
+            // 詳細画面からのホーム復帰: 現フェーズのUIを再適用（フェーズは保持）
+            turnPhaseManager.CurrentTurnPhase.ForceNotify();
+        }
     }
     
     //初期化
@@ -269,6 +298,12 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         // 保留データをクリア
         pendingEventData.Clear();
+
+        // イベントフェーズ完了 → 仕入れフェーズへ前進
+        if (turnPhaseManager.CurrentTurnPhase.Value == TurnPhase.Event)
+        {
+            turnPhaseManager.AdvanceTurnPhase();
+        }
     }
 
     /// <summary>
@@ -286,7 +321,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                     if (cmd.parameters.TryGetValue("amount", out var moneyStr))
                     {
                         int amount = int.Parse(moneyStr);
-                        sb.AppendLine(amount >= 0 ? $"所持金 +{amount}G" : $"所持金 {amount}G");
+                        sb.AppendLine(amount >= 0 ? $"所持金 +{amount:N0}G" : $"所持金 {amount:N0}G");
                     }
                     break;
 

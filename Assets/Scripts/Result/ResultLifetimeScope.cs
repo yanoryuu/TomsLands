@@ -17,11 +17,11 @@ public class ResultLifetimeScope : LifetimeScope
         // --- 1. Infrastructure / Data Setup ---
 
         // マスターデータのロードと登録（ItemModel 構築に必要）
-        var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
+        var masterItems = AddressableLoader.LoadAll<ItemData>("ItemData");
         builder.RegisterInstance(masterItems);
 
         // ItemVisualSettings のロードと登録
-        var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
+        var itemVisualSettings = AddressableLoader.Load<ItemVisualSettings>("ItemVisualSettings");
         if (itemVisualSettings == null)
         {
             itemVisualSettings = ScriptableObject.CreateInstance<ItemVisualSettings>();
@@ -30,9 +30,9 @@ public class ResultLifetimeScope : LifetimeScope
         builder.RegisterInstance(itemVisualSettings);
 
         // BattleInputData / BattleOutputData（SceneTransitionService の依存解決に必要）
-        var battleInputData = Resources.Load<BattleInputData>("SceneData/BattleInputData")
+        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData")
                               ?? ScriptableObject.CreateInstance<BattleInputData>();
-        var battleOutputData = Resources.Load<BattleOutputData>("SceneData/BattleOutputData")
+        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData")
                                ?? ScriptableObject.CreateInstance<BattleOutputData>();
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);

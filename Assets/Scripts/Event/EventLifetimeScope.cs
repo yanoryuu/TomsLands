@@ -20,7 +20,7 @@ public class EventLifetimeScope : LifetimeScope
         // EventInputData のロード
         if (eventInputData == null)
         {
-            eventInputData = Resources.Load<EventInputData>("SceneData/EventInputData");
+            eventInputData = AddressableLoader.Load<EventInputData>("SceneData/EventInputData");
             if (eventInputData == null)
             {
                 eventInputData = ScriptableObject.CreateInstance<EventInputData>();
@@ -32,7 +32,7 @@ public class EventLifetimeScope : LifetimeScope
         // EventOutputData のロード
         if (eventOutputData == null)
         {
-            eventOutputData = Resources.Load<EventOutputData>("SceneData/EventOutputData");
+            eventOutputData = AddressableLoader.Load<EventOutputData>("SceneData/EventOutputData");
             if (eventOutputData == null)
             {
                 eventOutputData = ScriptableObject.CreateInstance<EventOutputData>();
@@ -42,9 +42,9 @@ public class EventLifetimeScope : LifetimeScope
         builder.RegisterInstance(eventOutputData);
 
         // BattleInputData / BattleOutputData（SceneTransitionService の依存）
-        var battleInputData = Resources.Load<BattleInputData>("SceneData/BattleInputData")
+        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData")
                               ?? ScriptableObject.CreateInstance<BattleInputData>();
-        var battleOutputData = Resources.Load<BattleOutputData>("SceneData/BattleOutputData")
+        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData")
                                ?? ScriptableObject.CreateInstance<BattleOutputData>();
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);

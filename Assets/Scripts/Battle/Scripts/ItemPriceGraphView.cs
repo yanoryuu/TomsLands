@@ -158,14 +158,14 @@ public class ItemPriceGraphView : MonoBehaviour
             DrawPoint(graphContainer, points[i], ptColor);
 
             // 価格ラベル（点の上）
-            string priceLabel = $"{history[i]}G";
+            string priceLabel = $"{history[i]:N0}G";
             CreateLabel(graphContainer, priceLabel, points[i] + new Vector2(0f, pointSize * 0.5f + 4f),
                 fontSize: 8f, color: ptColor, pivot: new Vector2(0.5f, 0f));
 
             // ターン＋差分ラベル（グラフ下）
             int    delta = i == 0 ? 0 : history[i] - history[i - 1];
             string sign  = delta > 0 ? "+" : "";
-            string label = i == 0 ? $"開始\n±0G" : $"T{i}\n{sign}{delta}G";
+            string label = i == 0 ? $"開始\n±0G" : $"T{i}\n{sign}{delta:N0}G";
             Color  lc    = i == 0 ? lineColorFlat
                          : delta > 0 ? lineColorUp
                          : delta < 0 ? lineColorDown

@@ -23,6 +23,8 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private DemandDashboardView demandDashboardView;
     [SerializeField] private TurnActionHintView turnActionHintView;
     [SerializeField] private DebtView debtView;
+    [SerializeField] private TurnPhaseView turnPhaseView;
+    [SerializeField] private SalesPhaseView salesPhaseView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -32,18 +34,18 @@ public class GameLifetimeScope : LifetimeScope
     {
         // --- 1. Infrastructure / Data Setup ---
         // マスターデータのロードと登録
-        var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
+        var masterItems = AddressableLoader.LoadAll<ItemData>("ItemData");
         builder.RegisterInstance(masterItems); // List<ItemData> としてどこでも注入可能に
 
         // シーン間共有データ（ScriptableObject）のロードと登録
-        var battleInputData = Resources.Load<BattleInputData>("SceneData/BattleInputData");
+        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData");
         if (battleInputData == null)
         {
             battleInputData = ScriptableObject.CreateInstance<BattleInputData>();
             Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/BattleInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
         }
 
-        var battleOutputData = Resources.Load<BattleOutputData>("SceneData/BattleOutputData");
+        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData");
         if (battleOutputData == null)
         {
             battleOutputData = ScriptableObject.CreateInstance<BattleOutputData>();
@@ -54,14 +56,14 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(battleOutputData);
 
         // EventInputData / EventOutputData のロードと登録
-        var eventInputData = Resources.Load<EventInputData>("SceneData/EventInputData");
+        var eventInputData = AddressableLoader.Load<EventInputData>("SceneData/EventInputData");
         if (eventInputData == null)
         {
             eventInputData = ScriptableObject.CreateInstance<EventInputData>();
             Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
         }
 
-        var eventOutputData = Resources.Load<EventOutputData>("SceneData/EventOutputData");
+        var eventOutputData = AddressableLoader.Load<EventOutputData>("SceneData/EventOutputData");
         if (eventOutputData == null)
         {
             eventOutputData = ScriptableObject.CreateInstance<EventOutputData>();
@@ -72,7 +74,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(eventOutputData);
 
         // ShopEconomySettings のロードと登録
-        var shopEconomySettings = Resources.Load<ShopEconomySettings>("ShopEconomySettings");
+        var shopEconomySettings = AddressableLoader.Load<ShopEconomySettings>("ShopEconomySettings");
         if (shopEconomySettings == null)
         {
             shopEconomySettings = ScriptableObject.CreateInstance<ShopEconomySettings>();
@@ -85,7 +87,7 @@ public class GameLifetimeScope : LifetimeScope
         // =====================================================
 
         // GameBalanceData のロードと登録
-        var gameBalanceData = Resources.Load<GameBalanceData>("Marketing/GameBalanceData");
+        var gameBalanceData = AddressableLoader.Load<GameBalanceData>("Marketing/GameBalanceData");
         if (gameBalanceData == null)
         {
             gameBalanceData = ScriptableObject.CreateInstance<GameBalanceData>();
@@ -94,7 +96,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(gameBalanceData);
 
         // 広告データのロードと登録（Resourcesフォルダから全件ロード）
-        var advertisementDataList = Resources.LoadAll<AdvertisementData>("Marketing").ToList();
+        var advertisementDataList = AddressableLoader.LoadAll<AdvertisementData>("AdvertisementData");
         if (advertisementDataList.Count == 0)
         {
             Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に AdvertisementData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
@@ -102,7 +104,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(advertisementDataList);
 
         // フォロワーマイルストーンデータのロードと登録
-        var milestoneDataList = Resources.LoadAll<FollowerMilestoneData>("Marketing").ToList();
+        var milestoneDataList = AddressableLoader.LoadAll<FollowerMilestoneData>("FollowerMilestoneData");
         if (milestoneDataList.Count == 0)
         {
             Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に FollowerMilestoneData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
@@ -110,7 +112,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(milestoneDataList);
 
         // バズ効果データのロードと登録（タイプ別に個別登録）
-        var allBuzzEffects = Resources.LoadAll<BuzzEffectData>("Marketing");
+        var allBuzzEffects = AddressableLoader.LoadAll<BuzzEffectData>("BuzzEffectData");
         BuzzEffectData flameBuzzData = null;
         BuzzEffectData normalBuzzData = null;
         BuzzEffectData bigBuzzData = null;
@@ -149,7 +151,7 @@ public class GameLifetimeScope : LifetimeScope
         // （同じ型が3つあるため、RegisterInstance では区別できない）
 
         // ItemVisualSettings のロードと登録
-        var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
+        var itemVisualSettings = AddressableLoader.Load<ItemVisualSettings>("ItemVisualSettings");
         if (itemVisualSettings == null)
         {
             itemVisualSettings = ScriptableObject.CreateInstance<ItemVisualSettings>();
@@ -158,7 +160,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(itemVisualSettings);
 
         // シーン間共有データ（StartModeData）のロードと登録
-        var startModeData = Resources.Load<StartModeData>("SceneData/StartModeData");
+        var startModeData = AddressableLoader.Load<StartModeData>("SceneData/StartModeData");
         if (startModeData == null)
         {
             startModeData = ScriptableObject.CreateInstance<StartModeData>();
@@ -180,6 +182,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<MapModel>(Lifetime.Singleton);
         builder.Register<BlackSmithModel>(Lifetime.Singleton);
         builder.Register<StateManager>(Lifetime.Singleton);
+        builder.Register<TurnPhaseManager>(Lifetime.Singleton);
 
         // イベント関連
         builder.Register<PendingEventData>(Lifetime.Singleton);
@@ -240,6 +243,8 @@ public class GameLifetimeScope : LifetimeScope
             Debug.LogWarning("[GameLifetimeScope] turnActionHintView が未設定のためヒントチェックリストは無効です。");
 
         RegisterComponentSafe(builder, debtView, nameof(debtView));
+        RegisterComponentSafe(builder, turnPhaseView, nameof(turnPhaseView));
+        RegisterComponentSafe(builder, salesPhaseView, nameof(salesPhaseView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -254,6 +259,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<CommonPresenter>();
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>().AsSelf();
+        builder.RegisterEntryPoint<TurnPhasePresenter>();
 
         // 広告購入画面
         builder.RegisterEntryPoint<AdvertisementPresenter>();

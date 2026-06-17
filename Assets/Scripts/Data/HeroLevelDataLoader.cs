@@ -8,7 +8,7 @@ public class HeroLevelDataLoader
 
     public void LoadFromCSV(string csvFileName)
     {
-        TextAsset csvFile = Resources.Load<TextAsset>(csvFileName);
+        TextAsset csvFile = AddressableLoader.Load<TextAsset>(csvFileName);
         if (csvFile == null)
         {
             Debug.LogError($"CSV file not found: {csvFileName}");

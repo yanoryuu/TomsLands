@@ -7,8 +7,11 @@ public class Setting : MonoBehaviour
     [SerializeField] private Slider bgmSlider;
     [SerializeField] private Slider seSlider;
     [SerializeField] private Button closeBtn;
-    
+
     public Subject<Unit> OnCloseButtonClicked { get; } = new();
+
+    // 閉じる処理の二重実行ガード
+    private bool isClosing;
 
     private void Start()
     {
@@ -25,6 +28,11 @@ public class Setting : MonoBehaviour
         bgmSlider.onValueChanged.AddListener(value => SoundManager.Instance.SetBGMVolume(value));
         seSlider.onValueChanged.AddListener(value => SoundManager.Instance.SetSEVolume(value));
         
-        closeBtn.onClick.AddListener(() => SceneManager.UnloadSceneAsync("Setting"));
+        closeBtn.onClick.AddListener(() =>
+        {
+            if (isClosing) return;
+            isClosing = true;
+            SceneManager.UnloadSceneAsync("Setting");
+        });
     }
 }

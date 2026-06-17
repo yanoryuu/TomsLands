@@ -24,6 +24,10 @@ public class TitlePresenter : IStartable, IDisposable
     {
         SoundManager.Instance?.PlayBGM("OP");
         _titleView.SetContinueButtonVisible(SaveSystem.Exists());
+
+        // フロー選択UIの初期値を GameConst の既定から設定
+        _titleView.InitFlowSelection(_startModeData.SelectedMode, GameConst.FlowGeneration.useAutoGeneration);
+
         Bind();
     }
 
@@ -38,7 +42,9 @@ public class TitlePresenter : IStartable, IDisposable
         _titleView.OnNewGameRequested.Subscribe(_ =>
         {
             _startModeData.SetNewGame();
-            Debug.Log("[TitlePresenter] 初めから → TomsShopシーンへ遷移");
+            // タイトルUIで選んだフロー設定（モード・自動/手動）を反映
+            _startModeData.SetFlowSelection(_titleView.SelectedMode, _titleView.UseAutoGeneration);
+            Debug.Log($"[TitlePresenter] 初めから → TomsShopシーンへ遷移 (mode={_titleView.SelectedMode}, auto={_titleView.UseAutoGeneration})");
             SceneManager.LoadScene("TomsShop");
         }).AddTo(_disposable);
 

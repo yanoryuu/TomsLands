@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -104,12 +105,37 @@ public class GameFlowManager : IDisposable, IStartable
     
     public void Start()
     {
-        _gameFlow = Resources.Load<GameFlow>("GameFlow/GameFlow");
+        // フローの構築は GameLifecycleHandler が seed / mode を確定した後に
+        // InitializeFlow() を呼んで行う（VContainer の Start 順では本クラスが
+        // GameLifecycleHandler より先に走るため、ここでは何もしない）。
+    }
 
-        if (_gameFlow == null)
+    /// <summary>
+    /// フロー本体を構築する。手動(SO)か自動生成かを切り替える。
+    /// GameLifecycleHandler から RestoreIndex の前に呼ばれる。
+    /// </summary>
+    /// <param name="useAuto">true=自動生成 / false=手動SO</param>
+    /// <param name="mode">自動生成時のゲームモード</param>
+    /// <param name="seed">自動生成時の乱数シード</param>
+    public void InitializeFlow(bool useAuto, GameModeId mode, int seed)
+    {
+        if (!useAuto)
         {
-            Debug.LogError("GameFlow not found in Resources/GameFlow folder");
+            _gameFlow = AddressableLoader.Load<GameFlow>("GameFlow/GameFlow");
+            if (_gameFlow == null)
+                Debug.LogError("[GameFlowManager] 手動フロー GameFlow/GameFlow が見つかりません。");
+            else
+                Debug.Log($"[GameFlowManager] 手動フローをロード（nodes={_gameFlow.GameFlowStack.Count}）");
+            return;
         }
+
+        // --- 自動生成 ---
+        var config = GameConst.GetGameMode(mode);
+        var settings = GameConst.FlowGeneration;
+        var dungeons = _dungeonRepository != null ? _dungeonRepository.GetAll() : null;
+        var eventIdPool = EventDataLoader.LoadAll().Select(e => e.id).ToList();
+
+        _gameFlow = GameFlowGenerator.Generate(config, settings, dungeons, eventIdPool, seed);
     }
 
     /// <summary>

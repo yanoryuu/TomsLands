@@ -6,9 +6,14 @@ using VContainer.Unity;
 
 public class CommonPresenter:IStartable,IDisposable
 {
+    private const string SettingSceneName = "Setting";
+
     private readonly CommonView commonView;
     private readonly TomsModel tomsModel;
     private CompositeDisposable disposables = new();
+
+    // メニュー（Setting）シーンのロード中フラグ。連打による多重加算ロードを防ぐ。
+    private bool isMenuTransitioning;
 
     public CommonPresenter(CommonView commonView, TomsModel tomsModel)
     {
@@ -46,7 +51,23 @@ public class CommonPresenter:IStartable,IDisposable
             })
             .AddTo(disposables);
 
-        commonView.OnMenuButtonClicked.Subscribe(_ => SceneManager.LoadScene("Setting",LoadSceneMode.Additive))
+        commonView.OnMenuButtonClicked.Subscribe(_ => OpenSettingScene())
             .AddTo(disposables);
+    }
+
+    /// <summary>
+    /// 設定（Setting）シーンを加算ロードする。
+    /// 連打しても多重にロードされないよう、ロード中フラグと既ロード判定でガードする。
+    /// </summary>
+    private void OpenSettingScene()
+    {
+        // ロード処理中の連打を無視
+        if (isMenuTransitioning) return;
+        // すでに開いている場合は無視
+        if (SceneManager.GetSceneByName(SettingSceneName).isLoaded) return;
+
+        isMenuTransitioning = true;
+        var op = SceneManager.LoadSceneAsync(SettingSceneName, LoadSceneMode.Additive);
+        op.completed += _ => isMenuTransitioning = false;
     }
 }

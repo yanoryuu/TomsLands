@@ -117,7 +117,7 @@ public class InfoBrokerModel
     {
         var result = new Dictionary<DungeonName, int[]>();
 
-        TextAsset csvFile = Resources.Load<TextAsset>(csvFileName);
+        TextAsset csvFile = AddressableLoader.Load<TextAsset>(csvFileName);
         if (csvFile == null)
         {
             Debug.LogError($"CSV file not found: {csvFileName}");
@@ -194,7 +194,7 @@ public class InfoBrokerModel
 
         string weaponName = currentHeroData?.weaponName.Value ?? "";
         string armorName = currentHeroData?.armorName.Value ?? "";
-        var settings = Resources.Load<BattlePriceSettings>("BattlePriceSettings");
+        var settings = AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings");
         return HeroBattleInfluence.BuildSummary(currentHeroData, weaponName, armorName, settings);
     }
 

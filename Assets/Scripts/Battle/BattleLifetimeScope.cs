@@ -38,13 +38,13 @@ public class BattleLifetimeScope : LifetimeScope
         // SO を共有データとして登録
         if (battleInputData == null)
         {
-            battleInputData = Resources.Load<BattleInputData>("SceneData/BattleInputData") ?? ScriptableObject.CreateInstance<BattleInputData>();
+            battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData") ?? ScriptableObject.CreateInstance<BattleInputData>();
             Debug.LogWarning("[BattleLifetimeScope] BattleInputData が未設定だったため、Resourcesまたは実行時インスタンスを使用します。");
         }
 
         if (battleOutputData == null)
         {
-            battleOutputData = Resources.Load<BattleOutputData>("SceneData/BattleOutputData") ?? ScriptableObject.CreateInstance<BattleOutputData>();
+            battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData") ?? ScriptableObject.CreateInstance<BattleOutputData>();
             Debug.LogWarning("[BattleLifetimeScope] BattleOutputData が未設定だったため、Resourcesまたは実行時インスタンスを使用します。");
         }
 
@@ -81,11 +81,11 @@ public class BattleLifetimeScope : LifetimeScope
         }
 
         // ItemModel（マスターデータ）を構築して登録
-        var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
+        var masterItems = AddressableLoader.LoadAll<ItemData>("ItemData");
         builder.RegisterInstance(masterItems);
 
         // ItemVisualSettings のロードと登録
-        var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
+        var itemVisualSettings = AddressableLoader.Load<ItemVisualSettings>("ItemVisualSettings");
         if (itemVisualSettings == null)
         {
             itemVisualSettings = ScriptableObject.CreateInstance<ItemVisualSettings>();

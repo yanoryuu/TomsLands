@@ -1,47 +1,186 @@
 using UnityEngine;
 
-public class GameConst
+/// <summary>
+/// ゲーム全体の調整値への静的アクセス窓口。呼び出し側は従来どおり <c>GameConst.XXX</c> で参照する。
+/// 実体は <see cref="GameConstData"/>。初回アクセス時に <see cref="GameConstSettings"/> アセットから読み込む。
+///
+/// 値の供給元の優先順位:
+///   1. <see cref="Override"/> / <see cref="OverrideFromJson"/> で差し込まれた値（将来のサーバー配信用）
+///   2. GameConstSettings アセット（Inspector で編集するベイク済みデフォルト）
+///   3. どちらも無ければ <see cref="GameConstData"/> の既定値
+/// </summary>
+public static class GameConst
 {
-    public const int MaxDungeonLevel = 5;
-    
-    public const int MaxBlackSmithLevel = 5;
-    
-    public const int MaxToolShopLevel = 5;
-    
-    public const int MaxInfoBrokerLevel = 5;
+    /// <summary>GameConstSettings の Addressable アドレス。</summary>
+    public const string Address = "GameConstSettings";
 
-    public const int MaxItemStock = 99;
-    
-    public const int MinItemStock = 0;
-    
-    public const int InitMoney = 10000;
+    /// <summary>適用を受け付ける schemaVersion。データ構造を破壊的に変えた時のみ上げる。</summary>
+    public const int ExpectedSchemaVersion = 1;
 
-    public const int DebtPaymentInterval = 10;
+    private static GameConstData _data;
 
-    public const int HeroExpPerMob = 10;
+    public static GameConstData Data => _data ??= LoadDefault();
 
-    public const int HeroExpPerBoss = 100;
-
-    public const int HeroBaseExpToNextLevel = 100;
-
-    public static int GetHeroExpToNextLevel(int currentLevel)
+    /// <summary>
+    /// サーバー等から取得した値で上書きする（将来のリモートコンフィグ用の差し込み口）。
+    /// </summary>
+    public static void Override(GameConstData data)
     {
-        return Mathf.Max(HeroBaseExpToNextLevel, currentLevel * HeroBaseExpToNextLevel);
+        if (data != null) _data = data;
     }
 
     /// <summary>
-    /// 鍛冶屋レベルアップコスト（インデックス = 現在レベル → 次のレベルへの費用）
-    /// Lv1→2: 3000G, Lv2→3: 6000G, Lv3→4: 12000G, Lv4→5: 20000G
+    /// JSON 文字列から上書きする。SpreadSheet → サーバー経由でダウンロードした JSON をそのまま渡す想定。
+    /// ベイク済みデフォルトを土台に、JSON に存在するフィールドだけを上書きする（前方互換）。
+    /// JSON に無いフィールドはデフォルト値が保持されるため、クライアント先行でフィールドを
+    /// 追加してもサーバー旧JSONで破綻しない。
     /// </summary>
-    public static readonly int[] BlackSmithLevelUpCosts = { 0, 3000, 6000, 12000, 20000 };
+    public static void OverrideFromJson(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return;
+
+        // ベイク済みデフォルトを土台にする（欠損フィールドはこの値が残る）。
+        // LoadDefault() は Clone 済みの独立インスタンスを返すためアセットは汚染されない。
+        var baseData = LoadDefault();
+        try
+        {
+            JsonUtility.FromJsonOverwrite(json, baseData);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[GameConst] JSON の解析に失敗しました。上書きを中止します。{e.Message}");
+            return;
+        }
+        _data = baseData;
+    }
 
     /// <summary>
-    /// 鍛冶屋の現在レベルからレベルアップコストを取得。最大レベルなら -1 を返す。
+    /// 配信エンベロープ（version/schemaVersion 付き）から上書きする。
+    /// schemaVersion 不一致時は適用せずデフォルト（または前回値）を維持する。
+    /// </summary>
+    /// <returns>適用した version。適用しなかった場合は -1。</returns>
+    public static int OverrideFromEnvelope(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return -1;
+
+        // data を土台（ベイク済みデフォルト）で初期化しておくことで、
+        // data 内の欠損フィールドにもデフォルト保持が効く。
+        var envelope = new GameConstEnvelope { data = LoadDefault() };
+        try
+        {
+            // envelope.data は参照型のため、入れ子の data フィールドにも上書きが効く。
+            JsonUtility.FromJsonOverwrite(json, envelope);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[GameConst] エンベロープ解析に失敗しました。上書きを中止します。{e.Message}");
+            return -1;
+        }
+
+        // schemaVersion 検証：不一致なら部分適用せずフォールバック。
+        if (envelope.schemaVersion != ExpectedSchemaVersion)
+        {
+            Debug.LogWarning($"[GameConst] schemaVersion 不一致 (expected {ExpectedSchemaVersion}, got {envelope.schemaVersion})。" +
+                             "デフォルト/前回値を維持します。");
+            return -1;
+        }
+
+        if (envelope.data == null)
+        {
+            Debug.LogError("[GameConst] エンベロープに data がありません。上書きを中止します。");
+            return -1;
+        }
+
+        _data = envelope.data;
+        Debug.Log($"[GameConst] リモートコンフィグ version {envelope.version} を適用しました。");
+        return envelope.version;
+    }
+
+    /// <summary>
+    /// 上書きを破棄してベイク済みデフォルト（GameConstSettings）に戻す。
+    /// リモート/キャッシュのいずれも不正だった場合の最終フォールバック用。
+    /// </summary>
+    public static void ResetToDefault() => _data = LoadDefault();
+
+    /// <summary>現在の値を JSON 化する（サーバーへのアップロードや差分比較用）。</summary>
+    public static string ToJson() => JsonUtility.ToJson(Data, true);
+
+    private static GameConstData LoadDefault()
+    {
+        var settings = LoadSettings();
+        if (settings != null && settings.data != null)
+            return settings.data.Clone();
+
+        Debug.LogWarning($"[GameConst] '{Address}' が読み込めませんでした。既定値を使用します。" +
+                         "Tools > GameConst > Create Settings Asset で作成し、Addressable 登録してください。");
+        return new GameConstData();
+    }
+
+    private static GameConstSettings LoadSettings()
+    {
+#if UNITY_EDITOR
+        // 非再生時（Inspector 編集中やエディタ拡張からの参照）は AssetDatabase から直接取得する。
+        if (!Application.isPlaying)
+        {
+            foreach (var guid in UnityEditor.AssetDatabase.FindAssets("t:GameConstSettings"))
+            {
+                var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                var s = UnityEditor.AssetDatabase.LoadAssetAtPath<GameConstSettings>(path);
+                if (s != null) return s;
+            }
+            return null;
+        }
+#endif
+        return AddressableLoader.Load<GameConstSettings>(Address);
+    }
+
+    // =====================================================================
+    // 以降は呼び出し側の互換 API（旧 GameConst の定数・メソッドと同じシグネチャ）
+    // =====================================================================
+
+    public static int MaxDungeonLevel => Data.maxDungeonLevel;
+    public static int MaxBlackSmithLevel => Data.maxBlackSmithLevel;
+    public static int MaxToolShopLevel => Data.maxToolShopLevel;
+    public static int MaxInfoBrokerLevel => Data.maxInfoBrokerLevel;
+    public static int MaxItemStock => Data.maxItemStock;
+    public static int MinItemStock => Data.minItemStock;
+    public static int InitMoney => Data.initMoney;
+    public static int DebtPaymentInterval => Data.debtPaymentInterval;
+    public static int DebtBaseAmount => Data.debtBaseAmount;
+    public static float DebtMultiplier => Data.debtMultiplier;
+    public static int HeroExpPerMob => Data.heroExpPerMob;
+    public static int HeroExpPerBoss => Data.heroExpPerBoss;
+    public static int HeroBaseExpToNextLevel => Data.heroBaseExpToNextLevel;
+    public static int[] BlackSmithLevelUpCosts => Data.blackSmithLevelUpCosts;
+
+    // --- ゲームフロー自動生成 ---
+    public static GameFlowGenerationSettings FlowGeneration => Data.flowGeneration;
+    public static GameModeConfig GetGameMode(GameModeId id) => Data.flowGeneration.GetMode(id);
+
+    /// <summary>
+    /// 指定サイクルの返済額。支払うたびに倍率が掛かる等比級数。
+    /// 返済額 = 基準額 × 倍率^(cycle-1)
+    /// </summary>
+    public static int GetDebtAmount(int cycle)
+    {
+        if (cycle <= 0) return 0;
+        double amount = Data.debtBaseAmount * System.Math.Pow(Data.debtMultiplier, cycle - 1);
+        if (amount >= int.MaxValue) return int.MaxValue;
+        return Mathf.RoundToInt((float)amount);
+    }
+
+    public static int GetHeroExpToNextLevel(int currentLevel)
+    {
+        return Mathf.Max(Data.heroBaseExpToNextLevel, currentLevel * Data.heroBaseExpToNextLevel);
+    }
+
+    /// <summary>
+    /// 鍛冶屋の現在レベルからレベルアップコストを取得。最大レベル／範囲外なら -1 を返す。
     /// </summary>
     public static int GetBlackSmithLevelUpCost(int currentLevel)
     {
-        if (currentLevel <= 0 || currentLevel >= MaxBlackSmithLevel)
-            return -1;
-        return BlackSmithLevelUpCosts[currentLevel];
+        var costs = Data.blackSmithLevelUpCosts;
+        if (currentLevel <= 0 || currentLevel >= Data.maxBlackSmithLevel) return -1;
+        return costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
     }
 }

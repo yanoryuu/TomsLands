@@ -56,7 +56,7 @@ public class BattleControlView : MonoBehaviour
         var message =
             $"\u300c{itemName}\u300d\u306e\u5728\u5eab\u304c\u306a\u304f\u306a\u308a\u307e\u3057\u305f\u3002\n" +
             $"10\u500b\u88dc\u5145\u3057\u307e\u3059\u304b\uff1f\n\n" +
-            $"\u8cbb\u7528: {totalCost}G";
+            $"\u8cbb\u7528: {totalCost:N0}G";
 
         if (!canAfford)
         {

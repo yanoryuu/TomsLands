@@ -94,7 +94,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     private void UpdatePriceText()
     {
         int total = unitPrice * Mathf.Max(displayQuantity, 1);
-        priceText?.SetText($"{total}G");
+        priceText?.SetText($"{total:N0}G");
     }
 
     // === 表示だけ更新（通知しない） ===

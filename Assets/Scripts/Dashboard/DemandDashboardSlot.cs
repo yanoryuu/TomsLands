@@ -45,7 +45,7 @@ public class DemandDashboardSlot : MonoBehaviour
         if (demandSlider != null) demandSlider.value = demand;
         if (demandText != null) demandText.text = $"{demand:P0}";
 
-        if (priceText != null) priceText.text = $"{data.CurrentPrice.Value}G";
+        if (priceText != null) priceText.text = $"{data.CurrentPrice.Value:N0}G";
         UpdatePriceTrend(data.CurrentPrice.Value, data.PreviousPrice);
 
         if (stockText != null) stockText.text = $"×{data.Stock.Value}";

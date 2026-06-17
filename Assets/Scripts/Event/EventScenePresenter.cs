@@ -130,9 +130,9 @@ public class EventScenePresenter : IAsyncStartable
                     {
                         int amount = int.Parse(moneyStr);
                         if (amount >= 0)
-                            sb.AppendLine($"所持金 +{amount}G");
+                            sb.AppendLine($"所持金 +{amount:N0}G");
                         else
-                            sb.AppendLine($"所持金 {amount}G");
+                            sb.AppendLine($"所持金 {amount:N0}G");
                     }
                     break;
 

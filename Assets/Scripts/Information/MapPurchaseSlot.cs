@@ -41,7 +41,7 @@ public class MapPurchaseSlot : MonoBehaviour
 
     private void SetPrice(int price)
     {
-        priceText?.SetText($"{price}G");
+        priceText?.SetText($"{price:N0}G");
     }
 
     private void OnDestroy()

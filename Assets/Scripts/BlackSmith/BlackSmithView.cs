@@ -164,10 +164,10 @@ public class BlackSmithView : MonoBehaviour
         var sb = new System.Text.StringBuilder("【オート購入】\n");
         foreach (var r in results)
         {
-            sb.AppendLine($"  {r.ItemName} ×{r.Quantity}  {r.TotalCost}G");
+            sb.AppendLine($"  {r.ItemName} ×{r.Quantity}  {r.TotalCost:N0}G");
             total += r.TotalCost;
         }
-        sb.Append($"合計 {total}G  残金 {playerMoney}G");
+        sb.Append($"合計 {total:N0}G  残金 {playerMoney:N0}G");
         autoBuyResultText.text = sb.ToString();
     }
 
@@ -226,7 +226,7 @@ public class BlackSmithView : MonoBehaviour
         }
         else
         {
-            if (levelUpCostText) levelUpCostText.text = $"{cost}G";
+            if (levelUpCostText) levelUpCostText.text = $"{cost:N0}G";
             if (levelUpButtonText) levelUpButtonText.text = "レベルアップ";
             if (levelUpButton) levelUpButton.interactable = playerMoney >= cost;
         }

@@ -8,7 +8,8 @@
       "Bash(Get-ChildItem -Path \"D:\\\\Unity\\\\TomsLands\" -Recurse -Directory)",
       "Bash(Select-Object -First 20)",
       "Bash(Format-Table FullName)",
-      "Bash(xargs grep *)"
+      "Bash(xargs grep *)",
+      "mcp__claude_ai_Google_Drive__read_file_content"
     ]
   }
 }

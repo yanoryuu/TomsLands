@@ -9,6 +9,11 @@ public class StartModeData : ScriptableObject
 {
     public StartMode Mode = StartMode.NewGame;
 
+    // --- 自動生成フローの選択（タイトルUIで設定） ---
+    [Header("ゲームフロー自動生成")]
+    public GameModeId SelectedMode = GameModeId.Short;
+    public bool UseAutoGeneration = true;
+
     public void SetNewGame()
     {
         Mode = StartMode.NewGame;
@@ -17,6 +22,13 @@ public class StartModeData : ScriptableObject
     public void SetContinue()
     {
         Mode = StartMode.Continue;
+    }
+
+    /// <summary>タイトルUIからの選択を反映する。</summary>
+    public void SetFlowSelection(GameModeId mode, bool useAuto)
+    {
+        SelectedMode = mode;
+        UseAutoGeneration = useAuto;
     }
 }
 

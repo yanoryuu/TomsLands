@@ -15,20 +15,247 @@ MonoBehaviour:
   m_GroupName: Default Local Group
   m_GUID: 37e73f14ccb9bc2439468569d55785d5
   m_SerializeEntries:
+  - m_GUID: 00a6cee9050384e9fb397311a0cf37a1
+    m_Address: ItemData/SW3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 053dd271109d932408760057e6a843b7
+    m_Address: ItemData/HE2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06214442c9e1b472089e07749e0df669
+    m_Address: EventData
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 06c9bcc2cf982204d88c881b8335dc53
+    m_Address: EnemyData/Skill_Basillisk
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SkillData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 075484ccb98d9403fbd2ad45c9a7a381
+    m_Address: ItemData/AR8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 07ea969672c25d64ba4e641b173aabf4
     m_Address: "\u901A\u5E38\u55B6\u696D"
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 0d1f8886c1c140f4085e9daf6b97a64c
+    m_Address: DungeonIndoData/GreenForest
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoScriptableObj
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 13c36d50f513b48ee9d516c127fa552c
+    m_Address: StatusDescriptions
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1a46d60748424c9e9f5280fe6af92c34
+    m_Address: DungeonInfoCosts
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1b4d561ebadfe4e43aeff85a5ae6d315
+    m_Address: ItemData/AR7
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1c1c4b15f8c537c43857bd2e1a87f2a0
+    m_Address: EnemyData/mermaid
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1c5addf963e23cb4ca618bba7784be55
+    m_Address: HeroStatusData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ea3352562f0d484b9ba24971a032672
+    m_Address: EnemyData/New EnemyData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 20f8f64db649ddd439280d4068099782
+    m_Address: EnemyData/New EnemyData 2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 229b1479e35c16c4da6809cbd97f84c6
+    m_Address: ProphetDialogues
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2451a56cf709fec49a12967d4c26ca9f
+    m_Address: DungeonIndoData/RunningCastle
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoScriptableObj
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2529be2667aa6bc4a9e39ac9641d1069
+    m_Address: ItemData/SP1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 265373c4b8b08464eace7fe54ef5dd79
+    m_Address: EnemyData/Bat
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2adb830c8f7ed8e42ac1ba7d7ac55fd0
+    m_Address: Marketing/Ad_Influencer
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2b3e666b67121bf4ebe2c33400ca5d92
+    m_Address: DungeonInfoData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 314a4a8d4405c0d4586f3e62e6489aa2
+    m_Address: SceneData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - SceneData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3156644aed38cc8438c2aa4eeda3c169
+    m_Address: EnemyData/Slime_Water
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 318ea2a3f59204f76aa57d26a95a5c3b
+    m_Address: EventData/EventOutputData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EventOutputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 32f8c6c39672e844fbf58c042b40b593
+    m_Address: Marketing/Ad_Comprehensive
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 337cbae41773b4e4f84abbc59c6b4f68
+    m_Address: ItemData/HE3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35b924f34c8891445b04b4a018529ba6
     m_Address: "\u5171\u901ASE/SE_\u9078\u629E_\u6C7A\u5B9A"
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 382eb4d9f7099a242ba4b30bf458c6c9
+    m_Address: DungeonIndoData/BurningPrison
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoScriptableObj
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 435d2481cebb2634283baf4942298879
+    m_Address: ItemData/WA1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 45b33e78ba31d094a848d8fbfe4245b3
+    m_Address: Marketing/Ad_WordOfMouth
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47aaff80639fa9649ba9e8d00befff22
+    m_Address: Marketing/Ad_FollowerCampaign
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 482a0c67343963e4f99b7a03da776534
+    m_Address: Marketing
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Marketing
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4865d36be90517b4c82451040bdf3b55
+    m_Address: DungeonIndoData/OblivionMausoleum
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoScriptableObj
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4e8e797e2552054408d386352b586e54
+    m_Address: ItemData/HE5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4f34a34a3bb4143f19844b72adf07dde
+    m_Address: ItemData/SW4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 50776210712dd0b4d950b0f6e25a6165
+    m_Address: Marketing/GameBalanceData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameBalanceData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5177f0fe31e60cc47907a934d4fc8f85
+    m_Address: EnemyData/HeroData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - HeroData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 543a0e4e08f676e47beef70a850f049e
+    m_Address: ItemData/HE1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5458e0fabf225ff469428b017677f623
     m_Address: "\u55B6\u696D/SE_\u4ED5\u5165\u308C\u5B8C\u4E86"
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 577b332bf328b534db2580480a138e55
+    m_Address: GameConstSettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameConstSettings
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5d4515d7513ce5b4ba4bb71ac61a0395
+    m_Address: ItemData/HE6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 66619d79d7f761143b678a08cc7e89f1
+    m_Address: DungeonIndoData/IceCave
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoScriptableObj
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 6bd8bc3f65541e14f94ade0432351e2d
     m_Address: "\u55B6\u696D/SE_\u958B\u767A\u958B\u59CB"
@@ -40,30 +267,329 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 79db3ebcffac77c46aec9bf890f2efac
+    m_Address: ItemData/SW5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d01d935baa395441a6a5ea96779f858
+    m_Address: Marketing/Milestone_04_50000
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FollowerMilestoneData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7e12b1c41e9a32243beee6ac35b5acff
+    m_Address: BlackSmithDialogues
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8461757d40c3edc488bcd34d0f4ad107
+    m_Address: ItemData/HE8
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8704f6786292a443281b84d746a62e4b
+    m_Address: ItemData/AR5
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 88efe4ca8a65dcc45aa61cdea62fcfb3
+    m_Address: Marketing/BuzzEffect_Big
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuzzEffectData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 898e425ea89484c099923d31383bac1d
+    m_Address: ItemData/AR3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8c61712127e09f542b63fbd2133b38af
+    m_Address: ShopEconomySettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShopEconomySettings
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8fcdf7e7ace52e2489792f11fca1fc56
+    m_Address: DungeonIndoData/DemonCastle
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - DungeonInfoScriptableObj
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9ab6db534c2f9df47a8caad854148a84
+    m_Address: ItemData/HA1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9af559a3042ab8b4a9ac897d77a791a7
+    m_Address: SceneData/BattleOutputData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BattleOutputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9afcc0e9d82eb68419841858db2236ed
+    m_Address: EnemyData/New EnemyData 3
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9c968e11611d75647b0dfb42c8f02239
+    m_Address: EnemyData/New EnemyData 1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a22e267877de24b40bb590f54c8fb21a
+    m_Address: ItemData/SH1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a24ef22c76a7c324693a9852ea01fa5b
+    m_Address: SoundManager
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameObject
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a94b1936d2f7de946876ec100c0dee1a
+    m_Address: HeroDialogues
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a9d78b52d4491744899b617ffdfa76c2
+    m_Address: SceneData/BattleInputData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BattleInputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ac4ce1d8ec8224c8f9a5c5c1e88b1562
+    m_Address: ItemData/AR6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: aceb37e09ee007a4a828079b4d4127e8
+    m_Address: Marketing/Milestone_03_10000
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FollowerMilestoneData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: af0a3547ea65f40798c0005e078480e4
+    m_Address: EventData/EventInputData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EventInputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b1280309f6ba2914fb72b49c16bdc347
+    m_Address: SceneData/StartModeData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StartModeData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b19468514059a3443bc365caead6b051
+    m_Address: Marketing/Ad_SNS
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b3004b592a917714ca96ab83421c56cf
     m_Address: "\u55B6\u696D/SE_\u958B\u767A\u5B8C\u4E86"
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ba1a37558b33af24ebb0f59f71669ca9
+    m_Address: EnemyData/Elemental_Water
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bc8619c036502b34cb991588ec50d425
+    m_Address: BattlePriceSettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BattlePriceSettings
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bd4476cc0ba694e09929bb4da9e1b33d
+    m_Address: ItemData/AR2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bdc946c6475cbd746aa5d92974ef21ce
+    m_Address: ItemData/BO1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c04a16a0e1c9e944fb9792a2ed28d9d3
     m_Address: "\u914D\u4FE1\u30D5\u30A7\u30FC\u30BA"
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c1a3db02382485847b3a5f38c24cb44a
+    m_Address: Marketing/BuzzEffect_Normal
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuzzEffectData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3e32f770c94ebe47a3c879d0fb8c594
+    m_Address: ItemData/SW6
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c46a946b435449444af0c43045aa907c
+    m_Address: Marketing/Ad_Repeater
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c4a12a40997036e4b9ee16dd4703f9a8
+    m_Address: Marketing/Milestone_02_5000
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FollowerMilestoneData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c8f3a3651abb14816b758d2f4d2d8c91
+    m_Address: ItemData/SW2
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1787e3ae406910488fb1e479951b2d8
+    m_Address: GameFlow/GameFlow
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - GameFlow
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d643c4628233bba4da4a8b8a9060376b
     m_Address: "\u5171\u901ASE/SE_\u9078\u629E_\u623B\u308B\u30FB\u30AD\u30E3\u30F3\u30BB\u30EB"
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d8b9262fc2362aa4c850b59fd1cbccf5
+    m_Address: ItemData/HE4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d96b09da143d5b249b8ea243525ed843
+    m_Address: ItemData/AX1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: dc3b1cc6246a2b743af4ffeaa593b984
+    m_Address: Marketing/BuzzEffect_Flame
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - BuzzEffectData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e0038799ef4b3a848a8bf74432a4a650
+    m_Address: ItemData/HE7
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e3e2d59a1de3eef4293df470f6af9eae
+    m_Address: ItemData/HE9
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e43182b3dd9f9904abf927283e447e02
+    m_Address: EnemyData/Basilisk
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e4626c8a44d0a7348a307a9a33cc02ef
+    m_Address: EnemyData/Yeti
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6317cf8adea346d48f7f1ecd95223dd
+    m_Address: ItemData/AR4
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e6aa7ccacbaa4577a9c38979da0af3f9
+    m_Address: InfoBrokerDialogues
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e887f2c7e40093849b1f0f229b6b02b0
+    m_Address: ItemData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e8fa6e5db539bf84ba51df02eb3010c3
+    m_Address: SceneData/EventOutputData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EventOutputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ec664a0f521599f468e11ec714516c23
+    m_Address: EventDatas
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ec78988348c972646ac606677ca13b26
     m_Address: "\u30EA\u30B6\u30EB\u30C8\u753B\u9762"
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ef8972e7170e3496da8e725b5e47b7e4
+    m_Address: ItemData/AR1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f519a3329c74d0f409608a5eab4e1b86
+    m_Address: GameFlow
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f539a05125cee7c4caf9648f28eab88c
+    m_Address: ItemData/SW1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f54c512bedadf504a9e197bfa1342637
+    m_Address: SceneData/EventInputData
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - EventInputData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f6e56befc61b51c44851e22b2505c1d1
     m_Address: OP
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fac4343e27a9f4c3bbb77aad58a74533
+    m_Address: ItemVisualSettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemVisualSettings
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: fc83a6564706d474f8ad1438bf904ecc
+    m_Address: Marketing/Milestone_01_1000
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - FollowerMilestoneData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fd24f4a7347a7f142acf1d59895fedfa
     m_Address: "\u55B6\u696D/SE_\u58F2\u4E0A\u97F3"

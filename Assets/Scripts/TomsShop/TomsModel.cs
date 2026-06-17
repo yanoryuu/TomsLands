@@ -23,6 +23,17 @@ public class TomsModel
     /// </summary>
     public int GameFlowIndex { get; set; }
 
+    /// <summary>
+    /// 自動生成フローのシード（「続きから」で同一フローを再生成するため保存する）
+    /// </summary>
+    public int FlowSeed { get; set; }
+
+    /// <summary>選択中のゲームモード（自動生成時）</summary>
+    public GameModeId GameMode { get; set; } = GameModeId.Short;
+
+    /// <summary>true=自動生成フロー / false=手動(SO)フロー</summary>
+    public bool UseAutoFlow { get; set; }
+
     public TomsModel()
     {
         // ReactivePropertyの初回作成（一度だけ）
@@ -41,8 +52,12 @@ public class TomsModel
     /// <summary>
     /// 値をリセットする。ReactivePropertyのインスタンスは維持し、既存のSubscribeを壊さない。
     /// </summary>
-    public void Initialize(int defaultMoney = GameConst.InitMoney, int defaultBlacksmithLevel = 1, int defaultToolLevel = 1, int defaultInfoBrokerLevel = 1, float defaultTrust = 1, int defaultTurn = 1)
+    public void Initialize(int defaultMoney = -1, int defaultBlacksmithLevel = 1, int defaultToolLevel = 1, int defaultInfoBrokerLevel = 1, float defaultTrust = 1, int defaultTurn = 1)
     {
+        // defaultMoney 未指定（負値）なら GameConst の初期所持金を使う。
+        // ※ デフォルト引数はコンパイル時定数が必須で GameConst.InitMoney（実行時プロパティ）を直接使えないため、この方式にしている。
+        if (defaultMoney < 0) defaultMoney = GameConst.InitMoney;
+
         PlayerMoney.Value = defaultMoney;
         BlacksmithLevel.Value = defaultBlacksmithLevel;
         ToolShopLevel.Value = defaultToolLevel;
@@ -57,12 +72,13 @@ public class TomsModel
     /// </summary>
     public int GetNextDebtAmount()
     {
-        return DebtDataLoader.GetAmount(DebtCycle.Value + 1);
+        return GameConst.GetDebtAmount(DebtCycle.Value + 1);
     }
 
     public void SavePlayerMoney()
     {
-        var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value);
+        var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value,
+            FlowSeed, (int)GameMode, UseAutoFlow);
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(Application.persistentDataPath + "/tomsData.json", json);
     }
@@ -80,6 +96,9 @@ public class TomsModel
             CurrentTurn.Value = data.currentTurn;
             GameFlowIndex = data.gameFlowIndex;
             DebtCycle.Value = data.debtCycle;
+            FlowSeed = data.flowSeed;
+            GameMode = (GameModeId)data.gameMode;
+            UseAutoFlow = data.useAutoFlow;
         }
         else
         {
@@ -89,6 +108,9 @@ public class TomsModel
             InfoBrokerLevel.Value = 1;
             GameFlowIndex = 0;
             DebtCycle.Value = 0;
+            FlowSeed = 0;
+            GameMode = GameModeId.Short;
+            UseAutoFlow = false;
         }
     }
 

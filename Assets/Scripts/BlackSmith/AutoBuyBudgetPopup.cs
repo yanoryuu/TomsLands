@@ -39,7 +39,7 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         playerMoney = currentPlayerMoney;
         budgetInputField.text = currentPlayerMoney.ToString();
         if (playerMoneyText != null)
-            playerMoneyText.text = $"所持金: {currentPlayerMoney}G";
+            playerMoneyText.text = $"所持金: {currentPlayerMoney:N0}G";
         gameObject.SetActive(true);
     }
 

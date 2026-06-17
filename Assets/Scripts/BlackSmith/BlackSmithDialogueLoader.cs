@@ -21,7 +21,7 @@ public static class BlackSmithDialogueLoader
     {
         _cache = new Dictionary<string, string>();
 
-        var textAsset = Resources.Load<TextAsset>(CsvResourceName);
+        var textAsset = AddressableLoader.Load<TextAsset>(CsvResourceName);
         if (textAsset == null)
         {
             Debug.LogError($"[BlackSmithDialogueLoader] Resources/{CsvResourceName}.csv が見つかりません。");

@@ -15,7 +15,7 @@ public static class SoundManagerLoader
         // Instance プロパティは未発見時に LogError を出すため FindFirstObjectByType で直接チェック
         if (Object.FindFirstObjectByType<SoundManager>() != null) return;
 
-        var prefab = Resources.Load<GameObject>(PrefabPath);
+        var prefab = AddressableLoader.Load<GameObject>(PrefabPath);
         if (prefab == null)
         {
             Debug.LogError("[SoundManagerLoader] Resources/SoundManager プレハブが見つかりません。" +

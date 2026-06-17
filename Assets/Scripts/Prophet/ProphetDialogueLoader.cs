@@ -24,7 +24,7 @@ public static class ProphetDialogueLoader
     {
         _cache = new Dictionary<string, string>();
 
-        var textAsset = Resources.Load<TextAsset>(CsvResourceName);
+        var textAsset = AddressableLoader.Load<TextAsset>(CsvResourceName);
         if (textAsset == null)
         {
             Debug.LogError($"[ProphetDialogueLoader] Resources/{CsvResourceName}.csv が見つかりません。");

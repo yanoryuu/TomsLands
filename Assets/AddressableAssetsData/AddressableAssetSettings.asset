@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 37e73f14ccb9bc2439468569d55785d5
   m_currentHash:
     serializedVersion: 2
-    Hash: 77c291c4ced3599b71d2cf46f2347ecc
+    Hash: d1d6ec01d8c773febb9df3f3edbcd7c4
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -99,6 +99,30 @@ MonoBehaviour:
   m_LabelTable:
     m_LabelNames:
     - default
+    - ItemData
+    - Marketing
+    - DungeonInfoData
+    - SceneData
+    - BattlePriceSettings
+    - TextAsset
+    - DungeonInfoScriptableObj
+    - EventInputData
+    - EventOutputData
+    - GameFlow
+    - ItemVisualSettings
+    - AdvertisementData
+    - BuzzEffectData
+    - GameBalanceData
+    - FollowerMilestoneData
+    - BattleInputData
+    - BattleOutputData
+    - StartModeData
+    - ShopEconomySettings
+    - GameObject
+    - EnemyData
+    - HeroData
+    - SkillData
+    - GameConstSettings
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: b0c16d405fb1f0a4a9a3fbdc9e5b14a7, type: 2}

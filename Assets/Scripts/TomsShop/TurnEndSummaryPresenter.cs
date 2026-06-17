@@ -168,7 +168,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
 
     /// <summary>
     /// サマリーパネルを表示する。
-    /// TomsShopPresenter から NextTurnButton クリック時に呼ばれる。
+    /// TomsShopPresenter から営業フェーズの「営業開始」演出完了時に呼ばれる。
     /// </summary>
     public void ShowSummary()
     {

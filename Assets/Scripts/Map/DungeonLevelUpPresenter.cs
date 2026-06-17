@@ -193,10 +193,10 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         if (!data.isShowedInfo) return "報酬: ？？？";
 
         int currentReward = data.GetLevelData(currentLevel)?.rewardGold ?? 0;
-        if (isMax) return $"報酬 {currentReward}G";
+        if (isMax) return $"報酬 {currentReward:N0}G";
 
         int nextReward = data.GetLevelData(nextLevel)?.rewardGold ?? currentReward;
-        return $"報酬 {currentReward}G → {nextReward}G";
+        return $"報酬 {currentReward:N0}G → {nextReward:N0}G";
     }
 
     private static string ToElementLabel(ElementType element) => element switch

@@ -55,7 +55,7 @@ public class DungeonInfoView : MonoBehaviour
         {
             dungeonDescriptionText.text = d.dungeonDescription;
             dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
-            dungeonRewardText.text = $"クリア報酬：{d.rewardGold.ToString()}G";
+            dungeonRewardText.text = $"クリア報酬：{d.rewardGold:N0}G";
         }
         else
         {

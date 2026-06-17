@@ -14,7 +14,6 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button ToolButton;
     [SerializeField] private Button StartShopButton;
     [SerializeField] private Button MapButton;
-    [SerializeField] private Button NextTurnButton;
     [SerializeField] private Button DungeonLevelUpButton;
     [SerializeField] private Button AdvertisementButton;
     [SerializeField] private Button ProphetButton;
@@ -50,8 +49,6 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnAdvertisementClicked { get; } = new();
     //預言者画面を開く
     public Subject<Unit> OnProphetClicked { get; } = new();
-    //次のターンに進む
-    public Subject<Unit> OnNextTurnClicked { get; } = new();
     //需要ダッシュボードを開く
     public Subject<Unit> OnDashboardClicked { get; } = new();
     //借金返済パネルを開く
@@ -72,7 +69,6 @@ public class TomsShopView : MonoBehaviour
             AdvertisementButton.onClick.AddListener(() => OnAdvertisementClicked.OnNext(Unit.Default));
         if (ProphetButton != null)
             ProphetButton.onClick.AddListener(() => OnProphetClicked.OnNext(Unit.Default));
-        NextTurnButton.onClick.AddListener(() => OnNextTurnClicked.OnNext(Unit.Default));
         if (DashboardButton != null)
             DashboardButton.onClick.AddListener(() => OnDashboardClicked.OnNext(Unit.Default));
         if (debtPaymentButton != null)

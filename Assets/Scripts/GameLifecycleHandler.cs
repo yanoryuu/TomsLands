@@ -95,10 +95,25 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // マーケティングステータスをリセット
         _shopStatusModel.Reset();
 
-        // GameFlowManagerのインデックスを先頭に設定
+        // --- フロー選択（自動/手動）とシードを確定して保存 ---
+        bool useAuto = _startModeData.UseAutoGeneration;
+        GameModeId mode = _startModeData.SelectedMode;
+        int seed = GameConst.FlowGeneration.randomSeed != 0
+            ? GameConst.FlowGeneration.randomSeed
+            : unchecked((int)System.DateTime.Now.Ticks);
+
+        _tomsModel.UseAutoFlow = useAuto;
+        _tomsModel.GameMode = mode;
+        _tomsModel.FlowSeed = seed;
+
+        // フローを構築してからインデックスを先頭へ
+        _gameFlowManager.InitializeFlow(useAuto, mode, seed);
         _gameFlowManager.RestoreIndex(0);
 
-        Debug.Log("[GameLifecycleHandler] 初めから: マスターデータで新規ゲーム開始");
+        // seed/mode を含めて永続化（最初の戦闘前にセーブを確定させる）
+        _tomsModel.SavePlayerMoney();
+
+        Debug.Log($"[GameLifecycleHandler] 初めから: 新規開始 (useAuto={useAuto}, mode={mode}, seed={seed})");
     }
 
     /// <summary>
@@ -112,10 +127,11 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _tomsModel.LoadPlayerMoney();
         _heroModel.LoadHeroData();
 
-        // GameFlowManagerのインデックスを復元（セーブデータから読み込んだ値を使用）
+        // 保存済みの seed / mode から同一フローを再生成してからインデックス復元
+        _gameFlowManager.InitializeFlow(_tomsModel.UseAutoFlow, _tomsModel.GameMode, _tomsModel.FlowSeed);
         _gameFlowManager.RestoreIndex(_tomsModel.GameFlowIndex);
 
-        Debug.Log($"[GameLifecycleHandler] 続きから: セーブデータをロードして復帰 (FlowIndex={_tomsModel.GameFlowIndex})");
+        Debug.Log($"[GameLifecycleHandler] 続きから: 復帰 (FlowIndex={_tomsModel.GameFlowIndex}, useAuto={_tomsModel.UseAutoFlow}, mode={_tomsModel.GameMode}, seed={_tomsModel.FlowSeed})");
     }
 
     public void Dispose()

@@ -45,7 +45,7 @@ public class DebtPresenter : IDisposable, IStartable
     public void ShowVoluntary()
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
-        int debtAmount = DebtDataLoader.GetAmount(cycle);
+        int debtAmount = GameConst.GetDebtAmount(cycle);
         debtView.ShowPayment(debtAmount, tomsModel.PlayerMoney.Value, cycle, forced: false);
     }
 
@@ -55,7 +55,7 @@ public class DebtPresenter : IDisposable, IStartable
     public void ShowForced()
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
-        int debtAmount = DebtDataLoader.GetAmount(cycle);
+        int debtAmount = GameConst.GetDebtAmount(cycle);
         int currentMoney = tomsModel.PlayerMoney.Value;
 
         if (currentMoney < debtAmount)
@@ -67,7 +67,7 @@ public class DebtPresenter : IDisposable, IStartable
     private void OnPay()
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
-        int debtAmount = DebtDataLoader.GetAmount(cycle);
+        int debtAmount = GameConst.GetDebtAmount(cycle);
 
         tomsModel.PurchaseItem(debtAmount);
         tomsModel.DebtCycle.Value = cycle;
