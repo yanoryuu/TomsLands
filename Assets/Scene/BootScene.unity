@@ -413,7 +413,7 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  loadingView: {fileID: 0}
+  loadingView: {fileID: 156383036}
   enableRemoteConfig: 1
   remoteConfigUrl: https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/gameconst.json
   remoteConfigTimeoutSec: 10
@@ -742,7 +742,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 774.99994, y: -459}
+  m_AnchoredPosition: {x: 761, y: -459}
   m_SizeDelta: {x: 400, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2130926741
