@@ -1,11 +1,5 @@
 using System;
 
-/// <summary>
-/// ゲーム全体の調整値（旧 GameConst の定数群）を保持するシリアライズ可能なデータ。
-/// JsonUtility でそのままシリアライズできるため、将来のサーバー配信
-/// （SpreadSheet → サーバー → ダウンロードした JSON を適用）にそのまま使える。
-/// Inspector 編集用には <see cref="GameConstSettings"/> が内包する。
-/// </summary>
 [Serializable]
 public class GameConstData
 {

@@ -57,7 +57,7 @@ public class HeroInfoView : MonoBehaviour
         heroTacticsText.text = HeroBattleInfluence.GetDisplayName(heroInfo.tactics.Value);
         if (flavorText != null)
         {
-            var settings = AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings");
+            var settings = RemoteBalance.ApplyOverwrite("battlePrice", AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings"));
             flavorText.text = HeroBattleInfluence.BuildSummary(heroInfo, weaponName, armorName, settings);
         }
     }

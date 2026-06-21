@@ -58,7 +58,7 @@ public class StreamingSalesController : MonoBehaviour
             if (battlePriceSettings == null && !_priceSettingsLoadAttempted)
             {
                 _priceSettingsLoadAttempted = true;
-                battlePriceSettings = AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings");
+                battlePriceSettings = RemoteBalance.ApplyOverwrite("battlePrice", AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings"));
             }
             if (battlePriceSettings != null)
             {

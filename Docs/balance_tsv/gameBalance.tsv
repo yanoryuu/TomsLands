@@ -1,0 +1,15 @@
+key	value	type
+statMin	0	int
+statMax	1000	int
+followerMin	0	int
+buzzAttentionCoeff	0.5	float
+buzzTrustCoeff	0.2	float
+buzzMaxBaseChance	50	int
+flameTrustThreshold	50	int
+flameChance	30	int
+bigBuzzTrustThreshold	80	int
+initialTrust	50	int
+initialAttention	0	int
+initialSpread	0	int
+initialRetention	0	int
+initialFollowers	0	int

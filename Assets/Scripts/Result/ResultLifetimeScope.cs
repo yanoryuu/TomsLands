@@ -16,8 +16,8 @@ public class ResultLifetimeScope : LifetimeScope
     {
         // --- 1. Infrastructure / Data Setup ---
 
-        // マスターデータのロードと登録（ItemModel 構築に必要）
-        var masterItems = AddressableLoader.LoadAll<ItemData>("ItemData");
+        // マスターデータのロードと登録（ItemModel 構築に必要）。スプレッドシート由来の上書きを適用。
+        var masterItems = ItemMaster.ApplyOverrides(AddressableLoader.LoadAll<ItemData>("ItemData"));
         builder.RegisterInstance(masterItems);
 
         // ItemVisualSettings のロードと登録

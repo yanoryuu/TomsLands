@@ -53,7 +53,7 @@ public class BattleLifetimeScope : LifetimeScope
 
         // ダンジョンカタログを構築して登録
         // Inspector リストが空/不足なら、プロジェクト内の全 DungeonInfoScriptableObj を自動収集
-        var allDungeons = CollectAllDungeonInfos();
+        var allDungeons = RemoteBalance.ApplyList("dungeons", CollectAllDungeonInfos(), d => d.key.ToString());
         var catalog = new DungeonCatalog(allDungeons);
         builder.RegisterInstance<IDungeonCatalog>(catalog);
 
@@ -80,8 +80,8 @@ public class BattleLifetimeScope : LifetimeScope
             Debug.LogWarning("[BattleLifetimeScope] StreamingSalesController が未設定です。");
         }
 
-        // ItemModel（マスターデータ）を構築して登録
-        var masterItems = AddressableLoader.LoadAll<ItemData>("ItemData");
+        // ItemModel（マスターデータ）を構築して登録。スプレッドシート由来の上書きを適用。
+        var masterItems = ItemMaster.ApplyOverrides(AddressableLoader.LoadAll<ItemData>("ItemData"));
         builder.RegisterInstance(masterItems);
 
         // ItemVisualSettings のロードと登録

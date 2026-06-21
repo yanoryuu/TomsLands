@@ -194,7 +194,7 @@ public class InfoBrokerModel
 
         string weaponName = currentHeroData?.weaponName.Value ?? "";
         string armorName = currentHeroData?.armorName.Value ?? "";
-        var settings = AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings");
+        var settings = RemoteBalance.ApplyOverwrite("battlePrice", AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings"));
         return HeroBattleInfluence.BuildSummary(currentHeroData, weaponName, armorName, settings);
     }
 

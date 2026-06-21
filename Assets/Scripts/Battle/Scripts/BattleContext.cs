@@ -28,7 +28,7 @@ public class BattleContext
             // levelDataList が未設定の場合、Resources から EnemyData を自動収集してフォールバック
             if (_fallbackMonsters == null)
             {
-                _fallbackMonsters = AddressableLoader.LoadAll<EnemyData>("EnemyData");
+                _fallbackMonsters = RemoteBalance.ApplyList("enemies", AddressableLoader.LoadAll<EnemyData>("EnemyData"), e => e.enemyId);
                 if (_fallbackMonsters.Count > 0)
                 {
                     Debug.LogWarning($"[BattleContext] ダンジョン '{CurrentStage?.dungeonName}' (Lv{DungeonLevel}) の levelDataList にモンスターが未設定のため、Resources/EnemyData から {_fallbackMonsters.Count} 体を自動読み込みしました。ダンジョンSOの Inspector で levelDataList を設定してください。");

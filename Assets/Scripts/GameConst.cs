@@ -1,14 +1,6 @@
 using UnityEngine;
 
-/// <summary>
-/// ゲーム全体の調整値への静的アクセス窓口。呼び出し側は従来どおり <c>GameConst.XXX</c> で参照する。
-/// 実体は <see cref="GameConstData"/>。初回アクセス時に <see cref="GameConstSettings"/> アセットから読み込む。
-///
-/// 値の供給元の優先順位:
-///   1. <see cref="Override"/> / <see cref="OverrideFromJson"/> で差し込まれた値（将来のサーバー配信用）
-///   2. GameConstSettings アセット（Inspector で編集するベイク済みデフォルト）
-///   3. どちらも無ければ <see cref="GameConstData"/> の既定値
-/// </summary>
+
 public static class GameConst
 {
     /// <summary>GameConstSettings の Addressable アドレス。</summary>
@@ -133,10 +125,6 @@ public static class GameConst
 #endif
         return AddressableLoader.Load<GameConstSettings>(Address);
     }
-
-    // =====================================================================
-    // 以降は呼び出し側の互換 API（旧 GameConst の定数・メソッドと同じシグネチャ）
-    // =====================================================================
 
     public static int MaxDungeonLevel => Data.maxDungeonLevel;
     public static int MaxBlackSmithLevel => Data.maxBlackSmithLevel;

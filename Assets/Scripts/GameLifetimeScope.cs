@@ -34,7 +34,8 @@ public class GameLifetimeScope : LifetimeScope
     {
         // --- 1. Infrastructure / Data Setup ---
         // マスターデータのロードと登録
-        var masterItems = AddressableLoader.LoadAll<ItemData>("ItemData");
+        // スプレッドシート由来の上書きを適用してから登録（以降の master 参照すべてに反映される）
+        var masterItems = ItemMaster.ApplyOverrides(AddressableLoader.LoadAll<ItemData>("ItemData"));
         builder.RegisterInstance(masterItems); // List<ItemData> としてどこでも注入可能に
 
         // シーン間共有データ（ScriptableObject）のロードと登録
@@ -80,6 +81,7 @@ public class GameLifetimeScope : LifetimeScope
             shopEconomySettings = ScriptableObject.CreateInstance<ShopEconomySettings>();
             Debug.LogWarning("[GameLifetimeScope] Resources/ShopEconomySettings.asset が見つかりません。デフォルト値で生成しました。Unity メニューから Create > ScriptableObjects > ShopEconomySettings で作成してください。");
         }
+        shopEconomySettings = RemoteBalance.ApplyOverwrite("shopEconomy", shopEconomySettings);
         builder.RegisterInstance(shopEconomySettings);
 
         // =====================================================
@@ -93,6 +95,7 @@ public class GameLifetimeScope : LifetimeScope
             gameBalanceData = ScriptableObject.CreateInstance<GameBalanceData>();
             Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/GameBalanceData.asset が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
         }
+        gameBalanceData = RemoteBalance.ApplyOverwrite("gameBalance", gameBalanceData);
         builder.RegisterInstance(gameBalanceData);
 
         // 広告データのロードと登録（Resourcesフォルダから全件ロード）
@@ -101,6 +104,7 @@ public class GameLifetimeScope : LifetimeScope
         {
             Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に AdvertisementData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
         }
+        advertisementDataList = RemoteBalance.ApplyList("advertisements", advertisementDataList, a => a.advertisementName);
         builder.RegisterInstance(advertisementDataList);
 
         // フォロワーマイルストーンデータのロードと登録
@@ -109,10 +113,12 @@ public class GameLifetimeScope : LifetimeScope
         {
             Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に FollowerMilestoneData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
         }
+        milestoneDataList = RemoteBalance.ApplyList("followerMilestones", milestoneDataList, m => m.requiredFollowers.ToString());
         builder.RegisterInstance(milestoneDataList);
 
         // バズ効果データのロードと登録（タイプ別に個別登録）
         var allBuzzEffects = AddressableLoader.LoadAll<BuzzEffectData>("BuzzEffectData");
+        allBuzzEffects = RemoteBalance.ApplyList("buzzEffects", allBuzzEffects, b => b.buzzType.ToString());
         BuzzEffectData flameBuzzData = null;
         BuzzEffectData normalBuzzData = null;
         BuzzEffectData bigBuzzData = null;

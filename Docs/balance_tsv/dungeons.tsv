@@ -1,0 +1,7 @@
+id	key	dungeonName	dungeonDescription	initDungeonLevel	recommendedLevel	difficulty	requiredAttribute
+ScorchingVolcanoPrison	1	灼熱の火山牢	マグマが流れる火山の中に築かれた古代の監獄。今や炎をまとう魔物たちが跋扈する無法地帯と化している。	1	5	5	1
+DemonKingCastle	5	魔王城	世界の頂、空の果て。そこが最後の決戦の地、魔王城。城の周囲を覆う邪悪な光が、魔王の強大な力を物語っている。	1	10	10	4
+DeepGreenBeastForest	3	深緑の獣林	光が差し込まない鬱蒼とした森。魔獣と木の魔物の巣窟で、\n多くの新人冒険者がこの地を訪れる。	1	1	1	0
+IceMistCave	2	氷霧の洞窟	雪と氷に閉ざされた洞窟。視界の悪さに加え、肌を刺すような寒さが冒険者を襲う。滑りやすい氷の床にも注意が必要だ。	1	3	3	2
+MausoleumOblivion	0	忘却の霊廟	かつての偉大なる王が眠る巨大な地下墓地。闇に魅入られた死者たちがさまよい、訪れしものたちの精神を蝕む。	1	7	7	4
+AncientMechanicalCastle	4	古代機構城メタリオン	魔王軍の技術によって建造された鋼鉄の城塞。無数の歯車と機関が絶えず稼働し、中に潜むモンスターたちは侵入者をすべて排除する。	1	8	9	5

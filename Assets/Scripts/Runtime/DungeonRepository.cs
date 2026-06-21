@@ -18,6 +18,9 @@ public class DungeonRepository : MonoBehaviour
 
     private void Awake()
     {
+        // サーバー配信(balance.json dungeons)があればスカラー値を上書き（Sprite/levelData等は保持）
+        dungeonInfos = RemoteBalance.ApplyList("dungeons", dungeonInfos, d => d.key.ToString());
+
         // カタログが設定されていなければ作成してセット（TryLoadAndRebuild が catalog を使うため）
         if (catalog == null)
         {

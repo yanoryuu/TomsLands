@@ -2212,6 +2212,8 @@ MonoBehaviour:
   demandDashboardView: {fileID: 511830824}
   turnActionHintView: {fileID: 496696335}
   debtView: {fileID: 511830826}
+  turnPhaseView: {fileID: 713173462}
+  salesPhaseView: {fileID: 0}
   gamePanelManager: {fileID: 954988663}
   dungeonRepository: {fileID: 286490794}
 --- !u!4 &95694998
@@ -2954,6 +2956,7 @@ MonoBehaviour:
   playerMoneyText: {fileID: 254769880}
   currentTurnText: {fileID: 100685051}
   menuButton: {fileID: 1111294164}
+  moneyCountDuration: 0.5
 --- !u!114 &114203535
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13232,7 +13235,6 @@ MonoBehaviour:
   ToolButton: {fileID: 1212011921}
   StartShopButton: {fileID: 1557585058}
   MapButton: {fileID: 562128945}
-  NextTurnButton: {fileID: 1557585058}
   DungeonLevelUpButton: {fileID: 1983099757}
   AdvertisementButton: {fileID: 1482147244}
   ProphetButton: {fileID: 995723528}
@@ -16536,6 +16538,55 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 712889033}
   m_CullTransparentMesh: 1
+--- !u!1 &713173461
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 713173463}
+  - component: {fileID: 713173462}
+  m_Layer: 0
+  m_Name: TurnPhaseView
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &713173462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713173461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e6ad6cb7bb868a42985cd3a10a68936, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  phaseLabel: {fileID: 0}
+  advanceButton: {fileID: 0}
+  procurementGroup: {fileID: 0}
+  displayGroup: {fileID: 0}
+  salesGroup: {fileID: 0}
+--- !u!4 &713173463
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 713173461}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.503936, y: -0.085497804, z: 0.038165446}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &733949328
 GameObject:
   m_ObjectHideFlags: 0
@@ -44341,3 +44392,4 @@ SceneRoots:
   - {fileID: 1324069150}
   - {fileID: 1621812646}
   - {fileID: 95694998}
+  - {fileID: 713173463}

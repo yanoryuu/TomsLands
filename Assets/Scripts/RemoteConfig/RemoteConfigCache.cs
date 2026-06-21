@@ -7,12 +7,12 @@ public sealed class RemoteConfigCache
     private readonly string _jsonPath;
     private readonly string _versionPath;
 
-    public RemoteConfigCache()
+    public RemoteConfigCache(string fileBaseName = "gameconst")
     {
         var dir = Path.Combine(Application.persistentDataPath, "remoteconfig");
         Directory.CreateDirectory(dir);
-        _jsonPath = Path.Combine(dir, "gameconst.json");
-        _versionPath = Path.Combine(dir, "gameconst.version");
+        _jsonPath = Path.Combine(dir, $"{fileBaseName}.json");
+        _versionPath = Path.Combine(dir, $"{fileBaseName}.version");
     }
 
     public int LoadVersion()

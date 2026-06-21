@@ -36,6 +36,10 @@ public class HeroLevelDataLoader
 
             _levelDataMap[data.Level] = data;
         }
+
+        // サーバー配信(balance.json heroLevels)があれば全置換
+        var effective = RemoteBalance.ApplyHeroLevels(_levelDataMap.Values.ToList());
+        _levelDataMap = effective.ToDictionary(d => d.Level, d => d);
     }
 
     public HeroLevelData GetLevelData(int level)

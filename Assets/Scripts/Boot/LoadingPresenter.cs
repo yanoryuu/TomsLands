@@ -16,11 +16,16 @@ public sealed class LoadingPresenter : IAsyncStartable
     private const float MinDisplaySec = 0.6f;
 
     private readonly RemoteConfigService _service;
+    private readonly ItemMasterService _itemMasterService;
+    private readonly RemoteBalanceService _balanceService;
     private readonly LoadingView _view;
 
-    public LoadingPresenter(RemoteConfigService service, LoadingView view)
+    public LoadingPresenter(RemoteConfigService service, ItemMasterService itemMasterService,
+        RemoteBalanceService balanceService, LoadingView view)
     {
         _service = service;
+        _itemMasterService = itemMasterService;
+        _balanceService = balanceService;
         _view = view;
     }
 
@@ -31,8 +36,11 @@ public sealed class LoadingPresenter : IAsyncStartable
 
         try
         {
-            // 成功→キャッシュ→ベイク済みデフォルト の3段フォールバックは Service 内で完結。
-            await _service.InitializeAsync(ct);
+            // GameConst調整値・アイテムマスター・バランスを並行取得（各3段フォールバックは Service 内で完結）。
+            await UniTask.WhenAll(
+                _service.InitializeAsync(ct),
+                _itemMasterService.InitializeAsync(ct),
+                _balanceService.InitializeAsync(ct));
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception e)
