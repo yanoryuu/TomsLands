@@ -20,9 +20,6 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
 
-    [Header("需要ダッシュボード")]
-    [SerializeField] private Button DashboardButton;
-
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
@@ -49,8 +46,6 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnAdvertisementClicked { get; } = new();
     //預言者画面を開く
     public Subject<Unit> OnProphetClicked { get; } = new();
-    //需要ダッシュボードを開く
-    public Subject<Unit> OnDashboardClicked { get; } = new();
     //借金返済パネルを開く
     public Subject<Unit> OnDebtPaymentClicked { get; } = new();
 
@@ -69,8 +64,6 @@ public class TomsShopView : MonoBehaviour
             AdvertisementButton.onClick.AddListener(() => OnAdvertisementClicked.OnNext(Unit.Default));
         if (ProphetButton != null)
             ProphetButton.onClick.AddListener(() => OnProphetClicked.OnNext(Unit.Default));
-        if (DashboardButton != null)
-            DashboardButton.onClick.AddListener(() => OnDashboardClicked.OnNext(Unit.Default));
         if (debtPaymentButton != null)
             debtPaymentButton.onClick.AddListener(() => OnDebtPaymentClicked.OnNext(Unit.Default));
     }

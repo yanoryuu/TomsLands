@@ -16,14 +16,17 @@ public class TurnPhaseManager : IDisposable
     /// 新しいターンの先頭（イベントフェーズ）から開始する。
     /// 既にイベントなら ForceNotify で再発火する。
     /// </summary>
-    public void BeginTurnPhases()
+    public void BeginTurnPhases(bool hasPendingEvent)
     {
-        if (CurrentTurnPhase.Value == TurnPhase.Event)
+        // 保留イベントがあれば Event から、無ければ最初から仕入れ(Procurement)へ。
+        // ※ 購読ハンドラ内での再帰 Advance を避けるため、開始フェーズはここで直接決める。
+        var target = hasPendingEvent ? TurnPhase.Event : TurnPhase.Procurement;
+        if (CurrentTurnPhase.Value == target)
             CurrentTurnPhase.ForceNotify();
         else
-            CurrentTurnPhase.Value = TurnPhase.Event;
+            CurrentTurnPhase.Value = target;
 
-        Debug.Log("[TurnPhaseManager] BeginTurnPhases → Event");
+        Debug.Log($"[TurnPhaseManager] BeginTurnPhases → {target}");
     }
 
     /// <summary>

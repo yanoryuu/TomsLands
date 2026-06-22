@@ -20,7 +20,6 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private DungeonLevelUpView dungeonLevelUpView;
     [SerializeField] private AdvertisementView advertisementView;
     [SerializeField] private ProphetView prophetView;
-    [SerializeField] private DemandDashboardView demandDashboardView;
     [SerializeField] private TurnActionHintView turnActionHintView;
     [SerializeField] private DebtView debtView;
     [SerializeField] private TurnPhaseView turnPhaseView;
@@ -238,10 +237,6 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, dungeonLevelUpView, nameof(dungeonLevelUpView));
         RegisterComponentSafe(builder, advertisementView, nameof(advertisementView));
         RegisterComponentSafe(builder, prophetView, nameof(prophetView));
-        if (demandDashboardView != null)
-            builder.RegisterComponent(demandDashboardView);
-        else
-            Debug.LogWarning("[GameLifetimeScope] demandDashboardView が未設定のため需要ダッシュボードは無効です。");
 
         if (turnActionHintView != null)
             builder.RegisterComponent(turnActionHintView);
@@ -275,10 +270,6 @@ public class GameLifetimeScope : LifetimeScope
 
         // 借金返済画面（TomsShopPresenter から直接呼び出すため AsSelf で公開）
         builder.RegisterEntryPoint<DebtPresenter>().AsSelf();
-
-        // ⑤ 需要ダッシュボード（InspectorでdemandDashboardViewを設定した場合のみ有効）
-        if (demandDashboardView != null)
-            builder.RegisterEntryPoint<DemandDashboardPresenter>();
 
         // ターン行動ヒント（InspectorでturnActionHintViewを設定した場合のみ有効）
         if (turnActionHintView != null)

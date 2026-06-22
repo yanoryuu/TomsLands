@@ -127,11 +127,11 @@ public class ProphetPresenter : IDisposable, IStartable
         string attributeName = $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}";
         prophetView.ShowDungeonInfo(dungeon.dungeonName, attributeName, dungeon.difficulty, turnsUntil, dungeon.dungeonIcon);
 
-        // 同属性アイテムをTrend+Demand合計で降順→上位3件
+        // 統一おすすめスコア（GetRecommendScore：次ダンジョン弱点属性ボーナス込み）で降順→上位3件
         int level = tomsModel.BlacksmithLevel.Value;
         var recommended = itemModel.RuntimeItems
             .Where(r => r.ItemAttribute == dungeon.requiredAttribute && r.RequiredLevel.Value <= level)
-            .OrderByDescending(r => r.Trend + r.Demand.Value)
+            .OrderByDescending(r => itemModel.GetRecommendScore(r, dungeon.requiredAttribute))
             .Take(3)
             .Select(r => (r.ItemIcon, r.ItemName, r.Trend, r.Demand.Value))
             .ToList();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -12,10 +13,22 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
     private readonly ItemPopUpManager itemPopUpManager;
+    private readonly GameFlowManager gameFlowManager;
+    private readonly DungeonRepository dungeonRepository;
+    private readonly HeroModel heroModel;
 
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable panelDisposables = new();
+    private CompositeDisposable selectionDisposables = new();
     private int characterTalkIndex;
+
+    // 現在のタブ・並べ替え・選択銘柄（並べ替え再描画と選択維持に使う）
+    private BlackSmithTab currentTab = BlackSmithTab.Weapon;
+    private BlackSmithSortMode currentSort = BlackSmithSortMode.Recommend;
+    private string selectedItemId;
+
+    // 次の戦闘ダンジョンの弱点属性（おすすめスコアの属性ボーナス・自動仕入れに使う）
+    private ItemTypeData.ItemAttribute? nextDungeonAttr;
 
     public BlackSmithPresenter(
         TomsModel tomsModel,
@@ -23,7 +36,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         BlackSmithView blackSmithView,
         StateManager stateManager,
         BlackSmithModel blackSmithModel,
-        ItemPopUpManager itemPopUpManager)
+        ItemPopUpManager itemPopUpManager,
+        GameFlowManager gameFlowManager,
+        DungeonRepository dungeonRepository,
+        HeroModel heroModel)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
@@ -31,6 +47,9 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.blackSmithView = blackSmithView;
         this.stateManager = stateManager;
         this.itemPopUpManager = itemPopUpManager;
+        this.gameFlowManager = gameFlowManager;
+        this.dungeonRepository = dungeonRepository;
+        this.heroModel = heroModel;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -44,12 +63,56 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         characterTalkIndex = 0;
         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("open"));
+        UpdateNextDungeonBanner();
         blackSmithModel.SetRuntimeItems(
             itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
             itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
         );
         ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, BlackSmithTab.Weapon);
     }
+
+    /// <summary>
+    /// 次の戦闘ダンジョン情報バナーを更新し、おすすめスコア用の弱点属性を確定する。
+    /// </summary>
+    private void UpdateNextDungeonBanner()
+    {
+        int heroLevel = heroModel.heroData != null ? heroModel.heroData.level.Value : 1;
+        string weaponName = EquippedName(heroModel.heroData?.weaponId.Value);
+        string armorName = EquippedName(heroModel.heroData?.armorId.Value);
+
+        var header = blackSmithView.Header;
+        var nextKey = gameFlowManager.GetNextBattleDungeon();
+        var dungeon = nextKey.HasValue ? dungeonRepository.GetById(nextKey.Value) : null;
+
+        if (dungeon == null)
+        {
+            nextDungeonAttr = null;
+            header?.ShowNoBattle(heroLevel, weaponName, armorName);
+            return;
+        }
+
+        nextDungeonAttr = dungeon.requiredAttribute;
+        int turnsUntil = gameFlowManager.GetTurnsUntilNextBattle();
+        string weakness = $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}";
+        header?.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
+    }
+
+    private string EquippedName(string itemId)
+    {
+        if (string.IsNullOrEmpty(itemId)) return null;
+        return itemModel.GetRuntimeItem(itemId)?.ItemName;
+    }
+
+    private static string AttributeToJapanese(ItemTypeData.ItemAttribute attr) => attr switch
+    {
+        ItemTypeData.ItemAttribute.Fire  => "火",
+        ItemTypeData.ItemAttribute.Water => "水",
+        ItemTypeData.ItemAttribute.Earth => "土",
+        ItemTypeData.ItemAttribute.Wind  => "風",
+        ItemTypeData.ItemAttribute.Light => "光",
+        ItemTypeData.ItemAttribute.Dark  => "闇",
+        _ => attr.ToString()
+    };
 
     private void Bind()
     {
@@ -100,6 +163,32 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithView.OnLevelUpRequested
             .Subscribe(_ => HandleBlackSmithLevelUp())
             .AddTo(disposables);
+
+        // 並べ替え変更 → 現在のタブを並べ替えて再描画
+        blackSmithView.OnSortChanged
+            .Subscribe(mode =>
+            {
+                currentSort = mode;
+                if (currentTab == BlackSmithTab.Weapon || currentTab == BlackSmithTab.Armor)
+                    ChangePurchasePanel(GetTabItems(currentTab), currentTab);
+            })
+            .AddTo(disposables);
+    }
+
+    /// <summary>タブに対応する元アイテムリストを取得する。</summary>
+    private List<RuntimeItemData> GetTabItems(BlackSmithTab tab) =>
+        tab == BlackSmithTab.Armor ? blackSmithModel.armorRuntimeItems : blackSmithModel.weaponRuntimeItems;
+
+    /// <summary>現在の並べ替えモードでアイテムリストを並べ替える（おすすめ計算式に統一）。</summary>
+    private List<RuntimeItemData> ApplySort(List<RuntimeItemData> items)
+    {
+        IEnumerable<RuntimeItemData> sorted = currentSort switch
+        {
+            BlackSmithSortMode.Demand => items.OrderByDescending(r => r.Demand.Value),
+            BlackSmithSortMode.Price  => items.OrderByDescending(r => r.CurrentPrice.Value),
+            _ => items.OrderByDescending(ItemModel.ExpectedRevenueOf)
+        };
+        return sorted.ToList();
     }
 
     private string GetNextCharacterTalk()
@@ -110,7 +199,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     private void HandleAutoBuy(int budget)
     {
-        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel);
+        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel, nextDungeonAttr);
         if (results.Count > 0)
             SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
         blackSmithView.ShowAutoBuyResult(results, tomsModel.PlayerMoney.Value);
@@ -152,11 +241,18 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         panelDisposables.Dispose();
         panelDisposables = new CompositeDisposable();
+        selectionDisposables.Dispose();
+        selectionDisposables = new CompositeDisposable();
+
+        currentTab = itemType;
 
         // 購入パネルを表示、開発パネルを非表示
         blackSmithView.SwitchPanel(itemType);
 
-        var itemSlots = blackSmithView.PopulateItemList(items);
+        // 並べ替え（おすすめ計算式に統一）
+        var sortedItems = ApplySort(items);
+
+        var itemSlots = blackSmithView.PopulateItemList(sortedItems);
 
         foreach (var slot in itemSlots)
         {
@@ -173,106 +269,145 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 itemdata.IsPopular.Value
             );
 
-            // 残り購入可能数
+            // 市況（需要・前回比トレンド）の初期反映
+            slot.SetDemand(itemdata.Demand.Value, itemdata.IsPopular.Value);
+            slot.SetPriceTrend(itemdata.CurrentPrice.Value, itemdata.PreviousPrice);
+
+            // Model 内に予約数エントリを確保（注文は選択時に詳細パネルへ結線する）
             int initialMax = itemdata.RemainToMax();
+            int keepCount = blackSmithModel.itemCount.TryGetValue(slot.itemId, out var existing) ? existing.count.Value : 0;
+            blackSmithModel.SetItemCount(slot.itemId, Mathf.Min(keepCount, initialMax), initialMax);
 
-            // Model 内に初期登録
-            blackSmithModel.SetItemCount(slot.itemId, 0, initialMax);
-
-            // --- 購読: Model → View (予約数の反映) ---
-            blackSmithModel.itemCount[slot.itemId].count
-                .Subscribe(count => slot.SetDisplayQuantity(count))
-                .AddTo(panelDisposables);
-
-            // 残りmaxの変化（在庫やMaxStockの変動時）
+            // 在庫の変化 → 行の在庫表示＋予約数クランプ
             itemdata.Stock
                 .Subscribe(_ =>
                 {
                     int remainMax = itemdata.RemainToMax();
-                    // 既存の予約数が上限を超えないようにクランプ
-                    blackSmithModel.SetItemCount(
-                        slot.itemId,
-                        Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
-                        remainMax
-                    );
+                    if (blackSmithModel.itemCount.TryGetValue(slot.itemId, out var v))
+                        blackSmithModel.SetItemCount(slot.itemId, Mathf.Min(v.count.Value, remainMax), remainMax);
                     slot.SetCurrentStock(itemdata.Stock.Value);
                 })
                 .AddTo(panelDisposables);
 
-            itemdata.MaxStock
-                .Subscribe(_ =>
-                {
-                    int remainMax = itemdata.RemainToMax();
-                    blackSmithModel.SetItemCount(
-                        slot.itemId,
-                        Mathf.Min(blackSmithModel.itemCount[slot.itemId].count.Value, remainMax),
-                        remainMax
-                    );
-                })
-                .AddTo(panelDisposables);
-
-            // --- 購読: Model → View (上限の反映) ---
-            blackSmithModel.itemCount[slot.itemId].maxCount
-                .Subscribe(max => slot.SetMaxDisplayQuantity(max))
-                .AddTo(panelDisposables);
-
-            // --- 購読: View → Model (スライダー変更) ---
-            slot.OnDisplayQuantityChanged
-                .Subscribe(x =>
-                {
-                    int remainMax = itemdata.RemainToMax();
-                    blackSmithModel.SetItemCount(slot.itemId, x, remainMax);
-                })
-                .AddTo(panelDisposables);
-
-            // --- 購読: View → Model（＋／－ボタン） ---
-            slot.OnStepClicked
-                .Subscribe(step =>
-                {
-                    // step は +1 or -1
-                    blackSmithModel.AddToCount(slot.itemId, step);
-                    SoundManager.Instance?.PlaySE("営業/SE_数の増減");
-                })
-                .AddTo(panelDisposables);
-
-            // 価格の変化
+            // 価格の変化（行：価格＋前回比トレンド矢印）
             itemdata.CurrentPrice
-                .Subscribe(price => slot.SetPrice(price))
+                .Subscribe(price =>
+                {
+                    slot.SetPrice(price);
+                    slot.SetPriceTrend(price, itemdata.PreviousPrice);
+                })
                 .AddTo(panelDisposables);
 
-            // 情報パネル（infoボタン）
+            // 需要の変化（行：%・バー・人気バッジ）
+            itemdata.Demand
+                .Subscribe(d => slot.SetDemand(d, itemdata.IsPopular.Value))
+                .AddTo(panelDisposables);
+
+            // 情報・ホバーで説明表示
             slot.OnInfoRequested
                 .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
                 .AddTo(panelDisposables);
-
-            // ホバーでアイテム説明を表示
             slot.OnHoverEnter
                 .Subscribe(id => blackSmithView.SetDescription(itemModel.GetRuntimeItem(id).ItemDescription))
                 .AddTo(panelDisposables);
-
             slot.OnHoverExit
                 .Subscribe(_ => blackSmithView.SetDescription(string.Empty))
                 .AddTo(panelDisposables);
 
-            // アイコンクリック → 市場分析ポップアップ
+            // アイコン／行クリック → 銘柄選択（詳細パネル表示）
             slot.OnIconClicked
-                .Subscribe(id => ShowMarketAnalysisPopup(id))
+                .Subscribe(id => SelectItem(id, itemSlots))
                 .AddTo(panelDisposables);
-
-            // 購入確定
-            slot.OnPurchaseClicked
-                .Subscribe(_ =>
-                {
-                    int reserved = blackSmithModel.itemCount[slot.itemId].count.Value;
-                    int afterRemain = Mathf.Max(0, itemdata.MaxStock.Value - (itemdata.Stock.Value + reserved));
-
-                    int quantity = blackSmithModel.PurchaseItem(slot.itemId, afterRemain);
-                    HandlePurchase(itemdata.ItemId, quantity);
-                })
+            slot.OnRowSelected
+                .Subscribe(id => SelectItem(id, itemSlots))
                 .AddTo(panelDisposables);
         }
 
         blackSmithView.SortItemTab(itemType);
+
+        // 先頭銘柄を自動選択（直前の選択が残っていればそれを優先）
+        if (sortedItems.Count > 0)
+        {
+            string target = sortedItems.Any(r => r.ItemId == selectedItemId) ? selectedItemId : sortedItems[0].ItemId;
+            SelectItem(target, itemSlots);
+        }
+        else
+        {
+            selectedItemId = null;
+            blackSmithView.DetailPanel?.Hide();
+        }
+    }
+
+    /// <summary>
+    /// 銘柄を選択し、詳細パネル（チャート・市場分析・注文）を結線する。
+    /// 注文の予約数は BlackSmithModel が保持し、選択銘柄だけをパネルに張り替える。
+    /// </summary>
+    private void SelectItem(string itemId, List<ItemShopSlot> itemSlots)
+    {
+        var runtime = itemModel.GetRuntimeItem(itemId);
+        if (runtime == null) return;
+
+        var master = itemModel.GetMasterItem(itemId);
+        int basePrice = master != null ? master.basePrice : runtime.CurrentPrice.Value;
+
+        selectedItemId = itemId;
+
+        // 選択ハイライト＋説明
+        foreach (var s in itemSlots) s.SetSelected(s.itemId == itemId);
+        blackSmithView.SetDescription(runtime.ItemDescription);
+
+        var panel = blackSmithView.DetailPanel;
+        if (panel == null) return;
+
+        // 選択中アイテム専用の購読をリセット
+        selectionDisposables.Dispose();
+        selectionDisposables = new CompositeDisposable();
+
+        // 予約数エントリを確保
+        int remainMax = runtime.RemainToMax();
+        int currentCount = blackSmithModel.itemCount.TryGetValue(itemId, out var entry) ? entry.count.Value : 0;
+        blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, remainMax), remainMax);
+
+        panel.ShowItem(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr));
+
+        // Model → Panel（max を先に張ってから count をクランプ反映）
+        blackSmithModel.itemCount[itemId].maxCount
+            .Subscribe(m => panel.SetMaxQuantity(m))
+            .AddTo(selectionDisposables);
+        blackSmithModel.itemCount[itemId].count
+            .Subscribe(c => panel.SetQuantity(c))
+            .AddTo(selectionDisposables);
+
+        // Panel → Model
+        panel.OnDisplayQuantityChanged
+            .Subscribe(x => blackSmithModel.SetItemCount(itemId, x, runtime.RemainToMax()))
+            .AddTo(selectionDisposables);
+        panel.OnStepClicked
+            .Subscribe(step =>
+            {
+                blackSmithModel.AddToCount(itemId, step);
+                SoundManager.Instance?.PlaySE("営業/SE_数の増減");
+            })
+            .AddTo(selectionDisposables);
+
+        // 価格・需要のライブ更新（パネル表示）
+        runtime.CurrentPrice
+            .Subscribe(p => panel.SetPrice(p))
+            .AddTo(selectionDisposables);
+        runtime.Demand
+            .Subscribe(_ => panel.RefreshMarket(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr)))
+            .AddTo(selectionDisposables);
+
+        // 購入確定
+        panel.OnPurchaseClicked
+            .Subscribe(_ =>
+            {
+                int reserved = blackSmithModel.itemCount[itemId].count.Value;
+                int afterRemain = Mathf.Max(0, runtime.MaxStock.Value - (runtime.Stock.Value + reserved));
+                int quantity = blackSmithModel.PurchaseItem(itemId, afterRemain);
+                HandlePurchase(itemId, quantity);
+            })
+            .AddTo(selectionDisposables);
     }
 
     /// <summary>
@@ -325,9 +460,14 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         panelDisposables.Dispose();
         panelDisposables = new CompositeDisposable();
+        selectionDisposables.Dispose();
+        selectionDisposables = new CompositeDisposable();
 
-        // 開発パネルを表示、購入パネルを非表示
+        currentTab = BlackSmithTab.Development;
+
+        // 開発パネルを表示、購入パネル・詳細パネルを非表示
         blackSmithView.SwitchPanel(BlackSmithTab.Development);
+        blackSmithView.DetailPanel?.Hide();
         blackSmithView.SortItemTab(BlackSmithTab.Development);
 
         // 初回表示
@@ -389,6 +529,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     public void Dispose()
     {
+        selectionDisposables.Dispose();
         panelDisposables.Dispose();
         disposables.Dispose();
     }

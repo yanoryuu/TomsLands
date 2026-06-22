@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using R3;
 
-public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("UI")]
     [SerializeField] private Image icon;
@@ -17,6 +17,20 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [SerializeField] private TextMeshProUGUI quantityText;
     [SerializeField] private Button infoButton;
     [SerializeField] private Button purchaseButton;
+
+    [Header("市況（ティッカー行）")]
+    [Tooltip("需要を%表示するテキスト")]
+    [SerializeField] private TextMeshProUGUI demandText;
+    [Tooltip("需要を 0〜1 のバーで表示するスライダー（任意）")]
+    [SerializeField] private Slider demandBar;
+    [Tooltip("前回比トレンド矢印（↑→↓）")]
+    [SerializeField] private TextMeshProUGUI priceTrendText;
+    [Tooltip("人気バッジ（Demand高 or 前ターン販売）")]
+    [SerializeField] private GameObject popularBadge;
+    [Tooltip("品薄バッジ（在庫1〜2）")]
+    [SerializeField] private GameObject lowStockBadge;
+    [Tooltip("選択中のハイライト（任意）")]
+    [SerializeField] private GameObject selectedHighlight;
 
     [Header("Step Buttons")]
     [SerializeField] private Button plusButton;
@@ -34,6 +48,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     public Subject<string> OnIconClicked { get; } = new();         // アイコン押下 → 市場分析ポップアップ
     public Subject<string> OnHoverEnter { get; } = new();          // ホバー開始 → アイテムID
     public Subject<Unit> OnHoverExit { get; } = new();             // ホバー終了
+    public Subject<string> OnRowSelected { get; } = new();         // 行クリック → 詳細パネル表示
 
     // 内部状態（UI表示用）
     private int displayQuantity;
@@ -78,11 +93,48 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         }
         if (nameText) nameText.text = itemName;
         SetPrice(price);
-        stockText?.SetText($"{currentStock}");
+        SetCurrentStock(currentStock);
+        if (popularBadge) popularBadge.SetActive(isPopular);
 
         SetMaxDisplayQuantity(Mathf.Max(0, maxStock));
         SetDisplayQuantity(0);
         UpdateButtonsInteractable();
+    }
+
+    /// <summary>需要(0〜1)を%・バー・人気バッジに反映する。</summary>
+    public void SetDemand(float demand, bool isPopular)
+    {
+        demand = Mathf.Clamp01(demand);
+        demandText?.SetText($"{demand:P0}");
+        if (demandBar) demandBar.value = demand;
+        if (popularBadge) popularBadge.SetActive(isPopular);
+    }
+
+    /// <summary>前回比トレンド矢印（↑赤／→灰／↓水色）を更新する。</summary>
+    public void SetPriceTrend(int current, int previous)
+    {
+        if (priceTrendText == null) return;
+        if (current > previous)
+        {
+            priceTrendText.text = "↑";
+            priceTrendText.color = Color.red;
+        }
+        else if (current < previous)
+        {
+            priceTrendText.text = "↓";
+            priceTrendText.color = Color.cyan;
+        }
+        else
+        {
+            priceTrendText.text = "→";
+            priceTrendText.color = Color.gray;
+        }
+    }
+
+    /// <summary>この行の選択ハイライトを切り替える。</summary>
+    public void SetSelected(bool selected)
+    {
+        if (selectedHighlight) selectedHighlight.SetActive(selected);
     }
 
     public void SetPrice(int price)
@@ -117,6 +169,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     public void SetCurrentStock(int currentStock)
     {
         stockText?.SetText($"{currentStock}");
+        if (lowStockBadge) lowStockBadge.SetActive(currentStock > 0 && currentStock <= 2);
     }
 
     // === 最大値変更（通知しない） ===
@@ -163,6 +216,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter.OnNext(itemId);
     public void OnPointerExit(PointerEventData eventData) => OnHoverExit.OnNext(Unit.Default);
+    public void OnPointerClick(PointerEventData eventData) => OnRowSelected.OnNext(itemId);
 
     private void OnDestroy()
     {

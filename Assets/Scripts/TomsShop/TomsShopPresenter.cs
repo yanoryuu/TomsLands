@@ -199,9 +199,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // --- ターン進行フェーズの開始 / 再適用 ---
         if (turnChanged || !_turnPhaseInitialized)
         {
-            // 新ターン（または初回Entry）: イベントフェーズから開始
+            // 新ターン（または初回Entry）: 保留イベントがあればEvent、無ければProcurementから開始
             _turnPhaseInitialized = true;
-            turnPhaseManager.BeginTurnPhases();
+            turnPhaseManager.BeginTurnPhases(pendingEventData.HasPendingEvent);
         }
         else
         {

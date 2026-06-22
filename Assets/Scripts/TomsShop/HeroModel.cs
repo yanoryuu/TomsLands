@@ -130,7 +130,7 @@ public class HeroModel
 
     private string GetSavePath()
     {
-        return Path.Combine(Application.persistentDataPath, HeroDataFileName);
+        return SaveSlotManager.GetPath(HeroDataFileName);
     }
 
     private void SyncEquippedItemsFromHeroData()

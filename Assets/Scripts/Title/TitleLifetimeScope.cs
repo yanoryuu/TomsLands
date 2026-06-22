@@ -33,8 +33,10 @@ public class TitleLifetimeScope : LifetimeScope
             Debug.LogError("[TitleLifetimeScope] titleView が Inspector で未設定です！");
         }
 
-        // Presenter
         builder.RegisterEntryPoint<TitlePresenter>();
+        builder.Register<TitleModel>(Lifetime.Scoped);
+        builder.Register<PopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
 
         // ※ リモートコンフィグ取得は BootScene（BootLifetimeScope）で完了済みの想定。
         //   ここに来た時点で GameConst には適用済みの値が入っている。

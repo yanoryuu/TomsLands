@@ -147,10 +147,10 @@ public class GameLifecycleHandler : IStartable, IDisposable
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
     }
 
-    // ファイル削除ロジック
+    // ファイル削除ロジック（選択中スロット配下のみを対象にする）
     private void DeleteAllSaveFiles()
     {
-        string dir = Application.persistentDataPath;
+        string dir = SaveSlotManager.CurrentRoot;
         string[] files = {
             "itemData.json",
             "tomsData.json",

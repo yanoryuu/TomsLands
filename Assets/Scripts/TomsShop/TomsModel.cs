@@ -80,12 +80,12 @@ public class TomsModel
         var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value,
             FlowSeed, (int)GameMode, UseAutoFlow);
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(Application.persistentDataPath + "/tomsData.json", json);
+        File.WriteAllText(SaveSlotManager.GetPath("tomsData.json"), json);
     }
 
     public void LoadPlayerMoney()
     {
-        string path = Application.persistentDataPath + "/tomsData.json";
+        string path = SaveSlotManager.GetPath("tomsData.json");
         if (File.Exists(path))
         {
             string json = File.ReadAllText(path);

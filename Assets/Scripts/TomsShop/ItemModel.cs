@@ -24,6 +24,34 @@ public class ItemModel
     public RuntimeItemData GetRuntimeItem(string itemId) =>
         RuntimeItems.FirstOrDefault(r => r.ItemId == itemId);
 
+    // ========================================
+    // おすすめ計算（単一スコアの真実の源）
+    // ========================================
+    // 仕入れ一覧・自動陳列・自動仕入れ・Prophet のすべてが
+    // この2つを基準にする（画面ごとに式がバラつかないようにする）。
+
+    /// <summary>おすすめスコアの Trend 重み。0 で Trend 無視。</summary>
+    private const float RecommendTrendWeight = 0.5f;
+    /// <summary>次ダンジョンの弱点属性に一致するアイテムへの倍率（&gt;1 で優遇）。</summary>
+    private const float RecommendAttributeBonus = 1.5f;
+
+    /// <summary>
+    /// 期待収益（需要 × 価格 × SalesRate）。陳列・収益順の基礎値。
+    /// </summary>
+    public static float ExpectedRevenueOf(RuntimeItemData r) => r.ExpectedRevenue;
+
+    /// <summary>
+    /// 前向きおすすめスコア。期待収益に Trend と次ダンジョン属性ボーナスを乗せたもの。
+    /// 自動仕入れ・Prophet のおすすめに使う。<paramref name="nextDungeonAttr"/> が null なら属性ボーナスなし。
+    /// </summary>
+    public float GetRecommendScore(RuntimeItemData r, ItemTypeData.ItemAttribute? nextDungeonAttr)
+    {
+        float score = r.ExpectedRevenue * (1f + RecommendTrendWeight * r.Trend);
+        if (nextDungeonAttr.HasValue && r.ItemAttribute == nextDungeonAttr.Value)
+            score *= RecommendAttributeBonus;
+        return score;
+    }
+
     public void PurchaseItem(string itemId, int quantity)
     {
         var item = GetRuntimeItem(itemId);
@@ -383,6 +411,9 @@ public class ItemModel
             runtime.CurrentPrice.Value = newPrice;
             runtime.UpdatePopularity();
 
+            // 確定した価格・需要を価格チャート用の履歴へ記録
+            runtime.RecordShopHistory();
+
             Debug.Log($"[ShopEconomy] {runtime.ItemId}: " +
                       $"trend={runtime.Trend:F2} natural={naturalDemand:F2} " +
                       $"S1={s1Rate:F3} (Att×{attentionFactor:F2}, Ret t={retentionStability:F2}) " +
@@ -396,9 +427,10 @@ public class ItemModel
     // ========================================
 
     /// <summary>
-    /// 予算内で需要×SalesRateが高い順にアイテムを自動購入する。
+    /// 予算内でおすすめスコア（GetRecommendScore）が高い順にアイテムを自動購入する。
     /// </summary>
-    public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel)
+    public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel,
+        ItemTypeData.ItemAttribute? nextDungeonAttr = null)
     {
         var results = new List<AutoPurchaseResult>();
         int remaining = Mathf.Min(budget, tomsModel.PlayerMoney.Value);
@@ -407,7 +439,7 @@ public class ItemModel
             .Where(r => r.RequiredLevel.Value <= blacksmithLevel
                      && r.RemainToMax() > 0
                      && r.CurrentPrice.Value > 0)
-            .OrderByDescending(r => r.Demand.Value * r.SalesRate)
+            .OrderByDescending(r => GetRecommendScore(r, nextDungeonAttr))
             .ToList();
 
         foreach (var item in candidates)
@@ -446,14 +478,14 @@ public class ItemModel
 
         var top = RuntimeItems
             .Where(r => r.RequiredLevel.Value <= blacksmithLevel && r.Stock.Value > 0)
-            .OrderByDescending(r => r.Demand.Value * r.CurrentPrice.Value * r.SalesRate)
+            .OrderByDescending(ExpectedRevenueOf)
             .Take(maxSlots);
 
         foreach (var item in top)
         {
             item.IsDisplay.Value = true;
             item.DisplayStock.Value = item.Stock.Value;
-            Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={item.Demand.Value * item.CurrentPrice.Value * item.SalesRate:F1})");
+            Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={ExpectedRevenueOf(item):F1})");
         }
 
         SaveData();
@@ -470,7 +502,7 @@ public class ItemModel
     {
         return RuntimeItems
             .Where(r => r.RequiredLevel.Value <= blacksmithLevel)
-            .OrderByDescending(r => r.Demand.Value * r.CurrentPrice.Value * r.SalesRate)
+            .OrderByDescending(ExpectedRevenueOf)
             .ToList();
     }
 
@@ -481,14 +513,14 @@ public class ItemModel
             RuntimeItems.Select(r => r.ToPlainData()).ToList()
         );
         string json = JsonUtility.ToJson(dataList, true);
-        File.WriteAllText(Application.persistentDataPath + "/itemData.json", json);
+        File.WriteAllText(SaveSlotManager.GetPath("itemData.json"), json);
         Debug.Log("Item data saved.");
     }
 
     //ここでロード
     public void LoadData()
     {
-        string path = Application.persistentDataPath + "/itemData.json";
+        string path = SaveSlotManager.GetPath("itemData.json");
         if (!File.Exists(path))
         {
             InitializeRuntimeItemsFromMaster();

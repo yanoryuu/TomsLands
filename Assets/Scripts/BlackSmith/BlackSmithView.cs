@@ -38,6 +38,16 @@ public class BlackSmithView : MonoBehaviour
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
 
+    [Header("次ダンジョン情報バナー")]
+    [SerializeField] private ProcurementHeaderView procurementHeader;
+
+    [Header("選択銘柄 詳細パネル")]
+    [SerializeField] private ItemDetailPanel itemDetailPanel;
+
+    [Header("並べ替え")]
+    [Tooltip("収益/需要/価格 の並べ替えドロップダウン（任意。0:収益 1:需要 2:価格）")]
+    [SerializeField] private TMP_Dropdown sortDropdown;
+
     [Header("Development Panel")]
     [SerializeField] private GameObject developmentPanel;         // 開発タブ専用パネル（レベルアップUI）
     [SerializeField] private TextMeshProUGUI blackSmithLevelText; // 現在レベル表示
@@ -52,6 +62,14 @@ public class BlackSmithView : MonoBehaviour
     public Subject<Unit> OnCharacterClicked { get; private set; } = new();
     /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額を通知する。</summary>
     public Subject<int> OnAutoBuyBudgetConfirmed { get; private set; } = new();
+    /// <summary>並べ替えモードが変更されたときに通知する。</summary>
+    public Subject<BlackSmithSortMode> OnSortChanged { get; private set; } = new();
+
+    /// <summary>選択銘柄の詳細パネル。Presenter が選択時に結線する。</summary>
+    public ItemDetailPanel DetailPanel => itemDetailPanel;
+
+    /// <summary>次ダンジョン情報バナー。Presenter が Entry 時に更新する。</summary>
+    public ProcurementHeaderView Header => procurementHeader;
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
@@ -78,6 +96,9 @@ public class BlackSmithView : MonoBehaviour
 
         if (characterButton != null)
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+
+        if (sortDropdown != null)
+            sortDropdown.onValueChanged.AddListener(v => OnSortChanged.OnNext((BlackSmithSortMode)v));
 
         // 開発パネルは初期非表示
         if (developmentPanel)
@@ -239,4 +260,12 @@ public enum BlackSmithTab
     Armor,
     Development,
     Special
+}
+
+/// <summary>仕入れ一覧の並べ替えモード（ドロップダウンの index と一致）。</summary>
+public enum BlackSmithSortMode
+{
+    Recommend = 0, // 期待収益（おすすめ順）
+    Demand = 1,    // 需要
+    Price = 2      // 価格
 }
