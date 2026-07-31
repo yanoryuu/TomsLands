@@ -58,6 +58,7 @@ public sealed class TitleView : MonoBehaviour
     public bool UseAutoGeneration => autoGenerationToggle == null || autoGenerationToggle.isOn;
 
     private Tween _titleTween;
+    private TitleType _currentScreen = TitleType.Start;
 
     private readonly List<SaveSlotView> _slotViews = new();
     private readonly CompositeDisposable _slotDisposables = new();
@@ -88,6 +89,13 @@ public sealed class TitleView : MonoBehaviour
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetEase(Ease.OutCubic);
         }
+    }
+
+    private void Update()
+    {
+        // スタート画面では任意のキー入力・クリックで開始方法選択へ進む
+        if (_currentScreen == TitleType.Start && Input.anyKeyDown)
+            OnStartRequested.OnNext(Unit.Default);
     }
 
     private void OnDestroy()
@@ -130,6 +138,7 @@ public sealed class TitleView : MonoBehaviour
         }
         if (infos == null) return;
 
+        int index = 0;
         foreach (var info in infos)
         {
             var slot = Instantiate(saveSlotPrefab, saveSlotContainer);
@@ -141,6 +150,16 @@ public sealed class TitleView : MonoBehaviour
             slot.OnDelete.Subscribe(OnSaveSlotDeleteRequested.OnNext).AddTo(_slotDisposables);
 
             _slotViews.Add(slot);
+
+            // 上から順にポップイン
+            var cg = slot.GetComponent<CanvasGroup>();
+            if (cg == null) cg = slot.gameObject.AddComponent<CanvasGroup>();
+            float delay = index * 0.07f;
+            cg.alpha = 0f;
+            cg.DOFade(1f, 0.2f).SetDelay(delay).SetLink(slot.gameObject);
+            slot.transform.localScale = Vector3.one * 0.92f;
+            slot.transform.DOScale(1f, 0.28f).SetDelay(delay).SetEase(Ease.OutBack).SetLink(slot.gameObject);
+            index++;
         }
     }
 
@@ -157,6 +176,7 @@ public sealed class TitleView : MonoBehaviour
 
     public void DisplayScreen(TitleType screen)
     {
+        _currentScreen = screen;
         SetGroupActive(startScreenGroup, screen == TitleType.Start);
         SetGroupActive(startMethodScreenGroup, screen == TitleType.ContinueOrNewGame);
         SetGroupActive(difficultyScreenGroup, screen == TitleType.SelectDifficulty);

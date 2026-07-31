@@ -41,6 +41,15 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         view.ShowDialogue(DungeonLevelUpDialogueLoader.Get("open"));
         view.ClearDungeonDetail();
         RefreshList();
+
+        // 先頭ダンジョンを自動選択して、空の詳細パネルを見せない
+        // （会話は開店挨拶を維持したいので HandleSlotSelected は使わない）
+        var first = dungeonRepository.availableDungeons.FirstOrDefault();
+        if (first != null)
+        {
+            selectedKey = first.key;
+            view.ShowDungeonDetail(BuildDetailData(first));
+        }
     }
 
     private void Bind()

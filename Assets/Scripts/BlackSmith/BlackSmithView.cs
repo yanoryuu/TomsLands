@@ -41,6 +41,10 @@ public class BlackSmithView : MonoBehaviour
     [Header("次ダンジョン情報バナー")]
     [SerializeField] private ProcurementHeaderView procurementHeader;
 
+    [Header("所持金表示")]
+    [Tooltip("鍛冶屋専用の所持金テキスト（鍛冶屋表示中はCommonViewを出さないため）")]
+    [SerializeField] private TextMeshProUGUI playerMoneyText;
+
     [Header("選択銘柄 詳細パネル")]
     [SerializeField] private ItemDetailPanel itemDetailPanel;
 
@@ -122,8 +126,9 @@ public class BlackSmithView : MonoBehaviour
         }
         activeSlots.Clear();
 
-        // 再生成
+        // 再生成（上から順にフェード＋ポップで登場させる）
         List<ItemShopSlot> slots = new();
+        int index = 0;
         foreach (var item in runtimeItems)
         {
             var slotObj = Instantiate(itemShopSlotPrefab, blackSmithContent.transform);
@@ -140,6 +145,15 @@ public class BlackSmithView : MonoBehaviour
             );
             slots.Add(slot);
             activeSlots.Add(slot);
+
+            var cg = slotObj.GetComponent<CanvasGroup>();
+            if (cg == null) cg = slotObj.AddComponent<CanvasGroup>();
+            float delay = Mathf.Min(index * 0.035f, 0.35f); // 後半はまとめて出す
+            cg.alpha = 0f;
+            cg.DOFade(1f, 0.18f).SetDelay(delay).SetLink(slotObj);
+            slotObj.transform.localScale = Vector3.one * 0.94f;
+            slotObj.transform.DOScale(1f, 0.22f).SetDelay(delay).SetEase(Ease.OutCubic).SetLink(slotObj);
+            index++;
         }
 
         // スクロール位置を先頭にリセット
@@ -147,6 +161,40 @@ public class BlackSmithView : MonoBehaviour
             scrollRect.normalizedPosition = new Vector2(0, 1);
 
         return slots;
+    }
+
+    private int displayedMoney;
+    private bool moneyInitialized;
+    private Tween moneyTween;
+
+    /// <summary>鍛冶屋専用の所持金表示を更新する（カウントアップ演出付き）。</summary>
+    public void UpdatePlayerMoney(int money)
+    {
+        if (playerMoneyText == null) return;
+
+        // 初回は即時反映（画面を開いた瞬間に0からカウントさせない）
+        if (!moneyInitialized || !playerMoneyText.gameObject.activeInHierarchy)
+        {
+            moneyInitialized = true;
+            displayedMoney = money;
+            playerMoneyText.text = $"{money:N0}G";
+            return;
+        }
+
+        if (displayedMoney == money) return;
+
+        moneyTween?.Kill();
+        moneyTween = DOTween.To(() => displayedMoney, x =>
+            {
+                displayedMoney = x;
+                playerMoneyText.text = $"{x:N0}G";
+            }, money, 0.35f)
+            .SetEase(Ease.OutCubic)
+            .SetLink(playerMoneyText.gameObject);
+
+        playerMoneyText.transform.DOKill(true);
+        playerMoneyText.transform.DOPunchScale(Vector3.one * 0.1f, 0.25f, 6, 0.7f)
+            .SetLink(playerMoneyText.gameObject);
     }
 
     public void ShowDialogue(string message)

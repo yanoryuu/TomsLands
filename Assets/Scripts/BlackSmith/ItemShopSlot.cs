@@ -101,13 +101,25 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         UpdateButtonsInteractable();
     }
 
-    /// <summary>需要(0〜1)を%・バー・人気バッジに反映する。</summary>
+    /// <summary>需要(0〜1)を温度色付きの%表示と人気バッジに反映する。</summary>
     public void SetDemand(float demand, bool isPopular)
     {
         demand = Mathf.Clamp01(demand);
-        demandText?.SetText($"{demand:P0}");
-        if (demandBar) demandBar.value = demand;
+        if (demandText != null)
+        {
+            demandText.text = $"{demand:P0}";
+            demandText.color = DemandColor(demand);
+        }
+        if (demandBar) demandBar.value = demand; // バー未使用時はnull（旧レイアウト互換）
         if (popularBadge) popularBadge.SetActive(isPopular);
+    }
+
+    /// <summary>需要の高さを温度で表す色（低=青灰 / 中=白 / 高=オレンジ）。</summary>
+    private static Color DemandColor(float demand)
+    {
+        if (demand < 0.4f) return new Color(0.55f, 0.68f, 0.8f);  // 低: 青灰
+        if (demand < 0.7f) return Color.white;                     // 中: 白
+        return new Color(1f, 0.6f, 0.25f);                          // 高: オレンジ
     }
 
     /// <summary>前回比トレンド矢印（↑赤／→灰／↓水色）を更新する。</summary>

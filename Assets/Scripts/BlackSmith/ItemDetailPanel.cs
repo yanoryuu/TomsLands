@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -66,6 +67,14 @@ public class ItemDetailPanel : MonoBehaviour
     public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore)
     {
         Root.SetActive(true);
+
+        // 銘柄切替のフィードバック（短いポップ）
+        UIFx.Pop(Root.transform, 0.98f, 0.15f);
+        if (icon != null)
+        {
+            icon.transform.DOKill(true);
+            icon.transform.DOPunchScale(Vector3.one * 0.12f, 0.2f, 5, 0.6f).SetLink(icon.gameObject);
+        }
 
         if (icon) icon.sprite = runtime.ItemIcon;
         if (nameText) nameText.text = runtime.ItemName;
