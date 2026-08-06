@@ -94,7 +94,7 @@ public class BuzzAnnounceView : MonoBehaviour
                 break;
 
             case BuzzType.Big:
-                if (buzzTitleText != null) buzzTitleText.text = "大バズ発生！！";
+                if (buzzTitleText != null) buzzTitleText.text = "超バズ発生！！";
                 if (buzzDescriptionText != null) buzzDescriptionText.text = "大注目！売上が大幅にアップ！";
                 ApplySprites(bigBuzzBackgroundSprite, bigBuzzIconSprite);
                 break;
@@ -121,7 +121,7 @@ public class BuzzAnnounceView : MonoBehaviour
         {
             BuzzType.Flame => "炎上",
             BuzzType.Normal => "バズ",
-            BuzzType.Big => "大バズ",
+            BuzzType.Big => "超バズ",
             _ => "バズ"
         };
     }

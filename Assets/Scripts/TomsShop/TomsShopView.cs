@@ -20,6 +20,9 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
 
+    [Header("バズ中演出")]
+    [SerializeField] private BuzzModeOverlayView buzzModeOverlayView;
+
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
@@ -116,5 +119,27 @@ public class TomsShopView : MonoBehaviour
     {
         if (buzzAnnounceView != null)
             buzzAnnounceView.ShowBuzzEnded(endedBuzzType);
+    }
+
+    /// <summary>
+    /// バズ中の常時演出（バズモードオーバーレイ）の表示/非表示を切り替える。
+    /// バズ発生中はフレーム＋バナーを表示し続ける。
+    /// </summary>
+    public void SetBuzzModeActive(bool isActive, BuzzType buzzType)
+    {
+        if (buzzModeOverlayView == null) return;
+
+        if (isActive)
+            buzzModeOverlayView.Show(buzzType);
+        else
+            buzzModeOverlayView.Hide();
+    }
+
+    /// <summary>
+    /// バズの残りターン数表示を更新する。
+    /// </summary>
+    public void UpdateBuzzRemainingTurns(int remainingTurns)
+    {
+        buzzModeOverlayView?.UpdateRemainingTurns(remainingTurns);
     }
 }

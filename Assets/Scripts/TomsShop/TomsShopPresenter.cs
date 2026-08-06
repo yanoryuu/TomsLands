@@ -158,6 +158,17 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // ※ターン切り替え演出は Entry() 内で一元管理する
         //   バズ発生時はバズ演出のみ表示し、ターン演出はスキップするため
 
+        // バズ中の常時演出（バズモードオーバーレイ）
+        // IsBuzzActive と CurrentBuzzType は BuzzSystem 内で別々に更新されるため CombineLatest で同期する
+        marketingFacade.Buzz.IsBuzzActive
+            .CombineLatest(marketingFacade.Buzz.CurrentBuzzType, (isActive, buzzType) => (isActive, buzzType))
+            .Subscribe(x => tomsShopView.SetBuzzModeActive(x.isActive, x.buzzType))
+            .AddTo(disposables);
+
+        marketingFacade.Buzz.RemainingTurns
+            .Subscribe(turns => tomsShopView.UpdateBuzzRemainingTurns(turns))
+            .AddTo(disposables);
+
         // イベントポップアップの確認ボタン押下時
         eventView.OnConfirmClicked
             .Subscribe(_ => OnEventPopupConfirmed())

@@ -249,9 +249,9 @@ public class BuzzSystem
             RevenueMultiplier = effectData.CalculateRevenueMultiplier(spread)
         };
 
-        // リアクティブプロパティを更新
-        IsBuzzActive.Value = true;
+        // リアクティブプロパティを更新（購読側が正しいタイプで表示できるよう先にタイプを更新する）
         CurrentBuzzType.Value = type;
+        IsBuzzActive.Value = true;
         RemainingTurns.Value = _activeBuzz.RemainingTurns;
 
         // 即時効果を適用
@@ -413,6 +413,33 @@ public class BuzzSystem
         {
             EndBuzz();
         }
+    }
+
+    // =====================================================
+    // デバッグ用API（DebugMenuView から使用）
+    // =====================================================
+
+    /// <summary>
+    /// 【デバッグ用】指定タイプのバズを強制発生させる。
+    /// 既存のバズがある場合は終了後効果を適用せず破棄してから開始する。
+    /// </summary>
+    public void DebugStartBuzz(BuzzType type)
+    {
+        if (_activeBuzz != null)
+        {
+            EndBuzz();
+        }
+        StartBuzz(type);
+    }
+
+    /// <summary>
+    /// 【デバッグ用】アクティブなバズを終了後効果込みで強制終了する。
+    /// </summary>
+    public void DebugEndBuzz()
+    {
+        if (_activeBuzz == null) return;
+        ApplyAfterEffect();
+        EndBuzz();
     }
 }
 
