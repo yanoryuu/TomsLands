@@ -26,6 +26,10 @@ public class TurnPhasePresenter : IStartable, IDisposable
             .Subscribe(_ => _manager.AdvanceTurnPhase())
             .AddTo(_disposables);
 
+        _view.OnBackClicked
+            .Subscribe(_ => _manager.GoBackTurnPhase())
+            .AddTo(_disposables);
+
         // 現在値を即時受信してUI初期化、以降の変化にも追従（自動Advanceはしない）
         _manager.CurrentTurnPhase
             .Subscribe(phase => _view.ShowForPhase(phase))

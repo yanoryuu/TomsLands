@@ -23,7 +23,7 @@ public class GameOverView : MonoBehaviour
     public void Setup(int turn)
     {
         if (titleText != null)
-            titleText.text = "借金返済不能！！";
+            titleText.text = "税金納付不能！！";
 
         if (messageText != null)
             messageText.text = "ト、トムさん！！\nお店が差し押さえられてしまいました！";

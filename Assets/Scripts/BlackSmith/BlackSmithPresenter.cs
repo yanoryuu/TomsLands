@@ -253,6 +253,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         // 購入パネルを表示、開発パネルを非表示
         blackSmithView.SwitchPanel(itemType);
+        blackSmithView.SortItemTab(itemType);
 
         // 並べ替え（おすすめ計算式に統一）
         var sortedItems = ApplySort(items);
@@ -504,24 +505,21 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithView.DetailPanel?.Hide();
         blackSmithView.SortItemTab(BlackSmithTab.Development);
 
-        // 初回表示
-        RefreshDevelopmentPanel();
-
-        // 所持金が変わったらボタン有効/無効を再評価
+        // 所持金の変化はボタン有効/無効の再評価のみ（解放プレビューはレベル依存なので再構築しない）
         tomsModel.PlayerMoney
-            .Subscribe(_ => RefreshDevelopmentPanel())
+            .Subscribe(_ => RefreshDevelopmentButtons())
             .AddTo(panelDisposables);
 
-        // 鍛冶屋レベルが変わったら再描画
+        // 鍛冶屋レベルが変わったら全体を再描画（購読時に現在値が流れるため初回表示もここで行われる）
         tomsModel.BlacksmithLevel
             .Subscribe(_ => RefreshDevelopmentPanel())
             .AddTo(panelDisposables);
     }
 
     /// <summary>
-    /// 開発パネルの表示を最新状態に更新する
+    /// 開発パネルのレベル・コスト・ボタン状態のみ更新する（所持金変化時用）。
     /// </summary>
-    private void RefreshDevelopmentPanel()
+    private void RefreshDevelopmentButtons()
     {
         int currentLevel = tomsModel.BlacksmithLevel.Value;
         int cost = GameConst.GetBlackSmithLevelUpCost(currentLevel);
@@ -534,6 +532,46 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             tomsModel.PlayerMoney.Value
         );
     }
+
+    /// <summary>
+    /// 開発パネルの表示を最新状態に更新する
+    /// </summary>
+    private void RefreshDevelopmentPanel()
+    {
+        RefreshDevelopmentButtons();
+
+        int currentLevel = tomsModel.BlacksmithLevel.Value;
+
+        // 次レベルで解放される商品（武器・防具）のプレビュー
+        bool isMax = currentLevel >= GameConst.MaxBlackSmithLevel;
+        int nextLevel = Mathf.Min(currentLevel + 1, GameConst.MaxBlackSmithLevel);
+        var unlocks = new List<UnlockItemDisplayData>();
+        if (!isMax)
+        {
+            foreach (var r in itemModel.RuntimeItems)
+            {
+                if (r.RequiredLevel.Value != nextLevel) continue;
+                if (r.ItemType != ItemTypeData.ItemType.Weapon && r.ItemType != ItemTypeData.ItemType.Armor) continue;
+
+                unlocks.Add(new UnlockItemDisplayData
+                {
+                    Icon = r.ItemIcon,
+                    Name = r.ItemName,
+                    Info = $"{TypeToJapanese(r.ItemType)}・{AttributeToJapanese(r.ItemAttribute)}属性・{r.CurrentPrice.Value:N0}G",
+                    Description = r.ItemDescription
+                });
+            }
+        }
+        blackSmithView.UpdateUnlockPreview(nextLevel, isMax, unlocks);
+    }
+
+    private static string TypeToJapanese(ItemTypeData.ItemType type) => type switch
+    {
+        ItemTypeData.ItemType.Weapon => "武器",
+        ItemTypeData.ItemType.Armor  => "防具",
+        ItemTypeData.ItemType.Tool   => "道具",
+        _ => type.ToString()
+    };
 
     /// <summary>
     /// 鍛冶屋レベルアップ処理

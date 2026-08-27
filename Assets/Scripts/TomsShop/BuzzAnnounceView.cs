@@ -155,8 +155,8 @@ public class BuzzAnnounceView : MonoBehaviour
         if (buzzDescriptionText != null)
             _currentSequence.Join(buzzDescriptionText.DOFade(1f, 0.25f));
 
-        // 3. 表示キープ（炎上時はキャラが小刻みに震える）
-        if (flameShake && charRect != null)
+        // 3. 表示キープ（炎上時はキャラが小刻みに震える。シェイク軽減設定時は震えない）
+        if (flameShake && charRect != null && !GameSettings.ReduceShake)
         {
             _currentSequence.Append(charRect
                 .DOShakeAnchorPos(holdDuration, strength: 10f, vibrato: 30, randomness: 90f, snapping: false, fadeOut: false));
@@ -191,6 +191,9 @@ public class BuzzAnnounceView : MonoBehaviour
             _currentSequence = null;
             ResetPose();
         });
+
+        // 演出速度設定（速い=2倍速で再生）
+        _currentSequence.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
     }
 
     /// <summary>

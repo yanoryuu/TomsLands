@@ -108,6 +108,7 @@ public class DebugMenuView : MonoBehaviour
                 : "なし";
             GUILayout.Label($"バズ状態: {buzzState}");
             GUILayout.Label($"バズ発生確率: {_buzzSystem.CalculateBuzzChance():F1} %");
+            GUILayout.Label($"超バズ発生確率: {_buzzSystem.CalculateBigBuzzChance():F1} %");
         }
 
         if (_statusModel != null)

@@ -30,6 +30,10 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
     {
         base.Awake();
 
+        // オプションで保存済みの音量があれば優先する（無ければ Inspector の既定値。キー別に判定）
+        if (GameSettings.HasSavedBgmVolume) bgmVolume = GameSettings.BgmVolume;
+        if (GameSettings.HasSavedSeVolume) seVolume = GameSettings.SeVolume;
+
         bgmSource = gameObject.AddComponent<AudioSource>();
         bgmSource.loop = true;
         bgmSource.playOnAwake = false;

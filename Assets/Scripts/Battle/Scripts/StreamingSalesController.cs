@@ -40,6 +40,21 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>バトル中の累計売上金額を返す。</summary>
     public int GetTotalSalesValue() => _model != null ? _model.GetCurrentTotalSales() : 0;
 
+    /// <summary>
+    /// 販売ループを停止する。戦闘終了時（結果集計の前）に必ず呼ぶこと。
+    /// 呼ばないとリザルト画面表示中も売れ続け、集計スナップショットとの差分が消失する。
+    /// </summary>
+    public void StopSales()
+    {
+        if (_salesCts == null) return;
+        _salesCts.Cancel();
+        _salesCts.Dispose();
+        _salesCts = null;
+        Debug.Log("[StreamingSalesController] 販売ループを停止しました。");
+    }
+
+    private System.Threading.CancellationTokenSource _salesCts;
+
     private ItemModel _mainItemModel;
     private StreamingSalesPresenter _presenter;
     private StreamingSalesModel _model;
@@ -168,7 +183,11 @@ public class StreamingSalesController : MonoBehaviour
             item.RecordBattlePrice();
         }
 
-        _model.StartSalesLoopAsync(_mainItemModel, this.GetCancellationTokenOnDestroy()).Forget();
+        // 戦闘終了時に StopSales() で止められるよう、破棄トークンとリンクした専用CTSで開始する
+        _salesCts?.Cancel();
+        _salesCts?.Dispose();
+        _salesCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        _model.StartSalesLoopAsync(_mainItemModel, _salesCts.Token).Forget();
 
         // アイテムが売れた時の通知（顧客演出・店主演出・外部イベント）
         _model.OnItemSold
@@ -590,6 +609,9 @@ private void RefreshSellDisplay()
 
     private void OnDestroy()
     {
+        _salesCts?.Cancel();
+        _salesCts?.Dispose();
+        _salesCts = null;
         _presenter?.Dispose();
         _battleDisposables.Dispose();
         ItemSlotView.OnItemDropped -= HandleItemSwap;

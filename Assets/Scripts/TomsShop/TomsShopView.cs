@@ -26,7 +26,7 @@ public class TomsShopView : MonoBehaviour
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
-    [Header("借金情報")]
+    [Header("税金情報")]
     [SerializeField] private TextMeshProUGUI nextDebtText;
     [SerializeField] private Button debtPaymentButton;
     
@@ -76,6 +76,13 @@ public class TomsShopView : MonoBehaviour
 
     }
 
+    /// <summary>営業開始ボタンの押下可否を切り替える（演出中の連打防止用）。</summary>
+    public void SetStartShopInteractable(bool interactable)
+    {
+        if (StartShopButton != null)
+            StartShopButton.interactable = interactable;
+    }
+
     public void RefreshDeskDisplay(List<RuntimeItemData> runtimeItems)
     {
         shopDeskDisplay?.RefreshDisplay(runtimeItems);
@@ -91,12 +98,12 @@ public class TomsShopView : MonoBehaviour
     }
 
     /// <summary>
-    /// 次回借金返済額と残りターン数をショップ画面内に表示する
+    /// 次回税金の納付額と残りターン数をショップ画面内に表示する
     /// </summary>
     public void UpdateNextDebt(int amount, int remainingTurns)
     {
         if (nextDebtText == null) return;
-        nextDebtText.text = $"次回返済\n{amount:#,0}G\nあと{remainingTurns}ターン";
+        nextDebtText.text = $"次回納税\n{amount:#,0}G\nあと{remainingTurns}ターン";
     }
 
     /// <summary>

@@ -19,6 +19,7 @@ public sealed class TitleView : MonoBehaviour
     [Header("開始方法選択画面")]
     [SerializeField] private Button newGameButton;
     [SerializeField] private Button continueButton;
+    [SerializeField] private Button optionButton;
     [SerializeField] private Button startMethodBackButton;
 
     [Header("難易度選択画面")]
@@ -48,6 +49,7 @@ public sealed class TitleView : MonoBehaviour
     public Subject<Unit> OnStartRequested { get; } = new();
     public Subject<Unit> OnNewGameSelected { get; } = new();
     public Subject<Unit> OnContinueSelected { get; } = new();
+    public Subject<Unit> OnOptionSelected { get; } = new();
     public Subject<GameModeId> OnDifficultySelected { get; } = new();
     /// <summary>スロットが選択されたとき（引数=スロット番号）。ロード／上書き先指定の両方で発火。</summary>
     public Subject<int> OnSaveSlotSelected { get; } = new();
@@ -68,6 +70,7 @@ public sealed class TitleView : MonoBehaviour
         AddClickListener(startButton, () => OnStartRequested.OnNext(Unit.Default));
         AddClickListener(newGameButton, () => OnNewGameSelected.OnNext(Unit.Default));
         AddClickListener(continueButton, () => OnContinueSelected.OnNext(Unit.Default));
+        AddClickListener(optionButton, () => OnOptionSelected.OnNext(Unit.Default));
 
         AddClickListener(easyDifficultyButton,
             () => OnDifficultySelected.OnNext(GameModeId.Short));
@@ -106,6 +109,7 @@ public sealed class TitleView : MonoBehaviour
         OnStartRequested.Dispose();
         OnNewGameSelected.Dispose();
         OnContinueSelected.Dispose();
+        OnOptionSelected.Dispose();
         OnDifficultySelected.Dispose();
         OnSaveSlotSelected.Dispose();
         OnSaveSlotDeleteRequested.Dispose();

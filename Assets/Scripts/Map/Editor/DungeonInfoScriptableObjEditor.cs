@@ -90,13 +90,63 @@ public class DungeonInfoScriptableObjEditor : Editor
             EditorGUILayout.LabelField($"レベル {selectedLevelIndex + 1} の敵データ", EditorStyles.boldLabel);
             EditorGUILayout.Space(2);
 
+            var phasesProp = levelDataProp.FindPropertyRelative("phases");
             var monstersProp = levelDataProp.FindPropertyRelative("monsters");
             var bossNameProp = levelDataProp.FindPropertyRelative("bossName");
             var rewardGoldProp = levelDataProp.FindPropertyRelative("rewardGold");
             var levelUpCostProp = levelDataProp.FindPropertyRelative("levelUpCost");
 
-            EditorGUILayout.PropertyField(monstersProp, new GUIContent("出現モンスター"), true);
-            EditorGUILayout.PropertyField(bossNameProp, new GUIContent("ボス名"));
+            // ===== フェーズ構成（戦闘で実際に使われる） =====
+            EditorGUILayout.LabelField("フェーズ構成（戦闘用）", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox(
+                "全フェーズをクリアするとダンジョンクリア。各フェーズの敵は最大3体ずつ同時出現し、倒すと残りが補充される。\n" +
+                "ボスは最終フェーズの敵リストに isBoss の敵を入れる。", MessageType.None);
+
+            if (phasesProp != null)
+            {
+                for (int p = 0; p < phasesProp.arraySize; p++)
+                {
+                    var phaseProp = phasesProp.GetArrayElementAtIndex(p);
+                    var enemiesProp = phaseProp.FindPropertyRelative("enemies");
+
+                    EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+                    EditorGUILayout.BeginHorizontal();
+                    string suffix = p == phasesProp.arraySize - 1 ? "（最終・ボス可）" : "";
+                    EditorGUILayout.LabelField($"フェーズ {p + 1}{suffix}", EditorStyles.boldLabel);
+                    if (GUILayout.Button("削除", GUILayout.Width(44)))
+                    {
+                        phasesProp.DeleteArrayElementAtIndex(p);
+                        EditorGUILayout.EndHorizontal();
+                        EditorGUILayout.EndVertical();
+                        break;
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUILayout.PropertyField(enemiesProp, new GUIContent($"出現する敵（{enemiesProp.arraySize}体）"), true);
+                    EditorGUILayout.EndVertical();
+                }
+
+                if (GUILayout.Button("＋ フェーズを追加"))
+                {
+                    phasesProp.arraySize++;
+                    // 新規フェーズの敵リストを空にする（直前フェーズの内容が複製されるのを防ぐ）
+                    var newPhase = phasesProp.GetArrayElementAtIndex(phasesProp.arraySize - 1);
+                    var newEnemies = newPhase.FindPropertyRelative("enemies");
+                    newEnemies.ClearArray();
+                }
+            }
+
+            EditorGUILayout.Space(6);
+
+            // ===== 旧方式（表示・クリア確率用） =====
+            EditorGUILayout.LabelField("旧方式（ダンジョン情報画面の表示・クリア確率計算用）", EditorStyles.boldLabel);
+            EditorGUILayout.PropertyField(monstersProp, new GUIContent("出現モンスター（表示用）"), true);
+            EditorGUILayout.PropertyField(bossNameProp, new GUIContent("ボス名（旧方式）"));
+
+            EditorGUILayout.Space(6);
+
+            // ===== 報酬・費用 =====
+            EditorGUILayout.LabelField("報酬・費用", EditorStyles.boldLabel);
             EditorGUILayout.PropertyField(rewardGoldProp, new GUIContent("勇者敗北時の報酬（G）"));
             EditorGUILayout.PropertyField(levelUpCostProp, new GUIContent("次レベルへの費用（G）"));
 

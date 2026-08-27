@@ -90,7 +90,7 @@ public class GameConstWindow : EditorWindow
 
         Section("所持金", () => Row("initMoney", $"{d.initMoney:N0}G"));
 
-        Section("借金", () =>
+        Section("税金", () =>
         {
             Row("debtPaymentInterval", d.debtPaymentInterval);
             Row("debtBaseAmount", $"{d.debtBaseAmount:N0}G");

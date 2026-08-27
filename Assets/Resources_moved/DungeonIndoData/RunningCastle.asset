@@ -23,35 +23,66 @@ MonoBehaviour:
   difficulty: 9
   requiredAttribute: 5
   levelDataList:
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: c09bb79894c24984bbd364d786b39991, type: 2}
+      - {fileID: 11400000, guid: 3debddf8299ad0d42bb29538e63589bd, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: eb4de00c7ff2dcc45a3af63a8e346ccc, type: 2}
+    monsters:
     - {fileID: 11400000, guid: c09bb79894c24984bbd364d786b39991, type: 2}
     - {fileID: 11400000, guid: 3debddf8299ad0d42bb29538e63589bd, type: 2}
     - {fileID: 11400000, guid: eb4de00c7ff2dcc45a3af63a8e346ccc, type: 2}
     bossName: "\u30E1\u30C0\u30EA\u30AA\u30F3\u3000boss Lv.1"
     rewardGold: 10000
     levelUpCost: 5000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: ccb584c29fa84834886f29105a78927a, type: 2}
+      - {fileID: 11400000, guid: 3fcfd6ac9d3cb194096e1fea9652867d, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 9c7769fe115771447b8bfa64102db154, type: 2}
+    monsters:
     - {fileID: 11400000, guid: ccb584c29fa84834886f29105a78927a, type: 2}
     - {fileID: 11400000, guid: 3fcfd6ac9d3cb194096e1fea9652867d, type: 2}
     - {fileID: 11400000, guid: 9c7769fe115771447b8bfa64102db154, type: 2}
     bossName: "\u30E1\u30C0\u30EA\u30AA\u30F3\u3000boss Lv.2"
     rewardGold: 20000
     levelUpCost: 10000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: 55ad61f697474ae49bb7eb21f2e0ea7e, type: 2}
+      - {fileID: 11400000, guid: ac3af2f162edfb4458e67c4f277d6201, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 9780f3d2cc819e240aebc2a7fa9764f7, type: 2}
+    monsters:
     - {fileID: 11400000, guid: 55ad61f697474ae49bb7eb21f2e0ea7e, type: 2}
     - {fileID: 11400000, guid: ac3af2f162edfb4458e67c4f277d6201, type: 2}
     - {fileID: 11400000, guid: 9780f3d2cc819e240aebc2a7fa9764f7, type: 2}
     bossName: "\u30E1\u30C0\u30EA\u30AA\u30F3\u3000boss Lv.3"
     rewardGold: 40000
     levelUpCost: 20000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: 6bb5ad163480de04ab488c9fb9340b6e, type: 2}
+      - {fileID: 11400000, guid: e32a45cc64d6bb841aeb56f2d96e47ad, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 90f58545e747f734ebd6a9d188008486, type: 2}
+    monsters:
     - {fileID: 11400000, guid: 6bb5ad163480de04ab488c9fb9340b6e, type: 2}
     - {fileID: 11400000, guid: e32a45cc64d6bb841aeb56f2d96e47ad, type: 2}
     - {fileID: 11400000, guid: 90f58545e747f734ebd6a9d188008486, type: 2}
     bossName: "\u30E1\u30C0\u30EA\u30AA\u30F3\u3000boss Lv.4"
     rewardGold: 80000
     levelUpCost: 40000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: 3500162e32f9aab4da2ab9570a3bff13, type: 2}
+      - {fileID: 11400000, guid: a486a2384cb011f4caf1ce8205efb758, type: 2}
+      - {fileID: 11400000, guid: 6a57574cf57d764479aaa707dc1b42b6, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: be9481ea525de50429d1cd10a2ca7e56, type: 2}
+    monsters:
     - {fileID: 11400000, guid: 3500162e32f9aab4da2ab9570a3bff13, type: 2}
     - {fileID: 11400000, guid: a486a2384cb011f4caf1ce8205efb758, type: 2}
     - {fileID: 11400000, guid: 6a57574cf57d764479aaa707dc1b42b6, type: 2}

@@ -55,6 +55,9 @@ public class TurnAnnounceView : MonoBehaviour
             .Append(rectTransform.DOAnchorPosX(endX, slideDuration).SetEase(Ease.InCubic))
             .Join(canvasGroup.DOFade(0f, fadeDuration).SetDelay(slideDuration - fadeDuration))
             .OnComplete(() => currentSequence = null);
+
+        // 演出速度設定（速い=2倍速で再生）
+        currentSequence.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
     }
 
     private void OnDestroy()

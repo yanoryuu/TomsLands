@@ -59,6 +59,19 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Button levelUpButton;                // レベルアップボタン
     [SerializeField] private TextMeshProUGUI levelUpButtonText;   // ボタン内テキスト
 
+    [Header("Development Panel - 次レベル解放プレビュー")]
+    [SerializeField] private TextMeshProUGUI unlockHeaderText;    // 見出し（Lv.X で追加される商品）
+    [SerializeField] private Transform unlockListRoot;            // エントリの親（GridLayoutGroup）
+    [SerializeField] private GameObject unlockEntryTemplate;      // エントリ雛形（非アクティブで配置）
+
+    [Header("Development Panel - 解放商品の詳細（レベルアップフレーム上部）")]
+    [SerializeField] private GameObject unlockDetailContent;             // 詳細の中身（選択時に表示）
+    [SerializeField] private TextMeshProUGUI unlockDetailPlaceholder;    // 未選択時の案内テキスト
+    [SerializeField] private Image unlockDetailIcon;
+    [SerializeField] private TextMeshProUGUI unlockDetailName;
+    [SerializeField] private TextMeshProUGUI unlockDetailInfo;
+    [SerializeField] private TextMeshProUGUI unlockDetailDescription;
+
     public Subject<Unit> OnCloseRequested { get; private set; } = new();
     public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
@@ -242,31 +255,24 @@ public class BlackSmithView : MonoBehaviour
 
     public void SortItemTab(BlackSmithTab type)
     {
-        var weaponSeq =  weaponTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Weapon].y, 0.1f);
-        var armorSeq = armorTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Armor].y, 0.1f);
-        var developmentSeq = developmentTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Development].y, 0.1f);
-        var specialSeq = specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y, 0.1f);
-        
-        // タブを一番上に持ってくる動作はそのまま
-        switch (type)
-        {
-            case BlackSmithTab.Weapon:
-                weaponSeq.Kill();
-                weaponTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Weapon].y+10, 0.2f);
-                break;
-            case BlackSmithTab.Armor:
-                armorSeq.Kill();
-                armorTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Armor].y + 10, 0.2f);
-                break;
-            case BlackSmithTab.Development:
-                developmentSeq.Kill();
-                developmentTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Development].y + 10, 0.2f);
-                break;
-            case BlackSmithTab.Special:
-                specialSeq.Kill();
-                specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y + 10, 0.2f);
-                break;
-        }
+        MoveTab(weaponTab, BlackSmithTab.Weapon, type);
+        MoveTab(armorTab, BlackSmithTab.Armor, type);
+        MoveTab(developmentTab, BlackSmithTab.Development, type);
+        MoveTab(specialTab, BlackSmithTab.Special, type);
+    }
+
+    /// <summary>
+    /// 選択タブだけ少し持ち上げ、他は基準位置へ戻す。
+    /// 既存Tweenを必ず殺してから動かす（多重Tweenでタブが浮きっぱなしになるのを防ぐ）。
+    /// </summary>
+    private void MoveTab(GameObject tab, BlackSmithTab tabType, BlackSmithTab selected)
+    {
+        if (tab == null) return;
+
+        tab.transform.DOKill();
+        float baseY = initTabPos[tabType].y;
+        bool isSelected = tabType == selected;
+        tab.transform.DOLocalMoveY(isSelected ? baseY + 10 : baseY, isSelected ? 0.2f : 0.1f);
     }
 
     public void SwitchPanel(BlackSmithTab tab)
@@ -275,6 +281,85 @@ public class BlackSmithView : MonoBehaviour
 
         if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
+        // 開発パネルに並べ替えUIは不要なので隠す
+        if (sortDropdown)      sortDropdown.gameObject.SetActive(!isDevelopment);
+    }
+
+    private readonly List<GameObject> unlockEntries = new();
+
+    /// <summary>
+    /// 次レベルで解放される商品のプレビューを更新する。
+    /// </summary>
+    public void UpdateUnlockPreview(int nextLevel, bool isMax, List<UnlockItemDisplayData> items)
+    {
+        foreach (var e in unlockEntries) Destroy(e);
+        unlockEntries.Clear();
+
+        if (unlockHeaderText)
+        {
+            if (isMax)
+                unlockHeaderText.text = "最大レベル：これ以上追加される商品はありません";
+            else if (items == null || items.Count == 0)
+                unlockHeaderText.text = $"Lv.{nextLevel} で追加される商品はありません";
+            else
+                unlockHeaderText.text = $"Lv.{nextLevel} で追加される商品";
+        }
+
+        // リストを作り直すタイミングで詳細は未選択状態に戻す
+        ResetUnlockDetail();
+
+        if (isMax || items == null || unlockListRoot == null || unlockEntryTemplate == null) return;
+
+        foreach (var item in items)
+        {
+            var entry = Instantiate(unlockEntryTemplate, unlockListRoot);
+            entry.SetActive(true);
+
+            var icon = entry.transform.Find("Icon")?.GetComponent<Image>();
+            var nameText = entry.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
+            var infoText = entry.transform.Find("Info")?.GetComponent<TextMeshProUGUI>();
+
+            if (icon)
+            {
+                icon.sprite = item.Icon;
+                icon.enabled = item.Icon != null;
+            }
+            if (nameText) nameText.text = item.Name;
+            if (infoText) infoText.text = item.Info;
+
+            // タップで詳細を表示
+            var button = entry.GetComponent<Button>();
+            if (button != null)
+            {
+                var captured = item;
+                button.onClick.AddListener(() => ShowUnlockDetail(captured));
+            }
+
+            unlockEntries.Add(entry);
+        }
+    }
+
+    /// <summary>解放商品の詳細を表示する（レベルアップフレーム上部の詳細欄）。</summary>
+    public void ShowUnlockDetail(UnlockItemDisplayData item)
+    {
+        if (unlockDetailContent) unlockDetailContent.SetActive(true);
+        if (unlockDetailPlaceholder) unlockDetailPlaceholder.gameObject.SetActive(false);
+
+        if (unlockDetailIcon)
+        {
+            unlockDetailIcon.sprite = item.Icon;
+            unlockDetailIcon.enabled = item.Icon != null;
+        }
+        if (unlockDetailName) unlockDetailName.text = item.Name;
+        if (unlockDetailInfo) unlockDetailInfo.text = item.Info;
+        if (unlockDetailDescription) unlockDetailDescription.text = item.Description;
+    }
+
+    /// <summary>解放商品の詳細を未選択状態（案内表示）に戻す。</summary>
+    private void ResetUnlockDetail()
+    {
+        if (unlockDetailContent) unlockDetailContent.SetActive(false);
+        if (unlockDetailPlaceholder) unlockDetailPlaceholder.gameObject.SetActive(true);
     }
 
     /// <summary>
@@ -300,6 +385,15 @@ public class BlackSmithView : MonoBehaviour
             if (levelUpButton) levelUpButton.interactable = playerMoney >= cost;
         }
     }
+}
+
+/// <summary>次レベル解放プレビュー1件分の表示データ。</summary>
+public class UnlockItemDisplayData
+{
+    public Sprite Icon;
+    public string Name;
+    public string Info;        // 例: 「武器・火属性・1,200G」
+    public string Description; // アイテム説明文（詳細表示用）
 }
 
 public enum BlackSmithTab

@@ -42,6 +42,13 @@ public class BattleFlowManager
         await uiView.AddLogAsync("--- 戦闘開始！ ---", token);
         SetupCharacters(heroModel);
 
+        // フェーズ1の敵を出現させる（最大3体。以降の補充・フェーズ進行はターン終了評価が行う）
+        if (context.PhaseCount > 0)
+        {
+            await uiView.AddLogAsync($"--- フェーズ 1 / {context.PhaseCount} ---", token);
+            await executor.SpawnFromPhaseQueueAsync(factory, uiView, sequencer, token, announceReinforce: false);
+        }
+
         // --- 実行フェーズ ---
         int turnCount = 1;
         while (!executor.IsBattleEnded())
@@ -90,29 +97,20 @@ public class BattleFlowManager
             return;
         }
 
-        if (context.DungeonMonsters == null || context.DungeonMonsters.Count == 0)
+        // フェーズ構成を確定（SOの phases → 旧方式変換 → Resources の順でフォールバック）
+        context.InitializePhases();
+
+        if (context.PhaseCount == 0)
         {
-            Debug.LogError($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' (key={context.CurrentStage.key}) のモンスターデータが見つかりません。ダンジョンSOの Inspector で levelDataList を設定するか、Resources/EnemyData に EnemyData アセットを配置してください。");
+            Debug.LogError($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' (key={context.CurrentStage.key}) のフェーズ構成が空です。ダンジョンSOの Inspector で levelDataList の phases を設定してください。");
             return;
         }
 
-        Debug.Log($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' にモンスター {context.DungeonMonsters.Count} 種、ボス '{context.DungeonBoss}' を検出。");
+        Debug.Log($"[BattleFlowManager] ダンジョン '{context.CurrentStage.dungeonName}' Lv{context.DungeonLevel}: {context.PhaseCount}フェーズ構成で開始。");
 
-        int initialSpawnCount = Mathf.Min(context.MaxConcurrentEnemies, context.TotalNormalEnemies);
-        for (int i = 0; i < initialSpawnCount; i++)
-        {
-            int? spawnIndex = context.FindEmptySpawnPoint();
-            if (!spawnIndex.HasValue) continue;
-
-            var normalEnemies = context.DungeonMonsters.Where(m => m.enemyName != context.DungeonBoss).ToList();
-            if (!normalEnemies.Any()) continue;
-
-            var enemyData = normalEnemies[Random.Range(0, normalEnemies.Count)];
-            var enemyPresenter = factory.CreateEnemy(enemyData, spawnIndex.Value, sequencer);
-            context.AddEnemy(enemyPresenter);
-            context.EnemiesSpawnedCount++;
-            context.OccupySpawnPoint(spawnIndex.Value, enemyPresenter);
-        }
+        // フェーズ進捗ゲージを初期化
+        sequencer.SetupPhaseGauge(context.PhaseCount);
+        sequencer.UpdatePhaseGauge(0);
     }
 
     /// <summary>

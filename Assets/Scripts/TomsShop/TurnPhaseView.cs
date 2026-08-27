@@ -14,6 +14,10 @@ public class TurnPhaseView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI phaseLabel;
     [Tooltip("次へ/スキップ ボタン（仕入れ・陳列フェーズで表示）")]
     [SerializeField] private Button advanceButton;
+    [Tooltip("戻る ボタン（陳列・営業フェーズで表示。仕入れへは戻れるがイベントへは戻らない）")]
+    [SerializeField] private Button backButton;
+    [Tooltip("営業フェーズ中の戻るボタン位置（営業開始ボタンと重ならない場所に退避させる）")]
+    [SerializeField] private Vector2 backButtonSalesPosition = new(170f, -449f);
 
     [Header("フェーズ別ボタングループ")]
     [SerializeField] private GameObject procurementGroup; // 仕入れ：情報屋/鍛冶屋/道具屋/ダンジョンLv/広告/ヒーロー/マップ
@@ -27,14 +31,22 @@ public class TurnPhaseView : MonoBehaviour
     [SerializeField] private Color stepperInactiveColor = new(1f, 1f, 1f, 0.45f);
 
     public Subject<Unit> OnAdvanceClicked { get; } = new();
+    public Subject<Unit> OnBackClicked { get; } = new();
 
     private TurnPhase? _lastShownPhase;
+    private Vector2 _backButtonBasePos;
     private readonly Dictionary<GameObject, Vector2> _groupBasePos = new();
 
     private void Awake()
     {
         if (advanceButton != null)
             advanceButton.onClick.AddListener(() => OnAdvanceClicked.OnNext(Unit.Default));
+        if (backButton != null)
+        {
+            backButton.onClick.AddListener(() => OnBackClicked.OnNext(Unit.Default));
+            if (backButton.transform is RectTransform backRt)
+                _backButtonBasePos = backRt.anchoredPosition;
+        }
 
         // グループ入場演出のために初期位置を記録しておく（Tween中断後の位置ずれ防止）
         foreach (var g in new[] { procurementGroup, displayGroup, salesGroup })
@@ -58,6 +70,16 @@ public class TurnPhaseView : MonoBehaviour
         // 「次へ」は仕入れ・陳列のみ。営業は salesGroup の「営業開始」で進み、イベントはポップアップ任せ。
         bool showAdvance = phase == TurnPhase.Procurement || phase == TurnPhase.Display;
         if (advanceButton != null) advanceButton.gameObject.SetActive(showAdvance);
+
+        // 「戻る」は陳列・営業のみ（仕入れが下限。イベントへは戻らない）
+        bool showBack = phase == TurnPhase.Display || phase == TurnPhase.Sales;
+        if (backButton != null)
+        {
+            backButton.gameObject.SetActive(showBack);
+            // 営業フェーズは「営業開始」ボタンが大きく被るため、退避位置に移動する
+            if (backButton.transform is RectTransform backRt)
+                backRt.anchoredPosition = phase == TurnPhase.Sales ? backButtonSalesPosition : _backButtonBasePos;
+        }
 
         if (phaseLabel != null)
         {

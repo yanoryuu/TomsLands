@@ -56,6 +56,32 @@ public class TurnPhaseManager : IDisposable
     public void SkipCurrent() => AdvanceTurnPhase();
 
     /// <summary>
+    /// ひとつ前のフェーズへ戻る。仕入れ(Procurement)が下限で、
+    /// Event へは戻らない（イベントは消化済みのため再表示できない）。
+    /// </summary>
+    public void GoBackTurnPhase()
+    {
+        switch (CurrentTurnPhase.Value)
+        {
+            case TurnPhase.Display:
+                CurrentTurnPhase.Value = TurnPhase.Procurement;
+                break;
+            case TurnPhase.Sales:
+                CurrentTurnPhase.Value = TurnPhase.Display;
+                break;
+            case TurnPhase.Event:
+            case TurnPhase.Procurement:
+                // 下限：これ以上は戻れない
+                break;
+        }
+        Debug.Log($"[TurnPhaseManager] GoBackTurnPhase → {CurrentTurnPhase.Value}");
+    }
+
+    /// <summary>現フェーズから戻れるかどうか（戻るボタンの表示判定用）。</summary>
+    public bool CanGoBack()
+        => CurrentTurnPhase.Value == TurnPhase.Display || CurrentTurnPhase.Value == TurnPhase.Sales;
+
+    /// <summary>
     /// 詳細画面(TomsShopGamePhase)がどのフェーズに属するかを返す。
     /// ヒント絞り込みやゲート判定に使う。Shop(ホーム)は現フェーズに依存するため null を返す。
     /// </summary>

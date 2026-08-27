@@ -115,7 +115,7 @@ public class BuzzModeOverlayView : MonoBehaviour
             _showSequence.Join(frameRect.DOScale(1f, frameZoomDuration).SetEase(Ease.OutBack));
         }
 
-        // バナー: 役物風に上から落下してバウンド → 着地後に小シェイク
+        // バナー: 役物風に上から落下してバウンド → 着地後に小シェイク（シェイク軽減設定時はシェイクなし）
         if (bannerBackground != null && _bannerBaseCached)
         {
             var bannerRect = bannerBackground.rectTransform;
@@ -124,12 +124,18 @@ public class BuzzModeOverlayView : MonoBehaviour
                 .DOAnchorPos(_bannerBasePosition, bannerDropDuration)
                 .SetEase(Ease.OutBounce)
                 .SetDelay(0.1f));
-            _showSequence.Append(bannerRect
-                .DOShakeAnchorPos(shakeDuration, shakeStrength, vibrato: 18, randomness: 90f, snapping: false, fadeOut: true));
+            if (!GameSettings.ReduceShake)
+            {
+                _showSequence.Append(bannerRect
+                    .DOShakeAnchorPos(shakeDuration, shakeStrength, vibrato: 18, randomness: 90f, snapping: false, fadeOut: true));
+            }
         }
 
         // 着地後に持続パルス開始
         _showSequence.OnComplete(StartPulse);
+
+        // 演出速度設定（速い=2倍速で再生）
+        _showSequence.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
     }
 
     /// <summary>

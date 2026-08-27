@@ -20,6 +20,8 @@ public static class RemoteBalance
     private static readonly Dictionary<string, Dictionary<string, string>> _lists = new();
     // heroLevels は純スカラーCSV由来。あれば全置換。
     private static List<HeroLevelData> _heroLevels;
+    // events はCSVマスター由来（Dictionaryを含むためJsonUtility不可、JObjectから手動変換）。あれば全置換。
+    private static List<TomsEvent> _events;
 
     private static readonly string[] SingleSections = { "shopEconomy", "gameBalance", "battlePrice" };
     // ※ HeroData(SO) は Inspector 割当のフォールバックで、実バトル値は heroLevels(CSV由来) なので
@@ -27,7 +29,7 @@ public static class RemoteBalance
     private static readonly string[] ListSections =
         { "advertisements", "buzzEffects", "followerMilestones", "enemies", "dungeons" };
 
-    public static bool HasAny => _sections.Count > 0 || _lists.Count > 0 || _heroLevels != null;
+    public static bool HasAny => _sections.Count > 0 || _lists.Count > 0 || _heroLevels != null || _events != null;
 
     /// <summary>
     /// balance.json を取り込む。schemaVersion 不一致/解析失敗時は -1（不採用）。
@@ -51,6 +53,7 @@ public static class RemoteBalance
         _sections.Clear();
         _lists.Clear();
         _heroLevels = null;
+        _events = null;
 
         // 単一区画
         foreach (var key in SingleSections)
@@ -86,7 +89,49 @@ public static class RemoteBalance
             if (list.Count > 0) _heroLevels = list;
         }
 
-        Debug.Log($"[RemoteBalance] version {version} を適用（single={_sections.Count}, list={_lists.Count}, heroLevels={(_heroLevels?.Count ?? 0)}）");
+        // events（全置換用）
+        // 行形式: { id, title, description, command1, param1Key1, param1Value1, command2, ... }
+        // TomsEventCommand.parameters が Dictionary のため JsonUtility ではなく JObject から手動変換する
+        if (root["events"] is JArray ev && ev.Count > 0)
+        {
+            var list = new List<TomsEvent>();
+            foreach (var el in ev)
+            {
+                if (!(el is JObject eo)) continue;
+
+                string id = eo.Value<string>("id");
+                string title = eo.Value<string>("title");
+                // 空行（idのみ・タイトル無し）はプールに入れない
+                if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(title)) continue;
+
+                var e = new TomsEvent
+                {
+                    id = id.Trim(),
+                    title = title.Trim(),
+                    description = eo.Value<string>("description") ?? "",
+                    commands = new List<TomsEventCommand>()
+                };
+
+                for (int n = 1; n <= 10; n++)
+                {
+                    string cmdName = eo.Value<string>($"command{n}");
+                    if (string.IsNullOrWhiteSpace(cmdName)) break;
+
+                    var cmd = new TomsEventCommand { command = cmdName.Trim() };
+                    string key = eo.Value<string>($"param{n}Key1");
+                    string val = eo.Value<string>($"param{n}Value1");
+                    if (!string.IsNullOrWhiteSpace(key))
+                        cmd.parameters[key.Trim()] = val ?? "";
+
+                    e.commands.Add(cmd);
+                }
+
+                list.Add(e);
+            }
+            if (list.Count > 0) _events = list;
+        }
+
+        Debug.Log($"[RemoteBalance] version {version} を適用（single={_sections.Count}, list={_lists.Count}, heroLevels={(_heroLevels?.Count ?? 0)}, events={(_events?.Count ?? 0)}）");
         return version;
     }
 
@@ -134,10 +179,15 @@ public static class RemoteBalance
     public static List<HeroLevelData> ApplyHeroLevels(List<HeroLevelData> baked)
         => _heroLevels != null ? new List<HeroLevelData>(_heroLevels) : baked;
 
+    /// <summary>イベントマスター。配信があれば全置換、無ければ baked（CSV由来）。</summary>
+    public static List<TomsEvent> ApplyEvents(List<TomsEvent> baked)
+        => _events != null ? new List<TomsEvent>(_events) : baked;
+
     public static void ResetToDefault()
     {
         _sections.Clear();
         _lists.Clear();
         _heroLevels = null;
+        _events = null;
     }
 }

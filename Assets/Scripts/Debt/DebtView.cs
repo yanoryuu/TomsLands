@@ -44,8 +44,8 @@ public class DebtView : MonoBehaviour
         debtPanel.SetActive(true);
         if (bankruptcyPanel != null) bankruptcyPanel.SetActive(false);
 
-        if (titleText != null) titleText.text = $"第{cycle}回 借金返済日！";
-        if (debtAmountText != null) debtAmountText.text = $"返済額：{debtAmount:#,0}G";
+        if (titleText != null) titleText.text = $"第{cycle}回 税金納付日！";
+        if (debtAmountText != null) debtAmountText.text = $"納税額：{debtAmount:#,0}G";
         if (currentMoneyText != null) currentMoneyText.text = $"所持金：{currentMoney:#,0}G";
 
         bool canPay = currentMoney >= debtAmount;
@@ -64,11 +64,11 @@ public class DebtView : MonoBehaviour
         if (closeButton != null) closeButton.gameObject.SetActive(false);
         payButton.interactable = false;
 
-        if (titleText != null) titleText.text = $"第{cycle}回 借金返済日！";
-        if (debtAmountText != null) debtAmountText.text = $"返済額：{debtAmount:#,0}G";
+        if (titleText != null) titleText.text = $"第{cycle}回 税金納付日！";
+        if (debtAmountText != null) debtAmountText.text = $"納税額：{debtAmount:#,0}G";
         if (currentMoneyText != null) currentMoneyText.text = $"所持金：{currentMoney:#,0}G";
         if (bankruptcyMessageText != null)
-            bankruptcyMessageText.text = $"返済額 {debtAmount:#,0}G に対して所持金が {currentMoney:#,0}G...!\nト、トムさん！お店が差し押さえられました！！";
+            bankruptcyMessageText.text = $"納税額 {debtAmount:#,0}G に対して所持金が {currentMoney:#,0}G...!\nト、トムさん！お店が差し押さえられました！！";
     }
 
     public void Hide()
