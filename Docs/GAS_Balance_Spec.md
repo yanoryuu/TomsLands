@@ -27,6 +27,7 @@
   "followerMilestones": [ { "id": "<requiredFollowers>", "requiredFollowers": 100, ... } ],
   "enemies":            [ { "id": "<enemyId>", ...変更する数値... } ],
   "dungeons":           [ { "id": "<DungeonName>", ...変更する数値... } ],
+  "events":             [ { "id": "001", "title": "...", "description": "...", "command1": "...", "param1Key1": "...", "param1Value1": "..." } ],
 
   "heroLevels": [ { "Level":1, "MaxHp":100, "Attack":10, "Defense":5 } ]
 }
@@ -77,7 +78,9 @@
 `highDemandThreshold, highDemandPriceRateMin, highDemandPriceRateMax, lowDemandThreshold, lowDemandPriceRateMin, lowDemandPriceRateMax, normalDemandPriceRateMin, normalDemandPriceRateMax, shopPriceFloorRate, shopPriceCeilingRate, victoryAttributeDemandUp, defeatAttributeDemandDown, displayDemandUp, notDisplayDemandDown, demandFloor, demandCeiling, trustFloorBoost, attentionPriceAmplify, attentionAffectsLowDemand(bool), spreadDemandAmplify, retentionStabilizer, followerWeight, followerScale, trendAmplitude, trendConvergenceRate, trendDriftMax, trendDecayRate`
 
 ### gameBalance（単一・`GameBalanceData.cs` 準拠）
-例: `statMin, statMax, buzzAttentionCoeff, buzzTrustCoeff, buzzMaxBaseChance, flameTrustThreshold, flameChance, bigBuzzTrustThreshold, initialTrust, initialAttention, initialSpread, initialRetention, initialFollowers`（クラスの全フィールド名に一致させる）
+例: `statMin, statMax, buzzAttentionCoeff, buzzTrustCoeff, buzzMaxBaseChance, flameTrustThreshold, flameChance, buzzBaseChance, buzzMaxChance, bigBuzzBaseChance, bigBuzzMaxChance, buzzContinueChance, buzzEvolveToBigChance, initialTrust, initialAttention, initialSpread, initialRetention, initialFollowers`（クラスの全フィールド名に一致させる）
+
+バズ確率（2026-08 新方式）: `buzzBaseChance/buzzMaxChance` = 通常バズの基礎/最大発生率(%)、`bigBuzzBaseChance/bigBuzzMaxChance` = 超バズの基礎/最大発生率(%)、`buzzContinueChance` = 毎ターンの継続率(%)、`buzzEvolveToBigChance` = 通常バズ→超バズ発展率(%)。強化度合いは `buzzAttentionCoeff/buzzTrustCoeff/buzzMaxBaseChance`（正規化基準）とフォロワーボーナスから算出される。`bigBuzzTrustThreshold` は廃止（コード・シートとも削除済み。配信JSONに残っていても無視される）。
 
 ### battlePrice（単一・`BattlePriceSettings.cs` 準拠）
 例: `weaponPriceUpOnHit, weaponPriceDownOnNonKill, armorPriceDownOnHit, armorPriceUpOnBlock, effectiveAttributeRate, weakAttributeRate, priceFloorRate, priceCeilingRate, initialHeat, heatTurnDecay, coldTierMax, normalTierMax, hotTierMax, coldPriceMultiplier, normalPriceMultiplier, hotPriceMultiplier, superHotPriceMultiplier, demandEffectiveAttributeUp, demandWeakAttributeDown, buzzBonus2Turn, buzzBonus3PlusTurn, unsoldPenalty, highPriceThreshold, lowPriceThreshold, highPriceDemandDecay, lowPriceDemandGrowth`
@@ -100,6 +103,14 @@
 
 ### heroLevels[]（全置換・`HeroLevelData`）
 `Level, MaxHp, Attack, Defense`（PascalCase）。配列があれば CSV を**完全に置き換える**。
+
+### events[]（全置換・`TomsEvent`、2026-08追加）
+店イベントのマスター。配列があれば `EventDatas.csv`（ベイク）を**完全に置き換える**。
+列: `id, title, description, command1, param1Key1, param1Value1, command2, param2Key1, param2Value1`（command は最大10個まで `command{n}/param{n}Key1/param{n}Value1` で拡張可）。
+- `id`/`title` が空の行は Unity 側で除外される（空行プレースホルダを置いてもよい）。
+- 値はすべて**文字列扱い**（Unity側で必要に応じて数値パースする）。数値セルが number 型で出力されても受け側（JObject.Value&lt;string&gt;）で吸収する。
+- 現在使われている command: `ChangeMoney`（param: amount=金額±）, `ChangeTrust`（param: amount=信頼±）。
+- シート雛形: `Docs/balance_tsv/events.tsv`（現行CSVの実データ21件を変換済み）。
 
 ## 4. 完全な例
 ```json
@@ -128,6 +139,9 @@
   "heroLevels": [
     { "Level": 1, "MaxHp": 120, "Attack": 12, "Defense": 6 },
     { "Level": 2, "MaxHp": 140, "Attack": 15, "Defense": 7 }
+  ],
+  "events": [
+    { "id": "001", "title": "記念硬貨の発見", "description": "……", "command1": "ChangeMoney", "param1Key1": "amount", "param1Value1": "30000" }
   ]
 }
 ```

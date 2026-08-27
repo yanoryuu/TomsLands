@@ -1,0 +1,57 @@
+<linker>
+  <assembly fullname="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="AdvertisementData" preserve="all" />
+    <type fullname="BattleInputData" preserve="all" />
+    <type fullname="BattleOutputData" preserve="all" />
+    <type fullname="BattlePriceSettings" preserve="all" />
+    <type fullname="BuzzEffectData" preserve="all" />
+    <type fullname="DungeonInfoScriptableObj" preserve="all" />
+    <type fullname="EnemyData" preserve="all" />
+    <type fullname="EventInputData" preserve="all" />
+    <type fullname="EventOutputData" preserve="all" />
+    <type fullname="FollowerMilestoneData" preserve="all" />
+    <type fullname="GameBalanceData" preserve="all" />
+    <type fullname="GameConstSettings" preserve="all" />
+    <type fullname="GameFlow" preserve="all" />
+    <type fullname="HeroData" preserve="all" />
+    <type fullname="ItemData" preserve="all" />
+    <type fullname="ItemVisualSettings" preserve="all" />
+    <type fullname="ShopEconomySettings" preserve="all" />
+    <type fullname="SkillData" preserve="all" />
+    <type fullname="SoundLibrary" preserve="all" />
+    <type fullname="SoundManager" preserve="all" />
+    <type fullname="StartModeData" preserve="all" />
+    <type fullname=".DungeonLevelData" preserve="nothing" serialized="true" />
+    <type fullname=".DungeonName" preserve="nothing" serialized="true" />
+    <type fullname=".DungeonPhaseData" preserve="nothing" serialized="true" />
+    <type fullname=".GameConstData" preserve="nothing" serialized="true" />
+    <type fullname=".GameFlowGenerationSettings" preserve="nothing" serialized="true" />
+    <type fullname=".GameFlowNode" preserve="nothing" serialized="true" />
+    <type fullname=".GameModeConfig" preserve="nothing" serialized="true" />
+    <type fullname=".GameModeId" preserve="nothing" serialized="true" />
+    <type fullname=".ItemVisualSettings/LevelBackground" preserve="nothing" serialized="true" />
+    <type fullname=".SoundLibrary/Entry" preserve="nothing" serialized="true" />
+    <type fullname=".StatusEffectData" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="Unity.Addressables, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.AddressableAssets.Addressables" preserve="all" />
+    <type fullname="UnityEngine.AddressableAssets.AssetReferenceT`1" preserve="nothing" serialized="true" />
+  </assembly>
+  <assembly fullname="Unity.ResourceManager, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null" preserve="all">
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.AssetBundleProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.InstanceProvider" preserve="all" />
+    <type fullname="UnityEngine.ResourceManagement.ResourceProviders.SceneProvider" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.AudioClip" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <type fullname="UnityEngine.GameObject" preserve="all" />
+    <type fullname="UnityEngine.Object" preserve="all" />
+    <type fullname="UnityEngine.Sprite" preserve="all" />
+    <type fullname="UnityEngine.TextAsset" preserve="all" />
+    <type fullname="UnityEngine.Texture2D" preserve="all" />
+    <type fullname="UnityEngine.Transform" preserve="all" />
+  </assembly>
+</linker>

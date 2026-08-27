@@ -19,6 +19,7 @@ public sealed class TitleView : MonoBehaviour
     [Header("開始方法選択画面")]
     [SerializeField] private Button newGameButton;
     [SerializeField] private Button continueButton;
+    [SerializeField] private Button optionButton;
     [SerializeField] private Button startMethodBackButton;
 
     [Header("難易度選択画面")]
@@ -48,6 +49,7 @@ public sealed class TitleView : MonoBehaviour
     public Subject<Unit> OnStartRequested { get; } = new();
     public Subject<Unit> OnNewGameSelected { get; } = new();
     public Subject<Unit> OnContinueSelected { get; } = new();
+    public Subject<Unit> OnOptionSelected { get; } = new();
     public Subject<GameModeId> OnDifficultySelected { get; } = new();
     /// <summary>スロットが選択されたとき（引数=スロット番号）。ロード／上書き先指定の両方で発火。</summary>
     public Subject<int> OnSaveSlotSelected { get; } = new();
@@ -58,6 +60,7 @@ public sealed class TitleView : MonoBehaviour
     public bool UseAutoGeneration => autoGenerationToggle == null || autoGenerationToggle.isOn;
 
     private Tween _titleTween;
+    private TitleType _currentScreen = TitleType.Start;
 
     private readonly List<SaveSlotView> _slotViews = new();
     private readonly CompositeDisposable _slotDisposables = new();
@@ -67,6 +70,7 @@ public sealed class TitleView : MonoBehaviour
         AddClickListener(startButton, () => OnStartRequested.OnNext(Unit.Default));
         AddClickListener(newGameButton, () => OnNewGameSelected.OnNext(Unit.Default));
         AddClickListener(continueButton, () => OnContinueSelected.OnNext(Unit.Default));
+        AddClickListener(optionButton, () => OnOptionSelected.OnNext(Unit.Default));
 
         AddClickListener(easyDifficultyButton,
             () => OnDifficultySelected.OnNext(GameModeId.Short));
@@ -90,6 +94,13 @@ public sealed class TitleView : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        // スタート画面では任意のキー入力・クリックで開始方法選択へ進む
+        if (_currentScreen == TitleType.Start && Input.anyKeyDown)
+            OnStartRequested.OnNext(Unit.Default);
+    }
+
     private void OnDestroy()
     {
         _titleTween?.Kill();
@@ -98,6 +109,7 @@ public sealed class TitleView : MonoBehaviour
         OnStartRequested.Dispose();
         OnNewGameSelected.Dispose();
         OnContinueSelected.Dispose();
+        OnOptionSelected.Dispose();
         OnDifficultySelected.Dispose();
         OnSaveSlotSelected.Dispose();
         OnSaveSlotDeleteRequested.Dispose();
@@ -130,6 +142,7 @@ public sealed class TitleView : MonoBehaviour
         }
         if (infos == null) return;
 
+        int index = 0;
         foreach (var info in infos)
         {
             var slot = Instantiate(saveSlotPrefab, saveSlotContainer);
@@ -141,6 +154,16 @@ public sealed class TitleView : MonoBehaviour
             slot.OnDelete.Subscribe(OnSaveSlotDeleteRequested.OnNext).AddTo(_slotDisposables);
 
             _slotViews.Add(slot);
+
+            // 上から順にポップイン
+            var cg = slot.GetComponent<CanvasGroup>();
+            if (cg == null) cg = slot.gameObject.AddComponent<CanvasGroup>();
+            float delay = index * 0.07f;
+            cg.alpha = 0f;
+            cg.DOFade(1f, 0.2f).SetDelay(delay).SetLink(slot.gameObject);
+            slot.transform.localScale = Vector3.one * 0.92f;
+            slot.transform.DOScale(1f, 0.28f).SetDelay(delay).SetEase(Ease.OutBack).SetLink(slot.gameObject);
+            index++;
         }
     }
 
@@ -157,6 +180,7 @@ public sealed class TitleView : MonoBehaviour
 
     public void DisplayScreen(TitleType screen)
     {
+        _currentScreen = screen;
         SetGroupActive(startScreenGroup, screen == TitleType.Start);
         SetGroupActive(startMethodScreenGroup, screen == TitleType.ContinueOrNewGame);
         SetGroupActive(difficultyScreenGroup, screen == TitleType.SelectDifficulty);

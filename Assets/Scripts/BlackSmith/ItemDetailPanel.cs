@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -63,15 +64,30 @@ public class ItemDetailPanel : MonoBehaviour
     private GameObject Root => root != null ? root : gameObject;
 
     /// <summary>選択された銘柄の情報をパネルに表示する（チャート・市場分析を更新）。</summary>
-    public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore)
+    /// <param name="useBattleHistory">true=配信中の価格履歴（BattlePriceHistory）をチャートに表示する。バトル中の補充ポップアップ用</param>
+    public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore, bool useBattleHistory = false)
     {
         Root.SetActive(true);
+
+        // 銘柄切替のフィードバック（短いポップ）
+        UIFx.Pop(Root.transform, 0.98f, 0.15f);
+        if (icon != null)
+        {
+            icon.transform.DOKill(true);
+            icon.transform.DOPunchScale(Vector3.one * 0.12f, 0.2f, 5, 0.6f).SetLink(icon.gameObject);
+        }
 
         if (icon) icon.sprite = runtime.ItemIcon;
         if (nameText) nameText.text = runtime.ItemName;
         if (attributeText) attributeText.text = runtime.ItemAttribute.ToString();
 
-        if (priceChart) priceChart.SetData(runtime.ShopPriceHistory, runtime.ShopDemandHistory);
+        if (priceChart)
+        {
+            if (useBattleHistory)
+                priceChart.SetData(runtime.BattlePriceHistory); // 配信中の価格変動（需要系列なし）
+            else
+                priceChart.SetData(runtime.ShopPriceHistory, runtime.ShopDemandHistory);
+        }
 
         unitPrice = runtime.CurrentPrice.Value;
         RefreshMarket(runtime, basePrice, recommendScore);

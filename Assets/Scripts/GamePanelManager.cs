@@ -38,6 +38,14 @@ public class GamePanelManager : MonoBehaviour
         if (prophetPanel != null) prophetPanel.SetActive(false);
     }
 
+    /// <summary>パネルを表示し、開き演出（フェードイン）を再生する。</summary>
+    private static void ShowWithFx(GameObject panel)
+    {
+        if (panel == null) return;
+        panel.SetActive(true);
+        UIFx.PanelOpen(panel);
+    }
+
     /// <summary>
     /// メインフェーズ切替時に呼ばれる。大枠のパネルを制御。
     /// TomsShopに入った場合、サブフェーズ側でさらにパネルが切り替わる。
@@ -54,11 +62,11 @@ public class GamePanelManager : MonoBehaviour
                 break;
             //リザルト画面
             case GamePhase.Result:
-                endPhasePanel.SetActive(true);
+                ShowWithFx(endPhasePanel);
                 break;
             //音量などのシステム的な各所設定
             case GamePhase.Setting:
-                settingPanel.SetActive(true);
+                ShowWithFx(settingPanel);
                 break;
         }
     }
@@ -73,42 +81,43 @@ public class GamePanelManager : MonoBehaviour
         switch (subPhase)
         {
             case TomsShopGamePhase.Shop:
-                tomsShopPanel.SetActive(true);
+                ShowWithFx(tomsShopPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Hero:
-                if (heroPanel != null) heroPanel.SetActive(true);
+                ShowWithFx(heroPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.BlackSmith:
-                blackSmithPanel.SetActive(true);
-                commonPanel.SetActive(true);
+                // 鍛冶屋はCommonView(Turn/所持金/メニュー)と自前UIが重なるため出さない。
+                // 所持金は鍛冶屋専用表示（BlackSmithView.playerMoneyText）が担う。
+                ShowWithFx(blackSmithPanel);
                 break;
             case TomsShopGamePhase.ToolShop:
-                toolShopPanel.SetActive(true);
+                ShowWithFx(toolShopPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Broker:
-                infoBrokerPanel.SetActive(true);
+                ShowWithFx(infoBrokerPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Map:
-                mapPanel.SetActive(true);
+                ShowWithFx(mapPanel);
                 break;
             case TomsShopGamePhase.DungeonLevelUp:
-                dungeonLevelUpPanel.SetActive(true);
+                ShowWithFx(dungeonLevelUpPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.TurnEndSummary:
-                turnEndSummaryPanel.SetActive(true);
+                ShowWithFx(turnEndSummaryPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Advertisement:
-                if (advertisementPanel != null) advertisementPanel.SetActive(true);
+                ShowWithFx(advertisementPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Prophet:
-                if (prophetPanel != null) prophetPanel.SetActive(true);
+                ShowWithFx(prophetPanel);
                 commonPanel.SetActive(true);
                 break;
         }
@@ -121,7 +130,7 @@ public class GamePanelManager : MonoBehaviour
     {
         if (eventPanel != null)
         {
-            eventPanel.SetActive(true);
+            ShowWithFx(eventPanel);
         }
     }
 

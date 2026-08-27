@@ -30,6 +30,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     /// <summary>初回Entryでターンフェーズを一度だけ開始するためのフラグ。</summary>
     private bool _turnPhaseInitialized = false;
 
+    // 営業開始演出の再生中フラグ（ボタン連打防止。フェーズが変わったら解除）
+    private bool _salesStarting = false;
+
     public TomsShopPresenter(
         TomsShopView tomsShopView,
         ItemSelectionPresenter itemSelectionPresenter,
@@ -132,7 +135,25 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ =>
             {
                 if (turnPhaseManager.CurrentTurnPhase.Value != TurnPhase.Sales) return;
-                salesPhaseView.PlayAndThen(() => turnEndSummaryPresenter.ShowSummary());
+                if (_salesStarting) return; // 演出中の連打防止
+                _salesStarting = true;
+                tomsShopView.SetStartShopInteractable(false);
+                salesPhaseView.PlayAndThen(() =>
+                {
+                    // 演出中に「戻る」等でフェーズが変わっていたら営業開始をキャンセル
+                    if (turnPhaseManager.CurrentTurnPhase.Value != TurnPhase.Sales) return;
+                    turnEndSummaryPresenter.ShowSummary();
+                });
+            })
+            .AddTo(disposables);
+
+        // フェーズが動いたら営業開始ボタンの連打ガードを解除する
+        // （次ターンのSales再突入時や、演出中に戻った場合の復帰用）
+        turnPhaseManager.CurrentTurnPhase
+            .Subscribe(_ =>
+            {
+                _salesStarting = false;
+                tomsShopView.SetStartShopInteractable(true);
             })
             .AddTo(disposables);
 
@@ -157,6 +178,17 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         // ※ターン切り替え演出は Entry() 内で一元管理する
         //   バズ発生時はバズ演出のみ表示し、ターン演出はスキップするため
+
+        // バズ中の常時演出（バズモードオーバーレイ）
+        // IsBuzzActive と CurrentBuzzType は BuzzSystem 内で別々に更新されるため CombineLatest で同期する
+        marketingFacade.Buzz.IsBuzzActive
+            .CombineLatest(marketingFacade.Buzz.CurrentBuzzType, (isActive, buzzType) => (isActive, buzzType))
+            .Subscribe(x => tomsShopView.SetBuzzModeActive(x.isActive, x.buzzType))
+            .AddTo(disposables);
+
+        marketingFacade.Buzz.RemainingTurns
+            .Subscribe(turns => tomsShopView.UpdateBuzzRemainingTurns(turns))
+            .AddTo(disposables);
 
         // イベントポップアップの確認ボタン押下時
         eventView.OnConfirmClicked
@@ -276,11 +308,18 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         var tomsEvent = pendingEventData.PendingEvent;
         Debug.Log($"[TomsShopPresenter] Showing pending event popup: {tomsEvent.title}");
 
-        // エフェクトテキストを構築
-        string effectText = BuildEffectText(tomsEvent.commands);
-
-        // ポップアップを表示
-        eventView.ShowEvent(tomsEvent.title, tomsEvent.description, effectText);
+        // イベント表示の失敗で Entry 全体（ターンフェーズ開始）を巻き込まないようにガードする。
+        // 失敗した場合は保留イベントを破棄してターンを続行する。
+        try
+        {
+            string effectText = BuildEffectText(tomsEvent.commands);
+            eventView.ShowEvent(tomsEvent.title, tomsEvent.description, effectText);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[TomsShopPresenter] イベントポップアップ表示に失敗したためスキップします: {tomsEvent.id} {tomsEvent.title}\n{e}");
+            pendingEventData.Clear();
+        }
     }
 
     /// <summary>
@@ -318,17 +357,16 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                    if (cmd.parameters.TryGetValue("amount", out var moneyStr))
+                    // 不正なマスターデータ（数値でないamount）でも落とさない
+                    if (cmd.parameters.TryGetValue("amount", out var moneyStr) && int.TryParse(moneyStr, out var amount))
                     {
-                        int amount = int.Parse(moneyStr);
                         sb.AppendLine(amount >= 0 ? $"所持金 +{amount:N0}G" : $"所持金 {amount:N0}G");
                     }
                     break;
 
                 case "ChangeTrust":
-                    if (cmd.parameters.TryGetValue("amount", out var trustStr))
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
                     {
-                        float trustAmount = float.Parse(trustStr);
                         sb.AppendLine(trustAmount >= 0 ? $"信頼度 +{trustAmount}" : $"信頼度 {trustAmount}");
                     }
                     break;

@@ -58,16 +58,71 @@ public class BattleActionExecutor
     }
 
     /// <summary>
-    /// ターン終了時の評価を実行します
+    /// ターン終了時の評価を実行します。
+    /// フェーズ制: 現在フェーズの敵を全滅させると次のフェーズへ進み、全フェーズクリアで勝利。
     /// </summary>
     public async UniTask EvaluateEndOfTurnAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token)
     {
         ProcessDeadEnemies();
 
-        bool bossAppeared = await CheckAndSpawnBossAsync(factory, uiView, sequencer, token);
-        if (bossAppeared) return;
+        bool anyAlive = context.EnemyPresenters.Any(p => !p.GetModel().IsDead);
 
-        await ReinforceNormalEnemiesAsync(factory, uiView, sequencer, token);
+        // フェーズクリア判定（生存なし＆未出現なし）
+        if (!anyAlive && context.CurrentPhaseQueueEmpty)
+        {
+            bool hasNext = context.AdvancePhase();
+            sequencer.UpdatePhaseGauge(context.CurrentPhaseIndex);
+
+            if (!hasNext) return; // 全フェーズクリア → IsBattleEnded() が勝利を返す
+
+            await uiView.AddLogAsync($"--- フェーズ {context.CurrentPhaseIndex + 1} / {context.PhaseCount} ---", token);
+        }
+
+        // 補充（最大同時数まで現在フェーズのキューから出現）
+        await SpawnFromPhaseQueueAsync(factory, uiView, sequencer, token, announceReinforce: anyAlive);
+    }
+
+    /// <summary>
+    /// 現在フェーズの未出現キューから、同時最大数まで敵を出現させる。
+    /// ボス（isBoss）はボス用スポーン地点を優先し、出現時に演出イベントを発火する。
+    /// </summary>
+    public async UniTask SpawnFromPhaseQueueAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token, bool announceReinforce)
+    {
+        while (context.EnemyPresenters.Count(p => !p.GetModel().IsDead) < context.MaxConcurrentEnemies)
+        {
+            var enemyData = context.PeekNextSpawn();
+            if (enemyData == null) break;
+
+            // スポーン地点（ボスは中央=1を優先、埋まっていれば通常枠）
+            int? spawnIndex = enemyData.isBoss && context.IsSpawnPointFree(1)
+                ? 1
+                : context.FindEmptySpawnPoint();
+            if (!spawnIndex.HasValue) break;
+
+            context.DequeueNextSpawn();
+
+            if (enemyData.isBoss)
+            {
+                context.IsBossPhase = true;
+                await uiView.AddLogAsync("！！！不気味な気配がする！！！", token);
+            }
+
+            var enemyPresenter = factory.CreateEnemy(enemyData, spawnIndex.Value, sequencer);
+            context.AddEnemy(enemyPresenter);
+            context.EnemiesSpawnedCount++;
+            context.OccupySpawnPoint(spawnIndex.Value, enemyPresenter);
+
+            if (enemyData.isBoss)
+            {
+                await uiView.AddLogAsync($"ボス【{enemyData.enemyName}】が出現した！", token);
+                sequencer.OnBossAppeared.OnNext(Unit.Default);
+            }
+            else if (announceReinforce)
+            {
+                await uiView.AddLogAsync("敵の増援が現れた！", token);
+                await UniTask.Delay(uiView.GetSpeedScaledDelay(500), cancellationToken: token);
+            }
+        }
     }
 
     private void ProcessDeadEnemies()
@@ -88,70 +143,6 @@ public class BattleActionExecutor
         }
     }
 
-    private async UniTask<bool> CheckAndSpawnBossAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token)
-    {
-        if (!context.IsBossPhase && context.EnemiesDefeatedCount >= context.TotalNormalEnemies)
-        {
-            await SpawnBossAsync(factory, uiView, sequencer, token);
-            return true;
-        }
-        return false;
-    }
-
-    private async UniTask ReinforceNormalEnemiesAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token)
-    {
-        if (context.IsBossPhase) return;
-
-        while (context.EnemyPresenters.Count < context.MaxConcurrentEnemies &&
-               context.EnemiesSpawnedCount < context.TotalNormalEnemies)
-        {
-            if (SpawnRandomEnemy(factory, sequencer))
-            {
-                await uiView.AddLogAsync("敵の増援が現れた！", token);
-                await UniTask.Delay(uiView.GetSpeedScaledDelay(500), cancellationToken: token);
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    private async UniTask SpawnBossAsync(CharacterFactory factory, BattleUIView uiView, BattleSequencer sequencer, CancellationToken token)
-    {
-        context.IsBossPhase = true;
-        await uiView.AddLogAsync("！！！不気味な気配がする！！！", token);
-        var bossData = context.DungeonMonsters.FirstOrDefault(m => m.enemyName == context.DungeonBoss);
-        if (bossData != null)
-        {
-            int? spawnIndex = context.FindEmptySpawnPoint(isBoss: true);
-            if (spawnIndex.HasValue)
-            {
-                var bossPresenter = factory.CreateEnemy(bossData, spawnIndex.Value, sequencer);
-                context.AddEnemy(bossPresenter);
-                context.OccupySpawnPoint(spawnIndex.Value, bossPresenter);
-                await uiView.AddLogAsync($"ボス【{bossData.enemyName}】が出現した！", token);
-                sequencer.OnBossAppeared.OnNext(Unit.Default);
-            }
-        }
-    }
-
-    private bool SpawnRandomEnemy(CharacterFactory factory, BattleSequencer sequencer)
-    {
-        int? spawnIndex = context.FindEmptySpawnPoint();
-        if (!spawnIndex.HasValue) return false;
-
-        var normalEnemies = context.DungeonMonsters.Where(m => m.enemyName != context.DungeonBoss).ToList();
-        if (!normalEnemies.Any()) return false;
-
-        var enemyData = normalEnemies[Random.Range(0, normalEnemies.Count)];
-        var enemyPresenter = factory.CreateEnemy(enemyData, spawnIndex.Value, sequencer);
-        context.AddEnemy(enemyPresenter);
-        context.EnemiesSpawnedCount++;
-        context.OccupySpawnPoint(spawnIndex.Value, enemyPresenter);
-        return true;
-    }
-
     private List<CharacterPresenter> GetTurnOrder()
     {
         var list = new List<CharacterPresenter>();
@@ -164,7 +155,8 @@ public class BattleActionExecutor
     {
         if (context.HeroPresenter == null) return true;
         bool isHeroDead = context.HeroPresenter.GetModel().IsDead;
-        bool isVictory = context.IsBossPhase && !context.EnemyPresenters.Any(p => !p.GetModel().IsDead);
+        // 全フェーズをクリアしたら勝利（AdvancePhase が最終フェーズ全滅時に到達させる）
+        bool isVictory = context.AllPhasesCleared;
         return isHeroDead || isVictory;
     }
 

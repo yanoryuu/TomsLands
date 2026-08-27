@@ -56,6 +56,11 @@ public sealed class TitlePresenter : IStartable, IDisposable
             .Subscribe(_ => OpenSaveDataPanel(SaveDataPanelMode.Load))
             .AddTo(_disposables);
 
+        // オプション画面（加算シーン。プレイ中メニューと同じ Setting シーンを共用）
+        _view.OnOptionSelected
+            .Subscribe(_ => OpenOptionScene())
+            .AddTo(_disposables);
+
         _view.OnDifficultySelected
             .Subscribe(difficulty =>
             {
@@ -75,6 +80,20 @@ public sealed class TitlePresenter : IStartable, IDisposable
         _view.OnBackRequested
             .Subscribe(_ => GoBack())
             .AddTo(_disposables);
+    }
+
+    // Settingシーンの多重ロード防止（非同期ロード中は isLoaded が false のままのため必要）
+    private bool _isOptionTransitioning;
+
+    private void OpenOptionScene()
+    {
+        const string settingSceneName = "Setting";
+        if (_isOptionTransitioning) return;
+        if (SceneManager.GetSceneByName(settingSceneName).isLoaded) return;
+
+        _isOptionTransitioning = true;
+        var op = SceneManager.LoadSceneAsync(settingSceneName, LoadSceneMode.Additive);
+        op.completed += _ => _isOptionTransitioning = false;
     }
 
     private void GoBack()

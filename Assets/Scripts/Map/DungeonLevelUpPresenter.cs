@@ -11,6 +11,8 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     private readonly DungeonRepository   dungeonRepository;
     private readonly TomsModel           tomsModel;
     private readonly StateManager        stateManager;
+    private readonly HeroModel           heroModel;
+    private readonly ItemModel           itemModel;
 
     private readonly CompositeDisposable disposables     = new();
     private          CompositeDisposable slotDisposables = new();
@@ -22,12 +24,16 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         DungeonLevelUpView view,
         DungeonRepository  dungeonRepository,
         TomsModel          tomsModel,
-        StateManager       stateManager)
+        StateManager       stateManager,
+        HeroModel          heroModel,
+        ItemModel          itemModel)
     {
         this.view              = view;
         this.dungeonRepository = dungeonRepository;
         this.tomsModel         = tomsModel;
         this.stateManager      = stateManager;
+        this.heroModel         = heroModel;
+        this.itemModel         = itemModel;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.DungeonLevelUp, Entry);
     }
@@ -41,6 +47,15 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         view.ShowDialogue(DungeonLevelUpDialogueLoader.Get("open"));
         view.ClearDungeonDetail();
         RefreshList();
+
+        // 先頭ダンジョンを自動選択して、空の詳細パネルを見せない
+        // （会話は開店挨拶を維持したいので HandleSlotSelected は使わない）
+        var first = dungeonRepository.availableDungeons.FirstOrDefault();
+        if (first != null)
+        {
+            selectedKey = first.key;
+            view.ShowDungeonDetail(BuildDetailData(first));
+        }
     }
 
     private void Bind()
@@ -180,23 +195,42 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
 
         return new DungeonLevelUpDetailData
         {
-            DungeonName     = data.dungeonName,
-            LevelText       = isMax ? $"Lv.{currentLevel}（MAX）" : $"Lv.{currentLevel} → Lv.{nextLevel}",
-            RewardText      = BuildRewardText(data, currentLevel, nextLevel, isMax),
-            CurrentMonsters = currentMonsters,
-            NextMonsters    = nextMonsters,
+            DungeonName          = data.dungeonName,
+            LevelText            = isMax ? $"Lv.{currentLevel}（MAX）" : $"Lv.{currentLevel} → Lv.{nextLevel}",
+            RewardText           = BuildRewardText(data, currentLevel, nextLevel, isMax),
+            ClearProbabilityText = BuildClearProbabilityText(data, currentLevel, nextLevel, isMax),
+            CurrentMonsters      = currentMonsters,
+            NextMonsters         = nextMonsters,
         };
     }
 
-    private static string BuildRewardText(DungeonData data, int currentLevel, int nextLevel, bool isMax)
+    /// <summary>
+    /// 防衛報酬（勇者敗北時に受け取る rewardGold）の変化テキストを作る。
+    /// </summary>
+    private string BuildRewardText(DungeonData data, int currentLevel, int nextLevel, bool isMax)
     {
-        if (!data.isShowedInfo) return "報酬: ？？？";
+        if (!data.isShowedInfo) return "防衛報酬: ？？？";
 
         int currentReward = data.GetLevelData(currentLevel)?.rewardGold ?? 0;
-        if (isMax) return $"報酬 {currentReward:N0}G";
+        if (isMax) return $"防衛報酬 {currentReward:N0}G";
 
         int nextReward = data.GetLevelData(nextLevel)?.rewardGold ?? currentReward;
-        return $"報酬 {currentReward:N0}G → {nextReward:N0}G";
+        return $"防衛報酬 {currentReward:N0}G → {nextReward:N0}G";
+    }
+
+    /// <summary>
+    /// 勇者のクリア確率の変化テキストを作る。
+    /// レベルアップで確率が下がる＝防衛（敗北時報酬）を狙いやすくなることを示す。
+    /// </summary>
+    private string BuildClearProbabilityText(DungeonData data, int currentLevel, int nextLevel, bool isMax)
+    {
+        if (!data.isShowedInfo) return "クリア確率: ？？？";
+
+        float currentProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, currentLevel);
+        if (isMax) return $"クリア確率 {currentProb:F0}%";
+
+        float nextProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, nextLevel);
+        return $"クリア確率 {currentProb:F0}% → {nextProb:F0}%";
     }
 
     private static string ToElementLabel(ElementType element) => element switch

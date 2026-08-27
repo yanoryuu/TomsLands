@@ -48,17 +48,19 @@ public class BattleResultHandler : IStartable, IDisposable
         _gameFlowManager.RestoreIndex(_inputData.GameFlowIndex);
 
         // --- 売上処理（在庫を減らしてお金を加算）---
+        // 在庫減算は SoldFromStock（持ち込み分のみ。バトル中の補充分は店在庫に無い）
         foreach (var soldItem in _outputData.SoldItems)
         {
-            if (soldItem.SoldQuantity > 0)
+            if (soldItem.SoldFromStock > 0)
             {
-                _itemModel.Settlement(soldItem.ItemId, soldItem.SoldQuantity);
+                _itemModel.Settlement(soldItem.ItemId, soldItem.SoldFromStock);
             }
         }
 
         if (_outputData.TotalEarnings != 0)
         {
             _tomsModel.Settlement(_outputData.TotalEarnings);
+            _tomsModel.SavePlayerMoney();
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 

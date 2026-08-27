@@ -19,6 +19,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly BattleOutputData _battleOutputData;
     private readonly EventOutputData _eventOutputData;
     private readonly ShopStatusModel _shopStatusModel;
+    private readonly StateManager _stateManager;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -30,7 +31,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         GameFlowManager gameFlowManager,
         BattleOutputData battleOutputData,
         EventOutputData eventOutputData,
-        ShopStatusModel shopStatusModel)
+        ShopStatusModel shopStatusModel,
+        StateManager stateManager)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -41,6 +43,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _battleOutputData = battleOutputData;
         _eventOutputData = eventOutputData;
         _shopStatusModel = shopStatusModel;
+        _stateManager = stateManager;
     }
 
     public void Start()
@@ -70,6 +73,13 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // 以降のシーン再読み込み（FightScene→TomsShop等）で
         // NewGame 扱いにならないよう Continue に切り替える
         _startModeData.SetContinue();
+
+        // --- Shopフェーズ進入を発火する ---
+        // StateManager はコンストラクタで初期フェーズを ForceNotify するが、その時点では
+        // TomsShopPresenter の RegisterOnEnter(Shop, Entry) がまだ登録されていないため
+        // Entry() が呼ばれない。全Presenterの登録とフロー構築が済んだここで再発火し、
+        // Entry() → BeginTurnPhases()（ターン進行フェーズの開始）を確実に走らせる。
+        _stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
 
         Debug.Log($"[GameLifecycleHandler] Initialized (Mode={_startModeData.Mode}, returningFromScene={isReturningFromScene})");
     }

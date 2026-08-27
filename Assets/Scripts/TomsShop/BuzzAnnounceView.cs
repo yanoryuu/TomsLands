@@ -1,118 +1,215 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// バズ発生/終了時のキャラクターカットイン演出。
+/// 四角いバナーではなく、背景透過のキャラ立ち絵（トコ）が左から飛び込み、
+/// 横にタイトル/説明テキストがポップするパチンコ風カットイン。
+/// </summary>
 public class BuzzAnnounceView : MonoBehaviour
 {
     [Header("UI要素")]
-    [Tooltip("スライドアニメーションさせるパネル（バズテキストをまとめた子オブジェクト）")]
+    [Tooltip("カットイン全体のコンテナ（CanvasGroup付き）")]
     [SerializeField] private RectTransform slidePanel;
-    [SerializeField] private TextMeshProUGUI buzzTitleText;
-    [SerializeField] private TextMeshProUGUI buzzDescriptionText;
     [Tooltip("slidePanelにアタッチされたCanvasGroup")]
     [SerializeField] private CanvasGroup canvasGroup;
-    [Tooltip("slidePanelの背景Image")]
-    [SerializeField] private Image slidePanelBackground;
-    [Tooltip("バズタイプのアイコンを表示するImage")]
-    [SerializeField] private Image buzzIconImage;
+    [Tooltip("キャラ立ち絵のImage（背景透過スプライト）")]
+    [SerializeField] private Image characterImage;
+    [SerializeField] private TextMeshProUGUI buzzTitleText;
+    [SerializeField] private TextMeshProUGUI buzzDescriptionText;
+
+    [Header("テキスト用マテリアル（任意）")]
+    [Tooltip("超バズ時にタイトルへ適用する虹マテリアル（UI/BuzzFrame）。未設定なら色のみ")]
+    [SerializeField] private Material rainbowTextMaterial;
+
+    [Header("タイプ別カラー")]
+    [SerializeField] private Color normalTitleColor = new Color(1f, 0.85f, 0.2f);
+    [SerializeField] private Color bigTitleColor = Color.white;
+    [SerializeField] private Color flameTitleColor = new Color(1f, 0.3f, 0.2f);
+    [SerializeField] private Color endedTitleColor = new Color(0.8f, 0.8f, 0.8f);
+    [Tooltip("炎上時のキャラティント（青ざめ）")]
+    [SerializeField] private Color flameCharacterTint = new Color(0.75f, 0.75f, 0.95f);
+    [Tooltip("終了時のキャラティント（グレー）")]
+    [SerializeField] private Color endedCharacterTint = new Color(0.65f, 0.65f, 0.65f);
 
     [Header("演出設定")]
-    [SerializeField] private float slideInDuration = 0.6f;
-    [SerializeField] private float holdDuration = 1.5f;
-    [SerializeField] private float slideOutDuration = 0.6f;
+    [SerializeField] private float slideInDuration = 0.45f;
+    [SerializeField] private float holdDuration = 1.6f;
+    [SerializeField] private float slideOutDuration = 0.45f;
     [SerializeField] private float fadeDuration = 0.3f;
 
-    [Header("スライド位置")]
-    [SerializeField] private float startX = -1200f;
-    [SerializeField] private float centerX = 0f;
-    [SerializeField] private float endX = 1200f;
-
-    [Header("背景スプライト")]
-    [Tooltip("buzz_bg_flame.png")]
-    [SerializeField] private Sprite flameBackgroundSprite;
-    [Tooltip("buzz_bg_normal.png")]
-    [SerializeField] private Sprite normalBuzzBackgroundSprite;
-    [Tooltip("buzz_bg_big.png")]
-    [SerializeField] private Sprite bigBuzzBackgroundSprite;
-    [Tooltip("buzz_bg_ended.png")]
-    [SerializeField] private Sprite buzzEndedBackgroundSprite;
-
-    [Header("アイコンスプライト")]
-    [Tooltip("buzz_icon_flame.png")]
-    [SerializeField] private Sprite flameIconSprite;
-    [Tooltip("buzz_icon_normal.png")]
-    [SerializeField] private Sprite normalBuzzIconSprite;
-    [Tooltip("buzz_icon_big.png")]
-    [SerializeField] private Sprite bigBuzzIconSprite;
-    [Tooltip("buzz_icon_ended.png")]
-    [SerializeField] private Sprite buzzEndedIconSprite;
+    [Header("キャラ配置")]
+    [Tooltip("キャラのスライド開始X（画面外左）")]
+    [SerializeField] private float charStartX = -1500f;
+    [Tooltip("キャラの停止X（画面中央より左）")]
+    [SerializeField] private float charEndX = -430f;
+    [Tooltip("キャラの退場X（画面外左へ戻る）")]
+    [SerializeField] private float charExitX = -1500f;
+    [Tooltip("登場時のキャラ傾き（度）")]
+    [SerializeField] private float charTiltAngle = -6f;
+    [Tooltip("超バズ時のキャラ拡大率")]
+    [SerializeField] private float bigCharScale = 1.15f;
 
     private Sequence _currentSequence;
+    private Material _defaultTitleMaterial;
+    private float _defaultCharScale = 1f;
+    private Vector3 _titleBaseScale = Vector3.one;
 
     private void Awake()
     {
         if (canvasGroup != null)
             canvasGroup.alpha = 0f;
+
+        if (buzzTitleText != null)
+        {
+            _defaultTitleMaterial = buzzTitleText.fontSharedMaterial;
+            _titleBaseScale = buzzTitleText.rectTransform.localScale;
+        }
+        if (characterImage != null)
+            _defaultCharScale = characterImage.rectTransform.localScale.x;
     }
 
     public void ShowBuzzOccurred(BuzzType buzzType)
     {
-        _currentSequence?.Kill();
-        SetBuzzAppearance(buzzType);
-        PlaySlideAnimation();
+        switch (buzzType)
+        {
+            case BuzzType.Flame:
+                Play("炎上発生！", "売上が大幅に減少します…", flameTitleColor,
+                    characterTint: flameCharacterTint, useRainbow: false, charScaleFactor: 1f, flameShake: true);
+                break;
+
+            case BuzzType.Big:
+                Play("超バズ発生！！", "大注目！売上が大幅にアップ！", bigTitleColor,
+                    characterTint: Color.white, useRainbow: true, charScaleFactor: bigCharScale, flameShake: false);
+                break;
+
+            default:
+                Play("バズ発生！", "注目が集まり売上がアップ！", normalTitleColor,
+                    characterTint: Color.white, useRainbow: false, charScaleFactor: 1f, flameShake: false);
+                break;
+        }
     }
 
     public void ShowBuzzEnded(BuzzType endedBuzzType)
     {
-        _currentSequence?.Kill();
-
         string typeLabel = GetBuzzTypeLabel(endedBuzzType);
+        Play($"{typeLabel} 終了", "効果が終了しました", endedTitleColor,
+            characterTint: endedCharacterTint, useRainbow: false, charScaleFactor: 1f, flameShake: false);
+    }
+
+    private void Play(string title, string description, Color titleColor,
+        Color characterTint, bool useRainbow, float charScaleFactor, bool flameShake)
+    {
+        if (canvasGroup == null) return;
+
+        _currentSequence?.Kill();
+        ResetPose();
+
+        // テキスト設定
         if (buzzTitleText != null)
-            buzzTitleText.text = $"{typeLabel} 終了";
+        {
+            buzzTitleText.text = title;
+            buzzTitleText.color = titleColor;
+            buzzTitleText.fontSharedMaterial = useRainbow && rainbowTextMaterial != null
+                ? rainbowTextMaterial
+                : _defaultTitleMaterial;
+        }
         if (buzzDescriptionText != null)
-            buzzDescriptionText.text = "バズの効果が終了しました";
+            buzzDescriptionText.text = description;
 
-        ApplySprites(buzzEndedBackgroundSprite, buzzEndedIconSprite);
-        PlaySlideAnimation();
+        // キャラ初期状態（画面外左・傾き強め）
+        RectTransform charRect = null;
+        if (characterImage != null)
+        {
+            charRect = characterImage.rectTransform;
+            characterImage.color = characterTint;
+            var pos = charRect.anchoredPosition;
+            pos.x = charStartX;
+            charRect.anchoredPosition = pos;
+            charRect.localRotation = Quaternion.Euler(0, 0, charTiltAngle * 2f);
+            charRect.localScale = Vector3.one * (_defaultCharScale * charScaleFactor);
+        }
+
+        // テキスト初期状態（タイトルはポップ用に0、説明はフェード用に透明）
+        if (buzzTitleText != null) buzzTitleText.rectTransform.localScale = Vector3.zero;
+        if (buzzDescriptionText != null) buzzDescriptionText.alpha = 0f;
+
+        canvasGroup.alpha = 1f;
+
+        _currentSequence = DOTween.Sequence();
+
+        // 1. キャラが左から飛び込む（傾きを戻しながらOutBack）
+        if (charRect != null)
+        {
+            _currentSequence.Append(charRect.DOAnchorPosX(charEndX, slideInDuration).SetEase(Ease.OutBack));
+            _currentSequence.Join(charRect
+                .DOLocalRotate(new Vector3(0, 0, charTiltAngle), slideInDuration)
+                .SetEase(Ease.OutCubic));
+        }
+
+        // 2. タイトルがポップ（元のスケールへ）、説明がフェードイン
+        if (buzzTitleText != null)
+            _currentSequence.Append(buzzTitleText.rectTransform.DOScale(_titleBaseScale, 0.3f).SetEase(Ease.OutBack));
+        if (buzzDescriptionText != null)
+            _currentSequence.Join(buzzDescriptionText.DOFade(1f, 0.25f));
+
+        // 3. 表示キープ（炎上時はキャラが小刻みに震える。シェイク軽減設定時は震えない）
+        if (flameShake && charRect != null && !GameSettings.ReduceShake)
+        {
+            _currentSequence.Append(charRect
+                .DOShakeAnchorPos(holdDuration, strength: 10f, vibrato: 30, randomness: 90f, snapping: false, fadeOut: false));
+        }
+        else
+        {
+            _currentSequence.AppendInterval(holdDuration);
+        }
+
+        // 超バズ: タイトルの色相を回して虹文字にする（SDFマテリアルはそのまま）
+        if (useRainbow && buzzTitleText != null)
+        {
+            float hue = 0f;
+            var rainbowTween = DOTween.To(() => hue, h =>
+                {
+                    hue = h;
+                    buzzTitleText.color = Color.HSVToRGB(h % 1f, 0.7f, 1f);
+                }, 1f, 1.2f)
+                .SetEase(Ease.Linear)
+                .SetLoops(-1, LoopType.Restart);
+            // シーケンス終了時に止まるよう寿命を紐付ける
+            _currentSequence.OnKill(() => rainbowTween.Kill());
+        }
+
+        // 4. 退場: キャラは左へ引っ込み、全体フェードアウト
+        if (charRect != null)
+            _currentSequence.Append(charRect.DOAnchorPosX(charExitX, slideOutDuration).SetEase(Ease.InBack));
+        _currentSequence.Join(canvasGroup.DOFade(0f, fadeDuration).SetDelay(slideOutDuration - fadeDuration));
+
+        _currentSequence.OnComplete(() =>
+        {
+            _currentSequence = null;
+            ResetPose();
+        });
+
+        // 演出速度設定（速い=2倍速で再生）
+        _currentSequence.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
     }
 
-    private void SetBuzzAppearance(BuzzType buzzType)
+    /// <summary>
+    /// 途中killや連続再生に備えて各要素の姿勢を初期状態へ戻す。
+    /// </summary>
+    private void ResetPose()
     {
-        switch (buzzType)
+        if (characterImage != null)
         {
-            case BuzzType.Flame:
-                if (buzzTitleText != null) buzzTitleText.text = "炎上発生！";
-                if (buzzDescriptionText != null) buzzDescriptionText.text = "売上が大幅に減少します…";
-                ApplySprites(flameBackgroundSprite, flameIconSprite);
-                break;
-
-            case BuzzType.Normal:
-                if (buzzTitleText != null) buzzTitleText.text = "バズ発生！";
-                if (buzzDescriptionText != null) buzzDescriptionText.text = "注目が集まり売上がアップ！";
-                ApplySprites(normalBuzzBackgroundSprite, normalBuzzIconSprite);
-                break;
-
-            case BuzzType.Big:
-                if (buzzTitleText != null) buzzTitleText.text = "大バズ発生！！";
-                if (buzzDescriptionText != null) buzzDescriptionText.text = "大注目！売上が大幅にアップ！";
-                ApplySprites(bigBuzzBackgroundSprite, bigBuzzIconSprite);
-                break;
+            characterImage.rectTransform.localRotation = Quaternion.identity;
+            characterImage.rectTransform.localScale = Vector3.one * _defaultCharScale;
         }
-    }
-
-    private void ApplySprites(Sprite background, Sprite icon)
-    {
-        if (slidePanelBackground != null)
-        {
-            slidePanelBackground.sprite = background;
-            slidePanelBackground.color = Color.white;
-        }
-        if (buzzIconImage != null)
-        {
-            buzzIconImage.sprite = icon;
-            buzzIconImage.color = Color.white;
-        }
+        if (buzzTitleText != null)
+            buzzTitleText.rectTransform.localScale = _titleBaseScale;
+        if (buzzDescriptionText != null)
+            buzzDescriptionText.alpha = 1f;
     }
 
     private string GetBuzzTypeLabel(BuzzType buzzType)
@@ -121,26 +218,9 @@ public class BuzzAnnounceView : MonoBehaviour
         {
             BuzzType.Flame => "炎上",
             BuzzType.Normal => "バズ",
-            BuzzType.Big => "大バズ",
+            BuzzType.Big => "超バズ",
             _ => "バズ"
         };
-    }
-
-    private void PlaySlideAnimation()
-    {
-        if (slidePanel == null || canvasGroup == null) return;
-
-        Vector2 pos = slidePanel.anchoredPosition;
-        pos.x = startX;
-        slidePanel.anchoredPosition = pos;
-        canvasGroup.alpha = 1f;
-
-        _currentSequence = DOTween.Sequence()
-            .Append(slidePanel.DOAnchorPosX(centerX, slideInDuration).SetEase(Ease.OutBack))
-            .AppendInterval(holdDuration)
-            .Append(slidePanel.DOAnchorPosX(endX, slideOutDuration).SetEase(Ease.InCubic))
-            .Join(canvasGroup.DOFade(0f, fadeDuration).SetDelay(slideOutDuration - fadeDuration))
-            .OnComplete(() => _currentSequence = null);
     }
 
     private void OnDestroy()
@@ -148,4 +228,3 @@ public class BuzzAnnounceView : MonoBehaviour
         _currentSequence?.Kill();
     }
 }
-

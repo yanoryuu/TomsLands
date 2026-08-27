@@ -287,7 +287,13 @@ public class GameLifetimeScope : LifetimeScope
 
         // マーケティングシステムのファサード（統合窓口）
         builder.RegisterEntryPoint<MarketingFacade>().AsSelf();
-        
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // --- 6. デバッグメニュー（F12で開閉、リリースビルドには含まれない） ---
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log($"GameLifetimeScope configured.");
     }
 

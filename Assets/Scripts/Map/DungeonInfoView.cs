@@ -33,9 +33,10 @@ public class DungeonInfoView : MonoBehaviour
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
     }
     
-    public void ShowDungeonInfo(DungeonData dungeonData)
+    /// <param name="clearProbability">勇者のクリア確率（%）。情報未購入時は使用されない</param>
+    public void ShowDungeonInfo(DungeonData dungeonData, float clearProbability)
     {
-        SetDungeonInfo(dungeonData);
+        SetDungeonInfo(dungeonData, clearProbability);
         dungeonInfoPanel.SetActive(true);
     }
 
@@ -44,18 +45,18 @@ public class DungeonInfoView : MonoBehaviour
         dungeonInfoPanel.SetActive(false);
     }
 
-    private void SetDungeonInfo(DungeonData　d)
+    private void SetDungeonInfo(DungeonData　d, float clearProbability)
     {
         if(d==null)return;
-        
+
         dungeonNameImage.sprite = d.dungeonNameImage;
         if (dungeonIconImage) dungeonIconImage.sprite = d.dungeonIcon;
-        
+
         if (d.isShowedInfo)
         {
             dungeonDescriptionText.text = d.dungeonDescription;
             dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
-            dungeonRewardText.text = $"クリア報酬：{d.rewardGold:N0}G";
+            dungeonRewardText.text = $"クリア確率：{clearProbability:F0}%";
         }
         else
         {

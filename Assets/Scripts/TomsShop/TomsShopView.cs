@@ -20,10 +20,13 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
 
+    [Header("バズ中演出")]
+    [SerializeField] private BuzzModeOverlayView buzzModeOverlayView;
+
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
-    [Header("借金情報")]
+    [Header("税金情報")]
     [SerializeField] private TextMeshProUGUI nextDebtText;
     [SerializeField] private Button debtPaymentButton;
     
@@ -73,6 +76,13 @@ public class TomsShopView : MonoBehaviour
 
     }
 
+    /// <summary>営業開始ボタンの押下可否を切り替える（演出中の連打防止用）。</summary>
+    public void SetStartShopInteractable(bool interactable)
+    {
+        if (StartShopButton != null)
+            StartShopButton.interactable = interactable;
+    }
+
     public void RefreshDeskDisplay(List<RuntimeItemData> runtimeItems)
     {
         shopDeskDisplay?.RefreshDisplay(runtimeItems);
@@ -88,12 +98,12 @@ public class TomsShopView : MonoBehaviour
     }
 
     /// <summary>
-    /// 次回借金返済額と残りターン数をショップ画面内に表示する
+    /// 次回税金の納付額と残りターン数をショップ画面内に表示する
     /// </summary>
     public void UpdateNextDebt(int amount, int remainingTurns)
     {
         if (nextDebtText == null) return;
-        nextDebtText.text = $"次回返済\n{amount:#,0}G\nあと{remainingTurns}ターン";
+        nextDebtText.text = $"次回納税\n{amount:#,0}G\nあと{remainingTurns}ターン";
     }
 
     /// <summary>
@@ -116,5 +126,27 @@ public class TomsShopView : MonoBehaviour
     {
         if (buzzAnnounceView != null)
             buzzAnnounceView.ShowBuzzEnded(endedBuzzType);
+    }
+
+    /// <summary>
+    /// バズ中の常時演出（バズモードオーバーレイ）の表示/非表示を切り替える。
+    /// バズ発生中はフレーム＋バナーを表示し続ける。
+    /// </summary>
+    public void SetBuzzModeActive(bool isActive, BuzzType buzzType)
+    {
+        if (buzzModeOverlayView == null) return;
+
+        if (isActive)
+            buzzModeOverlayView.Show(buzzType);
+        else
+            buzzModeOverlayView.Hide();
+    }
+
+    /// <summary>
+    /// バズの残りターン数表示を更新する。
+    /// </summary>
+    public void UpdateBuzzRemainingTurns(int remainingTurns)
+    {
+        buzzModeOverlayView?.UpdateRemainingTurns(remainingTurns);
     }
 }

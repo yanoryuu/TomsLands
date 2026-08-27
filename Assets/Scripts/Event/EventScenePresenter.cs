@@ -85,9 +85,9 @@ public class EventScenePresenter : IAsyncStartable
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                    if (cmd.parameters.TryGetValue("amount", out var moneyStr))
+                    // 不正なマスターデータ（数値でないamount）でも落とさない
+                    if (cmd.parameters.TryGetValue("amount", out var moneyStr) && int.TryParse(moneyStr, out var amount))
                     {
-                        int amount = int.Parse(moneyStr);
                         _tomsModel.PlayerMoney.Value += amount;
                         _tomsModel.SavePlayerMoney();
                         Debug.Log($"[EventScenePresenter] ChangeMoney: {amount}");
@@ -95,9 +95,8 @@ public class EventScenePresenter : IAsyncStartable
                     break;
 
                 case "ChangeTrust":
-                    if (cmd.parameters.TryGetValue("amount", out var trustStr))
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
                     {
-                        float trustAmount = float.Parse(trustStr);
                         _tomsModel.Trust.Value += trustAmount;
                         Debug.Log($"[EventScenePresenter] ChangeTrust: {trustAmount}");
                     }
@@ -126,9 +125,8 @@ public class EventScenePresenter : IAsyncStartable
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                    if (cmd.parameters.TryGetValue("amount", out var moneyStr))
+                    if (cmd.parameters.TryGetValue("amount", out var moneyStr) && int.TryParse(moneyStr, out var amount))
                     {
-                        int amount = int.Parse(moneyStr);
                         if (amount >= 0)
                             sb.AppendLine($"所持金 +{amount:N0}G");
                         else
@@ -137,9 +135,8 @@ public class EventScenePresenter : IAsyncStartable
                     break;
 
                 case "ChangeTrust":
-                    if (cmd.parameters.TryGetValue("amount", out var trustStr))
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
                     {
-                        float trustAmount = float.Parse(trustStr);
                         if (trustAmount >= 0)
                             sb.AppendLine($"信頼度 +{trustAmount}");
                         else

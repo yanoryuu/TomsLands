@@ -121,6 +121,11 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
         }).AddTo(disposables);
 
+        // 鍛冶屋専用の所持金表示（鍛冶屋表示中はCommonViewを出さないため常時追従）
+        tomsModel.PlayerMoney
+            .Subscribe(money => blackSmithView.UpdatePlayerMoney(money))
+            .AddTo(disposables);
+
         blackSmithView.OnAutoBuyRequested
             .Subscribe(_ => blackSmithView.ShowBudgetPopup(tomsModel.PlayerMoney.Value))
             .AddTo(disposables);
@@ -248,6 +253,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         // 購入パネルを表示、開発パネルを非表示
         blackSmithView.SwitchPanel(itemType);
+        blackSmithView.SortItemTab(itemType);
 
         // 並べ替え（おすすめ計算式に統一）
         var sortedItems = ApplySort(items);
@@ -339,6 +345,26 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     }
 
     /// <summary>
+    /// 在庫の空きと所持金の両方でクランプした最大購入可能数。
+    /// スライダー／＋ボタンはこの範囲までしか動かせない。
+    /// </summary>
+    private int MaxPurchasableQuantity(RuntimeItemData runtime)
+    {
+        int remainMax = runtime.RemainToMax();
+        int price = Mathf.Max(1, runtime.CurrentPrice.Value);
+        int affordable = tomsModel.PlayerMoney.Value / price;
+        return Mathf.Clamp(affordable, 0, remainMax);
+    }
+
+    /// <summary>所持金・価格の変動に応じて選択銘柄の購入上限を再計算する。</summary>
+    private void RefreshQuantityLimit(string itemId, RuntimeItemData runtime)
+    {
+        if (!blackSmithModel.itemCount.TryGetValue(itemId, out var entry)) return;
+        int limit = MaxPurchasableQuantity(runtime);
+        blackSmithModel.SetItemCount(itemId, Mathf.Min(entry.count.Value, limit), limit);
+    }
+
+    /// <summary>
     /// 銘柄を選択し、詳細パネル（チャート・市場分析・注文）を結線する。
     /// 注文の予約数は BlackSmithModel が保持し、選択銘柄だけをパネルに張り替える。
     /// </summary>
@@ -363,10 +389,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         selectionDisposables.Dispose();
         selectionDisposables = new CompositeDisposable();
 
-        // 予約数エントリを確保
-        int remainMax = runtime.RemainToMax();
+        // 予約数エントリを確保（上限=在庫の空き×所持金で買える数の小さい方）
+        int quantityLimit = MaxPurchasableQuantity(runtime);
         int currentCount = blackSmithModel.itemCount.TryGetValue(itemId, out var entry) ? entry.count.Value : 0;
-        blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, remainMax), remainMax);
+        blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, quantityLimit), quantityLimit);
 
         panel.ShowItem(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr));
 
@@ -380,7 +406,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         // Panel → Model
         panel.OnDisplayQuantityChanged
-            .Subscribe(x => blackSmithModel.SetItemCount(itemId, x, runtime.RemainToMax()))
+            .Subscribe(x => blackSmithModel.SetItemCount(itemId, x, MaxPurchasableQuantity(runtime)))
             .AddTo(selectionDisposables);
         panel.OnStepClicked
             .Subscribe(step =>
@@ -390,9 +416,18 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             })
             .AddTo(selectionDisposables);
 
-        // 価格・需要のライブ更新（パネル表示）
+        // 価格・需要のライブ更新（パネル表示）。価格が変わると買える数も変わる
         runtime.CurrentPrice
-            .Subscribe(p => panel.SetPrice(p))
+            .Subscribe(p =>
+            {
+                panel.SetPrice(p);
+                RefreshQuantityLimit(itemId, runtime);
+            })
+            .AddTo(selectionDisposables);
+
+        // 所持金の変動（購入・レベルアップ等）に合わせて購入上限を追従させる
+        tomsModel.PlayerMoney
+            .Subscribe(_ => RefreshQuantityLimit(itemId, runtime))
             .AddTo(selectionDisposables);
         runtime.Demand
             .Subscribe(_ => panel.RefreshMarket(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr)))
@@ -470,24 +505,21 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithView.DetailPanel?.Hide();
         blackSmithView.SortItemTab(BlackSmithTab.Development);
 
-        // 初回表示
-        RefreshDevelopmentPanel();
-
-        // 所持金が変わったらボタン有効/無効を再評価
+        // 所持金の変化はボタン有効/無効の再評価のみ（解放プレビューはレベル依存なので再構築しない）
         tomsModel.PlayerMoney
-            .Subscribe(_ => RefreshDevelopmentPanel())
+            .Subscribe(_ => RefreshDevelopmentButtons())
             .AddTo(panelDisposables);
 
-        // 鍛冶屋レベルが変わったら再描画
+        // 鍛冶屋レベルが変わったら全体を再描画（購読時に現在値が流れるため初回表示もここで行われる）
         tomsModel.BlacksmithLevel
             .Subscribe(_ => RefreshDevelopmentPanel())
             .AddTo(panelDisposables);
     }
 
     /// <summary>
-    /// 開発パネルの表示を最新状態に更新する
+    /// 開発パネルのレベル・コスト・ボタン状態のみ更新する（所持金変化時用）。
     /// </summary>
-    private void RefreshDevelopmentPanel()
+    private void RefreshDevelopmentButtons()
     {
         int currentLevel = tomsModel.BlacksmithLevel.Value;
         int cost = GameConst.GetBlackSmithLevelUpCost(currentLevel);
@@ -500,6 +532,46 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             tomsModel.PlayerMoney.Value
         );
     }
+
+    /// <summary>
+    /// 開発パネルの表示を最新状態に更新する
+    /// </summary>
+    private void RefreshDevelopmentPanel()
+    {
+        RefreshDevelopmentButtons();
+
+        int currentLevel = tomsModel.BlacksmithLevel.Value;
+
+        // 次レベルで解放される商品（武器・防具）のプレビュー
+        bool isMax = currentLevel >= GameConst.MaxBlackSmithLevel;
+        int nextLevel = Mathf.Min(currentLevel + 1, GameConst.MaxBlackSmithLevel);
+        var unlocks = new List<UnlockItemDisplayData>();
+        if (!isMax)
+        {
+            foreach (var r in itemModel.RuntimeItems)
+            {
+                if (r.RequiredLevel.Value != nextLevel) continue;
+                if (r.ItemType != ItemTypeData.ItemType.Weapon && r.ItemType != ItemTypeData.ItemType.Armor) continue;
+
+                unlocks.Add(new UnlockItemDisplayData
+                {
+                    Icon = r.ItemIcon,
+                    Name = r.ItemName,
+                    Info = $"{TypeToJapanese(r.ItemType)}・{AttributeToJapanese(r.ItemAttribute)}属性・{r.CurrentPrice.Value:N0}G",
+                    Description = r.ItemDescription
+                });
+            }
+        }
+        blackSmithView.UpdateUnlockPreview(nextLevel, isMax, unlocks);
+    }
+
+    private static string TypeToJapanese(ItemTypeData.ItemType type) => type switch
+    {
+        ItemTypeData.ItemType.Weapon => "武器",
+        ItemTypeData.ItemType.Armor  => "防具",
+        ItemTypeData.ItemType.Tool   => "道具",
+        _ => type.ToString()
+    };
 
     /// <summary>
     /// 鍛冶屋レベルアップ処理

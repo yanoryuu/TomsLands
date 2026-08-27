@@ -23,35 +23,66 @@ MonoBehaviour:
   difficulty: 7
   requiredAttribute: 4
   levelDataList:
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: ee6c20ae8a40afd41b491c52a9cc7f20, type: 2}
+      - {fileID: 11400000, guid: 204e19de432538f4b9eddabea8fe3184, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 0b76b0acb88804e4685ce0b0b1922724, type: 2}
+    monsters:
     - {fileID: 11400000, guid: ee6c20ae8a40afd41b491c52a9cc7f20, type: 2}
     - {fileID: 11400000, guid: 204e19de432538f4b9eddabea8fe3184, type: 2}
     - {fileID: 11400000, guid: 0b76b0acb88804e4685ce0b0b1922724, type: 2}
     bossName: undead boss Lv1
     rewardGold: 10000
     levelUpCost: 5000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: e1628fcbd046e544e892f59068e5b2dd, type: 2}
+      - {fileID: 11400000, guid: 5eabb20b36cf3414985cec0436b2ff7e, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 858846cf1d72bef4ca4fb5ed402bb33f, type: 2}
+    monsters:
     - {fileID: 11400000, guid: e1628fcbd046e544e892f59068e5b2dd, type: 2}
     - {fileID: 11400000, guid: 5eabb20b36cf3414985cec0436b2ff7e, type: 2}
     - {fileID: 11400000, guid: 858846cf1d72bef4ca4fb5ed402bb33f, type: 2}
     bossName: undead boss Lv2
     rewardGold: 20000
     levelUpCost: 10000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: 1dd6186a632b92b45801b854dbad9cd7, type: 2}
+      - {fileID: 11400000, guid: cf2fb43f731f3bb499c0261a29aa9e1c, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: fc0f21abfb9642d42baa1b77eb302a6c, type: 2}
+    monsters:
     - {fileID: 11400000, guid: 1dd6186a632b92b45801b854dbad9cd7, type: 2}
     - {fileID: 11400000, guid: cf2fb43f731f3bb499c0261a29aa9e1c, type: 2}
     - {fileID: 11400000, guid: fc0f21abfb9642d42baa1b77eb302a6c, type: 2}
     bossName: undead boss Lv3
     rewardGold: 40000
     levelUpCost: 20000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: a9cd14782a4cc564ba32ddbeede90d7b, type: 2}
+      - {fileID: 11400000, guid: 3ee2a7535ef095f4dbca834f81a6e3dd, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 0830f2b50b49c814da80011aaf920a5d, type: 2}
+    monsters:
     - {fileID: 11400000, guid: a9cd14782a4cc564ba32ddbeede90d7b, type: 2}
     - {fileID: 11400000, guid: 3ee2a7535ef095f4dbca834f81a6e3dd, type: 2}
     - {fileID: 11400000, guid: 0830f2b50b49c814da80011aaf920a5d, type: 2}
     bossName: undead boss Lv4
     rewardGold: 80000
     levelUpCost: 40000
-  - monsters:
+  - phases:
+    - enemies:
+      - {fileID: 11400000, guid: 3bbeb46a5889a69428daace8614cf5ea, type: 2}
+      - {fileID: 11400000, guid: e35b9b80601d758429bccb6ff0f68c41, type: 2}
+      - {fileID: 11400000, guid: 9766c485d7ef36e40856766be10918a0, type: 2}
+    - enemies:
+      - {fileID: 11400000, guid: 6dacbd0f29338b84287b936e7ded0680, type: 2}
+    monsters:
     - {fileID: 11400000, guid: 3bbeb46a5889a69428daace8614cf5ea, type: 2}
     - {fileID: 11400000, guid: e35b9b80601d758429bccb6ff0f68c41, type: 2}
     - {fileID: 11400000, guid: 9766c485d7ef36e40856766be10918a0, type: 2}

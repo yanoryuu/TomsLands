@@ -11,6 +11,9 @@ public class BattleSequencer : MonoBehaviour
     [SerializeField] private BattleUIView battleUIView;
     [SerializeField] private StreamingSalesController streamingSalesController;
 
+    [Header("フェーズ進行ゲージ")]
+    [SerializeField] private DungeonPhaseGaugeView phaseGauge;
+
     [Header("戦闘ルール設定")]
     [Tooltip("この戦闘で倒すべき通常モンスターの総数")]
     [SerializeField] private const int totalNormalEnemies = 10;
@@ -54,6 +57,12 @@ public class BattleSequencer : MonoBehaviour
     /// </summary>
     public Subject<Unit> OnBossAppeared { get; } = new();
 
+
+    /// <summary>フェーズ進行ゲージを初期化する（BattleFlowManager から呼ばれる）。</summary>
+    public void SetupPhaseGauge(int phaseCount) => phaseGauge?.Setup(phaseCount);
+
+    /// <summary>フェーズ進行ゲージを更新する（clearedPhases = クリア済みフェーズ数）。</summary>
+    public void UpdatePhaseGauge(int clearedPhases) => phaseGauge?.SetProgress(clearedPhases);
 
     public void StartBattle(HeroModel heroModel)
     {

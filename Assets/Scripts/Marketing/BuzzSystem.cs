@@ -103,28 +103,63 @@ public class BuzzSystem
     // =====================================================
 
     /// <summary>
-    /// ターン開始時に呼び出す。バズの持続効果適用、終了判定、新規バズ判定を行う。
-    /// 
+    /// ターン開始時に呼び出す。バズの発展判定・継続判定・持続効果適用・新規バズ判定を行う。
+    ///
+    /// 【処理の流れ（新方式：確率は GameBalanceData に外だし）】
+    /// 1. 通常バズ継続中 → 超バズへの発展判定（buzzEvolveToBigChance）
+    /// 2. バズ継続中 → 継続判定（buzzContinueChance）。失敗で即終了、成功で持続効果適用
+    /// 3. バズなし → 超バズ発生判定（bigBuzzBaseChance～bigBuzzMaxChance）
+    ///              → 外れたら通常バズ発生判定（buzzBaseChance～buzzMaxChance、低信頼なら炎上化）
+    ///
     /// 【呼び出しタイミング】
     /// GameFlowManager の NextTurn() 内、経済更新の後に呼び出すことを想定。
-    /// TurnEndSummaryPresenter.Entry() 内で呼び出しても良い。
     /// </summary>
-    /// <returns>このターンで発生したバズの情報（発生しなかった場合は null）</returns>
+    /// <returns>このターンで発生したバズの情報</returns>
     public BuzzTurnResult ProcessTurnStart()
     {
         var result = new BuzzTurnResult();
 
-        // 1. アクティブなバズがある場合、持続効果を適用
+        // 1. アクティブなバズがある場合、発展→継続の順に判定
         if (_activeBuzz != null)
         {
-            ApplySustainedEffect();
-            _activeBuzz.RemainingTurns--;
-            RemainingTurns.Value = _activeBuzz.RemainingTurns;
+            // 通常バズ → 超バズへの発展判定
+            if (_activeBuzz.BuzzType == BuzzType.Normal && _balanceData != null)
+            {
+                float evolveRoll = UnityEngine.Random.Range(0f, 100f);
+                if (evolveRoll < _balanceData.buzzEvolveToBigChance)
+                {
+                    Debug.Log($"[BuzzSystem] 超バズ発展: ロール={evolveRoll:F1} < {_balanceData.buzzEvolveToBigChance}% → 超バズへ！");
+                    EndBuzz(); // 終了後効果は適用せず超バズへ引き継ぐ
+                    StartBuzz(BuzzType.Big);
+                    result.NewBuzzOccurred = true;
+                    result.NewBuzzType = BuzzType.Big;
+                    return result;
+                }
+            }
 
-            Debug.Log($"[BuzzSystem] バズ持続中: {_activeBuzz.BuzzType} | 残り {_activeBuzz.RemainingTurns} ターン");
+            // 継続判定（失敗したらこのターンで終了）
+            float continueChance = _balanceData != null ? _balanceData.buzzContinueChance : 50f;
+            float continueRoll = UnityEngine.Random.Range(0f, 100f);
+            bool continues = continueRoll < continueChance;
 
-            // 持続ターン終了判定
-            if (_activeBuzz.RemainingTurns <= 0)
+            Debug.Log($"[BuzzSystem] 継続判定: {_activeBuzz.BuzzType} ロール={continueRoll:F1} / 継続率={continueChance:F0}% → {(continues ? "継続" : "終了")}");
+
+            if (continues)
+            {
+                ApplySustainedEffect();
+                _activeBuzz.RemainingTurns--;
+                RemainingTurns.Value = _activeBuzz.RemainingTurns;
+
+                // 最大持続ターン（BuzzEffectData 由来）に達したら終了
+                if (_activeBuzz.RemainingTurns <= 0)
+                {
+                    result.BuzzEnded = true;
+                    result.EndedBuzzType = _activeBuzz.BuzzType;
+                    ApplyAfterEffect();
+                    EndBuzz();
+                }
+            }
+            else
             {
                 result.BuzzEnded = true;
                 result.EndedBuzzType = _activeBuzz.BuzzType;
@@ -134,21 +169,34 @@ public class BuzzSystem
         }
 
         // 2. バズが非アクティブの場合のみ、新規バズ発生判定を行う
-        if (_activeBuzz == null)
+        //    （このターンに終了・発展した場合は判定しない）
+        if (_activeBuzz == null && !result.BuzzEnded)
         {
-            float buzzChance = CalculateBuzzChance();
-            float roll = UnityEngine.Random.Range(0f, 100f);
+            // 超バズ → 通常バズ の順に判定（超バズ優先）
+            float bigChance = CalculateBigBuzzChance();
+            float bigRoll = UnityEngine.Random.Range(0f, 100f);
+            Debug.Log($"[BuzzSystem] 超バズ判定: 確率={bigChance:F1}% / ロール={bigRoll:F1}");
 
-            Debug.Log($"[BuzzSystem] バズ判定: 確率={buzzChance:F1}% / ロール={roll:F1}");
-
-            if (roll < buzzChance)
+            if (bigRoll < bigChance)
             {
-                // バズ発生！種類を決定
-                BuzzType type = DetermineBuzzType();
                 result.NewBuzzOccurred = true;
-                result.NewBuzzType = type;
+                result.NewBuzzType = BuzzType.Big;
+                StartBuzz(BuzzType.Big);
+            }
+            else
+            {
+                float buzzChance = CalculateBuzzChance();
+                float roll = UnityEngine.Random.Range(0f, 100f);
+                Debug.Log($"[BuzzSystem] バズ判定: 確率={buzzChance:F1}% / ロール={roll:F1}");
 
-                StartBuzz(type);
+                if (roll < buzzChance)
+                {
+                    // バズ発生！低信頼なら炎上化
+                    BuzzType type = DetermineBuzzType();
+                    result.NewBuzzOccurred = true;
+                    result.NewBuzzType = type;
+                    StartBuzz(type);
+                }
             }
         }
 
@@ -160,26 +208,39 @@ public class BuzzSystem
     // =====================================================
 
     /// <summary>
-    /// バズ発生確率を計算する。
-    /// 計算式: min(最大確率, 注目度 × 注目度係数 + 信頼度 × 信頼度係数) + フォロワーボーナス
+    /// ステータスによる強化度合いを 0～1 で返す。
+    /// 強化ボーナス（注目×係数＋信頼×係数＋フォロワーボーナス）を
+    /// buzzMaxBaseChance を基準に正規化する。
+    /// </summary>
+    private float CalculateEnhancementRatio()
+    {
+        if (_balanceData == null || _balanceData.buzzMaxBaseChance <= 0f) return 0f;
+
+        float bonus = _statusModel.Attention.Value * _balanceData.buzzAttentionCoeff
+                    + _statusModel.Trust.Value * _balanceData.buzzTrustCoeff
+                    + (_followerSystem != null ? _followerSystem.GetBuzzChanceBonus() : 0f);
+
+        return Mathf.Clamp01(bonus / _balanceData.buzzMaxBaseChance);
+    }
+
+    /// <summary>
+    /// 通常バズの発生確率（%）を計算する。
+    /// 基礎発生率から最大発生率まで、強化度合いに応じて上がる。
     /// </summary>
     public float CalculateBuzzChance()
     {
         if (_balanceData == null) return 0f;
+        return Mathf.Lerp(_balanceData.buzzBaseChance, _balanceData.buzzMaxChance, CalculateEnhancementRatio());
+    }
 
-        // 基本確率 = 注目度 × 係数 + 信頼度 × 係数
-        float baseChance = _statusModel.Attention.Value * _balanceData.buzzAttentionCoeff
-                         + _statusModel.Trust.Value * _balanceData.buzzTrustCoeff;
-
-        // 最大確率でクランプ
-        baseChance = Mathf.Min(baseChance, _balanceData.buzzMaxBaseChance);
-
-        // フォロワーマイルストーンによるボーナスを加算
-        float followerBonus = _followerSystem != null ? _followerSystem.GetBuzzChanceBonus() : 0f;
-
-        float finalChance = baseChance + followerBonus;
-
-        return Mathf.Max(0f, finalChance);
+    /// <summary>
+    /// 超バズの発生確率（%）を計算する。
+    /// 基礎発生率から最大発生率まで、強化度合いに応じて上がる。
+    /// </summary>
+    public float CalculateBigBuzzChance()
+    {
+        if (_balanceData == null) return 0f;
+        return Mathf.Lerp(_balanceData.bigBuzzBaseChance, _balanceData.bigBuzzMaxChance, CalculateEnhancementRatio());
     }
 
     // =====================================================
@@ -187,10 +248,8 @@ public class BuzzSystem
     // =====================================================
 
     /// <summary>
-    /// バズの種類を信頼度に基づいて決定する。
-    /// 1. 信頼度が閾値未満 → 一定確率で炎上
-    /// 2. 信頼度が大バズ閾値以上 → 大バズ
-    /// 3. それ以外 → 通常バズ
+    /// 発生したバズの種類を決定する（超バズは事前の専用判定で決まるためここでは扱わない）。
+    /// 信頼度が閾値未満なら一定確率で炎上、それ以外は通常バズ。
     /// </summary>
     private BuzzType DetermineBuzzType()
     {
@@ -207,13 +266,6 @@ public class BuzzSystem
                 Debug.Log($"[BuzzSystem] 炎上判定: 信頼度={trust} < {_balanceData.flameTrustThreshold}, ロール={flameRoll:F1} < {_balanceData.flameChance}% → 炎上！");
                 return BuzzType.Flame;
             }
-        }
-
-        // 大バズ判定: 信頼度が閾値以上
-        if (trust >= _balanceData.bigBuzzTrustThreshold)
-        {
-            Debug.Log($"[BuzzSystem] 大バズ判定: 信頼度={trust} >= {_balanceData.bigBuzzTrustThreshold} → 大バズ！");
-            return BuzzType.Big;
         }
 
         // それ以外は通常バズ
@@ -249,9 +301,9 @@ public class BuzzSystem
             RevenueMultiplier = effectData.CalculateRevenueMultiplier(spread)
         };
 
-        // リアクティブプロパティを更新
-        IsBuzzActive.Value = true;
+        // リアクティブプロパティを更新（購読側が正しいタイプで表示できるよう先にタイプを更新する）
         CurrentBuzzType.Value = type;
+        IsBuzzActive.Value = true;
         RemainingTurns.Value = _activeBuzz.RemainingTurns;
 
         // 即時効果を適用
@@ -413,6 +465,33 @@ public class BuzzSystem
         {
             EndBuzz();
         }
+    }
+
+    // =====================================================
+    // デバッグ用API（DebugMenuView から使用）
+    // =====================================================
+
+    /// <summary>
+    /// 【デバッグ用】指定タイプのバズを強制発生させる。
+    /// 既存のバズがある場合は終了後効果を適用せず破棄してから開始する。
+    /// </summary>
+    public void DebugStartBuzz(BuzzType type)
+    {
+        if (_activeBuzz != null)
+        {
+            EndBuzz();
+        }
+        StartBuzz(type);
+    }
+
+    /// <summary>
+    /// 【デバッグ用】アクティブなバズを終了後効果込みで強制終了する。
+    /// </summary>
+    public void DebugEndBuzz()
+    {
+        if (_activeBuzz == null) return;
+        ApplyAfterEffect();
+        EndBuzz();
     }
 }
 

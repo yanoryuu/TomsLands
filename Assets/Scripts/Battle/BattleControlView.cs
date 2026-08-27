@@ -16,6 +16,14 @@ public class BattleControlView : MonoBehaviour
     [Header("End Battle")]
     [SerializeField] private Button endBattleButton;
 
+    [Header("在庫補充（数量選択）")]
+    [Tooltip("数量を選べる補充ポップアップ。未設定の場合は従来の10個固定ポップアップにフォールバックする")]
+    [SerializeField] private RestockQuantityPopup restockQuantityPopup;
+
+    [Header("配信開始カウントダウン")]
+    [Tooltip("配信開始前の3秒カウントダウン。未設定の場合はカウントダウンなしで即開始する")]
+    [SerializeField] private StreamingCountdownView countdownView;
+
     public Subject<Unit> OnPauseToggled { get; } = new();
     public Subject<Unit> OnEndBattleRequested { get; } = new();
 
@@ -39,6 +47,31 @@ public class BattleControlView : MonoBehaviour
     {
         if (pauseButtonText != null)
             pauseButtonText.text = isPaused ? "\u518d\u958b" : "\u4e00\u6642\u505c\u6b62";
+    }
+
+    /// <summary>
+    /// 配信開始前のカウントダウンを再生する（未配線なら即座に戻る）。
+    /// </summary>
+    public UniTask PlayCountdownAsync(int seconds, CancellationToken token)
+        => countdownView != null ? countdownView.PlayAsync(seconds, token) : UniTask.CompletedTask;
+
+    /// <summary>
+    /// 在庫補充の数量選択ポップアップ（鍛冶屋の購入UIと同じ ItemDetailPanel）を表示し、
+    /// 選ばれた数量を返す（キャンセル時は 0）。
+    /// 未配線の場合は従来のはい/いいえポップアップ（10個固定）で代替する。
+    /// </summary>
+    public async UniTask<int> ShowRestockQuantityPopupAsync(
+        RuntimeItemData runtime, int unitCost, int maxQuantity, float recommendScore, CancellationToken token)
+    {
+        if (restockQuantityPopup != null)
+        {
+            return await restockQuantityPopup.ShowAsync(runtime, unitCost, maxQuantity, recommendScore, token);
+        }
+
+        // フォールバック: 従来の10個固定確認
+        bool canAfford = maxQuantity >= 10;
+        bool confirmed = await ShowRestockPopupAsync(runtime.ItemName, unitCost * 10, canAfford, token);
+        return confirmed && canAfford ? 10 : 0;
     }
 
     public async UniTask<bool> ShowRestockPopupAsync(

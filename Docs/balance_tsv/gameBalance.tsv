@@ -7,7 +7,12 @@ buzzTrustCoeff	0.2	float
 buzzMaxBaseChance	50	int
 flameTrustThreshold	50	int
 flameChance	30	int
-bigBuzzTrustThreshold	80	int
+buzzBaseChance	10	float
+buzzMaxChance	20	float
+bigBuzzBaseChance	1	float
+bigBuzzMaxChance	5	float
+buzzContinueChance	50	float
+buzzEvolveToBigChance	20	float
 initialTrust	50	int
 initialAttention	0	int
 initialSpread	0	int

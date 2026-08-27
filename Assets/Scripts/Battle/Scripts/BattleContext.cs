@@ -74,6 +74,86 @@ public class BattleContext
     public int EnemiesSpawnedCount { get; set; }
     public bool IsBossPhase { get; set; }
 
+    // ===== フェーズ制（ダンジョンはフェーズ列で構成され、全クリアでダンジョンクリア） =====
+
+    /// <summary>このダンジョンレベルのフェーズ一覧（InitializePhases で確定）</summary>
+    public IReadOnlyList<DungeonPhaseData> Phases { get; private set; } = new List<DungeonPhaseData>();
+
+    /// <summary>フェーズ総数</summary>
+    public int PhaseCount => Phases.Count;
+
+    /// <summary>現在のフェーズ番号（0始まり）。PhaseCount に達したら全フェーズクリア</summary>
+    public int CurrentPhaseIndex { get; private set; }
+
+    /// <summary>全フェーズをクリアしたか</summary>
+    public bool AllPhasesCleared => CurrentPhaseIndex >= PhaseCount;
+
+    /// <summary>現在フェーズの未出現の敵が残っていないか</summary>
+    public bool CurrentPhaseQueueEmpty => _phaseSpawnQueue.Count == 0;
+
+    private readonly Queue<EnemyData> _phaseSpawnQueue = new Queue<EnemyData>();
+
+    /// <summary>
+    /// フェーズ構成を確定する。SOの phases が未設定なら旧方式（monsters/bossName）から自動変換、
+    /// それも無ければ Resources フォールバックのモンスターから組み立てる。
+    /// </summary>
+    public void InitializePhases()
+    {
+        var level = CurrentStage?.GetLevelData(DungeonLevel);
+
+        List<DungeonPhaseData> phases = null;
+        if (level?.phases != null && level.phases.Any(p => p?.enemies != null && p.enemies.Any(e => e != null)))
+        {
+            phases = level.phases;
+        }
+        else if (level?.monsters != null && level.monsters.Count > 0)
+        {
+            phases = DungeonPhaseBuilder.BuildFromLegacy(level);
+            Debug.LogWarning($"[BattleContext] '{CurrentStage?.dungeonName}' Lv{DungeonLevel} の phases が未設定のため旧方式から自動変換しました（{phases.Count}フェーズ）。SOに phases を設定してください。");
+        }
+        else
+        {
+            // Resources フォールバックのモンスターから組み立て
+            var all = DungeonMonsters;
+            var boss = all.FirstOrDefault(m => m != null && m.isBoss);
+            var normals = all.Where(m => m != null && m != boss).ToList();
+            phases = DungeonPhaseBuilder.Build(normals, boss);
+            Debug.LogWarning($"[BattleContext] フォールバックのモンスターからフェーズを自動構成しました（{phases.Count}フェーズ）。");
+        }
+
+        Phases = phases.Where(p => p?.enemies != null && p.enemies.Any(e => e != null)).ToList();
+        CurrentPhaseIndex = 0;
+        LoadPhaseQueue(0);
+    }
+
+    /// <summary>次のフェーズへ進む。次があれば true、全フェーズクリアなら false。</summary>
+    public bool AdvancePhase()
+    {
+        CurrentPhaseIndex++;
+        if (AllPhasesCleared) return false;
+        LoadPhaseQueue(CurrentPhaseIndex);
+        return true;
+    }
+
+    /// <summary>現在フェーズの次に出現する敵を覗く（無ければ null）。</summary>
+    public EnemyData PeekNextSpawn() => _phaseSpawnQueue.Count > 0 ? _phaseSpawnQueue.Peek() : null;
+
+    /// <summary>現在フェーズの次に出現する敵を取り出す（無ければ null）。</summary>
+    public EnemyData DequeueNextSpawn() => _phaseSpawnQueue.Count > 0 ? _phaseSpawnQueue.Dequeue() : null;
+
+    /// <summary>指定のスポーン地点が空いているか。</summary>
+    public bool IsSpawnPointFree(int index) => !occupiedSpawnPoints.ContainsKey(index);
+
+    private void LoadPhaseQueue(int index)
+    {
+        _phaseSpawnQueue.Clear();
+        if (index < 0 || index >= Phases.Count) return;
+        foreach (var e in Phases[index].enemies)
+        {
+            if (e != null) _phaseSpawnQueue.Enqueue(e);
+        }
+    }
+
     private readonly Dictionary<int, CharacterPresenter> occupiedSpawnPoints = new Dictionary<int, CharacterPresenter>();
 
     // コンストラクタで戦闘ルールを受け取る

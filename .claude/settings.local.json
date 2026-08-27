@@ -9,7 +9,10 @@
       "Bash(Select-Object -First 20)",
       "Bash(Format-Table FullName)",
       "Bash(xargs grep *)",
-      "mcp__claude_ai_Google_Drive__read_file_content"
+      "mcp__claude_ai_Google_Drive__read_file_content",
+      "mcp__UnityMCP__manage_scene",
+      "mcp__UnityMCP__find_gameobjects",
+      "PowerShell(Get-Content \"Assets\\\\Resources\\\\SceneData\\\\BattleInputData.asset.meta\" -TotalCount 3; \"\"; Get-Content \"Assets\\\\Resources_moved\\\\SceneData\\\\BattleInputData.asset.meta\" -TotalCount 3; \"\"; Get-Content \"Assets\\\\Resources\\\\SceneData\\\\BattleInputData.asset\"; \"\"; Get-Content \"Assets\\\\Resources_moved\\\\SceneData\\\\BattleInputData.asset\")"
     ]
   }
 }

@@ -45,7 +45,12 @@ buzzTrustCoeff	0.2
 buzzMaxBaseChance	50
 flameTrustThreshold	50
 flameChance	30
-bigBuzzTrustThreshold	80
+buzzBaseChance	10
+buzzMaxChance	20
+bigBuzzBaseChance	1
+bigBuzzMaxChance	5
+buzzContinueChance	50
+buzzEvolveToBigChance	20
 initialTrust	50
 initialAttention	0
 initialSpread	0
