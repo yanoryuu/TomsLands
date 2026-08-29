@@ -20,8 +20,12 @@ public class TomsData
     public int gameMode;      // GameModeId を int で保存（JsonUtility 安全）
     public bool useAutoFlow;
 
+    // --- 旧セーブには無いフィールド。欠損時は 0 になるためロード側で正規化する ---
+    public int toolShopLevel;  // 欠損時 0 → 1 に正規化
+    public float trust;        // 欠損時 0 → 1 に正規化
+
     public TomsData(int shopMoney, int blacksmithLevel, int currentTurn, int gameFlowIndex = 0, int infoBrokerLevel = 1, int debtCycle = 0,
-        int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false)
+        int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false, int toolShopLevel = 1, float trust = 1f)
     {
         this.shopMoney = shopMoney;
         this.blacksmithLevel = blacksmithLevel;
@@ -32,5 +36,7 @@ public class TomsData
         this.flowSeed = flowSeed;
         this.gameMode = gameMode;
         this.useAutoFlow = useAutoFlow;
+        this.toolShopLevel = toolShopLevel;
+        this.trust = trust;
     }
 }

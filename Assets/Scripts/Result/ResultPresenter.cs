@@ -40,8 +40,10 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             _resultView.OnGoToTitleClicked
                 .Subscribe(_ =>
                 {
-                    Debug.Log("[ResultPresenter] Go to title clicked. Deleting save data.");
-                    SaveSystem.Delete();
+                    Debug.Log("[ResultPresenter] Go to title clicked. Deleting run save data.");
+                    // ランは終了したので、ラン内セーブ一式を削除する
+                    // （従来は save.json しか消さず、スロットが「続きから」に残り続けるバグがあった）
+                    RunSaveCleaner.DeleteRunFiles();
                     _sceneTransition.GoToTitle();
                 })
                 .AddTo(_disposables);
@@ -50,8 +52,8 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             _resultView.OnRetryClicked
                 .Subscribe(_ =>
                 {
-                    Debug.Log("[ResultPresenter] Retry clicked. Deleting save data.");
-                    SaveSystem.Delete();
+                    Debug.Log("[ResultPresenter] Retry clicked. Deleting run save data.");
+                    RunSaveCleaner.DeleteRunFiles();
                     _sceneTransition.GoToTitle();
                 })
                 .AddTo(_disposables);

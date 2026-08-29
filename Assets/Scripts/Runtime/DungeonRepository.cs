@@ -68,6 +68,16 @@ public class DungeonRepository : MonoBehaviour
     // ランタイム → 保存
     public void Save() => SaveSystem.Save(availableDungeons);
 
+    /// <summary>
+    /// ダンジョン進行を SO の初期状態に戻して保存し直す（ニューゲーム用）。
+    /// Awake が旧セーブをロード済みでも、これでメモリ・ファイルの両方がリセットされる。
+    /// </summary>
+    public void ResetToInitial()
+    {
+        InitializeFromScriptables(dungeonInfos);
+        Save();
+    }
+
     // 保存 → ランタイム（SO を再注入し、currentDungeonLevel だけ上書き）
     public bool TryLoadAndRebuild()
     {
