@@ -24,3 +24,4 @@ MonoBehaviour:
   itemAttribute: 2
   requiredLevel: 4
   salesRate: 1
+  dividendPerTurn: 30
