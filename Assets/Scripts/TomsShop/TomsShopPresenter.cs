@@ -23,6 +23,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly DebtPresenter debtPresenter;
     private readonly TurnPhaseManager turnPhaseManager;
     private readonly SalesPhaseView salesPhaseView;
+    private readonly MorningReportModel morningReportModel;
+    private readonly ShopMachineModel shopMachineModel;
 
     /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
     private int _lastKnownTurn = -1;
@@ -49,7 +51,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         MarketingFacade marketingFacade,
         DebtPresenter debtPresenter,
         TurnPhaseManager turnPhaseManager,
-        SalesPhaseView salesPhaseView)
+        SalesPhaseView salesPhaseView,
+        MorningReportModel morningReportModel,
+        ShopMachineModel shopMachineModel)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -66,6 +70,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.debtPresenter = debtPresenter;
         this.turnPhaseManager = turnPhaseManager;
         this.salesPhaseView = salesPhaseView;
+        this.morningReportModel = morningReportModel;
+        this.shopMachineModel = shopMachineModel;
 
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
@@ -133,6 +139,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         //　店の改装（店レベルアップ）画面ボタン
         tomsShopView.OnShopUpgradeClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ShopUpgrade))
+            .AddTo(disposables);
+
+        //　マシンショップ（店カスタマイズ）画面ボタン
+        tomsShopView.OnMachineShopClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.MachineShop))
             .AddTo(disposables);
 
         //　営業フェーズの「営業開始」ボタン → 簡易演出 → サマリー表示
@@ -217,6 +228,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         SoundManager.Instance?.PlayBGM("通常営業");
 
         tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
+        tomsShopView.RefreshMachineDisplay(shopMachineModel);
 
         // ターン変化はフェーズ開始判定に使うため、_lastKnownTurn が他で書き換わる前に捕捉する
         int currentTurn = gameFlowManager.CurrentTurn.Value;
@@ -232,6 +244,19 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         }
 
         ShowTurnOrBuzzAnnounce();
+
+        // 朝レポート（売り注文の持ち越し精算・配当・債券償還・マシンの設備収入/生成）
+        // 消費型: NextTurn 中に溜まった行を1つの通知にまとめて表示する
+        if (morningReportModel != null && morningReportModel.HasLines)
+        {
+            var lines = morningReportModel.Consume();
+            string reportText = string.Join("\n", lines);
+            if (!tomsShopView.ShowMorningReport(reportText))
+            {
+                // パネル未配線時はログにフォールバック（お金は適用済み）
+                Debug.Log($"[MorningReport]\n{reportText}");
+            }
+        }
 
         // --- ターン進行フェーズの開始 / 再適用 ---
         if (turnChanged || !_turnPhaseInitialized)

@@ -25,6 +25,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private TurnPhaseView turnPhaseView;
     [SerializeField] private SalesPhaseView salesPhaseView;
     [SerializeField] private ShopUpgradeView shopUpgradeView;
+    [SerializeField] private ShopMachineView shopMachineView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -114,6 +115,15 @@ public class GameLifetimeScope : LifetimeScope
         }
         financialProducts = RemoteBalance.ApplyList("financialProducts", financialProducts, p => p.productId);
         builder.RegisterInstance(financialProducts);
+
+        // マシン（店カスタマイズ）マスターのロードと登録
+        var shopMachines = AddressableLoader.LoadAll<ShopMachineData>("ShopMachineData");
+        if (shopMachines.Count == 0)
+        {
+            Debug.LogWarning("[GameLifetimeScope] ShopMachineData が見つかりません。マシンショップには商品が並びません。Create > ScriptableObjects > ShopMachine > ShopMachineData で作成し、ラベル ShopMachineData を付与してください。");
+        }
+        shopMachines = RemoteBalance.ApplyList("shopMachines", shopMachines, m => m.machineId);
+        builder.RegisterInstance(shopMachines);
 
         // =====================================================
         // マーケティングシステムのデータ登録
@@ -215,6 +225,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<SellOrderModel>(Lifetime.Singleton);
         builder.Register<PortfolioModel>(Lifetime.Singleton);
+        builder.Register<ShopMachineModel>(Lifetime.Singleton);
+        builder.Register<MorningReportModel>(Lifetime.Singleton);
         builder.Register<ItemSelectionModel>(Lifetime.Singleton);
         builder.Register<InfoBrokerModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);
@@ -281,6 +293,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, turnPhaseView, nameof(turnPhaseView));
         RegisterComponentSafe(builder, salesPhaseView, nameof(salesPhaseView));
         RegisterComponentSafe(builder, shopUpgradeView, nameof(shopUpgradeView));
+        RegisterComponentSafe(builder, shopMachineView, nameof(shopMachineView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -305,6 +318,8 @@ public class GameLifetimeScope : LifetimeScope
         // shopUpgradeView が未配線の間は Presenter を登録しない（DI解決エラー防止）
         if (shopUpgradeView != null)
             builder.RegisterEntryPoint<ShopUpgradePresenter>();
+        if (shopMachineView != null)
+            builder.RegisterEntryPoint<ShopMachinePresenter>();
 
         // 借金返済画面（TomsShopPresenter から直接呼び出すため AsSelf で公開）
         builder.RegisterEntryPoint<DebtPresenter>().AsSelf();

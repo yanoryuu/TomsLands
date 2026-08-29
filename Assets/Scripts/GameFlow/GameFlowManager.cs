@@ -23,6 +23,8 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly ShopStatusModel _shopStatusModel;
     private readonly SellOrderModel _sellOrderModel;
     private readonly PortfolioModel _portfolioModel;
+    private readonly ShopMachineModel _shopMachineModel;
+    private readonly MorningReportModel _morningReport;
     private int _currentIndex;
 
     /// <summary>
@@ -46,7 +48,8 @@ public class GameFlowManager : IDisposable, IStartable
         EventInputData eventInputData, EventOutputData eventOutputData,
         PendingEventData pendingEventData, MarketingFacade marketingFacade,
         ShopStatusModel shopStatusModel, SellOrderModel sellOrderModel,
-        PortfolioModel portfolioModel)
+        PortfolioModel portfolioModel, ShopMachineModel shopMachineModel,
+        MorningReportModel morningReport)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -63,6 +66,8 @@ public class GameFlowManager : IDisposable, IStartable
         _shopStatusModel = shopStatusModel;
         _sellOrderModel = sellOrderModel;
         _portfolioModel = portfolioModel;
+        _shopMachineModel = shopMachineModel;
+        _morningReport = morningReport;
         _currentIndex = 0;
     }
 
@@ -179,7 +184,9 @@ public class GameFlowManager : IDisposable, IStartable
 
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {
-            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel);
+            // マシン（冷蔵ケース等）の需要下限ボーナスを渡す（未設置なら 0 で従来挙動）
+            float machineDemandFloor = _shopMachineModel?.TotalDemandFloorBonus ?? 0f;
+            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, machineDemandFloor);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
@@ -196,6 +203,7 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.AddRevenue(overdue.TotalIncome);
                 _sellOrderModel.SaveData();
                 _tomsModel.SavePlayerMoney();
+                _morningReport?.Add($"売り注文の入金（持ち越し）: +{overdue.TotalIncome:N0}G");
                 Debug.Log($"[GameFlowManager] 持ち越し売り注文を精算: +{overdue.TotalIncome}G ({overdue.Settled.Count}件)");
             }
         }
@@ -216,7 +224,10 @@ public class GameFlowManager : IDisposable, IStartable
                 {
                     financeIncome += finance.BondPayout;
                     foreach (var bond in finance.MaturedBonds)
+                    {
+                        _morningReport?.Add($"債券償還: {bond.productName} 元本{bond.principal:N0}G + 利息{bond.interest:N0}G");
                         Debug.Log($"[GameFlowManager] 債券償還: {bond.productName} 元本{bond.principal}G + 利息{bond.interest}G");
+                    }
                 }
             }
 
@@ -224,7 +235,19 @@ public class GameFlowManager : IDisposable, IStartable
             if (dividend > 0)
             {
                 financeIncome += dividend;
+                _morningReport?.Add($"配当収入: +{dividend:N0}G");
                 Debug.Log($"[GameFlowManager] 配当収入: +{dividend}G");
+            }
+
+            // マシン（毎日発動型）の効果: お金製造・アイテム自動生成
+            if (_shopMachineModel != null)
+            {
+                var machineResult = _shopMachineModel.ExecuteDailyEffects(_itemModel);
+                if (machineResult.TotalMoney > 0)
+                    financeIncome += machineResult.TotalMoney;
+                _morningReport?.AddRange(machineResult.Lines);
+                if (machineResult.ProducedAnyItem)
+                    _itemModel.SaveData();
             }
 
             if (financeIncome > 0)

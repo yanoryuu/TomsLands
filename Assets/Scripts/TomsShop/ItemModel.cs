@@ -299,7 +299,8 @@ public class ItemModel
     /// A1〜A5: 広告ステータス（Trust/Attention/Spread/Retention/Followers）連動
     /// status が null または各係数が 0 のとき、従来挙動と完全一致する。
     /// </summary>
-    public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null)
+    public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
+        float machineDemandFloorBonus = 0f)
     {
         if (settings == null) return;
 
@@ -381,8 +382,9 @@ public class ItemModel
                 ? settings.displayDemandUp * spreadFactor
                 : -settings.notDisplayDemandDown * spreadFactor;
 
+            // マシン設置（冷蔵ケース等）の需要下限ボーナスは加算方式（0 で従来挙動と完全一致）
             float dynamicDemandFloor = Mathf.Min(
-                settings.demandFloor + demandBias,
+                settings.demandFloor + demandBias + machineDemandFloorBonus,
                 settings.demandCeiling);
 
             runtime.Demand.Value = Mathf.Clamp(

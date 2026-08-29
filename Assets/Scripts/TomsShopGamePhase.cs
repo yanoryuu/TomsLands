@@ -14,4 +14,5 @@ public enum TomsShopGamePhase
     Advertisement,
     Prophet,
     ShopUpgrade,
+    MachineShop,
 }

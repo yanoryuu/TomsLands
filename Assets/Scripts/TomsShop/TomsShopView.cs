@@ -18,6 +18,7 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button AdvertisementButton;
     [SerializeField] private Button ProphetButton;
     [SerializeField] private Button ShopUpgradeButton;
+    [SerializeField] private Button MachineShopButton;
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
 
@@ -27,9 +28,17 @@ public class TomsShopView : MonoBehaviour
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
+    [Header("設置マシンの表示 ※未配線でも動作する")]
+    [SerializeField] private ShopMachineDisplay shopMachineDisplay;
+
     [Header("税金情報")]
     [SerializeField] private TextMeshProUGUI nextDebtText;
     [SerializeField] private Button debtPaymentButton;
+
+    [Header("朝レポート ※未配線でも動作する")]
+    [SerializeField] private GameObject morningReportPanel;
+    [SerializeField] private TextMeshProUGUI morningReportText;
+    [SerializeField] private Button morningReportCloseButton;
     
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
@@ -52,8 +61,28 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnProphetClicked { get; } = new();
 
     public Subject<Unit> OnShopUpgradeClicked { get; } = new();
+    //マシンショップ（店カスタマイズ）画面を開く
+    public Subject<Unit> OnMachineShopClicked { get; } = new();
     //借金返済パネルを開く
     public Subject<Unit> OnDebtPaymentClicked { get; } = new();
+
+    /// <summary>設置済みマシンの見た目を更新する。未配線なら何もしない。</summary>
+    public void RefreshMachineDisplay(ShopMachineModel machineModel)
+    {
+        if (shopMachineDisplay != null)
+            shopMachineDisplay.RefreshDisplay(machineModel);
+    }
+
+    /// <summary>
+    /// 朝レポートを表示する。パネル未配線なら false を返す（呼び出し側がログにフォールバック）。
+    /// </summary>
+    public bool ShowMorningReport(string text)
+    {
+        if (morningReportPanel == null || morningReportText == null) return false;
+        morningReportText.text = text;
+        morningReportPanel.SetActive(true);
+        return true;
+    }
 
     public void Awake()
     {
@@ -72,6 +101,10 @@ public class TomsShopView : MonoBehaviour
             ProphetButton.onClick.AddListener(() => OnProphetClicked.OnNext(Unit.Default));
         if (ShopUpgradeButton != null)
             ShopUpgradeButton.onClick.AddListener(() => OnShopUpgradeClicked.OnNext(Unit.Default));
+        if (MachineShopButton != null)
+            MachineShopButton.onClick.AddListener(() => OnMachineShopClicked.OnNext(Unit.Default));
+        if (morningReportCloseButton != null && morningReportPanel != null)
+            morningReportCloseButton.onClick.AddListener(() => morningReportPanel.SetActive(false));
         if (debtPaymentButton != null)
             debtPaymentButton.onClick.AddListener(() => OnDebtPaymentClicked.OnNext(Unit.Default));
     }
