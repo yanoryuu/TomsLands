@@ -22,6 +22,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly SellOrderModel _sellOrderModel;
     private readonly PortfolioModel _portfolioModel;
     private readonly ShopMachineModel _shopMachineModel;
+    private readonly RelicInventoryModel _relicInventory;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -37,7 +38,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         StateManager stateManager,
         SellOrderModel sellOrderModel,
         PortfolioModel portfolioModel,
-        ShopMachineModel shopMachineModel)
+        ShopMachineModel shopMachineModel,
+        RelicInventoryModel relicInventory)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -52,6 +54,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _sellOrderModel = sellOrderModel;
         _portfolioModel = portfolioModel;
         _shopMachineModel = shopMachineModel;
+        _relicInventory = relicInventory;
     }
 
     public void Start()
@@ -117,10 +120,11 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // マーケティングステータスをリセット
         _shopStatusModel.Reset();
 
-        // 売り注文・金融資産・マシン設置をリセット
+        // 売り注文・金融資産・マシン設置・レリックをリセット
         _sellOrderModel.Clear();
         _portfolioModel.Clear();
         _shopMachineModel.Clear();
+        _relicInventory.Clear();
 
         // --- フロー選択（自動/手動）とシードを確定して保存 ---
         bool useAuto = _startModeData.UseAutoGeneration;
@@ -156,6 +160,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _sellOrderModel.LoadData();
         _portfolioModel.LoadData();
         _shopMachineModel.LoadData();
+        _relicInventory.LoadData();
 
         // 保存済みの seed / mode から同一フローを再生成してからインデックス復元
         _gameFlowManager.InitializeFlow(_tomsModel.UseAutoFlow, _tomsModel.GameMode, _tomsModel.FlowSeed);
@@ -176,6 +181,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _sellOrderModel.SaveData();
         _portfolioModel.SaveData();
         _shopMachineModel.SaveData();
+        _relicInventory.SaveData();
 
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
     }

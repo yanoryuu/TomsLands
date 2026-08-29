@@ -10,6 +10,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
     private readonly ItemModel itemModel;
     private readonly TomsModel tomsModel;
     private readonly ShopLevelSettings shopLevelSettings;
+    private readonly RelicEffectResolver relicResolver;
     private readonly CompositeDisposable disposables = new();
     private readonly Dictionary<string, CompositeDisposable> displaySlotDisposables = new();
 
@@ -18,10 +19,18 @@ public class ItemSelectionPresenter : IDisposable, IStartable
 
     public Subject<Unit> OnClosed { get; } = new();
 
-    // 店レベル由来の陳列上限（Entry時に更新）
-    private int MaxDisplayKinds => shopLevelSettings != null
-        ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayKinds
-        : int.MaxValue;
+    // 店レベル由来の陳列上限（レリックの DisplayKindsAdd で上乗せ可能）
+    private int MaxDisplayKinds
+    {
+        get
+        {
+            if (shopLevelSettings == null) return int.MaxValue;
+            int baseKinds = shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayKinds;
+            return relicResolver != null
+                ? UnityEngine.Mathf.Max(1, relicResolver.ModifyInt(RelicStatId.DisplayKindsAdd, baseKinds))
+                : baseKinds;
+        }
+    }
     private int MaxDisplayStockPerItem => shopLevelSettings != null
         ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayStockPerItem
         : int.MaxValue;
@@ -31,13 +40,15 @@ public class ItemSelectionPresenter : IDisposable, IStartable
         ItemSelectionView selectionView,
         ItemModel itemModel,
         TomsModel tomsModel,
-        ShopLevelSettings shopLevelSettings)
+        ShopLevelSettings shopLevelSettings,
+        RelicEffectResolver relicResolver)
     {
         this.selectionModel = selectionModel;
         this.selectionView = selectionView;
         this.itemModel = itemModel;
         this.tomsModel = tomsModel;
         this.shopLevelSettings = shopLevelSettings;
+        this.relicResolver = relicResolver;
     }
 
     public void Start()

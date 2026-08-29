@@ -7,14 +7,19 @@ public class TomsEventExecutor
     private DarkShopManager darkShopManager;
     private EventFragManager eventFragManager;
     private ShopStatusModel shopStatusModel;
+    private RelicInventoryModel relicInventory;
+    private RelicRewardService relicRewardService;
 
-    public TomsEventExecutor(TomsModel player, ItemModel itemModel, DarkShopManager darkShopManager, EventFragManager eventFragManager, ShopStatusModel shopStatusModel)
+    public TomsEventExecutor(TomsModel player, ItemModel itemModel, DarkShopManager darkShopManager, EventFragManager eventFragManager, ShopStatusModel shopStatusModel,
+        RelicInventoryModel relicInventory, RelicRewardService relicRewardService)
     {
         this.player = player;
         this.itemModel = itemModel;
         this.darkShopManager = darkShopManager;
         this.eventFragManager = eventFragManager;
         this.shopStatusModel = shopStatusModel;
+        this.relicInventory = relicInventory;
+        this.relicRewardService = relicRewardService;
     }
 
     public void Execute(TomsEvent e)
@@ -58,6 +63,23 @@ public class TomsEventExecutor
                     if (cmd.parameters.TryGetValue("itemId", out var yamiItemId))
                     {
                         darkShopManager.OpenDarkShop(yamiItemId, ParseIntParam(e, cmd, "price"));
+                    }
+                    break;
+
+                case "GrantRelic":
+                    // イベント報酬でレリックを付与（relicId 指定）。呪いレリックの付与にも使う
+                    if (cmd.parameters.TryGetValue("relicId", out var relicId))
+                    {
+                        relicInventory.Add(relicId, player.CurrentTurn.Value, GameConst.RelicMaxEquipSlots);
+                    }
+                    break;
+
+                case "GrantRandomRelic":
+                    // レア度重み付きランダム付与（所持済み・呪い除外）
+                    {
+                        var candidates = relicRewardService.PickChoices(1);
+                        if (candidates.Count > 0)
+                            relicInventory.Add(candidates[0].relicId, player.CurrentTurn.Value, GameConst.RelicMaxEquipSlots);
                     }
                     break;
 
