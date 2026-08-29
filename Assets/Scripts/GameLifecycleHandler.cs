@@ -23,6 +23,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly PortfolioModel _portfolioModel;
     private readonly ShopMachineModel _shopMachineModel;
     private readonly RelicInventoryModel _relicInventory;
+    private readonly RunSetupData _runSetupData;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -39,7 +40,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         SellOrderModel sellOrderModel,
         PortfolioModel portfolioModel,
         ShopMachineModel shopMachineModel,
-        RelicInventoryModel relicInventory)
+        RelicInventoryModel relicInventory,
+        RunSetupData runSetupData)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -55,6 +57,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _portfolioModel = portfolioModel;
         _shopMachineModel = shopMachineModel;
         _relicInventory = relicInventory;
+        _runSetupData = runSetupData;
     }
 
     public void Start()
@@ -126,6 +129,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _shopMachineModel.Clear();
         _relicInventory.Clear();
 
+        // 準備シーンの設定（借入・持ち込み・スターターレリック・スタートダッシュ）を適用
+        ApplyRunSetup();
+
         // --- フロー選択（自動/手動）とシードを確定して保存 ---
         bool useAuto = _startModeData.UseAutoGeneration;
         GameModeId mode = _startModeData.SelectedMode;
@@ -145,6 +151,69 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _tomsModel.SavePlayerMoney();
 
         Debug.Log($"[GameLifecycleHandler] 初めから: 新規開始 (useAuto={useAuto}, mode={mode}, seed={seed})");
+    }
+
+    /// <summary>
+    /// 準備シーンで確定した設定を新規ランへ適用する（消費型: 最後に必ず Clear する）。
+    /// </summary>
+    private void ApplyRunSetup()
+    {
+        if (_runSetupData == null || !_runSetupData.HasSetup) return;
+
+        var settings = GameConst.Preparation;
+
+        // 借入: 初期資金に加算し、初回返済に利息付きで上乗せされる（DebtCalculator 参照）
+        if (_runSetupData.BorrowedAmount > 0)
+        {
+            _tomsModel.AddRevenue(_runSetupData.BorrowedAmount);
+            _tomsModel.BorrowedPrincipal = _runSetupData.BorrowedAmount;
+            Debug.Log($"[RunSetup] 借入 +{_runSetupData.BorrowedAmount}G（初回返済に利息{settings.borrowInterestRate:P0}付きで上乗せ）");
+        }
+
+        // 持ち込みアイテム: 初期在庫に加算
+        for (int i = 0; i < _runSetupData.CarryItemIds.Count && i < _runSetupData.CarryItemCounts.Count; i++)
+        {
+            var runtime = _itemModel.GetRuntimeItem(_runSetupData.CarryItemIds[i]);
+            int count = _runSetupData.CarryItemCounts[i];
+            if (runtime == null || count <= 0) continue;
+            runtime.UpdateStock(runtime.Stock.Value + count);
+            Debug.Log($"[RunSetup] 持ち込み: {runtime.ItemName} ×{count}");
+        }
+
+        // スターターレリック
+        if (!string.IsNullOrEmpty(_runSetupData.StarterRelicId))
+        {
+            _relicInventory.Add(_runSetupData.StarterRelicId, 1, GameConst.RelicMaxEquipSlots);
+        }
+
+        // スタートダッシュ: 宣伝ビラ（注目度・フォロワーの初期加算）
+        if (_runSetupData.UseFlyer)
+        {
+            _shopStatusModel.ChangeAttention(settings.flyerAttention);
+            _shopStatusModel.ChangeFollowers(settings.flyerFollowers);
+            _shopStatusModel.SaveData();
+            Debug.Log($"[RunSetup] 宣伝ビラ: 注目+{settings.flyerAttention}, フォロワー+{settings.flyerFollowers}");
+        }
+
+        // スタートダッシュ: 目利きの手引き（全アイテムの初期需要を上振れ）
+        if (_runSetupData.UseAppraisal)
+        {
+            foreach (var runtime in _itemModel.RuntimeItems)
+                runtime.UpdateDemand(runtime.Demand.Value + settings.appraisalDemandBoost);
+            Debug.Log($"[RunSetup] 目利きの手引き: 全アイテム需要 +{settings.appraisalDemandBoost:P0}");
+        }
+
+        // スタートダッシュ: 返済猶予証（初回返済額の割引。DebtCalculator が参照）
+        if (_runSetupData.UseGrace)
+        {
+            _tomsModel.FirstDebtDiscountRate = settings.graceDiscountRate;
+            Debug.Log($"[RunSetup] 返済猶予証: 初回返済 -{settings.graceDiscountRate:P0}");
+        }
+
+        _itemModel.SaveData();
+
+        // 一度使ったら無効化（別スロットへの漏れ防止。StartModeData.SetContinue と同じパターン）
+        _runSetupData.Clear();
     }
 
     /// <summary>

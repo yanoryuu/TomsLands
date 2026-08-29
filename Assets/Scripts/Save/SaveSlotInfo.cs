@@ -18,4 +18,18 @@ public sealed class SaveSlotInfo
 
     /// <summary>選択中のゲームモード（難易度）。</summary>
     public GameModeId Mode;
+
+    // --- プロフィール（メタ進行）情報。ラン終了後もスロットに残る ---
+
+    /// <summary>プロフィール（メタ進行 or 進行中ラン）が存在するか。</summary>
+    public bool HasProfile;
+
+    /// <summary>メタ通貨（信用）の残高。</summary>
+    public int MetaCurrency;
+
+    /// <summary>総ラン数。</summary>
+    public int TotalRuns;
+
+    /// <summary>クリア時のベストランク（未クリアなら空文字）。</summary>
+    public string BestRank = "";
 }

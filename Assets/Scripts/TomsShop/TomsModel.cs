@@ -40,6 +40,14 @@ public class TomsModel
     /// <summary>true=自動生成フロー / false=手動(SO)フロー</summary>
     public bool UseAutoFlow { get; set; }
 
+    /// <summary>
+    /// 準備シーンで借りた初期資金の元本。初回返済に利息付きで上乗せされる（DebtCalculator）。
+    /// </summary>
+    public int BorrowedPrincipal { get; set; }
+
+    /// <summary>スタートダッシュ「返済猶予証」による初回返済額の割引率（0=なし）。</summary>
+    public float FirstDebtDiscountRate { get; set; }
+
     public TomsModel()
     {
         // ReactivePropertyの初回作成（一度だけ）
@@ -74,6 +82,8 @@ public class TomsModel
         Trust.Value = defaultTrust;
         CurrentTurn.Value = defaultTurn;
         DebtCycle.Value = 0;
+        BorrowedPrincipal = 0;
+        FirstDebtDiscountRate = 0f;
     }
 
     /// <summary>
@@ -87,7 +97,8 @@ public class TomsModel
     public void SavePlayerMoney()
     {
         var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value,
-            FlowSeed, (int)GameMode, UseAutoFlow, ToolShopLevel.Value, Trust.Value, ShopLevel.Value);
+            FlowSeed, (int)GameMode, UseAutoFlow, ToolShopLevel.Value, Trust.Value, ShopLevel.Value,
+            BorrowedPrincipal, FirstDebtDiscountRate);
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SaveSlotManager.GetPath("tomsData.json"), json);
     }
@@ -112,6 +123,8 @@ public class TomsModel
             ToolShopLevel.Value = Mathf.Max(1, data.toolShopLevel);
             Trust.Value = data.trust > 0f ? data.trust : 1f;
             ShopLevel.Value = Mathf.Max(1, data.shopLevel);
+            BorrowedPrincipal = Mathf.Max(0, data.borrowedPrincipal);
+            FirstDebtDiscountRate = Mathf.Clamp01(data.firstDebtDiscountRate);
         }
         else
         {

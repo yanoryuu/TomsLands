@@ -42,6 +42,7 @@ public class ResultLifetimeScope : LifetimeScope
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<ItemModel>(Lifetime.Singleton);
         builder.Register<ResultModel>(Lifetime.Singleton);
+        builder.Register<MetaProgressModel>(Lifetime.Singleton);
 
         // --- 3. Services ---
         builder.Register<SceneTransitionService>(Lifetime.Singleton);

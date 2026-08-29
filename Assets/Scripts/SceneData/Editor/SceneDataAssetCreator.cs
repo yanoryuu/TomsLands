@@ -16,6 +16,7 @@ public static class SceneDataAssetCreator
         CreateAssetIfNotExists<StartModeData>("Assets/Resources/SceneData/StartModeData.asset");
         CreateAssetIfNotExists<EventInputData>("Assets/Resources/SceneData/EventInputData.asset");
         CreateAssetIfNotExists<EventOutputData>("Assets/Resources/SceneData/EventOutputData.asset");
+        CreateAssetIfNotExists<RunSetupData>("Assets/Resources/SceneData/RunSetupData.asset");
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         Debug.Log("[SceneDataAssetCreator] Scene data assets created/verified.");

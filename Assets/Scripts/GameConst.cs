@@ -134,6 +134,9 @@ public static class GameConst
     public static int MinItemStock => Data.minItemStock;
     public static int InitMoney => Data.initMoney;
 
+    // --- 準備シーン（メタ進行） ---
+    public static PreparationSettingsData Preparation => Data.preparation;
+
     // --- レリック（装備アイテム） ---
     public static int RelicMaxEquipSlots => Data.relicSettings.maxEquipSlots;
     public static int RelicRewardChoiceCount => Data.relicSettings.rewardChoiceCount;

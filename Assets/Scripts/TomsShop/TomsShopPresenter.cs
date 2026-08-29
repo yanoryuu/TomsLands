@@ -247,10 +247,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private void RefreshNextDebtDisplay()
     {
         int cycle = tomsShopModel.DebtCycle.Value;
-        int nextAmount = GameConst.GetDebtAmount(cycle + 1);
-        // レリック補正（DebtAmountMul）を表示にも反映（実際の支払いは DebtPresenter 側で同じ補正）
-        if (relicResolver != null)
-            nextAmount = relicResolver.ModifyInt(RelicStatId.DebtAmountMul, nextAmount);
+        // 借入・猶予証・レリック補正込みの額（実際の支払いと同じ DebtCalculator を使う）
+        int nextAmount = DebtCalculator.GetAmount(cycle + 1, tomsShopModel, relicResolver);
         int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
         int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
         tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);

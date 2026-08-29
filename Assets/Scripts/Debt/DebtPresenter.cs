@@ -29,16 +29,11 @@ public class DebtPresenter : IDisposable, IStartable
     }
 
     /// <summary>
-    /// レリック補正（DebtAmountMul）を適用した返済額。
-    /// 表示（ShowVoluntary/ShowForced）と実際の支払い（OnPay）で必ず同じ値になるよう一元化する。
+    /// 借入・猶予証・レリック補正を適用した返済額。
+    /// 表示（ShowVoluntary/ShowForced）と実際の支払い（OnPay）で必ず同じ値になるよう
+    /// DebtCalculator に一元化している。
     /// </summary>
-    private int GetDebtAmount(int cycle)
-    {
-        int baseAmount = GameConst.GetDebtAmount(cycle);
-        return relicResolver != null
-            ? relicResolver.ModifyInt(RelicStatId.DebtAmountMul, baseAmount)
-            : baseAmount;
-    }
+    private int GetDebtAmount(int cycle) => DebtCalculator.GetAmount(cycle, tomsModel, relicResolver);
 
     public void Start()
     {

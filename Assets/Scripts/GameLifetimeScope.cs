@@ -75,6 +75,11 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(eventInputData);
         builder.RegisterInstance(eventOutputData);
 
+        // RunSetupData（準備シーン → 新規ラン初期化の受け渡し）のロードと登録
+        var runSetupData = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData")
+                           ?? RunSetupData.GetOrCreateFallback();
+        builder.RegisterInstance(runSetupData);
+
         // ShopEconomySettings のロードと登録
         var shopEconomySettings = AddressableLoader.Load<ShopEconomySettings>("ShopEconomySettings");
         if (shopEconomySettings == null)

@@ -18,6 +18,7 @@ public class GameOverLifetimeScope : LifetimeScope
 
         // TomsModel はコンストラクタでセーブデータを自動ロード（CurrentTurn 取得用）
         builder.Register<TomsModel>(Lifetime.Singleton);
+        builder.Register<MetaProgressModel>(Lifetime.Singleton);
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
         if (gameOverView != null)
