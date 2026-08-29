@@ -21,6 +21,7 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly PendingEventData _pendingEventData;
     private readonly MarketingFacade _marketingFacade;
     private readonly ShopStatusModel _shopStatusModel;
+    private readonly SellOrderModel _sellOrderModel;
     private int _currentIndex;
 
     /// <summary>
@@ -43,7 +44,7 @@ public class GameFlowManager : IDisposable, IStartable
         SceneTransitionService sceneTransition, HeroModel heroModel,
         EventInputData eventInputData, EventOutputData eventOutputData,
         PendingEventData pendingEventData, MarketingFacade marketingFacade,
-        ShopStatusModel shopStatusModel)
+        ShopStatusModel shopStatusModel, SellOrderModel sellOrderModel)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -58,6 +59,7 @@ public class GameFlowManager : IDisposable, IStartable
         _pendingEventData = pendingEventData;
         _marketingFacade = marketingFacade;
         _shopStatusModel = shopStatusModel;
+        _sellOrderModel = sellOrderModel;
         _currentIndex = 0;
     }
 
@@ -180,6 +182,24 @@ public class GameFlowManager : IDisposable, IStartable
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
         }
 
+        // 約定予定日を過ぎたのに営業サマリーを経由できなかった売り注文（配信日・イベント日を
+        // 挟んだ場合）をここで精算する。借金の返済チェック(TomsShopPresenter.Entry)より
+        // 前に必ず入金されるよう、この位置（日送りの朝）で行う。
+        if (_sellOrderModel != null && _tomsModel != null)
+        {
+            var overdue = _sellOrderModel.SettleOverdue(CurrentTurn.Value, _itemModel, _economySettings, _marketingFacade);
+            if (overdue.Settled.Count > 0)
+            {
+                _tomsModel.AddRevenue(overdue.TotalIncome);
+                _sellOrderModel.SaveData();
+                _tomsModel.SavePlayerMoney();
+                Debug.Log($"[GameFlowManager] 持ち越し売り注文を精算: +{overdue.TotalIncome}G ({overdue.Settled.Count}件)");
+            }
+        }
+
+        // 新しい日の仕入れ支出トラッカーをリセット（ターン評価「資金効率」用）
+        _tomsModel?.ResetTurnProcurementSpend();
+
         // マーケティングシステムのターン処理（バズ判定・持続効果適用）
         if (_marketingFacade != null)
         {
@@ -205,8 +225,9 @@ public class GameFlowManager : IDisposable, IStartable
                 Debug.LogWarning($"[GameFlowManager] Dungeon not found for key: {node.BattleDungeon}");
             }
 
-            // ItemModel の在庫データを保存してからシーン遷移
+            // ItemModel の在庫データ・売り注文を保存してからシーン遷移
             _itemModel.SaveData();
+            _sellOrderModel?.SaveData();
 
             // GameFlowIndexをTomsModelに反映して保存
             _tomsModel.GameFlowIndex = _currentIndex;

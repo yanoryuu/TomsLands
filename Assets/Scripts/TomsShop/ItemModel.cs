@@ -65,7 +65,11 @@ public class ItemModel
             item.Stock.Value -= quantity;
     }
     
-    public void Settlement(string itemId, int quantity)
+    /// <summary>
+    /// 在庫を確定消費する（旧名: Settlement。売り注文の「約定」と紛らわしいためリネーム）。
+    /// 在庫が尽きたら陳列状態も解除する。
+    /// </summary>
+    public void ConsumeStock(string itemId, int quantity)
     {
         var item = GetRuntimeItem(itemId);
         if (item != null && item.Stock.Value >= quantity)
@@ -154,12 +158,16 @@ public class ItemModel
     // ========================================
 
     /// <summary>
-    /// 通常営業ターン終了時の販売シミュレーション。
-    /// 品出し中の全アイテムについて Demand × SalesRate × DisplayStock で販売数を算出し、
-    /// Stock を減少させる。
+    /// 通常営業ターン終了時の販売処理。
+    /// 【現行仕様（売り注文制）】品出し中のアイテムは陳列した数だけ必ず全部売れる
+    /// （販売数 = min(Stock, DisplayStock)）。入金は即時ではなく、呼び出し側が
+    /// 売り注文(SellOrder)として翌日の約定に回す。
+    /// 【旧仕様】probabilistic=true で Demand × SalesRate × DisplayStock の確率販売に戻せる
+    /// （ShopEconomySettings.useProbabilisticShopSales）。
+    /// いずれの場合も Stock はここで減少する（売り注文の在庫引き当てを兼ねる）。
     /// </summary>
     /// <returns>itemId → soldCount の辞書</returns>
-    public Dictionary<string, int> SimulateShopSales()
+    public Dictionary<string, int> SimulateShopSales(bool probabilistic = false)
     {
         var salesResult = new Dictionary<string, int>();
 
@@ -179,22 +187,29 @@ public class ItemModel
             // 売れる上限 = 在庫と品出し数の小さい方
             int maxSellable = Mathf.Min(runtime.Stock.Value, displayStock);
 
-            // 販売数を算出（Demand × SalesRate × DisplayStock）
-            float rawSold = demand * salesRate * displayStock;
             int quantitySold;
-
-            if (rawSold >= 1f)
+            if (!probabilistic)
             {
-                quantitySold = Mathf.FloorToInt(rawSold);
-            }
-            else if (rawSold > 0f)
-            {
-                // 端数は確率的に1個売れるかどうかを判定
-                quantitySold = Random.value < rawSold ? 1 : 0;
+                // 売り注文制: 陳列した分は必ず全部売れる
+                quantitySold = maxSellable;
             }
             else
             {
-                quantitySold = 0;
+                // 旧仕様: 販売数を算出（Demand × SalesRate × DisplayStock）
+                float rawSold = demand * salesRate * displayStock;
+                if (rawSold >= 1f)
+                {
+                    quantitySold = Mathf.FloorToInt(rawSold);
+                }
+                else if (rawSold > 0f)
+                {
+                    // 端数は確率的に1個売れるかどうかを判定
+                    quantitySold = Random.value < rawSold ? 1 : 0;
+                }
+                else
+                {
+                    quantitySold = 0;
+                }
             }
 
             quantitySold = Mathf.Clamp(quantitySold, 0, maxSellable);
@@ -210,6 +225,12 @@ public class ItemModel
             if (runtime.DisplayStock.Value > runtime.Stock.Value)
             {
                 runtime.DisplayStock.Value = runtime.Stock.Value;
+            }
+            // 売り切れたら陳列状態も解除する（ConsumeStock と同じ扱い）
+            if (runtime.Stock.Value <= 0)
+            {
+                runtime.IsDisplay.Value = false;
+                runtime.DisplayStock.Value = 0;
             }
             runtime.WasSoldLastTurn = true;
             salesResult[runtime.ItemId] = quantitySold;
@@ -451,6 +472,7 @@ public class ItemModel
             int cost = canBuy * item.CurrentPrice.Value;
             item.UpdateStock(item.Stock.Value + canBuy);
             tomsModel.PlayerMoney.Value -= cost;
+            tomsModel.RecordProcurementSpend(cost);
             remaining -= cost;
             results.Add(new AutoPurchaseResult(item.ItemId, item.ItemName, canBuy, cost));
             Debug.Log($"[AutoPurchase] {item.ItemName} ×{canBuy} ({cost}G)");

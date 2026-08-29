@@ -53,13 +53,14 @@ public class BattleResultHandler : IStartable, IDisposable
         {
             if (soldItem.SoldFromStock > 0)
             {
-                _itemModel.Settlement(soldItem.ItemId, soldItem.SoldFromStock);
+                _itemModel.ConsumeStock(soldItem.ItemId, soldItem.SoldFromStock);
             }
         }
 
         if (_outputData.TotalEarnings != 0)
         {
-            _tomsModel.Settlement(_outputData.TotalEarnings);
+            // 配信の売上は「現場での現金取引」として即金のまま（売り注文の遅延対象外）
+            _tomsModel.AddRevenue(_outputData.TotalEarnings);
             _tomsModel.SavePlayerMoney();
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }

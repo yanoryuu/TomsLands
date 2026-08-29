@@ -230,6 +230,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             Debug.Log($"{totalPrice}ゴールドのアイテムを購入");
             itemModel.PurchaseItem(itemId, quantity);
             tomsModel.PurchaseItem(totalPrice);
+            tomsModel.RecordProcurementSpend(totalPrice);
             SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
 
             // 購入結果を即座に永続化

@@ -10,15 +10,17 @@ public class CommonPresenter:IStartable,IDisposable
 
     private readonly CommonView commonView;
     private readonly TomsModel tomsModel;
+    private readonly SellOrderModel sellOrderModel;
     private CompositeDisposable disposables = new();
 
     // メニュー（Setting）シーンのロード中フラグ。連打による多重加算ロードを防ぐ。
     private bool isMenuTransitioning;
 
-    public CommonPresenter(CommonView commonView, TomsModel tomsModel)
+    public CommonPresenter(CommonView commonView, TomsModel tomsModel, SellOrderModel sellOrderModel)
     {
         this.commonView = commonView;
         this.tomsModel = tomsModel;
+        this.sellOrderModel = sellOrderModel;
     }
     
     public void Start()
@@ -49,6 +51,11 @@ public class CommonPresenter:IStartable,IDisposable
                 Debug.Log($"CurrentTurn: {date}");
                 commonView.UpdateCurrentTurn(date);
             })
+            .AddTo(disposables);
+
+        // 未約定の売り注文の見込み入金額（所持金の隣のバッジ）
+        sellOrderModel.PendingTotalEstimate
+            .Subscribe(amount => commonView.UpdatePendingIncome(amount))
             .AddTo(disposables);
 
         commonView.OnMenuButtonClicked.Subscribe(_ => OpenSettingScene())

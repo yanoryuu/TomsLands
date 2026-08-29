@@ -181,6 +181,7 @@ public class GameLifetimeScope : LifetimeScope
         // 状態を持つモデルは Singleton で登録し、複数のPresenterで共有する
         builder.Register<ItemModel>(Lifetime.Singleton);
         builder.Register<TomsModel>(Lifetime.Singleton);
+        builder.Register<SellOrderModel>(Lifetime.Singleton);
         builder.Register<ItemSelectionModel>(Lifetime.Singleton);
         builder.Register<InfoBrokerModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);

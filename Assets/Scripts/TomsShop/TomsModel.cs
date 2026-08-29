@@ -117,12 +117,12 @@ public class TomsModel
         }
     }
 
-    
-    public void Settlement(int price)
+    /// <summary>
+    /// 収入を所持金に加算する（旧名: Settlement。売り注文の「約定」と紛らわしいためリネーム）。
+    /// </summary>
+    public void AddRevenue(int price)
     {
-        // 売り処理
         PlayerMoney.Value += price;
-        
     }
 
     public void PurchaseItem(int price)
@@ -130,6 +130,26 @@ public class TomsModel
         //購入処理
         PlayerMoney.Value -= price;
         Debug.Log(PlayerMoney.Value);
+    }
+
+    // ========================================
+    // 当日の仕入れ支出トラッカー（ターン評価の「資金効率」用）
+    // 永続化はしない（日をまたぐと GameFlowManager.NextTurn がリセットする）
+    // ========================================
+
+    /// <summary>この日（ターン）に仕入れへ投じた金額の累計。</summary>
+    public int TurnProcurementSpend { get; private set; }
+
+    /// <summary>仕入れ支出を記録する。仕入れ経路（鍛冶屋購入・自動仕入れ）から呼ぶ。</summary>
+    public void RecordProcurementSpend(int amount)
+    {
+        if (amount > 0) TurnProcurementSpend += amount;
+    }
+
+    /// <summary>日送り時に GameFlowManager から呼ばれるリセット。</summary>
+    public void ResetTurnProcurementSpend()
+    {
+        TurnProcurementSpend = 0;
     }
 
     /// <summary>

@@ -20,6 +20,12 @@ public class TurnEndSummaryView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI totalSoldCountText;
     [SerializeField] private TextMeshProUGUI daysUntilBattleText;
 
+    [Header("売り注文（遅延約定）表示 ※未配線でも動作する")]
+    [Tooltip("本日約定した売り注文の入金額")]
+    [SerializeField] private TextMeshProUGUI settledIncomeText;
+    [Tooltip("本日出した売り注文の見込み額（明日入金）")]
+    [SerializeField] private TextMeshProUGUI pendingIncomeText;
+
     [Header("ターン評価")]
     [SerializeField] private UnityEngine.UI.Image gradeImage;
     [SerializeField] private TextMeshProUGUI gradeCommentText;
@@ -100,6 +106,19 @@ public class TurnEndSummaryView : MonoBehaviour
             else
                 daysUntilBattleText.text = "予定なし";
         }
+    }
+
+    /// <summary>
+    /// 売り注文まわりの表示を更新する。
+    /// テキストが未配線（null）の場合は何もしない。
+    /// </summary>
+    public void UpdateSettlementInfo(int settledIncome, int pendingEstimate)
+    {
+        if (settledIncomeText != null)
+            settledIncomeText.text = $"本日の入金 +{settledIncome:N0}G";
+
+        if (pendingIncomeText != null)
+            pendingIncomeText.text = $"明日入金予定 +{pendingEstimate:N0}G";
     }
 
     private void ClearRows()
