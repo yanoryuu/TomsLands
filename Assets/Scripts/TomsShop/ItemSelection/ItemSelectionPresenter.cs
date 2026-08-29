@@ -9,6 +9,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
     private readonly ItemSelectionView selectionView;
     private readonly ItemModel itemModel;
     private readonly TomsModel tomsModel;
+    private readonly ShopLevelSettings shopLevelSettings;
     private readonly CompositeDisposable disposables = new();
     private readonly Dictionary<string, CompositeDisposable> displaySlotDisposables = new();
 
@@ -17,16 +18,26 @@ public class ItemSelectionPresenter : IDisposable, IStartable
 
     public Subject<Unit> OnClosed { get; } = new();
 
+    // 店レベル由来の陳列上限（Entry時に更新）
+    private int MaxDisplayKinds => shopLevelSettings != null
+        ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayKinds
+        : int.MaxValue;
+    private int MaxDisplayStockPerItem => shopLevelSettings != null
+        ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayStockPerItem
+        : int.MaxValue;
+
     public ItemSelectionPresenter(
         ItemSelectionModel selectionModel,
         ItemSelectionView selectionView,
         ItemModel itemModel,
-        TomsModel tomsModel)
+        TomsModel tomsModel,
+        ShopLevelSettings shopLevelSettings)
     {
         this.selectionModel = selectionModel;
         this.selectionView = selectionView;
         this.itemModel = itemModel;
         this.tomsModel = tomsModel;
+        this.shopLevelSettings = shopLevelSettings;
     }
 
     public void Start()
@@ -38,6 +49,13 @@ public class ItemSelectionPresenter : IDisposable, IStartable
     {
         selectionView.Show();
         SetRuntimeItems();
+        UpdateSlotCounter();
+    }
+
+    /// <summary>「陳列 3/5」のような枠カウンタ表示を更新する。</summary>
+    private void UpdateSlotCounter()
+    {
+        selectionView.UpdateSlotCounter(itemModel.CountDisplayedKinds(), MaxDisplayKinds);
     }
 
     public void OnCloseSelectionPanel()
@@ -66,7 +84,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
         selectionView.OnAutoDisplayRequested
             .Subscribe(_ =>
             {
-                itemModel.AutoSetDisplay(tomsModel.BlacksmithLevel.Value);
+                itemModel.AutoSetDisplay(tomsModel.BlacksmithLevel.Value, MaxDisplayKinds, MaxDisplayStockPerItem);
                 RefreshRuntimeItems();
                 RefreshCurrentSelectionPanel();
                 RebuildDisplaySlots();
@@ -90,7 +108,8 @@ public class ItemSelectionPresenter : IDisposable, IStartable
 
             itemdata.Stock.Subscribe(x =>
                 {
-                    slot.SetMaxDisplayQuantity(x);
+                    // 陳列個数の上限 = min(在庫, 店レベルの1銘柄あたり上限)
+                    slot.SetMaxDisplayQuantity(UnityEngine.Mathf.Min(x, MaxDisplayStockPerItem));
                     slot.SetStock(x);
                 })
                 .AddTo(panelDisposables);
@@ -98,10 +117,23 @@ public class ItemSelectionPresenter : IDisposable, IStartable
             itemdata.DisplayStock.Subscribe(x => slot.SetDisplayQuantity(x))
                 .AddTo(panelDisposables);
 
-            slot.OnDisplayQuantityChanged.Subscribe(x => itemdata.UpdateDisplayStock(x))
+            slot.OnDisplayQuantityChanged.Subscribe(x =>
+                    itemdata.UpdateDisplayStock(UnityEngine.Mathf.Min(x, MaxDisplayStockPerItem)))
                 .AddTo(panelDisposables);
 
-            slot.OnToggleChanged.Subscribe(x => itemdata.UpdateIsDisplay(x))
+            slot.OnToggleChanged.Subscribe(x =>
+                {
+                    // 陳列ONにするとき、店レベルの同時陳列銘柄数の上限を超えるなら弾く
+                    if (x && !itemdata.IsDisplay.Value && !itemModel.CanDisplayMore(MaxDisplayKinds))
+                    {
+                        slot.SetSelectToggle(false);
+                        selectionView.NotifySlotLimitReached(itemModel.CountDisplayedKinds(), MaxDisplayKinds);
+                        UpdateSlotCounter();
+                        return;
+                    }
+                    itemdata.UpdateIsDisplay(x);
+                    UpdateSlotCounter();
+                })
                 .AddTo(panelDisposables);
 
             itemdata.IsDisplay.Subscribe(x =>
@@ -185,6 +217,8 @@ public class ItemSelectionPresenter : IDisposable, IStartable
                 EnsureDisplaySlotSubscription(item);
             }
         }
+
+        UpdateSlotCounter();
     }
 
     private void EnsureDisplaySlotSubscription(RuntimeItemData itemdata)
@@ -209,6 +243,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
             {
                 itemdata.UpdateIsDisplay(false);
                 RemoveDisplaySlotSubscription(itemdata.ItemId);
+                UpdateSlotCounter();
             })
             .AddTo(d);
     }

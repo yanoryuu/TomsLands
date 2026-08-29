@@ -16,6 +16,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject eventPanel;
     [SerializeField] private GameObject advertisementPanel;
     [SerializeField] private GameObject prophetPanel;
+    [SerializeField] private GameObject shopUpgradePanel;
 
     /// <summary>
     /// 全パネルを非表示にする
@@ -36,6 +37,7 @@ public class GamePanelManager : MonoBehaviour
         eventPanel.SetActive(false);
         if (advertisementPanel != null) advertisementPanel.SetActive(false);
         if (prophetPanel != null) prophetPanel.SetActive(false);
+        if (shopUpgradePanel != null) shopUpgradePanel.SetActive(false);
     }
 
     /// <summary>パネルを表示し、開き演出（フェードイン）を再生する。</summary>
@@ -118,6 +120,10 @@ public class GamePanelManager : MonoBehaviour
                 break;
             case TomsShopGamePhase.Prophet:
                 ShowWithFx(prophetPanel);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.ShopUpgrade:
+                ShowWithFx(shopUpgradePanel);
                 commonPanel.SetActive(true);
                 break;
         }

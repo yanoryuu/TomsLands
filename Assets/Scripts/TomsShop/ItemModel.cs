@@ -492,8 +492,9 @@ public class ItemModel
 
     /// <summary>
     /// 期待収益（需要×価格×SalesRate）が高い順に最大maxSlots枠を自動陳列する。
+    /// maxSlots / maxStockPerItem は店レベル（ShopLevelSettings）由来の値を渡すこと。
     /// </summary>
-    public void AutoSetDisplay(int blacksmithLevel, int maxSlots = 8)
+    public void AutoSetDisplay(int blacksmithLevel, int maxSlots, int maxStockPerItem = int.MaxValue)
     {
         foreach (var r in RuntimeItems)
             r.IsDisplay.Value = false;
@@ -506,12 +507,22 @@ public class ItemModel
         foreach (var item in top)
         {
             item.IsDisplay.Value = true;
-            item.DisplayStock.Value = item.Stock.Value;
+            item.DisplayStock.Value = Mathf.Min(item.Stock.Value, maxStockPerItem);
             Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={ExpectedRevenueOf(item):F1})");
         }
 
         SaveData();
     }
+
+    // ========================================
+    // 陳列枠（店レベル）関連
+    // ========================================
+
+    /// <summary>現在陳列中の銘柄数。</summary>
+    public int CountDisplayedKinds() => RuntimeItems.Count(r => r.IsDisplay.Value);
+
+    /// <summary>あと1銘柄陳列できるか（maxKinds = 店レベル由来の同時陳列上限）。</summary>
+    public bool CanDisplayMore(int maxKinds) => CountDisplayedKinds() < maxKinds;
 
     // ========================================
     // ⑤ ダッシュボード用: 期待収益順リスト取得

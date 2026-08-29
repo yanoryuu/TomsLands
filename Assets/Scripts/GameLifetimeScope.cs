@@ -24,6 +24,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private DebtView debtView;
     [SerializeField] private TurnPhaseView turnPhaseView;
     [SerializeField] private SalesPhaseView salesPhaseView;
+    [SerializeField] private ShopUpgradeView shopUpgradeView;
 
     [Header("Other References")]
     [SerializeField] private GamePanelManager gamePanelManager;
@@ -82,6 +83,16 @@ public class GameLifetimeScope : LifetimeScope
         }
         shopEconomySettings = RemoteBalance.ApplyOverwrite("shopEconomy", shopEconomySettings);
         builder.RegisterInstance(shopEconomySettings);
+
+        // ShopLevelSettings（店レベルテーブル）のロードと登録
+        var shopLevelSettings = AddressableLoader.Load<ShopLevelSettings>("ShopLevelSettings");
+        if (shopLevelSettings == null)
+        {
+            shopLevelSettings = ScriptableObject.CreateInstance<ShopLevelSettings>();
+            Debug.LogWarning("[GameLifetimeScope] ShopLevelSettings.asset が見つかりません。デフォルト値で生成しました。Create > ScriptableObjects > ShopLevelSettings で作成し Addressables に登録してください。");
+        }
+        shopLevelSettings = RemoteBalance.ApplyOverwrite("shopLevel", shopLevelSettings);
+        builder.RegisterInstance(shopLevelSettings);
 
         // =====================================================
         // マーケティングシステムのデータ登録
@@ -247,6 +258,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, debtView, nameof(debtView));
         RegisterComponentSafe(builder, turnPhaseView, nameof(turnPhaseView));
         RegisterComponentSafe(builder, salesPhaseView, nameof(salesPhaseView));
+        RegisterComponentSafe(builder, shopUpgradeView, nameof(shopUpgradeView));
 
         // --- 4. Presenters (EntryPoints) ---
         // RegisterEntryPoint を使うと、インスタンス化 + IStartable等のライフサイクル実行を自動化
@@ -268,6 +280,9 @@ public class GameLifetimeScope : LifetimeScope
 
         // 預言者画面
         builder.RegisterEntryPoint<ProphetPresenter>();
+        // shopUpgradeView が未配線の間は Presenter を登録しない（DI解決エラー防止）
+        if (shopUpgradeView != null)
+            builder.RegisterEntryPoint<ShopUpgradePresenter>();
 
         // 借金返済画面（TomsShopPresenter から直接呼び出すため AsSelf で公開）
         builder.RegisterEntryPoint<DebtPresenter>().AsSelf();

@@ -23,6 +23,9 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private Transform displayListParent;
     [SerializeField] private GameObject itemDisplaySlotPrefab;
 
+    [Header("陳列枠カウンタ（店レベル） ※未配線でも動作する")]
+    [SerializeField] private TextMeshProUGUI slotCounterText;
+
     [SerializeField] private GameObject weaponTab;
     [SerializeField] private GameObject armorTab;
     [SerializeField] private GameObject toolTab;
@@ -136,5 +139,20 @@ public class ItemSelectionView : MonoBehaviour
         foreach (var slot in displaySlots.Values)
             Destroy(slot.gameObject);
         displaySlots.Clear();
+    }
+
+    /// <summary>「陳列 3/5」の枠カウンタ表示。未配線（null）なら何もしない。</summary>
+    public void UpdateSlotCounter(int used, int max)
+    {
+        if (slotCounterText == null) return;
+        slotCounterText.text = $"陳列 {used}/{max}";
+        slotCounterText.color = used >= max ? new Color(1f, 0.55f, 0.35f) : Color.white;
+    }
+
+    /// <summary>陳列枠が足りない時の通知。カウンタを強調表示する。</summary>
+    public void NotifySlotLimitReached(int used, int max)
+    {
+        UpdateSlotCounter(used, max);
+        Debug.Log($"[ItemSelection] 陳列枠が足りない（{used}/{max}）。店を改装すると枠が増える。");
     }
 }

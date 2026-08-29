@@ -130,6 +130,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Prophet))
             .AddTo(disposables);
 
+        //　店の改装（店レベルアップ）画面ボタン
+        tomsShopView.OnShopUpgradeClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ShopUpgrade))
+            .AddTo(disposables);
+
         //　営業フェーズの「営業開始」ボタン → 簡易演出 → サマリー表示
         tomsShopView.OnStartShopClicked
             .Subscribe(_ =>
