@@ -57,17 +57,8 @@ public class MetaProgressModel
         TotalRuns++;
         if (cleared) ClearedRuns++;
         if (netWorth > BestNetWorth) BestNetWorth = netWorth;
-        if (cleared && !string.IsNullOrEmpty(rank) &&
-            (string.IsNullOrEmpty(BestRank) || string.Compare(rank, BestRank, StringComparison.Ordinal) < 0))
-        {
-            // "S" < "A" は成立しないため単純比較はしない方が良いが、S/A/B/C/D/E は
-            // アルファベット順で S だけ例外。ここでは S を最上位として明示的に扱う。
-            BestRank = IsBetterRank(rank, BestRank) ? rank : BestRank;
-        }
-        else if (cleared && string.IsNullOrEmpty(BestRank))
-        {
+        if (cleared && !string.IsNullOrEmpty(rank) && IsBetterRank(rank, BestRank))
             BestRank = rank;
-        }
 
         int earned = Mathf.Max(0, totalTurns) * settings.metaCurrencyPerTurn;
         if (cleared)
