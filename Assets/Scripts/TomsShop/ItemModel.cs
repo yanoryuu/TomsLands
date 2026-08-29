@@ -521,6 +521,13 @@ public class ItemModel
     /// <summary>現在陳列中の銘柄数。</summary>
     public int CountDisplayedKinds() => RuntimeItems.Count(r => r.IsDisplay.Value);
 
+    /// <summary>
+    /// 配当付き武器の毎ターン配当収入の合計（在庫 × 1個あたり配当）。
+    /// GameFlowManager.NextTurn の朝に入金される。
+    /// </summary>
+    public int CalculateDividendIncome() =>
+        RuntimeItems.Sum(r => r.DividendPerTurn > 0 ? r.DividendPerTurn * r.Stock.Value : 0);
+
     /// <summary>あと1銘柄陳列できるか（maxKinds = 店レベル由来の同時陳列上限）。</summary>
     public bool CanDisplayMore(int maxKinds) => CountDisplayedKinds() < maxKinds;
 
@@ -574,7 +581,8 @@ public class ItemModel
                     if (item.requiredLevel <= 0) item.requiredLevel = master.requiredLevel;
                     if (string.IsNullOrEmpty(item.itemName)) item.itemName = master.itemName;
                 }
-                return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId), SearchBackgroundSpriteFromMaster(item.requiredLevel));
+                return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId), SearchBackgroundSpriteFromMaster(item.requiredLevel),
+                    master != null ? master.dividendPerTurn : 0);
             })
             .ToList();
 
@@ -599,7 +607,8 @@ public class ItemModel
                 master.requiredLevel,
                 Random.Range(0.3f, 0.7f),
                 master.description,
-                master.salesRate
+                master.salesRate,
+                master.dividendPerTurn
             ))
             .ToList();
 

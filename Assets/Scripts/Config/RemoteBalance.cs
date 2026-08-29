@@ -23,11 +23,11 @@ public static class RemoteBalance
     // events はCSVマスター由来（Dictionaryを含むためJsonUtility不可、JObjectから手動変換）。あれば全置換。
     private static List<TomsEvent> _events;
 
-    private static readonly string[] SingleSections = { "shopEconomy", "gameBalance", "battlePrice", "shopLevel" };
+    private static readonly string[] SingleSections = { "shopEconomy", "gameBalance", "battlePrice", "shopLevel", "finance" };
     // ※ HeroData(SO) は Inspector 割当のフォールバックで、実バトル値は heroLevels(CSV由来) なので
     //   "heroes" 区画は設けない（hero バランスは heroLevels で配信する）。
     private static readonly string[] ListSections =
-        { "advertisements", "buzzEffects", "followerMilestones", "enemies", "dungeons" };
+        { "advertisements", "buzzEffects", "followerMilestones", "enemies", "dungeons", "financialProducts" };
 
     public static bool HasAny => _sections.Count > 0 || _lists.Count > 0 || _heroLevels != null || _events != null;
 

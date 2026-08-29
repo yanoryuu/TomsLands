@@ -19,6 +19,7 @@ public static class RunSaveCleaner
         "streamingSelection.json",
         "shopStatusData.json",
         "sellOrderData.json",
+        "portfolioData.json",
     };
 
     /// <summary>

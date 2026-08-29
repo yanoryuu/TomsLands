@@ -19,6 +19,7 @@ public class ItemOverride
     public int requiredLevel;
     public float salesRate;
     public string description;      // 空なら master 維持
+    public int dividendPerTurn;     // 在庫1個あたりの毎ターン配当（0=配当なし）
 
     /// <summary>master のクローンへ上書きを反映する。Sprite 等は触らない。</summary>
     public void ApplyTo(ItemData target)
@@ -34,6 +35,7 @@ public class ItemOverride
         if (Enum.TryParse<ItemTypeData.ItemAttribute>(itemAttribute, true, out var a)) target.itemAttribute = a;
         target.requiredLevel = requiredLevel;
         target.salesRate = salesRate;
+        target.dividendPerTurn = dividendPerTurn;
         if (!string.IsNullOrEmpty(description)) target.description = description;
     }
 }

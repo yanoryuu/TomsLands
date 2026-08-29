@@ -95,6 +95,27 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(shopLevelSettings);
 
         // =====================================================
+        // 金融システム（取引所）のデータ登録
+        // =====================================================
+
+        var financeSettings = AddressableLoader.Load<FinanceSettings>("FinanceSettings");
+        if (financeSettings == null)
+        {
+            financeSettings = ScriptableObject.CreateInstance<FinanceSettings>();
+            Debug.LogWarning("[GameLifetimeScope] FinanceSettings.asset が見つかりません。デフォルト値で生成しました。Create > ScriptableObjects > Finance > FinanceSettings で作成し Addressables に登録してください。");
+        }
+        financeSettings = RemoteBalance.ApplyOverwrite("finance", financeSettings);
+        builder.RegisterInstance(financeSettings);
+
+        var financialProducts = AddressableLoader.LoadAll<FinancialProductData>("FinancialProductData");
+        if (financialProducts.Count == 0)
+        {
+            Debug.LogWarning("[GameLifetimeScope] FinancialProductData が見つかりません。取引所には商品が並びません。Create > ScriptableObjects > Finance > FinancialProductData で作成し、ラベル FinancialProductData を付与してください。");
+        }
+        financialProducts = RemoteBalance.ApplyList("financialProducts", financialProducts, p => p.productId);
+        builder.RegisterInstance(financialProducts);
+
+        // =====================================================
         // マーケティングシステムのデータ登録
         // =====================================================
 
@@ -193,6 +214,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<ItemModel>(Lifetime.Singleton);
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<SellOrderModel>(Lifetime.Singleton);
+        builder.Register<PortfolioModel>(Lifetime.Singleton);
         builder.Register<ItemSelectionModel>(Lifetime.Singleton);
         builder.Register<InfoBrokerModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);

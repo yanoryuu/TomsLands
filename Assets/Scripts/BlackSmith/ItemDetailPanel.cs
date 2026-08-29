@@ -30,6 +30,7 @@ public class ItemDetailPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI salesRateText;    // 売れやすさ
     [SerializeField] private TextMeshProUGUI wasSoldText;      // 前ターン販売
     [SerializeField] private TextMeshProUGUI recommendText;    // おすすめ度
+    [SerializeField] private TextMeshProUGUI dividendText;     // 配当/日（配当付き武器のみ・未配線可）
 
     [Header("注文")]
     [SerializeField] private Slider quantitySlider;
@@ -103,6 +104,13 @@ public class ItemDetailPanel : MonoBehaviour
         if (salesRateText)  salesRateText.text = $"売率 ×{runtime.SalesRate:0.0}";
         if (wasSoldText)    wasSoldText.text = runtime.WasSoldLastTurn ? "前ターン販売 ✓" : "前ターン販売 —";
         if (recommendText)  recommendText.text = $"おすすめ度 {recommendScore:N0}";
+        if (dividendText)
+        {
+            bool hasDividend = runtime.DividendPerTurn > 0;
+            dividendText.gameObject.SetActive(hasDividend);
+            if (hasDividend)
+                dividendText.text = $"配当 {runtime.DividendPerTurn:N0}G/日・個（保有で毎日入金）";
+        }
     }
 
     // === 注文表示 ===

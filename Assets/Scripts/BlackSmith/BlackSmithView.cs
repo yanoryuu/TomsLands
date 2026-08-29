@@ -64,6 +64,12 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Transform unlockListRoot;            // エントリの親（GridLayoutGroup）
     [SerializeField] private GameObject unlockEntryTemplate;      // エントリ雛形（非アクティブで配置）
 
+    [Header("取引所（Special タブ） ※未配線でも動作する")]
+    [SerializeField] private GameObject financePanel;          // 取引所タブ専用パネル
+    [SerializeField] private Transform financeContent;         // FinanceSlot の親
+    [SerializeField] private GameObject financeSlotPrefab;     // FinanceSlot プレハブ
+    [SerializeField] private FinanceDetailPanel financeDetailPanel;
+
     [Header("Development Panel - 解放商品の詳細（レベルアップフレーム上部）")]
     [SerializeField] private GameObject unlockDetailContent;             // 詳細の中身（選択時に表示）
     [SerializeField] private TextMeshProUGUI unlockDetailPlaceholder;    // 未選択時の案内テキスト
@@ -84,6 +90,9 @@ public class BlackSmithView : MonoBehaviour
 
     /// <summary>選択銘柄の詳細パネル。Presenter が選択時に結線する。</summary>
     public ItemDetailPanel DetailPanel => itemDetailPanel;
+
+    /// <summary>取引所の詳細パネル（未配線なら null）。</summary>
+    public FinanceDetailPanel FinanceDetail => financeDetailPanel;
 
     /// <summary>次ダンジョン情報バナー。Presenter が Entry 時に更新する。</summary>
     public ProcurementHeaderView Header => procurementHeader;
@@ -120,6 +129,8 @@ public class BlackSmithView : MonoBehaviour
         // 開発パネルは初期非表示
         if (developmentPanel)
             developmentPanel.SetActive(false);
+        if (financePanel)
+            financePanel.SetActive(false);
 
         initTabPos[BlackSmithTab.Weapon] = weaponTab.transform.localPosition;
         initTabPos[BlackSmithTab.Armor] = armorTab.transform.localPosition;
@@ -278,11 +289,36 @@ public class BlackSmithView : MonoBehaviour
     public void SwitchPanel(BlackSmithTab tab)
     {
         bool isDevelopment = tab == BlackSmithTab.Development;
+        bool isFinance = tab == BlackSmithTab.Special;
 
-        if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
+        if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment && !isFinance);
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
-        // 開発パネルに並べ替えUIは不要なので隠す
-        if (sortDropdown)      sortDropdown.gameObject.SetActive(!isDevelopment);
+        if (financePanel)      financePanel.SetActive(isFinance);
+        // 開発/取引所パネルに並べ替えUIは不要なので隠す
+        if (sortDropdown)      sortDropdown.gameObject.SetActive(!isDevelopment && !isFinance);
+    }
+
+    /// <summary>
+    /// 取引所の商品リストを再構築する。Setup と購読は Presenter 側で行う。
+    /// financeContent / financeSlotPrefab 未配線なら空リストを返す。
+    /// </summary>
+    public List<FinanceSlot> PopulateFinanceList(int count)
+    {
+        var slots = new List<FinanceSlot>();
+        if (financeContent == null || financeSlotPrefab == null) return slots;
+
+        for (int i = financeContent.childCount - 1; i >= 0; i--)
+        {
+            Destroy(financeContent.GetChild(i).gameObject);
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            var obj = Instantiate(financeSlotPrefab, financeContent);
+            var slot = obj.GetComponent<FinanceSlot>();
+            if (slot != null) slots.Add(slot);
+        }
+        return slots;
     }
 
     private readonly List<GameObject> unlockEntries = new();
