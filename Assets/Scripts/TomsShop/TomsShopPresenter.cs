@@ -29,6 +29,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly RelicInventoryModel relicInventory;
     private readonly RelicRewardService relicRewardService;
     private readonly RelicEffectResolver relicResolver;
+    private readonly PopUpManager popUpManager;
 
     /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
     private int _lastKnownTurn = -1;
@@ -60,7 +61,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         ShopMachineModel shopMachineModel,
         RelicInventoryModel relicInventory,
         RelicRewardService relicRewardService,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        PopUpManager popUpManager)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -82,6 +84,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.relicInventory = relicInventory;
         this.relicRewardService = relicRewardService;
         this.relicResolver = relicResolver;
+        this.popUpManager = popUpManager;
 
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
@@ -168,6 +171,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                 tomsShopView.HideRelicChoices();
                 RefreshRelicBar();
             })
+            .AddTo(disposables);
+
+        // レリックバーのアイコンクリック → 説明ポップアップ
+        tomsShopView.OnRelicIconClicked
+            .Subscribe(relicId => ShowRelicDetailPopup(relicId))
             .AddTo(disposables);
 
         tomsShopView.OnRelicChoiceSkipped
@@ -353,8 +361,22 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private void RefreshRelicBar()
     {
         if (relicInventory == null) return;
-        var names = relicInventory.OwnedDefinitions().Select(d => d.relicName).ToList();
-        tomsShopView.UpdateRelicBar(names);
+        tomsShopView.UpdateRelicBar(relicInventory.OwnedDefinitions().ToList());
+    }
+
+    /// <summary>レリックアイコンのクリック → 説明ポップアップ。</summary>
+    private void ShowRelicDetailPopup(string relicId)
+    {
+        var relic = relicInventory?.OwnedDefinitions().FirstOrDefault(d => d != null && d.relicId == relicId);
+        if (relic == null) return;
+
+        popUpManager?.Show(new PopUpData
+        {
+            Title = relic.relicName,
+            Message = string.IsNullOrEmpty(relic.description) ? "（効果の説明はまだない）" : relic.description,
+            IsCloseOnly = true,
+            Size = PopupSizeEnum.Medium,
+        });
     }
 
     //初期化

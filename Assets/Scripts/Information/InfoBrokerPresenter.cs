@@ -12,6 +12,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
     private readonly MapInfoView mapInfoView;
     private readonly TomsModel tomsModel;
     private readonly GameFlowManager gameFlowManager;
+    private readonly ExchangePanelController exchange;
     private int characterTalkIndex;
 
     public InfoBrokerPresenter(
@@ -20,7 +21,10 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         StateManager stateManager,
         MapInfoView mapInfoView,
         TomsModel tomsModel,
-        GameFlowManager gameFlowManager)
+        GameFlowManager gameFlowManager,
+        PortfolioModel portfolioModel,
+        FinanceSettings financeSettings,
+        ItemModel itemModel)
     {
         this.infoBrokerModel = infoBrokerModel;
         this.infoBrokerView = infoBrokerView;
@@ -28,6 +32,13 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         this.mapInfoView = mapInfoView;
         this.tomsModel = tomsModel;
         this.gameFlowManager = gameFlowManager;
+
+        // 取引所（金融商品の売買）は情報屋の1タブとして提供する
+        exchange = new ExchangePanelController(
+            portfolioModel, financeSettings, tomsModel, itemModel, gameFlowManager,
+            infoBrokerView.PopulateFinanceRows,
+            () => infoBrokerView.FinanceDetail,
+            infoBrokerView.ShowDialogue);
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Broker, Entry);
     }
@@ -66,10 +77,16 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             {
                 infoBrokerView.SortItemTab(tab);
                 infoBrokerView.ShowPanel(tab);
-                infoBrokerView.ShowDialogue(InfoBrokerDialogueLoader.Get("map"));
-                if (tab == InfoBrokerTab.Map)
+                switch (tab)
                 {
-                    ShowMapInfo();
+                    case InfoBrokerTab.Map:
+                        infoBrokerView.ShowDialogue(InfoBrokerDialogueLoader.Get("map"));
+                        ShowMapInfo();
+                        break;
+                    case InfoBrokerTab.Exchange:
+                        infoBrokerView.ShowDialogue("取引所へようこそ。債券やファンドで余った資金を働かせよう。");
+                        exchange.Refresh();
+                        break;
                 }
             })
             .AddTo(disposables);
@@ -128,6 +145,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
 
     public void Dispose()
     {
+        exchange.Dispose();
         disposables.Dispose();
     }
 }

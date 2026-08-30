@@ -3,6 +3,15 @@
 feature/finance ブランチで実装した金融システムのエディタ手作業手順。
 **未配線でもコンパイル・起動する**（取引所UIが表示されないだけ。配当・償還のロジックは即有効）。
 
+> **2026-08 更新2（取引所を情報屋へ移設）**
+> - 取引所は**情報屋画面のタブ**になった（地図タブの隣・InfoBrokerTab.Exchange）。
+>   鍛冶屋のSpecialタブは非表示化し、BlackSmith側の金融コードは削除。
+>   売買ロジックは `ExchangePanelController`（Finance/）に共通化し InfoBrokerPresenter が使う
+> - 数量指定に**スライダー**を追加（上限=買える口数と保有口数の大きい方）。
+>   説明文は折り返し+自動縮小+省略ではみ出さない
+> - 配線: InfoBrokerView の exchangeTab / exchangeButton / exchangePanel / exchangeListParent /
+>   itemShopSlotPrefab / financeDetailPanel（すべて配線済み）
+
 > **2026-08 更新（金融商品と武具の同列UI化）**
 > - 取引所のリストは専用の FinancePanel/FinanceSlot を廃止し、武具タブと**同じカタログリスト・
 >   同じ行プレハブ（`ItemShopSlot.SetFinance`）**を共用する（FinanceSlot.cs / FinanceSlot.prefab は削除済み）

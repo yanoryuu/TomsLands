@@ -47,9 +47,13 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI[] relicChoiceDescTexts;
     [SerializeField] private Button relicChoiceSkipButton;
 
-    [Header("所持レリックバー ※未配線でも動作する")]
-    [SerializeField] private TextMeshProUGUI relicBarText;
-    
+    [Header("所持レリックバー（アイコン列） ※未配線でも動作する")]
+    [Tooltip("レリックアイコンの親（HorizontalLayoutGroup推奨）。クリックで説明ポップアップ")]
+    [SerializeField] private Transform relicBarParent;
+    [Tooltip("アイコン1個のサイズ(px)")]
+    [SerializeField] private float relicIconSize = 56f;
+
+
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
     public Subject<Unit> OnHeroClicked { get; } = new();
@@ -78,6 +82,8 @@ public class TomsShopView : MonoBehaviour
     //レリック3択の選択（index）とスキップ
     public Subject<int> OnRelicChoiceSelected { get; } = new();
     public Subject<Unit> OnRelicChoiceSkipped { get; } = new();
+    //レリックバーのアイコンクリック（relicId）
+    public Subject<string> OnRelicIconClicked { get; } = new();
 
     /// <summary>
     /// レリック獲得3択を表示する。パネル未配線なら false を返す
@@ -118,13 +124,68 @@ public class TomsShopView : MonoBehaviour
             relicChoicePanel.SetActive(false);
     }
 
-    /// <summary>所持レリックバーの表示を更新する。未配線なら何もしない。</summary>
-    public void UpdateRelicBar(IReadOnlyList<string> relicNames)
+    /// <summary>
+    /// 所持レリックバー（アイコン列）を再構築する。未配線なら何もしない。
+    /// アイコン未設定のレリックはレア度色の丸+頭文字でフォールバック表示する。
+    /// クリックで OnRelicIconClicked（説明ポップアップは Presenter 側）。
+    /// </summary>
+    public void UpdateRelicBar(IReadOnlyList<RelicDefinition> relics)
     {
-        if (relicBarText == null) return;
-        relicBarText.text = relicNames == null || relicNames.Count == 0
-            ? ""
-            : $"レリック: {string.Join(" / ", relicNames)}";
+        if (relicBarParent == null) return;
+
+        for (int i = relicBarParent.childCount - 1; i >= 0; i--)
+        {
+            Destroy(relicBarParent.GetChild(i).gameObject);
+        }
+        if (relics == null) return;
+
+        foreach (var relic in relics)
+        {
+            if (relic == null) continue;
+            var iconObj = new GameObject($"Relic_{relic.relicId}", typeof(RectTransform), typeof(Image), typeof(Button));
+            var rt = iconObj.GetComponent<RectTransform>();
+            rt.SetParent(relicBarParent, false);
+            rt.sizeDelta = new Vector2(relicIconSize, relicIconSize);
+
+            var img = iconObj.GetComponent<Image>();
+            if (relic.icon != null)
+            {
+                img.sprite = relic.icon;
+                img.color = Color.white;
+            }
+            else
+            {
+                // アイコン未設定: レア度色の板 + 頭文字（本番アートで置き換わる前提のフォールバック）
+                img.color = RarityColor(relic.rarity, relic.isCurse);
+
+                var label = new GameObject("Label", typeof(RectTransform));
+                var lrt = label.GetComponent<RectTransform>();
+                lrt.SetParent(rt, false);
+                lrt.anchorMin = Vector2.zero; lrt.anchorMax = Vector2.one;
+                lrt.offsetMin = Vector2.zero; lrt.offsetMax = Vector2.zero;
+                var tmp = label.AddComponent<TextMeshProUGUI>();
+                tmp.text = string.IsNullOrEmpty(relic.relicName) ? "?" : relic.relicName.Substring(0, 1);
+                tmp.alignment = TextAlignmentOptions.Center;
+                tmp.enableAutoSizing = true;
+                tmp.fontSizeMin = 10f; tmp.fontSizeMax = relicIconSize * 0.6f;
+                tmp.color = Color.white;
+                tmp.raycastTarget = false;
+            }
+
+            string capturedId = relic.relicId;
+            iconObj.GetComponent<Button>().onClick.AddListener(() => OnRelicIconClicked.OnNext(capturedId));
+        }
+    }
+
+    private static Color RarityColor(RelicRarity rarity, bool isCurse)
+    {
+        if (isCurse) return new Color(0.45f, 0.15f, 0.35f);
+        return rarity switch
+        {
+            RelicRarity.Epic => new Color(0.55f, 0.35f, 0.75f),
+            RelicRarity.Rare => new Color(0.25f, 0.5f, 0.8f),
+            _ => new Color(0.5f, 0.55f, 0.6f),
+        };
     }
 
     /// <summary>設置済みマシンの見た目を更新する。未配線なら何もしない。</summary>
