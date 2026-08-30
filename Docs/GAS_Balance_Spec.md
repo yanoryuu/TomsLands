@@ -112,6 +112,16 @@
 - 現在使われている command: `ChangeMoney`（param: amount=金額±）, `ChangeTrust`（param: amount=信頼±）。
 - シート雛形: `Docs/balance_tsv/events.tsv`（現行CSVの実データ21件を変換済み）。
 
+### villageFacilities[]（部分・`VillageFacilityData`、2026-08追加）
+村（メタ層）の施設マスター。`id` = facilityId（hall/guild/antique/shrine/bank/warehouse/road/press/artisan/tavern/workshop/farm/training）。
+変更可: `facilityName, description, requiredHallLevel, levels[]`（levels の要素: `cost, effectText`。V2以降は `startBonusKey, startBonusValue, unlockRelicTier` も）。
+- **シートは1行=1施設×1レベル**（`Docs/balance_tsv/villageFacilities.tsv` 雛形）。GAS側で `id` ごとに `level` 昇順でグループ化し、
+  `levels` 配列（レベル列自体は出力しない）を持つ1オブジェクトに変換して出力する:
+  `{ "id": "guild", "facilityName": "冒険者ギルド", "requiredHallLevel": 0, "levels": [ { "cost": 4000, "effectText": "..." }, ... ] }`
+- `levels` を載せる場合は**その施設の全レベルぶんを載せる**こと（JsonUtilityの配列上書きは全置換のため、部分だけ書くと段数が縮む）。
+- 村のスカラー設定（純資産→村資金の変換率など）はこの区画ではなく **gameconst.json の `village` オブジェクト**
+  （`conversionRate` / `bankruptcyConversionRate` / `debtScalePerVillageLevel`）で配信する。
+
 ## 4. 完全な例
 ```json
 {
@@ -135,6 +145,13 @@
   ],
   "dungeons": [
     { "id": "DemonKingCastle", "difficulty": 9, "recommendedLevel": 25 }
+  ],
+  "villageFacilities": [
+    { "id": "guild", "requiredHallLevel": 0, "levels": [
+      { "cost": 4000, "effectText": "レリック Tier1（5種）が報酬の抽選に加わる" },
+      { "cost": 10000, "effectText": "レリック Tier2（4種）が加わる" },
+      { "cost": 20000, "effectText": "レリック Tier3（4種）が加わる" }
+    ] }
   ],
   "heroLevels": [
     { "Level": 1, "MaxHp": 120, "Attack": 12, "Defense": 6 },
