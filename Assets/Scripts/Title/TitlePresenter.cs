@@ -205,9 +205,9 @@ public sealed class TitlePresenter : IStartable, IDisposable
         SaveSlotManager.CurrentSlot = slot;
         _startModeData.SetNewGame();
         _startModeData.SetFlowSelection(_model.SelectedDifficulty, _view.UseAutoGeneration);
-        Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}, difficulty={_model.SelectedDifficulty}) → 準備シーンへ");
-        // 新規ランは準備シーン（借入・持ち込み・スタートダッシュ・スターターレリック）を経由する
-        SceneManager.LoadScene("PreparationScene");
+        Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}, difficulty={_model.SelectedDifficulty}) → 村シーンへ");
+        // 新規ランは 村（メタ層・投資）→ 準備シーン（借入・持ち込み・スターターレリック）を経由する
+        SceneManager.LoadScene("VillageScene");
     }
 
     private void ContinueGame(int slot)

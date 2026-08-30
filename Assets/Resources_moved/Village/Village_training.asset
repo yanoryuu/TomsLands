@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_training
+  m_EditorClassIdentifier: 
+  facilityId: training
+  facilityName: "\u8A13\u7DF4\u6240"
+  description: "\u935B\u3048\u305F\u52C7\u8005\u306F\u3088\u304F\u7A3C\u3050\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 5000
+    effectText: "\u914D\u4FE1\u306E\u58F2\u4E0A +5%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 12000
+    effectText: "\u914D\u4FE1\u306E\u58F2\u4E0A +10%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

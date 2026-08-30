@@ -54,12 +54,14 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 08eb9995539b7cc4f8d454ca71224fb2
     m_Address: Relic/relic_piggy
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 090bc7390244b8d40bba715f2aad116c
     m_Address: ShopMachine/machine_money_m
@@ -78,6 +80,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 15473ddc087f3d940ba1e655dc829286
+    m_Address: Village/Village_antique
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 15cb917b5f703084eb125b14be226f92
     m_Address: ShopMachine/machine_maker_l
@@ -115,11 +123,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - FinancialProductData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1ddb2ef4ad79fd84e92f1f6d337674a7
+    m_Address: Village/Village_workshop
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1ea3352562f0d484b9ba24971a032672
     m_Address: EnemyData/New EnemyData
     m_ReadOnly: 0
     m_SerializedLabels:
     - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 1fbb4ec789ef51e4cab623febf12a3ad
+    m_Address: Village/Village_bank
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 209dea27f4b012741bb3bf4ff5497ebd
     m_Address: FinanceSettings
@@ -174,6 +194,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 314a4a8d4405c0d4586f3e62e6489aa2
     m_Address: SceneData
@@ -192,6 +213,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - EventOutputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 324e5ee30bb743746a7d4807e37f17a7
+    m_Address: Village/Village_hall
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 32f8c6c39672e844fbf58c042b40b593
     m_Address: Marketing/Ad_Comprehensive
@@ -245,6 +272,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 45b33e78ba31d094a848d8fbfe4245b3
     m_Address: Marketing/Ad_WordOfMouth
@@ -257,6 +285,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 47aaff80639fa9649ba9e8d00befff22
     m_Address: Marketing/Ad_FollowerCampaign
@@ -281,6 +310,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4e8e797e2552054408d386352b586e54
     m_Address: ItemData/HE5
@@ -311,6 +341,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 543a0e4e08f676e47beef70a850f049e
     m_Address: ItemData/HE1
@@ -334,6 +365,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 577b332bf328b534db2580480a138e55
     m_Address: GameConstSettings
@@ -347,6 +379,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - FinancialProductData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 59e29e358f3642042b87ad9ed3d9b452
+    m_Address: Village/Village_shrine
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5d4515d7513ce5b4ba4bb71ac61a0395
     m_Address: ItemData/HE6
     m_ReadOnly: 0
@@ -358,6 +396,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 608a5db318948c2449a8ae6614886adf
     m_Address: Finance/fund_light
@@ -376,6 +415,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 66619d79d7f761143b678a08cc7e89f1
     m_Address: DungeonIndoData/IceCave
@@ -393,6 +433,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6f0b51b94ff24f747b269c6889727cf9
+    m_Address: Village/Village_training
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 770826da944cbe64e9184eb124e48090
     m_Address: "\u55B6\u696D/SE_\u6570\u306E\u5897\u6E1B"
@@ -405,6 +452,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - ItemData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7cbe6f0d78baf67449d719962363a2b0
+    m_Address: Village/Village_farm
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7d01d935baa395441a6a5ea96779f858
     m_Address: Marketing/Milestone_04_50000
     m_ReadOnly: 0
@@ -416,6 +469,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e12b1c41e9a32243beee6ac35b5acff
     m_Address: BlackSmithDialogues
@@ -464,6 +518,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8e140916ef5795f4d8a59cd8cb6ba023
     m_Address: Finance/fund_fire
@@ -524,12 +579,14 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ed5bf55de518344f805acf31a1685e5
     m_Address: Relic/relic_seal
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a22e267877de24b40bb590f54c8fb21a
     m_Address: ItemData/SH1
@@ -548,6 +605,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a94b1936d2f7de946876ec100c0dee1a
     m_Address: HeroDialogues
@@ -596,11 +654,24 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b3b558c2be6f5974fa590a858a6afda7
+    m_Address: Village/Village_tavern
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b76377ca78015df41acfa35eca5aec85
     m_Address: Relic/relic_display_manual
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b7cdc7fbd33c06945a26b9b958580cda
+    m_Address: Village/Village_artisan
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ba1a37558b33af24ebb0f59f71669ca9
     m_Address: EnemyData/Elemental_Water
@@ -613,6 +684,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc8619c036502b34cb991588ec50d425
     m_Address: BattlePriceSettings
@@ -631,6 +703,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RunSetupData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bdb59af2a5634c641bc09481088c1ea3
+    m_Address: Village/Village_warehouse
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bdc946c6475cbd746aa5d92974ef21ce
     m_Address: ItemData/BO1
@@ -654,6 +732,13 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c375fce81e5a8e44bb6e47e90d752227
+    m_Address: Village/Village_guild
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c3e32f770c94ebe47a3c879d0fb8c594
     m_Address: ItemData/SW6
@@ -678,6 +763,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c8f3a3651abb14816b758d2f4d2d8c91
     m_Address: ItemData/SW2
@@ -690,6 +776,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: cbc5b48198e184943ba7cfe65b9b4b61
     m_Address: ShopMachine/machine_fridge_l
@@ -702,12 +789,19 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d1787e3ae406910488fb1e479951b2d8
     m_Address: GameFlow/GameFlow
     m_ReadOnly: 0
     m_SerializedLabels:
     - GameFlow
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: d1d593aa1464158458871543a14b0bc5
+    m_Address: Village/Village_road
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d5db8b5d2971f15418a94fffa4a6594c
     m_Address: Finance/fund_wind
@@ -761,6 +855,7 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - RelicData
+    - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e43182b3dd9f9904abf927283e447e02
     m_Address: EnemyData/Basilisk
@@ -842,6 +937,12 @@ MonoBehaviour:
     m_Address: OP
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f81a445390548254eb643210142e254f
+    m_Address: Village/Village_press
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: fac4343e27a9f4c3bbb77aad58a74533
     m_Address: ItemVisualSettings

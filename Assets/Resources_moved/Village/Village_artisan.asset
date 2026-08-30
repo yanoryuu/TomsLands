@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_artisan
+  m_EditorClassIdentifier: 
+  facilityId: artisan
+  facilityName: "\u8077\u4EBA\u7D44\u5408"
+  description: "\u6751\u306E\u935B\u51B6\u304C\u5E97\u3092\u652F\u3048\u308B\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 7000
+    effectText: "\u30E9\u30F3\u958B\u59CB\u6642\u304B\u3089\u935B\u51B6\u5C4B Lv2"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 16000
+    effectText: "\u935B\u51B6\u5C4B\u306E\u958B\u767A\u8CBB -15%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

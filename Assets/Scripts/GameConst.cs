@@ -137,6 +137,9 @@ public static class GameConst
     // --- 準備シーン（メタ進行） ---
     public static PreparationSettingsData Preparation => Data.preparation;
 
+    // --- 村（メタ層・村投資） ---
+    public static VillageSettingsData Village => Data.village;
+
     // --- レリック（装備アイテム） ---
     public static int RelicMaxEquipSlots => Data.relicSettings.maxEquipSlots;
     public static int RelicRewardChoiceCount => Data.relicSettings.rewardChoiceCount;

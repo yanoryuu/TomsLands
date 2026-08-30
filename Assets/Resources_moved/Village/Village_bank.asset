@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_bank
+  m_EditorClassIdentifier: 
+  facilityId: bank
+  facilityName: "\u9280\u884C"
+  description: "\u4FE1\u7528\u306F\u5EFA\u7269\u3067\u793A\u3059\u3082\u306E\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 5000
+    effectText: "\u501F\u5165\u67A0\u306E\u6700\u7D42\u6BB5\u968E\uFF0820,000G\uFF09\u306E\u62E1\u5F35\u3092\u89E3\u653E"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 12000
+    effectText: "\u501F\u5165\u306E\u5229\u606F 50% \u2192 45%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 22000
+    effectText: "\u501F\u5165\u306E\u5229\u606F 45% \u2192 40%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_shrine
+  m_EditorClassIdentifier: 
+  facilityId: shrine
+  facilityName: "\u7960"
+  description: "\u5546\u58F2\u306E\u795E\u306F\u9078\u629E\u80A2\u3092\u5897\u3084\u3057\u3066\u304F\u308C\u308B\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 2
+  levels:
+  - cost: 12000
+    effectText: "\u30EC\u30EA\u30C3\u30AF\u5831\u916C\u306E\u9078\u629E\u80A2\u304C
+      3 \u2192 4 \u306B\u306A\u308B"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
