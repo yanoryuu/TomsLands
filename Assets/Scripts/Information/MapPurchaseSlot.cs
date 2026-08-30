@@ -46,15 +46,29 @@ public class MapPurchaseSlot : MonoBehaviour
         OnSelected.OnNext(dungeonKey);
     }
 
-    public void SetMapInfo(DungeonName key, string dungeonName, Sprite sprite, int price, bool purchased)
+    public void SetMapInfo(DungeonName key, string dungeonName, Sprite sprite, int price, bool purchased, bool sellable)
     {
         dungeonKey = key;
         if (icon) icon.sprite = sprite;
         if (nameText) nameText.text = dungeonName;
         if (priceText)
         {
-            priceText.text = purchased ? "購入済み" : $"{price:N0}G";
-            priceText.color = purchased ? new Color(0.55f, 0.9f, 0.55f) : Color.white;
+            if (purchased)
+            {
+                priceText.text = "購入済み";
+                priceText.color = new Color(0.55f, 0.9f, 0.55f);
+            }
+            else if (!sellable)
+            {
+                // コスト表にないダンジョン（魔王城など）は情報を売っていない
+                priceText.text = "取扱なし";
+                priceText.color = new Color(0.7f, 0.7f, 0.7f);
+            }
+            else
+            {
+                priceText.text = $"{price:N0}G";
+                priceText.color = Color.white;
+            }
         }
         // 行には購入ボタンを出さない（詳細パネルで買う）
         if (purchaseButton) purchaseButton.gameObject.SetActive(false);

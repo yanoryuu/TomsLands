@@ -67,7 +67,7 @@ public class MapInfoView : MonoBehaviour
         {
             GameObject slotObj = Instantiate(mapPurchaseSlotPrefab, mapInfoContent.transform);
             MapPurchaseSlot slot = slotObj.GetComponent<MapPurchaseSlot>();
-            slot.SetMapInfo(data.key, data.dungeonName, data.dungeonIcon, GetCost(data.key), data.isShowedInfo);
+            slot.SetMapInfo(data.key, data.dungeonName, data.dungeonIcon, GetCost(data.key), data.isShowedInfo, IsSellable(data.key));
             activeSlots.Add(slot);
 
             slot.OnSelected
@@ -121,10 +121,16 @@ public class MapInfoView : MonoBehaviour
             detailStatusText.text = purchased ? "情報購入済み" : "情報未購入";
             detailStatusText.color = purchased ? new Color(0.55f, 0.9f, 0.55f) : new Color(1f, 0.75f, 0.4f);
         }
+        bool sellable = IsSellable(data.key);
         if (detailDescriptionText != null)
-            detailDescriptionText.text = purchased
-                ? data.dungeonDescription
-                : "？？？\n\n情報を購入すると、このダンジョンの弱点属性・推奨レベル・詳しい様子がわかる。";
+        {
+            if (purchased)
+                detailDescriptionText.text = data.dungeonDescription;
+            else if (sellable)
+                detailDescriptionText.text = "？？？\n\n情報を購入すると、このダンジョンの弱点属性・推奨レベル・詳しい様子がわかる。";
+            else
+                detailDescriptionText.text = "？？？\n\nこの場所の情報は、この店では扱っていないらしい……。";
+        }
 
         if (weaknessText != null)
             weaknessText.text = purchased ? $"弱点: {AttributeLabel(data.requiredAttribute)}属性" : "弱点: ???";
@@ -136,12 +142,16 @@ public class MapInfoView : MonoBehaviour
         int cost = GetCost(data.key);
         if (costText != null)
         {
-            costText.gameObject.SetActive(!purchased);
+            costText.gameObject.SetActive(!purchased && sellable);
             costText.text = $"情報料 {cost:N0}G";
         }
         if (purchaseButton != null)
-            purchaseButton.gameObject.SetActive(!purchased);
+            purchaseButton.gameObject.SetActive(!purchased && sellable);
     }
+
+    /// <summary>情報料テーブルに載っているか（載っていないダンジョンの情報は売っていない）。</summary>
+    private bool IsSellable(DungeonName key) =>
+        currentCosts.TryGetValue(key, out var costs) && costs.Length > 0;
 
     private int GetCost(DungeonName key)
     {
