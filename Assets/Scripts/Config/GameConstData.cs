@@ -15,7 +15,8 @@ public class GameConstData
     public int initMoney = 10000;
 
     // --- 借金 ---
-    public int debtPaymentInterval = 10;   // 何ターンごとに強制返済か
+    // ※ サーバー配信(gameconst.json)で上書き可能。ベイク値は GameConstSettings.asset。
+    public int debtPaymentInterval = 7;    // 何ターンごとに強制返済か
     public int debtBaseAmount = 5000;       // 1回目（cycle=1）の返済額
     public float debtMultiplier = 1.8f;     // 返済のたびに前回額へ掛ける倍率
 

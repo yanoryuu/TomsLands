@@ -20,10 +20,54 @@ MonoBehaviour:
     maxItemStock: 99
     minItemStock: 0
     initMoney: 10000
-    debtPaymentInterval: 10
+    debtPaymentInterval: 7
     debtBaseAmount: 5000
     debtMultiplier: 1.8
     heroExpPerMob: 10
     heroExpPerBoss: 100
     heroBaseExpToNextLevel: 100
     blackSmithLevelUpCosts: 00000000b80b000070170000e02e0000204e0000
+    flowGeneration:
+      useAutoGeneration: 1
+      randomSeed: 0
+      modes:
+      - mode: 0
+        dungeonCount: 2
+        minShopTurnsBetweenBattles: 2
+        maxShopTurnsBetweenBattles: 3
+        eventRate: 0.3
+      - mode: 1
+        dungeonCount: 4
+        minShopTurnsBetweenBattles: 2
+        maxShopTurnsBetweenBattles: 4
+        eventRate: 0.3
+      - mode: 2
+        dungeonCount: 6
+        minShopTurnsBetweenBattles: 3
+        maxShopTurnsBetweenBattles: 5
+        eventRate: 0.35
+      dungeonWeights: []
+      earlyTargetDifficulty: 1
+      lateTargetDifficulty: 10
+      difficultyBias: 0.5
+    relicSettings:
+      maxEquipSlots: 0
+      rewardChoiceCount: 3
+      commonWeight: 60
+      rareWeight: 30
+      epicWeight: 10
+    preparation:
+      borrowInterestRate: 0.5
+      creditLineAmounts: 000000008813000010270000204e0000
+      creditLineUpgradeCosts: 1e00000050000000c8000000
+      baseCarrySlots: 2
+      metaCurrencyDivisor: 5000
+      rankBonuses: c800000078000000460000002800000014000000
+      metaCurrencyPerTurn: 2
+      flyerCost: 20
+      flyerAttention: 20
+      flyerFollowers: 100
+      appraisalCost: 25
+      appraisalDemandBoost: 0.15
+      graceCost: 30
+      graceDiscountRate: 0.3

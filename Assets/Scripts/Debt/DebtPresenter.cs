@@ -10,7 +10,14 @@ public class DebtPresenter : IDisposable, IStartable
     private readonly PortfolioModel portfolioModel;
     private readonly ItemModel itemModel;
     private readonly RelicEffectResolver relicResolver;
+    private readonly RelicRewardService relicRewardService;
     private readonly CompositeDisposable disposables = new();
+
+    /// <summary>
+    /// 返済が完了したときに発火する（TomsShopPresenter が購読し、
+    /// 返済報酬のレリック3択の表示と次回返済表示の更新を行う）。
+    /// </summary>
+    public Subject<R3.Unit> OnDebtPaid { get; } = new();
 
     public DebtPresenter(
         DebtView debtView,
@@ -18,7 +25,8 @@ public class DebtPresenter : IDisposable, IStartable
         SceneTransitionService sceneTransitionService,
         PortfolioModel portfolioModel,
         ItemModel itemModel,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        RelicRewardService relicRewardService)
     {
         this.debtView = debtView;
         this.tomsModel = tomsModel;
@@ -26,6 +34,7 @@ public class DebtPresenter : IDisposable, IStartable
         this.portfolioModel = portfolioModel;
         this.itemModel = itemModel;
         this.relicResolver = relicResolver;
+        this.relicRewardService = relicRewardService;
     }
 
     /// <summary>
@@ -105,6 +114,10 @@ public class DebtPresenter : IDisposable, IStartable
         tomsModel.SavePlayerMoney();
 
         debtView.Hide();
+
+        // 返済報酬: レリックの3択を保留に積む（表示は OnDebtPaid 購読側が行う）
+        relicRewardService?.QueueReward($"返済報酬(サイクル{cycle})");
+        OnDebtPaid.OnNext(R3.Unit.Default);
     }
 
     private void OnBankruptcy()

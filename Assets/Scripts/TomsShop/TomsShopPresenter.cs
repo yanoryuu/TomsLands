@@ -209,6 +209,15 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         tomsShopView.OnDebtPaymentClicked
             .Subscribe(_ => debtPresenter.ShowVoluntary())
             .AddTo(disposables);
+
+        // 返済完了 → 返済報酬のレリック3択を即表示し、次回返済表示を更新
+        debtPresenter.OnDebtPaid
+            .Subscribe(_ =>
+            {
+                RefreshNextDebtDisplay();
+                ShowPendingRelicChoicesIfAny();
+            })
+            .AddTo(disposables);
         
         //　ターン表示の更新（CommonView）
         gameFlowManager.CurrentTurn

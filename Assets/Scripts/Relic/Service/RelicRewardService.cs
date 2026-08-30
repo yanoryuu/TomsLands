@@ -61,8 +61,11 @@ public class RelicRewardService
         _ => 1f,
     };
 
-    /// <summary>配信勝利報酬の3択を保留に積む（既に保留があれば何もしない）。</summary>
-    public void QueueBattleReward()
+    /// <summary>
+    /// レリック報酬の3択を保留に積む（既に保留があれば何もしない）。
+    /// ホーム復帰時に TomsShopPresenter が選択UIを表示する。
+    /// </summary>
+    public void QueueReward(string reason)
     {
         if (PendingChoices.Count > 0) return;
 
@@ -73,8 +76,11 @@ public class RelicRewardService
             return;
         }
         PendingChoices.AddRange(choices);
-        Debug.Log($"[Relic] 配信報酬の3択を保留: {string.Join(", ", choices.Select(c => c.relicName))}");
+        Debug.Log($"[Relic] {reason}の3択を保留: {string.Join(", ", choices.Select(c => c.relicName))}");
     }
+
+    /// <summary>配信勝利報酬の3択を保留に積む。</summary>
+    public void QueueBattleReward() => QueueReward("配信報酬");
 
     /// <summary>保留中の3択から1つ選んで獲得する。</summary>
     public bool ChoosePending(int index, int currentTurn)
