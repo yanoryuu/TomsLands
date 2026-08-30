@@ -65,8 +65,8 @@ TomsLands は市場シミュレーション（毎日変動する価格・需要�
 ### 変換ルール（v1）
 - クリア時: `村資金 += floor(最終純資産 × 変換率0.5)`（比例のみ・固定ボーナスなし → Short連打周回を自然に抑制）
 - 破産時: `村資金 += floor(最終現金 × 0.1)`（RL2型の敗北の無害化。「でも村は育った」）
-- **ラン中送金は v1 では入れない**（破産前夜に全額送金→計画破産で持ち逃げ、という悪用の穴が大きい）。
-  後続フェーズで「村の行商人」イベント（返済日翌朝限定・手数料付き・1ラン1回）として追加
+- **ラン中送金は採用しない**（2026-08-30 ユーザー決定。破産前夜に全額送金→計画破産で持ち逃げという悪用の穴があり、
+  村と店の経営のフロー分離の原則にも反するため）
 - **同時改修必須**: `ResultModel` の純資産に金融資産（債券・ファンド）が未算入。村変換の基準にするなら
   `NetWorth += PortfolioModel.TotalAssetsEstimate` を算入しないと「最終日に全解約」が作業最適解になる
 
@@ -123,7 +123,7 @@ TomsLands は市場シミュレーション（毎日変動する価格・需要�
 - **マスターSO**: `VillageFacilityData`（`Assets/Resources_moved/Village/`・ラベル`VillageFacilityData`・
   `RemoteBalance.ListSections` に `"villageFacilities"` 追加）。レベル毎に cost / RelicModifier[]（常時型）/
   startBonusKey+value（開始時型）/ unlockRelicTier（抽選型）を持つフラット構造
-- **スカラー設定**: `GameConstData.villageSettings { conversionRate=0.5, bankruptcyConversionRate=0.1, merchantSendFeeRate=0.2, merchantSendEnabled=false, debtScalePerVillageLevel=0 }`
+- **スカラー設定**: `GameConstData.villageSettings { conversionRate=0.5, bankruptcyConversionRate=0.1, debtScalePerVillageLevel=0 }`
 - **常時効果の配線が肝**: `RelicEffectResolver` のコンストラクタに `permanentModifiers` を追加して集計に合流させるだけで、
   既存の全StatId差し込み点（売上・需要・仕入割引・バズ・配当・金融利回り・陳列枠・借金・製造予算・配信系）を
   **村効果がゼロ改修で使い回せる**。村→ラン間の受け渡しは `VillageEffectService`（metaDataから施設Lvを読みmodifier合成）
@@ -138,7 +138,6 @@ TomsLands は市場シミュレーション（毎日変動する価格・需要�
 | V3 レリック解禁 | `feature/village-relic-unlock` | `unlockGuildLevel`+全抽選入口フィルタ、祠、23種のTier振り分け | ギルドLv0/3で3択の顔ぶれが変わる |
 | V4 常時効果 | `feature/village-passive` | Resolver注入、農場（朝レポート統合）、工房区画 | F12で施設Lv操作→売上/朝入金 |
 | V5 産業投資 | `feature/village-industry` | **シグネチャー**: 属性別の価格/需要/出現係数、土地スロット、付け替え、仕入れ画面の村バッジ | 鉱山Lv2→金属系の基準価格が下がる |
-| V6 送金(任意) | `feature/village-remit` | 「村の行商人」イベント（返済日翌朝限定・手数料20%・1ラン1回） | 送金→村資金反映 |
 
 V1〜V2 で「村に投資すると次のランが強くなる」ループが成立するので、そこで一度プレイ確認を挟む。
 
@@ -157,7 +156,7 @@ V1〜V2 で「村に投資すると次のランが強くなる」ループが成
 ### フロー分離の原則（重要）
 **村と店の経営（ラン）は完全に別のフロー**。ラン中に村は登場せず、村の操作もできない。
 村の効果はラン開始時に確定した恒常修正としてのみ効き、両者を繋ぐのは「ラン終了時の純資産→村資金変換」の一方向だけ。
-V6（ラン中送金）はこの原則を崩す任意枠なので、採用しない選択も含めて実装直前に再判断する。
+ラン中に村へ送金するイベントは**不採用**（2026-08-30 ユーザー決定）。
 
 ---
 
