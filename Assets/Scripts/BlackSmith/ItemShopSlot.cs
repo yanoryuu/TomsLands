@@ -101,6 +101,66 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         UpdateButtonsInteractable();
     }
 
+    /// <summary>
+    /// 金融商品モードで行を設定する（武具と同列の見た目に統一するための共用化）。
+    /// 在庫・数量系のUIを隠し、需要欄には利回り/前日比などの市況ラベルを表示する。
+    /// </summary>
+    public void SetFinance(string productId, string productName, Sprite sprite, int unitPrice,
+        int heldUnits, string marketLabel, Color marketColor, int previousPrice, bool unlocked)
+    {
+        itemId = productId;
+        if (icon)
+        {
+            icon.sprite = sprite;
+            icon.enabled = sprite != null;
+        }
+        if (backgroundImage) backgroundImage.enabled = false;
+        if (nameText) nameText.text = productName;
+        SetPrice(unitPrice);
+        SetPriceTrend(unitPrice, previousPrice);
+
+        // 行内の固定キャプション（プレハブの静的Text）を金融向けの文言に差し替える
+        var demandLabel = transform.Find("DemandLabel");
+        if (demandLabel != null)
+        {
+            var label = demandLabel.GetComponent<TextMeshProUGUI>();
+            if (label != null) label.text = "市況";
+        }
+        var stockLabel = transform.Find("StockLabel");
+        if (stockLabel != null)
+        {
+            var label = stockLabel.GetComponent<TextMeshProUGUI>();
+            if (label != null) label.text = "保有";
+        }
+
+        if (stockText) stockText.text = heldUnits > 0 ? $"{heldUnits}口" : "-";
+        if (demandText)
+        {
+            demandText.text = marketLabel;
+            demandText.color = marketColor;
+        }
+
+        // 金融商品に無い概念のUIを隠す
+        if (demandBar) demandBar.gameObject.SetActive(false);
+        if (popularBadge) popularBadge.SetActive(false);
+        if (lowStockBadge) lowStockBadge.SetActive(false);
+        if (quantitySlider) quantitySlider.gameObject.SetActive(false);
+        if (quantityText) quantityText.gameObject.SetActive(false);
+        if (plusButton) plusButton.gameObject.SetActive(false);
+        if (minusButton) minusButton.gameObject.SetActive(false);
+        if (purchaseButton) purchaseButton.gameObject.SetActive(false);
+
+        // 未解禁は行ごと薄くする（選択は可能にして解禁条件の案内を出す）。
+        // 登場フェード（CanvasGroupをDOFadeで1へ）と競合するため、未解禁時はTweenを止めてから設定する
+        if (!unlocked)
+        {
+            var cg = GetComponent<CanvasGroup>();
+            if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
+            DG.Tweening.DOTween.Kill(cg);
+            cg.alpha = 0.55f;
+        }
+    }
+
     /// <summary>需要(0〜1)を温度色付きの%表示と人気バッジに反映する。</summary>
     public void SetDemand(float demand, bool isPopular)
     {

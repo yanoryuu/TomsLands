@@ -3,6 +3,14 @@
 feature/finance ブランチで実装した金融システムのエディタ手作業手順。
 **未配線でもコンパイル・起動する**（取引所UIが表示されないだけ。配当・償還のロジックは即有効）。
 
+> **2026-08 更新（金融商品と武具の同列UI化）**
+> - 取引所のリストは専用の FinancePanel/FinanceSlot を廃止し、武具タブと**同じカタログリスト・
+>   同じ行プレハブ（`ItemShopSlot.SetFinance`）**を共用する（FinanceSlot.cs / FinanceSlot.prefab は削除済み）
+> - 行の表示: 価格+前日比矢印 / 市況欄=債券は利率・ファンドは前日比% / 保有欄=口数。未解禁は行を薄表示
+> - 右の詳細は `FinanceDetailPanel` のまま、ItemDetailPanel と同位置・同素材（6枠_0等）に統一済み
+> - Special タブはシーン上でアクティブ化し「取引所」ラベルを追加済み。配線は BlackSmithView の
+>   **Finance Detail Panel** 1参照のみ（下記 §2 の旧手順は履歴として残す）
+
 ## 仕様の要点
 
 - **配当付き武器**: `ItemData.dividendPerTurn` > 0 の武器は、在庫1個につき毎朝その額が入金される。

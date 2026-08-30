@@ -71,7 +71,7 @@ public class FinanceDetailPanel : MonoBehaviour
             detailText.text = product.kind == FinancialProductKind.Bond
                 ? $"満期: {product.bondMaturityTurns}日後\n利率: {product.bondInterestRate:P0}\n※満期まで資金はロックされる"
                 : (product.useAttributeFilter
-                    ? $"{FinanceSlot.AttributeLabel(product.attribute)}属性銘柄の市場価格に連動\nいつでも解約可能"
+                    ? $"{AttributeLabel(product.attribute)}属性銘柄の市場価格に連動\nいつでも解約可能"
                     : "全銘柄の市場価格に連動（市場指数）\nいつでも解約可能");
         }
 
@@ -81,6 +81,11 @@ public class FinanceDetailPanel : MonoBehaviour
         if (chartView != null)
         {
             bool hasChart = product.kind == FinancialProductKind.IndexFund && navHistory != null && navHistory.Count > 0;
+            // チャート枠（NavChart）ごと隠す。債券選択時に空の枠だけ残さないため
+            var chartRoot = chartView.transform.parent != null && chartView.transform.parent != transform
+                ? chartView.transform.parent.gameObject
+                : chartView.gameObject;
+            chartRoot.SetActive(hasChart);
             chartView.gameObject.SetActive(hasChart);
             if (hasChart) chartView.SetData(navHistory);
         }
@@ -104,6 +109,17 @@ public class FinanceDetailPanel : MonoBehaviour
     }
 
     public int CurrentQuantity => quantity;
+
+    public static string AttributeLabel(ItemTypeData.ItemAttribute attr) => attr switch
+    {
+        ItemTypeData.ItemAttribute.Fire => "火",
+        ItemTypeData.ItemAttribute.Water => "水",
+        ItemTypeData.ItemAttribute.Earth => "土",
+        ItemTypeData.ItemAttribute.Wind => "風",
+        ItemTypeData.ItemAttribute.Light => "光",
+        ItemTypeData.ItemAttribute.Dark => "闇",
+        _ => attr.ToString()
+    };
 
     private void RefreshQuantity()
     {
