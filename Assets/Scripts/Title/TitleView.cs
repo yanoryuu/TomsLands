@@ -10,7 +10,6 @@ public sealed class TitleView : MonoBehaviour
     [Tooltip("TitleView自身ではなく、Start画面の子Groupを設定してください。")]
     [SerializeField] private GameObject startScreenGroup;
     [SerializeField] private GameObject startMethodScreenGroup;
-    [SerializeField] private GameObject difficultyScreenGroup;
     [SerializeField] private GameObject saveDataScreenGroup;
 
     [Header("Start画面")]
@@ -21,12 +20,6 @@ public sealed class TitleView : MonoBehaviour
     [SerializeField] private Button continueButton;
     [SerializeField] private Button optionButton;
     [SerializeField] private Button startMethodBackButton;
-
-    [Header("難易度選択画面")]
-    [SerializeField] private Button easyDifficultyButton;
-    [SerializeField] private Button normalDifficultyButton;
-    [SerializeField] private Button hardDifficultyButton;
-    [SerializeField] private Button difficultyBackButton;
 
     [Header("セーブデータ選択画面")]
     [Tooltip("1スロット分のプレハブ（SaveSlotViewをアタッチしたもの）")]
@@ -50,7 +43,6 @@ public sealed class TitleView : MonoBehaviour
     public Subject<Unit> OnNewGameSelected { get; } = new();
     public Subject<Unit> OnContinueSelected { get; } = new();
     public Subject<Unit> OnOptionSelected { get; } = new();
-    public Subject<GameModeId> OnDifficultySelected { get; } = new();
     /// <summary>スロットが選択されたとき（引数=スロット番号）。ロード／上書き先指定の両方で発火。</summary>
     public Subject<int> OnSaveSlotSelected { get; } = new();
     /// <summary>スロットの削除が要求されたとき（引数=スロット番号）。</summary>
@@ -72,15 +64,7 @@ public sealed class TitleView : MonoBehaviour
         AddClickListener(continueButton, () => OnContinueSelected.OnNext(Unit.Default));
         AddClickListener(optionButton, () => OnOptionSelected.OnNext(Unit.Default));
 
-        AddClickListener(easyDifficultyButton,
-            () => OnDifficultySelected.OnNext(GameModeId.Short));
-        AddClickListener(normalDifficultyButton,
-            () => OnDifficultySelected.OnNext(GameModeId.Medium));
-        AddClickListener(hardDifficultyButton,
-            () => OnDifficultySelected.OnNext(GameModeId.Long));
-
         AddClickListener(startMethodBackButton, NotifyBackRequested);
-        AddClickListener(difficultyBackButton, NotifyBackRequested);
         AddClickListener(saveDataBackButton, NotifyBackRequested);
 
         DisplayScreen(TitleType.Start);
@@ -110,7 +94,6 @@ public sealed class TitleView : MonoBehaviour
         OnNewGameSelected.Dispose();
         OnContinueSelected.Dispose();
         OnOptionSelected.Dispose();
-        OnDifficultySelected.Dispose();
         OnSaveSlotSelected.Dispose();
         OnSaveSlotDeleteRequested.Dispose();
         OnBackRequested.Dispose();
@@ -183,7 +166,6 @@ public sealed class TitleView : MonoBehaviour
         _currentScreen = screen;
         SetGroupActive(startScreenGroup, screen == TitleType.Start);
         SetGroupActive(startMethodScreenGroup, screen == TitleType.ContinueOrNewGame);
-        SetGroupActive(difficultyScreenGroup, screen == TitleType.SelectDifficulty);
         SetGroupActive(saveDataScreenGroup, screen == TitleType.SaveData);
     }
 

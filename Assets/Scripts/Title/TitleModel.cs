@@ -4,7 +4,6 @@
 public sealed class TitleModel
 {
     public TitleType CurrentScreen { get; private set; } = TitleType.Start;
-    public GameModeId SelectedDifficulty { get; private set; } = GameModeId.Short;
 
     /// <summary>セーブデータ画面の用途（続きから / ニューゲームの保存先選択）。</summary>
     public SaveDataPanelMode PanelMode { get; private set; } = SaveDataPanelMode.Load;
@@ -14,22 +13,17 @@ public sealed class TitleModel
         CurrentScreen = screen;
     }
 
-    public void SelectDifficulty(GameModeId difficulty)
-    {
-        SelectedDifficulty = difficulty;
-    }
-
     public void SetPanelMode(SaveDataPanelMode mode)
     {
         PanelMode = mode;
     }
 }
 
+// 難易度選択はタイトルから撤去済み（出撃準備シーンで選ぶ）
 public enum TitleType
 {
     Start,
     ContinueOrNewGame,
-    SelectDifficulty,
     SaveData
 }
 
