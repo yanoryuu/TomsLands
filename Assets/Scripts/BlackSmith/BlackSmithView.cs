@@ -81,8 +81,8 @@ public class BlackSmithView : MonoBehaviour
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
     public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
     public Subject<Unit> OnCharacterClicked { get; private set; } = new();
-    /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額を通知する。</summary>
-    public Subject<int> OnAutoBuyBudgetConfirmed { get; private set; } = new();
+    /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額と方針プリセットを通知する。</summary>
+    public Subject<(int budget, AutoBuyStrategy strategy)> OnAutoBuyBudgetConfirmed { get; private set; } = new();
     /// <summary>並べ替えモードが変更されたときに通知する。</summary>
     public Subject<BlackSmithSortMode> OnSortChanged { get; private set; } = new();
 
@@ -116,7 +116,8 @@ public class BlackSmithView : MonoBehaviour
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
 
         if (autoBuyBudgetPopup != null)
-            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget => OnAutoBuyBudgetConfirmed.OnNext(budget));
+            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget =>
+                OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)));
 
         if (characterButton != null)
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));

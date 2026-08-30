@@ -453,17 +453,33 @@ public class ItemModel
     /// 予算内でおすすめスコア（GetRecommendScore）が高い順にアイテムを自動購入する。
     /// </summary>
     public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel,
-        ItemTypeData.ItemAttribute? nextDungeonAttr = null, RelicEffectResolver relicResolver = null)
+        ItemTypeData.ItemAttribute? nextDungeonAttr = null, RelicEffectResolver relicResolver = null,
+        AutoBuyStrategy strategy = AutoBuyStrategy.Recommend)
     {
         var results = new List<AutoPurchaseResult>();
         int remaining = Mathf.Min(budget, tomsModel.PlayerMoney.Value);
 
-        var candidates = RuntimeItems
+        var pool = RuntimeItems
             .Where(r => r.RequiredLevel.Value <= blacksmithLevel
                      && r.RemainToMax() > 0
-                     && r.CurrentPrice.Value > 0)
-            .OrderByDescending(r => GetRecommendScore(r, nextDungeonAttr))
-            .ToList();
+                     && r.CurrentPrice.Value > 0);
+
+        // 方針プリセットで優先順位を切り替える（同率以降はおすすめ順にフォールバック）
+        var candidates = (strategy switch
+        {
+            AutoBuyStrategy.DungeonFocus => pool
+                .OrderByDescending(r => nextDungeonAttr.HasValue && r.ItemAttribute == nextDungeonAttr.Value ? 1 : 0)
+                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+            AutoBuyStrategy.Bargain => pool
+                .OrderBy(BargainRatioOf)
+                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+            AutoBuyStrategy.Dividend => pool
+                .OrderByDescending(r => r.DividendPerTurn > 0
+                    ? (float)r.DividendPerTurn / Mathf.Max(1, r.CurrentPrice.Value)
+                    : 0f)
+                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+            _ => pool.OrderByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+        }).ToList();
 
         foreach (var item in candidates)
         {
@@ -488,6 +504,14 @@ public class ItemModel
             tomsModel.SavePlayerMoney();
         }
         return results;
+    }
+
+    /// <summary>割安度（現在価格／基準価格。低いほど割安）。基準価格が引けない銘柄は割安扱いしない。</summary>
+    private float BargainRatioOf(RuntimeItemData runtime)
+    {
+        var master = GetMasterItem(runtime.ItemId);
+        if (master == null || master.basePrice <= 0) return float.MaxValue;
+        return (float)runtime.CurrentPrice.Value / master.basePrice;
     }
 
     // ========================================

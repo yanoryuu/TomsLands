@@ -144,10 +144,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .AddTo(disposables);
 
         blackSmithView.OnAutoBuyBudgetConfirmed
-            .Subscribe(budget =>
+            .Subscribe(x =>
             {
                 blackSmithView.HideBudgetPopup();
-                HandleAutoBuy(budget);
+                HandleAutoBuy(x.budget, x.strategy);
             })
             .AddTo(disposables);
 
@@ -219,9 +219,9 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         return BlackSmithDialogueLoader.Get($"character_talk_{characterTalkIndex}");
     }
 
-    private void HandleAutoBuy(int budget)
+    private void HandleAutoBuy(int budget, AutoBuyStrategy strategy)
     {
-        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel, nextDungeonAttr, relicResolver);
+        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel, nextDungeonAttr, relicResolver, strategy);
         if (results.Count > 0)
             SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
         blackSmithView.ShowAutoBuyResult(results, tomsModel.PlayerMoney.Value);
