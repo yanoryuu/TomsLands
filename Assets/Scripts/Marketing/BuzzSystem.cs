@@ -67,6 +67,8 @@ public class BuzzSystem
     /// <param name="flameData">炎上バズの効果データ</param>
     /// <param name="normalBuzzData">通常バズの効果データ</param>
     /// <param name="bigBuzzData">大バズの効果データ</param>
+    private readonly RelicEffectResolver _relicResolver;
+
     public BuzzSystem(
         ShopStatusModel statusModel,
         FollowerSystem followerSystem,
@@ -74,7 +76,8 @@ public class BuzzSystem
         GameBalanceData balanceData,
         BuzzEffectData flameData,
         BuzzEffectData normalBuzzData,
-        BuzzEffectData bigBuzzData)
+        BuzzEffectData bigBuzzData,
+        RelicEffectResolver relicResolver = null)
     {
         _statusModel = statusModel;
         _followerSystem = followerSystem;
@@ -83,6 +86,7 @@ public class BuzzSystem
         _flameData = flameData;
         _normalBuzzData = normalBuzzData;
         _bigBuzzData = bigBuzzData;
+        _relicResolver = relicResolver;
 
         ValidateData();
     }
@@ -230,7 +234,11 @@ public class BuzzSystem
     public float CalculateBuzzChance()
     {
         if (_balanceData == null) return 0f;
-        return Mathf.Lerp(_balanceData.buzzBaseChance, _balanceData.buzzMaxChance, CalculateEnhancementRatio());
+        float chance = Mathf.Lerp(_balanceData.buzzBaseChance, _balanceData.buzzMaxChance, CalculateEnhancementRatio());
+        // レリック補正（インフルエンサービルド: BuzzChanceAdd = 確率%への加算）
+        if (_relicResolver != null)
+            chance = Mathf.Clamp(_relicResolver.Modify(RelicStatId.BuzzChanceAdd, chance), 0f, 100f);
+        return chance;
     }
 
     /// <summary>

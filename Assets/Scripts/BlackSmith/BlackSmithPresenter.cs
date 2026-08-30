@@ -18,6 +18,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private readonly HeroModel heroModel;
     private readonly PortfolioModel portfolioModel;
     private readonly FinanceSettings financeSettings;
+    private readonly RelicEffectResolver relicResolver;
 
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable panelDisposables = new();
@@ -45,7 +46,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         DungeonRepository dungeonRepository,
         HeroModel heroModel,
         PortfolioModel portfolioModel,
-        FinanceSettings financeSettings)
+        FinanceSettings financeSettings,
+        RelicEffectResolver relicResolver)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
@@ -58,6 +60,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.heroModel = heroModel;
         this.portfolioModel = portfolioModel;
         this.financeSettings = financeSettings;
+        this.relicResolver = relicResolver;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -216,7 +219,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     private void HandleAutoBuy(int budget)
     {
-        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel, nextDungeonAttr);
+        var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel, nextDungeonAttr, relicResolver);
         if (results.Count > 0)
             SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
         blackSmithView.ShowAutoBuyResult(results, tomsModel.PlayerMoney.Value);
@@ -235,7 +238,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private void HandlePurchase(string itemId, int quantity)
     {
         var item = itemModel.GetRuntimeItem(itemId);
-        int totalPrice = item.CurrentPrice.Value * quantity;
+        int totalPrice = BuyUnitPrice(item) * quantity;
 
         if (tomsModel.PlayerMoney.Value >= totalPrice)
         {
@@ -484,10 +487,17 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     /// 在庫の空きと所持金の両方でクランプした最大購入可能数。
     /// スライダー／＋ボタンはこの範囲までしか動かせない。
     /// </summary>
+    /// <summary>
+    /// 仕入れの実効単価（レリックの仕入れ割引 ProcurementCostMul 適用後）。
+    /// 注文ウィジェットの表示・購入上限・決済は必ずこれを使う（表示と請求のズレ防止）。
+    /// </summary>
+    private int BuyUnitPrice(RuntimeItemData runtime) =>
+        RelicPricing.GetBuyUnitPrice(runtime.CurrentPrice.Value, relicResolver);
+
     private int MaxPurchasableQuantity(RuntimeItemData runtime)
     {
         int remainMax = runtime.RemainToMax();
-        int price = Mathf.Max(1, runtime.CurrentPrice.Value);
+        int price = BuyUnitPrice(runtime);
         int affordable = tomsModel.PlayerMoney.Value / price;
         return Mathf.Clamp(affordable, 0, remainMax);
     }
@@ -531,6 +541,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, quantityLimit), quantityLimit);
 
         panel.ShowItem(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr));
+        // 注文ウィジェットの単価はレリック割引適用後の実効単価にする
+        panel.SetPrice(BuyUnitPrice(runtime));
 
         // Model → Panel（max を先に張ってから count をクランプ反映）
         blackSmithModel.itemCount[itemId].maxCount
@@ -556,7 +568,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         runtime.CurrentPrice
             .Subscribe(p =>
             {
-                panel.SetPrice(p);
+                panel.SetPrice(BuyUnitPrice(runtime));
                 RefreshQuantityLimit(itemId, runtime);
             })
             .AddTo(selectionDisposables);

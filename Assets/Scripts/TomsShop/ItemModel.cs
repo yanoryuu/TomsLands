@@ -453,7 +453,7 @@ public class ItemModel
     /// 予算内でおすすめスコア（GetRecommendScore）が高い順にアイテムを自動購入する。
     /// </summary>
     public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel,
-        ItemTypeData.ItemAttribute? nextDungeonAttr = null)
+        ItemTypeData.ItemAttribute? nextDungeonAttr = null, RelicEffectResolver relicResolver = null)
     {
         var results = new List<AutoPurchaseResult>();
         int remaining = Mathf.Min(budget, tomsModel.PlayerMoney.Value);
@@ -468,10 +468,12 @@ public class ItemModel
         foreach (var item in candidates)
         {
             if (remaining <= 0) break;
-            int canBuy = Mathf.Min(remaining / item.CurrentPrice.Value, item.RemainToMax());
+            // レリックの仕入れ割引（ProcurementCostMul）は手動購入と同じ実効単価で適用
+            int unitPrice = RelicPricing.GetBuyUnitPrice(item.CurrentPrice.Value, relicResolver);
+            int canBuy = Mathf.Min(remaining / unitPrice, item.RemainToMax());
             if (canBuy <= 0) continue;
 
-            int cost = canBuy * item.CurrentPrice.Value;
+            int cost = canBuy * unitPrice;
             item.UpdateStock(item.Stock.Value + canBuy);
             tomsModel.PlayerMoney.Value -= cost;
             tomsModel.RecordProcurementSpend(cost);

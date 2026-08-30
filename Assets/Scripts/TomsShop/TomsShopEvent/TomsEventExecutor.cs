@@ -9,10 +9,12 @@ public class TomsEventExecutor
     private ShopStatusModel shopStatusModel;
     private RelicInventoryModel relicInventory;
     private RelicRewardService relicRewardService;
+    private RelicEffectResolver relicResolver;
 
     public TomsEventExecutor(TomsModel player, ItemModel itemModel, DarkShopManager darkShopManager, EventFragManager eventFragManager, ShopStatusModel shopStatusModel,
-        RelicInventoryModel relicInventory, RelicRewardService relicRewardService)
+        RelicInventoryModel relicInventory, RelicRewardService relicRewardService, RelicEffectResolver relicResolver)
     {
+        this.relicResolver = relicResolver;
         this.player = player;
         this.itemModel = itemModel;
         this.darkShopManager = darkShopManager;
@@ -31,9 +33,15 @@ public class TomsEventExecutor
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                    player.PlayerMoney.Value += ParseIntParam(e, cmd, "amount");
+                {
+                    int amount = ParseIntParam(e, cmd, "amount");
+                    // レリック補正（強運ビルド: EventRewardMul）。もらえる金額のみ増幅し、ペナルティ(負値)はそのまま
+                    if (amount > 0 && relicResolver != null)
+                        amount = relicResolver.ModifyInt(RelicStatId.EventRewardMul, amount);
+                    player.PlayerMoney.Value += amount;
                     player.SavePlayerMoney();
                     break;
+                }
 
                 case "ChangeTrust":
                     // バズ判定・炎上判定が参照する店ステータスの信頼度を変更する

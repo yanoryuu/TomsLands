@@ -46,9 +46,10 @@ public class CharacterModel
     }
 
     /// <summary>
-    /// 勇者データからModelを生成するためのコンストラクタ
+    /// 勇者データからModelを生成するためのコンストラクタ。
+    /// powerMul はレリック補正（HeroPowerMul。1未満で勇者が弱くなり防衛=敗北を狙いやすくなる）。
     /// </summary>
-    public CharacterModel(HeroData masterData, HeroModel savedHeroModel)
+    public CharacterModel(HeroData masterData, HeroModel savedHeroModel, float powerMul = 1f)
     {
         Name = masterData.heroName;
         Type = CharacterType.Hero;
@@ -56,27 +57,29 @@ public class CharacterModel
         Element = ElementType.None;
         IsBoss = false;
 
+        int Scale(int value) => Mathf.Max(1, Mathf.RoundToInt(value * powerMul));
+
         // RuntimeHeroData (CSV由来) からステータスを取得
         var runtime = savedHeroModel?.heroData;
         if (runtime != null)
         {
-            MaxHp = runtime.hp.Value;
-            CurrentHp = new ReactiveProperty<int>(runtime.hp.Value);
+            MaxHp = Scale(runtime.hp.Value);
+            CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = runtime.mp.Value;
             CurrentMp = new ReactiveProperty<int>(runtime.mp.Value);
-            AttackPower = runtime.attackPower.Value;
-            DefensePower = runtime.defensePower.Value;
-            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower}");
+            AttackPower = Scale(runtime.attackPower.Value);
+            DefensePower = Scale(runtime.defensePower.Value);
+            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower} (powerMul={powerMul:F2})");
         }
         else
         {
             // フォールバック: ScriptableObject のデフォルト値を使用
-            MaxHp = masterData.hp;
-            CurrentHp = new ReactiveProperty<int>(masterData.hp);
+            MaxHp = Scale(masterData.hp);
+            CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = masterData.mp;
             CurrentMp = new ReactiveProperty<int>(masterData.mp);
-            AttackPower = masterData.attackPower;
-            DefensePower = masterData.defensePower;
+            AttackPower = Scale(masterData.attackPower);
+            DefensePower = Scale(masterData.defensePower);
             Debug.LogWarning("[CharacterModel] RuntimeHeroData が null のため、HeroData ScriptableObject のデフォルト値を使用します。");
         }
 

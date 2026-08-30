@@ -204,7 +204,7 @@ public class GameFlowManager : IDisposable, IStartable
         // 前に必ず入金されるよう、この位置（日送りの朝）で行う。
         if (_sellOrderModel != null && _tomsModel != null)
         {
-            var overdue = _sellOrderModel.SettleOverdue(CurrentTurn.Value, _itemModel, _economySettings, _marketingFacade);
+            var overdue = _sellOrderModel.SettleOverdue(CurrentTurn.Value, _itemModel, _economySettings, _marketingFacade, _relicResolver);
             if (overdue.Settled.Count > 0)
             {
                 _tomsModel.AddRevenue(overdue.TotalIncome);
@@ -226,7 +226,7 @@ public class GameFlowManager : IDisposable, IStartable
 
             if (_portfolioModel != null)
             {
-                var finance = _portfolioModel.ApplyTurn(CurrentTurn.Value, _itemModel, _tomsModel.BlacksmithLevel.Value);
+                var finance = _portfolioModel.ApplyTurn(CurrentTurn.Value, _itemModel, _tomsModel.BlacksmithLevel.Value, _relicResolver);
                 if (finance.BondPayout > 0)
                 {
                     financeIncome += finance.BondPayout;
@@ -241,6 +241,9 @@ public class GameFlowManager : IDisposable, IStartable
             int dividend = _itemModel.CalculateDividendIncome();
             if (dividend > 0)
             {
+                // レリック補正（不労所得ビルド: DividendMul）
+                if (_relicResolver != null)
+                    dividend = Mathf.Max(0, _relicResolver.ModifyInt(RelicStatId.DividendMul, dividend));
                 financeIncome += dividend;
                 _morningReport?.Add($"配当収入: +{dividend:N0}G");
                 Debug.Log($"[GameFlowManager] 配当収入: +{dividend}G");
@@ -249,7 +252,7 @@ public class GameFlowManager : IDisposable, IStartable
             // マシン（毎日発動型）の効果: お金製造・アイテム自動生成
             if (_shopMachineModel != null)
             {
-                var machineResult = _shopMachineModel.ExecuteDailyEffects(_itemModel);
+                var machineResult = _shopMachineModel.ExecuteDailyEffects(_itemModel, _relicResolver);
                 if (machineResult.TotalMoney > 0)
                     financeIncome += machineResult.TotalMoney;
                 _morningReport?.AddRange(machineResult.Lines);
@@ -285,6 +288,9 @@ public class GameFlowManager : IDisposable, IStartable
         // Battle時はBattleInputDataをセットアップしてFightSceneへ直接遷移
         if (node.EventType == GameEvent.Battle)
         {
+            // レリックの戦闘系効果（勇者弱体化・防衛報酬アップ）をスナップショット
+            RelicBattleEffects.SetFrom(_relicResolver);
+
             var catalog = _dungeonRepository.CreateCatalog();
             var dungeonInfo = catalog.GetDungeon(node.BattleDungeon);
             if (dungeonInfo != null)

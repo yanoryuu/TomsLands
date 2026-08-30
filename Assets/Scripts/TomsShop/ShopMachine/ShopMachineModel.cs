@@ -41,14 +41,22 @@ public class ShopMachineModel
     public ShopMachineData GetMachine(string machineId) =>
         machines.FirstOrDefault(m => m.machineId == machineId);
 
-    public PlacedMachine GetPlaced(string machineId) =>
-        Placed.FirstOrDefault(p => p.MachineId == machineId);
+    /// <summary>設置IDから設置エントリを取得する。</summary>
+    public PlacedMachine GetPlacement(string placementId) =>
+        Placed.FirstOrDefault(p => p.PlacementId == placementId);
 
-    public bool IsPlaced(string machineId) => GetPlaced(machineId) != null;
+    /// <summary>指定マシンの設置エントリ一覧（複数設置可）。</summary>
+    public List<PlacedMachine> PlacementsOf(string machineId) =>
+        Placed.Where(p => p.MachineId == machineId).ToList();
+
+    public bool IsPlaced(string machineId) => Placed.Any(p => p.MachineId == machineId);
+
+    /// <summary>指定マシンの設置台数。</summary>
+    public int CountOf(string machineId) => Placed.Count(p => p.MachineId == machineId);
 
     public int PlacedCount => Placed.Count;
 
-    /// <summary>設置済みマシンのID列（見た目反映用）。</summary>
+    /// <summary>設置済みマシンのID列（見た目反映用。同一マシンは台数ぶん並ぶ）。</summary>
     public IEnumerable<string> PlacedMachineIds => Placed.Select(p => p.MachineId);
 
     // ========================================
@@ -56,36 +64,38 @@ public class ShopMachineModel
     // ========================================
 
     /// <summary>
-    /// マシンを購入して設置する。設置枠（maxSlots=店レベル由来）・資金・重複・店レベルを検証。
+    /// マシンを購入して設置する。設置枠（maxSlots=店レベル由来）・資金・店レベルを検証。
+    /// 同一マシンでも枠が空いていれば複数台設置できる。
     /// </summary>
-    public bool TryPurchaseAndPlace(ShopMachineData machine, TomsModel tomsModel, int maxSlots)
+    public PlacedMachine TryPurchaseAndPlace(ShopMachineData machine, TomsModel tomsModel, int maxSlots)
     {
-        if (machine == null || tomsModel == null) return false;
-        if (IsPlaced(machine.machineId)) return false;                        // 各1台まで
-        if (PlacedCount >= maxSlots) return false;                            // 設置枠
-        if (machine.requiredShopLevel > tomsModel.ShopLevel.Value) return false;
-        if (tomsModel.PlayerMoney.Value < machine.cost) return false;
+        if (machine == null || tomsModel == null) return null;
+        if (PlacedCount >= maxSlots) return null;                             // 設置枠
+        if (machine.requiredShopLevel > tomsModel.ShopLevel.Value) return null;
+        if (tomsModel.PlayerMoney.Value < machine.cost) return null;
 
         tomsModel.PurchaseItem(machine.cost);
-        Placed.Add(new PlacedMachine
+        var placed = new PlacedMachine
         {
+            PlacementId = Guid.NewGuid().ToString("N"),
             MachineId = machine.machineId,
             SelectedItemId = machine.dailyItemSelectable ? machine.dailyItemId : "",
             ProductionProgress = 0,
-        });
+        };
+        Placed.Add(placed);
 
         SaveData();
         tomsModel.SavePlayerMoney();
         OnPlacementChanged.OnNext(Unit.Default);
-        Debug.Log($"[ShopMachine] 設置: {machine.machineName} (-{machine.cost}G)");
-        return true;
+        Debug.Log($"[ShopMachine] 設置: {machine.machineName} {CountOf(machine.machineId)}台目 (-{machine.cost}G)");
+        return placed;
     }
 
-    /// <summary>マシンを撤去する（購入額の50%返金）。</summary>
-    public bool TryRemove(string machineId, TomsModel tomsModel)
+    /// <summary>指定の設置エントリを撤去する（購入額の50%返金）。</summary>
+    public bool RemovePlacement(string placementId, TomsModel tomsModel)
     {
-        var machine = GetMachine(machineId);
-        var placed = GetPlaced(machineId);
+        var placed = GetPlacement(placementId);
+        var machine = placed != null ? GetMachine(placed.MachineId) : null;
         if (machine == null || placed == null) return false;
 
         int refund = Mathf.RoundToInt(machine.cost * RemoveRefundRate);
@@ -100,12 +110,12 @@ public class ShopMachineModel
     }
 
     /// <summary>
-    /// 選択式製造機の生産アイテムを変更する（生産進捗は引き継ぐ）。
+    /// 選択式製造機（設置エントリ単位）の生産アイテムを変更する（生産進捗は引き継ぐ）。
     /// </summary>
-    public bool SetProducedItem(string machineId, string itemId)
+    public bool SetProducedItem(string placementId, string itemId)
     {
-        var machine = GetMachine(machineId);
-        var placed = GetPlaced(machineId);
+        var placed = GetPlacement(placementId);
+        var machine = placed != null ? GetMachine(placed.MachineId) : null;
         if (machine == null || placed == null || !machine.dailyItemSelectable) return false;
         if (placed.SelectedItemId == itemId) return false;
 
@@ -141,7 +151,7 @@ public class ShopMachineModel
     /// 毎日発動型マシンの効果を実行する。お金はここでは触らず結果で返す
     /// （呼び出し側が入金し朝レポートへ載せる）。アイテム生成はここで在庫へ反映する。
     /// </summary>
-    public ShopMachineDailyResult ExecuteDailyEffects(ItemModel itemModel)
+    public ShopMachineDailyResult ExecuteDailyEffects(ItemModel itemModel, RelicEffectResolver relicResolver = null)
     {
         var result = new ShopMachineDailyResult();
         bool progressChanged = false;
@@ -159,7 +169,7 @@ public class ShopMachineModel
                     break;
 
                 case ShopMachineEffectType.DailyItem when machine.dailyItemSelectable:
-                    ExecuteSelectableProduction(machine, placed, itemModel, result);
+                    ExecuteSelectableProduction(machine, placed, itemModel, result, relicResolver);
                     progressChanged = true;
                     break;
 
@@ -196,7 +206,7 @@ public class ShopMachineModel
     /// <summary>
     /// 選択式生産: 毎朝 budget ぶん進捗が貯まり、選択アイテムの basePrice に達するごとに1個生産する。
     /// </summary>
-    private void ExecuteSelectableProduction(ShopMachineData machine, PlacedMachine placed, ItemModel itemModel, ShopMachineDailyResult result)
+    private void ExecuteSelectableProduction(ShopMachineData machine, PlacedMachine placed, ItemModel itemModel, ShopMachineDailyResult result, RelicEffectResolver relicResolver)
     {
         if (string.IsNullOrEmpty(placed.SelectedItemId))
         {
@@ -212,7 +222,12 @@ public class ShopMachineModel
             return;
         }
 
-        placed.ProductionProgress += machine.dailyProductionBudget;
+        // レリック補正（工房ビルド: ProductionBudgetAdd）
+        int budget = machine.dailyProductionBudget;
+        if (relicResolver != null)
+            budget = Mathf.Max(0, relicResolver.ModifyInt(RelicStatId.ProductionBudgetAdd, budget));
+
+        placed.ProductionProgress += budget;
 
         int producible = placed.ProductionProgress / master.basePrice;
         if (producible <= 0)
@@ -252,6 +267,7 @@ public class ShopMachineModel
         {
             placed = Placed.Select(p => new PlacedMachinePlain
             {
+                placementId = p.PlacementId,
                 machineId = p.MachineId,
                 selectedItemId = p.SelectedItemId ?? "",
                 productionProgress = p.ProductionProgress,
@@ -275,9 +291,10 @@ public class ShopMachineModel
                 foreach (var plain in data.placed)
                 {
                     if (string.IsNullOrEmpty(plain.machineId) || GetMachine(plain.machineId) == null) continue;
-                    if (IsPlaced(plain.machineId)) continue;
                     Placed.Add(new PlacedMachine
                     {
+                        // 旧セーブ（placementId なし）は新規発番
+                        PlacementId = string.IsNullOrEmpty(plain.placementId) ? Guid.NewGuid().ToString("N") : plain.placementId,
                         MachineId = plain.machineId,
                         SelectedItemId = plain.selectedItemId ?? "",
                         ProductionProgress = Mathf.Max(0, plain.productionProgress),
@@ -290,9 +307,10 @@ public class ShopMachineModel
                 foreach (var id in data.placedMachineIds)
                 {
                     var machine = GetMachine(id);
-                    if (string.IsNullOrEmpty(id) || machine == null || IsPlaced(id)) continue;
+                    if (string.IsNullOrEmpty(id) || machine == null) continue;
                     Placed.Add(new PlacedMachine
                     {
+                        PlacementId = Guid.NewGuid().ToString("N"),
                         MachineId = id,
                         SelectedItemId = machine.dailyItemSelectable ? machine.dailyItemId : "",
                         ProductionProgress = 0,
@@ -311,9 +329,10 @@ public class ShopMachineModel
     }
 }
 
-/// <summary>設置済みマシン1台ぶんの状態。</summary>
+/// <summary>設置済みマシン1台ぶんの状態（同一マシンの複数設置に対応するため設置IDを持つ）。</summary>
 public class PlacedMachine
 {
+    public string PlacementId;
     public string MachineId;
     /// <summary>選択式製造機の生産アイテムID（未選択は空）。</summary>
     public string SelectedItemId = "";
@@ -324,6 +343,7 @@ public class PlacedMachine
 [Serializable]
 public class PlacedMachinePlain
 {
+    public string placementId;
     public string machineId;
     public string selectedItemId;
     public int productionProgress;

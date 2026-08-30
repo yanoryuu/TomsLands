@@ -54,18 +54,18 @@ public class SellOrderModel
     /// <summary>
     /// 約定予定が当ターン以前の注文を全て約定する（営業サマリーから呼ぶ通常経路）。
     /// </summary>
-    public SellSettlementResult SettleDue(int currentTurn, ItemModel itemModel, ShopEconomySettings settings, MarketingFacade marketing)
-        => SettleInternal(o => o.SettleTurn <= currentTurn, itemModel, settings, marketing);
+    public SellSettlementResult SettleDue(int currentTurn, ItemModel itemModel, ShopEconomySettings settings, MarketingFacade marketing, RelicEffectResolver relicResolver = null)
+        => SettleInternal(o => o.SettleTurn <= currentTurn, itemModel, settings, marketing, relicResolver);
 
     /// <summary>
     /// 約定予定日を過ぎてしまった注文だけを約定する（配信日・イベント日を挟んだときの
     /// 持ち越し精算。GameFlowManager.NextTurn() の朝に呼ぶ）。
     /// 当日約定分(SettleTurn == currentTurn)はその日の営業サマリーに任せるため対象外。
     /// </summary>
-    public SellSettlementResult SettleOverdue(int currentTurn, ItemModel itemModel, ShopEconomySettings settings, MarketingFacade marketing)
-        => SettleInternal(o => o.SettleTurn < currentTurn, itemModel, settings, marketing);
+    public SellSettlementResult SettleOverdue(int currentTurn, ItemModel itemModel, ShopEconomySettings settings, MarketingFacade marketing, RelicEffectResolver relicResolver = null)
+        => SettleInternal(o => o.SettleTurn < currentTurn, itemModel, settings, marketing, relicResolver);
 
-    private SellSettlementResult SettleInternal(Func<SellOrder, bool> isDue, ItemModel itemModel, ShopEconomySettings settings, MarketingFacade marketing)
+    private SellSettlementResult SettleInternal(Func<SellOrder, bool> isDue, ItemModel itemModel, ShopEconomySettings settings, MarketingFacade marketing, RelicEffectResolver relicResolver)
     {
         var result = new SellSettlementResult();
         var due = PendingOrders.Where(isDue).ToList();
@@ -73,6 +73,10 @@ public class SellOrderModel
 
         float clampRate = settings != null ? settings.sellOrderPriceClampRate : 0.2f;
         float feeRate = settings != null ? settings.sellOrderFeeRate : 0f;
+
+        // レリック補正（相場師ビルド: SellClampAdd）。クランプ幅が±に広がり、値動きの恩恵もリスクも増える
+        if (relicResolver != null)
+            clampRate = Mathf.Clamp(relicResolver.Modify(RelicStatId.SellClampAdd, clampRate), 0f, 2f);
 
         foreach (var order in due)
         {

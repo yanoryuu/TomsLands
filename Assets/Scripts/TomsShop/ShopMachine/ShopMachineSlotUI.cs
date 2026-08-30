@@ -30,7 +30,7 @@ public class ShopMachineSlotUI : MonoBehaviour
             });
     }
 
-    public void Setup(ShopMachineData machine, bool placed, bool levelLocked)
+    public void Setup(ShopMachineData machine, int placedCount, bool levelLocked)
     {
         MachineId = machine.machineId;
 
@@ -44,9 +44,24 @@ public class ShopMachineSlotUI : MonoBehaviour
         if (costText != null) costText.text = $"{machine.cost:N0}G";
         if (stateText != null)
         {
-            stateText.text = placed ? "設置中"
+            stateText.text = placedCount > 0 ? $"設置中×{placedCount}"
                 : levelLocked ? $"店Lv{machine.requiredShopLevel}で解禁"
                 : "";
         }
+    }
+
+    /// <summary>
+    /// 「設置済み一覧」の行として使う（複数設置対応）。
+    /// OnSelected には placementId が流れる。
+    /// </summary>
+    public void SetupPlacementRow(string placementId, string label, string detail, bool selected)
+    {
+        MachineId = placementId;
+
+        if (iconImage != null) iconImage.enabled = false;
+        if (nameText != null) nameText.text = label;
+        if (effectText != null) effectText.text = detail;
+        if (costText != null) costText.text = "";
+        if (stateText != null) stateText.text = selected ? "▶ 選択中" : "";
     }
 }
