@@ -40,7 +40,8 @@ const BALANCE_META_SHEET = 'balance_meta';
 const BALANCE_SINGLE = {
   shopEconomy: 'bal_shopEconomy',
   gameBalance: 'bal_gameBalance',
-  battlePrice: 'bal_battlePrice'
+  battlePrice: 'bal_battlePrice',
+  finance: 'bal_finance'
 };
 const BALANCE_LISTS = {
   advertisements: 'bal_advertisements',
@@ -48,7 +49,8 @@ const BALANCE_LISTS = {
   followerMilestones: 'bal_followerMilestones',
   enemies: 'bal_enemies',
   dungeons: 'bal_dungeons',
-  events: 'bal_events'
+  events: 'bal_events',
+  financialProducts: 'bal_financialProducts'
   // villageFacilities は入れ子構造のため専用リーダーで処理（下方の readVillageFacilities_）
 };
 const BALANCE_HEROLEVELS_SHEET = 'bal_heroLevels';
@@ -213,14 +215,16 @@ function buildBalanceEnvelope() {
     updatedAt: new Date().toISOString()
   };
 
-  // 単一区画（中身が空なら区画ごと省略）
+  // 単一区画（シート未作成 or 中身が空なら区画ごと省略）
   Object.keys(BALANCE_SINGLE).forEach(function (outKey) {
+    if (!sheetExists_(BALANCE_SINGLE[outKey])) return;
     const obj = readKeyValueTypeSheet_(BALANCE_SINGLE[outKey]);
     if (Object.keys(obj).length > 0) envelope[outKey] = obj;
   });
 
-  // リスト区画（空配列なら区画ごと省略）
+  // リスト区画（シート未作成 or 空配列なら区画ごと省略）
   Object.keys(BALANCE_LISTS).forEach(function (outKey) {
+    if (!sheetExists_(BALANCE_LISTS[outKey])) return;
     const arr = readListSheet_(BALANCE_LISTS[outKey]);
     if (arr.length > 0) envelope[outKey] = arr;
   });
@@ -361,6 +365,11 @@ function readHeroLevels_() {
 // ============================================================
 // 共通：シート読み取り・型変換・アップロード・認証
 // ============================================================
+
+/** シートの存在確認（新規区画のシート未作成を許容するため）。 */
+function sheetExists_(name) {
+  return SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name) !== null;
+}
 
 /** key/value/type シートをオブジェクト化（gameconst data / balance単一区画 共用）。 */
 function readKeyValueTypeSheet_(sheetName) {

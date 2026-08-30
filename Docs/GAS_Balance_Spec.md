@@ -127,6 +127,19 @@
   シート名は `villageFacilities`、ヘッダは型サフィックス不要（`id / facilityName / requiredHallLevel / level / cost / effectText`。
   V2以降は `startBonusKey / startBonusValue / unlockRelicTier` 列を追加可）。
 
+### finance（単一・`FinanceSettings.cs` 準拠、2026-08追加）
+金融システムのスカラー設定。シートは **`bal_finance`**（key/value/type 形式・雛形 `Docs/balance_tsv/finance.tsv`）。
+フィールド: `fundBuyFeeRate(float), fundSellFeeRate(float), forcedSaleExtraFeeRate(float), bondEarlyRedemptionRate(float), navHistoryCapacity(int)`
+
+### financialProducts[]（部分・`FinancialProductData`、2026-08追加）
+金融商品（債券・ファンド）のマスター。`id` = productId。シートは **`bal_financialProducts`・1行=1商品**
+（汎用行リーダー対応・ヘッダに `:type` サフィックス必須。雛形 `Docs/balance_tsv/financialProducts.tsv`、現行9商品の実データ変換済み）。
+変更可: `productName, description, kind(int), unlockInfoBrokerLevel(int), bondUnitPrice(int), bondInterestRate(float),
+bondMaturityTurns(int), fundBaseUnitPrice(int), useAttributeFilter(bool), attribute(int)`。icon は載せない（SO保持）。
+- **enum int**: `kind` → FinancialProductKind: Bond=0 / IndexFund=1。`attribute` → `ItemTypeData.ItemAttribute`
+  （dungeons と同じ表: Fire=0/Water=1/Earth=2/Wind=3/Light=4/Dark=5）。
+- `description` セル内の `\n` はそのまま文字列として渡る（改行変換なし。1行で書くこと）。
+
 ### relics — 配信しない（2026-08-31決定）
 レリックは **Unity上の ScriptableObject（RelicDefinition）で直接管理**し、スプレッドシートからは配信しない。
 Unity側の受け口（`RemoteBalance.ListSections` の `"relics"`）は残っているが、GAS・シートは作らないこと。
