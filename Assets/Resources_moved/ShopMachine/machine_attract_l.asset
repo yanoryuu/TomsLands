@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cc065c56bb702ac4f86609b547c0f5ac, type: 3}
-  m_Name: machine_maker
+  m_Name: machine_attract_l
   m_EditorClassIdentifier: 
-  machineId: machine_maker
-  machineName: "\u81EA\u52D5\u935B\u9020\u7089"
-  description: "\u9078\u3093\u3060\u6B66\u5177\u3092\u6BCE\u671D\u30B3\u30C4\u30B3\u30C4\u935B\u3048\u4E0A\u3052\u308B\u9B54\u5C0E\u7089\u3002\u9AD8\u3044\u6B66\u5177\u307B\u3069\u6642\u9593\u304C\u304B\u304B\u308B\u3002"
+  machineId: machine_attract_l
+  machineName: "\u5927\u9053\u82B8\u306E\u30B9\u30C6\u30FC\u30B8"
+  description: "\u6BCE\u65E5\u304C\u796D\u308A\u3002\u55B6\u696D\u58F2\u4E0A+20%\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
-  cost: 6000
+  cost: 18000
   placementType: 0
-  requiredShopLevel: 2
-  effectType: 1
+  requiredShopLevel: 4
+  effectType: 2
   dailyMoney: 800
-  dailyItemId: AX1
-  dailyItemCount: 2
-  dailyItemSelectable: 1
+  dailyItemId: 
+  dailyItemCount: 1
+  dailyItemSelectable: 0
   dailyProductionBudget: 1000
-  revenueMultiplierBonus: 0.05
+  revenueMultiplierBonus: 0.2
   demandFloorBonus: 0.05

@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cc065c56bb702ac4f86609b547c0f5ac, type: 3}
-  m_Name: machine_maker
+  m_Name: machine_fridge_l
   m_EditorClassIdentifier: 
-  machineId: machine_maker
-  machineName: "\u81EA\u52D5\u935B\u9020\u7089"
-  description: "\u9078\u3093\u3060\u6B66\u5177\u3092\u6BCE\u671D\u30B3\u30C4\u30B3\u30C4\u935B\u3048\u4E0A\u3052\u308B\u9B54\u5C0E\u7089\u3002\u9AD8\u3044\u6B66\u5177\u307B\u3069\u6642\u9593\u304C\u304B\u304B\u308B\u3002"
+  machineId: machine_fridge_l
+  machineName: "\u7279\u7D1A\u9BAE\u5EA6\u30B1\u30FC\u30B9"
+  description: "\u5546\u54C1\u304C\u3044\u3064\u3067\u3082\u8F1D\u3044\u3066\u898B\u3048\u308B\u3002\u5168\u5546\u54C1\u306E\u9700\u8981\u4E0B\u9650+15%\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
-  cost: 6000
+  cost: 12000
   placementType: 0
-  requiredShopLevel: 2
-  effectType: 1
+  requiredShopLevel: 3
+  effectType: 3
   dailyMoney: 800
-  dailyItemId: AX1
-  dailyItemCount: 2
-  dailyItemSelectable: 1
+  dailyItemId: 
+  dailyItemCount: 1
+  dailyItemSelectable: 0
   dailyProductionBudget: 1000
   revenueMultiplierBonus: 0.05
-  demandFloorBonus: 0.05
+  demandFloorBonus: 0.15

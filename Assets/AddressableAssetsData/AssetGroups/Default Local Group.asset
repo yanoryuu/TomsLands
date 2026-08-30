@@ -61,6 +61,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - RelicData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 090bc7390244b8d40bba715f2aad116c
+    m_Address: ShopMachine/machine_money_m
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShopMachineData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 0d1f8886c1c140f4085e9daf6b97a64c
     m_Address: DungeonIndoData/GreenForest
     m_ReadOnly: 0
@@ -72,6 +78,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 15cb917b5f703084eb125b14be226f92
+    m_Address: ShopMachine/machine_maker_l
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShopMachineData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1a46d60748424c9e9f5280fe6af92c34
     m_Address: DungeonInfoCosts
@@ -228,11 +240,23 @@ MonoBehaviour:
     m_SerializedLabels:
     - ItemData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 43dded16963351d4086ad9e3e9bd43cf
+    m_Address: Relic/relic_allin_dice
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 45b33e78ba31d094a848d8fbfe4245b3
     m_Address: Marketing/Ad_WordOfMouth
     m_ReadOnly: 0
     m_SerializedLabels:
     - AdvertisementData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 4658a1421b474e746b9711980c14b0ad
+    m_Address: Relic/relic_demon_banner
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 47aaff80639fa9649ba9e8d00befff22
     m_Address: Marketing/Ad_FollowerCampaign
@@ -251,6 +275,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - DungeonInfoScriptableObj
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 48fdcbcce1789514b9f4f36e984b5ece
+    m_Address: Relic/relic_collector_secret
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 4e8e797e2552054408d386352b586e54
     m_Address: ItemData/HE5
@@ -299,6 +329,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - FinancialProductData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 56df123e26d714b4a985a63bf3894374
+    m_Address: Relic/relic_blueprint
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 577b332bf328b534db2580480a138e55
     m_Address: GameConstSettings
     m_ReadOnly: 0
@@ -317,11 +353,29 @@ MonoBehaviour:
     m_SerializedLabels:
     - ItemData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 605c6096ce2167d4f9419cda16b95108
+    m_Address: Relic/relic_demon_pact
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 608a5db318948c2449a8ae6614886adf
     m_Address: Finance/fund_light
     m_ReadOnly: 0
     m_SerializedLabels:
     - FinancialProductData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 60fe072226b41104a8620c2ff7160bbb
+    m_Address: ShopMachine/machine_attract_l
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShopMachineData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 61e9e9c57d7ac3c4885fb0ebda817d6a
+    m_Address: Relic/relic_compound_tome
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 66619d79d7f761143b678a08cc7e89f1
     m_Address: DungeonIndoData/IceCave
@@ -333,6 +387,12 @@ MonoBehaviour:
     m_Address: "\u55B6\u696D/SE_\u958B\u767A\u958B\u59CB"
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 6e4e148404f73844d95006cf493c5ae4
+    m_Address: Relic/relic_furnace_core
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 770826da944cbe64e9184eb124e48090
     m_Address: "\u55B6\u696D/SE_\u6570\u306E\u5897\u6E1B"
@@ -350,6 +410,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - FollowerMilestoneData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 7d2eb31c989685745b38db37cead14ae
+    m_Address: Relic/relic_charisma
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7e12b1c41e9a32243beee6ac35b5acff
     m_Address: BlackSmithDialogues
@@ -392,6 +458,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - ShopEconomySettings
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 8dcdd32422745464cb8ef4286eb3fb8b
+    m_Address: Relic/relic_fairy_coin
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 8e140916ef5795f4d8a59cd8cb6ba023
     m_Address: Finance/fund_fire
@@ -447,6 +519,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - EnemyData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 9d0a031ec99576643abe0b80387a35df
+    m_Address: Relic/relic_guild_license
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ed5bf55de518344f805acf31a1685e5
     m_Address: Relic/relic_seal
     m_ReadOnly: 0
@@ -464,6 +542,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - GameObject
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a27a39f939ecaa749b4bd11c0c165a8b
+    m_Address: Relic/relic_wholesaler_pass
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: a94b1936d2f7de946876ec100c0dee1a
     m_Address: HeroDialogues
@@ -512,11 +596,23 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b76377ca78015df41acfa35eca5aec85
+    m_Address: Relic/relic_display_manual
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: ba1a37558b33af24ebb0f59f71669ca9
     m_Address: EnemyData/Elemental_Water
     m_ReadOnly: 0
     m_SerializedLabels:
     - EnemyData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: bb3daeca3e2f5e146b63bca778e7b9fd
+    m_Address: Relic/relic_trader_creed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bc8619c036502b34cb991588ec50d425
     m_Address: BattlePriceSettings
@@ -553,6 +649,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - BuzzEffectData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c3668261be9093a49826461554928b83
+    m_Address: Relic/relic_gossip_notes
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c3e32f770c94ebe47a3c879d0fb8c594
     m_Address: ItemData/SW6
     m_ReadOnly: 0
@@ -571,11 +673,29 @@ MonoBehaviour:
     m_SerializedLabels:
     - FollowerMilestoneData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c7c1e7e952b67fe40a22ddcfab11ef44
+    m_Address: Relic/relic_dept_creed
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: c8f3a3651abb14816b758d2f4d2d8c91
     m_Address: ItemData/SW2
     m_ReadOnly: 0
     m_SerializedLabels:
     - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: c92aaf4f70a905345a3142a8b8021a87
+    m_Address: Relic/relic_star_chart
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: cbc5b48198e184943ba7cfe65b9b4b61
+    m_Address: ShopMachine/machine_fridge_l
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ShopMachineData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d126617b3c6f7994cb8fdac518c8800c
     m_Address: Relic/relic_showcase
@@ -635,6 +755,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e41e212ae202a2a4eae668be5cd0cc5b
+    m_Address: Relic/relic_dividend_book
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - RelicData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e43182b3dd9f9904abf927283e447e02
     m_Address: EnemyData/Basilisk

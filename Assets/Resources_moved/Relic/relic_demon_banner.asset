@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5fd8053a5a60848a697a4513b65547, type: 3}
+  m_Name: relic_demon_banner
+  m_EditorClassIdentifier: 
+  relicId: relic_demon_banner
+  relicName: "\u9B54\u738B\u8ECD\u306E\u8ECD\u65D7"
+  description: "\u5E97\u5148\u306B\u63B2\u3052\u308B\u3068\u52C7\u8005\u306E\u58EB\u6C17\u304C\u4E0B\u304C\u308B\u3002\u9632\u885B\u5831\u916C+30%\u3001\u52C7\u8005\u306E\u5F37\u3055-15%\u3002"
+  icon: {fileID: 0}
+  rarity: 2
+  category: 0
+  isCurse: 0
+  modifiers:
+  - stat: 7
+    op: 1
+    value: 1.3
+  - stat: 8
+    op: 1
+    value: 0.85
+  behaviours: []
