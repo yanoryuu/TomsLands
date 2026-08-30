@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -12,8 +10,8 @@ public class PreparationModel
     /// <summary>借入額（0〜借入枠）。</summary>
     public int BorrowAmount { get; private set; }
 
-    /// <summary>持ち込みアイテム（itemId → 個数）。合計個数 ≦ 持ち込みスロット数。</summary>
-    public Dictionary<string, int> CarryItems { get; } = new();
+    /// <summary>選択中の難易度（出撃時に StartModeData へ書き出す）。</summary>
+    public GameModeId Difficulty { get; private set; } = GameModeId.Medium;
 
     /// <summary>選択中のスターターレリック（空=なし）。</summary>
     public string StarterRelicId { get; private set; } = "";
@@ -21,10 +19,6 @@ public class PreparationModel
     public bool UseFlyer { get; private set; }
     public bool UseAppraisal { get; private set; }
     public bool UseGrace { get; private set; }
-
-    public int CarryTotal => CarryItems.Values.Sum();
-
-    public int CarrySlots => GameConst.Preparation.baseCarrySlots;
 
     /// <summary>現在の借入枠（creditLineLevel に応じた上限額）。</summary>
     public int GetCreditLine(MetaProgressModel meta)
@@ -55,20 +49,7 @@ public class PreparationModel
     public void ClampBorrow(int creditLine) =>
         BorrowAmount = Mathf.Clamp(BorrowAmount, 0, creditLine);
 
-    public bool TryAddCarry(string itemId)
-    {
-        if (CarryTotal >= CarrySlots) return false;
-        CarryItems.TryGetValue(itemId, out int count);
-        CarryItems[itemId] = count + 1;
-        return true;
-    }
-
-    public void RemoveCarry(string itemId)
-    {
-        if (!CarryItems.TryGetValue(itemId, out int count)) return;
-        if (count <= 1) CarryItems.Remove(itemId);
-        else CarryItems[itemId] = count - 1;
-    }
+    public void SelectDifficulty(GameModeId difficulty) => Difficulty = difficulty;
 
     public void SelectStarterRelic(string relicId)
     {

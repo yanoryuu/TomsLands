@@ -15,10 +15,6 @@ public class PreparationLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
-        // アイテムマスター（持ち込みカタログ用）
-        var masterItems = ItemMaster.ApplyOverrides(AddressableLoader.LoadAll<ItemData>("ItemData"));
-        builder.RegisterInstance(masterItems);
-
         // レリックマスター（スターター選択用）
         var relicDefinitions = AddressableLoader.LoadAll<RelicDefinition>("RelicData");
         relicDefinitions = RemoteBalance.ApplyList("relics", relicDefinitions, r => r.relicId);

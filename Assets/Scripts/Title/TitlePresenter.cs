@@ -48,8 +48,9 @@ public sealed class TitlePresenter : IStartable, IDisposable
             .Subscribe(_ => TransitionTo(TitleType.ContinueOrNewGame))
             .AddTo(_disposables);
 
+        // 難易度はタイトルでは選ばない（村からの出撃準備シーンで選ぶ）→ 保存先スロット選択へ直行
         _view.OnNewGameSelected
-            .Subscribe(_ => TransitionTo(TitleType.SelectDifficulty))
+            .Subscribe(_ => OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot))
             .AddTo(_disposables);
 
         _view.OnContinueSelected
@@ -59,14 +60,6 @@ public sealed class TitlePresenter : IStartable, IDisposable
         // オプション画面（加算シーン。プレイ中メニューと同じ Setting シーンを共用）
         _view.OnOptionSelected
             .Subscribe(_ => OpenOptionScene())
-            .AddTo(_disposables);
-
-        _view.OnDifficultySelected
-            .Subscribe(difficulty =>
-            {
-                _model.SelectDifficulty(difficulty);
-                ShowNewGameConfirmationPopup();
-            })
             .AddTo(_disposables);
 
         _view.OnSaveSlotSelected
@@ -103,14 +96,8 @@ public sealed class TitlePresenter : IStartable, IDisposable
             case TitleType.ContinueOrNewGame:
                 TransitionTo(TitleType.Start);
                 break;
-            case TitleType.SelectDifficulty:
-                TransitionTo(TitleType.ContinueOrNewGame);
-                break;
             case TitleType.SaveData:
-                // ニューゲームの保存先選択からは難易度選択へ、続きからは開始方法選択へ戻る
-                TransitionTo(_model.PanelMode == SaveDataPanelMode.NewGameSlot
-                    ? TitleType.SelectDifficulty
-                    : TitleType.ContinueOrNewGame);
+                TransitionTo(TitleType.ContinueOrNewGame);
                 break;
         }
     }
@@ -185,28 +172,14 @@ public sealed class TitlePresenter : IStartable, IDisposable
         });
     }
 
-    private void ShowNewGameConfirmationPopup()
-    {
-        string difficulty = GetDifficultyLabel(_model.SelectedDifficulty);
-        _popUpManager.Show(new PopUpData
-        {
-            Title = "難易度の確認",
-            Message = $"難易度「{difficulty}」でゲームを始めますか？",
-            ConfirmButtonText = "ニューゲーム",
-            CancelButtonText = "戻る",
-            Size = PopupSizeEnum.Medium,
-            // 難易度確定後、保存先スロットを選ばせる
-            OnConfirm = () => OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot)
-        });
-    }
-
     private void StartNewGame(int slot)
     {
         SaveSlotManager.CurrentSlot = slot;
         _startModeData.SetNewGame();
-        _startModeData.SetFlowSelection(_model.SelectedDifficulty, _view.UseAutoGeneration);
-        Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}, difficulty={_model.SelectedDifficulty}) → 村シーンへ");
-        // 新規ランは 村（メタ層・投資）→ 準備シーン（借入・持ち込み・スターターレリック）を経由する
+        // 難易度は出撃準備シーンで選ぶ（ここでは仮の既定値だけ入れておく）
+        _startModeData.SetFlowSelection(GameModeId.Medium, _view.UseAutoGeneration);
+        Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → 村シーンへ（難易度は準備シーンで選択）");
+        // 新規ランは 村（メタ層・投資）→ 準備シーン（借入・難易度・スターターレリック）を経由する
         SceneManager.LoadScene("VillageScene");
     }
 
@@ -230,16 +203,5 @@ public sealed class TitlePresenter : IStartable, IDisposable
     {
         _model.ChangeScreen(screen);
         _view.DisplayScreen(screen);
-    }
-
-    private static string GetDifficultyLabel(GameModeId difficulty)
-    {
-        return difficulty switch
-        {
-            GameModeId.Short => "かんたん",
-            GameModeId.Medium => "ふつう",
-            GameModeId.Long => "むずかしい",
-            _ => difficulty.ToString()
-        };
     }
 }

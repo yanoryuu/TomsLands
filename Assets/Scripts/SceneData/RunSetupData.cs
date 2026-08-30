@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -16,10 +15,6 @@ public class RunSetupData : ScriptableObject
     [Header("借入（初期資金レバレッジ）")]
     [Tooltip("借入額。初期資金に加算され、初回返済に利息付きで上乗せされる")]
     public int BorrowedAmount;
-
-    [Header("持ち込みアイテム（初期在庫に加算）")]
-    public List<string> CarryItemIds = new();
-    public List<int> CarryItemCounts = new();
 
     [Header("スターターレリック")]
     public string StarterRelicId = "";
@@ -50,8 +45,6 @@ public class RunSetupData : ScriptableObject
     {
         HasSetup = false;
         BorrowedAmount = 0;
-        CarryItemIds.Clear();
-        CarryItemCounts.Clear();
         StarterRelicId = "";
         UseFlyer = false;
         UseAppraisal = false;
