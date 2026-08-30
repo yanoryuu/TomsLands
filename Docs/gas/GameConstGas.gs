@@ -14,7 +14,7 @@
  *
  * 2026-08 更新:
  *   - villageFacilities を専用リーダーに変更（1行=1施設×1レベル → levels[] にグループ化）
- *   - relics 区画を追加（bal_relics シート。mod/beh 固定列 → modifiers[]/behaviours[]）
+ *   ※ レリックは配信しない（Unity上のScriptableObjectで管理する方針・2026-08-31決定）
  */
 
 // ============================================================
@@ -49,11 +49,10 @@ const BALANCE_LISTS = {
   enemies: 'bal_enemies',
   dungeons: 'bal_dungeons',
   events: 'bal_events'
-  // villageFacilities / relics は入れ子構造のため専用リーダーで処理（下方の readVillageFacilities_ / readRelics_）
+  // villageFacilities は入れ子構造のため専用リーダーで処理（下方の readVillageFacilities_）
 };
 const BALANCE_HEROLEVELS_SHEET = 'bal_heroLevels';
 const VILLAGE_FACILITIES_SHEET = 'villageFacilities';
-const RELICS_SHEET = 'bal_relics';
 
 // ============================================================
 // メニュー
@@ -230,10 +229,6 @@ function buildBalanceEnvelope() {
   const facilities = readVillageFacilities_();
   if (facilities.length > 0) envelope.villageFacilities = facilities;
 
-  // relics（modN/behN 固定列 → modifiers[]/behaviours[] に変換）
-  const relics = readRelics_();
-  if (relics.length > 0) envelope.relics = relics;
-
   // heroLevels（空なら省略）
   const hero = readHeroLevels_();
   if (hero.length > 0) envelope.heroLevels = hero;
@@ -335,74 +330,6 @@ function readVillageFacilities_() {
     g.obj.levels = g.rows.map(function (x) { return x.entry; });
     return g.obj;
   });
-}
-
-/**
- * relics: 1行=1レリック（シート bal_relics。雛形 Docs/balance_tsv/relics.tsv）。
- * ヘッダ: id / relicName / description / rarity / isCurse /
- *         mod1Stat / mod1Op / mod1Value / mod2Stat... / beh1Key / beh1Param（型サフィックス不要）
- * modN 列が入っていれば modifiers[] を出力（Unity側は全置換のため全modifierを書くこと）。behN も同様。
- * enum int: rarity Common=0/Rare=1/Epic=2、op Add=0/Mul=1、stat は GAS_Balance_Spec.md §3 の表を参照。
- * description セル内の "\n"（バックスラッシュ+n）は改行に変換される。
- */
-function readRelics_() {
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(RELICS_SHEET);
-  if (!sheet) return []; // シート未作成なら区画ごと省略
-  const values = sheet.getDataRange().getValues();
-  if (values.length < 2) return [];
-
-  const header = values[0].map(function (h) { return String(h).trim().split(':')[0]; });
-  const col = {};
-  header.forEach(function (h, i) { if (h !== '' && !(h in col)) col[h] = i; });
-  if (!('id' in col)) throw new Error(RELICS_SHEET + ': 列 "id" がありません。');
-
-  const result = [];
-  for (let r = 1; r < values.length; r++) {
-    const row = values[r];
-    const id = String(row[col.id]).trim();
-    if (id === '') continue;
-    const ctx = RELICS_SHEET + '(行' + (r + 1) + ')';
-
-    const obj = { id: id };
-    if ('relicName' in col && String(row[col.relicName]).trim() !== '')
-      obj.relicName = String(row[col.relicName]).trim();
-    if ('description' in col && String(row[col.description]).trim() !== '')
-      obj.description = String(row[col.description]).replace(/\\n/g, '\n');
-    if ('rarity' in col && row[col.rarity] !== '')
-      obj.rarity = castCell_(row[col.rarity], 'int', ctx + '!rarity');
-    if ('isCurse' in col && row[col.isCurse] !== '')
-      obj.isCurse = castCell_(row[col.isCurse], 'bool', ctx + '!isCurse');
-
-    const modifiers = [];
-    for (let i = 1; ; i++) {
-      const key = 'mod' + i + 'Stat';
-      if (!(key in col)) break;
-      const cell = row[col[key]];
-      if (cell === '' || cell === null || cell === undefined) continue;
-      modifiers.push({
-        stat: castCell_(cell, 'int', ctx + '!' + key),
-        op: castCell_(row[col['mod' + i + 'Op']], 'int', ctx + '!mod' + i + 'Op'),
-        value: castCell_(row[col['mod' + i + 'Value']], 'float', ctx + '!mod' + i + 'Value')
-      });
-    }
-    if (modifiers.length > 0) obj.modifiers = modifiers;
-
-    const behaviours = [];
-    for (let i = 1; ; i++) {
-      const key = 'beh' + i + 'Key';
-      if (!(key in col)) break;
-      const behKey = String(row[col[key]]).trim();
-      if (behKey === '') continue;
-      behaviours.push({
-        behaviourKey: behKey,
-        param: castCell_(row[col['beh' + i + 'Param']], 'float', ctx + '!beh' + i + 'Param')
-      });
-    }
-    if (behaviours.length > 0) obj.behaviours = behaviours;
-
-    result.push(obj);
-  }
-  return result;
 }
 
 /** heroLevels を全置換配列で返す（id無し・PascalCase + 型サフィックス）。 */
