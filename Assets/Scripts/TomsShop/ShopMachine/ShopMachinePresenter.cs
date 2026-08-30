@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -15,12 +16,16 @@ public class ShopMachinePresenter : IStartable, IDisposable
     private readonly ShopMachineView view;
     private readonly ShopMachineModel machineModel;
     private readonly TomsModel tomsModel;
+    private readonly ItemModel itemModel;
     private readonly StateManager stateManager;
     private readonly ShopLevelSettings shopLevelSettings;
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable slotDisposables = new();
 
     private string selectedMachineId;
+
+    /// <summary>生産アイテムドロップダウンの候補（表示順と同じ itemId 列）。</summary>
+    private readonly System.Collections.Generic.List<string> producedCandidates = new();
 
     private int MaxSlots => shopLevelSettings != null
         ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).machineSlots
@@ -30,12 +35,14 @@ public class ShopMachinePresenter : IStartable, IDisposable
         ShopMachineView view,
         ShopMachineModel machineModel,
         TomsModel tomsModel,
+        ItemModel itemModel,
         StateManager stateManager,
         ShopLevelSettings shopLevelSettings)
     {
         this.view = view;
         this.machineModel = machineModel;
         this.tomsModel = tomsModel;
+        this.itemModel = itemModel;
         this.stateManager = stateManager;
         this.shopLevelSettings = shopLevelSettings;
 
@@ -56,6 +63,11 @@ public class ShopMachinePresenter : IStartable, IDisposable
 
         view.OnRemoveClicked
             .Subscribe(_ => HandleRemove())
+            .AddTo(disposables);
+
+        // 選択式製造機の生産アイテム変更
+        view.OnProducedItemChanged
+            .Subscribe(index => HandleProducedItemChanged(index))
             .AddTo(disposables);
     }
 
@@ -115,6 +127,69 @@ public class ShopMachinePresenter : IStartable, IDisposable
         int refund = Mathf.RoundToInt(machine.cost * RemoveRefundRate);
 
         view.ShowDetail(machine, placed, canPurchase, refund);
+        RefreshProducedItemSelector(machine, placed);
+    }
+
+    /// <summary>
+    /// 選択式製造機（設置済み）の生産アイテムドロップダウンを更新する。
+    /// 候補 = 鍛冶屋レベルで解放済みの全アイテム（基準価格の安い順）。
+    /// 高い武器ほど製造が遅い（進捗が basePrice に達するごとに1個）のでどれを選んでもよい。
+    /// </summary>
+    private void RefreshProducedItemSelector(ShopMachineData machine, bool placed)
+    {
+        producedCandidates.Clear();
+
+        if (!placed || machine.effectType != ShopMachineEffectType.DailyItem || !machine.dailyItemSelectable)
+        {
+            view.HideProducedItemSelector();
+            return;
+        }
+
+        var candidates = itemModel.RuntimeItems
+            .Where(r => r.RequiredLevel.Value <= tomsModel.BlacksmithLevel.Value)
+            .Select(r => (runtime: r, master: itemModel.GetMasterItem(r.ItemId)))
+            .Where(x => x.master != null && x.master.basePrice > 0)
+            .OrderBy(x => x.master.basePrice)
+            .ToList();
+
+        if (candidates.Count == 0)
+        {
+            view.HideProducedItemSelector();
+            return;
+        }
+
+        var placedMachine = machineModel.GetPlaced(machine.machineId);
+
+        // 未選択なら最初の候補（最安）を自動選択して製造を止めない
+        if (placedMachine != null && string.IsNullOrEmpty(placedMachine.SelectedItemId))
+            machineModel.SetProducedItem(machine.machineId, candidates[0].runtime.ItemId);
+
+        var labels = new System.Collections.Generic.List<string>();
+        int selectedIndex = 0;
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            var (runtime, master) = candidates[i];
+            producedCandidates.Add(runtime.ItemId);
+            labels.Add($"{runtime.ItemName}（{master.basePrice:N0}G）");
+            if (placedMachine != null && placedMachine.SelectedItemId == runtime.ItemId)
+                selectedIndex = i;
+        }
+
+        view.ShowProducedItemSelector(labels, selectedIndex);
+    }
+
+    private void HandleProducedItemChanged(int index)
+    {
+        if (index < 0 || index >= producedCandidates.Count) return;
+        var machine = machineModel.GetMachine(selectedMachineId);
+        if (machine == null || !machine.dailyItemSelectable) return;
+
+        string itemId = producedCandidates[index];
+        if (machineModel.SetProducedItem(machine.machineId, itemId))
+        {
+            var runtime = itemModel.GetRuntimeItem(itemId);
+            view?.ShowMessage($"{machine.machineName} の生産を「{runtime?.ItemName}」に切り替えた。明日の朝から製造される。");
+        }
     }
 
     private void HandlePurchase()

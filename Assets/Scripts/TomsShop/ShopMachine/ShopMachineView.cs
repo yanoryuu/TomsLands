@@ -27,6 +27,10 @@ public class ShopMachineView : MonoBehaviour
     [SerializeField] private Button purchaseButton;
     [SerializeField] private Button removeButton;
 
+    [Header("生産アイテム選択（選択式製造機のみ） ※未配線でも動作する")]
+    [SerializeField] private GameObject producedItemGroup;
+    [SerializeField] private TMP_Dropdown producedItemDropdown;
+
     [Header("その他")]
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private Button closeButton;
@@ -34,6 +38,8 @@ public class ShopMachineView : MonoBehaviour
     public Subject<Unit> OnPurchaseClicked { get; } = new();
     public Subject<Unit> OnRemoveClicked { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
+    /// <summary>生産アイテムのドロップダウンで選択が変わった（候補リストのindex）。</summary>
+    public Subject<int> OnProducedItemChanged { get; } = new();
 
     private void Awake()
     {
@@ -43,6 +49,26 @@ public class ShopMachineView : MonoBehaviour
             removeButton.onClick.AddListener(() => OnRemoveClicked.OnNext(Unit.Default));
         if (closeButton != null)
             closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+        if (producedItemDropdown != null)
+            producedItemDropdown.onValueChanged.AddListener(i => OnProducedItemChanged.OnNext(i));
+    }
+
+    /// <summary>
+    /// 生産アイテム選択ドロップダウンを表示・再構築する。未配線（null）なら何もしない。
+    /// </summary>
+    public void ShowProducedItemSelector(List<string> optionLabels, int selectedIndex)
+    {
+        if (producedItemGroup == null || producedItemDropdown == null) return;
+        producedItemGroup.SetActive(true);
+        producedItemDropdown.ClearOptions();
+        producedItemDropdown.AddOptions(optionLabels);
+        producedItemDropdown.SetValueWithoutNotify(Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, optionLabels.Count - 1)));
+        producedItemDropdown.RefreshShownValue();
+    }
+
+    public void HideProducedItemSelector()
+    {
+        if (producedItemGroup != null) producedItemGroup.SetActive(false);
     }
 
     /// <summary>カタログを再構築する。Setup と購読は Presenter 側で行う。</summary>
