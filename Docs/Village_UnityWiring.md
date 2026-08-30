@@ -24,13 +24,25 @@ feature/village-core ブランチで実装した「村投資メタ層のコア�
 
 ## 2. VillageScene の構成（実施済み・構造の記録）
 
+> **2026-08 更新（背景のタイルマップ化・建物の段階見た目）**
+> - 一枚絵の Background は削除し、**Grid「VillageMap」+ Tilemap 2レイヤー**（Ground=草 / Path=土の道・広場）に変更
+> - タイルはプレースホルダー（コード生成のピクセル画。`Assets/Art/VillageTiles/village_tileset.png` + `Tile_*.asset`）。
+>   **本番素材への差し替えは `Tile_grass_a/b/c`・`Tile_dirt`・`Tile_dirt_light` の Sprite 参照を差し替えるだけ**で
+>   塗り済みマップにそのまま反映される（タイルパレットで塗り直す場合もレイヤー構成はそのまま使える）
+> - 建物は **Lv0=空き地（立て札）→ Lv1小屋 → Lv2家 → Lv3館** の段階スプライトを全13区画の
+>   `stageSprites` に配線済み（`village_buildings.png`: plot_sign / building_lv1〜3、ピボット下辺中央、
+>   Building の localPosition=(0,-1,0)）。差し替えも同様にスプライト参照の入れ替えのみ
+> - 村全体の装飾（道の舗装化など）の発展表現は**入れない**（2026-08-30ユーザー決定。変わるのは建物のみ）
+
 ```
 VillageScene.unity（ビルド設定登録済み）
 ├─ Main Camera（orthographic size=5.5, pos(0,-0.5,-10)）
-├─ Background（背景_街_1 を少し暗めに）
+├─ VillageMap（Grid）
+│    ├─ Ground（Tilemap: 草タイル。sortingOrder=-20）
+│    └─ Path（Tilemap: 土の道・出撃広場。sortingOrder=-19）
 ├─ Player（TomsShopのPlayerを複製: PlayerMove+SPUM+Rigidbody2D）
 ├─ Plots/Plot_{facilityId} ×13（FacilityPlot + BoxCollider2D(Trigger)）
-│    ├─ Building（SpriteRenderer。プレースホルダー=マップ町アイコン: -1=未建設/-0=建設済み）
+│    ├─ Building（SpriteRenderer。stageSprites=[立て札, Lv1小屋, Lv2家, Lv3館] 配線済み）
 │    ├─ SignIcon（施設アイコン看板。icon未設定なら非表示）
 │    ├─ Bubble/Name+Hint（接近時の吹き出し・ワールドTMP）
 │    └─ LockedSign（未解禁表示）
@@ -45,7 +57,8 @@ VillageScene.unity（ビルド設定登録済み）
 
 - **注意: CanvasはScreen Space - Camera**（Overlayだと一部キャプチャ/合成で映らない。プロジェクト慣習にも一致）
 - FacilityPlot の `facilityId` はマスターの `facilityId`（hall/guild/antique/shrine/bank/warehouse/road/press/artisan/tavern/workshop/farm/training）と一致させること
-- 建物のプレースホルダーはマップの町アイコン5種を巡回使用。製品版アートで各区画のBuilding/stageSpritesを差し替える
+- 建物プレースホルダーは自前生成のピクセル画（`Assets/Art/VillageTiles/village_buildings.png`）。
+  製品版アートでは同名スプライトの差し替え、または各区画の `stageSprites` を個別に差し替える
 
 ## 3. 動作確認チェックリスト（V1で確認済みの項目）
 
