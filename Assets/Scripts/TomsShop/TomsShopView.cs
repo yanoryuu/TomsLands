@@ -83,10 +83,17 @@ public class TomsShopView : MonoBehaviour
     /// レリック獲得3択を表示する。パネル未配線なら false を返す
     /// （呼び出し側が自動獲得にフォールバック）。
     /// </summary>
-    public bool ShowRelicChoices(List<(string name, string description)> choices)
+    public bool ShowRelicChoices(List<(string name, string description)> choices, string skipLabel = null)
     {
         if (relicChoicePanel == null || relicChoiceButtons == null || relicChoiceButtons.Length == 0)
             return false;
+
+        // 辞退ボタンの文言（「辞退して◯◯Gもらう」等）を差し替える
+        if (!string.IsNullOrEmpty(skipLabel) && relicChoiceSkipButton != null)
+        {
+            var label = relicChoiceSkipButton.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null) label.text = skipLabel;
+        }
 
         for (int i = 0; i < relicChoiceButtons.Length; i++)
         {

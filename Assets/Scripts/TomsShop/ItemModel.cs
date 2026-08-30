@@ -496,9 +496,10 @@ public class ItemModel
 
     /// <summary>
     /// 期待収益（需要×価格×SalesRate）が高い順に最大maxSlots枠を自動陳列する。
-    /// maxSlots / maxStockPerItem は店レベル（ShopLevelSettings）由来の値を渡すこと。
+    /// maxSlots は店レベル（ShopLevelSettings）由来の値を渡すこと。
+    /// 1銘柄あたりの陳列個数に上限は無い（制限は同時陳列の銘柄数のみ）。
     /// </summary>
-    public void AutoSetDisplay(int blacksmithLevel, int maxSlots, int maxStockPerItem = int.MaxValue)
+    public void AutoSetDisplay(int blacksmithLevel, int maxSlots)
     {
         foreach (var r in RuntimeItems)
             r.IsDisplay.Value = false;
@@ -511,7 +512,7 @@ public class ItemModel
         foreach (var item in top)
         {
             item.IsDisplay.Value = true;
-            item.DisplayStock.Value = Mathf.Min(item.Stock.Value, maxStockPerItem);
+            item.DisplayStock.Value = item.Stock.Value;
             Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={ExpectedRevenueOf(item):F1})");
         }
 

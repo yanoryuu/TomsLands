@@ -15,7 +15,7 @@ public class ShopLevelSettings : ScriptableObject
     {
         [Tooltip("同時に陳列できる銘柄数（SKU数）の上限")]
         public int maxDisplayKinds = 3;
-        [Tooltip("1銘柄あたりの陳列個数の上限")]
+        [Tooltip("【廃止】1銘柄あたりの陳列個数の上限。個数制限は撤廃した（制限は銘柄数のみ）。旧アセット/配信データ互換のためフィールドだけ残す")]
         public int maxDisplayStockPerItem = 5;
         [Tooltip("このレベルへ上がるための費用（Lv1 の行は 0）")]
         public int levelUpCost = 0;

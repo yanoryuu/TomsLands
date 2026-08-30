@@ -143,6 +143,13 @@ public static class GameConst
     public static float RelicCommonWeight => Data.relicSettings.commonWeight;
     public static float RelicRareWeight => Data.relicSettings.rareWeight;
     public static float RelicEpicWeight => Data.relicSettings.epicWeight;
+    /// <summary>レリック3択を辞退したときにもらえるゴールド（レア度別）。</summary>
+    public static int RelicDeclineGold(RelicRarity rarity) => rarity switch
+    {
+        RelicRarity.Epic => Data.relicSettings.declineGoldEpic,
+        RelicRarity.Rare => Data.relicSettings.declineGoldRare,
+        _ => Data.relicSettings.declineGoldCommon,
+    };
     public static int DebtPaymentInterval => Data.debtPaymentInterval;
     public static int DebtBaseAmount => Data.debtBaseAmount;
     public static float DebtMultiplier => Data.debtMultiplier;

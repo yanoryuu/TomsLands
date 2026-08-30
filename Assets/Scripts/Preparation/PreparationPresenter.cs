@@ -115,7 +115,7 @@ public class PreparationPresenter : IStartable, IDisposable
         {
             var master = carryPool[i];
             var slot = carrySlots[i];
-            slot.Setup(master.itemId, master.itemName, master.itemIcon, showMinus: true);
+            slot.Setup(master.itemId, master.itemName, master.itemIcon, showMinus: true, info: BuildItemInfo(master));
 
             slot.OnSelected.Subscribe(id =>
             {
@@ -140,7 +140,7 @@ public class PreparationPresenter : IStartable, IDisposable
         {
             var relic = relicPool[i];
             var slot = relicSlots[i];
-            slot.Setup(relic.relicId, relic.relicName, relic.icon, showMinus: false);
+            slot.Setup(relic.relicId, relic.relicName, relic.icon, showMinus: false, info: relic.description);
 
             slot.OnSelected.Subscribe(id =>
             {
@@ -208,6 +208,31 @@ public class PreparationPresenter : IStartable, IDisposable
 
         Debug.Log($"[Preparation] 出撃: 借入={model.BorrowAmount}G, 持ち込み={model.CarryTotal}個, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace})");
         SceneManager.LoadScene("TomsShop");
+    }
+
+    /// <summary>持ち込みアイテムの効果表示（種別・属性・基準価格・配当）。</summary>
+    private static string BuildItemInfo(ItemData master)
+    {
+        string type = master.itemType switch
+        {
+            ItemTypeData.ItemType.Weapon => "武器",
+            ItemTypeData.ItemType.Armor => "防具",
+            ItemTypeData.ItemType.Tool => "道具",
+            _ => master.itemType.ToString(),
+        };
+        string attr = master.itemAttribute switch
+        {
+            ItemTypeData.ItemAttribute.Fire => "火",
+            ItemTypeData.ItemAttribute.Water => "水",
+            ItemTypeData.ItemAttribute.Earth => "土",
+            ItemTypeData.ItemAttribute.Wind => "風",
+            ItemTypeData.ItemAttribute.Light => "光",
+            ItemTypeData.ItemAttribute.Dark => "闇",
+            _ => master.itemAttribute.ToString(),
+        };
+        string info = $"{type}・{attr}属性・{master.basePrice:N0}G";
+        if (master.dividendPerTurn > 0) info += $"・配当{master.dividendPerTurn}G/日";
+        return info;
     }
 
     private static string DifficultyLabel(GameModeId mode) => mode switch

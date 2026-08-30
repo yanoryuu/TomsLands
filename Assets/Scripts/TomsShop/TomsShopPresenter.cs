@@ -173,7 +173,15 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         tomsShopView.OnRelicChoiceSkipped
             .Subscribe(_ =>
             {
-                relicRewardService?.SkipPending();
+                // 辞退したら代わりにゴールドをもらう（額は選択肢の最高レア度で決まる）
+                int gold = relicRewardService?.DeclineForGold() ?? 0;
+                if (gold > 0)
+                {
+                    tomsShopModel.AddRevenue(gold);
+                    tomsShopModel.SavePlayerMoney();
+                    SoundManager.Instance?.PlaySE("営業/SE_売上音");
+                    Debug.Log($"[Relic] レリックを辞退して {gold}G を獲得");
+                }
                 tomsShopView.HideRelicChoices();
             })
             .AddTo(disposables);
@@ -332,7 +340,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Select(c => (c.relicName, c.description))
             .ToList();
 
-        if (!tomsShopView.ShowRelicChoices(choices))
+        string skipLabel = $"辞退して {relicRewardService.GetDeclineGold():N0}G もらう";
+        if (!tomsShopView.ShowRelicChoices(choices, skipLabel))
         {
             string autoName = relicRewardService.PendingChoices[0].relicName;
             relicRewardService.ChoosePending(0, gameFlowManager.CurrentTurn.Value);

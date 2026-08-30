@@ -13,6 +13,7 @@ public class PreparationChoiceSlot : MonoBehaviour
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI countText;
+    [SerializeField] private TextMeshProUGUI infoText;   // 効果・属性・価格などの説明行
     [SerializeField] private Button selectButton;
     [SerializeField] private Button minusButton;
     [SerializeField] private GameObject highlight;
@@ -37,10 +38,15 @@ public class PreparationChoiceSlot : MonoBehaviour
             });
     }
 
-    public void Setup(string id, string displayName, Sprite icon, bool showMinus)
+    public void Setup(string id, string displayName, Sprite icon, bool showMinus, string info = null)
     {
         Id = id;
         if (nameText != null) nameText.text = displayName;
+        if (infoText != null)
+        {
+            infoText.text = info ?? string.Empty;
+            infoText.gameObject.SetActive(!string.IsNullOrEmpty(info));
+        }
         if (iconImage != null)
         {
             iconImage.sprite = icon;

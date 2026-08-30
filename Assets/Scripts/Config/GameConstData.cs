@@ -112,6 +112,10 @@ public class RelicSettingsData
     public float commonWeight = 60f;
     public float rareWeight = 30f;
     public float epicWeight = 10f;
+    /// <summary>3択を辞退したときの代わりのゴールド（選択肢の最高レア度で決まる）。</summary>
+    public int declineGoldCommon = 500;
+    public int declineGoldRare = 1200;
+    public int declineGoldEpic = 2500;
 
     public RelicSettingsData Clone() => (RelicSettingsData)MemberwiseClone();
 }

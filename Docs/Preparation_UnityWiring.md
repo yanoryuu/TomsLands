@@ -34,7 +34,8 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
 
 1. 汎用選択スロットのプレハブ `PreparationChoiceSlot.prefab` を作成
    （`ItemSelectionSlot.prefab` 複製ベース。ルートに `PreparationChoiceSlot`:
-   icon / name / count / selectButton(本体) / minusButton / highlight）。
+   icon / name / count / **infoText（効果表示行）** / selectButton(本体) / minusButton / highlight）。
+   ※ infoText には持ち込みアイテム=「種別・属性・基準価格・配当」、レリック=説明文が入る（配線済み）。
 2. PreparationPanel 配下に以下を作り、`PreparationView` コンポーネント（Panelのルート等に付与）に割り当てる:
    - ヘッダー: MetaCurrencyText（信用表示）/ DifficultyText / MessageText
    - 借入セクション: BorrowAmountText / +ボタン / -ボタン（1,000G刻み）/ CreditLineText /

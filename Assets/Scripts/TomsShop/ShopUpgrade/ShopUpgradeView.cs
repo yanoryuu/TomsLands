@@ -53,10 +53,9 @@ public class ShopUpgradeView : MonoBehaviour
                 ? $"同時陳列 {current.maxDisplayKinds}銘柄"
                 : $"同時陳列 {current.maxDisplayKinds} → {next.maxDisplayKinds}銘柄";
 
+        // 陳列個数の上限は撤廃した（制限は銘柄数のみ）ため常時無制限と表示
         if (displayStockText != null)
-            displayStockText.text = isMax
-                ? $"陳列個数 {current.maxDisplayStockPerItem}個/銘柄"
-                : $"陳列個数 {current.maxDisplayStockPerItem} → {next.maxDisplayStockPerItem}個/銘柄";
+            displayStockText.text = "陳列個数 無制限";
 
         if (machineSlotsText != null)
             machineSlotsText.text = isMax

@@ -91,9 +91,19 @@ public class RelicRewardService
         return inventory.Add(chosen.relicId, currentTurn, GameConst.RelicMaxEquipSlots);
     }
 
-    /// <summary>保留中の3択を破棄する（スキップ）。</summary>
-    public void SkipPending()
+    /// <summary>保留中の3択を辞退したときにもらえるゴールド（選択肢の最高レア度基準）。保留なしは0。</summary>
+    public int GetDeclineGold()
     {
+        if (PendingChoices.Count == 0) return 0;
+        var best = PendingChoices.Max(c => c.rarity);
+        return GameConst.RelicDeclineGold(best);
+    }
+
+    /// <summary>保留中の3択を辞退してゴールドに換える。もらえる額を返す（保留なしは0、入金は呼び出し側）。</summary>
+    public int DeclineForGold()
+    {
+        int gold = GetDeclineGold();
         PendingChoices.Clear();
+        return gold;
     }
 }
