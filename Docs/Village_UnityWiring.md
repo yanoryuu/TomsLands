@@ -33,6 +33,11 @@ feature/village-core ブランチで実装した「村投資メタ層のコア�
 >   `stageSprites` に配線済み（`village_buildings.png`: plot_sign / building_lv1〜3、ピボット下辺中央、
 >   Building の localPosition=(0,-1,0)）。差し替えも同様にスプライト参照の入れ替えのみ
 > - 村全体の装飾（道の舗装化など）の発展表現は**入れない**（2026-08-30ユーザー決定。変わるのは建物のみ）
+> - **町レベルの広いマップ**（48×32タイル、x -24..23 / y -18..13）。道は碁盤目ではなく
+>   ゆるく蛇行しながら数本分岐するネットワーク（西⇔東の街道 / 北=領主館へ+左右分岐 / 南 / 脇道3本）。
+>   施設13区画は道沿いに分散配置（中央広場=スポーン+出撃、北端=領主館）
+> - **カメラはプレイヤー追従**: Main Camera に `CameraFollow2D`（target=Player、
+>   worldBounds=マップ範囲でクランプ、SmoothDamp追従）。UIはScreen Space - Cameraなのでそのまま追従
 
 ```
 VillageScene.unity（ビルド設定登録済み）
