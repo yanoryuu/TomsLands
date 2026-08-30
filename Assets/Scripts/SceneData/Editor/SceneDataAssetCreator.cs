@@ -4,11 +4,11 @@ using UnityEngine;
 
 /// <summary>
 /// シーン間共有データの ScriptableObject アセットを自動生成するエディタツール。
-/// メニュー: Tools > Create Scene Data Assets
+/// メニュー: Tools > TomsLands > データ生成 > SceneDataアセット生成
 /// </summary>
 public static class SceneDataAssetCreator
 {
-    [MenuItem("Tools/Create Scene Data Assets")]
+    [MenuItem("Tools/TomsLands/データ生成/SceneDataアセット生成")]
     public static void CreateAssets()
     {
         CreateAssetIfNotExists<BattleInputData>("Assets/Resources/SceneData/BattleInputData.asset");

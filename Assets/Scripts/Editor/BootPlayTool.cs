@@ -6,8 +6,8 @@ using UnityEngine;
 /// エディタ再生を BootScene から開始するためのツール。
 /// どのシーンを開いていても、リモートコンフィグ取得（Boot）を通した起動フローで再生できる。
 ///
-/// - Tools > Boot > BootSceneから再生      : 今回だけ Boot から再生（終了後は元に戻る）
-/// - Tools > Boot > 常にBootSceneから再生   : トグル。ON の間は通常の再生ボタンでも Boot から始まる
+/// - Tools > TomsLands > デバッグ > BootSceneから再生      : 今回だけ Boot から再生（終了後は元に戻る）
+/// - Tools > TomsLands > デバッグ > 常にBootSceneから再生   : トグル。ON の間は通常の再生ボタンでも Boot から始まる
 /// </summary>
 [InitializeOnLoad]
 public static class BootPlayTool
@@ -16,8 +16,8 @@ public static class BootPlayTool
     private const string AlwaysPrefKey = "TomsLands.AlwaysPlayFromBoot";
     private const string OneShotKey = "TomsLands.PlayFromBootOneShot";
 
-    private const string MenuPlayOnce = "Tools/Boot/BootSceneから再生";
-    private const string MenuAlways = "Tools/Boot/常にBootSceneから再生";
+    private const string MenuPlayOnce = "Tools/TomsLands/デバッグ/BootSceneから再生";
+    private const string MenuAlways = "Tools/TomsLands/デバッグ/常にBootSceneから再生";
 
     private static bool AlwaysOn
     {

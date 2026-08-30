@@ -4,13 +4,13 @@ using UnityEngine;
 
 /// <summary>
 /// マーケティングシステムのScriptableObjectデフォルトデータを一括生成するエディタツール。
-/// メニュー「Tools > Marketing > Create Default Data」から実行する。
+/// メニュー「Tools > TomsLands > データ生成 > マーケティング初期データ生成（全部入り）」から実行する。
 /// </summary>
 public static class MarketingDataCreator
 {
     private const string BasePath = "Assets/Resources/Marketing";
 
-    [MenuItem("Tools/Marketing/Create Default Data")]
+    [MenuItem("Tools/TomsLands/データ生成/マーケティング初期データ生成（全部入り）")]
     private static void CreateAllDefaultData()
     {
         // フォルダ作成
@@ -34,7 +34,7 @@ public static class MarketingDataCreator
     // 広告データ作成
     // =====================================================
 
-    [MenuItem("Tools/Marketing/Create Default Advertisements")]
+    // 個別メニューは「全部入り」に集約（既存アセットはスキップされるため全部入りで安全に再生成できる）
     private static void CreateDefaultAdvertisements()
     {
         EnsureFolderExists();
@@ -92,7 +92,6 @@ public static class MarketingDataCreator
     // バズ効果データ作成
     // =====================================================
 
-    [MenuItem("Tools/Marketing/Create Default Buzz Effects")]
     private static void CreateDefaultBuzzEffects()
     {
         EnsureFolderExists();
@@ -204,7 +203,6 @@ public static class MarketingDataCreator
     // フォロワーマイルストーンデータ作成
     // =====================================================
 
-    [MenuItem("Tools/Marketing/Create Default Milestones")]
     private static void CreateDefaultMilestones()
     {
         EnsureFolderExists();
@@ -251,7 +249,6 @@ public static class MarketingDataCreator
     // ゲームバランスデータ作成
     // =====================================================
 
-    [MenuItem("Tools/Marketing/Create Default Game Balance")]
     private static void CreateDefaultGameBalance()
     {
         EnsureFolderExists();

@@ -104,7 +104,7 @@ public static class GameConst
             return settings.data.Clone();
 
         Debug.LogWarning($"[GameConst] '{Address}' が読み込めませんでした。既定値を使用します。" +
-                         "Tools > GameConst > Create Settings Asset で作成し、Addressable 登録してください。");
+                         "Tools > TomsLands > リモート設定 > GameConst Settingsアセット生成 で作成し、Addressable 登録してください。");
         return new GameConstData();
     }
 

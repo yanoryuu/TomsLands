@@ -24,7 +24,7 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
 
 ## 1. アセット作成
 
-1. Tools > Create Scene Data Assets を実行（`RunSetupData.asset` が追加生成される）。
+1. Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行（`RunSetupData.asset` が追加生成される）。
 2. 生成された `Assets/Resources/SceneData/RunSetupData.asset` を Addressables に登録し、
    アドレスを **`SceneData/RunSetupData`** にする（他の SceneData と同じ）。
 

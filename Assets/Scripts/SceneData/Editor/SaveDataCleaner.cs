@@ -8,7 +8,7 @@ using UnityEngine;
 /// </summary>
 public static class SaveDataCleaner
 {
-    [MenuItem("Tools/Delete All Save Data")]
+    [MenuItem("Tools/TomsLands/デバッグ/全セーブデータ削除")]
     public static void DeleteAllSaveData()
     {
         string root = Application.persistentDataPath;

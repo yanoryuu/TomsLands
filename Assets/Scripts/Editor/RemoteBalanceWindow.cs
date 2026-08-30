@@ -26,7 +26,7 @@ public class RemoteBalanceWindow : EditorWindow
     private UnityWebRequest _req;
     private bool _fetching;
 
-    [MenuItem("Tools/Balance/リモート確認ウィンドウ")]
+    [MenuItem("Tools/TomsLands/リモート設定/Balance確認ウィンドウ")]
     public static void Open()
     {
         var w = GetWindow<RemoteBalanceWindow>("Balance");

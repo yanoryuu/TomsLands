@@ -15,7 +15,7 @@ public class ItemDataInspector : Editor
         EditorGUILayout.HelpBox(
             "価格・在庫・種類・属性・名前・説明などは スプレッドシート/サーバー で管理されます。\n" +
             "ここでの編集はゲームに反映されません。\n" +
-            "配信中の値は [Tools > ItemMaster > Item一覧ウィンドウ] で確認してください。",
+            "配信中の値は [Tools > TomsLands > リモート設定 > Item一覧ウィンドウ] で確認してください。",
             MessageType.Info);
 
         EditorGUILayout.Space();

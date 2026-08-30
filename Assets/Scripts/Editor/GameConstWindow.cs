@@ -24,7 +24,7 @@ public class GameConstWindow : EditorWindow
     private UnityWebRequest _req;
     private bool _fetching;
 
-    [MenuItem("Tools/GameConst/リモート確認ウィンドウ")]
+    [MenuItem("Tools/TomsLands/リモート設定/GameConst確認ウィンドウ")]
     public static void Open()
     {
         var w = GetWindow<GameConstWindow>("GameConst");

@@ -44,14 +44,14 @@ public class GameLifetimeScope : LifetimeScope
         if (battleInputData == null)
         {
             battleInputData = ScriptableObject.CreateInstance<BattleInputData>();
-            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/BattleInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/BattleInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行してください。");
         }
 
         var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData");
         if (battleOutputData == null)
         {
             battleOutputData = ScriptableObject.CreateInstance<BattleOutputData>();
-            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/BattleOutputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/BattleOutputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行してください。");
         }
 
         builder.RegisterInstance(battleInputData);
@@ -62,14 +62,14 @@ public class GameLifetimeScope : LifetimeScope
         if (eventInputData == null)
         {
             eventInputData = ScriptableObject.CreateInstance<EventInputData>();
-            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventInputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行してください。");
         }
 
         var eventOutputData = AddressableLoader.Load<EventOutputData>("SceneData/EventOutputData");
         if (eventOutputData == null)
         {
             eventOutputData = ScriptableObject.CreateInstance<EventOutputData>();
-            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventOutputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > Create Scene Data Assets を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/SceneData/EventOutputData.asset が見つからなかったため、実行時インスタンスを生成しました。Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行してください。");
         }
 
         builder.RegisterInstance(eventInputData);
@@ -148,7 +148,7 @@ public class GameLifetimeScope : LifetimeScope
         if (gameBalanceData == null)
         {
             gameBalanceData = ScriptableObject.CreateInstance<GameBalanceData>();
-            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/GameBalanceData.asset が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/GameBalanceData.asset が見つかりません。Tools > TomsLands > データ生成 > マーケティング初期データ生成（全部入り） を実行してください。");
         }
         gameBalanceData = RemoteBalance.ApplyOverwrite("gameBalance", gameBalanceData);
         builder.RegisterInstance(gameBalanceData);
@@ -157,7 +157,7 @@ public class GameLifetimeScope : LifetimeScope
         var advertisementDataList = AddressableLoader.LoadAll<AdvertisementData>("AdvertisementData");
         if (advertisementDataList.Count == 0)
         {
-            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に AdvertisementData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に AdvertisementData が見つかりません。Tools > TomsLands > データ生成 > マーケティング初期データ生成（全部入り） を実行してください。");
         }
         advertisementDataList = RemoteBalance.ApplyList("advertisements", advertisementDataList, a => a.advertisementName);
         builder.RegisterInstance(advertisementDataList);
@@ -166,7 +166,7 @@ public class GameLifetimeScope : LifetimeScope
         var milestoneDataList = AddressableLoader.LoadAll<FollowerMilestoneData>("FollowerMilestoneData");
         if (milestoneDataList.Count == 0)
         {
-            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に FollowerMilestoneData が見つかりません。Tools > Marketing > Create Default Data を実行してください。");
+            Debug.LogWarning("[GameLifetimeScope] Resources/Marketing/ に FollowerMilestoneData が見つかりません。Tools > TomsLands > データ生成 > マーケティング初期データ生成（全部入り） を実行してください。");
         }
         milestoneDataList = RemoteBalance.ApplyList("followerMilestones", milestoneDataList, m => m.requiredFollowers.ToString());
         builder.RegisterInstance(milestoneDataList);

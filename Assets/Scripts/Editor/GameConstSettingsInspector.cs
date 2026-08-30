@@ -14,7 +14,7 @@ public class GameConstSettingsInspector : Editor
     {
         EditorGUILayout.HelpBox(
             "これは「ベイク済みデフォルト」です（サーバー取得失敗・オフライン時のフォールバックに使用）。\n" +
-            "実際にゲームへ適用される配信値は [Tools > GameConst > リモート確認ウィンドウ] で確認してください。",
+            "実際にゲームへ適用される配信値は [Tools > TomsLands > リモート設定 > GameConst確認ウィンドウ] で確認してください。",
             MessageType.Info);
 
         if (GUILayout.Button("リモート確認ウィンドウを開く"))
