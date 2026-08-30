@@ -121,6 +121,34 @@
 - `levels` を載せる場合は**その施設の全レベルぶんを載せる**こと（JsonUtilityの配列上書きは全置換のため、部分だけ書くと段数が縮む）。
 - 村のスカラー設定（純資産→村資金の変換率など）はこの区画ではなく **gameconst.json の `village` オブジェクト**
   （`conversionRate` / `bankruptcyConversionRate` / `debtScalePerVillageLevel`）で配信する。
+- ⚠️ **汎用の行シートリーダー（readListSheet_）では処理できない**（同一idが複数行になり後勝ちで潰れる＋
+  `level/cost/effectText` はフラットフィールドとして存在しないため無視される）。
+  **専用リーダー `readVillageFacilities_()` で id ごとに levels[] へグループ化する**（§8のコード参照）。
+  シート名は `villageFacilities`、ヘッダは型サフィックス不要（`id / facilityName / requiredHallLevel / level / cost / effectText`。
+  V2以降は `startBonusKey / startBonusValue / unlockRelicTier` 列を追加可）。
+
+### relics[]（部分・`RelicDefinition`、2026-08追加）
+レリックのマスター。`id` = relicId。シートは **`bal_relics`・1行=1レリック**
+（雛形: `Docs/balance_tsv/relics.tsv`、現行23種の実データ変換済み）。
+変更可: `relicName, description, rarity(int), isCurse(bool), modifiers[], behaviours[]`。icon/category は載せない（SO保持）。
+- 入れ子は**固定列方式**: `mod1Stat(int) / mod1Op(int) / mod1Value(float) / mod2Stat...`（最大列数はシートに合わせ拡張可）、
+  `beh1Key(string) / beh1Param(float)`。modN列が1つでも入っていれば `modifiers[]` を出力する。
+  **modifiers/behaviours は全置換**のため、書く場合はそのレリックの全要素を書くこと（空なら区画は省略され既定値保持）。
+- `description` セル内の `\n` は改行に変換される。
+- **enum int 対応表（末尾追加のみ・並び替え禁止）**:
+  - `rarity` → RelicRarity: Common=0 / Rare=1 / Epic=2
+  - `modNOp` → RelicOp: Add=0 / Mul=1
+  - `modNStat` → RelicStatId:
+    | 名前 | int | 名前 | int |
+    |---|---|---|---|
+    | ShopRevenueMul | 0 | DefeatRewardMul | 7 |
+    | DemandFloorAdd | 1 | HeroPowerMul | 8 |
+    | DebtAmountMul | 2 | EventRewardMul | 9 |
+    | DisplayKindsAdd | 3 | FinanceYieldMul | 10 |
+    | ProcurementCostMul | 4 | SellClampAdd | 11 |
+    | BuzzChanceAdd | 5 | ProductionBudgetAdd | 12 |
+    | DividendMul | 6 | | |
+  - `behNKey` は文字列（例: `dailyGold`。`RelicBehaviourRegistry` のキー）。
 
 ## 4. 完全な例
 ```json
@@ -179,3 +207,146 @@
 - 取得・分割・適用・キャッシュ・フォールバックは実装済み（`RemoteBalance` / `RemoteBalanceService` / `BootLifetimeScope` / 各ロード箇所）。
 - 確認は `Tools > TomsLands > リモート設定 > Balance確認ウィンドウ`。
 - GAS担当は本書 §1〜§3 を満たす `balance.json` を配信すればよい。
+
+## 8. GAS追加コード（villageFacilities / relics 専用リーダー・2026-08）
+
+既存GASへの変更は3点:
+1. `BALANCE_LISTS` から `villageFacilities` を**削除**（汎用リーダーでは処理不可のため）
+2. 定数追加: `const VILLAGE_FACILITIES_SHEET = 'villageFacilities'; const RELICS_SHEET = 'bal_relics';`
+3. `buildBalanceEnvelope()` のリスト区画処理の後に以下を追加し、下記2関数を貼り付ける:
+
+```js
+  // villageFacilities（1行=1施設×1レベル → levels[] にグループ化）
+  const facilities = readVillageFacilities_();
+  if (facilities.length > 0) envelope.villageFacilities = facilities;
+
+  // relics（modN/behN 固定列 → modifiers[]/behaviours[] に変換）
+  const relics = readRelics_();
+  if (relics.length > 0) envelope.relics = relics;
+```
+
+```js
+/**
+ * villageFacilities: 1行=1施設×1レベル（ヘッダ: id/facilityName/requiredHallLevel/level/cost/effectText。
+ * 任意で startBonusKey/startBonusValue/unlockRelicTier）。型サフィックス不要。
+ * id ごとに level 昇順でグループ化し、levels[] を持つ1オブジェクトに変換する。
+ * levels は Unity 側で全置換されるため、載せる施設は全レベル行を書くこと。
+ */
+function readVillageFacilities_() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(VILLAGE_FACILITIES_SHEET);
+  if (!sheet) return [];
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const header = values[0].map(function (h) { return String(h).trim().split(':')[0]; });
+  const col = {};
+  header.forEach(function (h, i) { if (h && !(h in col)) col[h] = i; });
+  ['id', 'level', 'cost', 'effectText'].forEach(function (req) {
+    if (!(req in col)) throw new Error(VILLAGE_FACILITIES_SHEET + ': 列 "' + req + '" がありません。');
+  });
+
+  const byId = {};
+  const order = [];
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+    const id = String(row[col.id]).trim();
+    if (id === '') continue;
+    const ctx = VILLAGE_FACILITIES_SHEET + '(行' + (r + 1) + ')';
+
+    if (!byId[id]) {
+      const obj = { id: id };
+      if ('facilityName' in col && String(row[col.facilityName]).trim() !== '')
+        obj.facilityName = String(row[col.facilityName]).trim();
+      if ('requiredHallLevel' in col && row[col.requiredHallLevel] !== '')
+        obj.requiredHallLevel = castCell_(row[col.requiredHallLevel], 'int', ctx + '!requiredHallLevel');
+      byId[id] = { obj: obj, rows: [] };
+      order.push(id);
+    }
+
+    const entry = {
+      cost: castCell_(row[col.cost], 'int', ctx + '!cost'),
+      effectText: String(row[col.effectText])
+    };
+    if ('startBonusKey' in col && String(row[col.startBonusKey]).trim() !== '') {
+      entry.startBonusKey = String(row[col.startBonusKey]).trim();
+      entry.startBonusValue = castCell_(row[col.startBonusValue], 'float', ctx + '!startBonusValue');
+    }
+    if ('unlockRelicTier' in col && row[col.unlockRelicTier] !== '')
+      entry.unlockRelicTier = castCell_(row[col.unlockRelicTier], 'int', ctx + '!unlockRelicTier');
+
+    byId[id].rows.push({ level: castCell_(row[col.level], 'int', ctx + '!level'), entry: entry });
+  }
+
+  return order.map(function (id) {
+    const g = byId[id];
+    g.rows.sort(function (a, b) { return a.level - b.level; });
+    g.obj.levels = g.rows.map(function (x) { return x.entry; });
+    return g.obj;
+  });
+}
+
+/**
+ * relics: 1行=1レリック（シート bal_relics。雛形 Docs/balance_tsv/relics.tsv）。
+ * ヘッダ: id/relicName/description/rarity/isCurse/mod1Stat/mod1Op/mod1Value/mod2.../beh1Key/beh1Param。
+ * modN 列が入っていれば modifiers[] を出力（全置換のため全要素を書くこと）。behN も同様。
+ * enum int は仕様書 §3 relics の表を参照。description の "\n" は改行に変換。
+ */
+function readRelics_() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(RELICS_SHEET);
+  if (!sheet) return []; // シート未作成なら区画ごと省略
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const header = values[0].map(function (h) { return String(h).trim().split(':')[0]; });
+  const col = {};
+  header.forEach(function (h, i) { if (h && !(h in col)) col[h] = i; });
+  if (!('id' in col)) throw new Error(RELICS_SHEET + ': 列 "id" がありません。');
+
+  const result = [];
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+    const id = String(row[col.id]).trim();
+    if (id === '') continue;
+    const ctx = RELICS_SHEET + '(行' + (r + 1) + ')';
+
+    const obj = { id: id };
+    if ('relicName' in col && String(row[col.relicName]).trim() !== '')
+      obj.relicName = String(row[col.relicName]).trim();
+    if ('description' in col && String(row[col.description]).trim() !== '')
+      obj.description = String(row[col.description]).replace(/\\n/g, '\n');
+    if ('rarity' in col && row[col.rarity] !== '')
+      obj.rarity = castCell_(row[col.rarity], 'int', ctx + '!rarity');
+    if ('isCurse' in col && row[col.isCurse] !== '')
+      obj.isCurse = castCell_(row[col.isCurse], 'bool', ctx + '!isCurse');
+
+    const modifiers = [];
+    for (let i = 1; ; i++) {
+      const key = 'mod' + i + 'Stat';
+      if (!(key in col)) break;
+      if (row[col[key]] === '' || row[col[key]] === null || row[col[key]] === undefined) continue;
+      modifiers.push({
+        stat: castCell_(row[col[key]], 'int', ctx + '!' + key),
+        op: castCell_(row[col['mod' + i + 'Op']], 'int', ctx + '!mod' + i + 'Op'),
+        value: castCell_(row[col['mod' + i + 'Value']], 'float', ctx + '!mod' + i + 'Value')
+      });
+    }
+    if (modifiers.length > 0) obj.modifiers = modifiers;
+
+    const behaviours = [];
+    for (let i = 1; ; i++) {
+      const key = 'beh' + i + 'Key';
+      if (!(key in col)) break;
+      const behKey = String(row[col[key]]).trim();
+      if (behKey === '') continue;
+      behaviours.push({
+        behaviourKey: behKey,
+        param: castCell_(row[col['beh' + i + 'Param']], 'float', ctx + '!beh' + i + 'Param')
+      });
+    }
+    if (behaviours.length > 0) obj.behaviours = behaviours;
+
+    result.push(obj);
+  }
+  return result;
+}
+```
