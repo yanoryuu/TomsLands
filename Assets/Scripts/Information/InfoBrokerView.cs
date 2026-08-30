@@ -19,6 +19,9 @@ public class InfoBrokerView : MonoBehaviour
     [Header("Content Panels")]
     [SerializeField] private GameObject mapPanel;
 
+    [Header("所持金表示（情報屋表示中はCommonViewを出さないため） ※未配線でも動作する")]
+    [SerializeField] private TextMeshProUGUI playerMoneyText;
+
     [Header("取引所（Exchange タブ） ※未配線でも動作する")]
     [SerializeField] private GameObject exchangeTab;
     [SerializeField] private Button exchangeButton;
@@ -137,6 +140,12 @@ public class InfoBrokerView : MonoBehaviour
     public void ShowDialogue(string message)
     {
         if (dialogueText != null) dialogueText.text = message ?? string.Empty;
+    }
+
+    /// <summary>情報屋専用の所持金表示を更新する。</summary>
+    public void UpdatePlayerMoney(int money)
+    {
+        if (playerMoneyText != null) playerMoneyText.text = $"{money:N0}G";
     }
 }
 

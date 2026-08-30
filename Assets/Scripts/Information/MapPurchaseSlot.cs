@@ -3,6 +3,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// 情報屋・地図タブの1行（ダンジョン）。
+/// 行クリックで選択し、購入は右の詳細パネル（MapInfoView）から行う（鍛冶屋と同じ操作感）。
+/// </summary>
 public class MapPurchaseSlot : MonoBehaviour
 {
     [Header("UI")]
@@ -12,41 +16,61 @@ public class MapPurchaseSlot : MonoBehaviour
     [SerializeField] private Button infoButton;
     [SerializeField] private Button purchaseButton;
 
-    // 通知系
-    public Subject<DungeonName> OnPurchaseClicked { get; } = new();
+    /// <summary>行がクリックされた（選択→右の詳細に表示）。</summary>
+    public Subject<DungeonName> OnSelected { get; } = new();
 
-    // 内部状態（UI表示用）
-    private int displayQuantity;
-    private int maxQuantity;
-    private bool suppress;
     private DungeonName dungeonKey;
+    private Image rowBackground;
 
-    public DungeonName DungeonKey
-    {
-        get { return dungeonKey; }
-    }
+    public DungeonName DungeonKey => dungeonKey;
 
     private void Awake()
     {
-        purchaseButton?.onClick.AddListener(() => OnPurchaseClicked.OnNext(dungeonKey));
+        // 行のどこを押しても選択できるようにする（購入は右の詳細パネルから）
+        infoButton?.onClick.AddListener(Select);
+        purchaseButton?.onClick.AddListener(Select);
+
+        var bg = transform.Find("BackGround");
+        if (bg != null)
+        {
+            rowBackground = bg.GetComponent<Image>();
+            var btn = bg.GetComponent<Button>();
+            if (btn == null) btn = bg.gameObject.AddComponent<Button>();
+            btn.transition = Selectable.Transition.None;
+            btn.onClick.AddListener(Select);
+        }
     }
 
-    public void SetMapInfo(DungeonName dungeonName,string itemName, Sprite sprite, int price)
+    private void Select()
     {
+        OnSelected.OnNext(dungeonKey);
+    }
+
+    public void SetMapInfo(DungeonName key, string dungeonName, Sprite sprite, int price, bool purchased)
+    {
+        dungeonKey = key;
         if (icon) icon.sprite = sprite;
-        if (nameText) nameText.text = itemName;
-        dungeonKey = dungeonName;
-        SetPrice(price);
+        if (nameText) nameText.text = dungeonName;
+        if (priceText)
+        {
+            priceText.text = purchased ? "購入済み" : $"{price:N0}G";
+            priceText.color = purchased ? new Color(0.55f, 0.9f, 0.55f) : Color.white;
+        }
+        // 行には購入ボタンを出さない（詳細パネルで買う）
+        if (purchaseButton) purchaseButton.gameObject.SetActive(false);
     }
 
-    private void SetPrice(int price)
+    /// <summary>この行の選択ハイライトを切り替える。</summary>
+    public void SetSelected(bool selected)
     {
-        priceText?.SetText($"{price:N0}G");
+        if (rowBackground != null)
+            rowBackground.color = selected ? new Color(1f, 0.9f, 0.65f) : Color.white;
     }
 
     private void OnDestroy()
     {
         infoButton?.onClick.RemoveAllListeners();
         purchaseButton?.onClick.RemoveAllListeners();
+        OnSelected.Dispose();
     }
 }

@@ -228,6 +228,8 @@ public class InfoBrokerModel
         }
 
         dungeon.isShowedInfo = true;
+        // 購入直後に永続化（保存しないと「続きから」で情報が未購入に戻る）
+        dungeonRepository.Save();
         Debug.Log($"Purchased dungeon info: {dungeonName}");
     }
 

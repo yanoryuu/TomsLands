@@ -68,6 +68,11 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => infoBrokerView.ShowDialogue(GetNextCharacterTalk()))
             .AddTo(disposables);
 
+        // 情報屋専用の所持金表示（情報屋表示中はCommonViewを出さないため常時追従）
+        tomsModel.PlayerMoney
+            .Subscribe(money => infoBrokerView.UpdatePlayerMoney(money))
+            .AddTo(disposables);
+
         infoBrokerView.OnRefreshRequested
             .Subscribe(_ => infoBrokerModel.UpdateInfoMessages())
             .AddTo(disposables);
@@ -127,6 +132,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
 
         if (tomsModel.PlayerMoney.Value < cost)
         {
+            infoBrokerView.ShowDialogue($"金が足りないな。その情報は {cost:N0}G だ。");
             Debug.Log($"[InfoBrokerPresenter] 所持金不足: 必要 {cost}G / 所持 {tomsModel.PlayerMoney.Value}G");
             return;
         }
@@ -134,7 +140,12 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         tomsModel.PurchaseItem(cost);
         tomsModel.SavePlayerMoney();
         infoBrokerModel.PurchaseDungeonInfo(dungeonName);
-        mapInfoView.RemoveSlot(dungeonName);
+        SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+
+        // リストを購入済み表示に更新し、右の詳細に解放された情報をそのまま見せる
+        ShowMapInfo();
+        mapInfoView.SelectDungeon(dungeonName);
+        infoBrokerView.ShowDialogue("いい買い物だ。右の詳細を見てくれ。弱点を突けば配信も楽になる。");
         Debug.Log($"[InfoBrokerPresenter] {dungeonName} の情報を {cost}G で購入しました。残金: {tomsModel.PlayerMoney.Value}G");
     }
 
