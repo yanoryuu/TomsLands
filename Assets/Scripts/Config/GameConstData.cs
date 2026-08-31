@@ -30,6 +30,9 @@ public class GameConstData
     // --- ゲームフロー自動生成（ローグライト） ---
     public GameFlowGenerationSettings flowGeneration = new GameFlowGenerationSettings();
 
+    // --- レリック（装備アイテム） ---
+    public RelicSettingsData relicSettings = new RelicSettingsData();
+
     /// <summary>
     /// 配列まで含めた深いコピーを返す（ベイク済みアセットを実行時に汚染しないため）。
     /// </summary>
@@ -42,6 +45,25 @@ public class GameConstData
         clone.flowGeneration = flowGeneration != null
             ? flowGeneration.Clone()
             : new GameFlowGenerationSettings();
+        clone.relicSettings = relicSettings != null
+            ? relicSettings.Clone()
+            : new RelicSettingsData();
         return clone;
     }
+}
+
+/// <summary>レリック（装備アイテム）関連の設定。</summary>
+[Serializable]
+public class RelicSettingsData
+{
+    /// <summary>装備枠の上限。0 = 無制限（後からデータで絞れる）。</summary>
+    public int maxEquipSlots = 0;
+    /// <summary>配信勝利報酬の選択肢数。</summary>
+    public int rewardChoiceCount = 3;
+    /// <summary>レア度抽選の重み。</summary>
+    public float commonWeight = 60f;
+    public float rareWeight = 30f;
+    public float epicWeight = 10f;
+
+    public RelicSettingsData Clone() => (RelicSettingsData)MemberwiseClone();
 }

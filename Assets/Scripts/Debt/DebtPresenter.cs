@@ -9,6 +9,7 @@ public class DebtPresenter : IDisposable, IStartable
     private readonly SceneTransitionService sceneTransitionService;
     private readonly PortfolioModel portfolioModel;
     private readonly ItemModel itemModel;
+    private readonly RelicEffectResolver relicResolver;
     private readonly CompositeDisposable disposables = new();
 
     public DebtPresenter(
@@ -16,13 +17,27 @@ public class DebtPresenter : IDisposable, IStartable
         TomsModel tomsModel,
         SceneTransitionService sceneTransitionService,
         PortfolioModel portfolioModel,
-        ItemModel itemModel)
+        ItemModel itemModel,
+        RelicEffectResolver relicResolver)
     {
         this.debtView = debtView;
         this.tomsModel = tomsModel;
         this.sceneTransitionService = sceneTransitionService;
         this.portfolioModel = portfolioModel;
         this.itemModel = itemModel;
+        this.relicResolver = relicResolver;
+    }
+
+    /// <summary>
+    /// レリック補正（DebtAmountMul）を適用した返済額。
+    /// 表示（ShowVoluntary/ShowForced）と実際の支払い（OnPay）で必ず同じ値になるよう一元化する。
+    /// </summary>
+    private int GetDebtAmount(int cycle)
+    {
+        int baseAmount = GameConst.GetDebtAmount(cycle);
+        return relicResolver != null
+            ? relicResolver.ModifyInt(RelicStatId.DebtAmountMul, baseAmount)
+            : baseAmount;
     }
 
     public void Start()
@@ -51,7 +66,7 @@ public class DebtPresenter : IDisposable, IStartable
     public void ShowVoluntary()
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
-        int debtAmount = GameConst.GetDebtAmount(cycle);
+        int debtAmount = GetDebtAmount(cycle);
         debtView.ShowPayment(debtAmount, tomsModel.PlayerMoney.Value, cycle, forced: false);
     }
 
@@ -61,7 +76,7 @@ public class DebtPresenter : IDisposable, IStartable
     public void ShowForced()
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
-        int debtAmount = GameConst.GetDebtAmount(cycle);
+        int debtAmount = GetDebtAmount(cycle);
         int currentMoney = tomsModel.PlayerMoney.Value;
 
         // 破産判定は現金のみ。ただし現金不足でも金融資産（ファンド・債券）の
@@ -88,7 +103,7 @@ public class DebtPresenter : IDisposable, IStartable
     private void OnPay()
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
-        int debtAmount = GameConst.GetDebtAmount(cycle);
+        int debtAmount = GetDebtAmount(cycle);
 
         tomsModel.PurchaseItem(debtAmount);
         tomsModel.DebtCycle.Value = cycle;

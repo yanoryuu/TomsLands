@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using R3;
 using UnityEngine;
@@ -25,6 +26,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly SalesPhaseView salesPhaseView;
     private readonly MorningReportModel morningReportModel;
     private readonly ShopMachineModel shopMachineModel;
+    private readonly RelicInventoryModel relicInventory;
+    private readonly RelicRewardService relicRewardService;
+    private readonly RelicEffectResolver relicResolver;
 
     /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
     private int _lastKnownTurn = -1;
@@ -53,7 +57,10 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         TurnPhaseManager turnPhaseManager,
         SalesPhaseView salesPhaseView,
         MorningReportModel morningReportModel,
-        ShopMachineModel shopMachineModel)
+        ShopMachineModel shopMachineModel,
+        RelicInventoryModel relicInventory,
+        RelicRewardService relicRewardService,
+        RelicEffectResolver relicResolver)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -72,6 +79,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.salesPhaseView = salesPhaseView;
         this.morningReportModel = morningReportModel;
         this.shopMachineModel = shopMachineModel;
+        this.relicInventory = relicInventory;
+        this.relicRewardService = relicRewardService;
+        this.relicResolver = relicResolver;
 
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
@@ -146,6 +156,28 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.MachineShop))
             .AddTo(disposables);
 
+        //　レリック3択の選択/スキップ
+        tomsShopView.OnRelicChoiceSelected
+            .Subscribe(index =>
+            {
+                if (relicRewardService != null &&
+                    relicRewardService.ChoosePending(index, gameFlowManager.CurrentTurn.Value))
+                {
+                    SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+                }
+                tomsShopView.HideRelicChoices();
+                RefreshRelicBar();
+            })
+            .AddTo(disposables);
+
+        tomsShopView.OnRelicChoiceSkipped
+            .Subscribe(_ =>
+            {
+                relicRewardService?.SkipPending();
+                tomsShopView.HideRelicChoices();
+            })
+            .AddTo(disposables);
+
         //　営業フェーズの「営業開始」ボタン → 簡易演出 → サマリー表示
         tomsShopView.OnStartShopClicked
             .Subscribe(_ =>
@@ -216,6 +248,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     {
         int cycle = tomsShopModel.DebtCycle.Value;
         int nextAmount = GameConst.GetDebtAmount(cycle + 1);
+        // レリック補正（DebtAmountMul）を表示にも反映（実際の支払いは DebtPresenter 側で同じ補正）
+        if (relicResolver != null)
+            nextAmount = relicResolver.ModifyInt(RelicStatId.DebtAmountMul, nextAmount);
         int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
         int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
         tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);
@@ -258,6 +293,12 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             }
         }
 
+        // 配信勝利報酬のレリック3択（保留があれば表示）
+        ShowPendingRelicChoicesIfAny();
+
+        // 所持レリックバーの更新
+        RefreshRelicBar();
+
         // --- ターン進行フェーズの開始 / 再適用 ---
         if (turnChanged || !_turnPhaseInitialized)
         {
@@ -272,6 +313,34 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         }
     }
     
+    /// <summary>
+    /// 配信勝利報酬のレリック3択を表示する。
+    /// パネル未配線の場合は最初の候補を自動獲得してログに残す（機能自体は成立させる）。
+    /// </summary>
+    private void ShowPendingRelicChoicesIfAny()
+    {
+        if (relicRewardService == null || relicRewardService.PendingChoices.Count == 0) return;
+
+        var choices = relicRewardService.PendingChoices
+            .Select(c => (c.relicName, c.description))
+            .ToList();
+
+        if (!tomsShopView.ShowRelicChoices(choices))
+        {
+            string autoName = relicRewardService.PendingChoices[0].relicName;
+            relicRewardService.ChoosePending(0, gameFlowManager.CurrentTurn.Value);
+            Debug.Log($"[Relic] 3択パネル未配線のため自動獲得: {autoName}");
+            RefreshRelicBar();
+        }
+    }
+
+    private void RefreshRelicBar()
+    {
+        if (relicInventory == null) return;
+        var names = relicInventory.OwnedDefinitions().Select(d => d.relicName).ToList();
+        tomsShopView.UpdateRelicBar(names);
+    }
+
     //初期化
     private void Initialize()
     {

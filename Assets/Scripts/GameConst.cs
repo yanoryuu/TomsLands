@@ -133,6 +133,13 @@ public static class GameConst
     public static int MaxItemStock => Data.maxItemStock;
     public static int MinItemStock => Data.minItemStock;
     public static int InitMoney => Data.initMoney;
+
+    // --- レリック（装備アイテム） ---
+    public static int RelicMaxEquipSlots => Data.relicSettings.maxEquipSlots;
+    public static int RelicRewardChoiceCount => Data.relicSettings.rewardChoiceCount;
+    public static float RelicCommonWeight => Data.relicSettings.commonWeight;
+    public static float RelicRareWeight => Data.relicSettings.rareWeight;
+    public static float RelicEpicWeight => Data.relicSettings.epicWeight;
     public static int DebtPaymentInterval => Data.debtPaymentInterval;
     public static int DebtBaseAmount => Data.debtBaseAmount;
     public static float DebtMultiplier => Data.debtMultiplier;

@@ -25,6 +25,8 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly PortfolioModel _portfolioModel;
     private readonly ShopMachineModel _shopMachineModel;
     private readonly MorningReportModel _morningReport;
+    private readonly RelicEffectResolver _relicResolver;
+    private readonly RelicHookDispatcher _relicHooks;
     private int _currentIndex;
 
     /// <summary>
@@ -49,7 +51,8 @@ public class GameFlowManager : IDisposable, IStartable
         PendingEventData pendingEventData, MarketingFacade marketingFacade,
         ShopStatusModel shopStatusModel, SellOrderModel sellOrderModel,
         PortfolioModel portfolioModel, ShopMachineModel shopMachineModel,
-        MorningReportModel morningReport)
+        MorningReportModel morningReport, RelicEffectResolver relicResolver,
+        RelicHookDispatcher relicHooks)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -68,6 +71,8 @@ public class GameFlowManager : IDisposable, IStartable
         _portfolioModel = portfolioModel;
         _shopMachineModel = shopMachineModel;
         _morningReport = morningReport;
+        _relicResolver = relicResolver;
+        _relicHooks = relicHooks;
         _currentIndex = 0;
     }
 
@@ -184,9 +189,11 @@ public class GameFlowManager : IDisposable, IStartable
 
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {
-            // マシン（冷蔵ケース等）の需要下限ボーナスを渡す（未設置なら 0 で従来挙動）
-            float machineDemandFloor = _shopMachineModel?.TotalDemandFloorBonus ?? 0f;
-            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, machineDemandFloor);
+            // マシン（冷蔵ケース等）+ レリックの需要下限ボーナスを渡す（どちらも無ければ 0 で従来挙動）
+            float demandFloorBonus = _shopMachineModel?.TotalDemandFloorBonus ?? 0f;
+            if (_relicResolver != null)
+                demandFloorBonus = _relicResolver.Modify(RelicStatId.DemandFloorAdd, demandFloorBonus);
+            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
@@ -248,6 +255,13 @@ public class GameFlowManager : IDisposable, IStartable
                 _morningReport?.AddRange(machineResult.Lines);
                 if (machineResult.ProducedAnyItem)
                     _itemModel.SaveData();
+            }
+
+            // レリックのターン開始フック（フック型効果。入金はビヘイビア内で行われる）
+            if (_relicHooks != null)
+            {
+                var relicLines = _relicHooks.OnTurnStart(CurrentTurn.Value, _tomsModel, _itemModel);
+                _morningReport?.AddRange(relicLines);
             }
 
             if (financeIncome > 0)

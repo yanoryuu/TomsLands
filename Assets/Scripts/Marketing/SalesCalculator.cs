@@ -15,15 +15,18 @@ public class SalesCalculator
     private readonly BuzzSystem _buzzSystem;
     private readonly FollowerSystem _followerSystem;
     private readonly ShopMachineModel _machineModel;
+    private readonly RelicEffectResolver _relicResolver;
 
     /// <summary>
     /// コンストラクタ。VContainer から注入する。
     /// </summary>
-    public SalesCalculator(BuzzSystem buzzSystem, FollowerSystem followerSystem, ShopMachineModel machineModel = null)
+    public SalesCalculator(BuzzSystem buzzSystem, FollowerSystem followerSystem, ShopMachineModel machineModel = null,
+        RelicEffectResolver relicResolver = null)
     {
         _buzzSystem = buzzSystem;
         _followerSystem = followerSystem;
         _machineModel = machineModel;
+        _relicResolver = relicResolver;
     }
 
     /// <summary>
@@ -47,8 +50,11 @@ public class SalesCalculator
         // マシン（客寄せ）による売上倍率（未設置なら 1.0）
         float machineMultiplier = _machineModel != null ? _machineModel.TotalRevenueMultiplier : 1f;
 
-        // 最終売上 = 基本売上 × バズ倍率 × (1 + フォロワーボーナス率) × マシン倍率
-        float finalRevenue = baseRevenue * buzzMultiplier * (1f + followerBonusRate) * machineMultiplier;
+        // レリックによる売上倍率（未所持なら 1.0）
+        float relicMultiplier = _relicResolver != null ? _relicResolver.Modify(RelicStatId.ShopRevenueMul, 1f) : 1f;
+
+        // 最終売上 = 基本売上 × バズ倍率 × (1 + フォロワーボーナス率) × マシン倍率 × レリック倍率
+        float finalRevenue = baseRevenue * buzzMultiplier * (1f + followerBonusRate) * machineMultiplier * relicMultiplier;
 
         int result = Mathf.Max(0, Mathf.RoundToInt(finalRevenue));
 

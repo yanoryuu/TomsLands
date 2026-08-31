@@ -16,6 +16,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly ShopEconomySettings _economySettings;
     private readonly TomsModel _tomsModel;
     private readonly HeroModel _heroModel;
+    private readonly RelicRewardService _relicRewardService;
 
     public BattleResultHandler(
         BattleOutputData outputData,
@@ -25,7 +26,8 @@ public class BattleResultHandler : IStartable, IDisposable
         GameFlowManager gameFlowManager,
         ShopEconomySettings economySettings,
         TomsModel tomsModel,
-        HeroModel heroModel)
+        HeroModel heroModel,
+        RelicRewardService relicRewardService)
     {
         _outputData = outputData;
         _inputData = inputData;
@@ -35,6 +37,7 @@ public class BattleResultHandler : IStartable, IDisposable
         _economySettings = economySettings;
         _tomsModel = tomsModel;
         _heroModel = heroModel;
+        _relicRewardService = relicRewardService;
     }
 
     public void Start()
@@ -72,6 +75,9 @@ public class BattleResultHandler : IStartable, IDisposable
                 _itemModel.BattleWinBonus(_outputData.WeaponId, 5);
             if (!string.IsNullOrEmpty(_outputData.ArmorId))
                 _itemModel.BattleWinBonus(_outputData.ArmorId, 5);
+
+            // 配信勝利報酬: レリック3択を保留に積む（ホーム復帰時に選択UIが出る）
+            _relicRewardService?.QueueBattleReward();
 
             Debug.Log("[BattleResultHandler] Victory bonuses applied.");
         }

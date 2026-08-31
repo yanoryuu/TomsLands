@@ -23,6 +23,8 @@ public class DebugMenuView : MonoBehaviour
     private TurnPhaseManager _turnPhaseManager;
     private PortfolioModel _portfolioModel;
     private ItemModel _itemModel;
+    private RelicInventoryModel _relicInventory;
+    private RelicRewardService _relicRewardService;
 
     private bool _visible;
     private Rect _windowRect = new Rect(24, 24, 360, 600);
@@ -37,7 +39,9 @@ public class DebugMenuView : MonoBehaviour
         ShopStatusModel statusModel,
         TurnPhaseManager turnPhaseManager,
         PortfolioModel portfolioModel,
-        ItemModel itemModel)
+        ItemModel itemModel,
+        RelicInventoryModel relicInventory,
+        RelicRewardService relicRewardService)
     {
         _tomsModel = tomsModel;
         _gameFlowManager = gameFlowManager;
@@ -46,6 +50,8 @@ public class DebugMenuView : MonoBehaviour
         _turnPhaseManager = turnPhaseManager;
         _portfolioModel = portfolioModel;
         _itemModel = itemModel;
+        _relicInventory = relicInventory;
+        _relicRewardService = relicRewardService;
     }
 
     private void Update()
@@ -179,6 +185,25 @@ public class DebugMenuView : MonoBehaviour
                 }
                 else Debug.Log("[DebugMenu] FinancialProductData が1件もありません");
             }
+        }
+
+        // レリック検証
+        if (_relicInventory != null)
+        {
+            GUILayout.Label($"レリック: {_relicInventory.Owned.Count}個所持");
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("ランダム獲得"))
+            {
+                var picks = _relicRewardService?.PickChoices(1);
+                if (picks != null && picks.Count > 0)
+                    _relicInventory.Add(picks[0].relicId, _gameFlowManager.CurrentTurn.Value, GameConst.RelicMaxEquipSlots);
+                else Debug.Log("[DebugMenu] 獲得できるレリックがありません");
+            }
+            if (GUILayout.Button("3択テスト"))
+            {
+                _relicRewardService?.QueueBattleReward();
+            }
+            GUILayout.EndHorizontal();
         }
 
         GUILayout.Space(8);

@@ -116,6 +116,15 @@ public class GameLifetimeScope : LifetimeScope
         financialProducts = RemoteBalance.ApplyList("financialProducts", financialProducts, p => p.productId);
         builder.RegisterInstance(financialProducts);
 
+        // レリック（装備アイテム）マスターのロードと登録
+        var relicDefinitions = AddressableLoader.LoadAll<RelicDefinition>("RelicData");
+        if (relicDefinitions.Count == 0)
+        {
+            Debug.LogWarning("[GameLifetimeScope] RelicDefinition が見つかりません。レリックは獲得できません。Create > ScriptableObjects > Relic > RelicDefinition で作成し、ラベル RelicData を付与してください。");
+        }
+        relicDefinitions = RemoteBalance.ApplyList("relics", relicDefinitions, r => r.relicId);
+        builder.RegisterInstance(relicDefinitions);
+
         // マシン（店カスタマイズ）マスターのロードと登録
         var shopMachines = AddressableLoader.LoadAll<ShopMachineData>("ShopMachineData");
         if (shopMachines.Count == 0)
@@ -227,6 +236,11 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<PortfolioModel>(Lifetime.Singleton);
         builder.Register<ShopMachineModel>(Lifetime.Singleton);
         builder.Register<MorningReportModel>(Lifetime.Singleton);
+        builder.Register<RelicInventoryModel>(Lifetime.Singleton);
+        builder.Register<RelicEffectResolver>(Lifetime.Singleton);
+        builder.Register<RelicBehaviourRegistry>(Lifetime.Singleton);
+        builder.Register<RelicHookDispatcher>(Lifetime.Singleton);
+        builder.Register<RelicRewardService>(Lifetime.Singleton);
         builder.Register<ItemSelectionModel>(Lifetime.Singleton);
         builder.Register<InfoBrokerModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);

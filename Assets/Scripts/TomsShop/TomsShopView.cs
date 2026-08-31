@@ -39,6 +39,16 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private GameObject morningReportPanel;
     [SerializeField] private TextMeshProUGUI morningReportText;
     [SerializeField] private Button morningReportCloseButton;
+
+    [Header("レリック獲得3択 ※未配線でも動作する")]
+    [SerializeField] private GameObject relicChoicePanel;
+    [SerializeField] private Button[] relicChoiceButtons;
+    [SerializeField] private TextMeshProUGUI[] relicChoiceNameTexts;
+    [SerializeField] private TextMeshProUGUI[] relicChoiceDescTexts;
+    [SerializeField] private Button relicChoiceSkipButton;
+
+    [Header("所持レリックバー ※未配線でも動作する")]
+    [SerializeField] private TextMeshProUGUI relicBarText;
     
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
@@ -65,6 +75,50 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnMachineShopClicked { get; } = new();
     //借金返済パネルを開く
     public Subject<Unit> OnDebtPaymentClicked { get; } = new();
+    //レリック3択の選択（index）とスキップ
+    public Subject<int> OnRelicChoiceSelected { get; } = new();
+    public Subject<Unit> OnRelicChoiceSkipped { get; } = new();
+
+    /// <summary>
+    /// レリック獲得3択を表示する。パネル未配線なら false を返す
+    /// （呼び出し側が自動獲得にフォールバック）。
+    /// </summary>
+    public bool ShowRelicChoices(List<(string name, string description)> choices)
+    {
+        if (relicChoicePanel == null || relicChoiceButtons == null || relicChoiceButtons.Length == 0)
+            return false;
+
+        for (int i = 0; i < relicChoiceButtons.Length; i++)
+        {
+            bool hasChoice = i < choices.Count;
+            if (relicChoiceButtons[i] != null)
+                relicChoiceButtons[i].gameObject.SetActive(hasChoice);
+            if (!hasChoice) continue;
+
+            if (relicChoiceNameTexts != null && i < relicChoiceNameTexts.Length && relicChoiceNameTexts[i] != null)
+                relicChoiceNameTexts[i].text = choices[i].name;
+            if (relicChoiceDescTexts != null && i < relicChoiceDescTexts.Length && relicChoiceDescTexts[i] != null)
+                relicChoiceDescTexts[i].text = choices[i].description;
+        }
+
+        relicChoicePanel.SetActive(true);
+        return true;
+    }
+
+    public void HideRelicChoices()
+    {
+        if (relicChoicePanel != null)
+            relicChoicePanel.SetActive(false);
+    }
+
+    /// <summary>所持レリックバーの表示を更新する。未配線なら何もしない。</summary>
+    public void UpdateRelicBar(IReadOnlyList<string> relicNames)
+    {
+        if (relicBarText == null) return;
+        relicBarText.text = relicNames == null || relicNames.Count == 0
+            ? ""
+            : $"レリック: {string.Join(" / ", relicNames)}";
+    }
 
     /// <summary>設置済みマシンの見た目を更新する。未配線なら何もしない。</summary>
     public void RefreshMachineDisplay(ShopMachineModel machineModel)
@@ -105,6 +159,18 @@ public class TomsShopView : MonoBehaviour
             MachineShopButton.onClick.AddListener(() => OnMachineShopClicked.OnNext(Unit.Default));
         if (morningReportCloseButton != null && morningReportPanel != null)
             morningReportCloseButton.onClick.AddListener(() => morningReportPanel.SetActive(false));
+
+        if (relicChoiceButtons != null)
+        {
+            for (int i = 0; i < relicChoiceButtons.Length; i++)
+            {
+                int index = i;
+                if (relicChoiceButtons[i] != null)
+                    relicChoiceButtons[i].onClick.AddListener(() => OnRelicChoiceSelected.OnNext(index));
+            }
+        }
+        if (relicChoiceSkipButton != null)
+            relicChoiceSkipButton.onClick.AddListener(() => OnRelicChoiceSkipped.OnNext(Unit.Default));
         if (debtPaymentButton != null)
             debtPaymentButton.onClick.AddListener(() => OnDebtPaymentClicked.OnNext(Unit.Default));
     }
