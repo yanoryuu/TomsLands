@@ -104,7 +104,7 @@ public static class GameConst
             return settings.data.Clone();
 
         Debug.LogWarning($"[GameConst] '{Address}' が読み込めませんでした。既定値を使用します。" +
-                         "Tools > GameConst > Create Settings Asset で作成し、Addressable 登録してください。");
+                         "Tools > TomsLands > リモート設定 > GameConst Settingsアセット生成 で作成し、Addressable 登録してください。");
         return new GameConstData();
     }
 
@@ -134,12 +134,22 @@ public static class GameConst
     public static int MinItemStock => Data.minItemStock;
     public static int InitMoney => Data.initMoney;
 
+    // --- 準備シーン（メタ進行） ---
+    public static PreparationSettingsData Preparation => Data.preparation;
+
     // --- レリック（装備アイテム） ---
     public static int RelicMaxEquipSlots => Data.relicSettings.maxEquipSlots;
     public static int RelicRewardChoiceCount => Data.relicSettings.rewardChoiceCount;
     public static float RelicCommonWeight => Data.relicSettings.commonWeight;
     public static float RelicRareWeight => Data.relicSettings.rareWeight;
     public static float RelicEpicWeight => Data.relicSettings.epicWeight;
+    /// <summary>レリック3択を辞退したときにもらえるゴールド（レア度別）。</summary>
+    public static int RelicDeclineGold(RelicRarity rarity) => rarity switch
+    {
+        RelicRarity.Epic => Data.relicSettings.declineGoldEpic,
+        RelicRarity.Rare => Data.relicSettings.declineGoldRare,
+        _ => Data.relicSettings.declineGoldCommon,
+    };
     public static int DebtPaymentInterval => Data.debtPaymentInterval;
     public static int DebtBaseAmount => Data.debtBaseAmount;
     public static float DebtMultiplier => Data.debtMultiplier;

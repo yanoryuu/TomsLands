@@ -20,8 +20,11 @@ public static class SaveSlotManager
 
     private const string CurrentSlotKey = "current_save_slot";
 
-    /// <summary>スロットが使用済みか判定する基準ファイル（新規開始時に必ず書き込まれる）。</summary>
+    /// <summary>進行中のランが存在するか判定する基準ファイル（新規開始時に必ず書き込まれる）。</summary>
     private const string PresenceMarkerFile = "tomsData.json";
+
+    /// <summary>プロフィール（メタ進行）が存在するか判定するファイル。</summary>
+    private const string MetaMarkerFile = "metaData.json";
 
     private static int _currentSlot = -1;
 
@@ -63,9 +66,17 @@ public static class SaveSlotManager
         return Path.Combine(root, fileName);
     }
 
-    /// <summary>指定スロットにセーブデータが存在するか。</summary>
+    /// <summary>
+    /// 指定スロットに「進行中のラン」が存在するか（＝続きから再開できるか）。
+    /// スロットの意味は「1スロット=1プロフィール（メタ進行 + 進行中のラン0〜1個）」であり、
+    /// ラン終了後もメタ進行（metaData.json）は残る（HasProfile）。
+    /// </summary>
     public static bool Exists(int slot)
         => File.Exists(Path.Combine(SlotRoot(slot), PresenceMarkerFile));
+
+    /// <summary>指定スロットにプロフィール（メタ進行 or 進行中ラン）が存在するか。</summary>
+    public static bool HasProfile(int slot)
+        => Exists(slot) || File.Exists(Path.Combine(SlotRoot(slot), MetaMarkerFile));
 
     /// <summary>いずれかのスロットにセーブデータが存在するか。</summary>
     public static bool AnyExists()
@@ -101,25 +112,49 @@ public static class SaveSlotManager
     public static SaveSlotInfo GetSlotInfo(int slot)
     {
         var info = new SaveSlotInfo { SlotIndex = slot, Exists = false };
-        var path = Path.Combine(SlotRoot(slot), PresenceMarkerFile);
-        if (!File.Exists(path)) return info;
 
-        try
+        var path = Path.Combine(SlotRoot(slot), PresenceMarkerFile);
+        if (File.Exists(path))
         {
-            var json = File.ReadAllText(path);
-            var data = JsonUtility.FromJson<TomsData>(json);
-            if (data != null)
+            try
             {
-                info.Exists = true;
-                info.Day = data.currentTurn;
-                info.Gold = data.shopMoney;
-                info.Mode = (GameModeId)data.gameMode;
+                var json = File.ReadAllText(path);
+                var data = JsonUtility.FromJson<TomsData>(json);
+                if (data != null)
+                {
+                    info.Exists = true;
+                    info.Day = data.currentTurn;
+                    info.Gold = data.shopMoney;
+                    info.Mode = (GameModeId)data.gameMode;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[SaveSlotManager] スロット{slot}のサマリ読み取りに失敗: {e.Message}");
             }
         }
-        catch (Exception e)
+
+        // メタ進行（プロフィール）のサマリ。ラン終了後もスロット表示に残る
+        var metaPath = Path.Combine(SlotRoot(slot), MetaMarkerFile);
+        if (File.Exists(metaPath))
         {
-            Debug.LogWarning($"[SaveSlotManager] スロット{slot}のサマリ読み取りに失敗: {e.Message}");
+            try
+            {
+                var meta = JsonUtility.FromJson<MetaProgressData>(File.ReadAllText(metaPath));
+                if (meta != null)
+                {
+                    info.HasProfile = true;
+                    info.MetaCurrency = meta.metaCurrency;
+                    info.TotalRuns = meta.totalRuns;
+                    info.BestRank = meta.bestRank ?? "";
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[SaveSlotManager] スロット{slot}のメタ情報読み取りに失敗: {e.Message}");
+            }
         }
+        info.HasProfile |= info.Exists;
 
         return info;
     }

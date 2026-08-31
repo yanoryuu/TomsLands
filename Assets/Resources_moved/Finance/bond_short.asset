@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d89886b9764e0b4c86d797a4873f837, type: 3}
+  m_Name: bond_short
+  m_EditorClassIdentifier: 
+  productId: bond_short
+  productName: "\u30AE\u30EB\u30C9\u77ED\u671F\u50B5"
+  description: "\u30AE\u30EB\u30C9\u3078\u306E\u77ED\u671F\u51FA\u8CC7\u30025\u65E5\u5F8C\u306B\u5143\u672C+10%\u3067\u511F\u9084\u3055\u308C\u308B\u3002\u6E80\u671F\u307E\u3067\u8CC7\u91D1\u306F\u30ED\u30C3\u30AF\u3055\u308C\u308B\u3002"
+  icon: {fileID: 0}
+  kind: 0
+  unlockInfoBrokerLevel: 1
+  bondUnitPrice: 2000
+  bondInterestRate: 0.1
+  bondMaturityTurns: 5
+  fundBaseUnitPrice: 1000
+  useAttributeFilter: 0
+  attribute: 0

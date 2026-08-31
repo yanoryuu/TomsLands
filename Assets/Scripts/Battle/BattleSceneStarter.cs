@@ -347,8 +347,12 @@ public class BattleSceneStarter : IAsyncStartable
 
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
         int reward = dungeon?.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0;
+
+        // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
+        reward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
+
         if (reward > 0)
-            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel})");
+            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={RelicBattleEffects.DefeatRewardMul:F2})");
         return reward;
     }
 

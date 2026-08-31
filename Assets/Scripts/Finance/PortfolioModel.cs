@@ -182,7 +182,7 @@ public class PortfolioModel
     /// <summary>
     /// 日送り時に呼ぶ。満期を迎えた債券を償還（入金は呼び出し側）し、ファンドのNAV履歴を記録する。
     /// </summary>
-    public FinanceTurnResult ApplyTurn(int currentTurn, ItemModel itemModel, int blacksmithLevel)
+    public FinanceTurnResult ApplyTurn(int currentTurn, ItemModel itemModel, int blacksmithLevel, RelicEffectResolver relicResolver = null)
     {
         var result = new FinanceTurnResult();
 
@@ -193,6 +193,10 @@ public class PortfolioModel
             float rate = product != null ? product.bondInterestRate : 0f;
             int principal = pos.Principal;
             int interest = Mathf.RoundToInt(principal * rate);
+
+            // レリック補正（不労所得ビルド: FinanceYieldMul）。利息のみ増幅（元本は不変）
+            if (relicResolver != null)
+                interest = Mathf.Max(0, relicResolver.ModifyInt(RelicStatId.FinanceYieldMul, interest));
 
             result.BondPayout += principal + interest;
             result.MaturedBonds.Add((product != null ? product.productName : pos.ProductId, principal, interest));

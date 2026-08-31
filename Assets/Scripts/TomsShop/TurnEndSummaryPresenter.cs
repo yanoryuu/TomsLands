@@ -19,6 +19,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     private readonly MarketingFacade marketingFacade;
     private readonly SellOrderModel sellOrderModel;
     private readonly ShopEconomySettings economySettings;
+    private readonly RelicEffectResolver relicResolver;
     private readonly CompositeDisposable disposables = new();
 
     // フェーズ再入（ForceNotify等）による販売処理の二重実行を防ぐガード
@@ -32,7 +33,8 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         StateManager stateManager,
         MarketingFacade marketingFacade,
         SellOrderModel sellOrderModel,
-        ShopEconomySettings economySettings)
+        ShopEconomySettings economySettings,
+        RelicEffectResolver relicResolver)
     {
         this.view = view;
         this.itemModel = itemModel;
@@ -42,6 +44,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         this.marketingFacade = marketingFacade;
         this.sellOrderModel = sellOrderModel;
         this.economySettings = economySettings;
+        this.relicResolver = relicResolver;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.TurnEndSummary, Entry);
     }
@@ -76,7 +79,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         int delayTurns = economySettings != null ? economySettings.sellOrderDelayTurns : 1;
 
         // 1. 約定日を迎えた売り注文を精算して入金（昨日陳列した分が今日売れた）
-        var settlement = sellOrderModel.SettleDue(currentTurn, itemModel, economySettings, marketingFacade);
+        var settlement = sellOrderModel.SettleDue(currentTurn, itemModel, economySettings, marketingFacade, relicResolver);
         if (settlement.TotalIncome > 0)
         {
             tomsModel.AddRevenue(settlement.TotalIncome);

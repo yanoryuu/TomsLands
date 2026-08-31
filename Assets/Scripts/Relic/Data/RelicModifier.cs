@@ -16,12 +16,24 @@ public enum RelicStatId
     DebtAmountMul,
     /// <summary>同時陳列銘柄数への加算（店レベル上限に上乗せ）。</summary>
     DisplayKindsAdd,
-    /// <summary>仕入れ価格への倍率（未配線・将来用。表示価格との一元化が前提）。</summary>
+    /// <summary>仕入れ価格への倍率（薄利多売ビルド。注文ウィジェットの表示・決済とも RelicPricing で一元適用）。</summary>
     ProcurementCostMul,
-    /// <summary>バズ発生確率への加算%（未配線・将来用）。</summary>
+    /// <summary>バズ発生確率への加算%（インフルエンサービルド）。</summary>
     BuzzChanceAdd,
-    /// <summary>配当収入への倍率（未配線・将来用）。</summary>
+    /// <summary>配当収入への倍率（不労所得ビルド）。</summary>
     DividendMul,
+    /// <summary>勇者敗北時（防衛成功）の報酬への倍率（魔王ビルド）。</summary>
+    DefeatRewardMul,
+    /// <summary>配信での勇者の強さ（HP/攻/防）への倍率。1未満で負けやすくなる（魔王ビルド）。</summary>
+    HeroPowerMul,
+    /// <summary>イベントで得る金額への倍率（強運ビルド。マイナスのペナルティには適用しない）。</summary>
+    EventRewardMul,
+    /// <summary>債券利息への倍率（不労所得ビルド）。</summary>
+    FinanceYieldMul,
+    /// <summary>売り注文の約定クランプ幅への加算（相場師ビルド。±が広がりハイリスク化）。</summary>
+    SellClampAdd,
+    /// <summary>選択式製造機の毎朝の製造予算への加算G（工房ビルド）。</summary>
+    ProductionBudgetAdd,
 }
 
 public enum RelicOp

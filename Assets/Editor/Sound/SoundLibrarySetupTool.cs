@@ -23,7 +23,7 @@ public class SoundLibrarySetupTool : EditorWindow
     // プレビュー用
     private List<(string key, string path, bool isBGM)> _preview;
 
-    [MenuItem("Tools/Sound/SoundLibrary 自動設定")]
+    [MenuItem("Tools/TomsLands/データ生成/SoundLibrary自動設定")]
     public static void ShowWindow()
         => GetWindow<SoundLibrarySetupTool>("SoundLibrary 自動設定");
 

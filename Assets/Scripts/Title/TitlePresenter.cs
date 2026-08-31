@@ -152,12 +152,13 @@ public sealed class TitlePresenter : IStartable, IDisposable
     /// <summary>スロットの削除要求。確認ポップアップを挟んでから削除する。</summary>
     private void OnSlotDeleteRequested(int slot)
     {
-        if (!SaveSlotManager.Exists(slot)) return;
+        // プロフィール（メタ進行のみのスロット含む）を対象にする
+        if (!SaveSlotManager.HasProfile(slot)) return;
 
         _popUpManager.Show(new PopUpData
         {
             Title = "削除の確認",
-            Message = $"スロット {slot + 1} のセーブデータを削除しますか？\nこの操作は取り消せません。",
+            Message = $"スロット {slot + 1} のデータ（メタ進行を含む）を削除しますか？\nこの操作は取り消せません。",
             ConfirmButtonText = "削除する",
             CancelButtonText = "戻る",
             Size = PopupSizeEnum.Medium,
@@ -204,8 +205,9 @@ public sealed class TitlePresenter : IStartable, IDisposable
         SaveSlotManager.CurrentSlot = slot;
         _startModeData.SetNewGame();
         _startModeData.SetFlowSelection(_model.SelectedDifficulty, _view.UseAutoGeneration);
-        Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}, difficulty={_model.SelectedDifficulty})");
-        SceneManager.LoadScene(GameSceneName);
+        Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}, difficulty={_model.SelectedDifficulty}) → 準備シーンへ");
+        // 新規ランは準備シーン（借入・持ち込み・スタートダッシュ・スターターレリック）を経由する
+        SceneManager.LoadScene("PreparationScene");
     }
 
     private void ContinueGame(int slot)

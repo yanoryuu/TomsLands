@@ -160,5 +160,5 @@
 
 ## 7. Unity側対応状況（実装済み・GAS担当は不要）
 - 取得・分割・適用・キャッシュ・フォールバックは実装済み（`RemoteBalance` / `RemoteBalanceService` / `BootLifetimeScope` / 各ロード箇所）。
-- 確認は `Tools > Balance > リモート確認ウィンドウ`。
+- 確認は `Tools > TomsLands > リモート設定 > Balance確認ウィンドウ`。
 - GAS担当は本書 §1〜§3 を満たす `balance.json` を配信すればよい。

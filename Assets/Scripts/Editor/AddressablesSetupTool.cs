@@ -9,7 +9,7 @@ using UnityEngine;
 /// - アドレス = 旧 Resources からの相対パス（拡張子なし）にするため、コード側のキーを変えずに済む。
 /// - LoadAll をラベルで束ねるため、各アセットに「型名ラベル」を付与する
 ///   （例: ItemData → ラベル "ItemData", AdvertisementData → "AdvertisementData"）。
-/// メニュー: Tools > Addressables > Register Moved Resources
+/// メニュー: Tools > TomsLands > データ生成 > Addressables一括登録（Resources_moved）
 /// </summary>
 public static class AddressablesSetupTool
 {
@@ -18,7 +18,7 @@ public static class AddressablesSetupTool
     // EnemyData は別フォルダに移動済み。アドレスは "EnemyData/<ファイル名>"。
     private const string EnemyDataRoot = "Assets/EnemyData";
 
-    [MenuItem("Tools/Addressables/Register Moved Resources")]
+    [MenuItem("Tools/TomsLands/データ生成/Addressables一括登録（Resources_moved）")]
     public static void RegisterMovedResources()
     {
         var settings = AddressableAssetSettingsDefaultObject.Settings;

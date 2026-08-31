@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5fd8053a5a60848a697a4513b65547, type: 3}
+  m_Name: relic_compound_tome
+  m_EditorClassIdentifier: 
+  relicId: relic_compound_tome
+  relicName: "\u8907\u5229\u306E\u6559\u672C"
+  description: "\u5229\u606F\u306F\u96EA\u3060\u308B\u307E\u5F0F\u306B\u3002\u50B5\u5238\u5229\u606F+50%\u3002"
+  icon: {fileID: 0}
+  rarity: 1
+  category: 0
+  isCurse: 0
+  modifiers:
+  - stat: 10
+    op: 1
+    value: 1.5
+  behaviours: []

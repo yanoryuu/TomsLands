@@ -46,10 +46,15 @@ public class ShopMachineData : ScriptableObject
     public ShopMachineEffectType effectType = ShopMachineEffectType.DailyMoney;
     [Tooltip("DailyMoney: 毎朝入るゴールド")]
     public int dailyMoney = 800;
-    [Tooltip("DailyItem: 毎朝生成するアイテムID")]
+    [Tooltip("DailyItem: 毎朝生成するアイテムID（dailyItemSelectable=true のときは初期選択。空なら未選択で開始）")]
     public string dailyItemId = "";
-    [Tooltip("DailyItem: 毎朝生成する個数")]
+    [Tooltip("DailyItem: 毎朝生成する個数（dailyItemSelectable=false の固定生産時のみ使用）")]
     public int dailyItemCount = 1;
+    [Tooltip("DailyItem: true ならプレイヤーが生産アイテムを選べる（鍛冶屋レベルで解放済みのアイテムから）")]
+    public bool dailyItemSelectable = false;
+    [Tooltip("DailyItem(選択式): 毎朝この金額ぶんの製造が進み、選択アイテムの基準価格に達するごとに1個生産する。" +
+             "高い武器ほどゆっくり作られるため、何を選んでもバランスが保たれる")]
+    public int dailyProductionBudget = 1000;
     [Tooltip("RevenueMultiplier: 営業売上への加算倍率（0.05 = +5%）")]
     public float revenueMultiplierBonus = 0.05f;
     [Tooltip("DemandFloorBonus: 需要下限への加算量（0.05 = 下限+5%）")]
@@ -59,7 +64,9 @@ public class ShopMachineData : ScriptableObject
     public string EffectSummary => effectType switch
     {
         ShopMachineEffectType.DailyMoney => $"毎朝 +{dailyMoney:N0}G",
-        ShopMachineEffectType.DailyItem => $"毎朝 {dailyItemId} ×{dailyItemCount} を生成",
+        ShopMachineEffectType.DailyItem => dailyItemSelectable
+            ? $"選んだ武具を毎朝製造（{dailyProductionBudget:N0}G分/日）"
+            : $"毎朝 {dailyItemId} ×{dailyItemCount} を生成",
         ShopMachineEffectType.RevenueMultiplier => $"営業売上 +{revenueMultiplierBonus:P0}",
         ShopMachineEffectType.DemandFloorBonus => $"全商品の需要下限 +{demandFloorBonus:P0}",
         _ => "",

@@ -453,25 +453,43 @@ public class ItemModel
     /// 予算内でおすすめスコア（GetRecommendScore）が高い順にアイテムを自動購入する。
     /// </summary>
     public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel,
-        ItemTypeData.ItemAttribute? nextDungeonAttr = null)
+        ItemTypeData.ItemAttribute? nextDungeonAttr = null, RelicEffectResolver relicResolver = null,
+        AutoBuyStrategy strategy = AutoBuyStrategy.Recommend)
     {
         var results = new List<AutoPurchaseResult>();
         int remaining = Mathf.Min(budget, tomsModel.PlayerMoney.Value);
 
-        var candidates = RuntimeItems
+        var pool = RuntimeItems
             .Where(r => r.RequiredLevel.Value <= blacksmithLevel
                      && r.RemainToMax() > 0
-                     && r.CurrentPrice.Value > 0)
-            .OrderByDescending(r => GetRecommendScore(r, nextDungeonAttr))
-            .ToList();
+                     && r.CurrentPrice.Value > 0);
+
+        // 方針プリセットで優先順位を切り替える（同率以降はおすすめ順にフォールバック）
+        var candidates = (strategy switch
+        {
+            AutoBuyStrategy.DungeonFocus => pool
+                .OrderByDescending(r => nextDungeonAttr.HasValue && r.ItemAttribute == nextDungeonAttr.Value ? 1 : 0)
+                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+            AutoBuyStrategy.Bargain => pool
+                .OrderBy(BargainRatioOf)
+                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+            AutoBuyStrategy.Dividend => pool
+                .OrderByDescending(r => r.DividendPerTurn > 0
+                    ? (float)r.DividendPerTurn / Mathf.Max(1, r.CurrentPrice.Value)
+                    : 0f)
+                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+            _ => pool.OrderByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+        }).ToList();
 
         foreach (var item in candidates)
         {
             if (remaining <= 0) break;
-            int canBuy = Mathf.Min(remaining / item.CurrentPrice.Value, item.RemainToMax());
+            // レリックの仕入れ割引（ProcurementCostMul）は手動購入と同じ実効単価で適用
+            int unitPrice = RelicPricing.GetBuyUnitPrice(item.CurrentPrice.Value, relicResolver);
+            int canBuy = Mathf.Min(remaining / unitPrice, item.RemainToMax());
             if (canBuy <= 0) continue;
 
-            int cost = canBuy * item.CurrentPrice.Value;
+            int cost = canBuy * unitPrice;
             item.UpdateStock(item.Stock.Value + canBuy);
             tomsModel.PlayerMoney.Value -= cost;
             tomsModel.RecordProcurementSpend(cost);
@@ -488,15 +506,24 @@ public class ItemModel
         return results;
     }
 
+    /// <summary>割安度（現在価格／基準価格。低いほど割安）。基準価格が引けない銘柄は割安扱いしない。</summary>
+    private float BargainRatioOf(RuntimeItemData runtime)
+    {
+        var master = GetMasterItem(runtime.ItemId);
+        if (master == null || master.basePrice <= 0) return float.MaxValue;
+        return (float)runtime.CurrentPrice.Value / master.basePrice;
+    }
+
     // ========================================
     // ③ おすすめ陳列
     // ========================================
 
     /// <summary>
     /// 期待収益（需要×価格×SalesRate）が高い順に最大maxSlots枠を自動陳列する。
-    /// maxSlots / maxStockPerItem は店レベル（ShopLevelSettings）由来の値を渡すこと。
+    /// maxSlots は店レベル（ShopLevelSettings）由来の値を渡すこと。
+    /// 1銘柄あたりの陳列個数に上限は無い（制限は同時陳列の銘柄数のみ）。
     /// </summary>
-    public void AutoSetDisplay(int blacksmithLevel, int maxSlots, int maxStockPerItem = int.MaxValue)
+    public void AutoSetDisplay(int blacksmithLevel, int maxSlots)
     {
         foreach (var r in RuntimeItems)
             r.IsDisplay.Value = false;
@@ -509,7 +536,7 @@ public class ItemModel
         foreach (var item in top)
         {
             item.IsDisplay.Value = true;
-            item.DisplayStock.Value = Mathf.Min(item.Stock.Value, maxStockPerItem);
+            item.DisplayStock.Value = item.Stock.Value;
             Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={ExpectedRevenueOf(item):F1})");
         }
 

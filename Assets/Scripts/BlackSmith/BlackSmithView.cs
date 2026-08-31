@@ -65,9 +65,7 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private GameObject unlockEntryTemplate;      // エントリ雛形（非アクティブで配置）
 
     [Header("取引所（Special タブ） ※未配線でも動作する")]
-    [SerializeField] private GameObject financePanel;          // 取引所タブ専用パネル
-    [SerializeField] private Transform financeContent;         // FinanceSlot の親
-    [SerializeField] private GameObject financeSlotPrefab;     // FinanceSlot プレハブ
+    [Tooltip("金融商品の詳細パネル。リストは武具と同じ ItemShopSlot を共用する")]
     [SerializeField] private FinanceDetailPanel financeDetailPanel;
 
     [Header("Development Panel - 解放商品の詳細（レベルアップフレーム上部）")]
@@ -83,8 +81,8 @@ public class BlackSmithView : MonoBehaviour
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
     public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
     public Subject<Unit> OnCharacterClicked { get; private set; } = new();
-    /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額を通知する。</summary>
-    public Subject<int> OnAutoBuyBudgetConfirmed { get; private set; } = new();
+    /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額と方針プリセットを通知する。</summary>
+    public Subject<(int budget, AutoBuyStrategy strategy)> OnAutoBuyBudgetConfirmed { get; private set; } = new();
     /// <summary>並べ替えモードが変更されたときに通知する。</summary>
     public Subject<BlackSmithSortMode> OnSortChanged { get; private set; } = new();
 
@@ -118,7 +116,8 @@ public class BlackSmithView : MonoBehaviour
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
 
         if (autoBuyBudgetPopup != null)
-            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget => OnAutoBuyBudgetConfirmed.OnNext(budget));
+            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget =>
+                OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)));
 
         if (characterButton != null)
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
@@ -129,8 +128,6 @@ public class BlackSmithView : MonoBehaviour
         // 開発パネルは初期非表示
         if (developmentPanel)
             developmentPanel.SetActive(false);
-        if (financePanel)
-            financePanel.SetActive(false);
 
         initTabPos[BlackSmithTab.Weapon] = weaponTab.transform.localPosition;
         initTabPos[BlackSmithTab.Armor] = armorTab.transform.localPosition;
@@ -143,20 +140,14 @@ public class BlackSmithView : MonoBehaviour
     /// </summary>
     public List<ItemShopSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // 既存スロット破棄（Content配下の全子オブジェクトを削除）
-        for (int i = blackSmithContent.transform.childCount - 1; i >= 0; i--)
-        {
-            Destroy(blackSmithContent.transform.GetChild(i).gameObject);
-        }
-        activeSlots.Clear();
+        ClearCatalog();
 
         // 再生成（上から順にフェード＋ポップで登場させる）
         List<ItemShopSlot> slots = new();
         int index = 0;
         foreach (var item in runtimeItems)
         {
-            var slotObj = Instantiate(itemShopSlotPrefab, blackSmithContent.transform);
-            var slot = slotObj.GetComponent<ItemShopSlot>();
+            var slot = CreateCatalogSlot(index++);
             slot.SetItem(
                 item.ItemId,
                 item.ItemName,
@@ -169,22 +160,64 @@ public class BlackSmithView : MonoBehaviour
             );
             slots.Add(slot);
             activeSlots.Add(slot);
-
-            var cg = slotObj.GetComponent<CanvasGroup>();
-            if (cg == null) cg = slotObj.AddComponent<CanvasGroup>();
-            float delay = Mathf.Min(index * 0.035f, 0.35f); // 後半はまとめて出す
-            cg.alpha = 0f;
-            cg.DOFade(1f, 0.18f).SetDelay(delay).SetLink(slotObj);
-            slotObj.transform.localScale = Vector3.one * 0.94f;
-            slotObj.transform.DOScale(1f, 0.22f).SetDelay(delay).SetEase(Ease.OutCubic).SetLink(slotObj);
-            index++;
         }
 
-        // スクロール位置を先頭にリセット
+        ResetScroll();
+        return slots;
+    }
+
+    /// <summary>
+    /// 取引所（金融商品）の行を武具と同じカタログリスト・同じ行プレハブで生成する。
+    /// Setup（SetFinance）と購読は Presenter 側で行う。
+    /// </summary>
+    public List<ItemShopSlot> PopulateFinanceRows(int count)
+    {
+        ClearCatalog();
+
+        var slots = new List<ItemShopSlot>();
+        for (int i = 0; i < count; i++)
+        {
+            var slot = CreateCatalogSlot(i);
+            slots.Add(slot);
+            activeSlots.Add(slot);
+        }
+
+        ResetScroll();
+        return slots;
+    }
+
+    /// <summary>カタログリストの全行を破棄する。</summary>
+    private void ClearCatalog()
+    {
+        for (int i = blackSmithContent.transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(blackSmithContent.transform.GetChild(i).gameObject);
+        }
+        activeSlots.Clear();
+    }
+
+    /// <summary>行を1つ生成し、登場演出（フェード＋ポップ）を付ける。</summary>
+    private ItemShopSlot CreateCatalogSlot(int index)
+    {
+        var slotObj = Instantiate(itemShopSlotPrefab, blackSmithContent.transform);
+        var slot = slotObj.GetComponent<ItemShopSlot>();
+
+        var cg = slotObj.GetComponent<CanvasGroup>();
+        if (cg == null) cg = slotObj.AddComponent<CanvasGroup>();
+        float delay = Mathf.Min(index * 0.035f, 0.35f); // 後半はまとめて出す
+        cg.alpha = 0f;
+        cg.DOFade(1f, 0.18f).SetDelay(delay).SetLink(slotObj);
+        slotObj.transform.localScale = Vector3.one * 0.94f;
+        slotObj.transform.DOScale(1f, 0.22f).SetDelay(delay).SetEase(Ease.OutCubic).SetLink(slotObj);
+
+        return slot;
+    }
+
+    /// <summary>スクロール位置を先頭にリセットする。</summary>
+    private void ResetScroll()
+    {
         if (scrollRect)
             scrollRect.normalizedPosition = new Vector2(0, 1);
-
-        return slots;
     }
 
     private int displayedMoney;
@@ -289,36 +322,12 @@ public class BlackSmithView : MonoBehaviour
     public void SwitchPanel(BlackSmithTab tab)
     {
         bool isDevelopment = tab == BlackSmithTab.Development;
-        bool isFinance = tab == BlackSmithTab.Special;
 
-        if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment && !isFinance);
+        // 取引所（Special）も武具と同じカタログリストを使う（金融商品と武具を同列に扱う）
+        if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
-        if (financePanel)      financePanel.SetActive(isFinance);
-        // 開発/取引所パネルに並べ替えUIは不要なので隠す
-        if (sortDropdown)      sortDropdown.gameObject.SetActive(!isDevelopment && !isFinance);
-    }
-
-    /// <summary>
-    /// 取引所の商品リストを再構築する。Setup と購読は Presenter 側で行う。
-    /// financeContent / financeSlotPrefab 未配線なら空リストを返す。
-    /// </summary>
-    public List<FinanceSlot> PopulateFinanceList(int count)
-    {
-        var slots = new List<FinanceSlot>();
-        if (financeContent == null || financeSlotPrefab == null) return slots;
-
-        for (int i = financeContent.childCount - 1; i >= 0; i--)
-        {
-            Destroy(financeContent.GetChild(i).gameObject);
-        }
-
-        for (int i = 0; i < count; i++)
-        {
-            var obj = Instantiate(financeSlotPrefab, financeContent);
-            var slot = obj.GetComponent<FinanceSlot>();
-            if (slot != null) slots.Add(slot);
-        }
-        return slots;
+        // 並べ替えUIは武具の指標（収益/需要/価格）専用なので武具タブ以外では隠す
+        if (sortDropdown)      sortDropdown.gameObject.SetActive(tab == BlackSmithTab.Weapon || tab == BlackSmithTab.Armor);
     }
 
     private readonly List<GameObject> unlockEntries = new();

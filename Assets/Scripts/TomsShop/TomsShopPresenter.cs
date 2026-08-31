@@ -173,7 +173,15 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         tomsShopView.OnRelicChoiceSkipped
             .Subscribe(_ =>
             {
-                relicRewardService?.SkipPending();
+                // 辞退したら代わりにゴールドをもらう（額は選択肢の最高レア度で決まる）
+                int gold = relicRewardService?.DeclineForGold() ?? 0;
+                if (gold > 0)
+                {
+                    tomsShopModel.AddRevenue(gold);
+                    tomsShopModel.SavePlayerMoney();
+                    SoundManager.Instance?.PlaySE("営業/SE_売上音");
+                    Debug.Log($"[Relic] レリックを辞退して {gold}G を獲得");
+                }
                 tomsShopView.HideRelicChoices();
             })
             .AddTo(disposables);
@@ -208,6 +216,15 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // 借金返済ボタン → 任意払いパネルを表示
         tomsShopView.OnDebtPaymentClicked
             .Subscribe(_ => debtPresenter.ShowVoluntary())
+            .AddTo(disposables);
+
+        // 返済完了 → 返済報酬のレリック3択を即表示し、次回返済表示を更新
+        debtPresenter.OnDebtPaid
+            .Subscribe(_ =>
+            {
+                RefreshNextDebtDisplay();
+                ShowPendingRelicChoicesIfAny();
+            })
             .AddTo(disposables);
         
         //　ターン表示の更新（CommonView）
@@ -247,10 +264,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private void RefreshNextDebtDisplay()
     {
         int cycle = tomsShopModel.DebtCycle.Value;
-        int nextAmount = GameConst.GetDebtAmount(cycle + 1);
-        // レリック補正（DebtAmountMul）を表示にも反映（実際の支払いは DebtPresenter 側で同じ補正）
-        if (relicResolver != null)
-            nextAmount = relicResolver.ModifyInt(RelicStatId.DebtAmountMul, nextAmount);
+        // 借入・猶予証・レリック補正込みの額（実際の支払いと同じ DebtCalculator を使う）
+        int nextAmount = DebtCalculator.GetAmount(cycle + 1, tomsShopModel, relicResolver);
         int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
         int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
         tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);
@@ -325,7 +340,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Select(c => (c.relicName, c.description))
             .ToList();
 
-        if (!tomsShopView.ShowRelicChoices(choices))
+        string skipLabel = $"辞退して {relicRewardService.GetDeclineGold():N0}G もらう";
+        if (!tomsShopView.ShowRelicChoices(choices, skipLabel))
         {
             string autoName = relicRewardService.PendingChoices[0].relicName;
             relicRewardService.ChoosePending(0, gameFlowManager.CurrentTurn.Value);

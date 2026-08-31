@@ -7,7 +7,7 @@ public static class BattlePriceSettingsAssetCreator
     private const string ResourcesFolder = "Assets/Resources";
     private const string AssetPath = ResourcesFolder + "/BattlePriceSettings.asset";
 
-    [MenuItem("Tools/Battle/Create Battle Price Settings")]
+    [MenuItem("Tools/TomsLands/データ生成/BattlePriceSettings生成")]
     public static void CreateBattlePriceSettings()
     {
         if (!AssetDatabase.IsValidFolder(ResourcesFolder))

@@ -29,7 +29,7 @@ public class ItemMasterWindow : EditorWindow
     // itemId → アイコン（SOアセットから引く。items.jsonにスプライトは含まれないため）
     private Dictionary<string, Sprite> _iconLookup;
 
-    [MenuItem("Tools/ItemMaster/Item一覧ウィンドウ")]
+    [MenuItem("Tools/TomsLands/リモート設定/Item一覧ウィンドウ")]
     public static void Open()
     {
         var w = GetWindow<ItemMasterWindow>("Item Master");

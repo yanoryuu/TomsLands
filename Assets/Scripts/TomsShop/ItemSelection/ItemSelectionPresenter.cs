@@ -31,9 +31,6 @@ public class ItemSelectionPresenter : IDisposable, IStartable
                 : baseKinds;
         }
     }
-    private int MaxDisplayStockPerItem => shopLevelSettings != null
-        ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayStockPerItem
-        : int.MaxValue;
 
     public ItemSelectionPresenter(
         ItemSelectionModel selectionModel,
@@ -95,7 +92,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
         selectionView.OnAutoDisplayRequested
             .Subscribe(_ =>
             {
-                itemModel.AutoSetDisplay(tomsModel.BlacksmithLevel.Value, MaxDisplayKinds, MaxDisplayStockPerItem);
+                itemModel.AutoSetDisplay(tomsModel.BlacksmithLevel.Value, MaxDisplayKinds);
                 RefreshRuntimeItems();
                 RefreshCurrentSelectionPanel();
                 RebuildDisplaySlots();
@@ -119,8 +116,8 @@ public class ItemSelectionPresenter : IDisposable, IStartable
 
             itemdata.Stock.Subscribe(x =>
                 {
-                    // 陳列個数の上限 = min(在庫, 店レベルの1銘柄あたり上限)
-                    slot.SetMaxDisplayQuantity(UnityEngine.Mathf.Min(x, MaxDisplayStockPerItem));
+                    // 陳列個数の上限 = 在庫数（個数は制限しない。制限するのは同時陳列の銘柄数のみ）
+                    slot.SetMaxDisplayQuantity(x);
                     slot.SetStock(x);
                 })
                 .AddTo(panelDisposables);
@@ -128,8 +125,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
             itemdata.DisplayStock.Subscribe(x => slot.SetDisplayQuantity(x))
                 .AddTo(panelDisposables);
 
-            slot.OnDisplayQuantityChanged.Subscribe(x =>
-                    itemdata.UpdateDisplayStock(UnityEngine.Mathf.Min(x, MaxDisplayStockPerItem)))
+            slot.OnDisplayQuantityChanged.Subscribe(x => itemdata.UpdateDisplayStock(x))
                 .AddTo(panelDisposables);
 
             slot.OnToggleChanged.Subscribe(x =>

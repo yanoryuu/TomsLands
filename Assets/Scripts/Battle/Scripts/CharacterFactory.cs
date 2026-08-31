@@ -18,7 +18,8 @@ public class CharacterFactory : MonoBehaviour
     /// </summary>
     public CharacterPresenter CreateHero(HeroModel savedHeroModel, BattleSequencer sequencer)
     {
-        var model = new CharacterModel(heroData, savedHeroModel);
+        // レリック補正（魔王ビルド: 勇者弱体化）。配信遷移時に GameFlowManager がセットする
+        var model = new CharacterModel(heroData, savedHeroModel, RelicBattleEffects.HeroPowerMul);
         CharacterView view = Instantiate(heroPrefab, heroSpawnPoint.position, Quaternion.identity);
         var presenter = new CharacterPresenter(model, view, sequencer);
         presenter.Initialize();
