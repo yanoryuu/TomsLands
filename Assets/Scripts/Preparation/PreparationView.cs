@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 準備シーン（出撃準備）の View。
-/// 借入（初期資金レバレッジ）・持ち込みアイテム・スターターレリック・スタートダッシュを設定して出撃する。
+/// 借入（初期資金レバレッジ）・難易度・スターターレリック・スタートダッシュを設定して出撃する。
 /// 参照は未配線（null）でも動作する。departButton が未配線の間、Presenter は旧挙動
 /// （即 TomsShop へ遷移）にフォールバックする。
 /// </summary>
@@ -25,10 +25,16 @@ public class PreparationView : MonoBehaviour
     [SerializeField] private Button creditUpgradeButton;
     [SerializeField] private TextMeshProUGUI creditUpgradeCostText;
 
-    [Header("持ち込みアイテム（スロット制）")]
-    [SerializeField] private Transform carryCatalogParent;
+    [Header("難易度選択")]
+    [SerializeField] private Button easyButton;
+    [SerializeField] private GameObject easyCheck;
+    [SerializeField] private Button normalButton;
+    [SerializeField] private GameObject normalCheck;
+    [SerializeField] private Button hardButton;
+    [SerializeField] private GameObject hardCheck;
+
+    [Header("カタログ共通")]
     [SerializeField] private GameObject choiceSlotPrefab;
-    [SerializeField] private TextMeshProUGUI carryCounterText;
 
     [Header("スターターレリック")]
     [SerializeField] private Transform relicCatalogParent;
@@ -50,6 +56,7 @@ public class PreparationView : MonoBehaviour
 
     public Subject<Unit> OnBorrowPlus { get; } = new();
     public Subject<Unit> OnBorrowMinus { get; } = new();
+    public Subject<GameModeId> OnDifficultySelected { get; } = new();
     public Subject<Unit> OnCreditUpgrade { get; } = new();
     public Subject<Unit> OnFlyerToggled { get; } = new();
     public Subject<Unit> OnAppraisalToggled { get; } = new();
@@ -64,6 +71,9 @@ public class PreparationView : MonoBehaviour
     {
         if (borrowPlusButton != null) borrowPlusButton.onClick.AddListener(() => OnBorrowPlus.OnNext(Unit.Default));
         if (borrowMinusButton != null) borrowMinusButton.onClick.AddListener(() => OnBorrowMinus.OnNext(Unit.Default));
+        if (easyButton != null) easyButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Short));
+        if (normalButton != null) normalButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Medium));
+        if (hardButton != null) hardButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Long));
         if (creditUpgradeButton != null) creditUpgradeButton.onClick.AddListener(() => OnCreditUpgrade.OnNext(Unit.Default));
         if (flyerButton != null) flyerButton.onClick.AddListener(() => OnFlyerToggled.OnNext(Unit.Default));
         if (appraisalButton != null) appraisalButton.onClick.AddListener(() => OnAppraisalToggled.OnNext(Unit.Default));
@@ -96,9 +106,12 @@ public class PreparationView : MonoBehaviour
         if (creditUpgradeButton != null) creditUpgradeButton.interactable = canUpgrade;
     }
 
-    public void UpdateCarryCounter(int used, int max)
+    /// <summary>難易度の選択ハイライトを更新する。</summary>
+    public void UpdateDifficultySelection(GameModeId selected)
     {
-        if (carryCounterText != null) carryCounterText.text = $"持ち込み {used}/{max}";
+        if (easyCheck != null) easyCheck.SetActive(selected == GameModeId.Short);
+        if (normalCheck != null) normalCheck.SetActive(selected == GameModeId.Medium);
+        if (hardCheck != null) hardCheck.SetActive(selected == GameModeId.Long);
     }
 
     public void UpdateStartDash(
@@ -114,7 +127,7 @@ public class PreparationView : MonoBehaviour
         if (graceCheck != null) graceCheck.SetActive(graceOn);
     }
 
-    /// <summary>カタログ（持ち込み/レリック）を再構築する。Setup と購読は Presenter 側。</summary>
+    /// <summary>カタログ（スターターレリック）を再構築する。Setup と購読は Presenter 側。</summary>
     public List<PreparationChoiceSlot> PopulateCatalog(Transform parent, int count)
     {
         var slots = new List<PreparationChoiceSlot>();
@@ -134,6 +147,5 @@ public class PreparationView : MonoBehaviour
         return slots;
     }
 
-    public Transform CarryCatalogParent => carryCatalogParent;
     public Transform RelicCatalogParent => relicCatalogParent;
 }

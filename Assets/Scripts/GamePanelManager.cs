@@ -102,8 +102,8 @@ public class GamePanelManager : MonoBehaviour
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Broker:
+                // 情報屋も鍛冶屋と同レイアウトのためCommonViewを出さない（所持金は専用表示）
                 ShowWithFx(infoBrokerPanel);
-                commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Map:
                 ShowWithFx(mapPanel);

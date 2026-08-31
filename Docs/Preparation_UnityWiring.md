@@ -5,6 +5,14 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
 **未配線でもコンパイル・起動する**: 準備シーンのUIが未配線の間は従来通り素通りして TomsShop へ遷移し、
 メタ通貨の獲得・保存だけが有効になる。
 
+> **2026-08 更新（難易度の移設・持ち込み廃止）**
+> - **難易度選択はタイトルから撤去**し、準備シーンで選ぶ（かんたん=Short/ふつう=Medium/むずかしい=Long。
+>   タイトルは NewGame→保存先スロット選択に直行し、仮の既定値=ふつうを StartModeData に入れる。
+>   出撃時に `StartModeData.SetFlowSelection(選択難易度, useAuto)` で確定）
+> - **持ち込みアイテムは廃止**（レリックだけ持ち込む）。旧CarrySection は DifficultySection
+>   （かんたん/ふつう/むずかしい の3ボタン+チェック）に置き換え済み。
+>   RunSetupData.CarryItemIds/Counts と GameLifecycleHandler の持ち込み消費コードは削除
+
 ## 仕様の要点
 
 - **スロット=プロフィール化**: 1スロット = メタ進行（metaData.json）+ 進行中のラン(0〜1個)。
@@ -15,7 +23,7 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
 - **準備シーン**（新規ラン時のみ経由。続きからはスキップ）:
   - 借入: メタ通貨で解放した借入枠（0/5,000/10,000/20,000G）の範囲で借りる。
     借入額は初期資金に加算され、**初回返済に利息+50%付きで上乗せ**される（借入レバレッジ）
-  - 持ち込み: requiredLevel==1 のアイテムを合計2個まで初期在庫に（枠は将来メタ拡張）
+  - 難易度: このランの難易度をここで選ぶ（タイトルでは選ばない）
   - スターターレリック: 呪い以外の Common レリックから1個（無料）
   - スタートダッシュ（メタ通貨消費）: 宣伝ビラ（注目+20/フォロワー+100）・
     目利きの手引き（全需要+15%）・返済猶予証（初回返済-30%）
@@ -24,9 +32,8 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
 
 ## 1. アセット作成
 
-1. Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行（`RunSetupData.asset` が追加生成される）。
-2. 生成された `Assets/Resources/SceneData/RunSetupData.asset` を Addressables に登録し、
-   アドレスを **`SceneData/RunSetupData`** にする（他の SceneData と同じ）。
+1. `Assets/Resources_moved/SceneData/RunSetupData.asset` はコミット済みで、
+   アドレス **`SceneData/RunSetupData`** で Addressables 登録済み（生成ツールは役目を終えたため削除済み）。
 
 ## 2. 準備シーンのUI構築（PreparationScene.unity）
 
@@ -40,8 +47,7 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
    - ヘッダー: MetaCurrencyText（信用表示）/ DifficultyText / MessageText
    - 借入セクション: BorrowAmountText / +ボタン / -ボタン（1,000G刻み）/ CreditLineText /
      枠拡張ボタン + コストText
-   - 持ち込みセクション: ScrollView の Content → **Carry Catalog Parent**、
-     Choice Slot Prefab、CarryCounterText（「持ち込み 1/2」）
+   - 難易度セクション: Easy/Normal/Hard Button ×3 + 各チェックマークGameObject（配線済み）
    - スターターレリックセクション: ScrollView の Content → **Relic Catalog Parent**
    - スタートダッシュ: ボタン×3 + ラベルText×3 + チェックマークGameObject×3
    - **出撃ボタン（必須。これが未配線の間はシーンが素通りになる）** / 戻るボタン

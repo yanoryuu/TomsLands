@@ -70,5 +70,15 @@ public class SceneTransitionService
         Debug.Log("[SceneTransition] Loading GameOver...");
         SceneManager.LoadScene("GameOver");
     }
+
+    /// <summary>
+    /// 村シーン（メタ層）へ遷移する。ラン終了後の帰還先。
+    /// 事前に VillageArrivalReport を書き込んでおくと収支ポップが表示される。
+    /// </summary>
+    public void GoToVillage()
+    {
+        Debug.Log("[SceneTransition] Loading VillageScene...");
+        SceneManager.LoadScene("VillageScene");
+    }
 }
 

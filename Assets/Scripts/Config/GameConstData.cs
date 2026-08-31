@@ -37,6 +37,9 @@ public class GameConstData
     // --- 準備シーン（メタ進行・借入レバレッジ・スタートダッシュ） ---
     public PreparationSettingsData preparation = new PreparationSettingsData();
 
+    // --- 村（メタ層・村投資） ---
+    public VillageSettingsData village = new VillageSettingsData();
+
     /// <summary>
     /// 配列まで含めた深いコピーを返す（ベイク済みアセットを実行時に汚染しないため）。
     /// </summary>
@@ -55,6 +58,9 @@ public class GameConstData
         clone.preparation = preparation != null
             ? preparation.Clone()
             : new PreparationSettingsData();
+        clone.village = village != null
+            ? village.Clone()
+            : new VillageSettingsData();
         return clone;
     }
 }
@@ -98,6 +104,20 @@ public class PreparationSettingsData
         clone.rankBonuses = rankBonuses != null ? (int[])rankBonuses.Clone() : Array.Empty<int>();
         return clone;
     }
+}
+
+/// <summary>村（メタ層・村投資）関連の設定。村と店の経営（ラン）は別フローで、橋はラン終了時の変換のみ。</summary>
+[Serializable]
+public class VillageSettingsData
+{
+    /// <summary>ランクリア時: 純資産 → 村資金への変換率。</summary>
+    public float conversionRate = 0.5f;
+    /// <summary>破産時: 手元現金 → 村資金への変換率（敗北の無害化）。</summary>
+    public float bankruptcyConversionRate = 0.1f;
+    /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>
+    public float debtScalePerVillageLevel = 0f;
+
+    public VillageSettingsData Clone() => (VillageSettingsData)MemberwiseClone();
 }
 
 /// <summary>レリック（装備アイテム）関連の設定。</summary>

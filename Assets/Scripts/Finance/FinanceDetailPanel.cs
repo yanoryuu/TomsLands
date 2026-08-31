@@ -23,6 +23,7 @@ public class FinanceDetailPanel : MonoBehaviour
 
     [Header("注文")]
     [SerializeField] private TextMeshProUGUI quantityText;
+    [SerializeField] private Slider quantitySlider;
     [SerializeField] private Button plusButton;
     [SerializeField] private Button minusButton;
     [SerializeField] private TextMeshProUGUI totalCostText;
@@ -33,15 +34,27 @@ public class FinanceDetailPanel : MonoBehaviour
     public Subject<int> OnSellClicked { get; } = new();  // 数量つき
 
     private int quantity = 1;
+    private int maxQuantity = 99;
     private int unitPrice;
     private float buyFeeRate;
 
     private void Awake()
     {
         if (plusButton != null)
-            plusButton.onClick.AddListener(() => { quantity = Mathf.Min(quantity + 1, 99); RefreshQuantity(); });
+            plusButton.onClick.AddListener(() => { quantity = Mathf.Min(quantity + 1, maxQuantity); RefreshQuantity(); });
         if (minusButton != null)
             minusButton.onClick.AddListener(() => { quantity = Mathf.Max(quantity - 1, 1); RefreshQuantity(); });
+        if (quantitySlider != null)
+        {
+            quantitySlider.wholeNumbers = true;
+            quantitySlider.onValueChanged.AddListener(v =>
+            {
+                int next = Mathf.Clamp(Mathf.RoundToInt(v), 1, maxQuantity);
+                if (next == quantity) return;
+                quantity = next;
+                RefreshQuantity();
+            });
+        }
         if (buyButton != null)
             buyButton.onClick.AddListener(() => OnBuyClicked.OnNext(quantity));
         if (sellButton != null)
@@ -49,13 +62,20 @@ public class FinanceDetailPanel : MonoBehaviour
     }
 
     public void Show(FinancialProductData product, int currentUnitPrice, int heldUnits,
-        System.Collections.Generic.IReadOnlyList<int> navHistory, float fundBuyFeeRate, bool canAffordOne)
+        System.Collections.Generic.IReadOnlyList<int> navHistory, float fundBuyFeeRate, bool canAffordOne,
+        int maxOrderQuantity = 99)
     {
         gameObject.SetActive(true);
 
         unitPrice = currentUnitPrice;
         buyFeeRate = product.kind == FinancialProductKind.IndexFund ? fundBuyFeeRate : 0f;
+        maxQuantity = Mathf.Max(1, maxOrderQuantity);
         quantity = 1;
+        if (quantitySlider != null)
+        {
+            quantitySlider.minValue = 1;
+            quantitySlider.maxValue = maxQuantity;
+        }
 
         if (iconImage != null)
         {
@@ -124,6 +144,7 @@ public class FinanceDetailPanel : MonoBehaviour
     private void RefreshQuantity()
     {
         if (quantityText != null) quantityText.text = quantity.ToString();
+        if (quantitySlider != null) quantitySlider.SetValueWithoutNotify(quantity);
         if (totalCostText != null)
         {
             int total = Mathf.RoundToInt(unitPrice * quantity * (1f + buyFeeRate));

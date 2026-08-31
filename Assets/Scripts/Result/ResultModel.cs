@@ -9,13 +9,15 @@ public class ResultModel
 {
     private readonly TomsModel _tomsModel;
     private readonly ItemModel _itemModel;
+    private readonly PortfolioModel _portfolioModel;
 
     public ResultStatisticsData Statistics { get; private set; }
 
-    public ResultModel(TomsModel tomsModel, ItemModel itemModel)
+    public ResultModel(TomsModel tomsModel, ItemModel itemModel, PortfolioModel portfolioModel)
     {
         _tomsModel = tomsModel;
         _itemModel = itemModel;
+        _portfolioModel = portfolioModel;
     }
 
     /// <summary>
@@ -58,7 +60,16 @@ public class ResultModel
             }
         }
 
-        int netWorth = finalMoney + totalStockValue;
+        // 金融資産（債券元本+ファンド評価額）も純資産に算入する。
+        // ※ 算入しないと村資金変換の基準から漏れ、「最終日に全解約」が作業最適解になってしまう
+        int financeAssets = 0;
+        if (_portfolioModel != null)
+        {
+            _portfolioModel.RefreshEstimate(_itemModel, _tomsModel.BlacksmithLevel.Value);
+            financeAssets = _portfolioModel.TotalAssetsEstimate.Value;
+        }
+
+        int netWorth = finalMoney + totalStockValue + financeAssets;
         string rank = EvaluateRank(netWorth);
         string comment = GetRankComment(rank);
 

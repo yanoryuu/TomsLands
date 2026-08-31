@@ -37,10 +37,21 @@ public class ResultLifetimeScope : LifetimeScope
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
 
+        // 金融資産（債券・ファンド）を純資産に算入するための PortfolioModel 依存
+        var financeSettings = AddressableLoader.Load<FinanceSettings>("FinanceSettings")
+                              ?? ScriptableObject.CreateInstance<FinanceSettings>();
+        financeSettings = RemoteBalance.ApplyOverwrite("finance", financeSettings);
+        builder.RegisterInstance(financeSettings);
+
+        var financialProducts = AddressableLoader.LoadAll<FinancialProductData>("FinancialProductData");
+        financialProducts = RemoteBalance.ApplyList("financialProducts", financialProducts, p => p.productId);
+        builder.RegisterInstance(financialProducts);
+
         // --- 2. Models ---
-        // TomsModel / ItemModel はコンストラクタでセーブデータを自動ロードする
+        // TomsModel / ItemModel / PortfolioModel はコンストラクタでセーブデータを自動ロードする
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<ItemModel>(Lifetime.Singleton);
+        builder.Register<PortfolioModel>(Lifetime.Singleton);
         builder.Register<ResultModel>(Lifetime.Singleton);
         builder.Register<MetaProgressModel>(Lifetime.Singleton);
 

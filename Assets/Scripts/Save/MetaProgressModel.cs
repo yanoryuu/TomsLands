@@ -22,6 +22,12 @@ public class MetaProgressModel
     public int BestNetWorth { get; private set; }
     public string BestRank { get; private set; } = "";
 
+    /// <summary>村資金(G)。ラン終了時に純資産から変換されて貯まり、村の施設投資に使う。</summary>
+    public int VillageFunds { get; private set; }
+
+    /// <summary>村施設のレベル（facilityIdキー。JsonUtility対応のためList保持）。</summary>
+    private readonly System.Collections.Generic.List<FacilityLevelPlain> facilityLevels = new();
+
     public MetaProgressModel()
     {
         LoadData();
@@ -44,6 +50,65 @@ public class MetaProgressModel
     public void UpgradeCreditLine()
     {
         CreditLineLevel++;
+    }
+
+    // ========================================
+    // 村（メタ層）
+    // ========================================
+
+    public void AddVillageFunds(int amount)
+    {
+        if (amount <= 0) return;
+        VillageFunds += amount;
+    }
+
+    public bool TrySpendVillageFunds(int amount)
+    {
+        if (amount < 0 || VillageFunds < amount) return false;
+        VillageFunds -= amount;
+        return true;
+    }
+
+    public int GetFacilityLevel(string facilityId)
+    {
+        if (string.IsNullOrEmpty(facilityId)) return 0;
+        foreach (var entry in facilityLevels)
+        {
+            if (entry.facilityId == facilityId) return entry.level;
+        }
+        return 0;
+    }
+
+    public void SetFacilityLevel(string facilityId, int level)
+    {
+        if (string.IsNullOrEmpty(facilityId)) return;
+        foreach (var entry in facilityLevels)
+        {
+            if (entry.facilityId == facilityId)
+            {
+                entry.level = level;
+                return;
+            }
+        }
+        facilityLevels.Add(new FacilityLevelPlain { facilityId = facilityId, level = level });
+    }
+
+    /// <summary>
+    /// ラン終了時の村資金への変換（村と店の経営を繋ぐ唯一の橋・一方向）。
+    /// クリア時: 純資産 × conversionRate / 破産時: 手元現金 × bankruptcyConversionRate。
+    /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
+    /// </summary>
+    public int ConvertRunToVillageFunds(bool cleared, int netWorth, int finalCash)
+    {
+        var settings = GameConst.Village;
+        int converted = cleared
+            ? Mathf.FloorToInt(Mathf.Max(0, netWorth) * settings.conversionRate)
+            : Mathf.FloorToInt(Mathf.Max(0, finalCash) * settings.bankruptcyConversionRate);
+
+        if (converted > 0) AddVillageFunds(converted);
+        SaveData();
+        Debug.Log($"[Meta] 村資金へ変換: +{converted}G (cleared={cleared}, 合計 {VillageFunds}G)");
+        return converted;
     }
 
     /// <summary>
@@ -109,6 +174,8 @@ public class MetaProgressModel
             clearedRuns = ClearedRuns,
             bestNetWorth = BestNetWorth,
             bestRank = BestRank,
+            villageFunds = VillageFunds,
+            facilities = new System.Collections.Generic.List<FacilityLevelPlain>(facilityLevels),
         };
         File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
     }
@@ -124,6 +191,8 @@ public class MetaProgressModel
             ClearedRuns = 0;
             BestNetWorth = 0;
             BestRank = "";
+            VillageFunds = 0;
+            facilityLevels.Clear();
             return;
         }
 
@@ -135,6 +204,18 @@ public class MetaProgressModel
         ClearedRuns = Mathf.Max(0, data.clearedRuns);
         BestNetWorth = Mathf.Max(0, data.bestNetWorth);
         BestRank = data.bestRank ?? "";
+
+        // 旧セーブ（フィールド欠損）は0/空で正規化
+        VillageFunds = Mathf.Max(0, data.villageFunds);
+        facilityLevels.Clear();
+        if (data.facilities != null)
+        {
+            foreach (var entry in data.facilities)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.facilityId) || entry.level <= 0) continue;
+                facilityLevels.Add(entry);
+            }
+        }
     }
 }
 
@@ -147,4 +228,16 @@ public class MetaProgressData
     public int clearedRuns;
     public int bestNetWorth;
     public string bestRank;
+
+    // --- 村（メタ層）。旧セーブは欠損→0/空で正規化 ---
+    public int villageFunds;
+    public System.Collections.Generic.List<FacilityLevelPlain> facilities = new();
+}
+
+/// <summary>村施設1つぶんのレベル保存（JsonUtilityはDictionary不可のためList要素）。</summary>
+[Serializable]
+public class FacilityLevelPlain
+{
+    public string facilityId;
+    public int level;
 }

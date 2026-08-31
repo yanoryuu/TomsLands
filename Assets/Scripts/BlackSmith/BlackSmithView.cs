@@ -64,10 +64,6 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Transform unlockListRoot;            // エントリの親（GridLayoutGroup）
     [SerializeField] private GameObject unlockEntryTemplate;      // エントリ雛形（非アクティブで配置）
 
-    [Header("取引所（Special タブ） ※未配線でも動作する")]
-    [Tooltip("金融商品の詳細パネル。リストは武具と同じ ItemShopSlot を共用する")]
-    [SerializeField] private FinanceDetailPanel financeDetailPanel;
-
     [Header("Development Panel - 解放商品の詳細（レベルアップフレーム上部）")]
     [SerializeField] private GameObject unlockDetailContent;             // 詳細の中身（選択時に表示）
     [SerializeField] private TextMeshProUGUI unlockDetailPlaceholder;    // 未選択時の案内テキスト
@@ -88,9 +84,6 @@ public class BlackSmithView : MonoBehaviour
 
     /// <summary>選択銘柄の詳細パネル。Presenter が選択時に結線する。</summary>
     public ItemDetailPanel DetailPanel => itemDetailPanel;
-
-    /// <summary>取引所の詳細パネル（未配線なら null）。</summary>
-    public FinanceDetailPanel FinanceDetail => financeDetailPanel;
 
     /// <summary>次ダンジョン情報バナー。Presenter が Entry 時に更新する。</summary>
     public ProcurementHeaderView Header => procurementHeader;
@@ -158,26 +151,6 @@ public class BlackSmithView : MonoBehaviour
                 item.Stock.Value,
                 item.IsPopular.Value
             );
-            slots.Add(slot);
-            activeSlots.Add(slot);
-        }
-
-        ResetScroll();
-        return slots;
-    }
-
-    /// <summary>
-    /// 取引所（金融商品）の行を武具と同じカタログリスト・同じ行プレハブで生成する。
-    /// Setup（SetFinance）と購読は Presenter 側で行う。
-    /// </summary>
-    public List<ItemShopSlot> PopulateFinanceRows(int count)
-    {
-        ClearCatalog();
-
-        var slots = new List<ItemShopSlot>();
-        for (int i = 0; i < count; i++)
-        {
-            var slot = CreateCatalogSlot(i);
             slots.Add(slot);
             activeSlots.Add(slot);
         }
@@ -323,7 +296,6 @@ public class BlackSmithView : MonoBehaviour
     {
         bool isDevelopment = tab == BlackSmithTab.Development;
 
-        // 取引所（Special）も武具と同じカタログリストを使う（金融商品と武具を同列に扱う）
         if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
         // 並べ替えUIは武具の指標（収益/需要/価格）専用なので武具タブ以外では隠す

@@ -170,16 +170,6 @@ public class GameLifecycleHandler : IStartable, IDisposable
             Debug.Log($"[RunSetup] 借入 +{_runSetupData.BorrowedAmount}G（初回返済に利息{settings.borrowInterestRate:P0}付きで上乗せ）");
         }
 
-        // 持ち込みアイテム: 初期在庫に加算
-        for (int i = 0; i < _runSetupData.CarryItemIds.Count && i < _runSetupData.CarryItemCounts.Count; i++)
-        {
-            var runtime = _itemModel.GetRuntimeItem(_runSetupData.CarryItemIds[i]);
-            int count = _runSetupData.CarryItemCounts[i];
-            if (runtime == null || count <= 0) continue;
-            runtime.UpdateStock(runtime.Stock.Value + count);
-            Debug.Log($"[RunSetup] 持ち込み: {runtime.ItemName} ×{count}");
-        }
-
         // スターターレリック
         if (!string.IsNullOrEmpty(_runSetupData.StarterRelicId))
         {

@@ -10,7 +10,7 @@ using UnityEngine;
 /// </summary>
 public static class GameConstSettingsTool
 {
-    // Resources_moved 配下に置くことで、Tools > TomsLands > データ生成 > Addressables一括登録（Resources_moved） の対象になり
+    // Resources_moved 配下に置くことで、Tools > TomsLands > Addressables一括登録（Resources_moved） の対象になり
     // アドレス "GameConstSettings" で登録される（GameConst.Address と一致）。
     private const string AssetPath = "Assets/Resources_moved/GameConstSettings.asset";
 
@@ -36,7 +36,7 @@ public static class GameConstSettingsTool
         Selection.activeObject = asset;
 
         Debug.Log($"[GameConstSettingsTool] 作成しました: {AssetPath}\n" +
-                  "続けて Tools > TomsLands > データ生成 > Addressables一括登録（Resources_moved） を実行し、Addressable 登録してください。");
+                  "続けて Tools > TomsLands > Addressables一括登録（Resources_moved） を実行し、Addressable 登録してください。");
     }
 
     [MenuItem("Tools/TomsLands/リモート設定/GameConst JSONエクスポート")]

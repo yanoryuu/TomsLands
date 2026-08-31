@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_antique
+  m_EditorClassIdentifier: 
+  facilityId: antique
+  facilityName: "\u9AA8\u8463\u54C1\u5E97"
+  description: "\u6398\u308A\u51FA\u3057\u7269\u3068\u76EE\u5229\u304D\u306E\u5E97\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 5000
+    effectText: "\u30B9\u30BF\u30FC\u30BF\u30FC\u30EC\u30EA\u30C3\u30AF\u306E\u5019\u88DC\u306B
+      Rare \u304C\u4E26\u3076"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 13000
+    effectText: "\u30EC\u30EA\u30C3\u30AF3\u629E\u3092\u8F9E\u9000\u3057\u305F\u3068\u304D\u306E\u8CB7\u53D6\u984D
+      +50%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

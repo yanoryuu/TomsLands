@@ -19,7 +19,7 @@ public class TitleLifetimeScope : LifetimeScope
         {
             startModeData = ScriptableObject.CreateInstance<StartModeData>();
             Debug.LogWarning("[TitleLifetimeScope] Resources/SceneData/StartModeData.asset が見つかりません。" +
-                             "Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行してください。");
+                             "アセットが欠損しています。リポジトリから Resources_moved/SceneData を復元してください。");
         }
         builder.RegisterInstance(startModeData);
 

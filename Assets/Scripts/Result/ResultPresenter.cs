@@ -40,30 +40,16 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
     private void Bind()
     {
-        // タイトルへ戻るボタン
+        // どちらのボタンも「精算 → ラン内セーブ削除 → 村へ帰還」の順を厳守する
+        // （先に遷移するとランデータが残り「続きから」に破産/クリア済みランが復活するバグの再発経路になる）
         if (_resultView != null)
         {
             _resultView.OnGoToTitleClicked
-                .Subscribe(_ =>
-                {
-                    Debug.Log("[ResultPresenter] Go to title clicked. Deleting run save data.");
-                    // メタ通貨を精算してから、ラン内セーブ一式を削除する
-                    // （従来は save.json しか消さず、スロットが「続きから」に残り続けるバグがあった）
-                    AwardMetaCurrencyOnce();
-                    RunSaveCleaner.DeleteRunFiles();
-                    _sceneTransition.GoToTitle();
-                })
+                .Subscribe(_ => FinishRunAndGoVillage())
                 .AddTo(_disposables);
 
-            // もう一度遊ぶボタン（セーブデータを削除して新規ゲームで再開）
             _resultView.OnRetryClicked
-                .Subscribe(_ =>
-                {
-                    Debug.Log("[ResultPresenter] Retry clicked. Deleting run save data.");
-                    AwardMetaCurrencyOnce();
-                    RunSaveCleaner.DeleteRunFiles();
-                    _sceneTransition.GoToTitle();
-                })
+                .Subscribe(_ => FinishRunAndGoVillage())
                 .AddTo(_disposables);
         }
     }
@@ -90,7 +76,18 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     }
 
     /// <summary>
-    /// ランクリアのメタ通貨精算（1回のみ）。ラン内データを消す前に metaData.json へ加算保存する。
+    /// ラン終了の後始末: メタ精算 → ラン内セーブ削除 → 村シーンへ帰還。
+    /// </summary>
+    private void FinishRunAndGoVillage()
+    {
+        Debug.Log("[ResultPresenter] Finishing run. Deleting run save data → Village.");
+        AwardMetaCurrencyOnce();
+        RunSaveCleaner.DeleteRunFiles();
+        _sceneTransition.GoToVillage();
+    }
+
+    /// <summary>
+    /// ランクリアのメタ通貨精算と村資金への変換（1回のみ）。ラン内データを消す前に metaData.json へ加算保存する。
     /// </summary>
     private void AwardMetaCurrencyOnce()
     {
@@ -102,7 +99,15 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             netWorth: _lastStatistics.NetWorth,
             rank: _lastStatistics.Rank,
             totalTurns: _lastStatistics.TotalTurns);
-        Debug.Log($"[ResultPresenter] メタ通貨（信用）を獲得: +{earned}");
+
+        // 村資金への変換（村と店の経営を繋ぐ唯一の橋）
+        int converted = _metaProgress.ConvertRunToVillageFunds(
+            cleared: true,
+            netWorth: _lastStatistics.NetWorth,
+            finalCash: _lastStatistics.FinalMoney);
+        VillageArrivalReport.Set(cleared: true, earned: _lastStatistics.NetWorth, converted: converted);
+
+        Debug.Log($"[ResultPresenter] メタ通貨（信用）+{earned} / 村資金 +{converted}G");
     }
 
     public void Dispose()
