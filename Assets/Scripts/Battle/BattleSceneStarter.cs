@@ -277,41 +277,48 @@ public class BattleSceneStarter : IAsyncStartable
             _controlView.UpdatePauseButtonText(true);
         }
 
-        // コスト計算（マスターデータの基本価格）
-        var master = _itemModel.GetMasterItem(item.ItemId);
-        int unitCost = master != null ? master.basePrice : item.CurrentPrice.Value;
-        unitCost = Mathf.Max(1, unitCost);
-
-        // バトル中獲得金額も含めた利用可能残高から購入可能な最大数を算出
-        // （UpdateStock が MaxStock で黙ってクランプするため、在庫の空き枠も上限に含める。
-        //   超過分を請求すると精算が狂う）
-        int battleEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
-        int availableForPurchase = (_tomsModel != null ? _tomsModel.PlayerMoney.Value : 0) + battleEarnings - _battleSpending;
-        int stockRoom = Mathf.Max(0, item.MaxStock.Value - item.Stock.Value);
-        int maxQuantity = Mathf.Clamp(Mathf.Min(availableForPurchase / unitCost, stockRoom), 0, 99);
-
-        // 数量選択ポップアップ（鍛冶屋と同じ購入UI。0 = キャンセル）
-        float recommendScore = _itemModel.GetRecommendScore(item, null);
-        int quantity = await _controlView.ShowRestockQuantityPopupAsync(item, unitCost, maxQuantity, recommendScore, token);
-
-        if (quantity > 0)
+        // 途中で例外が出てもフラグとポーズが固まらないようにする
+        // （固まると以後の在庫切れでポップアップが二度と出なくなる）
+        try
         {
-            int totalCost = unitCost * quantity;
-            item.UpdateStock(item.Stock.Value + quantity);
-            _battleSpending += totalCost; // バトル中売上から充当（PlayerMoneyは戦闘終了時に精算）
-            _restockedQuantities[item.ItemId] = (_restockedQuantities.TryGetValue(item.ItemId, out var prev) ? prev : 0) + quantity;
-            _restockUnitCosts[item.ItemId] = unitCost; // 単価はマスター基準価格で固定
-            Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +{quantity}個, 費用 {totalCost}G (利用可能残高: {availableForPurchase}G → {availableForPurchase - totalCost}G)");
-        }
+            // コスト計算（マスターデータの基本価格）
+            var master = _itemModel.GetMasterItem(item.ItemId);
+            int unitCost = master != null ? master.basePrice : item.CurrentPrice.Value;
+            unitCost = Mathf.Max(1, unitCost);
 
-        // ポーズ状態を元に戻す
-        if (!wasPaused)
+            // バトル中獲得金額も含めた利用可能残高から購入可能な最大数を算出
+            // （UpdateStock が MaxStock で黙ってクランプするため、在庫の空き枠も上限に含める。
+            //   超過分を請求すると精算が狂う）
+            int battleEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
+            int availableForPurchase = (_tomsModel != null ? _tomsModel.PlayerMoney.Value : 0) + battleEarnings - _battleSpending;
+            int stockRoom = Mathf.Max(0, item.MaxStock.Value - item.Stock.Value);
+            int maxQuantity = Mathf.Clamp(Mathf.Min(availableForPurchase / unitCost, stockRoom), 0, 99);
+
+            // 数量選択ポップアップ（鍛冶屋と同じ購入UI。0 = キャンセル）
+            float recommendScore = _itemModel.GetRecommendScore(item, null);
+            int quantity = await _controlView.ShowRestockQuantityPopupAsync(item, unitCost, maxQuantity, recommendScore, token);
+
+            if (quantity > 0)
+            {
+                int totalCost = unitCost * quantity;
+                item.UpdateStock(item.Stock.Value + quantity);
+                _battleSpending += totalCost; // バトル中売上から充当（PlayerMoneyは戦闘終了時に精算）
+                _restockedQuantities[item.ItemId] = (_restockedQuantities.TryGetValue(item.ItemId, out var prev) ? prev : 0) + quantity;
+                _restockUnitCosts[item.ItemId] = unitCost; // 単価はマスター基準価格で固定
+                Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +{quantity}個, 費用 {totalCost}G (利用可能残高: {availableForPurchase}G → {availableForPurchase - totalCost}G)");
+            }
+        }
+        finally
         {
-            _pauseController.Resume();
-            _controlView.UpdatePauseButtonText(false);
-        }
+            // ポーズ状態を元に戻す
+            if (!wasPaused)
+            {
+                _pauseController.Resume();
+                _controlView.UpdatePauseButtonText(false);
+            }
 
-        _isRestockPopupShowing = false;
+            _isRestockPopupShowing = false;
+        }
     }
 
     // =====================================================

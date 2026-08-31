@@ -8583,7 +8583,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1048672551
 RectTransform:
   m_ObjectHideFlags: 0
@@ -9578,7 +9578,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1141443882
 RectTransform:
   m_ObjectHideFlags: 0
@@ -16333,6 +16333,7 @@ MonoBehaviour:
   salesRateText: {fileID: 1810639402}
   wasSoldText: {fileID: 325549516}
   recommendText: {fileID: 676715607}
+  dividendText: {fileID: 0}
   quantitySlider: {fileID: 1262905002}
   quantityText: {fileID: 917982504}
   plusButton: {fileID: 471120071}

@@ -47,6 +47,11 @@ public class RestockQuantityPopup : MonoBehaviour
             return 0;
         }
 
+        // ルート自体が非アクティブだと panel を出しても表示されない（シーン初期状態が
+        // OFF でも動くように自分ごと起こす。このとき Awake が走り panel は一旦 OFF になるが、
+        // 直後の SetActive(true) で正しく表示される）
+        if (!gameObject.activeSelf) gameObject.SetActive(true);
+
         _maxQuantity = Mathf.Max(0, maxQuantity);
         _quantity = Mathf.Clamp(10, _maxQuantity > 0 ? 1 : 0, _maxQuantity); // 既定10個（買える範囲に丸める）
 
