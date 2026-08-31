@@ -78,7 +78,7 @@ public class TomsModel
     public void SavePlayerMoney()
     {
         var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value,
-            FlowSeed, (int)GameMode, UseAutoFlow);
+            FlowSeed, (int)GameMode, UseAutoFlow, ToolShopLevel.Value, Trust.Value);
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SaveSlotManager.GetPath("tomsData.json"), json);
     }
@@ -99,6 +99,9 @@ public class TomsModel
             FlowSeed = data.flowSeed;
             GameMode = (GameModeId)data.gameMode;
             UseAutoFlow = data.useAutoFlow;
+            // 旧セーブには無いフィールド（欠損時 0）→ 初期値 1 に正規化
+            ToolShopLevel.Value = Mathf.Max(1, data.toolShopLevel);
+            Trust.Value = data.trust > 0f ? data.trust : 1f;
         }
         else
         {

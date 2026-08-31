@@ -63,12 +63,12 @@ public class SceneTransitionService
     }
 
     /// <summary>
-    /// GameOverScene へ遷移する。借金返済不能時に呼び出す。
+    /// GameOver シーンへ遷移する。借金返済不能時に呼び出す。
     /// </summary>
     public void GoToGameOver()
     {
-        Debug.Log("[SceneTransition] Loading GameOverScene...");
-        SceneManager.LoadScene("GameOverScene");
+        Debug.Log("[SceneTransition] Loading GameOver...");
+        SceneManager.LoadScene("GameOver");
     }
 }
 

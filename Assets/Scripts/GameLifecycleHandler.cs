@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -90,8 +89,12 @@ public class GameLifecycleHandler : IStartable, IDisposable
     /// </summary>
     private void InitializeNewGame()
     {
-        // 既存セーブデータを削除
-        DeleteAllSaveFiles();
+        // 既存のラン内セーブデータを削除（削除対象一覧は RunSaveCleaner に一元化）
+        RunSaveCleaner.DeleteRunFiles();
+
+        // ダンジョン進行をSO初期状態に戻す
+        // （DungeonRepository.Awake が旧セーブを先にロードしているため、メモリ側のリセットが必須）
+        _dungeonRepository.ResetToInitial();
 
         // マスターデータからアイテムを初期化
         _itemModel.InitializeRuntimeItemsFromMaster();
@@ -155,29 +158,5 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _heroModel.SaveHeroData();
 
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
-    }
-
-    // ファイル削除ロジック（選択中スロット配下のみを対象にする）
-    private void DeleteAllSaveFiles()
-    {
-        string dir = SaveSlotManager.CurrentRoot;
-        string[] files = {
-            "itemData.json",
-            "tomsData.json",
-            "displayItemData.json",
-            "heroData.json",
-            "streamingSelection.json",
-            "shopStatusData.json",
-        };
-
-        foreach (var filename in files)
-        {
-            string path = Path.Combine(dir, filename);
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-                Debug.Log($"Deleted save file: {filename}");
-            }
-        }
     }
 }

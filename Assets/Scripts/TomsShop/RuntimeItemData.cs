@@ -214,12 +214,8 @@ public class RuntimeItemData
 
     public void UpdateDemand(float demand)
     {
-        demand = Mathf.Clamp(demand, 0f, 1f);
-    }
-
-    public void UpdateIsPopular(bool isPopular)
-    {
-        isPopular = IsPopular.Value;
+        Demand.Value = Mathf.Clamp(demand, 0f, 1f);
+        UpdatePopularity();
     }
 
     public void UpdateIsDisplay(bool isDisplay)

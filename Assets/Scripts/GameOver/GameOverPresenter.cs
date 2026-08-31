@@ -25,12 +25,21 @@ public class GameOverPresenter : IDisposable, IStartable
 
         // もう一度：タイトルへ戻る（タイトル画面でニューゲームを選択）
         gameOverView.OnRetryClicked
-            .Subscribe(_ => sceneTransitionService.GoToTitle())
+            .Subscribe(_ =>
+            {
+                // 破産したランのセーブを削除（残すと「続きから」で破産直前が復活してしまう）
+                RunSaveCleaner.DeleteRunFiles();
+                sceneTransitionService.GoToTitle();
+            })
             .AddTo(disposables);
 
         // タイトル画面に戻る
         gameOverView.OnGoToTitleClicked
-            .Subscribe(_ => sceneTransitionService.GoToTitle())
+            .Subscribe(_ =>
+            {
+                RunSaveCleaner.DeleteRunFiles();
+                sceneTransitionService.GoToTitle();
+            })
             .AddTo(disposables);
     }
 
