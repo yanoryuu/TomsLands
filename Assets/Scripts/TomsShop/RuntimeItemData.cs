@@ -32,6 +32,11 @@ public class RuntimeItemData
     public float SalesRate { get; private set; }
 
     /// <summary>
+    /// 在庫1個あたりの毎ターン配当（配当付き武器）。マスターデータ由来でセーブ対象外。
+    /// </summary>
+    public int DividendPerTurn { get; private set; }
+
+    /// <summary>
     /// 期待収益（需要 × 価格 × SalesRate）。おすすめ計算の単一の基礎値。
     /// 仕入れ一覧の並べ替え・自動陳列・ダッシュボードはすべてこの値を基準にする。
     /// </summary>
@@ -130,7 +135,8 @@ public class RuntimeItemData
         int requiredLevel,
         float demand = 0.5f,
         string description = "",
-        float salesRate = 1.0f)
+        float salesRate = 1.0f,
+        int dividendPerTurn = 0)
     {
         ItemId = itemId;
         ItemName = itemName;
@@ -148,14 +154,17 @@ public class RuntimeItemData
         IsDisplay = new ReactiveProperty<bool>(false);
         ItemDescription = description;
         SalesRate = salesRate;
+        DividendPerTurn = dividendPerTurn;
         PreviousDemand = demand;
         PreviousPrice = currentPrice;
         Trend = UnityEngine.Random.Range(-0.5f, 0.5f);
     }
 
     // 保存→復元CTor（Plain→Runtime）
-    public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon, Sprite backgroundSprite = null)
+    // dividendPerTurn はマスターデータが真実の源のためセーブせず、復元時に外から渡す
+    public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon, Sprite backgroundSprite = null, int dividendPerTurn = 0)
     {
+        DividendPerTurn = dividendPerTurn;
         ItemId = plainData.itemId;
         ItemName = plainData.itemName;
         CurrentPrice = new ReactiveProperty<int>(plainData.currentPrice);

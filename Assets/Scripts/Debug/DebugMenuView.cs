@@ -21,6 +21,8 @@ public class DebugMenuView : MonoBehaviour
     private BuzzSystem _buzzSystem;
     private ShopStatusModel _statusModel;
     private TurnPhaseManager _turnPhaseManager;
+    private PortfolioModel _portfolioModel;
+    private ItemModel _itemModel;
 
     private bool _visible;
     private Rect _windowRect = new Rect(24, 24, 360, 600);
@@ -33,13 +35,17 @@ public class DebugMenuView : MonoBehaviour
         GameFlowManager gameFlowManager,
         BuzzSystem buzzSystem,
         ShopStatusModel statusModel,
-        TurnPhaseManager turnPhaseManager)
+        TurnPhaseManager turnPhaseManager,
+        PortfolioModel portfolioModel,
+        ItemModel itemModel)
     {
         _tomsModel = tomsModel;
         _gameFlowManager = gameFlowManager;
         _buzzSystem = buzzSystem;
         _statusModel = statusModel;
         _turnPhaseManager = turnPhaseManager;
+        _portfolioModel = portfolioModel;
+        _itemModel = itemModel;
     }
 
     private void Update()
@@ -150,6 +156,30 @@ public class DebugMenuView : MonoBehaviour
         if (GUILayout.Button("店Lv +1")) _tomsModel.ShopLevel.Value++;
         if (GUILayout.Button("店Lv 1に")) _tomsModel.ShopLevel.Value = 1;
         GUILayout.EndHorizontal();
+
+        // 情報屋レベル操作（金融商品の解放検証用）
+        GUILayout.BeginHorizontal();
+        GUILayout.Label($"情報屋Lv: {_tomsModel.InfoBrokerLevel.Value}");
+        if (GUILayout.Button("情報屋Lv +1")) _tomsModel.InfoBrokerLevel.Value++;
+        GUILayout.EndHorizontal();
+
+        // 金融資産の状態（検証用）
+        if (_portfolioModel != null)
+        {
+            GUILayout.Label($"金融資産: ポジション {_portfolioModel.Positions.Count}件 / 評価額 {_portfolioModel.TotalAssetsEstimate.Value:N0}G");
+            if (GUILayout.Button("最初の商品を1口買う（検証）"))
+            {
+                var product = _portfolioModel.AllProducts.Count > 0 ? _portfolioModel.AllProducts[0] : null;
+                if (product != null)
+                {
+                    bool ok = product.kind == FinancialProductKind.Bond
+                        ? _portfolioModel.BuyBond(product, 1, _tomsModel, _gameFlowManager.CurrentTurn.Value)
+                        : _portfolioModel.BuyFund(product, 1, _tomsModel, _itemModel, _tomsModel.BlacksmithLevel.Value, _gameFlowManager.CurrentTurn.Value);
+                    Debug.Log($"[DebugMenu] 金融購入テスト: {product.productName} → {(ok ? "成功" : "失敗")}");
+                }
+                else Debug.Log("[DebugMenu] FinancialProductData が1件もありません");
+            }
+        }
 
         GUILayout.Space(8);
     }

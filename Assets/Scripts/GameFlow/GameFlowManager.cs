@@ -22,6 +22,7 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly MarketingFacade _marketingFacade;
     private readonly ShopStatusModel _shopStatusModel;
     private readonly SellOrderModel _sellOrderModel;
+    private readonly PortfolioModel _portfolioModel;
     private int _currentIndex;
 
     /// <summary>
@@ -44,7 +45,8 @@ public class GameFlowManager : IDisposable, IStartable
         SceneTransitionService sceneTransition, HeroModel heroModel,
         EventInputData eventInputData, EventOutputData eventOutputData,
         PendingEventData pendingEventData, MarketingFacade marketingFacade,
-        ShopStatusModel shopStatusModel, SellOrderModel sellOrderModel)
+        ShopStatusModel shopStatusModel, SellOrderModel sellOrderModel,
+        PortfolioModel portfolioModel)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -60,6 +62,7 @@ public class GameFlowManager : IDisposable, IStartable
         _marketingFacade = marketingFacade;
         _shopStatusModel = shopStatusModel;
         _sellOrderModel = sellOrderModel;
+        _portfolioModel = portfolioModel;
         _currentIndex = 0;
     }
 
@@ -200,6 +203,38 @@ public class GameFlowManager : IDisposable, IStartable
         // 新しい日の仕入れ支出トラッカーをリセット（ターン評価「資金効率」用）
         _tomsModel?.ResetTurnProcurementSpend();
 
+        // 金融資産のターン処理（価格更新後に行う）:
+        // 満期債券の償還・ファンド基準価額の履歴記録・配当付き武器の配当入金
+        if (_tomsModel != null && _itemModel != null)
+        {
+            int financeIncome = 0;
+
+            if (_portfolioModel != null)
+            {
+                var finance = _portfolioModel.ApplyTurn(CurrentTurn.Value, _itemModel, _tomsModel.BlacksmithLevel.Value);
+                if (finance.BondPayout > 0)
+                {
+                    financeIncome += finance.BondPayout;
+                    foreach (var bond in finance.MaturedBonds)
+                        Debug.Log($"[GameFlowManager] 債券償還: {bond.productName} 元本{bond.principal}G + 利息{bond.interest}G");
+                }
+            }
+
+            int dividend = _itemModel.CalculateDividendIncome();
+            if (dividend > 0)
+            {
+                financeIncome += dividend;
+                Debug.Log($"[GameFlowManager] 配当収入: +{dividend}G");
+            }
+
+            if (financeIncome > 0)
+            {
+                _tomsModel.AddRevenue(financeIncome);
+                _portfolioModel?.SaveData();
+                _tomsModel.SavePlayerMoney();
+            }
+        }
+
         // マーケティングシステムのターン処理（バズ判定・持続効果適用）
         if (_marketingFacade != null)
         {
@@ -225,9 +260,10 @@ public class GameFlowManager : IDisposable, IStartable
                 Debug.LogWarning($"[GameFlowManager] Dungeon not found for key: {node.BattleDungeon}");
             }
 
-            // ItemModel の在庫データ・売り注文を保存してからシーン遷移
+            // ItemModel の在庫データ・売り注文・金融資産を保存してからシーン遷移
             _itemModel.SaveData();
             _sellOrderModel?.SaveData();
+            _portfolioModel?.SaveData();
 
             // GameFlowIndexをTomsModelに反映して保存
             _tomsModel.GameFlowIndex = _currentIndex;

@@ -16,11 +16,15 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private readonly GameFlowManager gameFlowManager;
     private readonly DungeonRepository dungeonRepository;
     private readonly HeroModel heroModel;
+    private readonly PortfolioModel portfolioModel;
+    private readonly FinanceSettings financeSettings;
 
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable panelDisposables = new();
     private CompositeDisposable selectionDisposables = new();
+    private CompositeDisposable financeDisposables = new();
     private int characterTalkIndex;
+    private string selectedProductId;
 
     // 現在のタブ・並べ替え・選択銘柄（並べ替え再描画と選択維持に使う）
     private BlackSmithTab currentTab = BlackSmithTab.Weapon;
@@ -39,7 +43,9 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         ItemPopUpManager itemPopUpManager,
         GameFlowManager gameFlowManager,
         DungeonRepository dungeonRepository,
-        HeroModel heroModel)
+        HeroModel heroModel,
+        PortfolioModel portfolioModel,
+        FinanceSettings financeSettings)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
@@ -50,6 +56,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.gameFlowManager = gameFlowManager;
         this.dungeonRepository = dungeonRepository;
         this.heroModel = heroModel;
+        this.portfolioModel = portfolioModel;
+        this.financeSettings = financeSettings;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -160,6 +168,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("development"));
                         ShowDevelopmentPanel();
                         break;
+                    case BlackSmithTab.Special:
+                        blackSmithView.ShowDialogue("取引所へようこそ。債券やファンドで余った資金を働かせよう。");
+                        ShowFinancePanel();
+                        break;
                 }
             })
             .AddTo(disposables);
@@ -240,6 +252,129 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         else
         {
             Debug.Log("お金が足りません！");
+        }
+    }
+
+    // ========================================
+    // 取引所（Special タブ）
+    // ========================================
+
+    private void ShowFinancePanel()
+    {
+        blackSmithView.SwitchPanel(BlackSmithTab.Special);
+        blackSmithView.SortItemTab(BlackSmithTab.Special);
+        RefreshFinanceList();
+    }
+
+    private void RefreshFinanceList()
+    {
+        financeDisposables.Dispose();
+        financeDisposables = new CompositeDisposable();
+
+        var products = portfolioModel.AllProducts;
+        var slots = blackSmithView.PopulateFinanceList(products.Count);
+
+        for (int i = 0; i < slots.Count && i < products.Count; i++)
+        {
+            var product = products[i];
+            var slot = slots[i];
+            bool unlocked = product.unlockInfoBrokerLevel <= tomsModel.InfoBrokerLevel.Value;
+            slot.Setup(product, GetUnitPrice(product), portfolioModel.GetHeldUnits(product.productId), unlocked);
+            slot.SetSelected(product.productId == selectedProductId);
+
+            slot.OnSelected
+                .Subscribe(id => SelectProduct(id))
+                .AddTo(financeDisposables);
+        }
+
+        var detail = blackSmithView.FinanceDetail;
+        if (detail != null)
+        {
+            detail.OnBuyClicked.Subscribe(qty => HandleFinanceBuy(qty)).AddTo(financeDisposables);
+            detail.OnSellClicked.Subscribe(qty => HandleFinanceSell(qty)).AddTo(financeDisposables);
+        }
+
+        // 選択中の商品があれば詳細を維持
+        if (!string.IsNullOrEmpty(selectedProductId))
+            ShowFinanceDetail();
+        else
+            detail?.Hide();
+    }
+
+    private int GetUnitPrice(FinancialProductData product) =>
+        product.kind == FinancialProductKind.Bond
+            ? product.bondUnitPrice
+            : portfolioModel.CalculateFundUnitPrice(product, itemModel, tomsModel.BlacksmithLevel.Value);
+
+    private void SelectProduct(string productId)
+    {
+        selectedProductId = productId;
+        var product = portfolioModel.GetProduct(productId);
+        if (product == null) return;
+
+        if (product.unlockInfoBrokerLevel > tomsModel.InfoBrokerLevel.Value)
+        {
+            blackSmithView.ShowDialogue($"それは情報屋レベル {product.unlockInfoBrokerLevel} で取り扱いが解禁される。");
+            return;
+        }
+
+        ShowFinanceDetail();
+    }
+
+    private void ShowFinanceDetail()
+    {
+        var detail = blackSmithView.FinanceDetail;
+        var product = portfolioModel.GetProduct(selectedProductId);
+        if (detail == null || product == null) return;
+
+        int unitPrice = GetUnitPrice(product);
+        int held = portfolioModel.GetHeldUnits(product.productId);
+        float buyFee = financeSettings != null ? financeSettings.fundBuyFeeRate : 0.02f;
+        bool canAfford = tomsModel.PlayerMoney.Value >= Mathf.RoundToInt(unitPrice * (1f + (product.kind == FinancialProductKind.IndexFund ? buyFee : 0f)));
+
+        detail.Show(product, unitPrice, held, portfolioModel.GetNavHistory(product.productId), buyFee, canAfford);
+    }
+
+    private void HandleFinanceBuy(int quantity)
+    {
+        var product = portfolioModel.GetProduct(selectedProductId);
+        if (product == null) return;
+
+        bool success = product.kind == FinancialProductKind.Bond
+            ? portfolioModel.BuyBond(product, quantity, tomsModel, gameFlowManager.CurrentTurn.Value)
+            : portfolioModel.BuyFund(product, quantity, tomsModel, itemModel, tomsModel.BlacksmithLevel.Value, gameFlowManager.CurrentTurn.Value);
+
+        if (success)
+        {
+            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+            blackSmithView.ShowDialogue(product.kind == FinancialProductKind.Bond
+                ? $"{product.productName} を購入した。満期は {product.bondMaturityTurns} 日後だ。"
+                : $"{product.productName} を {quantity}口 購入した。");
+            portfolioModel.RefreshEstimate(itemModel, tomsModel.BlacksmithLevel.Value);
+            RefreshFinanceList();
+        }
+        else
+        {
+            blackSmithView.ShowDialogue("資金が足りないようだ。");
+        }
+    }
+
+    private void HandleFinanceSell(int quantity)
+    {
+        var product = portfolioModel.GetProduct(selectedProductId);
+        if (product == null || product.kind != FinancialProductKind.IndexFund) return;
+
+        int income = portfolioModel.SellFund(product.productId, quantity, tomsModel, itemModel, tomsModel.BlacksmithLevel.Value);
+        if (income > 0)
+        {
+            SoundManager.Instance?.PlaySE("営業/SE_売上音");
+            blackSmithView.ShowDialogue($"{product.productName} を解約して {income:N0}G を受け取った。");
+            portfolioModel.RefreshEstimate(itemModel, tomsModel.BlacksmithLevel.Value);
+            RefreshFinanceList();
+        }
+        else
+        {
+            blackSmithView.ShowDialogue("解約できる保有口数がない。");
         }
     }
 
@@ -604,6 +739,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         selectionDisposables.Dispose();
         panelDisposables.Dispose();
+        financeDisposables.Dispose();
         disposables.Dispose();
     }
 }
