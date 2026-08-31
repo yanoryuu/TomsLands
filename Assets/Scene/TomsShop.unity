@@ -3063,8 +3063,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 290}
-  m_SizeDelta: {x: 580, y: 120}
+  m_AnchoredPosition: {x: 0, y: 278}
+  m_SizeDelta: {x: 580, y: 104}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &290554694
 MonoBehaviour:
@@ -19130,7 +19130,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: Marketing
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 1187115016568501102, guid: 9b5fe09a3ffba6d468879a8f801b04c6, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
