@@ -97,6 +97,7 @@ public class TurnPhaseManager : IDisposable
             case TomsShopGamePhase.Hero:
             case TomsShopGamePhase.Map:
             case TomsShopGamePhase.ShopUpgrade:
+            case TomsShopGamePhase.MachineShop:
                 return TurnPhase.Procurement;
             case TomsShopGamePhase.Prophet:
                 return TurnPhase.Display;

@@ -14,14 +14,16 @@ public class SalesCalculator
 {
     private readonly BuzzSystem _buzzSystem;
     private readonly FollowerSystem _followerSystem;
+    private readonly ShopMachineModel _machineModel;
 
     /// <summary>
     /// コンストラクタ。VContainer から注入する。
     /// </summary>
-    public SalesCalculator(BuzzSystem buzzSystem, FollowerSystem followerSystem)
+    public SalesCalculator(BuzzSystem buzzSystem, FollowerSystem followerSystem, ShopMachineModel machineModel = null)
     {
         _buzzSystem = buzzSystem;
         _followerSystem = followerSystem;
+        _machineModel = machineModel;
     }
 
     /// <summary>
@@ -42,13 +44,16 @@ public class SalesCalculator
         // フォロワーマイルストーンによる売上ボーナス率（例: 0.15 = 15%UP）
         float followerBonusRate = _followerSystem != null ? _followerSystem.GetSalesBonusRate() : 0f;
 
-        // 最終売上 = 基本売上 × バズ倍率 × (1 + フォロワーボーナス率)
-        float finalRevenue = baseRevenue * buzzMultiplier * (1f + followerBonusRate);
+        // マシン（客寄せ）による売上倍率（未設置なら 1.0）
+        float machineMultiplier = _machineModel != null ? _machineModel.TotalRevenueMultiplier : 1f;
+
+        // 最終売上 = 基本売上 × バズ倍率 × (1 + フォロワーボーナス率) × マシン倍率
+        float finalRevenue = baseRevenue * buzzMultiplier * (1f + followerBonusRate) * machineMultiplier;
 
         int result = Mathf.Max(0, Mathf.RoundToInt(finalRevenue));
 
         Debug.Log($"[SalesCalculator] 売上計算: " +
-                  $"基本={baseRevenue}G × バズ倍率={buzzMultiplier:F2} × フォロワーボーナス={(1f + followerBonusRate):F2} " +
+                  $"基本={baseRevenue}G × バズ倍率={buzzMultiplier:F2} × フォロワーボーナス={(1f + followerBonusRate):F2} × マシン={machineMultiplier:F2} " +
                   $"= {result}G");
 
         return result;
@@ -61,8 +66,9 @@ public class SalesCalculator
     {
         float buzzMultiplier = _buzzSystem != null ? _buzzSystem.GetCurrentRevenueMultiplier() : 1f;
         float followerBonusRate = _followerSystem != null ? _followerSystem.GetSalesBonusRate() : 0f;
+        float machineMultiplier = _machineModel != null ? _machineModel.TotalRevenueMultiplier : 1f;
 
-        return buzzMultiplier * (1f + followerBonusRate);
+        return buzzMultiplier * (1f + followerBonusRate) * machineMultiplier;
     }
 
     /// <summary>
@@ -78,6 +84,7 @@ public class SalesCalculator
             BaseRevenue = baseRevenue,
             BuzzMultiplier = buzzMultiplier,
             FollowerBonusRate = followerBonusRate,
+            MachineMultiplier = _machineModel != null ? _machineModel.TotalRevenueMultiplier : 1f,
             FinalRevenue = CalculateFinalRevenue(baseRevenue)
         };
     }
@@ -97,12 +104,15 @@ public class SalesBreakdown
     /// <summary>フォロワーボーナス率</summary>
     public float FollowerBonusRate;
 
+    /// <summary>マシン（客寄せ）による売上倍率</summary>
+    public float MachineMultiplier = 1f;
+
     /// <summary>最終売上</summary>
     public int FinalRevenue;
 
     public override string ToString()
     {
-        return $"基本: {BaseRevenue}G × バズ: {BuzzMultiplier:F2} × フォロワー: {(1f + FollowerBonusRate):F2} = {FinalRevenue}G";
+        return $"基本: {BaseRevenue}G × バズ: {BuzzMultiplier:F2} × フォロワー: {(1f + FollowerBonusRate):F2} × マシン: {MachineMultiplier:F2} = {FinalRevenue}G";
     }
 }
 

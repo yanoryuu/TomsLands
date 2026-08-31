@@ -27,7 +27,7 @@ public static class RemoteBalance
     // ※ HeroData(SO) は Inspector 割当のフォールバックで、実バトル値は heroLevels(CSV由来) なので
     //   "heroes" 区画は設けない（hero バランスは heroLevels で配信する）。
     private static readonly string[] ListSections =
-        { "advertisements", "buzzEffects", "followerMilestones", "enemies", "dungeons", "financialProducts" };
+        { "advertisements", "buzzEffects", "followerMilestones", "enemies", "dungeons", "financialProducts", "shopMachines" };
 
     public static bool HasAny => _sections.Count > 0 || _lists.Count > 0 || _heroLevels != null || _events != null;
 

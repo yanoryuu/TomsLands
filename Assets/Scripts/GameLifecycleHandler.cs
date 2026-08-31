@@ -21,6 +21,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly StateManager _stateManager;
     private readonly SellOrderModel _sellOrderModel;
     private readonly PortfolioModel _portfolioModel;
+    private readonly ShopMachineModel _shopMachineModel;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -35,7 +36,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         ShopStatusModel shopStatusModel,
         StateManager stateManager,
         SellOrderModel sellOrderModel,
-        PortfolioModel portfolioModel)
+        PortfolioModel portfolioModel,
+        ShopMachineModel shopMachineModel)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -49,6 +51,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _stateManager = stateManager;
         _sellOrderModel = sellOrderModel;
         _portfolioModel = portfolioModel;
+        _shopMachineModel = shopMachineModel;
     }
 
     public void Start()
@@ -114,9 +117,10 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // マーケティングステータスをリセット
         _shopStatusModel.Reset();
 
-        // 売り注文・金融資産をリセット
+        // 売り注文・金融資産・マシン設置をリセット
         _sellOrderModel.Clear();
         _portfolioModel.Clear();
+        _shopMachineModel.Clear();
 
         // --- フロー選択（自動/手動）とシードを確定して保存 ---
         bool useAuto = _startModeData.UseAutoGeneration;
@@ -151,6 +155,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _heroModel.LoadHeroData();
         _sellOrderModel.LoadData();
         _portfolioModel.LoadData();
+        _shopMachineModel.LoadData();
 
         // 保存済みの seed / mode から同一フローを再生成してからインデックス復元
         _gameFlowManager.InitializeFlow(_tomsModel.UseAutoFlow, _tomsModel.GameMode, _tomsModel.FlowSeed);
@@ -170,6 +175,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _heroModel.SaveHeroData();
         _sellOrderModel.SaveData();
         _portfolioModel.SaveData();
+        _shopMachineModel.SaveData();
 
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
     }

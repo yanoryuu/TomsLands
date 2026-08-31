@@ -20,6 +20,7 @@ public static class RunSaveCleaner
         "shopStatusData.json",
         "sellOrderData.json",
         "portfolioData.json",
+        "shopMachineData.json",
     };
 
     /// <summary>
