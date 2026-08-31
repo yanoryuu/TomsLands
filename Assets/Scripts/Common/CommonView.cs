@@ -10,6 +10,9 @@ public class CommonView : MonoBehaviour
 
     [SerializeField] private TextMeshProUGUI currentTurnText;
 
+    [Header("売り注文の入金予定バッジ ※未配線でも動作する")]
+    [SerializeField] private TextMeshProUGUI pendingIncomeText;
+
     [SerializeField] private Button menuButton;
 
     [Header("所持金カウントアップ演出")]
@@ -64,6 +67,19 @@ public class CommonView : MonoBehaviour
     public void UpdateCurrentTurn(int turn)
     {
         currentTurnText.text = $"Turn: {turn}";
+    }
+
+    /// <summary>
+    /// 未約定の売り注文の見込み入金額バッジを更新する。0 なら非表示。
+    /// テキストが未配線（null）の場合は何もしない。
+    /// </summary>
+    public void UpdatePendingIncome(int amount)
+    {
+        if (pendingIncomeText == null) return;
+
+        pendingIncomeText.gameObject.SetActive(amount > 0);
+        if (amount > 0)
+            pendingIncomeText.text = $"入金予定 +{amount:N0}G";
     }
 
     private void OnDestroy()

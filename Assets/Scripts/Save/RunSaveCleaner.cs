@@ -18,6 +18,7 @@ public static class RunSaveCleaner
         "heroData.json",
         "streamingSelection.json",
         "shopStatusData.json",
+        "sellOrderData.json",
     };
 
     /// <summary>

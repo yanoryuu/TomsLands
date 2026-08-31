@@ -90,6 +90,17 @@ public class ShopEconomySettings : ScriptableObject
              "10000 で Log10(11)≒1.041。値を大きくするほど効きが緩やかになる。想定レンジ: 100〜10000")]
     public float followerScale = 1000f;
 
+    [Header("売り注文（遅延約定）")]
+    [Tooltip("売り注文が約定するまでのターン数。1 = 陳列した翌日の営業で全量売れる。")]
+    public int sellOrderDelayTurns = 1;
+    [Tooltip("約定価格を注文時価格の ±この割合 にクランプする（例: 0.2 = ±20%）。" +
+             "配信勝利ボーナス(×5)等で約定額が跳ねる事故を防ぐ安全弁。")]
+    public float sellOrderPriceClampRate = 0.2f;
+    [Tooltip("売却手数料率（0 = 手数料なし）。将来のバランス調整用。")]
+    public float sellOrderFeeRate = 0f;
+    [Tooltip("true にすると旧仕様（需要×売率の確率販売・即時入金なし版）に戻す退避フラグ。")]
+    public bool useProbabilisticShopSales = false;
+
     [Header("流行度（Trend）自然需要収束モデル")]
     [Tooltip("Trend=±1.0 のとき naturalDemand が 0.5 からどれだけずれるか。" +
              "例: 0.30 → Trend=+1 で naturalDemand=0.80 / Trend=−1 で 0.20。想定レンジ: 0.1〜0.5")]

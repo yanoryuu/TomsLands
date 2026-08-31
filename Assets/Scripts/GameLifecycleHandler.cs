@@ -19,6 +19,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly EventOutputData _eventOutputData;
     private readonly ShopStatusModel _shopStatusModel;
     private readonly StateManager _stateManager;
+    private readonly SellOrderModel _sellOrderModel;
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -31,7 +32,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         BattleOutputData battleOutputData,
         EventOutputData eventOutputData,
         ShopStatusModel shopStatusModel,
-        StateManager stateManager)
+        StateManager stateManager,
+        SellOrderModel sellOrderModel)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -43,6 +45,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _eventOutputData = eventOutputData;
         _shopStatusModel = shopStatusModel;
         _stateManager = stateManager;
+        _sellOrderModel = sellOrderModel;
     }
 
     public void Start()
@@ -108,6 +111,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // マーケティングステータスをリセット
         _shopStatusModel.Reset();
 
+        // 売り注文をリセット
+        _sellOrderModel.Clear();
+
         // --- フロー選択（自動/手動）とシードを確定して保存 ---
         bool useAuto = _startModeData.UseAutoGeneration;
         GameModeId mode = _startModeData.SelectedMode;
@@ -139,6 +145,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _itemModel.LoadData();
         _tomsModel.LoadPlayerMoney();
         _heroModel.LoadHeroData();
+        _sellOrderModel.LoadData();
 
         // 保存済みの seed / mode から同一フローを再生成してからインデックス復元
         _gameFlowManager.InitializeFlow(_tomsModel.UseAutoFlow, _tomsModel.GameMode, _tomsModel.FlowSeed);
@@ -156,6 +163,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _itemModel.SaveData();
         _tomsModel.SavePlayerMoney();
         _heroModel.SaveHeroData();
+        _sellOrderModel.SaveData();
 
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
     }
