@@ -32,9 +32,8 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
 
 ## 1. アセット作成
 
-1. Tools > TomsLands > データ生成 > SceneDataアセット生成 を実行（`RunSetupData.asset` が追加生成される）。
-2. 生成された `Assets/Resources/SceneData/RunSetupData.asset` を Addressables に登録し、
-   アドレスを **`SceneData/RunSetupData`** にする（他の SceneData と同じ）。
+1. `Assets/Resources_moved/SceneData/RunSetupData.asset` はコミット済みで、
+   アドレス **`SceneData/RunSetupData`** で Addressables 登録済み（生成ツールは役目を終えたため削除済み）。
 
 ## 2. 準備シーンのUI構築（PreparationScene.unity）
 

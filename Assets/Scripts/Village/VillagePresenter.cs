@@ -83,7 +83,7 @@ public class VillagePresenter : IStartable, IDisposable
         var facility = model.GetFacility(facilityId);
         if (facility == null)
         {
-            Debug.LogWarning($"[VillagePresenter] 未知の施設ID: {facilityId}（マスター未生成？ Tools > TomsLands > データ生成）");
+            Debug.LogWarning($"[VillagePresenter] 未知の施設ID: {facilityId}（Resources_moved/Village のマスターに存在しない）");
             return;
         }
 

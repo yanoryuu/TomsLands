@@ -19,8 +19,8 @@ feature/village-core ブランチで実装した「村投資メタ層のコア�
 
 ## 1. マスターデータ（実施済み）
 
-1. Tools > TomsLands > データ生成 > **村施設データ生成（全部入り）** → `Assets/Resources_moved/Village/` に13施設
-2. Tools > TomsLands > データ生成 > **Addressables一括登録（Resources_moved）** → ラベル `VillageFacilityData` が13件付与
+1. 13施設のマスターは `Assets/Resources_moved/Village/` にコミット済み（生成ツールは役目を終えたため削除済み）
+2. 新規アセットを足したら Tools > TomsLands > **Addressables一括登録（Resources_moved）** → ラベル `VillageFacilityData` が付与される
 
 ## 2. VillageScene の構成（実施済み・構造の記録）
 
