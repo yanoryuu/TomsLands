@@ -144,6 +144,13 @@ public class DebugMenuView : MonoBehaviour
         if (GUILayout.Button("0にする")) _tomsModel.PlayerMoney.Value = 0;
         GUILayout.EndHorizontal();
 
+        // 店レベル操作（陳列上限の検証用）
+        GUILayout.BeginHorizontal();
+        GUILayout.Label($"店Lv: {_tomsModel.ShopLevel.Value}");
+        if (GUILayout.Button("店Lv +1")) _tomsModel.ShopLevel.Value++;
+        if (GUILayout.Button("店Lv 1に")) _tomsModel.ShopLevel.Value = 1;
+        GUILayout.EndHorizontal();
+
         GUILayout.Space(8);
     }
 

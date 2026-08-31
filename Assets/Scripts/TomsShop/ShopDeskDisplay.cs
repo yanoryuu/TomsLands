@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class ShopDeskDisplay : MonoBehaviour
 {
-    private const int MaxSlots = 16;
+    // 机スプライトの見た目上の上限。店レベルの陳列上限(最大12銘柄)より大きいので通常は間引かれない。
+    [SerializeField] private int maxSlots = 16;
 
     [SerializeField] private SpriteRenderer[] itemSlots;
 
@@ -14,11 +15,11 @@ public class ShopDeskDisplay : MonoBehaviour
             .Where(r => r.IsDisplay.Value && r.Stock.Value > 0)
             .ToList();
 
-        if (displayItems.Count > MaxSlots)
+        if (displayItems.Count > maxSlots)
         {
             displayItems = displayItems
                 .OrderBy(_ => Random.value)
-                .Take(MaxSlots)
+                .Take(maxSlots)
                 .ToList();
         }
 
