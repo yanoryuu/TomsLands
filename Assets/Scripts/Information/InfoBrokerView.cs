@@ -22,6 +22,17 @@ public class InfoBrokerView : MonoBehaviour
     [Header("所持金表示（情報屋表示中はCommonViewを出さないため） ※未配線でも動作する")]
     [SerializeField] private TextMeshProUGUI playerMoneyText;
 
+    [Header("開発（レベルアップ・Development タブ） ※未配線でも動作する")]
+    [SerializeField] private GameObject developmentTab;
+    [SerializeField] private Button developmentButton;
+    [SerializeField] private GameObject developmentPanel;
+    [SerializeField] private TextMeshProUGUI brokerLevelText;      // 情報屋 Lv.X
+    [SerializeField] private TextMeshProUGUI unlockHeaderText;     // 見出し（Lv.X で解禁される商品）
+    [SerializeField] private TextMeshProUGUI unlockPreviewText;    // 解禁商品の一覧（箇条書き）
+    [SerializeField] private TextMeshProUGUI levelUpCostText;      // レベルアップ費用
+    [SerializeField] private Button levelUpButton;                 // レベルアップボタン
+    [SerializeField] private TextMeshProUGUI levelUpButtonText;    // ボタン内テキスト
+
     [Header("取引所（Exchange タブ） ※未配線でも動作する")]
     [SerializeField] private GameObject exchangeTab;
     [SerializeField] private Button exchangeButton;
@@ -35,6 +46,7 @@ public class InfoBrokerView : MonoBehaviour
     public Subject<Unit> OnCharacterClicked { get; } = new();
     public Subject<Unit> OnRefreshRequested { get; } = new();
     public Subject<InfoBrokerTab> OnChangePanel { get; } = new();
+    public Subject<Unit> OnLevelUpRequested { get; } = new();
 
     /// <summary>取引所の詳細パネル（未配線なら null）。</summary>
     public FinanceDetailPanel FinanceDetail => financeDetailPanel;
@@ -63,6 +75,16 @@ public class InfoBrokerView : MonoBehaviour
             exchangeButton.onClick.AddListener(() => OnChangePanel.OnNext(InfoBrokerTab.Exchange));
         }
 
+        if (developmentButton != null)
+        {
+            developmentButton.onClick.AddListener(() => OnChangePanel.OnNext(InfoBrokerTab.Development));
+        }
+
+        if (levelUpButton != null)
+        {
+            levelUpButton.onClick.AddListener(() => OnLevelUpRequested.OnNext(Unit.Default));
+        }
+
         if (mapTab != null)
         {
             initTabPos[InfoBrokerTab.Map] = mapTab.transform.localPosition;
@@ -70,6 +92,10 @@ public class InfoBrokerView : MonoBehaviour
         if (exchangeTab != null)
         {
             initTabPos[InfoBrokerTab.Exchange] = exchangeTab.transform.localPosition;
+        }
+        if (developmentTab != null)
+        {
+            initTabPos[InfoBrokerTab.Development] = developmentTab.transform.localPosition;
         }
 
         ShowPanel(InfoBrokerTab.Map);
@@ -86,12 +112,48 @@ public class InfoBrokerView : MonoBehaviour
         {
             exchangePanel.SetActive(tab == InfoBrokerTab.Exchange);
         }
+        if (developmentPanel != null)
+        {
+            developmentPanel.SetActive(tab == InfoBrokerTab.Development);
+        }
     }
 
     public void SortItemTab(InfoBrokerTab type)
     {
         MoveTab(mapTab, InfoBrokerTab.Map, type);
         MoveTab(exchangeTab, InfoBrokerTab.Exchange, type);
+        MoveTab(developmentTab, InfoBrokerTab.Development, type);
+    }
+
+    /// <summary>
+    /// 開発パネルのレベル・コスト表示を更新する（鍛冶屋の開発パネルと同じ流儀）。
+    /// </summary>
+    public void UpdateDevelopmentPanel(int currentLevel, int maxLevel, int cost, int playerMoney)
+    {
+        bool isMax = currentLevel >= maxLevel;
+
+        if (brokerLevelText != null)
+            brokerLevelText.text = $"情報屋 Lv.{currentLevel}";
+
+        if (isMax)
+        {
+            if (levelUpCostText != null) levelUpCostText.text = "MAX";
+            if (levelUpButtonText != null) levelUpButtonText.text = "最大レベル";
+            if (levelUpButton != null) levelUpButton.interactable = false;
+        }
+        else
+        {
+            if (levelUpCostText != null) levelUpCostText.text = $"{cost:N0}G";
+            if (levelUpButtonText != null) levelUpButtonText.text = "レベルアップ";
+            if (levelUpButton != null) levelUpButton.interactable = playerMoney >= cost;
+        }
+    }
+
+    /// <summary>次レベルで解禁される商品のプレビュー表示を更新する。</summary>
+    public void UpdateUnlockPreview(string header, string body)
+    {
+        if (unlockHeaderText != null) unlockHeaderText.text = header ?? string.Empty;
+        if (unlockPreviewText != null) unlockPreviewText.text = body ?? string.Empty;
     }
 
     /// <summary>選択タブだけ少し持ち上げ、他は基準位置へ戻す（鍛冶屋と同じ挙動）。</summary>
@@ -153,5 +215,6 @@ public enum InfoBrokerTab
 {
     Map,
     Guess,
-    Exchange
+    Exchange,
+    Development
 }

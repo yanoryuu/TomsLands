@@ -191,4 +191,16 @@ public static class GameConst
         if (currentLevel <= 0 || currentLevel >= Data.maxBlackSmithLevel) return -1;
         return costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
     }
+
+    public static int[] InfoBrokerLevelUpCosts => Data.infoBrokerLevelUpCosts;
+
+    /// <summary>
+    /// 情報屋の現在レベル → 次レベルへの費用。最大レベル or 未定義なら -1。
+    /// </summary>
+    public static int GetInfoBrokerLevelUpCost(int currentLevel)
+    {
+        var costs = Data.infoBrokerLevelUpCosts;
+        if (currentLevel <= 0 || currentLevel >= Data.maxInfoBrokerLevel) return -1;
+        return costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
+    }
 }

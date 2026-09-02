@@ -196,6 +196,27 @@ public class TomsModel
     }
 
     /// <summary>
+    /// 情報屋レベルを1上げる。成功なら true を返す。
+    /// UpgradeBlacksmith と同じ流儀（MAX判定 → コスト → 所持金 → 減算 → 即セーブ）。
+    /// </summary>
+    public bool UpgradeInfoBroker()
+    {
+        if (InfoBrokerLevel.Value >= GameConst.MaxInfoBrokerLevel)
+            return false;
+
+        int cost = GameConst.GetInfoBrokerLevelUpCost(InfoBrokerLevel.Value);
+        if (cost < 0 || PlayerMoney.Value < cost)
+            return false;
+
+        PlayerMoney.Value -= cost;
+        InfoBrokerLevel.Value++;
+        SavePlayerMoney();
+
+        Debug.Log($"[InfoBroker] 情報屋レベルアップ: Lv.{InfoBrokerLevel.Value - 1} → Lv.{InfoBrokerLevel.Value} (費用: {cost}G)");
+        return true;
+    }
+
+    /// <summary>
     /// 店レベルを1上げる（ゴールド購入）。成功なら true を返す。
     /// UpgradeBlacksmith と同じ流儀（MAX判定 → コスト → 所持金 → 減算 → 即セーブ）。
     /// </summary>

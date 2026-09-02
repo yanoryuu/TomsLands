@@ -28,6 +28,9 @@ public class GameConstData
     // --- 鍛冶屋レベルアップコスト（index = 現在レベル → 次レベルへの費用） ---
     public int[] blackSmithLevelUpCosts = { 0, 3000, 6000, 12000, 20000 };
 
+    // --- 情報屋レベルアップコスト（index = 現在レベル → 次レベルへの費用） ---
+    public int[] infoBrokerLevelUpCosts = { 0, 2500, 6000, 12000, 20000 };
+
     // --- ゲームフロー自動生成（ローグライト） ---
     public GameFlowGenerationSettings flowGeneration = new GameFlowGenerationSettings();
 
@@ -48,6 +51,9 @@ public class GameConstData
         var clone = (GameConstData)MemberwiseClone();
         clone.blackSmithLevelUpCosts = blackSmithLevelUpCosts != null
             ? (int[])blackSmithLevelUpCosts.Clone()
+            : Array.Empty<int>();
+        clone.infoBrokerLevelUpCosts = infoBrokerLevelUpCosts != null
+            ? (int[])infoBrokerLevelUpCosts.Clone()
             : Array.Empty<int>();
         clone.flowGeneration = flowGeneration != null
             ? flowGeneration.Clone()
