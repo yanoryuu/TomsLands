@@ -1,0 +1,3590 @@
+fileFormatVersion: 2
+guid: eaa0b41f340fed2478472e8696891f44
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cube 01
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 1984
+        width: 39
+        height: 34
+      alignment: 9
+      pivot: {x: 0.4871795, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 90945dd0d1918d44f82f21ba19d1b323
+      internalID: 1573212042
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 01 A
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 1984
+        width: 39
+        height: 34
+      alignment: 9
+      pivot: {x: 0.4871795, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: be46c92c4d40fc84eb7e9dbeef8930c0
+      internalID: 222918195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 02 A
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 1987
+        width: 31
+        height: 27
+      alignment: 9
+      pivot: {x: 0.48387095, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 017c890b3c9999d4abfd86da2198bceb
+      internalID: -1197140741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Road Lamp 01 L
+      rect:
+        serializedVersion: 2
+        x: 403
+        y: 298
+        width: 52
+        height: 33
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1992bbf80075faf4bb8d4bc29986103d
+      internalID: 1153516419
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Road Lamp 01 R
+      rect:
+        serializedVersion: 2
+        x: 468
+        y: 298
+        width: 50
+        height: 33
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f839124d22d1b9498461d3e8e5f68f4
+      internalID: 1793130072
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence Gate 01
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 481
+        width: 80
+        height: 30
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f0f14611a655634aa1a266dfc524a90
+      internalID: -716962454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Table 01 H A
+      rect:
+        serializedVersion: 2
+        x: 555
+        y: 928
+        width: 81
+        height: 36
+      alignment: 9
+      pivot: {x: 0.49382716, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 97db02840be7154499dbfa1d623369c9
+      internalID: 1292815438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Table 01 H B
+      rect:
+        serializedVersion: 2
+        x: 555
+        y: 864
+        width: 81
+        height: 36
+      alignment: 9
+      pivot: {x: 0.49382716, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 155ad27d4a5ee674eb6ad8fe9837f167
+      internalID: -1613208810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Table 01 V A
+      rect:
+        serializedVersion: 2
+        x: 650
+        y: 928
+        width: 47
+        height: 66
+      alignment: 9
+      pivot: {x: 0.4893617, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e69e1d5bf20e7b347a9186bb3cd205bb
+      internalID: 1100759961
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Table 01 V B
+      rect:
+        serializedVersion: 2
+        x: 650
+        y: 832
+        width: 47
+        height: 66
+      alignment: 9
+      pivot: {x: 0.4893617, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d4190b640d3e20d43bd28ad106d197c4
+      internalID: 1695966270
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 01 V - L
+      rect:
+        serializedVersion: 2
+        x: 714
+        y: 929
+        width: 15
+        height: 60
+      alignment: 9
+      pivot: {x: 0.4705867, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1994c8abbc337a45bfc08af2808fc9f
+      internalID: 2076283106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 01 H
+      rect:
+        serializedVersion: 2
+        x: 744
+        y: 998
+        width: 82
+        height: 14
+      alignment: 9
+      pivot: {x: 0.4878049, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5161a5ddd06ec9946aec70b8cdebd054
+      internalID: -968797410
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel 01
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 897
+        width: 12
+        height: 20
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0925767f2c1ff0f4f8f42b6a0a72f4ea
+      internalID: -2077117567
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Clothesline 01
+      rect:
+        serializedVersion: 2
+        x: 451
+        y: 1986
+        width: 106
+        height: 23
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0d19c5e9844b654593273efcee811c5
+      internalID: 984549592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 01 V - R
+      rect:
+        serializedVersion: 2
+        x: 729
+        y: 929
+        width: 2
+        height: 60
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ca41bdf8cbb64ae408fb05a14ec084f0
+      internalID: -1785315228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood Pile 01 H
+      rect:
+        serializedVersion: 2
+        x: 397
+        y: 451
+        width: 48
+        height: 36
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5baab8104dd2e347a6dd490485d55d1
+      internalID: 191374612
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Chopping Block 01
+      rect:
+        serializedVersion: 2
+        x: 755
+        y: 710
+        width: 20
+        height: 20
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cc5fb7dfdea9c2b46956468a4dbcb436
+      internalID: 541921211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Firewood Pile 01
+      rect:
+        serializedVersion: 2
+        x: 799
+        y: 709
+        width: 34
+        height: 16
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5ccb7d22bb47f0d48850bffd088ddd30
+      internalID: 287642802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Hay Bale 01 H
+      rect:
+        serializedVersion: 2
+        x: 1118
+        y: 641
+        width: 4
+        height: 21
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d600bbec6f33f1447b336d97279545b1
+      internalID: -1456628602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Hay Bale 01 V
+      rect:
+        serializedVersion: 2
+        x: 1178
+        y: 640
+        width: 4
+        height: 27
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cb5cb197ef7333342ba573b4c4e1a20f
+      internalID: 850660692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 01 H
+      rect:
+        serializedVersion: 2
+        x: 985
+        y: 992
+        width: 4
+        height: 16
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1499b273ad176e48bc41ce328132cc1
+      internalID: -1369596861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 02 H
+      rect:
+        serializedVersion: 2
+        x: 986
+        y: 960
+        width: 6
+        height: 18
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5ac47806629ef124d885c19961037a10
+      internalID: 318496776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 03 H
+      rect:
+        serializedVersion: 2
+        x: 986
+        y: 929
+        width: 4
+        height: 18
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a11bc365215f72e41836320c7f272a7a
+      internalID: -2125362758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 04 H
+      rect:
+        serializedVersion: 2
+        x: 986
+        y: 896
+        width: 6
+        height: 18
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4736f5b9e9e072845b55612bc4b0dc81
+      internalID: -1956676073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Billboard 01
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 610
+        width: 59
+        height: 23
+      alignment: 9
+      pivot: {x: 0.4915254, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 51515bf9d7614824284e2b9914991272
+      internalID: -944421337
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Road Sign 01
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 546
+        width: 26
+        height: 14
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 789f516c6cbfe0a45860b4b310998d0a
+      internalID: -537771571
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Road Sign 02
+      rect:
+        serializedVersion: 2
+        x: 423
+        y: 546
+        width: 26
+        height: 14
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a1c7dd84832d44a4d99aeedfbb7494d1
+      internalID: 584961480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Road Sign 03
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 546
+        width: 26
+        height: 19
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a54f04f53506de24f863b9112d527e16
+      internalID: 882704648
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sack 01
+      rect:
+        serializedVersion: 2
+        x: 759
+        y: 579
+        width: 7
+        height: 17
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 046311b1bc440d346bdad1f48b6c562e
+      internalID: 1351643101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sack 02
+      rect:
+        serializedVersion: 2
+        x: 793
+        y: 580
+        width: 4
+        height: 15
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cf599f53c8463f245a21a36daafbc5ef
+      internalID: -1849895797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sack 03
+      rect:
+        serializedVersion: 2
+        x: 824
+        y: 583
+        width: 5
+        height: 11
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09fe8a1154fee9b42a3ee35e03417312
+      internalID: 19563815
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sack 04
+      rect:
+        serializedVersion: 2
+        x: 835
+        y: 580
+        width: 36
+        height: 8
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73b5ce5fe77300a41976ddd901c875d6
+      internalID: -171625936
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 01 H Short
+      rect:
+        serializedVersion: 2
+        x: 837
+        y: 998
+        width: 59
+        height: 14
+      alignment: 9
+      pivot: {x: 0.4915254, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a17621060f6f2b242a28fe531d59b134
+      internalID: 1568814185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 01 V Short - L
+      rect:
+        serializedVersion: 2
+        x: 746
+        y: 929
+        width: 15
+        height: 42
+      alignment: 9
+      pivot: {x: 0.4666667, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4f3028cea526c34ab72aa83e8899dc7
+      internalID: -1839977600
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Round Table 01
+      rect:
+        serializedVersion: 2
+        x: 548
+        y: 805
+        width: 32
+        height: 21
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e41e360699b72b84fb44a2af8b43c205
+      internalID: -1533093036
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 01 V Short - R
+      rect:
+        serializedVersion: 2
+        x: 761
+        y: 929
+        width: 2
+        height: 42
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 523a2b0e38e5df74cac806b757edef02
+      internalID: -1952969301
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Stool 01
+      rect:
+        serializedVersion: 2
+        x: 583
+        y: 804
+        width: 21
+        height: 14
+      alignment: 9
+      pivot: {x: 0.47619048, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea29c8b9814686d4686022368fb84864
+      internalID: 965078984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Chopping Board 01
+      rect:
+        serializedVersion: 2
+        x: 2009
+        y: 1991
+        width: 7
+        height: 13
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4a2ca5e03b6ee324e9e2163a100bce0b
+      internalID: -1210873376
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pallet Crate 01 H
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1794
+        width: 2
+        height: 17
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 737caad6666f65a479c9596ae4ea7b87
+      internalID: 1781824136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pallet Crate 01 V
+      rect:
+        serializedVersion: 2
+        x: 284
+        y: 1794
+        width: 2
+        height: 25
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7cee3130c5dc0744ea7b0d9b20beda1d
+      internalID: 1600110899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Flower Pot 01
+      rect:
+        serializedVersion: 2
+        x: 905
+        y: 711
+        width: 19
+        height: 10
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3eb5d525aca40cc468a728c04675d756
+      internalID: 782690119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Flower Pot 02
+      rect:
+        serializedVersion: 2
+        x: 969
+        y: 711
+        width: 21
+        height: 15
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c7335d8416f71340a9c31a22f8c3034
+      internalID: -1736080666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Flower Pot 03
+      rect:
+        serializedVersion: 2
+        x: 1001
+        y: 711
+        width: 20
+        height: 10
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fd1b50ed4b813134cbccd60b290e5635
+      internalID: 1659596617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Flower Pot 04
+      rect:
+        serializedVersion: 2
+        x: 1033
+        y: 711
+        width: 19
+        height: 10
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 06dee857687f4e0468bea7a5db5f172c
+      internalID: -2119694795
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bale 01
+      rect:
+        serializedVersion: 2
+        x: 893
+        y: 642
+        width: 4
+        height: 21
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 069fe22e4ff86f644a22a49208740162
+      internalID: 763571360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bale 02 H
+      rect:
+        serializedVersion: 2
+        x: 963
+        y: 642
+        width: 4
+        height: 21
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3bf3d003679ec1944912efbad161dca6
+      internalID: 2021610936
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel 05
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 833
+        width: 14
+        height: 24
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a3f32c4c0448ad045b32f09b990098c3
+      internalID: -266732630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Anvil 01
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 908
+        width: 38
+        height: 9
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b6f95ea5e4820f544b27123ae796e4c9
+      internalID: -5485381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Washtub 01
+      rect:
+        serializedVersion: 2
+        x: 561
+        y: 628
+        width: 7
+        height: 20
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e2e49729f6b88e41b8202f905b1fdb2
+      internalID: 395899912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 01 H X1
+      rect:
+        serializedVersion: 2
+        x: 35
+        y: 577
+        width: 38
+        height: 14
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 04c8cf1145facb842829329916cfc275
+      internalID: 1176474799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 01 H X2
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 577
+        width: 69
+        height: 14
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff3aa0591268e9c4e950f4c1dc3a02ea
+      internalID: 885851881
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 01 V X1
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 513
+        width: 7
+        height: 35
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6372d9f65af46734da42c76462e549d1
+      internalID: 323470572
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 01 V X2
+      rect:
+        serializedVersion: 2
+        x: 66
+        y: 481
+        width: 7
+        height: 67
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8463381119738a44db9fd561753845bf
+      internalID: -1345812817
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 01 Pillar
+      rect:
+        serializedVersion: 2
+        x: 100
+        y: 545
+        width: 5
+        height: 14
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a297dd2e892389e4b83a431d1e1eafc1
+      internalID: -94995260
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Watercan 01
+      rect:
+        serializedVersion: 2
+        x: 893
+        y: 744
+        width: 36
+        height: 16
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 247a9e6a3df65fd42ac3e29e2f1e520b
+      internalID: -1535284583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bucket 01
+      rect:
+        serializedVersion: 2
+        x: 633
+        y: 613
+        width: 5
+        height: 17
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1d5faf10e0640fd41ae056ba3c1da01b
+      internalID: 454339613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 02 H
+      rect:
+        serializedVersion: 2
+        x: 538
+        y: 1089
+        width: 81
+        height: 29
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad15b4882500f584782b8ae3301fb5a1
+      internalID: 567454104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 02 L
+      rect:
+        serializedVersion: 2
+        x: 552
+        y: 993
+        width: 26
+        height: 68
+      alignment: 9
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d20708fafc01ec042ac51596acbb8490
+      internalID: -142618570
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bench 02 R
+      rect:
+        serializedVersion: 2
+        x: 616
+        y: 993
+        width: 27
+        height: 70
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f95ba359f4228144aae910c28c44f8c
+      internalID: 1262915825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood Pile 01 V
+      rect:
+        serializedVersion: 2
+        x: 499
+        y: 456
+        width: 11
+        height: 32
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 530b8b631d8f03e4e8519e8d61c9d1df
+      internalID: -162597632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 02 H 01
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 417
+        width: 64
+        height: 31
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4e27780aa400c44a80332cc92be5809
+      internalID: -1022805283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 02 V 01
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 353
+        width: 7
+        height: 80
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e930dada0064ea54aacd1152294b95b6
+      internalID: 1839684276
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 02 V 02
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 353
+        width: 8
+        height: 80
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3937bfc6e0424a248889f5393bdb9459
+      internalID: 582279674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Gravestone 01
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 73
+        width: 11
+        height: 22
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c5b734584a9eb145b2f605c948d6f09
+      internalID: -485473126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Gravestone 02
+      rect:
+        serializedVersion: 2
+        x: 123
+        y: 71
+        width: 6
+        height: 18
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f98aa2eb3ff61c840b37ea52da00c443
+      internalID: 2142508733
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Gravestone 04
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 10
+        width: 29
+        height: 23
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: adfa7eb9b0c16cf40ba36e6284d653ec
+      internalID: -1593692359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Gravestone 05
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 19
+        width: 30
+        height: 10
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1e65c54c6e46324db21ecf4849d8ba1
+      internalID: -1800618252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 02 H 02
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 417
+        width: 12
+        height: 31
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 844599cb9e0de78459e6e835e410e6e6
+      internalID: -1718564810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Gravestone 03
+      rect:
+        serializedVersion: 2
+        x: 187
+        y: 68
+        width: 6
+        height: 23
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e9d9ad85764310247926b6116e970543
+      internalID: -1002423212
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Gravestone 06
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 4
+        width: 10
+        height: 34
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0affa6e24651cb04bb110a86a5d0e5dc
+      internalID: 1536985689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Tomb 01 V
+      rect:
+        serializedVersion: 2
+        x: 251
+        y: 3
+        width: 5
+        height: 44
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5befe17cf3786994a8025d82f81f116a
+      internalID: 1213997315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Tomb 01 H
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 64
+        width: 5
+        height: 24
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ce8dcbc293e8004bb9f54ec2be12c96
+      internalID: 323961029
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 02 Door
+      rect:
+        serializedVersion: 2
+        x: 70
+        y: 353
+        width: 35
+        height: 21
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aee5e4110df40d2468c00d21346c33a4
+      internalID: -554424097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fence 02 Pillar
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 353
+        width: 12
+        height: 30
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 76d6a35d957d45b40bd564027e313838
+      internalID: 1767229093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Tomb 02 H
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 64
+        width: 5
+        height: 24
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db4a33d9b5f02b64bb08b8c2a8683247
+      internalID: -1446939033
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Tomb 02 V
+      rect:
+        serializedVersion: 2
+        x: 314
+        y: 3
+        width: 6
+        height: 44
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6f0265dea6e506442ad67c82a2852155
+      internalID: 2050140228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Lantern 01
+      rect:
+        serializedVersion: 2
+        x: 405
+        y: 392
+        width: 3
+        height: 10
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7a395752dd10be84e9518695324bdb10
+      internalID: 899087507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Lantern 02
+      rect:
+        serializedVersion: 2
+        x: 467
+        y: 392
+        width: 5
+        height: 10
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62cb96120de440b488314f84f81dc201
+      internalID: 1817312601
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Weapon Rack 02
+      rect:
+        serializedVersion: 2
+        x: 554
+        y: 291
+        width: 53
+        height: 23
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6d060e8fb31c3745b729736ecd3ff96
+      internalID: -1364251566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sword 01
+      rect:
+        serializedVersion: 2
+        x: 552
+        y: 355
+        width: 5
+        height: 12
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 74b02c02956cd6d4e89e740d75fec5ef
+      internalID: -1141273709
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Hammer 01
+      rect:
+        serializedVersion: 2
+        x: 569
+        y: 354
+        width: 7
+        height: 12
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c724ab64ac0466a40bbff547cb3d34ef
+      internalID: 2047624922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Spear 01
+      rect:
+        serializedVersion: 2
+        x: 581
+        y: 354
+        width: 13
+        height: 27
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: abe98f99c58a94f4bb0913a08433b905
+      internalID: -580531263
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fork 01
+      rect:
+        serializedVersion: 2
+        x: 597
+        y: 353
+        width: 17
+        height: 26
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 32e4e4b19f4344f448ce05d6cf7ddd97
+      internalID: 914942278
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Weapon Rack 01
+      rect:
+        serializedVersion: 2
+        x: 628
+        y: 291
+        width: 33
+        height: 23
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 65741525c9987b1459e15741b45712d3
+      internalID: -1591854904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Shield 01
+      rect:
+        serializedVersion: 2
+        x: 661
+        y: 353
+        width: 9
+        height: 15
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9307149241ebd243985c5c716381807
+      internalID: 103826589
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Training Dummy 01
+      rect:
+        serializedVersion: 2
+        x: 678
+        y: 297
+        width: 33
+        height: 25
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cfb038b38ade6a84288d68f6bc6aabe4
+      internalID: -271617707
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Archery Target 01
+      rect:
+        serializedVersion: 2
+        x: 742
+        y: 289
+        width: 28
+        height: 23
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e32dac4481c53a4490d72c801b6156a
+      internalID: 554854756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cart 01 W
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 197
+        width: 108
+        height: 49
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d182fec837943824b8871fb10ea46281
+      internalID: 59864469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 01 A
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 1824
+        width: 11
+        height: 16
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea995b6b3cf6957449df6bb0955bc462
+      internalID: -1674064232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 01 B
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 1792
+        width: 11
+        height: 16
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4a850b63a428c647bc8a402eaf1f3e1
+      internalID: -1633025920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 02 A
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 1824
+        width: 10
+        height: 12
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4642d841afc33f4fb7b163a2b33996c
+      internalID: 1941845610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 02 B
+      rect:
+        serializedVersion: 2
+        x: 116
+        y: 1792
+        width: 10
+        height: 12
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 25e78ab1e4ea1eb4b9b72a11f7a49633
+      internalID: 2037182652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 03
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 1825
+        width: 15
+        height: 16
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0bd4f6587a8d751409a83f9274e9e02c
+      internalID: 1393442296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 04
+      rect:
+        serializedVersion: 2
+        x: 179
+        y: 1795
+        width: 10
+        height: 13
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a8bb8eb84e34b264a87f591349454a7c
+      internalID: 1930591296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pot 05
+      rect:
+        serializedVersion: 2
+        x: 53
+        y: 1728
+        width: 12
+        height: 19
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a259aba48bb77eb4ba9c8d9c49feb317
+      internalID: 1789039153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sign 01 L
+      rect:
+        serializedVersion: 2
+        x: 878
+        y: 485
+        width: 50
+        height: 17
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 678765aab4b243d4197b94b07b8de97a
+      internalID: 1420803863
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sign 01 R
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 485
+        width: 52
+        height: 17
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 214747ee1790ffa4696e6cc065b9e6ba
+      internalID: -38107933
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel 06
+      rect:
+        serializedVersion: 2
+        x: 245
+        y: 768
+        width: 12
+        height: 24
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9e6b68e9faedb341b222172d4ab935a
+      internalID: -1698837126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel Pile 01
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 769
+        width: 42
+        height: 38
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bda909359686ceb449198465b3a0c178
+      internalID: -1457913895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 01 V
+      rect:
+        serializedVersion: 2
+        x: 1002
+        y: 966
+        width: 18
+        height: 44
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 17c16c0bcd7f859429a6aaa4bb8b1ff5
+      internalID: -196807096
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 02 V
+      rect:
+        serializedVersion: 2
+        x: 1048
+        y: 966
+        width: 6
+        height: 42
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 513610b3181575d40a014bf20da82468
+      internalID: -607850144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 03 V
+      rect:
+        serializedVersion: 2
+        x: 1080
+        y: 966
+        width: 5
+        height: 42
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 89489de9365b6bc49984cf44a545e047
+      internalID: 26146324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Planter Box 04 V
+      rect:
+        serializedVersion: 2
+        x: 1112
+        y: 966
+        width: 5
+        height: 42
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6a3cef5cae2b6124998f8e807818f268
+      internalID: 2008527438
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Clothesline 02
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 1922
+        width: 89
+        height: 23
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4808a53c374cf4c42854594863f99852
+      internalID: -1731414797
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Plate 01
+      rect:
+        serializedVersion: 2
+        x: 1991
+        y: 1958
+        width: 22
+        height: 11
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22d7ffd05cfb63d43999cb68252629f2
+      internalID: -974119502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wine 01
+      rect:
+        serializedVersion: 2
+        x: 1813
+        y: 1993
+        width: 2
+        height: 10
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 97f815331f3b6a940a37818f59b00e31
+      internalID: 1296159350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wine 02
+      rect:
+        serializedVersion: 2
+        x: 1813
+        y: 1960
+        width: 2
+        height: 10
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 63e2379d0a1558e41be5124eb0043617
+      internalID: -1879801475
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wine 03
+      rect:
+        serializedVersion: 2
+        x: 1814
+        y: 1928
+        width: 2
+        height: 8
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42c7dde6f348f9349b42e5dbca3908b7
+      internalID: -961658510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cup 01
+      rect:
+        serializedVersion: 2
+        x: 1875
+        y: 1994
+        width: 7
+        height: 8
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 48c95f70c45aad74eaa9d0d48322e3b5
+      internalID: 295129769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cup 02
+      rect:
+        serializedVersion: 2
+        x: 1874
+        y: 1963
+        width: 3
+        height: 6
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc79f7d1fd752354da2570129819e631
+      internalID: -1728135126
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fruit 01
+      rect:
+        serializedVersion: 2
+        x: 1938
+        y: 1996
+        width: 4
+        height: 6
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b383a9d1ef8228d4eb9ca1f6b14773b7
+      internalID: -1234325356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Fruit 02
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 1964
+        width: 4
+        height: 6
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc7c027968ac9c943ae6a152b9101cb5
+      internalID: 150522629
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Kettle
+      rect:
+        serializedVersion: 2
+        x: 1863
+        y: 1927
+        width: 19
+        height: 8
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5e867b557c908b840b755a5c8e49bbbf
+      internalID: 1178892142
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel 02
+      rect:
+        serializedVersion: 2
+        x: 310
+        y: 897
+        width: 12
+        height: 20
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8923e3092fb201f4fba3fcf6211d9c30
+      internalID: 202443467
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel 04
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 833
+        width: 12
+        height: 20
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 94188630aee88b84eb5c5dca76f15c49
+      internalID: -256140690
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sink 01 H
+      rect:
+        serializedVersion: 2
+        x: 671
+        y: 544
+        width: 4
+        height: 17
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ca4731e9c3cb31498be6b8508e62662
+      internalID: -653291926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sink 01 V
+      rect:
+        serializedVersion: 2
+        x: 696
+        y: 523
+        width: 4
+        height: 49
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: afd37372af4d39a429b645b11b46554c
+      internalID: 1313620291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Washtub 02
+      rect:
+        serializedVersion: 2
+        x: 563
+        y: 562
+        width: 5
+        height: 19
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b5323cf60ef1af241b0f1d18a2d4f21f
+      internalID: 685343728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sign 01
+      rect:
+        serializedVersion: 2
+        x: 327
+        y: 546
+        width: 31
+        height: 15
+      alignment: 9
+      pivot: {x: 0.38709676, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c72036f078b179c44881d9305072c4fa
+      internalID: 1476599882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 03 A H
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 1991
+        width: 4
+        height: 14
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85140337754cf5d4b87ed3836b6dbd78
+      internalID: -1129796098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 01 B
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1921
+        width: 8
+        height: 34
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 39b90723c871ae74c9cc6d04858ba01f
+      internalID: 1914938655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 02 B
+      rect:
+        serializedVersion: 2
+        x: 189
+        y: 1924
+        width: 6
+        height: 27
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b000bbe7bd98a54481d46bfb3131d38
+      internalID: -250828307
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 03 A V
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 1991
+        width: 4
+        height: 27
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9eb828a0f68077b4fb02b5ead17edb6f
+      internalID: -1692308620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 03 B H
+      rect:
+        serializedVersion: 2
+        x: 258
+        y: 1927
+        width: 4
+        height: 15
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 10e60c156cd487946acbdc4ee57f218b
+      internalID: -116741109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Crate 03 B V
+      rect:
+        serializedVersion: 2
+        x: 282
+        y: 1927
+        width: 4
+        height: 27
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3a6dcc37142320b47bbbab3e32fa42b9
+      internalID: 1594906758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Campfire Cauldron 01
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 329
+        width: 63
+        height: 29
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2099cde14d6cc244d86ce1ab604e7332
+      internalID: -1244596167
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Barrel 03
+      rect:
+        serializedVersion: 2
+        x: 374
+        y: 897
+        width: 15
+        height: 27
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5041cf75488497044aeec224c10152d5
+      internalID: 1496292349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 01 V
+      rect:
+        serializedVersion: 2
+        x: 563
+        y: 480
+        width: 4
+        height: 31
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0edbbf8102afb9b429522792faf837ba
+      internalID: -1754833403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 02 V
+      rect:
+        serializedVersion: 2
+        x: 595
+        y: 480
+        width: 4
+        height: 30
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4da1b871cd52b0749bc4f6a53e1fc078
+      internalID: -1398587922
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 03 V
+      rect:
+        serializedVersion: 2
+        x: 626
+        y: 480
+        width: 7
+        height: 32
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f30be3938a2d07e41907177764f8af46
+      internalID: 1940363184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 04 V
+      rect:
+        serializedVersion: 2
+        x: 660
+        y: 480
+        width: 5
+        height: 31
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 649ce1332c53d424a942112976c8924d
+      internalID: 1491216873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 01 H
+      rect:
+        serializedVersion: 2
+        x: 595
+        y: 457
+        width: 3
+        height: 7
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ee3e1b96e8208c4b9379f7c7c63d052
+      internalID: 1416738105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 03 H
+      rect:
+        serializedVersion: 2
+        x: 595
+        y: 432
+        width: 2
+        height: 6
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99a0e5c20213b244dbc70cb1cab4b6bd
+      internalID: 733412032
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 02 H
+      rect:
+        serializedVersion: 2
+        x: 656
+        y: 457
+        width: 3
+        height: 6
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: afee5374231029b46b407ae278fae6ef
+      internalID: 1591552569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 04 H
+      rect:
+        serializedVersion: 2
+        x: 656
+        y: 427
+        width: 3
+        height: 7
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bc3e60c0d83744249a5e43f738cea1a3
+      internalID: -66001580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 01 T
+      rect:
+        serializedVersion: 2
+        x: 679
+        y: 480
+        width: 25
+        height: 27
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ca16daeb99e74554c8f75d9c14afa1b5
+      internalID: -1902053688
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Wood 02 T
+      rect:
+        serializedVersion: 2
+        x: 700
+        y: 417
+        width: 4
+        height: 7
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a427d21486f1b54e9b11dc02de72e3e
+      internalID: 698144400
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Statue 01
+      rect:
+        serializedVersion: 2
+        x: 23
+        y: 178
+        width: 46
+        height: 36
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c31265cfe59c375438fdb55dfb41199f
+      internalID: 311820202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bowl 01
+      rect:
+        serializedVersion: 2
+        x: 2004
+        y: 1928
+        width: 6
+        height: 8
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2afe7269640dca44397bd25f70521658
+      internalID: -1601584172
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Bowl 02
+      rect:
+        serializedVersion: 2
+        x: 2004
+        y: 1896
+        width: 9
+        height: 10
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cbe393125d960c14e90620295004f54e
+      internalID: 156430938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Ladder 01
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 642
+        width: 25
+        height: 68
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99789cc311396e147b86a4a2838c00a5
+      internalID: -134126097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Scarecrow 01
+      rect:
+        serializedVersion: 2
+        x: 1021
+        y: 610
+        width: 56
+        height: 48
+      alignment: 9
+      pivot: {x: 0.39285716, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f381dd71fcd49cb4b8a0b940e338eac8
+      internalID: -1414600283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Shovel 01
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 353
+        width: 15
+        height: 24
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e4fe0820aa7d65458e4182156e15a90
+      internalID: -1894775423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pumpkin 01
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 1891
+        width: 10
+        height: 14
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1312ef576a158eb419f41914fbceee07
+      internalID: 214632841
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Pumpkin 02
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 1861
+        width: 7
+        height: 12
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0219e01c78f631c43951406eee0285b4
+      internalID: -1824337114
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Beehive 01
+      rect:
+        serializedVersion: 2
+        x: 993
+        y: 290
+        width: 40
+        height: 56
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa65d4e80927f984e99aafea5d176c9d
+      internalID: -741188896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Birdhouse 01
+      rect:
+        serializedVersion: 2
+        x: 1065
+        y: 296
+        width: 24
+        height: 46
+      alignment: 9
+      pivot: {x: 0.4166667, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e9ae6c3716ae85842a71718eb46ac3a7
+      internalID: -1063997554
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Sawbuck 01
+      rect:
+        serializedVersion: 2
+        x: 744
+        y: 431
+        width: 22
+        height: 42
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b139a863b004a554690553d5565b6f9b
+      internalID: 697508431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cart 01 E
+      rect:
+        serializedVersion: 2
+        x: 524
+        y: 197
+        width: 112
+        height: 38
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b137d4f0cd1a8e4eb9497081236504f
+      internalID: 1872049923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cabbage 01
+      rect:
+        serializedVersion: 2
+        x: 1940
+        y: 1833
+        width: 7
+        height: 10
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77ad3a9cfa5aa4a4f8e6ca06b20184a0
+      internalID: 1159471412
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cabbage 02
+      rect:
+        serializedVersion: 2
+        x: 1940
+        y: 1798
+        width: 7
+        height: 10
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f16eb7709661f3e46894c1f9b41a84b3
+      internalID: -1694928273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Cabbage 03
+      rect:
+        serializedVersion: 2
+        x: 1938
+        y: 1768
+        width: 8
+        height: 8
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 902195d6b3cde6f4ba5f3b69dff34587
+      internalID: -1787229628
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Hay Pile 01
+      rect:
+        serializedVersion: 2
+        x: 1101
+        y: 547
+        width: 15
+        height: 21
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5039e53f0c38a70408a42bf58894b4f0
+      internalID: -1779815007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Hay Pile 02
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 549
+        width: 25
+        height: 36
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a88858661a801c64186823ab6d30188e
+      internalID: 711523160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Props Shadow - Hay Pile 03
+      rect:
+        serializedVersion: 2
+        x: 1277
+        y: 552
+        width: 34
+        height: 50
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 86dbb4d1d0ed81a499c55ca5c2f6de2c
+      internalID: -250847852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      TX Village Props Shadow - Cup 01: 295129769
+      TX Village Props Shadow - Cup 02: -1728135126
+      TX Village Props Shadow - Crate 03 B V: 1594906758
+      TX Village Props Shadow - Fence 02 H 01: -1022805283
+      TX Village Props Shadow - Cabbage 01: 1159471412
+      TX Village Props Shadow - Sword 01: -1141273709
+      TX Village Props Shadow - Training Dummy 01: -271617707
+      TX Village Props Shadow - Kettle: 1178892142
+      TX Village Props Shadow - Sign 01 R: -38107933
+      TX Village Props Shadow - Shovel 01: -1894775423
+      TX Village Props Shadow - Fence 01 V A: -670235693
+      TX Village Props Shadow - Sign 01: 1476599882
+      TX Village Props Shadow - Firewood Pile 01: 287642802
+      TX Village Props Shadow - Wood Pile 01 H: 191374612
+      TX Village Props Shadow - Planter Box 03 V: 26146324
+      TX Village Props Shadow - Wood 03 H: 733412032
+      TX Village Props Shadow - Bucket 01: 454339613
+      TX Village Props Shadow - Hay Pile 02: 711523160
+      TX Village Props Shadow - Fence 01 H X1: 1176474799
+      TX Village Props Shadow - Wine 01: 1296159350
+      TX Village Props Shadow - Stone 03: -462373155
+      TX Village Props Shadow - Stone 02: 427847908
+      TX Village Props Shadow - Round Table 01: -1533093036
+      TX Village Props Shadow - Pallet Crate 01 V: 1600110899
+      TX Village Props Shadow - Fence 02 H 02: -1718564810
+      TX Village Props Shadow - Planter Box 01 V: -196807096
+      TX Village Props Shadow - Tomb 02 V: 2050140228
+      TX Village Props Shadow - Fruit 01: -1234325356
+      TX Village Props Shadow - Flower Pot 04: -2119694795
+      TX Village Props Shadow - Well 01: -1467646967
+      TX Village Props Shadow - Cabbage 02: -1694928273
+      TX Village Props Shadow - Pot 02 B: 2037182652
+      TX Village Props Shadow - Planter Box 03 H: -2125362758
+      TX Village Props Shadow - Chopping Board 01: -1210873376
+      TX Village Props Shadow - Pot 01 A: -1674064232
+      TX Village Props Shadow - Lantern 01: 899087507
+      TX Village Props Shadow - Wood 01 H: 1416738105
+      TX Village Props Shadow - Wine 03: -961658510
+      TX Village Props Shadow - Spear 01: -580531263
+      TX Village Props Shadow - Road Sign 03: 882704648
+      TX Village Props Shadow - Hammer 01: 2047624922
+      TX Village Props Shadow - Planter Box 02 V: -607850144
+      TX Village Props Shadow - Crate 02 B: -250828307
+      TX Village Props Shadow - Flower Pot 02: -1736080666
+      TX Village Props Shadow - Fork 01: 914942278
+      TX Village Props Shadow - Gravestone 01: -485473126
+      TX Village Props Shadow - Lantern 02: 1817312601
+      TX Village Props Shadow - Sink 01 H: -653291926
+      TX Village Props Shadow - Pot 01 B: -1633025920
+      TX Village Props Shadow - Fruit 02: 150522629
+      TX Village Props Shadow - Stone 01: 673025041
+      TX Village Props Shadow - Barrel 06: -1698837126
+      TX Village Props Shadow - Wood 03 V: 1940363184
+      TX Village Props Shadow - Fence 01 H A: 626377326
+      TX Village Props Shadow - Barrel 01: -2077117567
+      TX Village Props Shadow - Crate 01 A: 222918195
+      TX Village Props Shadow - Crate 03 B H: -116741109
+      TX Village Props Shadow - Planter Box 02 H: 318496776
+      TX Village Props Shadow - Crate 01 B: 1914938655
+      TX Village Props Shadow - Hay Pile 01: -1779815007
+      TX Village Props Shadow - Bench 01 V - R: -1785315228
+      TX Village Props Shadow - Gravestone 04: -1593692359
+      TX Village Props Shadow - Bench 02 H: 567454104
+      TX Village Props Shadow - Sack 03: 19563815
+      TX Village Props Shadow - Fence 01 V X2: -1345812817
+      TX Village Props Shadow - Fence 01 H B: 1285407901
+      TX Village Props Shadow - Fence 01 V X1: 323470572
+      TX Village Props Shadow - Hay Bale 01 V: 850660692
+      TX Village Props Shadow - Tomb 01 V: 1213997315
+      TX Village Props Shadow - Hay Bale 01 H: -1456628602
+      TX Village Props Shadow - Stone 05: 481228898
+      TX Village Props Shadow - Bale 01: 763571360
+      TX Village Props Shadow - Barrel 04: -256140690
+      TX Village Props Shadow - Clothesline 02: -1731414797
+      TX Village Props Shadow - Archery Target 01: 554854756
+      TX Village Props Shadow - Wood 02 H: 1591552569
+      TX Village Props Shadow - Table 01 H B: -1613208810
+      TX Village Props Shadow - Gravestone 06: 1536985689
+      TX Village Props Shadow - Stone 06: 2086507869
+      TX Village Props Shadow - Scarecrow 01: -1414600283
+      TX Village Props Shadow - Barrel Pile 01: -1457913895
+      TX Village Props Shadow - Pot 02 A: 1941845610
+      TX Village Props Shadow - Sink 01 V: 1313620291
+      TX Village Props Shadow - Sawbuck 01 Saw: -960451952
+      TX Village Props Shadow - Pallet Crate 01 H: 1781824136
+      TX Village Props Shadow - Beehive 01: -741188896
+      TX Village Props Shadow - Stone 04: 525515571
+      TX Village Props Shadow - Pot 05: 1789039153
+      TX Village Props Shadow - Planter Box 04 V: 2008527438
+      TX Village Props Shadow - Statue 01: 311820202
+      TX Village Props Shadow - Bench 02 R: 1262915825
+      TX Village Props Shadow - Washtub 02: 685343728
+      TX Village Props Shadow - Fence 01 V B: -1183756272
+      TX Village Props Shadow - Stool 01: 965078984
+      TX Village Props Shadow - Road Sign 01: -537771571
+      TX Village Props Shadow - Table 01 V B: 1695966270
+      TX Village Props Shadow - Road Lamp 01 R: 1793130072
+      TX Village Props Shadow - Flower Pot 03: 1659596617
+      TX Village Props Shadow - Sack 01: 1351643101
+      TX Village Props Shadow - Bowl 01: -1601584172
+      TX Village Props Shadow - Hay Pile 03: -250847852
+      TX Village Props Shadow - Fence 01 H X2: 885851881
+      TX Village Props Shadow - Bench 01 V Short - L: -1839977600
+      TX Village Props Shadow - Billboard 01: -944421337
+      TX Village Props Shadow - Road Sign 02: 584961480
+      TX Village Props Shadow - Fence 02 V 01: 1839684276
+      TX Village Props Shadow - Tomb 02 H: -1446939033
+      TX Village Props Shadow - Wood 02 T: 698144400
+      TX Village Props Shadow - Weapon Rack 01: -1591854904
+      TX Village Props Shadow - Barrel 05: -266732630
+      TX Village Props Shadow - Sawbuck 01: 697508431
+      TX Village Props Shadow - Gravestone 05: -1800618252
+      TX Village Props Shadow - Tomb 01 H: 323961029
+      TX Village Props Shadow - Cart 01 E: 1872049923
+      TX Village Props Shadow - Campfire Cauldron 01: -1244596167
+      TX Village Props Shadow - Pot 03: 1393442296
+      TX Village Props Shadow - Cube 01: 1573212042
+      TX Village Props Shadow - Wood Pile 01 V: -162597632
+      TX Village Props Shadow - Cabbage 03: -1787229628
+      TX Village Props Shadow - Bowl 02: 156430938
+      TX Village Props Shadow - Fence 02 Pillar: 1767229093
+      TX Village Props Shadow - Anvil 01: -5485381
+      TX Village Props Shadow - Sack 02: -1849895797
+      TX Village Props Shadow - Gravestone 02: 2142508733
+      TX Village Props Shadow - Crate 03 A H: -1129796098
+      TX Village Props Shadow - Weapon Rack 02: -1364251566
+      TX Village Props Shadow - Wood 04 V: 1491216873
+      TX Village Props Shadow - Pumpkin 02: -1824337114
+      TX Village Props Shadow - Fence 02 V 02: 582279674
+      TX Village Props Shadow - Washtub 01: 395899912
+      TX Village Props Shadow - Gravestone 03: -1002423212
+      TX Village Props Shadow - Watercan 01: -1336661837
+      TX Village Props Shadow - Bench 01 V - L: 2076283106
+      TX Village Props Shadow - Pumpkin 01: 214632841
+      TX Village Props Shadow - Flower Pot 01: 782690119
+      TX Village Props Shadow - Fence 01 Pillar: -94995260
+      TX Village Props Shadow - Wood 01 T: -1902053688
+      TX Village Props Shadow - Birdhouse 01: -1063997554
+      TX Village Props Shadow - Ladder 01: -134126097
+      TX Village Props Shadow - Clothesline 01: 984549592
+      TX Village Props Shadow - Barrel 02: 202443467
+      TX Village Props Shadow - Planter Box 04 H: -1956676073
+      TX Village Props Shadow - Fence Gate 01: -716962454
+      TX Village Props Shadow - Table 01 H A: 1292815438
+      TX Village Props Shadow - Crate 02 A: -1197140741
+      TX Village Props Shadow - Crate 03 A V: -1692308620
+      TX Village Props Shadow - Wood 04 H: -66001580
+      TX Village Props Shadow - Table 01 V A: 1100759961
+      TX Village Props Shadow - Sack 04: -171625936
+      TX Village Props Shadow - Road Lamp 01 L: 1153516419
+      TX Village Props Shadow - Bench 01 V Short - R: -1952969301
+      TX Village Props Shadow - Shield 01: 103826589
+      TX Village Props Shadow - Chopping Block 01: 541921211
+      TX Village Props Shadow - Wood 01 V: -1754833403
+      TX Village Props Shadow - Wine 02: -1879801475
+      TX Village Props Shadow - Pot 04: 1930591296
+      TX Village Props Shadow - Stone 07: 1249051017
+      TX Village Props Shadow - Barrel 03: 1496292349
+      TX Village Props Shadow - Plate 01: -974119502
+      TX Village Props Shadow - Bench 01 H: -968797410
+      TX Village Props Shadow - Bench 02 L: -142618570
+      TX Village Props Shadow - Planter Box 01 H: -1369596861
+      TX Village Props Shadow - Wood 02 V: -1398587922
+      TX Village Props Shadow - Sign 01 L: 1420803863
+      TX Village Props Shadow - Bench 01 H Short: 1568814185
+      TX Village Props Shadow - Cart 01 W: 59864469
+      TX Village Props Shadow - Fence 02 Door: -554424097
+      TX Village Props Shadow - Bale 02 H: 2021610936
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Texture/TX Village Props
+    Shadow.png
+  uploadId: 984298

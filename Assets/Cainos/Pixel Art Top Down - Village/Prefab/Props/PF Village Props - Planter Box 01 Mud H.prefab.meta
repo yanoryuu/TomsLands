@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d8f6a2501c4d15f4c84616aee6b26658
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Planter Box 01 Mud H.prefab
+  uploadId: 984298

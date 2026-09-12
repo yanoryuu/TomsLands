@@ -1,0 +1,1740 @@
+fileFormatVersion: 2
+guid: 877aa0ec458560d46a547c66ed575284
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 01 A
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 842
+        width: 55
+        height: 106
+      alignment: 9
+      pivot: {x: 0.49090907, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 258f2f682c37328448c5a63fb1550d70
+      internalID: -1725782585
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 03 A
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 842
+        width: 87
+        height: 140
+      alignment: 9
+      pivot: {x: 0.51724136, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a412f7c421a7be44db4b113159f2116a
+      internalID: 1088986972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 05 A
+      rect:
+        serializedVersion: 2
+        x: 445
+        y: 840
+        width: 96
+        height: 179
+      alignment: 9
+      pivot: {x: 0.5520834, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62fe6583a520ed541adfb50a07913be4
+      internalID: -1665114063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 02 A
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 34
+        width: 38
+        height: 30
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8af5ca146edbf3f42b28870833134327
+      internalID: -2019042073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 03 A
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 34
+        width: 42
+        height: 39
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 92be42a4966ac5e42a1b1a2c85247366
+      internalID: -1279475762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 04 A
+      rect:
+        serializedVersion: 2
+        x: 217
+        y: 32
+        width: 45
+        height: 38
+      alignment: 9
+      pivot: {x: 0.4888889, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e7cdbc44193d504b8d9bedc718f5a48
+      internalID: 2029630617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 06 A
+      rect:
+        serializedVersion: 2
+        x: 379
+        y: 29
+        width: 73
+        height: 45
+      alignment: 9
+      pivot: {x: 0.49315068, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1887edc63d0691e42880312f45e8a943
+      internalID: -280219232
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 07 A
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 31
+        width: 79
+        height: 57
+      alignment: 9
+      pivot: {x: 0.4936709, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 63963021601428348abf9bc2b99c6611
+      internalID: -406871893
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 01 A
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 34
+        width: 27
+        height: 27
+      alignment: 9
+      pivot: {x: 0.4814815, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9fa599a0cae27c74e87528b8af5cff19
+      internalID: -79124539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X2 01
+      rect:
+        serializedVersion: 2
+        x: 907
+        y: 107
+        width: 8
+        height: 7
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69ad975fb96243d4caab51a0f65efe58
+      internalID: -1039795354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X2 02
+      rect:
+        serializedVersion: 2
+        x: 906
+        y: 72
+        width: 9
+        height: 7
+      alignment: 9
+      pivot: {x: 0.44444445, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e7c912b795906684e9e7a9c1c35d3e9c
+      internalID: -1862461451
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X2 03
+      rect:
+        serializedVersion: 2
+        x: 907
+        y: 42
+        width: 8
+        height: 6
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dc8a3018ed4555440bfd40254964116f
+      internalID: 1838827691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X2 04
+      rect:
+        serializedVersion: 2
+        x: 907
+        y: 13
+        width: 8
+        height: 5
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5f55470c02b07a54f9cfa0faf1175fc1
+      internalID: 1985339781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 01
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 106
+        width: 11
+        height: 8
+      alignment: 9
+      pivot: {x: 0.45454547, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22f51e9cfdb455a4f99b74e25662cb57
+      internalID: -1222964413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 02
+      rect:
+        serializedVersion: 2
+        x: 936
+        y: 73
+        width: 14
+        height: 9
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c1675f1c3ee21f243bef5338d2a0e6f6
+      internalID: 1688220061
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 03
+      rect:
+        serializedVersion: 2
+        x: 936
+        y: 40
+        width: 12
+        height: 8
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bbaac089ef2d8b64792b28af5b8adb8a
+      internalID: -182481689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 04
+      rect:
+        serializedVersion: 2
+        x: 938
+        y: 11
+        width: 12
+        height: 9
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d421bf3888931c34caaa3b746682c42f
+      internalID: 1271390891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 05
+      rect:
+        serializedVersion: 2
+        x: 971
+        y: 105
+        width: 12
+        height: 7
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1489769df9b76d94182fd14ac7100029
+      internalID: 2146906195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 06
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 73
+        width: 12
+        height: 7
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d79a4968d7b031a4e9c9cc9eb7057577
+      internalID: 1644476473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 07
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 43
+        width: 12
+        height: 6
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7609835824403f34e8e24070d1eae148
+      internalID: -1637518798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X3 08
+      rect:
+        serializedVersion: 2
+        x: 969
+        y: 12
+        width: 15
+        height: 6
+      alignment: 9
+      pivot: {x: 0.4666667, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57a8df5332809214db50fb86a9408e1f
+      internalID: -1808158287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X4 01
+      rect:
+        serializedVersion: 2
+        x: 1001
+        y: 106
+        width: 14
+        height: 9
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35998ed9d2551544290b089de765e64c
+      internalID: -1993420994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X4 02
+      rect:
+        serializedVersion: 2
+        x: 1001
+        y: 74
+        width: 15
+        height: 9
+      alignment: 9
+      pivot: {x: 0.4666667, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9d8daa8a2b08f1438855421037aef5c
+      internalID: -1953368290
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X4 03
+      rect:
+        serializedVersion: 2
+        x: 1001
+        y: 42
+        width: 16
+        height: 9
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: baf8df27434ae1a45b0eee8f2a2406df
+      internalID: 1438237632
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Grass X4 04
+      rect:
+        serializedVersion: 2
+        x: 1001
+        y: 10
+        width: 17
+        height: 9
+      alignment: 9
+      pivot: {x: 0.47058824, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee1e457cafe1e864d97157ac2b97010d
+      internalID: -1721601569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Flower 02 01
+      rect:
+        serializedVersion: 2
+        x: 908
+        y: 169
+        width: 9
+        height: 14
+      alignment: 9
+      pivot: {x: 0.44444445, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d60ee64dc44885446bcf7406e6128730
+      internalID: -987577691
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Flower 02 02
+      rect:
+        serializedVersion: 2
+        x: 937
+        y: 168
+        width: 13
+        height: 17
+      alignment: 9
+      pivot: {x: 0.4615385, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e536fc4d6c31554db36b3c6bc84b345
+      internalID: 907931605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Flower 02 03
+      rect:
+        serializedVersion: 2
+        x: 969
+        y: 167
+        width: 12
+        height: 18
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb3c7c852249ca64e90191b3820394bf
+      internalID: -597305773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Flower 02 04
+      rect:
+        serializedVersion: 2
+        x: 1001
+        y: 168
+        width: 15
+        height: 19
+      alignment: 9
+      pivot: {x: 0.4666667, y: -0.05263158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 729fd05ff89e01f4e9a7a68e2549e10a
+      internalID: -233492512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Oak 02
+      rect:
+        serializedVersion: 2
+        x: 687
+        y: 760
+        width: 252
+        height: 249
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e78e1ea5c1e3be84d9bebb80466c5768
+      internalID: 343315975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 04 A
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 842
+        width: 93
+        height: 161
+      alignment: 9
+      pivot: {x: 0.5268817, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 70eb59a547500b244b567fe3b8038fe8
+      internalID: -556785952
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 01 B
+      rect:
+        serializedVersion: 2
+        x: 19
+        y: 647
+        width: 55
+        height: 106
+      alignment: 9
+      pivot: {x: 0.49090907, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 38ed93d9bffa0604987cba57769e65d8
+      internalID: -63249786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 03 B
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 648
+        width: 87
+        height: 140
+      alignment: 9
+      pivot: {x: 0.51724136, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 318fdb447422d2441a91cfdfb6141562
+      internalID: 413368694
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 04 B
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 647
+        width: 93
+        height: 161
+      alignment: 9
+      pivot: {x: 0.5268817, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3abf136b983bc394d90adb4a84a8b79c
+      internalID: -682430553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 05 B
+      rect:
+        serializedVersion: 2
+        x: 444
+        y: 645
+        width: 96
+        height: 179
+      alignment: 9
+      pivot: {x: 0.5520834, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: edd94bad5264fc448a237a3ab8f246bc
+      internalID: 1487137128
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 02 A
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 842
+        width: 79
+        height: 123
+      alignment: 9
+      pivot: {x: 0.4936709, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3a90eeb87f4ff664ba77287215fd741f
+      internalID: 1565868238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Birch 02 B
+      rect:
+        serializedVersion: 2
+        x: 104
+        y: 647
+        width: 79
+        height: 123
+      alignment: 9
+      pivot: {x: 0.49367088, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 44a75dd31051903428678a83c3ef7b22
+      internalID: 1974472683
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 01 B
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 98
+        width: 27
+        height: 27
+      alignment: 9
+      pivot: {x: 0.4814815, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 105029a0bc281a7458d2b3647c2bdd7f
+      internalID: -835867448
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 02 B
+      rect:
+        serializedVersion: 2
+        x: 93
+        y: 98
+        width: 38
+        height: 30
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 286d287295ba22e4aaa90773e3263d04
+      internalID: 1641754583
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 03 B
+      rect:
+        serializedVersion: 2
+        x: 153
+        y: 98
+        width: 42
+        height: 39
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87b63fd5365ed0f428b231aa30d68cec
+      internalID: 1384887962
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 04 B
+      rect:
+        serializedVersion: 2
+        x: 217
+        y: 96
+        width: 45
+        height: 38
+      alignment: 9
+      pivot: {x: 0.4888889, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f4b68eac883f718499aeab8c86fb20ec
+      internalID: -341744906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 06 B
+      rect:
+        serializedVersion: 2
+        x: 379
+        y: 93
+        width: 73
+        height: 45
+      alignment: 9
+      pivot: {x: 0.49315068, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 382cfef675ee3c04bbbc1ba402048797
+      internalID: 1906252847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 07 B
+      rect:
+        serializedVersion: 2
+        x: 472
+        y: 95
+        width: 79
+        height: 57
+      alignment: 9
+      pivot: {x: 0.4936709, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b576bb5e73d651d41a7f7e4899a8da78
+      internalID: 979616908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 01 A
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 272
+        width: 35
+        height: 48
+      alignment: 9
+      pivot: {x: 0.4857143, y: 0.041666668}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 80bcb223aed87ed42b0d3309ea8c1579
+      internalID: -241991258
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 02 A
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 272
+        width: 35
+        height: 50
+      alignment: 9
+      pivot: {x: 0.4857143, y: 0.06122449}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 55f177a833bf8f74492fce796090af26
+      internalID: 1111198480
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 03 A
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 272
+        width: 33
+        height: 50
+      alignment: 9
+      pivot: {x: 0.4848485, y: 0.06}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1c862f0d4b838d146afcd34bc96658bf
+      internalID: -595183685
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 04 A
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 272
+        width: 34
+        height: 48
+      alignment: 9
+      pivot: {x: 0.5, y: 0.041666668}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c0850959c024eed44aadaad3e82031a4
+      internalID: -289918486
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 05 A
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 272
+        width: 34
+        height: 49
+      alignment: 9
+      pivot: {x: 0.5, y: 0.041666668}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1534865063ad5fb4390cf8ef877af43e
+      internalID: -1779965452
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 06 A
+      rect:
+        serializedVersion: 2
+        x: 351
+        y: 272
+        width: 34
+        height: 49
+      alignment: 9
+      pivot: {x: 0.5, y: 0.040816326}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 16d4a8679de32ee4b94eda01fe077261
+      internalID: 1687345372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat Cut 01 A
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 272
+        width: 30
+        height: 37
+      alignment: 9
+      pivot: {x: 0.5, y: 0.054054055}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2c6e94e1a32f9cb41b5fc2b4ca889b79
+      internalID: 1765960369
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat Cut 02 A
+      rect:
+        serializedVersion: 2
+        x: 480
+        y: 271
+        width: 31
+        height: 38
+      alignment: 9
+      pivot: {x: 0.48387095, y: 0.05263158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e25d748836fcdf44f8094762be950eb1
+      internalID: 1841051213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 01 B
+      rect:
+        serializedVersion: 2
+        x: 30
+        y: 208
+        width: 35
+        height: 48
+      alignment: 9
+      pivot: {x: 0.4857143, y: 0.041666668}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f0d22c4ad50c07498513bb0fb42d792
+      internalID: -1097210488
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 02 B
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 208
+        width: 35
+        height: 50
+      alignment: 9
+      pivot: {x: 0.4857143, y: 0.06122449}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 00cc553b5140efb4a91ef4b197088d06
+      internalID: 1817392758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 03 B
+      rect:
+        serializedVersion: 2
+        x: 159
+        y: 208
+        width: 33
+        height: 50
+      alignment: 9
+      pivot: {x: 0.4848485, y: 0.06}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 45d6dd7d09759304fa1baeda08d65d7d
+      internalID: -284144785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 04 B
+      rect:
+        serializedVersion: 2
+        x: 223
+        y: 208
+        width: 34
+        height: 48
+      alignment: 9
+      pivot: {x: 0.5, y: 0.041666668}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5cbd054d9c6a0643b242c34e4c6c5bb
+      internalID: 398039503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 05 B
+      rect:
+        serializedVersion: 2
+        x: 287
+        y: 208
+        width: 34
+        height: 49
+      alignment: 9
+      pivot: {x: 0.5, y: 0.041666668}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3f8b3d7de1bbc13468468bcb6cc43b52
+      internalID: -1312168495
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat 06 B
+      rect:
+        serializedVersion: 2
+        x: 351
+        y: 208
+        width: 34
+        height: 49
+      alignment: 9
+      pivot: {x: 0.5, y: 0.040816326}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 755e9ba649b933047a4b96f4a4abca65
+      internalID: -1029690354
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat Cut 01 B
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 208
+        width: 30
+        height: 37
+      alignment: 9
+      pivot: {x: 0.5, y: 0.054054055}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fbcaa6ad9dc177c4ba8deb37d9f5ae06
+      internalID: -463545176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Wheat Cut 02 B
+      rect:
+        serializedVersion: 2
+        x: 480
+        y: 207
+        width: 31
+        height: 38
+      alignment: 9
+      pivot: {x: 0.48387095, y: 0.05263158}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5936d0496eacae4aaf0919f4b135b18
+      internalID: 1806094796
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Carrot 03
+      rect:
+        serializedVersion: 2
+        x: 869
+        y: 293
+        width: 22
+        height: 24
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 848a56e6ce579114b90c280aaf8a4f3e
+      internalID: -603492007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Carrot 02
+      rect:
+        serializedVersion: 2
+        x: 935
+        y: 295
+        width: 19
+        height: 18
+      alignment: 9
+      pivot: {x: 0.47368422, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 484203af329b4034abb6062637d266e0
+      internalID: 288487854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Carrot 01
+      rect:
+        serializedVersion: 2
+        x: 1000
+        y: 296
+        width: 14
+        height: 15
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fb557127da689be46aab26cf6df6455f
+      internalID: 106515958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Pumpkin 03
+      rect:
+        serializedVersion: 2
+        x: 861
+        y: 322
+        width: 35
+        height: 28
+      alignment: 9
+      pivot: {x: 0.4857143, y: 0.14285715}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f16b129a20260ca46988bad89690c795
+      internalID: 2098424230
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Pumpkin 02
+      rect:
+        serializedVersion: 2
+        x: 931
+        y: 325
+        width: 27
+        height: 21
+      alignment: 9
+      pivot: {x: 0.4814815, y: 0.1904762}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 90006dd04459188458a6e01a4f3de144
+      internalID: -1645710484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Pumpkin 01
+      rect:
+        serializedVersion: 2
+        x: 1000
+        y: 328
+        width: 16
+        height: 14
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b3881cfe75e4824488e51221368e17f2
+      internalID: 719569891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Cabbage - 03
+      rect:
+        serializedVersion: 2
+        x: 867
+        y: 356
+        width: 26
+        height: 22
+      alignment: 9
+      pivot: {x: 0.5, y: 0.22727273}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 702163737beab2e44ad77c93b4ef7011
+      internalID: 1371552947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Cabbage - 02
+      rect:
+        serializedVersion: 2
+        x: 931
+        y: 357
+        width: 25
+        height: 19
+      alignment: 9
+      pivot: {x: 0.52, y: 0.2631579}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 320de26681c6a8743a0006317a0eae52
+      internalID: 1096238487
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Cabbage - 01
+      rect:
+        serializedVersion: 2
+        x: 999
+        y: 359
+        width: 17
+        height: 13
+      alignment: 9
+      pivot: {x: 0.5294118, y: 0.15384616}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 871201fbb0dd9f348a96561092cbeca8
+      internalID: 1002060794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Tree Oak 01
+      rect:
+        serializedVersion: 2
+        x: 702
+        y: 539
+        width: 210
+        height: 207
+      alignment: 9
+      pivot: {x: 0.54285717, y: 0.08695652}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0e14bf7743fde8e459b345ba0e4076e3
+      internalID: 1428850429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 05 B
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 97
+        width: 57
+        height: 41
+      alignment: 9
+      pivot: {x: 0.49122807, y: 0.07317073}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape:
+      - - {x: -14.5, y: -18.5}
+        - {x: -18.5, y: -14.5}
+        - {x: -11.5, y: -8.5}
+        - {x: 13.5, y: -8.5}
+        - {x: 20.5, y: -13.5}
+        - {x: 15.5, y: -18.5}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5977784148151cb408b6779c0ecaf137
+      internalID: 2126597437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Plant - Bush 05 A
+      rect:
+        serializedVersion: 2
+        x: 293
+        y: 33
+        width: 57
+        height: 41
+      alignment: 9
+      pivot: {x: 0.49122807, y: 0.07317073}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape:
+      - - {x: -14.5, y: -18.5}
+        - {x: -18.5, y: -13.5}
+        - {x: -12.5, y: -8.5}
+        - {x: 13.5, y: -8.5}
+        - {x: 20.5, y: -12.5}
+        - {x: 15.5, y: -18.5}
+      tessellationDetail: 0
+      bones: []
+      spriteID: 81d738c13f2ea1d469c0c0bc91abab9b
+      internalID: 25204252
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      TX Village Plant - Grass X2 02: -1862461451
+      TX Village Plant - Grass X3 05: 2146906195
+      TX Village Plant - Tree Birch 04 B: -682430553
+      TX Village Plant - Flower 02 02: 907931605
+      TX Village Plant - Tree Birch 02 B: 1974472683
+      TX Village Plant - Grass X3 03: -182481689
+      TX Village Plant - Tree Birch 05 B: 1487137128
+      TX Village Plant - Bush 06 B: 1906252847
+      TX Village Plant - Grass X3 06: 1644476473
+      TX Village Plant - Carrot 02: 288487854
+      TX Village Plant - Wheat 03 A: -595183685
+      TX Village Plant - Grass X4 03: 1438237632
+      TX Village Plant - Wheat 01 B: -1097210488
+      TX Village Plant - Tree Birch 01 B: -63249786
+      TX Village Plant - Grass X3 08: -1808158287
+      TX Village Plant - Bush 07 A: -406871893
+      TX Village Plant - Wheat Cut 02 B: 1806094796
+      TX Village Plant - Bush 01 A: -79124539
+      TX Village Plant - Wheat 01 A: -241991258
+      TX Village Plant - Tree Oak 01: 1428850429
+      TX Village Plant - Wheat Cut 01 A: 1765960369
+      TX Village Plant - Wheat 04 A: -289918486
+      TX Village Plant - Tree Birch 02 A: 1565868238
+      TX Village Plant - Grass X4 02: -1953368290
+      TX Village Plant - Wheat 06 A: 1687345372
+      TX Village Plant - Bush 02 B: 1641754583
+      TX Village Plant - Cabbage - 03: 1371552947
+      TX Village Plant - Bush 05 A: 25204252
+      TX Village Plant - Bush 03 A: -1279475762
+      TX Village Plant - Grass X4 04: -1721601569
+      TX Village Plant - Wheat 06 B: -1029690354
+      TX Village Plant - Carrot 03: -603492007
+      TX Village Plant - Grass X3 01: -1222964413
+      TX Village Plant - Bush 03 B: 1384887962
+      TX Village Plant - Carrot 01: 106515958
+      TX Village Plant - Flower 02 04: -233492512
+      TX Village Plant - Pumpkin 01: 719569891
+      TX Village Plant - Wheat 04 B: 398039503
+      TX Village Plant - Flower 02 03: -597305773
+      TX Village Plant - Grass X3 04: 1271390891
+      TX Village Plant - Tree Birch 01 A: -1725782585
+      TX Village Plant - Bush 04 B: -341744906
+      TX Village Plant - Pumpkin 02: -1645710484
+      TX Village Plant - Tree Birch 03 B: 413368694
+      TX Village Plant - Bush 02 A: -2019042073
+      TX Village Plant - Tree Birch 03 A: 1088986972
+      TX Village Plant - Grass X2 03: 1838827691
+      TX Village Plant - Cabbage - 02: 1096238487
+      TX Village Plant - Wheat 02 A: 1111198480
+      TX Village Plant - Wheat 05 A: -1779965452
+      TX Village Plant - Wheat Cut 02 A: 1841051213
+      TX Village Plant - Grass X3 02: 1688220061
+      TX Village Plant - Bush 04 A: 2029630617
+      TX Village Plant - Grass X2 04: 1985339781
+      TX Village Plant - Grass X3 07: -1637518798
+      TX Village Plant - Cabbage - 01: 1002060794
+      TX Village Plant - Grass X2 01: -1039795354
+      TX Village Plant - Bush 01 B: -835867448
+      TX Village Plant - Tree Birch 05 A: -1665114063
+      TX Village Plant - Wheat Cut 01 B: -463545176
+      TX Village Plant - Wheat 05 B: -1312168495
+      TX Village Plant - Tree Birch 04 A: -556785952
+      TX Village Plant - Tree Oak 02: 343315975
+      TX Village Plant - Pumpkin 03: 2098424230
+      TX Village Plant - Bush 06 A: -280219232
+      TX Village Plant - Bush 05 B: 2126597437
+      TX Village Plant - Flower 02 01: -987577691
+      TX Village Plant - Wheat 02 B: 1817392758
+      TX Village Plant - Grass X4 01: -1993420994
+      TX Village Plant - Bush 07 B: 979616908
+      TX Village Plant - Wheat 03 B: -284144785
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Texture/TX Village Plant.png
+  uploadId: 984298

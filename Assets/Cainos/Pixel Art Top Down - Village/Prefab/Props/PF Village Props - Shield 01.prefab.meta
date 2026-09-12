@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a7230fa8b25ab5046a09c8bff799d7dc
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Shield 01.prefab
+  uploadId: 984298

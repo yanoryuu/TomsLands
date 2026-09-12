@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2cd7476d640d2dc448949137d11d73d4
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Bench 02 R.prefab
+  uploadId: 984298

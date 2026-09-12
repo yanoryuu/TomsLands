@@ -21,6 +21,8 @@ public class FacilityPlot : MonoBehaviour
     [Tooltip("建物本体。stageSprites[0]=空き地(立て札) / [1]=Lv1 / [2]=Lv2 / [3]=Lv3（足りない分は最後を使う）")]
     [SerializeField] private SpriteRenderer buildingRenderer;
     [SerializeField] private Sprite[] stageSprites;
+    [Tooltip("レベルごとの見た目ルート（[0]=空き地(立て札) / [1..]=Lv1..）。設定されていれば stageSprites より優先で、該当レベルの1つだけをアクティブにする")]
+    [SerializeField] private GameObject[] stageObjects;
     [Tooltip("施設アイコンの看板（icon未設定の施設では非表示）")]
     [SerializeField] private SpriteRenderer signIconRenderer;
     [Tooltip("未解禁（領主館ゲート）のときに出す表示")]
@@ -47,7 +49,16 @@ public class FacilityPlot : MonoBehaviour
     /// <summary>Presenter からの表示更新。level=0 は空き地。</summary>
     public void SetState(int level, bool lockedByGate, Sprite icon, string facilityName)
     {
-        if (buildingRenderer != null && stageSprites != null && stageSprites.Length > 0)
+        if (stageObjects != null && stageObjects.Length > 0)
+        {
+            // 子オブジェクト切替方式（Cainos建物のような複数スプライト合成に対応）
+            int index = Mathf.Clamp(level, 0, stageObjects.Length - 1);
+            for (int i = 0; i < stageObjects.Length; i++)
+            {
+                if (stageObjects[i] != null) stageObjects[i].SetActive(i == index);
+            }
+        }
+        else if (buildingRenderer != null && stageSprites != null && stageSprites.Length > 0)
         {
             int index = Mathf.Clamp(level, 0, stageSprites.Length - 1);
             buildingRenderer.sprite = stageSprites[index];
@@ -64,11 +75,27 @@ public class FacilityPlot : MonoBehaviour
     /// <summary>投資直後の建設演出（ポップ）。</summary>
     public void PlayBuildEffect()
     {
-        if (buildingRenderer == null) return;
-        var t = buildingRenderer.transform;
+        Transform t = null;
+        GameObject linkTarget = null;
+
+        if (stageObjects != null && stageObjects.Length > 0)
+        {
+            // アクティブなステージオブジェクトをポップさせる
+            foreach (var so in stageObjects)
+            {
+                if (so != null && so.activeSelf) { t = so.transform; linkTarget = so; break; }
+            }
+        }
+        else if (buildingRenderer != null)
+        {
+            t = buildingRenderer.transform;
+            linkTarget = buildingRenderer.gameObject;
+        }
+
+        if (t == null) return;
         t.DOKill();
         t.localScale = Vector3.one * 0.6f;
-        t.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetLink(buildingRenderer.gameObject);
+        t.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetLink(linkTarget);
     }
 
     private void Update()

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2663f18adb82dc4ba25d7195e7f6c5a, type: 3}
+  m_Name: ST Dirt
+  m_EditorClassIdentifier: Assembly-CSharp::GrassTile
+  decorationRate: 0.6
+  seed: 0
+  basic:
+  - {fileID: -2032353663, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  decoration:
+  - {fileID: -1704705186, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 1171069448, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 417220968, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: -1040041470, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 190211892, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 560696153, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: -1079475264, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: -284513701, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 1238543208, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: -809667045, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 1048818294, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 1724157695, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: -1961635461, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}
+  - {fileID: 961662096, guid: 9a7dac47385f10c46adde9967e9d1236, type: 3}

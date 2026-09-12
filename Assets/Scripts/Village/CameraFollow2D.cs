@@ -19,6 +19,11 @@ public class CameraFollow2D : MonoBehaviour
     private void Awake()
     {
         cam = GetComponent<Camera>();
+
+        // 奥行きソートをY軸基準にする（Cainos素材の建物とプレイヤーの前後関係用）。
+        // プロジェクト全体のGraphicsSettingsは変えず、このカメラだけに適用する
+        cam.transparencySortMode = TransparencySortMode.CustomAxis;
+        cam.transparencySortAxis = Vector3.up;
     }
 
     private void OnEnable()

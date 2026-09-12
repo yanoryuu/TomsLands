@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: dca34517bc2593f4b8ec133fb2d22e7f
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Cabbage 02.prefab
+  uploadId: 984298

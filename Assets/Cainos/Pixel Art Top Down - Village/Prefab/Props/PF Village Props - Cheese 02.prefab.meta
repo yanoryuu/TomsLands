@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 840e80f3344fc6f4e9ecd0f5e768b170
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Cheese 02.prefab
+  uploadId: 984298

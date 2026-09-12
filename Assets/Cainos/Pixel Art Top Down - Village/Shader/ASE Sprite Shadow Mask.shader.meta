@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 3e62bec17bd50434d9fa2f40dbfa38a2
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Shader/ASE Sprite Shadow
+    Mask.shader
+  uploadId: 984298

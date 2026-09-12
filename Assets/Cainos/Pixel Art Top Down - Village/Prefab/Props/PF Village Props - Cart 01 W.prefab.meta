@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: edb0fb368c9ccbc49bde1b53ec52f695
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Cart 01 W.prefab
+  uploadId: 984298
