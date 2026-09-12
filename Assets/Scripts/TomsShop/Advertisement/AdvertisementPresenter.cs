@@ -185,16 +185,8 @@ public class AdvertisementPresenter : IStartable, IDisposable
         // 1タップ目 or 別スロット → 選択してプレビュー表示
         _selectedSlot = slot;
 
-        var status = marketingFacade.Status;
-        view.ShowEffectPreview(
-            slot,
-            adData,
-            status.Trust.Value,
-            status.Attention.Value,
-            status.Spread.Value,
-            status.Retention.Value,
-            status.Followers.Value
-        );
+        // 広告ごとの statMax を超える分は削られるので、実効上昇量を表示する
+        view.ShowEffectPreview(slot, adData, marketingFacade.GetAdvertisementEffect(adData));
 
         Debug.Log($"[AdvertisementPresenter] 広告選択: {adData.advertisementName}（もう一度タップで購入）");
     }
@@ -206,6 +198,8 @@ public class AdvertisementPresenter : IStartable, IDisposable
     {
         if (adData == null) return;
 
+        // 実行前に実効上昇量を取っておく（実行後は現在値が変わり再計算できないため）
+        var effect = marketingFacade.GetAdvertisementEffect(adData);
         bool success = marketingFacade.ExecuteAdvertisement(adData);
 
         if (success)
@@ -221,11 +215,43 @@ public class AdvertisementPresenter : IStartable, IDisposable
 
             // 効果プレビューをクリア
             view.ClearEffectPreview();
+
+            // 何がどれだけ上がったかを明示する（総合マーケティングのような
+            // 複数ステータスに分散する広告は効果が体感しづらいため）
+            ShowPurchaseResult(adData, effect);
         }
         else
         {
             Debug.Log($"[AdvertisementPresenter] 広告実行失敗（資金不足）: {adData.advertisementName}");
         }
+    }
+
+    /// <summary>
+    /// 購入した広告の効果内訳（実効上昇量）をポップアップで表示する。
+    /// </summary>
+    private void ShowPurchaseResult(AdvertisementData adData, AdvertisementEffect effect)
+    {
+        var lines = new System.Collections.Generic.List<string>();
+        if (effect.Trust != 0)     lines.Add($"信頼度　　 +{effect.Trust}");
+        if (effect.Attention != 0) lines.Add($"注目度　　 +{effect.Attention}");
+        if (effect.Spread != 0)    lines.Add($"拡散力　　 +{effect.Spread}");
+        if (effect.Retention != 0) lines.Add($"顧客維持力 +{effect.Retention}");
+        if (effect.Followers != 0) lines.Add($"フォロワー +{effect.Followers:N0}");
+        if (lines.Count == 0)
+        {
+            lines.Add(adData.statMax > 0
+                ? $"ステータスはこの広告の上限（{adData.statMax}）に達しています"
+                : "ステータスは上限に達しています");
+        }
+
+        popUpManager.Show(new PopUpData
+        {
+            Title = $"「{adData.advertisementName}」を実施した！",
+            Message = string.Join("\n", lines),
+            IsCloseOnly = true,
+            ConfirmButtonText = "OK",
+            Size = PopupSizeEnum.Medium,
+        });
     }
 
     /// <summary>

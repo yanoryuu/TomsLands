@@ -64,9 +64,15 @@ public class CommonView : MonoBehaviour
         playerMoneyText.text = $"{money:N0}G";
     }
 
-    public void UpdateCurrentTurn(int turn)
+    /// <summary>
+    /// ターン表示を更新する。バズ中は残りターン数を併記する
+    /// （バズオーバーレイ側の「残りNターン」が小さく気づかれにくいため、ここにも出す）。
+    /// </summary>
+    public void UpdateCurrentTurn(int turn, string buzzInfo = null)
     {
-        currentTurnText.text = $"Turn: {turn}";
+        currentTurnText.text = string.IsNullOrEmpty(buzzInfo)
+            ? $"Turn: {turn}"
+            : $"Turn: {turn}\n<size=70%>{buzzInfo}</size>";
     }
 
     /// <summary>

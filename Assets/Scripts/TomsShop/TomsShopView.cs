@@ -111,7 +111,13 @@ public class TomsShopView : MonoBehaviour
             if (relicChoiceNameTexts != null && i < relicChoiceNameTexts.Length && relicChoiceNameTexts[i] != null)
                 relicChoiceNameTexts[i].text = choices[i].name;
             if (relicChoiceDescTexts != null && i < relicChoiceDescTexts.Length && relicChoiceDescTexts[i] != null)
-                relicChoiceDescTexts[i].text = choices[i].description;
+            {
+                // 説明文の枠超え防止: シーン側の設定に依らず折り返し＋はみ出し分は省略にする
+                var desc = relicChoiceDescTexts[i];
+                desc.textWrappingMode = TextWrappingModes.Normal;
+                desc.overflowMode = TextOverflowModes.Ellipsis;
+                desc.text = choices[i].description;
+            }
         }
 
         relicChoicePanel.SetActive(true);

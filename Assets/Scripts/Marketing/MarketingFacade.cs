@@ -150,6 +150,14 @@ public class MarketingFacade : IStartable, IDisposable
         return _adSystem.CanExecute(ad);
     }
 
+    /// <summary>
+    /// 広告の実効上昇量（広告ごとの statMax 適用後）を取得する。
+    /// </summary>
+    public AdvertisementEffect GetAdvertisementEffect(AdvertisementData ad)
+    {
+        return _adSystem.GetEffectiveGains(ad);
+    }
+
     // =====================================================
     // 売上計算
     // =====================================================

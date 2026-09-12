@@ -27,6 +27,14 @@ public class StreamingHeatView : MonoBehaviour
 
     private float _prevHeat = 30f;
 
+    private void Awake()
+    {
+        // 初回 UpdateHeat が来るまでプレースホルダー（New Text）が見えないように空にしておく
+        if (tierLabelText != null) tierLabelText.text = string.Empty;
+        if (heatValueText != null) heatValueText.text = string.Empty;
+        if (priceDirectionText != null) priceDirectionText.text = string.Empty;
+    }
+
     // ─────────────────────────────────────────
     //  公開 API
     // ─────────────────────────────────────────

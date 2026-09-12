@@ -86,7 +86,8 @@
 例: `weaponPriceUpOnHit, weaponPriceDownOnNonKill, armorPriceDownOnHit, armorPriceUpOnBlock, effectiveAttributeRate, weakAttributeRate, priceFloorRate, priceCeilingRate, initialHeat, heatTurnDecay, coldTierMax, normalTierMax, hotTierMax, coldPriceMultiplier, normalPriceMultiplier, hotPriceMultiplier, superHotPriceMultiplier, demandEffectiveAttributeUp, demandWeakAttributeDown, buzzBonus2Turn, buzzBonus3PlusTurn, unsoldPenalty, highPriceThreshold, lowPriceThreshold, highPriceDemandDecay, lowPriceDemandGrowth`
 
 ### advertisements[]（部分・`AdvertisementData`）
-`id` = advertisementName。変更可: `advertisementName, cost, trustGain, attentionGain, spreadGain, retentionGain, followerGain`。icon/selectedBackground は載せない（SO保持）。
+`id` = advertisementName。変更可: `advertisementName, cost, trustGain, attentionGain, spreadGain, retentionGain, followerGain, statMax`。icon/selectedBackground は載せない（SO保持）。
+`statMax` = その広告で上げられる各ステータスの上限（マックス値）。現在値がこれ以上のステータスは上昇せず、超える分の上昇量は削られる。`0`（または列なし）= 個別上限なしで `gameBalance.statMax` まで上がる。
 
 ### buzzEffects[]（部分・`BuzzEffectData`）
 `id` = `"Flame"|"Normal"|"Big"`（= buzzType の名前）。変更可: `immediateRevenueMultiplierBase, immediateFollowerBase, durationBase, sustainedAllStatGain, afterGrantFreeMarketing(bool)` 等の数値/bool。`buzzType` と `afterFreeMarketingData` は載せない。

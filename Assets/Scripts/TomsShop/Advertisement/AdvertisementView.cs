@@ -171,18 +171,12 @@ public class AdvertisementView : MonoBehaviour
 
     /// <summary>
     /// 選択した広告の効果プレビューを表示し、スロットに選択枠を表示する。
-    /// 各ステータスの上昇量を「+X」形式で表示し、0の項目は非表示にする。
+    /// 各ステータスの実効上昇量（広告ごとの statMax 適用後）を「+X」形式で表示し、0の項目は非表示にする。
     /// </summary>
     /// <param name="slot">選択されたスロット</param>
     /// <param name="ad">選択された広告データ</param>
-    /// <param name="currentTrust">現在の信頼度</param>
-    /// <param name="currentAttention">現在の注目度</param>
-    /// <param name="currentSpread">現在の拡散力</param>
-    /// <param name="currentRetention">現在の顧客維持力</param>
-    /// <param name="currentFollowers">現在のフォロワー数</param>
-    public void ShowEffectPreview(AdvertisementSlotUI slot, AdvertisementData ad,
-        int currentTrust, int currentAttention, int currentSpread,
-        int currentRetention, int currentFollowers)
+    /// <param name="effect">実効上昇量</param>
+    public void ShowEffectPreview(AdvertisementSlotUI slot, AdvertisementData ad, AdvertisementEffect effect)
     {
         if (ad == null) return;
 
@@ -190,11 +184,11 @@ public class AdvertisementView : MonoBehaviour
         SelectSlot(slot);
 
         // 各ステータスの上昇プレビュー（0なら非表示）
-        SetPreviewText(trustPreviewText, ad.trustGain, currentTrust);
-        SetPreviewText(attentionPreviewText, ad.attentionGain, currentAttention);
-        SetPreviewText(spreadPreviewText, ad.spreadGain, currentSpread);
-        SetPreviewText(retentionPreviewText, ad.retentionGain, currentRetention);
-        SetPreviewText(followerPreviewText, ad.followerGain, currentFollowers);
+        SetPreviewText(trustPreviewText, effect.Trust);
+        SetPreviewText(attentionPreviewText, effect.Attention);
+        SetPreviewText(spreadPreviewText, effect.Spread);
+        SetPreviewText(retentionPreviewText, effect.Retention);
+        SetPreviewText(followerPreviewText, effect.Followers);
     }
 
     /// <summary>
@@ -203,9 +197,14 @@ public class AdvertisementView : MonoBehaviour
     /// </summary>
     private void SelectSlot(AdvertisementSlotUI slot)
     {
+        // 前のスロットの拡大を戻す
+        if (_selectedSlot != null && _selectedSlot != slot)
+            _selectedSlot.SetSelected(false);
 
-        // 新しいスロットを選択
+        // 新しいスロットを選択（少し拡大して目立たせる）
         _selectedSlot = slot;
+        if (slot != null)
+            slot.SetSelected(true);
 
 
         // 背景Spriteを切り替え（広告データのselectedBackgroundを使用）
@@ -235,9 +234,9 @@ public class AdvertisementView : MonoBehaviour
 
     /// <summary>
     /// 効果プレビューテキストを設定する。
-    /// 値が0なら非表示、それ以外なら「現在値 → 変化後（+変化量）」形式で表示。
+    /// 値が0なら非表示、それ以外なら「+変化量」形式で表示。
     /// </summary>
-    private void SetPreviewText(TextMeshProUGUI text, int gain, int currentValue)
+    private void SetPreviewText(TextMeshProUGUI text, int gain)
     {
         if (text == null) return;
 
@@ -301,6 +300,7 @@ public class AdvertisementView : MonoBehaviour
     /// </summary>
     public void ClearAdList()
     {
+        _selectedSlot = null;
         foreach (var slot in activeSlots)
         {
             if (slot != null)
