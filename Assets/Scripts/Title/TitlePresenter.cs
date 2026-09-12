@@ -48,7 +48,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
             .Subscribe(_ => TransitionTo(TitleType.ContinueOrNewGame))
             .AddTo(_disposables);
 
-        // 難易度はタイトルでは選ばない（村からの出撃準備シーンで選ぶ）→ 保存先スロット選択へ直行
+        // 難易度はタイトルでは選ばない（村からの出店準備シーンで選ぶ）→ 保存先スロット選択へ直行
         _view.OnNewGameSelected
             .Subscribe(_ => OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot))
             .AddTo(_disposables);
@@ -176,7 +176,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
     {
         SaveSlotManager.CurrentSlot = slot;
         _startModeData.SetNewGame();
-        // 難易度は出撃準備シーンで選ぶ（ここでは仮の既定値だけ入れておく）
+        // 難易度は出店準備シーンで選ぶ（ここでは仮の既定値だけ入れておく）
         _startModeData.SetFlowSelection(GameModeId.Medium, _view.UseAutoGeneration);
         Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → 村シーンへ（難易度は準備シーンで選択）");
         // 新規ランは 村（メタ層・投資）→ 準備シーン（借入・難易度・スターターレリック）を経由する

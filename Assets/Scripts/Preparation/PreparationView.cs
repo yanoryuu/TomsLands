@@ -5,24 +5,28 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 準備シーン（出撃準備）の View。
-/// 借入（初期資金レバレッジ）・難易度・スターターレリック・スタートダッシュを設定して出撃する。
+/// 準備シーン（出店準備）の View。
+/// 持ち込み資金（銀行預金から持っていく）・難易度・スターターレリック・スタートダッシュを設定して出店する。
 /// 参照は未配線（null）でも動作する。departButton が未配線の間、Presenter は旧挙動
 /// （即 TomsShop へ遷移）にフォールバックする。
 /// </summary>
 public class PreparationView : MonoBehaviour
 {
     [Header("ヘッダー")]
+    [Tooltip("銀行預金の残高表示（旧: メタ通貨）")]
     [SerializeField] private TextMeshProUGUI metaCurrencyText;
     [SerializeField] private TextMeshProUGUI difficultyText;
     [SerializeField] private TextMeshProUGUI messageText;
 
-    [Header("借入（初期資金レバレッジ）")]
+    [Header("持ち込み資金（銀行預金から持っていく）")]
     [SerializeField] private TextMeshProUGUI borrowAmountText;
     [SerializeField] private Button borrowPlusButton;
     [SerializeField] private Button borrowMinusButton;
+    [Tooltip("持ち込み上限（銀行レベル依存）の表示")]
     [SerializeField] private TextMeshProUGUI creditLineText;
+    [Tooltip("旧・枠拡張ボタン。銀行レベル制に移行したため Awake で非表示にする")]
     [SerializeField] private Button creditUpgradeButton;
+    [Tooltip("上限の上げ方の案内表示（旧: 枠拡張コスト）")]
     [SerializeField] private TextMeshProUGUI creditUpgradeCostText;
 
     [Header("難易度選択")]
@@ -50,7 +54,7 @@ public class PreparationView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI graceLabelText;
     [SerializeField] private GameObject graceCheck;
 
-    [Header("出撃 / 戻る")]
+    [Header("出店 / 戻る")]
     [SerializeField] private Button departButton;
     [SerializeField] private Button backButton;
 
@@ -74,17 +78,54 @@ public class PreparationView : MonoBehaviour
         if (easyButton != null) easyButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Short));
         if (normalButton != null) normalButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Medium));
         if (hardButton != null) hardButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Long));
-        if (creditUpgradeButton != null) creditUpgradeButton.onClick.AddListener(() => OnCreditUpgrade.OnNext(Unit.Default));
+        // 枠拡張（旧・のれん消費）は廃止。持ち込み上限は村の銀行レベルで決まる
+        if (creditUpgradeButton != null) creditUpgradeButton.gameObject.SetActive(false);
         if (flyerButton != null) flyerButton.onClick.AddListener(() => OnFlyerToggled.OnNext(Unit.Default));
         if (appraisalButton != null) appraisalButton.onClick.AddListener(() => OnAppraisalToggled.OnNext(Unit.Default));
         if (graceButton != null) graceButton.onClick.AddListener(() => OnGraceToggled.OnNext(Unit.Default));
         if (departButton != null) departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
         if (backButton != null) backButton.onClick.AddListener(() => OnBack.OnNext(Unit.Default));
+
+        // ラベル類のはみ出し防止（折り返し＋枠に収まるまで自動縮小）。
+        // シーン側の設定に依らずコードで揃える。
+        FitText(messageText);
+        FitText(metaCurrencyText);
+        FitText(difficultyText);
+        FitText(borrowAmountText);
+        FitText(creditLineText);
+        FitText(creditUpgradeCostText);
+        FitText(flyerLabelText);
+        FitText(appraisalLabelText);
+        FitText(graceLabelText);
     }
 
-    public void UpdateMetaCurrency(int amount)
+    /// <summary>
+    /// テキストのはみ出し対策: 折り返しを有効化し、枠に収まるようオートサイズで縮小、
+    /// それでも収まらない分は省略記号にする。
+    /// ※ オートサイズON かつ fontSizeMax=0 だと文字が消える罠があるため必ず max を入れる。
+    /// </summary>
+    public static void FitText(TMP_Text t)
     {
-        if (metaCurrencyText != null) metaCurrencyText.text = $"信用 {amount:N0}";
+        if (t == null) return;
+        t.textWrappingMode = TextWrappingModes.Normal;
+        t.overflowMode = TextOverflowModes.Ellipsis;
+        if (!t.enableAutoSizing)
+        {
+            float max = t.fontSize > 0 ? t.fontSize : 24f;
+            t.fontSizeMax = max;
+            t.fontSizeMin = Mathf.Max(10f, max * 0.5f);
+            t.enableAutoSizing = true;
+        }
+        else if (t.fontSizeMax <= 0)
+        {
+            t.fontSizeMax = 36f;
+        }
+    }
+
+    /// <summary>銀行預金の残高表示を更新する。</summary>
+    public void UpdateBankedGold(int amount)
+    {
+        if (metaCurrencyText != null) metaCurrencyText.text = $"銀行預金 {amount:N0}G";
     }
 
     public void UpdateDifficulty(string label)
@@ -97,13 +138,16 @@ public class PreparationView : MonoBehaviour
         if (messageText != null) messageText.text = message;
     }
 
-    public void UpdateBorrow(int amount, int creditLine, int upgradeCost, bool canUpgrade)
+    /// <summary>持ち込み資金の表示を更新する。</summary>
+    public void UpdateCarry(int amount, int carryLimit, int bankLevel, bool isLimitMax)
     {
-        if (borrowAmountText != null) borrowAmountText.text = $"借入 {amount:N0}G";
-        if (creditLineText != null) creditLineText.text = $"借入枠 {creditLine:N0}G";
+        if (borrowAmountText != null) borrowAmountText.text = $"持ち込み {amount:N0}G";
+        if (creditLineText != null)
+            creditLineText.text = $"上限 {carryLimit:N0}G（銀行Lv{bankLevel}）";
         if (creditUpgradeCostText != null)
-            creditUpgradeCostText.text = upgradeCost >= 0 ? $"枠拡張: 信用{upgradeCost}" : "枠拡張: MAX";
-        if (creditUpgradeButton != null) creditUpgradeButton.interactable = canUpgrade;
+            creditUpgradeCostText.text = isLimitMax
+                ? "持ち込み上限は最大"
+                : "村の銀行を増築すると上限が上がる";
     }
 
     /// <summary>難易度の選択ハイライトを更新する。</summary>

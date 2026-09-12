@@ -1,16 +1,21 @@
 using UnityEngine;
 
 /// <summary>
-/// 準備シーンの選択状態（永続化しない。出撃時に RunSetupData へ書き出す）。
+/// 準備シーンの選択状態（永続化しない。出店時に RunSetupData へ書き出す）。
+/// 初期資金は「借入」ではなく、前のランで持ち帰って銀行に預けたGを持ち込む方式。
+/// 持ち込み上限は村の銀行レベル（bankCarryLimits）で決まる。
 /// </summary>
 public class PreparationModel
 {
-    private const int BorrowStep = 1000;
+    private const int CarryStep = 1000;
 
-    /// <summary>借入額（0〜借入枠）。</summary>
-    public int BorrowAmount { get; private set; }
+    /// <summary>銀行の施設ID（村施設マスタ VillageFacilityData.facilityId）。</summary>
+    public const string BankFacilityId = "bank";
 
-    /// <summary>選択中の難易度（出撃時に StartModeData へ書き出す）。</summary>
+    /// <summary>持ち込み額（0〜min(銀行預金, 持ち込み上限)）。</summary>
+    public int CarryAmount { get; private set; }
+
+    /// <summary>選択中の難易度（出店時に StartModeData へ書き出す）。</summary>
     public GameModeId Difficulty { get; private set; } = GameModeId.Medium;
 
     /// <summary>選択中のスターターレリック（空=なし）。</summary>
@@ -20,34 +25,30 @@ public class PreparationModel
     public bool UseAppraisal { get; private set; }
     public bool UseGrace { get; private set; }
 
-    /// <summary>現在の借入枠（creditLineLevel に応じた上限額）。</summary>
-    public int GetCreditLine(MetaProgressModel meta)
+    /// <summary>村の銀行レベル（0=未建設）。</summary>
+    public int GetBankLevel(MetaProgressModel meta) => meta.GetFacilityLevel(BankFacilityId);
+
+    /// <summary>銀行レベルに応じた持ち込み上限（G）。</summary>
+    public int GetCarryLimit(MetaProgressModel meta)
     {
-        var amounts = GameConst.Preparation.creditLineAmounts;
-        if (amounts == null || amounts.Length == 0) return 0;
-        int index = Mathf.Clamp(meta.CreditLineLevel, 0, amounts.Length - 1);
-        return amounts[index];
+        var limits = GameConst.Preparation.bankCarryLimits;
+        if (limits == null || limits.Length == 0) return 0;
+        int index = Mathf.Clamp(GetBankLevel(meta), 0, limits.Length - 1);
+        return limits[index];
     }
 
-    /// <summary>借入枠拡張の次コスト。最大なら -1。</summary>
-    public int GetCreditUpgradeCost(MetaProgressModel meta)
-    {
-        var costs = GameConst.Preparation.creditLineUpgradeCosts;
-        var amounts = GameConst.Preparation.creditLineAmounts;
-        if (costs == null || amounts == null) return -1;
-        if (meta.CreditLineLevel >= amounts.Length - 1) return -1;
-        if (meta.CreditLineLevel >= costs.Length) return -1;
-        return costs[meta.CreditLineLevel];
-    }
+    /// <summary>実際に持ち込める最大額 = min(預金残高, 上限)。</summary>
+    public int GetCarryMax(MetaProgressModel meta) =>
+        Mathf.Min(meta.BankedGold.Value, GetCarryLimit(meta));
 
-    public void AddBorrow(int creditLine) =>
-        BorrowAmount = Mathf.Min(BorrowAmount + BorrowStep, creditLine);
+    public void AddCarry(int carryMax) =>
+        CarryAmount = Mathf.Min(CarryAmount + CarryStep, carryMax);
 
-    public void SubtractBorrow() =>
-        BorrowAmount = Mathf.Max(0, BorrowAmount - BorrowStep);
+    public void SubtractCarry() =>
+        CarryAmount = Mathf.Max(0, CarryAmount - CarryStep);
 
-    public void ClampBorrow(int creditLine) =>
-        BorrowAmount = Mathf.Clamp(BorrowAmount, 0, creditLine);
+    public void ClampCarry(int carryMax) =>
+        CarryAmount = Mathf.Clamp(CarryAmount, 0, carryMax);
 
     public void SelectDifficulty(GameModeId difficulty) => Difficulty = difficulty;
 
@@ -61,7 +62,7 @@ public class PreparationModel
     public void ToggleAppraisal() => UseAppraisal = !UseAppraisal;
     public void ToggleGrace() => UseGrace = !UseGrace;
 
-    /// <summary>選択中のスタートダッシュの合計メタ通貨コスト。</summary>
+    /// <summary>選択中のスタートダッシュの合計コスト（銀行預金Gから支払う）。</summary>
     public int StartDashTotalCost
     {
         get

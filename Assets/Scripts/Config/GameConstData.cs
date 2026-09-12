@@ -75,36 +75,41 @@ public class GameConstData
 [Serializable]
 public class PreparationSettingsData
 {
-    /// <summary>借入の利率。借入額×(1+これ) が初回返済に上乗せされる。</summary>
-    public float borrowInterestRate = 0.5f;
-    /// <summary>借入枠の上限額（index = creditLineLevel）。</summary>
-    public int[] creditLineAmounts = { 0, 5000, 10000, 20000 };
-    /// <summary>借入枠拡張のメタ通貨コスト（index = 現在レベル → 次レベル）。</summary>
-    public int[] creditLineUpgradeCosts = { 30, 80, 200 };
+    // --- 銀行預金の持ち込み（ラン終了時に手元Gが預金され、次の出店に持ち込める） ---
+    /// <summary>持ち込みGの上限（index = 村の銀行レベル。0 = 未建設）。</summary>
+    public int[] bankCarryLimits = { 5000, 10000, 20000, 50000 };
+
     /// <summary>持ち込みアイテムのスロット数（合計個数の上限）。</summary>
     public int baseCarrySlots = 2;
 
-    // --- メタ通貨の獲得式 ---
-    /// <summary>クリア時: floor(NetWorth / この値) を獲得。</summary>
+    // --- 旧仕組みの残置フィールド（借入レバレッジ・メタ通貨「信用」。現在は未使用） ---
+    /// <summary>【旧・未使用】借入の利率。</summary>
+    public float borrowInterestRate = 0.5f;
+    /// <summary>【旧・未使用】借入枠の上限額。</summary>
+    public int[] creditLineAmounts = { 0, 5000, 10000, 20000 };
+    /// <summary>【旧・未使用】借入枠拡張のメタ通貨コスト。</summary>
+    public int[] creditLineUpgradeCosts = { 30, 80, 200 };
+    /// <summary>【旧・未使用】クリア時: floor(NetWorth / この値) を獲得。</summary>
     public int metaCurrencyDivisor = 5000;
-    /// <summary>ランクボーナス（S/A/B/C/D）。</summary>
+    /// <summary>【旧・未使用】ランクボーナス（S/A/B/C/D）。</summary>
     public int[] rankBonuses = { 200, 120, 70, 40, 20 };
-    /// <summary>到達ターン×この値を獲得（破産時もこれだけは入る）。</summary>
+    /// <summary>【旧・未使用】到達ターン×この値を獲得。</summary>
     public int metaCurrencyPerTurn = 2;
 
-    // --- スタートダッシュ（メタ通貨コストと効果量） ---
-    public int flyerCost = 20;
+    // --- スタートダッシュ（銀行預金Gで購入するコストと効果量） ---
+    public int flyerCost = 1000;
     public int flyerAttention = 20;
     public int flyerFollowers = 100;
-    public int appraisalCost = 25;
+    public int appraisalCost = 1500;
     public float appraisalDemandBoost = 0.15f;
-    public int graceCost = 30;
+    public int graceCost = 2000;
     /// <summary>返済猶予証: 初回返済額の割引率。</summary>
     public float graceDiscountRate = 0.3f;
 
     public PreparationSettingsData Clone()
     {
         var clone = (PreparationSettingsData)MemberwiseClone();
+        clone.bankCarryLimits = bankCarryLimits != null ? (int[])bankCarryLimits.Clone() : Array.Empty<int>();
         clone.creditLineAmounts = creditLineAmounts != null ? (int[])creditLineAmounts.Clone() : Array.Empty<int>();
         clone.creditLineUpgradeCosts = creditLineUpgradeCosts != null ? (int[])creditLineUpgradeCosts.Clone() : Array.Empty<int>();
         clone.rankBonuses = rankBonuses != null ? (int[])rankBonuses.Clone() : Array.Empty<int>();

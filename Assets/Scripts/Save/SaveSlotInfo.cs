@@ -24,7 +24,7 @@ public sealed class SaveSlotInfo
     /// <summary>プロフィール（メタ進行 or 進行中ラン）が存在するか。</summary>
     public bool HasProfile;
 
-    /// <summary>メタ通貨（信用）の残高。</summary>
+    /// <summary>メタ通貨（のれん）の残高。</summary>
     public int MetaCurrency;
 
     /// <summary>総ラン数。</summary>

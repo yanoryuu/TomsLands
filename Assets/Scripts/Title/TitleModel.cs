@@ -19,7 +19,7 @@ public sealed class TitleModel
     }
 }
 
-// 難易度選択はタイトルから撤去済み（出撃準備シーンで選ぶ）
+// 難易度選択はタイトルから撤去済み（出店準備シーンで選ぶ）
 public enum TitleType
 {
     Start,

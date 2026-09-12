@@ -162,12 +162,12 @@ public class GameLifecycleHandler : IStartable, IDisposable
 
         var settings = GameConst.Preparation;
 
-        // 借入: 初期資金に加算し、初回返済に利息付きで上乗せされる（DebtCalculator 参照）
-        if (_runSetupData.BorrowedAmount > 0)
+        // 持ち込み資金: 銀行預金から持ってきたGをそのまま初期資金に加算する（借入ではないので返済への上乗せはない）
+        if (_runSetupData.CarriedGold > 0)
         {
-            _tomsModel.AddRevenue(_runSetupData.BorrowedAmount);
-            _tomsModel.BorrowedPrincipal = _runSetupData.BorrowedAmount;
-            Debug.Log($"[RunSetup] 借入 +{_runSetupData.BorrowedAmount}G（初回返済に利息{settings.borrowInterestRate:P0}付きで上乗せ）");
+            _tomsModel.AddRevenue(_runSetupData.CarriedGold);
+            _tomsModel.BorrowedPrincipal = 0;
+            Debug.Log($"[RunSetup] 持ち込み資金 +{_runSetupData.CarriedGold}G（銀行預金から）");
         }
 
         // スターターレリック

@@ -8,7 +8,7 @@ using VContainer.Unity;
 /// 村シーン（歩ける村）のPresenter。
 /// - 帰還時: VillageArrivalReport（消費型）を読んで収支ポップを表示
 /// - 区画（FacilityPlot）の調べる→投資パネル→投資
-/// - 出撃 → PreparationScene / タイトルへ → TitleScene
+/// - 出店 → PreparationScene / タイトルへ → TitleScene
 /// 村と店の経営（ラン）は別フロー: ここでの操作はラン外のメタ層のみに影響する。
 /// View未配線（IsInteractiveReady=false）の場合は PreparationScene へ素通りする。
 /// </summary>
@@ -57,7 +57,7 @@ public class VillagePresenter : IStartable, IDisposable
     {
         view.OnDepart.Subscribe(_ =>
         {
-            Debug.Log("[VillagePresenter] 出撃準備へ");
+            Debug.Log("[VillagePresenter] 出店準備へ");
             SceneManager.LoadScene("PreparationScene");
         }).AddTo(disposables);
 
@@ -136,7 +136,7 @@ public class VillagePresenter : IStartable, IDisposable
     /// <summary>HUDと全区画の見た目を最新化する。</summary>
     private void RefreshAll()
     {
-        view.UpdateHud(model.VillageFunds, metaProgress.MetaCurrency.Value, model.VillageLevel);
+        view.UpdateHud(model.VillageFunds, metaProgress.BankedGold.Value, model.VillageLevel);
 
         foreach (var plot in view.Plots)
         {

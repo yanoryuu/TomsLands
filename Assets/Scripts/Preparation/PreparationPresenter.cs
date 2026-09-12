@@ -7,13 +7,13 @@ using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
 /// <summary>
-/// 準備シーン（出撃準備）の Presenter。村の「出撃準備へ」から遷移してくる
+/// 準備シーン（出店準備）の Presenter。村の「出店準備へ」から遷移してくる
 /// （「続きから」はこのシーンを通らず TomsShop へ直行する）。
-/// - 借入: メタ通貨で解放した借入枠の範囲でいくら借りるか決める（初回返済に利息付き上乗せ）
+/// - 持ち込み資金: 前のランで持ち帰って銀行に預けたGを、上限（村の銀行レベル依存）まで持ち込む
 /// - 難易度: このランの難易度（かんたん/ふつう/むずかしい）をここで選ぶ（タイトルでは選ばない）
 /// - スターターレリック: 呪い以外の Common レリックから1個
-/// - スタートダッシュ: メタ通貨を払ってこのランに適用する消費効果3種
-/// 出撃時に RunSetupData（+難易度は StartModeData）へ書き出し、GameLifecycleHandler.InitializeNewGame が消費する。
+/// - スタートダッシュ: 銀行預金Gを払ってこのランに適用する消費効果3種
+/// 出店時に RunSetupData（+難易度は StartModeData）へ書き出し、GameLifecycleHandler.InitializeNewGame が消費する。
 /// UI未配線の間は旧挙動（即 TomsShop へ遷移）にフォールバックする。
 /// </summary>
 public class PreparationPresenter : IStartable, IDisposable
@@ -65,32 +65,13 @@ public class PreparationPresenter : IStartable, IDisposable
         Bind();
         BuildCatalogs();
         RefreshAll();
-        view.ShowMessage("出撃の準備をしよう。難易度を選び、借入は初回返済に利息付きで上乗せされる。");
+        view.ShowMessage("出店の準備をしよう。前のランで持ち帰ったお金は銀行に預けてあり、上限まで持ち込める。スタートダッシュも預金から買える。");
     }
 
     private void Bind()
     {
-        view.OnBorrowPlus.Subscribe(_ => { model.AddBorrow(model.GetCreditLine(metaProgress)); RefreshAll(); }).AddTo(disposables);
-        view.OnBorrowMinus.Subscribe(_ => { model.SubtractBorrow(); RefreshAll(); }).AddTo(disposables);
-
-        view.OnCreditUpgrade.Subscribe(_ =>
-        {
-            int cost = model.GetCreditUpgradeCost(metaProgress);
-            if (cost < 0)
-            {
-                view.ShowMessage("借入枠はすでに最大だ。");
-                return;
-            }
-            if (!metaProgress.TrySpend(cost))
-            {
-                view.ShowMessage("信用が足りない……。ランを重ねて信用を積もう。");
-                return;
-            }
-            metaProgress.UpgradeCreditLine();
-            metaProgress.SaveData();
-            view.ShowMessage($"借入枠を拡張した（{model.GetCreditLine(metaProgress):N0}Gまで借りられる）。");
-            RefreshAll();
-        }).AddTo(disposables);
+        view.OnBorrowPlus.Subscribe(_ => { model.AddCarry(model.GetCarryMax(metaProgress)); RefreshAll(); }).AddTo(disposables);
+        view.OnBorrowMinus.Subscribe(_ => { model.SubtractCarry(); RefreshAll(); }).AddTo(disposables);
 
         view.OnDifficultySelected.Subscribe(difficulty =>
         {
@@ -104,7 +85,7 @@ public class PreparationPresenter : IStartable, IDisposable
         view.OnGraceToggled.Subscribe(_ => { model.ToggleGrace(); RefreshAll(); }).AddTo(disposables);
 
         view.OnDepart.Subscribe(_ => Depart()).AddTo(disposables);
-        view.OnBack.Subscribe(_ => SceneManager.LoadScene("TitleScene")).AddTo(disposables);
+        view.OnBack.Subscribe(_ => SceneManager.LoadScene("VillageScene")).AddTo(disposables);
     }
 
     private void BuildCatalogs()
@@ -135,23 +116,23 @@ public class PreparationPresenter : IStartable, IDisposable
     {
         var settings = GameConst.Preparation;
 
-        model.ClampBorrow(model.GetCreditLine(metaProgress));
+        int carryMax = model.GetCarryMax(metaProgress);
+        model.ClampCarry(carryMax);
 
-        view.UpdateMetaCurrency(metaProgress.MetaCurrency.Value);
+        view.UpdateBankedGold(metaProgress.BankedGold.Value);
         view.UpdateDifficulty(DifficultyLabel(model.Difficulty));
         view.UpdateDifficultySelection(model.Difficulty);
 
-        int upgradeCost = model.GetCreditUpgradeCost(metaProgress);
-        view.UpdateBorrow(
-            model.BorrowAmount,
-            model.GetCreditLine(metaProgress),
-            upgradeCost,
-            upgradeCost >= 0 && metaProgress.MetaCurrency.Value >= upgradeCost);
+        int carryLimit = model.GetCarryLimit(metaProgress);
+        int bankLevel = model.GetBankLevel(metaProgress);
+        bool isLimitMax = settings.bankCarryLimits != null &&
+                          bankLevel >= settings.bankCarryLimits.Length - 1;
+        view.UpdateCarry(model.CarryAmount, carryLimit, bankLevel, isLimitMax);
 
         view.UpdateStartDash(
-            $"宣伝ビラ（信用{settings.flyerCost}）", model.UseFlyer,
-            $"目利きの手引き（信用{settings.appraisalCost}）", model.UseAppraisal,
-            $"返済猶予証（信用{settings.graceCost}）", model.UseGrace);
+            $"宣伝ビラ（{settings.flyerCost:N0}G）", model.UseFlyer,
+            $"目利きの手引き（{settings.appraisalCost:N0}G）", model.UseAppraisal,
+            $"返済猶予証（{settings.graceCost:N0}G）", model.UseGrace);
 
         // レリック選択のハイライトを反映
         foreach (var slot in relicSlots)
@@ -160,13 +141,19 @@ public class PreparationPresenter : IStartable, IDisposable
         }
     }
 
-    /// <summary>出撃: メタ通貨を精算し、RunSetupData に書き出して TomsShop へ。</summary>
+    /// <summary>出店: 持ち込み＋スタートダッシュ代を銀行預金から精算し、RunSetupData に書き出して TomsShop へ。</summary>
     private void Depart()
     {
-        int dashCost = model.StartDashTotalCost;
-        if (dashCost > 0 && !metaProgress.TrySpend(dashCost))
+        int totalCost = model.CarryAmount + model.StartDashTotalCost;
+        if (totalCost > metaProgress.BankedGold.Value)
         {
-            view.ShowMessage($"スタートダッシュに必要な信用が足りない（必要 {dashCost}）。");
+            // 持ち込みは預金上限でクランプ済みなので、超えるのはスタートダッシュ分
+            view.ShowMessage($"銀行預金が足りない（必要 {totalCost:N0}G / 残高 {metaProgress.BankedGold.Value:N0}G）。持ち込みかスタートダッシュを減らそう。");
+            return;
+        }
+        if (totalCost > 0 && !metaProgress.TrySpendBankedGold(totalCost))
+        {
+            view.ShowMessage("銀行預金の精算に失敗した。");
             return;
         }
         metaProgress.SaveData();
@@ -175,13 +162,13 @@ public class PreparationPresenter : IStartable, IDisposable
         startModeData.SetFlowSelection(model.Difficulty, startModeData.UseAutoGeneration);
 
         runSetupData.HasSetup = true;
-        runSetupData.BorrowedAmount = model.BorrowAmount;
+        runSetupData.CarriedGold = model.CarryAmount;
         runSetupData.StarterRelicId = model.StarterRelicId;
         runSetupData.UseFlyer = model.UseFlyer;
         runSetupData.UseAppraisal = model.UseAppraisal;
         runSetupData.UseGrace = model.UseGrace;
 
-        Debug.Log($"[Preparation] 出撃: 難易度={model.Difficulty}, 借入={model.BorrowAmount}G, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace})");
+        Debug.Log($"[Preparation] 出店: 難易度={model.Difficulty}, 持ち込み={model.CarryAmount}G, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace}), 預金残高={metaProgress.BankedGold.Value}G");
         SceneManager.LoadScene("TomsShop");
     }
 

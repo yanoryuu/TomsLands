@@ -16,7 +16,7 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI villageFundsText;
     [SerializeField] private TextMeshProUGUI metaCurrencyText;
     [SerializeField] private TextMeshProUGUI villageLevelText;
-    [SerializeField] private Button departButton;     // 出撃準備へ（必須。未配線なら素通り）
+    [SerializeField] private Button departButton;     // 出店準備へ（必須。未配線なら素通り）
     [SerializeField] private Button titleButton;      // タイトルへ
     [SerializeField] private TextMeshProUGUI messageText;
 
@@ -50,7 +50,7 @@ public class VillageView : MonoBehaviour
 
     public IReadOnlyList<FacilityPlot> Plots => plots ?? System.Array.Empty<FacilityPlot>();
 
-    /// <summary>出撃ボタンが配線済みか（falseならPresenterが準備シーンへ素通りする）。</summary>
+    /// <summary>出店ボタンが配線済みか（falseならPresenterが準備シーンへ素通りする）。</summary>
     public bool IsInteractiveReady => departButton != null;
 
     private void Awake()
@@ -78,10 +78,10 @@ public class VillageView : MonoBehaviour
         if (conversionPopup != null) conversionPopup.SetActive(false);
     }
 
-    public void UpdateHud(int villageFunds, int metaCurrency, int villageLevel)
+    public void UpdateHud(int villageFunds, int bankedGold, int villageLevel)
     {
         if (villageFundsText != null) villageFundsText.text = $"村資金 {villageFunds:N0}G";
-        if (metaCurrencyText != null) metaCurrencyText.text = $"信用 {metaCurrency:N0}";
+        if (metaCurrencyText != null) metaCurrencyText.text = $"銀行預金 {bankedGold:N0}G";
         if (villageLevelText != null) villageLevelText.text = $"トムの村（総合Lv{villageLevel}）";
     }
 

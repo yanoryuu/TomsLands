@@ -41,9 +41,15 @@ public class PreparationChoiceSlot : MonoBehaviour
     public void Setup(string id, string displayName, Sprite icon, bool showMinus, string info = null)
     {
         Id = id;
-        if (nameText != null) nameText.text = displayName;
+        if (nameText != null)
+        {
+            PreparationView.FitText(nameText);
+            nameText.text = displayName;
+        }
         if (infoText != null)
         {
+            // 効果説明はスロット枠からはみ出しやすいため折り返し＋自動縮小を強制する
+            PreparationView.FitText(infoText);
             infoText.text = info ?? string.Empty;
             infoText.gameObject.SetActive(!string.IsNullOrEmpty(info));
         }

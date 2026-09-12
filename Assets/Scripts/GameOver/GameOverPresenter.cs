@@ -56,7 +56,7 @@ public class GameOverPresenter : IDisposable, IStartable
                 cleared: false, netWorth: 0, finalCash: finalCash);
             VillageArrivalReport.Set(cleared: false, earned: finalCash, converted: converted);
 
-            UnityEngine.Debug.Log($"[GameOverPresenter] 破産でも信用+{earned} / 村資金+{converted}G");
+            UnityEngine.Debug.Log($"[GameOverPresenter] 破産: 村資金+{converted}G（銀行預金への預け入れはなし）");
         }
         RunSaveCleaner.DeleteRunFiles();
         sceneTransitionService.GoToVillage();

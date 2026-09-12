@@ -5,7 +5,7 @@ using VContainer.Unity;
 
 /// <summary>
 /// 村シーン（VillageScene.unity）用の LifetimeScope。
-/// フロー: タイトル（ニューゲーム）→ 村 → 出撃準備、ラン終了（リザルト/ゲームオーバー）→ 村。
+/// フロー: タイトル（ニューゲーム）→ 村 → 出店準備、ラン終了（リザルト/ゲームオーバー）→ 村。
 /// 村UIが未配線の間は PreparationScene へ素通りする（既存規約）。
 /// </summary>
 public class VillageLifetimeScope : LifetimeScope

@@ -14,24 +14,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   facilityId: bank
   facilityName: "\u9280\u884C"
-  description: "\u4FE1\u7528\u306F\u5EFA\u7269\u3067\u793A\u3059\u3082\u306E\u3002"
+  description: "\u6301\u3061\u5E30\u3063\u305F\u304A\u91D1\u3092\u9810\u304B\u308B\u3002\u5897\u7BC9\u3059\u308B\u3068\u51FA\u5E97\u3078\u306E\u6301\u3061\u8FBC\u307F\u4E0A\u9650\u304C\u4E0A\u304C\u308B\u3002"
   icon: {fileID: 0}
   requiredHallLevel: 0
   levels:
   - cost: 5000
-    effectText: "\u501F\u5165\u67A0\u306E\u6700\u7D42\u6BB5\u968E\uFF0820,000G\uFF09\u306E\u62E1\u5F35\u3092\u89E3\u653E"
+    effectText: "\u51FA\u5E97\u3078\u306E\u6301\u3061\u8FBC\u307F\u4E0A\u9650 5,000G \u2192 10,000G"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
   - cost: 12000
-    effectText: "\u501F\u5165\u306E\u5229\u606F 50% \u2192 45%"
+    effectText: "\u6301\u3061\u8FBC\u307F\u4E0A\u9650 10,000G \u2192 20,000G"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
   - cost: 22000
-    effectText: "\u501F\u5165\u306E\u5229\u606F 45% \u2192 40%"
+    effectText: "\u6301\u3061\u8FBC\u307F\u4E0A\u9650 20,000G \u2192 50,000G"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []

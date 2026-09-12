@@ -12,9 +12,9 @@ public class RunSetupData : ScriptableObject
     /// <summary>準備シーンを経由した設定があるか。false なら従来通りの初期化。</summary>
     public bool HasSetup;
 
-    [Header("借入（初期資金レバレッジ）")]
-    [Tooltip("借入額。初期資金に加算され、初回返済に利息付きで上乗せされる")]
-    public int BorrowedAmount;
+    [Header("持ち込み資金（銀行預金から）")]
+    [Tooltip("銀行預金から持ち込むG。初期資金に加算される（返済への上乗せはない）")]
+    public int CarriedGold;
 
     [Header("スターターレリック")]
     public string StarterRelicId = "";
@@ -44,7 +44,7 @@ public class RunSetupData : ScriptableObject
     public void Clear()
     {
         HasSetup = false;
-        BorrowedAmount = 0;
+        CarriedGold = 0;
         StarterRelicId = "";
         UseFlyer = false;
         UseAppraisal = false;

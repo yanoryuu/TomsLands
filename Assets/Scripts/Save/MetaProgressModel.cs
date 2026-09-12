@@ -5,9 +5,10 @@ using UnityEngine;
 
 /// <summary>
 /// ラン間で持ち越すメタ進行（スロット=プロフィール単位、slot_N/metaData.json）。
-/// - メタ通貨「信用」: ラン終了時に成績から獲得し、準備シーンで借入枠拡張やスタートダッシュに使う
-/// - creditLineLevel: 借入枠のレベル（準備シーンの借入レバレッジの上限を決める）
+/// - 銀行預金 BankedGold: ランクリア時に手元Gがそのまま預金され、次の出店に持ち込める
+///   （持ち込み上限は村の銀行レベルで決まる。スタートダッシュの購入もここから払う）
 /// - 周回統計（総ラン数・クリア数・ベスト記録）
+/// - MetaCurrency/CreditLineLevel は旧仕組み（信用・借入枠）の残置。現在は未使用
 /// ※ RunSaveCleaner の削除対象に含めないこと（ラン内データではない）。
 /// スロット削除（プロフィール削除）でのみ消える。
 /// </summary>
@@ -15,7 +16,12 @@ public class MetaProgressModel
 {
     private const string FileName = "metaData.json";
 
+    /// <summary>銀行預金(G)。ランクリア時の手元Gが貯まり、出店準備で持ち込み・スタートダッシュに使う。</summary>
+    public ReactiveProperty<int> BankedGold { get; } = new(0);
+
+    /// <summary>【旧・未使用】メタ通貨「信用」。</summary>
     public ReactiveProperty<int> MetaCurrency { get; } = new(0);
+    /// <summary>【旧・未使用】借入枠レベル。</summary>
     public int CreditLineLevel { get; private set; }
     public int TotalRuns { get; private set; }
     public int ClearedRuns { get; private set; }
@@ -33,6 +39,31 @@ public class MetaProgressModel
         LoadData();
     }
 
+    // ========================================
+    // 銀行預金（持ち帰りG）
+    // ========================================
+
+    /// <summary>ラン終了時の預け入れ。クリア時に手元Gをそのまま預金する。</summary>
+    public int DepositRunGold(int amount)
+    {
+        int deposit = Mathf.Max(0, amount);
+        if (deposit > 0)
+        {
+            BankedGold.Value += deposit;
+            SaveData();
+        }
+        Debug.Log($"[Meta] 銀行預金へ +{deposit}G（残高 {BankedGold.Value}G）");
+        return deposit;
+    }
+
+    /// <summary>預金から支払う（持ち込み・スタートダッシュ購入）。足りなければ false。</summary>
+    public bool TrySpendBankedGold(int amount)
+    {
+        if (amount < 0 || BankedGold.Value < amount) return false;
+        BankedGold.Value -= amount;
+        return true;
+    }
+
     public void AddCurrency(int amount)
     {
         if (amount <= 0) return;
@@ -46,7 +77,7 @@ public class MetaProgressModel
         return true;
     }
 
-    /// <summary>借入枠レベルを1上げる（メタ通貨消費は呼び出し側で TrySpend 済みであること）。</summary>
+    /// <summary>【旧・未使用】借入枠レベルを1上げる。</summary>
     public void UpgradeCreditLine()
     {
         CreditLineLevel++;
@@ -168,6 +199,7 @@ public class MetaProgressModel
     {
         var data = new MetaProgressData
         {
+            bankedGold = BankedGold.Value,
             metaCurrency = MetaCurrency.Value,
             creditLineLevel = CreditLineLevel,
             totalRuns = TotalRuns,
@@ -185,6 +217,7 @@ public class MetaProgressModel
         string path = SaveSlotManager.GetPath(FileName);
         if (!File.Exists(path))
         {
+            BankedGold.Value = 0;
             MetaCurrency.Value = 0;
             CreditLineLevel = 0;
             TotalRuns = 0;
@@ -198,6 +231,7 @@ public class MetaProgressModel
 
         var data = JsonUtility.FromJson<MetaProgressData>(File.ReadAllText(path));
         if (data == null) return;
+        BankedGold.Value = Mathf.Max(0, data.bankedGold);
         MetaCurrency.Value = Mathf.Max(0, data.metaCurrency);
         CreditLineLevel = Mathf.Max(0, data.creditLineLevel);
         TotalRuns = Mathf.Max(0, data.totalRuns);
@@ -222,6 +256,8 @@ public class MetaProgressModel
 [Serializable]
 public class MetaProgressData
 {
+    /// <summary>銀行預金(G)。旧セーブは欠損→0。</summary>
+    public int bankedGold;
     public int metaCurrency;
     public int creditLineLevel;
     public int totalRuns;
