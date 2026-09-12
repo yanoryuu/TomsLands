@@ -139,6 +139,12 @@ public class BattleLifetimeScope : LifetimeScope
         // 戦闘開始の EntryPoint（IAsyncStartable）
         builder.RegisterEntryPoint<BattleSceneStarter>();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F12で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log($"[BattleLifetimeScope] Configured. Dungeon catalog size: {allDungeons.Count}");
     }
 

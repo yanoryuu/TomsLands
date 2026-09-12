@@ -35,6 +35,12 @@ public class VillageLifetimeScope : LifetimeScope
             Debug.LogWarning("[VillageLifetimeScope] villageView が未設定のため素通りします（Docs/Village_UnityWiring.md 参照）");
         }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F12で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log("[VillageLifetimeScope] Configured.");
     }
 
