@@ -162,12 +162,12 @@ public class GameLifecycleHandler : IStartable, IDisposable
 
         var settings = GameConst.Preparation;
 
-        // 持ち込み資金: 銀行預金から持ってきたGをそのまま初期資金に加算する（借入ではないので返済への上乗せはない）
+        // 持ち込み資金: 村資金から持ってきたGをそのまま初期資金に加算する（借入ではないので返済への上乗せはない）
         if (_runSetupData.CarriedGold > 0)
         {
             _tomsModel.AddRevenue(_runSetupData.CarriedGold);
             _tomsModel.BorrowedPrincipal = 0;
-            Debug.Log($"[RunSetup] 持ち込み資金 +{_runSetupData.CarriedGold}G（銀行預金から）");
+            Debug.Log($"[RunSetup] 持ち込み資金 +{_runSetupData.CarriedGold}G（村資金から）");
         }
 
         // スターターレリック

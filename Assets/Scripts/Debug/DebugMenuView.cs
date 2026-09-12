@@ -11,7 +11,7 @@ using VContainer;
 ///
 /// 依存Modelは IObjectResolver.TryResolve で任意解決し、
 /// そのシーンに存在しないModelのセクションは表示しない。
-/// 例外: MetaProgressModel（銀行預金/村資金/村施設Lv）はスコープ未登録のシーンでは
+/// 例外: MetaProgressModel（村資金/村施設Lv）はスコープ未登録のシーンでは
 /// ローカル生成して metaData.json を直接読み書きする。
 /// </summary>
 public class DebugMenuView : MonoBehaviour
@@ -135,7 +135,7 @@ public class DebugMenuView : MonoBehaviour
             GUILayout.Label($"フェーズ: {_turnPhaseManager.CurrentTurnPhase.Value}");
         if (_tomsModel != null)
             GUILayout.Label($"所持金: {_tomsModel.PlayerMoney.Value:N0} G / 当日仕入れ支出: {_tomsModel.TurnProcurementSpend:N0} G");
-        GUILayout.Label($"銀行預金: {Meta.BankedGold.Value:N0} G / 村資金: {Meta.VillageFunds:N0} G");
+        GUILayout.Label($"村資金: {Meta.VillageFunds:N0} G");
         GUILayout.Label($"スロット: slot_{SaveSlotManager.CurrentSlot}");
 
         if (_buzzSystem != null)
@@ -190,28 +190,21 @@ public class DebugMenuView : MonoBehaviour
         else GUILayout.Label("TomsModel なし");
 
         GUILayout.Space(6);
-        GUILayout.Label("■ 銀行預金（ラン間持ち越し）", _headerStyle);
-        GUILayout.Label($"預金: {Meta.BankedGold.Value:N0} G");
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("+10,000")) { Meta.DepositRunGold(10000); }
-        if (GUILayout.Button("-10,000")) { Meta.TrySpendBankedGold(10000); Meta.SaveData(); }
-        if (GUILayout.Button("0にする")) { Meta.TrySpendBankedGold(Meta.BankedGold.Value); Meta.SaveData(); }
-        GUILayout.EndHorizontal();
-        GUILayout.BeginHorizontal();
-        _bankInput = GUILayout.TextField(_bankInput, GUILayout.Width(120));
-        if (GUILayout.Button("この値に設定") && int.TryParse(_bankInput, out int bank))
-        {
-            Meta.TrySpendBankedGold(Meta.BankedGold.Value);
-            Meta.DepositRunGold(Mathf.Max(0, bank));
-        }
-        GUILayout.EndHorizontal();
-
-        GUILayout.Space(6);
-        GUILayout.Label("■ 村資金", _headerStyle);
+        GUILayout.Label("■ 村資金（ラン間持ち越し・持ち込みとスタートダッシュに使用）", _headerStyle);
         GUILayout.Label($"村資金: {Meta.VillageFunds:N0} G");
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("+10,000")) { Meta.AddVillageFunds(10000); Meta.SaveData(); }
+        if (GUILayout.Button("-10,000")) { Meta.TrySpendVillageFunds(10000); Meta.SaveData(); }
         if (GUILayout.Button("0にする")) { Meta.TrySpendVillageFunds(Meta.VillageFunds); Meta.SaveData(); }
+        GUILayout.EndHorizontal();
+        GUILayout.BeginHorizontal();
+        _bankInput = GUILayout.TextField(_bankInput, GUILayout.Width(120));
+        if (GUILayout.Button("この値に設定") && int.TryParse(_bankInput, out int funds))
+        {
+            Meta.TrySpendVillageFunds(Meta.VillageFunds);
+            Meta.AddVillageFunds(Mathf.Max(0, funds));
+            Meta.SaveData();
+        }
         GUILayout.EndHorizontal();
 
         // 金融資産の状態（検証用）

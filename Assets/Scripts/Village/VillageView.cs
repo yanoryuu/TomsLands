@@ -78,10 +78,11 @@ public class VillageView : MonoBehaviour
         if (conversionPopup != null) conversionPopup.SetActive(false);
     }
 
-    public void UpdateHud(int villageFunds, int bankedGold, int villageLevel)
+    public void UpdateHud(int villageFunds, int villageLevel)
     {
         if (villageFundsText != null) villageFundsText.text = $"村資金 {villageFunds:N0}G";
-        if (metaCurrencyText != null) metaCurrencyText.text = $"銀行預金 {bankedGold:N0}G";
+        // metaCurrencyText（旧・銀行預金/のれん表示）は村資金へ統合したため使わない
+        if (metaCurrencyText != null) metaCurrencyText.gameObject.SetActive(false);
         if (villageLevelText != null) villageLevelText.text = $"トムの村（総合Lv{villageLevel}）";
     }
 

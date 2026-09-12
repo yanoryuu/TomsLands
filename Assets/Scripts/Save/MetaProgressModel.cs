@@ -5,19 +5,16 @@ using UnityEngine;
 
 /// <summary>
 /// ラン間で持ち越すメタ進行（スロット=プロフィール単位、slot_N/metaData.json）。
-/// - 銀行預金 BankedGold: ランクリア時に手元Gがそのまま預金され、次の出店に持ち込める
-///   （持ち込み上限は村の銀行レベルで決まる。スタートダッシュの購入もここから払う）
+/// - 村資金 VillageFunds: ランクリア時に持ち帰った手元Gがそのまま貯まる唯一のメタ通貨。
+///   村の施設投資・次の出店への持ち込み（上限=銀行レベル）・スタートダッシュ購入すべてに使う
 /// - 周回統計（総ラン数・クリア数・ベスト記録）
-/// - MetaCurrency/CreditLineLevel は旧仕組み（信用・借入枠）の残置。現在は未使用
+/// - MetaCurrency/CreditLineLevel/bankedGold は旧仕組みの残置。現在は未使用
 /// ※ RunSaveCleaner の削除対象に含めないこと（ラン内データではない）。
 /// スロット削除（プロフィール削除）でのみ消える。
 /// </summary>
 public class MetaProgressModel
 {
     private const string FileName = "metaData.json";
-
-    /// <summary>銀行預金(G)。ランクリア時の手元Gが貯まり、出店準備で持ち込み・スタートダッシュに使う。</summary>
-    public ReactiveProperty<int> BankedGold { get; } = new(0);
 
     /// <summary>【旧・未使用】メタ通貨「信用」。</summary>
     public ReactiveProperty<int> MetaCurrency { get; } = new(0);
@@ -37,31 +34,6 @@ public class MetaProgressModel
     public MetaProgressModel()
     {
         LoadData();
-    }
-
-    // ========================================
-    // 銀行預金（持ち帰りG）
-    // ========================================
-
-    /// <summary>ラン終了時の預け入れ。クリア時に手元Gをそのまま預金する。</summary>
-    public int DepositRunGold(int amount)
-    {
-        int deposit = Mathf.Max(0, amount);
-        if (deposit > 0)
-        {
-            BankedGold.Value += deposit;
-            SaveData();
-        }
-        Debug.Log($"[Meta] 銀行預金へ +{deposit}G（残高 {BankedGold.Value}G）");
-        return deposit;
-    }
-
-    /// <summary>預金から支払う（持ち込み・スタートダッシュ購入）。足りなければ false。</summary>
-    public bool TrySpendBankedGold(int amount)
-    {
-        if (amount < 0 || BankedGold.Value < amount) return false;
-        BankedGold.Value -= amount;
-        return true;
     }
 
     public void AddCurrency(int amount)
@@ -125,20 +97,20 @@ public class MetaProgressModel
     }
 
     /// <summary>
-    /// ラン終了時の村資金への変換（村と店の経営を繋ぐ唯一の橋・一方向）。
-    /// クリア時: 純資産 × conversionRate / 破産時: 手元現金 × bankruptcyConversionRate。
+    /// ラン終了時、持ち帰ったお金を村資金へ入れる（村と店の経営を繋ぐ唯一の橋・一方向）。
+    /// クリア時: 手元現金がそのまま全額 / 破産時: 手元現金 × bankruptcyConversionRate。
     /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
     /// </summary>
     public int ConvertRunToVillageFunds(bool cleared, int netWorth, int finalCash)
     {
         var settings = GameConst.Village;
         int converted = cleared
-            ? Mathf.FloorToInt(Mathf.Max(0, netWorth) * settings.conversionRate)
+            ? Mathf.Max(0, finalCash)
             : Mathf.FloorToInt(Mathf.Max(0, finalCash) * settings.bankruptcyConversionRate);
 
         if (converted > 0) AddVillageFunds(converted);
         SaveData();
-        Debug.Log($"[Meta] 村資金へ変換: +{converted}G (cleared={cleared}, 合計 {VillageFunds}G)");
+        Debug.Log($"[Meta] 村資金へ: +{converted}G (cleared={cleared}, 合計 {VillageFunds}G)");
         return converted;
     }
 
@@ -199,7 +171,8 @@ public class MetaProgressModel
     {
         var data = new MetaProgressData
         {
-            bankedGold = BankedGold.Value,
+            // bankedGold は村資金へ統合済み（旧セーブ読み込み時に移行）。常に0で保存する
+            bankedGold = 0,
             metaCurrency = MetaCurrency.Value,
             creditLineLevel = CreditLineLevel,
             totalRuns = TotalRuns,
@@ -217,7 +190,6 @@ public class MetaProgressModel
         string path = SaveSlotManager.GetPath(FileName);
         if (!File.Exists(path))
         {
-            BankedGold.Value = 0;
             MetaCurrency.Value = 0;
             CreditLineLevel = 0;
             TotalRuns = 0;
@@ -231,7 +203,6 @@ public class MetaProgressModel
 
         var data = JsonUtility.FromJson<MetaProgressData>(File.ReadAllText(path));
         if (data == null) return;
-        BankedGold.Value = Mathf.Max(0, data.bankedGold);
         MetaCurrency.Value = Mathf.Max(0, data.metaCurrency);
         CreditLineLevel = Mathf.Max(0, data.creditLineLevel);
         TotalRuns = Mathf.Max(0, data.totalRuns);
@@ -241,6 +212,13 @@ public class MetaProgressModel
 
         // 旧セーブ（フィールド欠損）は0/空で正規化
         VillageFunds = Mathf.Max(0, data.villageFunds);
+
+        // 旧仕組みの銀行預金は村資金へ統合（移行。次のSaveDataでbankedGold=0が保存される）
+        if (data.bankedGold > 0)
+        {
+            VillageFunds += data.bankedGold;
+            Debug.Log($"[Meta] 旧・銀行預金 {data.bankedGold}G を村資金へ統合しました（村資金 {VillageFunds}G）");
+        }
         facilityLevels.Clear();
         if (data.facilities != null)
         {
@@ -256,7 +234,7 @@ public class MetaProgressModel
 [Serializable]
 public class MetaProgressData
 {
-    /// <summary>銀行預金(G)。旧セーブは欠損→0。</summary>
+    /// <summary>【旧】銀行預金(G)。村資金へ統合済み（読み込み時に移行し、常に0で保存）。</summary>
     public int bankedGold;
     public int metaCurrency;
     public int creditLineLevel;

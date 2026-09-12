@@ -12,7 +12,7 @@ public class PreparationModel
     /// <summary>銀行の施設ID（村施設マスタ VillageFacilityData.facilityId）。</summary>
     public const string BankFacilityId = "bank";
 
-    /// <summary>持ち込み額（0〜min(銀行預金, 持ち込み上限)）。</summary>
+    /// <summary>持ち込み額（0〜min(村資金, 持ち込み上限)）。</summary>
     public int CarryAmount { get; private set; }
 
     /// <summary>選択中の難易度（出店時に StartModeData へ書き出す）。</summary>
@@ -37,9 +37,9 @@ public class PreparationModel
         return limits[index];
     }
 
-    /// <summary>実際に持ち込める最大額 = min(預金残高, 上限)。</summary>
+    /// <summary>実際に持ち込める最大額 = min(村資金, 上限)。</summary>
     public int GetCarryMax(MetaProgressModel meta) =>
-        Mathf.Min(meta.BankedGold.Value, GetCarryLimit(meta));
+        Mathf.Min(meta.VillageFunds, GetCarryLimit(meta));
 
     public void AddCarry(int carryMax) =>
         CarryAmount = Mathf.Min(CarryAmount + CarryStep, carryMax);
@@ -62,7 +62,7 @@ public class PreparationModel
     public void ToggleAppraisal() => UseAppraisal = !UseAppraisal;
     public void ToggleGrace() => UseGrace = !UseGrace;
 
-    /// <summary>選択中のスタートダッシュの合計コスト（銀行預金Gから支払う）。</summary>
+    /// <summary>選択中のスタートダッシュの合計コスト（村資金から支払う）。</summary>
     public int StartDashTotalCost
     {
         get

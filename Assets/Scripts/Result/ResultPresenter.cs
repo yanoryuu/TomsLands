@@ -88,8 +88,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
     /// <summary>
     /// ランクリアの精算（1回のみ）。ラン内データを消す前に metaData.json へ加算保存する。
-    /// - 手元の現金 → 銀行預金へそのまま預け入れ（次の出店で上限まで持ち込める）
-    /// - 純資産 → 村資金へ変換（村と店の経営を繋ぐ橋）
+    /// 持ち帰った手元の現金がそのまま村資金になる（施設投資・次の出店への持ち込みに使う）。
     /// </summary>
     private void AwardMetaCurrencyOnce()
     {
@@ -102,17 +101,14 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             rank: _lastStatistics.Rank,
             totalTurns: _lastStatistics.TotalTurns);
 
-        // 持ち帰ったお金を銀行に預ける（次の出店準備で持ち込める）
-        int deposited = _metaProgress.DepositRunGold(_lastStatistics.FinalMoney);
-
-        // 村資金への変換（村と店の経営を繋ぐ唯一の橋）
+        // 持ち帰ったお金を村資金へ（村と店の経営を繋ぐ唯一の橋）
         int converted = _metaProgress.ConvertRunToVillageFunds(
             cleared: true,
             netWorth: _lastStatistics.NetWorth,
             finalCash: _lastStatistics.FinalMoney);
-        VillageArrivalReport.Set(cleared: true, earned: _lastStatistics.NetWorth, converted: converted);
+        VillageArrivalReport.Set(cleared: true, earned: _lastStatistics.FinalMoney, converted: converted);
 
-        Debug.Log($"[ResultPresenter] 銀行預金 +{deposited}G / 村資金 +{converted}G");
+        Debug.Log($"[ResultPresenter] 村資金 +{converted}G");
     }
 
     public void Dispose()

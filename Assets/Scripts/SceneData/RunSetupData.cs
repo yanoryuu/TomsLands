@@ -12,8 +12,8 @@ public class RunSetupData : ScriptableObject
     /// <summary>準備シーンを経由した設定があるか。false なら従来通りの初期化。</summary>
     public bool HasSetup;
 
-    [Header("持ち込み資金（銀行預金から）")]
-    [Tooltip("銀行預金から持ち込むG。初期資金に加算される（返済への上乗せはない）")]
+    [Header("持ち込み資金（村資金から）")]
+    [Tooltip("村資金から持ち込むG。初期資金に加算される（返済への上乗せはない）")]
     public int CarriedGold;
 
     [Header("スターターレリック")]

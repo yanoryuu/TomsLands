@@ -6,19 +6,19 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 準備シーン（出店準備）の View。
-/// 持ち込み資金（銀行預金から持っていく）・難易度・スターターレリック・スタートダッシュを設定して出店する。
+/// 持ち込み資金（村資金から持っていく）・難易度・スターターレリック・スタートダッシュを設定して出店する。
 /// 参照は未配線（null）でも動作する。departButton が未配線の間、Presenter は旧挙動
 /// （即 TomsShop へ遷移）にフォールバックする。
 /// </summary>
 public class PreparationView : MonoBehaviour
 {
     [Header("ヘッダー")]
-    [Tooltip("銀行預金の残高表示（旧: メタ通貨）")]
+    [Tooltip("村資金の残高表示（旧: メタ通貨）")]
     [SerializeField] private TextMeshProUGUI metaCurrencyText;
     [SerializeField] private TextMeshProUGUI difficultyText;
     [SerializeField] private TextMeshProUGUI messageText;
 
-    [Header("持ち込み資金（銀行預金から持っていく）")]
+    [Header("持ち込み資金（村資金から持っていく）")]
     [SerializeField] private TextMeshProUGUI borrowAmountText;
     [SerializeField] private Button borrowPlusButton;
     [SerializeField] private Button borrowMinusButton;
@@ -122,10 +122,10 @@ public class PreparationView : MonoBehaviour
         }
     }
 
-    /// <summary>銀行預金の残高表示を更新する。</summary>
-    public void UpdateBankedGold(int amount)
+    /// <summary>村資金の残高表示を更新する。</summary>
+    public void UpdateVillageFunds(int amount)
     {
-        if (metaCurrencyText != null) metaCurrencyText.text = $"銀行預金 {amount:N0}G";
+        if (metaCurrencyText != null) metaCurrencyText.text = $"村資金 {amount:N0}G";
     }
 
     public void UpdateDifficulty(string label)

@@ -75,7 +75,7 @@ public class GameConstData
 [Serializable]
 public class PreparationSettingsData
 {
-    // --- 銀行預金の持ち込み（ラン終了時に手元Gが預金され、次の出店に持ち込める） ---
+    // --- 村資金の持ち込み（ラン終了時に手元Gが村資金になり、次の出店に持ち込める） ---
     /// <summary>持ち込みGの上限（index = 村の銀行レベル。0 = 未建設）。</summary>
     public int[] bankCarryLimits = { 5000, 10000, 20000, 50000 };
 
@@ -96,7 +96,7 @@ public class PreparationSettingsData
     /// <summary>【旧・未使用】到達ターン×この値を獲得。</summary>
     public int metaCurrencyPerTurn = 2;
 
-    // --- スタートダッシュ（銀行預金Gで購入するコストと効果量） ---
+    // --- スタートダッシュ（村資金で購入するコストと効果量） ---
     public int flyerCost = 1000;
     public int flyerAttention = 20;
     public int flyerFollowers = 100;

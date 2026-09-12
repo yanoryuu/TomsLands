@@ -136,7 +136,7 @@ public class VillagePresenter : IStartable, IDisposable
     /// <summary>HUDと全区画の見た目を最新化する。</summary>
     private void RefreshAll()
     {
-        view.UpdateHud(model.VillageFunds, metaProgress.BankedGold.Value, model.VillageLevel);
+        view.UpdateHud(model.VillageFunds, model.VillageLevel);
 
         foreach (var plot in view.Plots)
         {

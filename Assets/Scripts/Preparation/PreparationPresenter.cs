@@ -12,7 +12,7 @@ using VContainer.Unity;
 /// - 持ち込み資金: 前のランで持ち帰って銀行に預けたGを、上限（村の銀行レベル依存）まで持ち込む
 /// - 難易度: このランの難易度（かんたん/ふつう/むずかしい）をここで選ぶ（タイトルでは選ばない）
 /// - スターターレリック: 呪い以外の Common レリックから1個
-/// - スタートダッシュ: 銀行預金Gを払ってこのランに適用する消費効果3種
+/// - スタートダッシュ: 村資金を払ってこのランに適用する消費効果3種
 /// 出店時に RunSetupData（+難易度は StartModeData）へ書き出し、GameLifecycleHandler.InitializeNewGame が消費する。
 /// UI未配線の間は旧挙動（即 TomsShop へ遷移）にフォールバックする。
 /// </summary>
@@ -65,7 +65,7 @@ public class PreparationPresenter : IStartable, IDisposable
         Bind();
         BuildCatalogs();
         RefreshAll();
-        view.ShowMessage("出店の準備をしよう。前のランで持ち帰ったお金は銀行に預けてあり、上限まで持ち込める。スタートダッシュも預金から買える。");
+        view.ShowMessage("出店の準備をしよう。持ち帰ったお金は村資金になっていて、上限まで持ち込める。スタートダッシュも村資金から買える。");
     }
 
     private void Bind()
@@ -119,7 +119,7 @@ public class PreparationPresenter : IStartable, IDisposable
         int carryMax = model.GetCarryMax(metaProgress);
         model.ClampCarry(carryMax);
 
-        view.UpdateBankedGold(metaProgress.BankedGold.Value);
+        view.UpdateVillageFunds(metaProgress.VillageFunds);
         view.UpdateDifficulty(DifficultyLabel(model.Difficulty));
         view.UpdateDifficultySelection(model.Difficulty);
 
@@ -141,19 +141,19 @@ public class PreparationPresenter : IStartable, IDisposable
         }
     }
 
-    /// <summary>出店: 持ち込み＋スタートダッシュ代を銀行預金から精算し、RunSetupData に書き出して TomsShop へ。</summary>
+    /// <summary>出店: 持ち込み＋スタートダッシュ代を村資金から精算し、RunSetupData に書き出して TomsShop へ。</summary>
     private void Depart()
     {
         int totalCost = model.CarryAmount + model.StartDashTotalCost;
-        if (totalCost > metaProgress.BankedGold.Value)
+        if (totalCost > metaProgress.VillageFunds)
         {
-            // 持ち込みは預金上限でクランプ済みなので、超えるのはスタートダッシュ分
-            view.ShowMessage($"銀行預金が足りない（必要 {totalCost:N0}G / 残高 {metaProgress.BankedGold.Value:N0}G）。持ち込みかスタートダッシュを減らそう。");
+            // 持ち込みは村資金でクランプ済みなので、超えるのはスタートダッシュ分
+            view.ShowMessage($"村資金が足りない（必要 {totalCost:N0}G / 残高 {metaProgress.VillageFunds:N0}G）。持ち込みかスタートダッシュを減らそう。");
             return;
         }
-        if (totalCost > 0 && !metaProgress.TrySpendBankedGold(totalCost))
+        if (totalCost > 0 && !metaProgress.TrySpendVillageFunds(totalCost))
         {
-            view.ShowMessage("銀行預金の精算に失敗した。");
+            view.ShowMessage("村資金の精算に失敗した。");
             return;
         }
         metaProgress.SaveData();
@@ -168,7 +168,7 @@ public class PreparationPresenter : IStartable, IDisposable
         runSetupData.UseAppraisal = model.UseAppraisal;
         runSetupData.UseGrace = model.UseGrace;
 
-        Debug.Log($"[Preparation] 出店: 難易度={model.Difficulty}, 持ち込み={model.CarryAmount}G, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace}), 預金残高={metaProgress.BankedGold.Value}G");
+        Debug.Log($"[Preparation] 出店: 難易度={model.Difficulty}, 持ち込み={model.CarryAmount}G, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace}), 村資金残高={metaProgress.VillageFunds}G");
         SceneManager.LoadScene("TomsShop");
     }
 
