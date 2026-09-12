@@ -429,8 +429,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buttonImage: {fileID: 369204124}
-  normalSprite: {fileID: 6480414880870408709, guid: be53d3018f3894928a9da6adf8a4c4d2, type: 3}
-  pressedSprite: {fileID: 6025815372582046271, guid: 36dfc9b0585cb484a84c4fa8240abf6f, type: 3}
+  normalSprite: {fileID: 8464668628180671850, guid: 9532e92bfa422104192d347e3c0cc046, type: 3}
+  pressedSprite: {fileID: -6293373275540163031, guid: 3de4b80b394316b47ab74c2782692f98, type: 3}
 --- !u!114 &369204124
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -684,17 +684,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   startScreenGroup: {fileID: 625894256}
   startMethodScreenGroup: {fileID: 1940797037}
-  difficultyScreenGroup: {fileID: 0}
   saveDataScreenGroup: {fileID: 623746699}
   startButton: {fileID: 704152472}
   newGameButton: {fileID: 704152472}
   continueButton: {fileID: 362743783}
   optionButton: {fileID: 369204126}
   startMethodBackButton: {fileID: 589512681}
-  easyDifficultyButton: {fileID: 0}
-  normalDifficultyButton: {fileID: 0}
-  hardDifficultyButton: {fileID: 0}
-  difficultyBackButton: {fileID: 0}
   saveSlotPrefab: {fileID: 6698881315720984809, guid: 991ff35b7ae41ec47ac2acf8bfc07c7d, type: 3}
   saveSlotContainer: {fileID: 1671352546}
   loadModeHeader: {fileID: 866506993}
