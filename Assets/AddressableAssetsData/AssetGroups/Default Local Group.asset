@@ -293,6 +293,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - AdvertisementData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 47f738947a3f3e9469e05541b1c686b9
+    m_Address: ScenarioSystem
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 482a0c67343963e4f99b7a03da776534
     m_Address: Marketing
     m_ReadOnly: 0
