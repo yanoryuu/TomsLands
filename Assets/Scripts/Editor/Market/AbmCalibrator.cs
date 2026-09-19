@@ -30,11 +30,21 @@ public sealed class AbmCalibrationTarget
     /// <summary>対数リターンの標準偏差（ボラティリティ水準）。</summary>
     public float StdDevReturn = 0.012f;
 
+    /// <summary>
+    /// 最大ドローダウン（0〜1）。ストップ高／安への張り付きを直接抑えるための項。
+    /// 統計量だけを合わせると「価格が上下限まで走って凍結する」解が選ばれうるため、
+    /// 値動きの到達範囲そのものに上限を与える。<see cref="WeightMaxDrawdown"/> が 0 なら無視される。
+    /// </summary>
+    public float MaxDrawdown = 0.15f;
+
     // --- 各項の重み。0 にすればその指標を無視する ---
     public float WeightKurtosis = 1.0f;
     public float WeightAbsAutocorr = 1.5f;
     public float WeightAutocorr = 1.5f;
     public float WeightStdDev = 1.0f;
+
+    /// <summary>最大ドローダウン項の重み。既定 0 = 無視（従来挙動と一致）。</summary>
+    public float WeightMaxDrawdown;
 
     /// <summary>Jev のお手本結果から目標を作る。</summary>
     public static AbmCalibrationTarget FromStats(MarketStats stats)
@@ -59,11 +69,57 @@ public sealed class AbmCalibrationTarget
         float lr = Sq((s.ReturnAutocorr1 - ReturnAutocorr1) / 0.2f) * WeightAutocorr;
         float ls = Sq((s.StdDevReturn - StdDevReturn) / Mathf.Max(1e-4f, StdDevReturn)) * WeightStdDev;
 
-        float loss = lk + la + lr + ls;
+        // ドローダウンは「超過分だけ」を罰する片側ペナルティ。
+        // 目標より浅いのは問題にならず、深い（＝上下限へ走る）方だけを抑えたい。
+        float excess = Mathf.Max(0f, s.MaxDrawdown - MaxDrawdown);
+        float ld = Sq(excess / Mathf.Max(1e-4f, MaxDrawdown)) * WeightMaxDrawdown;
+
+        float loss = lk + la + lr + ls + ld;
         return (float.IsNaN(loss) || float.IsInfinity(loss)) ? float.MaxValue : loss;
     }
 
     private static float Sq(float x) => x * x;
+}
+
+/// <summary>
+/// 探索するパラメータの範囲。既定値は「物理的に意味のある範囲」全体。
+///
+/// 範囲を絞ることで、統計量は合っていても挙動が破綻する解を排除できる。
+/// 実例: valueGain（逆張り勢の基準価格アンカー）に下限を設けないと、
+/// 最適化が racf1 を稼ぐためにアンカーを 0 近くまで切ってしまい、
+/// 価格を基準値へ引き戻す力が消えて上下限に張り付く解が選ばれる。
+/// </summary>
+public sealed class AbmSearchBounds
+{
+    public Vector2 MomentumGain = new Vector2(0f, 30f);
+
+    /// <summary>逆張りの感度。下限を 0 にすると基準価格アンカーが失われる。2 以上を推奨。</summary>
+    public Vector2 ValueGain = new Vector2(0f, 12f);
+
+    public Vector2 DemandGain = new Vector2(0f, 30f);
+    public Vector2 MarketMakerGain = new Vector2(0f, 20f);
+    public Vector2 HerdingGain = new Vector2(0f, 1f);
+    public Vector2 InactionBandMax = new Vector2(0f, 0.99f);
+    public Vector2 Lambda = new Vector2(0.002f, 0.6f);
+    public Vector2 BaseDepth = new Vector2(20f, 2000f);
+    public Vector2 CapitalParetoAlpha = new Vector2(0.6f, 3f);
+
+    /// <summary>
+    /// 出発点の各値を範囲内へ収める。範囲外の開始値から探索するのを防ぐ。
+    /// </summary>
+    public void Clamp(LocalAbmSettings s)
+    {
+        if (s == null) return;
+        s.momentumGain = Mathf.Clamp(s.momentumGain, MomentumGain.x, MomentumGain.y);
+        s.valueGain = Mathf.Clamp(s.valueGain, ValueGain.x, ValueGain.y);
+        s.demandGain = Mathf.Clamp(s.demandGain, DemandGain.x, DemandGain.y);
+        s.marketMakerGain = Mathf.Clamp(s.marketMakerGain, MarketMakerGain.x, MarketMakerGain.y);
+        s.herdingGain = Mathf.Clamp(s.herdingGain, HerdingGain.x, HerdingGain.y);
+        s.inactionBandMax = Mathf.Clamp(s.inactionBandMax, InactionBandMax.x, InactionBandMax.y);
+        s.lambda = Mathf.Clamp(s.lambda, Lambda.x, Lambda.y);
+        s.baseDepth = Mathf.Clamp(s.baseDepth, BaseDepth.x, BaseDepth.y);
+        s.capitalParetoAlpha = Mathf.Clamp(s.capitalParetoAlpha, CapitalParetoAlpha.x, CapitalParetoAlpha.y);
+    }
 }
 
 public sealed class AbmCalibrationResult
@@ -91,12 +147,15 @@ public static class AbmCalibrator
     public static AbmCalibrationResult Fit(
         AbmCalibrationTarget target, LocalAbmSettings start = null,
         int iterations = 500, int turns = 250, int itemCount = 8, int seed = 4242,
-        Action<int, int, float> onProgress = null)
+        Action<int, int, float> onProgress = null, AbmSearchBounds bounds = null)
     {
         if (target == null) throw new ArgumentNullException(nameof(target));
 
+        bounds = bounds ?? new AbmSearchBounds();
+
         var rng = new System.Random(seed);
         var current = (start ?? new LocalAbmSettings()).Clone();
+        bounds.Clamp(current);
 
         var currentStats = Evaluate(current, turns, itemCount, seed);
         float currentLoss = target.Loss(currentStats);
@@ -112,7 +171,7 @@ public static class AbmCalibrator
             // 温度: 序盤は大きく動き、終盤は微調整に絞る
             float temperature = Mathf.Lerp(0.45f, 0.05f, i / (float)Mathf.Max(1, iterations - 1));
 
-            var candidate = Perturb(current, rng, temperature);
+            var candidate = Perturb(current, rng, temperature, bounds);
             var stats = Evaluate(candidate, turns, itemCount, seed);
             float loss = target.Loss(stats);
 
@@ -142,19 +201,20 @@ public static class AbmCalibrator
     /// <summary>
     /// 設定をランダムに揺らす。各パラメータは物理的に意味のある範囲でクランプする。
     /// </summary>
-    private static LocalAbmSettings Perturb(LocalAbmSettings source, System.Random rng, float temperature)
+    private static LocalAbmSettings Perturb(
+        LocalAbmSettings source, System.Random rng, float temperature, AbmSearchBounds b)
     {
         var s = source.Clone();
 
-        s.momentumGain = Jitter(s.momentumGain, 0f, 30f, rng, temperature);
-        s.valueGain = Jitter(s.valueGain, 0f, 12f, rng, temperature);
-        s.demandGain = Jitter(s.demandGain, 0f, 30f, rng, temperature);
-        s.marketMakerGain = Jitter(s.marketMakerGain, 0f, 20f, rng, temperature);
-        s.herdingGain = Jitter(s.herdingGain, 0f, 1f, rng, temperature);
-        s.inactionBandMax = Jitter(s.inactionBandMax, 0f, 0.99f, rng, temperature);
-        s.lambda = Jitter(s.lambda, 0.002f, 0.6f, rng, temperature);
-        s.baseDepth = Jitter(s.baseDepth, 20f, 2000f, rng, temperature);
-        s.capitalParetoAlpha = Jitter(s.capitalParetoAlpha, 0.6f, 3f, rng, temperature);
+        s.momentumGain = Jitter(s.momentumGain, b.MomentumGain.x, b.MomentumGain.y, rng, temperature);
+        s.valueGain = Jitter(s.valueGain, b.ValueGain.x, b.ValueGain.y, rng, temperature);
+        s.demandGain = Jitter(s.demandGain, b.DemandGain.x, b.DemandGain.y, rng, temperature);
+        s.marketMakerGain = Jitter(s.marketMakerGain, b.MarketMakerGain.x, b.MarketMakerGain.y, rng, temperature);
+        s.herdingGain = Jitter(s.herdingGain, b.HerdingGain.x, b.HerdingGain.y, rng, temperature);
+        s.inactionBandMax = Jitter(s.inactionBandMax, b.InactionBandMax.x, b.InactionBandMax.y, rng, temperature);
+        s.lambda = Jitter(s.lambda, b.Lambda.x, b.Lambda.y, rng, temperature);
+        s.baseDepth = Jitter(s.baseDepth, b.BaseDepth.x, b.BaseDepth.y, rng, temperature);
+        s.capitalParetoAlpha = Jitter(s.capitalParetoAlpha, b.CapitalParetoAlpha.x, b.CapitalParetoAlpha.y, rng, temperature);
 
         if (s.archetypeWeights != null)
         {
@@ -234,7 +294,8 @@ public static class AbmCalibrator
     /// </summary>
     public static void FitToFile(
         AbmCalibrationTarget target, LocalAbmSettings start, string outputPath,
-        int iterations = 400, int turns = 250, int itemCount = 8, int seed = 4242)
+        int iterations = 400, int turns = 250, int itemCount = 8, int seed = 4242,
+        AbmSearchBounds bounds = null)
     {
         if (target == null) throw new ArgumentNullException(nameof(target));
         if (string.IsNullOrEmpty(outputPath)) throw new ArgumentException("outputPath が空です。");
@@ -253,7 +314,7 @@ public static class AbmCalibrator
             var sb = new System.Text.StringBuilder();
             try
             {
-                var result = Fit(target, startCopy, iterations, turns, itemCount, seed);
+                var result = Fit(target, startCopy, iterations, turns, itemCount, seed, null, bounds);
                 sb.AppendLine("INITIAL " + result.InitialStats);
                 sb.AppendLine("INITIAL_LOSS " + result.InitialLoss.ToString("F4"));
                 sb.AppendLine("BEST " + result.Stats);
