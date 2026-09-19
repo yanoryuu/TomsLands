@@ -283,6 +283,13 @@ public static class AbmCalibrator
         public string Id;
         public int Base, Price, StockValue;
         public float DemandValue, PrevDemandValue, Trend, LastNet;
+
+        /// <summary>
+        /// 陳列中かどうか。実機では陳列の有無で需要の向きが反転し、
+        /// 需要が低い銘柄は板が薄くなって値動きが荒れる。
+        /// 片方の条件だけで合わせ込むともう片方で破綻するため、両方を混ぜて評価する。
+        /// </summary>
+        public bool Displayed;
         public readonly List<int> History = new List<int>();
 
         public int CurrentPrice => Price;
@@ -300,7 +307,7 @@ public static class AbmCalibrator
     private const float TrendDriftMax = 0.12f;
     private const float TrendDecayRate = 0.10f;
     private const float DemandFloor = 0.05f, DemandCeiling = 1.0f;
-    private const float DisplayDemandUp = 0.02f;
+    private const float DisplayDemandUp = 0.02f, NotDisplayDemandDown = 0.01f;
     private const float PriceFloorRate = 0.3f, PriceCeilingRate = 3.0f;
 
     private static List<SimItem> _itemCache;
@@ -313,7 +320,8 @@ public static class AbmCalibrator
     /// </summary>
     public static void PrewarmItems(int count)
     {
-        BuildItems(Mathf.Max(1, count), 0);
+        LoadMasters(Mathf.Max(1, count));
+        SharedShopSettings();
     }
 
     /// <summary>
@@ -371,24 +379,119 @@ public static class AbmCalibrator
     /// </summary>
     public static MarketStats Evaluate(LocalAbmSettings settings, int turns, int itemCount, int seed)
     {
-        var items = BuildItems(itemCount, seed);
-        var market = new LocalAbmMarket(settings, seed);
-        var rng = new System.Random(seed);
+        // 実ランタイムと同じ型・同じ手順で回す。
+        // 独自のミニシミュレータで代用すると、価格履歴のリングバッファ長や陳列の有無といった
+        // 細部がズレて「ハーネスでは良いのに実機では破綻する」解を選んでしまう（実際に起きた）。
+        var masters = LoadMasters(itemCount);
+        if (masters.Count == 0) return default;
 
+        var shopSettings = SharedShopSettings();
+        var engine = new AbmShopPriceEngine(settings, seed);
+
+        var runtimes = new List<RuntimeItemData>(masters.Count);
+        var fullHistories = new List<List<int>>(masters.Count);
+
+        UnityEngine.Random.InitState(seed);
+        var trendRng = new System.Random(seed);
+
+        for (int i = 0; i < masters.Count; i++)
+        {
+            var m = masters[i];
+            var r = new RuntimeItemData(
+                m.itemId, m.itemName, m.basePrice, Mathf.Max(1, m.maxStock),
+                Mathf.Max(1, m.initialStock), 5, null, null,
+                m.itemType, m.itemAttribute, 1, 0.5f, "", 1f, 0);
+
+            // 陳列の有無で需要の向きが反転する。片方だけで合わせ込むと他方で破綻するので混ぜる。
+            r.UpdateIsDisplay(i % 2 == 0);
+            r.UpdateDisplayStock(5);
+            r.Trend = (float)(trendRng.NextDouble() - 0.5);
+
+            runtimes.Add(r);
+            fullHistories.Add(new List<int> { r.CurrentPrice.Value });
+        }
+
+        float floorRate = shopSettings.shopPriceFloorRate;
+        float ceilingRate = shopSettings.shopPriceCeilingRate;
+
+        engine.BeginTurn();
         for (int turn = 0; turn < turns; turn++)
         {
-            foreach (var item in items)
+            for (int i = 0; i < runtimes.Count; i++)
             {
-                AdvanceDemand(item, rng);
-                float rate = market.Step(item);
-                item.LastNet = market.LastNetOrder;
-                ApplyPrice(item, rate);
+                var r = runtimes[i];
+                var m = masters[i];
+
+                // --- ItemModel.ApplyShopTurnEconomy と同一の需要更新（status なし相当）---
+                r.PreviousDemand = r.Demand.Value;
+                r.PreviousPrice = r.CurrentPrice.Value;
+
+                float drift = UnityEngine.Random.Range(-shopSettings.trendDriftMax, shopSettings.trendDriftMax);
+                r.Trend = Mathf.Clamp(r.Trend + drift - r.Trend * shopSettings.trendDecayRate, -1f, 1f);
+
+                bool displaying = r.IsDisplay.Value && r.DisplayStock.Value > 0;
+                float natural = Mathf.Clamp01(0.5f + r.Trend * shopSettings.trendAmplitude);
+                float convergence = (natural - r.Demand.Value) * shopSettings.trendConvergenceRate;
+                float displayDelta = displaying
+                    ? shopSettings.displayDemandUp
+                    : -shopSettings.notDisplayDemandDown;
+
+                r.UpdateDemand(Mathf.Clamp(
+                    r.Demand.Value + convergence + displayDelta,
+                    shopSettings.demandFloor, shopSettings.demandCeiling));
+
+                // --- 価格（実ランタイムと同じエンジン・同じクランプ）---
+                var ctx = new ShopPriceContext(r, m, shopSettings, 1f, 0f);
+                float rate = engine.GetPriceRate(in ctx);
+
+                int price = Mathf.Max(1, Mathf.RoundToInt(r.CurrentPrice.Value * rate));
+                int floor = Mathf.Max(1, Mathf.RoundToInt(m.basePrice * floorRate));
+                int ceiling = Mathf.Max(floor, Mathf.RoundToInt(m.basePrice * ceilingRate));
+                r.UpdatePrice(Mathf.Clamp(price, floor, ceiling));
+
+                r.RecordShopHistory();
+                fullHistories[i].Add(r.CurrentPrice.Value);
             }
         }
 
-        var stats = new List<MarketStats>(items.Count);
-        foreach (var item in items) stats.Add(MarketStatistics.Compute(item.History));
+        var stats = new List<MarketStats>(fullHistories.Count);
+        foreach (var h in fullHistories) stats.Add(MarketStatistics.Compute(h));
         return MarketStatistics.Aggregate(stats);
+    }
+
+    private static List<ItemData> _masterCache;
+    private static int _masterCacheCount = -1;
+    private static ShopEconomySettings _sharedShopSettings;
+
+    /// <summary>既定値の ShopEconomySettings（需要モデルの定数とクランプ率をここから読む）。</summary>
+    private static ShopEconomySettings SharedShopSettings()
+    {
+        if (_sharedShopSettings == null)
+        {
+            _sharedShopSettings =
+                AssetDatabase.LoadAssetAtPath<ShopEconomySettings>("Assets/Resources_moved/ShopEconomySettings.asset")
+                ?? ScriptableObject.CreateInstance<ShopEconomySettings>();
+        }
+        return _sharedShopSettings;
+    }
+
+    private static List<ItemData> LoadMasters(int count)
+    {
+        count = Mathf.Max(1, count);
+        if (_masterCache != null && _masterCacheCount == count) return _masterCache;
+
+        var list = new List<ItemData>(count);
+        foreach (var guid in AssetDatabase.FindAssets("t:ItemData"))
+        {
+            if (list.Count >= count) break;
+            var data = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
+            if (data == null || data.basePrice <= 0) continue;
+            list.Add(data);
+        }
+
+        _masterCache = list;
+        _masterCacheCount = count;
+        return list;
     }
 
     private static List<SimItem> BuildItems(int count, int seed)
@@ -424,6 +527,7 @@ public static class AbmCalibrator
                 StockValue = template.StockValue,
                 DemandValue = 0.5f,
                 PrevDemandValue = 0.5f,
+                Displayed = (items.Count % 2 == 0),
                 Trend = (float)(rng.NextDouble() - 0.5),
             };
             item.History.Add(item.Price);
@@ -440,8 +544,9 @@ public static class AbmCalibrator
         item.Trend = Mathf.Clamp(item.Trend + drift - item.Trend * TrendDecayRate, -1f, 1f);
 
         float natural = Mathf.Clamp01(0.5f + item.Trend * TrendAmplitude);
+        float displayDelta = item.Displayed ? DisplayDemandUp : -NotDisplayDemandDown;
         item.DemandValue = Mathf.Clamp(
-            item.DemandValue + (natural - item.DemandValue) * TrendConvergenceRate + DisplayDemandUp,
+            item.DemandValue + (natural - item.DemandValue) * TrendConvergenceRate + displayDelta,
             DemandFloor, DemandCeiling);
     }
 

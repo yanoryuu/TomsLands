@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10012a2dac794e59bb666be8a7ce1c06, type: 3}
   m_Name: ShopEconomySettings
   m_EditorClassIdentifier: 
-  useAbmPriceEngine: 0
+  useAbmPriceEngine: 1
   marketModelPreset: {fileID: 11400000, guid: 399647cafd1a1d145910f6b9bf2d3af9, type: 2}
   abmSeed: 0
   highDemandThreshold: 0.7
