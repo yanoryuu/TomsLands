@@ -303,6 +303,7 @@ public class ItemModel
     // ABM はトレーダー群を生成時に確定させるため、毎ターン作り直すと相場の連続性が失われる。
     private IShopPriceEngine _priceEngine;
     private bool _priceEngineIsAbm;
+    private int _priceEngineSeed;
 
     /// <summary>
     /// 次回のターン経済更新でエンジンを作り直させる。
@@ -314,19 +315,26 @@ public class ItemModel
     /// 設定に応じた価格変動エンジンを返す。
     /// useAbmPriceEngine が false、またはプリセット未設定なら従来挙動（Legacy）。
     /// </summary>
-    private IShopPriceEngine ResolvePriceEngine(ShopEconomySettings settings)
+    private IShopPriceEngine ResolvePriceEngine(ShopEconomySettings settings, int flowSeed)
     {
         bool wantAbm = settings.useAbmPriceEngine && settings.marketModelPreset != null;
 
-        if (_priceEngine != null && _priceEngineIsAbm == wantAbm)
+        // シードの優先順: 設定で固定 > ランのシード（ラン再現と揃う） > 乱数
+        int seed = settings.abmSeed != 0 ? settings.abmSeed
+                 : flowSeed != 0 ? flowSeed
+                 : Random.Range(int.MinValue, int.MaxValue);
+
+        // ABM はシードが変わったら（別ランになったら）編成を作り直す
+        bool sameSeed = !wantAbm || _priceEngineSeed == seed || (settings.abmSeed == 0 && flowSeed == 0);
+        if (_priceEngine != null && _priceEngineIsAbm == wantAbm && sameSeed)
         {
             return _priceEngine;
         }
 
         if (wantAbm)
         {
-            int seed = settings.abmSeed != 0 ? settings.abmSeed : Random.Range(int.MinValue, int.MaxValue);
             _priceEngine = new AbmShopPriceEngine(settings.marketModelPreset.abm, seed);
+            _priceEngineSeed = seed;
             Debug.Log($"[ShopEconomy] 価格変動エンジン: ABM (seed={seed})");
         }
         else
@@ -343,8 +351,10 @@ public class ItemModel
         return _priceEngine;
     }
 
+    /// <param name="turnIndex">現在のターン番号。ABM がターン専用の乱数を作るのに使う（セーブ/ロード後も同じ系列になる）。</param>
+    /// <param name="flowSeed">ランのシード。ABM のトレーダー編成に使う。0 なら設定または乱数にフォールバック。</param>
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
-        float machineDemandFloorBonus = 0f)
+        float machineDemandFloorBonus = 0f, int turnIndex = 0, int flowSeed = 0)
     {
         if (settings == null) return;
 
@@ -393,8 +403,8 @@ public class ItemModel
         // ------------------------------------------------
         // Step 6: 価格変動エンジンの解決（設定が変わったときだけ作り直す）
         // ------------------------------------------------
-        var engine = ResolvePriceEngine(settings);
-        engine.BeginTurn();
+        var engine = ResolvePriceEngine(settings, flowSeed);
+        engine.BeginTurn(turnIndex);
 
         foreach (var runtime in RuntimeItems)
         {
@@ -447,7 +457,18 @@ public class ItemModel
             //   AbmShopPriceEngine          … 仮想トレーダーの注文フローから決める。
             // Attention 増幅(A2) と Retention 安定化(A4) はどちらのエンジンでも適用される。
             // ------------------------------------------------
-            var context = new ShopPriceContext(runtime, master, settings, attentionFactor, retentionStability);
+            // 層1: 適正値。需要から決まる「本来あるべき価格」。ABM の逆張り勢はここへ引き寄せる。
+            //   前ターンの需要から求めた値も渡し、ファンダメンタル勢が差分（需要の変化）を見る。
+            //   Legacy はこの2値を使わない。
+            int fairFloor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * floorRate));
+            int fairCeiling = Mathf.Max(fairFloor, Mathf.RoundToInt(master.basePrice * settings.shopPriceCeilingRate));
+            float fairValue = ShopFairValue.Compute(
+                master.basePrice, runtime.Demand.Value, settings.demandPricePremium, fairFloor, fairCeiling);
+            float previousFairValue = ShopFairValue.Compute(
+                master.basePrice, runtime.PreviousDemand, settings.demandPricePremium, fairFloor, fairCeiling);
+
+            var context = new ShopPriceContext(
+                runtime, master, settings, fairValue, previousFairValue, attentionFactor, retentionStability);
             float s1Rate = engine.GetPriceRate(in context);
 
             int newPrice = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * s1Rate));

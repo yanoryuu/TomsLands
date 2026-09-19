@@ -92,10 +92,14 @@ public sealed class JevMarketSimulator : EditorWindow
         public readonly List<int> History = new List<int>();
         public float LastNet;
 
+        /// <summary>層1の傾き。比較ツールなので既定値 0.5 に固定（本番は ShopEconomySettings 側）。</summary>
+        private const float FairPremium = 0.5f;
+
         public int CurrentPrice => Price;
         public int BasePrice => Base;
+        public float FairValue => ShopFairValue.Compute(Base, DemandValue, FairPremium, Base * PriceFloorRate, Base * PriceCeilingRate);
+        public float PreviousFairValue => ShopFairValue.Compute(Base, PrevDemandValue, FairPremium, Base * PriceFloorRate, Base * PriceCeilingRate);
         public float Demand => DemandValue;
-        public float PreviousDemand => PrevDemandValue;
         public int Stock => StockValue;
         public IReadOnlyList<int> PriceHistory => History;
         public float LastNetOrder => LastNet;
@@ -542,6 +546,7 @@ public sealed class JevMarketSimulator : EditorWindow
 
         for (int turn = 0; turn < _turns; turn++)
         {
+            market.BeginTurn(turn);
             foreach (var item in items)
             {
                 AdvanceDemand(item, rng);

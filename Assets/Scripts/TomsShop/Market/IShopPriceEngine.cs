@@ -20,22 +20,26 @@ public readonly struct ShopPriceContext
     public readonly ItemData Master;
     public readonly ShopEconomySettings Settings;
 
-    /// <summary>
-    /// 案A2 Attention の増幅係数（1.0 = 無補正）。上振れ側を強める。
-    /// </summary>
+    /// <summary>適正値（層1）。今ターンの需要から求めた値。Legacy は使わない。</summary>
+    public readonly float FairValue;
+
+    /// <summary>前ターンの需要から求めた適正値。ファンダメンタル勢が差分を見る。</summary>
+    public readonly float PreviousFairValue;
+
+    /// <summary>案A2 Attention の増幅係数（1.0 = 無補正）。上振れ側を強める。</summary>
     public readonly float AttentionFactor;
 
-    /// <summary>
-    /// 案A4 Retention の安定化強度（0 = 無補正）。変動率を 1.0 へ引き寄せる Lerp の t。
-    /// </summary>
+    /// <summary>案A4 Retention の安定化強度（0 = 無補正）。変動率を 1.0 へ引き寄せる Lerp の t。</summary>
     public readonly float RetentionStability;
 
     public ShopPriceContext(RuntimeItemData item, ItemData master, ShopEconomySettings settings,
-        float attentionFactor, float retentionStability)
+        float fairValue, float previousFairValue, float attentionFactor, float retentionStability)
     {
         Item = item;
         Master = master;
         Settings = settings;
+        FairValue = fairValue;
+        PreviousFairValue = previousFairValue;
         AttentionFactor = attentionFactor;
         RetentionStability = retentionStability;
     }
@@ -47,9 +51,10 @@ public readonly struct ShopPriceContext
 public interface IShopPriceEngine
 {
     /// <summary>
-    /// このターンの計算を始める前に一度だけ呼ばれる。エンジン側の状態更新に使う。
+    /// このターンの計算を始める前に一度だけ呼ばれる。
+    /// ABM はここでターン専用の乱数を作り直す（セーブ/ロード後も同じ系列になるように）。
     /// </summary>
-    void BeginTurn();
+    void BeginTurn(int turnIndex);
 
     /// <summary>
     /// 価格変動率を返す。1.0 が据え置き、1.02 なら 2% 上昇。
@@ -67,7 +72,7 @@ public interface IShopPriceEngine
 /// </summary>
 public sealed class LegacyShopPriceEngine : IShopPriceEngine
 {
-    public void BeginTurn() { }
+    public void BeginTurn(int turnIndex) { }
 
     public float GetPriceRate(in ShopPriceContext context)
     {

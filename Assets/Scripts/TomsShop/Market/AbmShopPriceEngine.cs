@@ -2,10 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// エージェントベースモデル（ABM）による価格変動エンジン。
+/// エージェントベースモデル（ABM）による価格変動エンジン（層2）。
 ///
 /// キャリブレーション済みの <see cref="MarketModelPreset"/> を読み、
-/// 30体の仮想トレーダーの注文フローから価格変動率を決める。外部APIは使わない。
+/// 仮想トレーダーの注文フローから価格変動率を決める。外部APIは使わない。
+/// 適正値（層1）は呼び出し側が <see cref="ShopPriceContext"/> で渡す。
 ///
 /// 広告ステータス補正は Legacy と同じ意味で後掛けする:
 ///   Attention … 上振れ側だけを増幅（下落方向は増幅しない）
@@ -20,12 +21,15 @@ public sealed class AbmShopPriceEngine : IShopPriceEngine
     /// <summary>直近の Step で算出した純注文（デバッグ表示用）。</summary>
     public float LastNetOrder => _market.LastNetOrder;
 
+    /// <summary>編成に使ったシード。</summary>
+    public int Seed => _market.Seed;
+
     public AbmShopPriceEngine(LocalAbmSettings settings, int seed)
     {
         _market = new LocalAbmMarket(settings ?? new LocalAbmSettings(), seed);
     }
 
-    public void BeginTurn() { }
+    public void BeginTurn(int turnIndex) => _market.BeginTurn(turnIndex);
 
     public float GetPriceRate(in ShopPriceContext context)
     {
@@ -34,7 +38,7 @@ public sealed class AbmShopPriceEngine : IShopPriceEngine
         if (item == null || master == null) return 1f;
 
         _lastNetOrders.TryGetValue(item.ItemId, out float lastNet);
-        _view.Bind(item, master, lastNet);
+        _view.Bind(item, master, context.FairValue, context.PreviousFairValue, lastNet);
 
         float rate = _market.Step(_view);
         _lastNetOrders[item.ItemId] = _market.LastNetOrder;
@@ -61,19 +65,22 @@ public sealed class AbmShopPriceEngine : IShopPriceEngine
     {
         private RuntimeItemData _item;
         private ItemData _master;
-        private float _lastNet;
+        private float _fair, _prevFair, _lastNet;
 
-        public void Bind(RuntimeItemData item, ItemData master, float lastNetOrder)
+        public void Bind(RuntimeItemData item, ItemData master, float fair, float prevFair, float lastNetOrder)
         {
             _item = item;
             _master = master;
+            _fair = fair;
+            _prevFair = prevFair;
             _lastNet = lastNetOrder;
         }
 
         public int CurrentPrice => _item.CurrentPrice.Value;
         public int BasePrice => _master.basePrice;
+        public float FairValue => _fair;
+        public float PreviousFairValue => _prevFair;
         public float Demand => _item.Demand.Value;
-        public float PreviousDemand => _item.PreviousDemand;
         public int Stock => _item.Stock.Value;
 
         /// <summary>

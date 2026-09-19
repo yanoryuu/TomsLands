@@ -46,6 +46,15 @@ public sealed class AbmCalibrationTarget
     /// <summary>最大ドローダウン項の重み。既定 0 = 無視（従来挙動と一致）。</summary>
     public float WeightMaxDrawdown;
 
+    /// <summary>
+    /// 需要×リターン相関の下限。「需要が高い銘柄は値上がりする」が価格に届いているか。
+    /// Legacy は +0.106。これを下回ったときだけ罰する片側ペナルティ。
+    /// </summary>
+    public float DemandCorrMin = 0.08f;
+
+    /// <summary>需要相関項の重み。既定 0 = 無視。</summary>
+    public float WeightDemandCorr;
+
     /// <summary>Jev のお手本結果から目標を作る。</summary>
     public static AbmCalibrationTarget FromStats(MarketStats stats)
     {
@@ -74,7 +83,11 @@ public sealed class AbmCalibrationTarget
         float excess = Mathf.Max(0f, s.MaxDrawdown - MaxDrawdown);
         float ld = Sq(excess / Mathf.Max(1e-4f, MaxDrawdown)) * WeightMaxDrawdown;
 
-        float loss = lk + la + lr + ls + ld;
+        // 需要相関は「下限を割った分だけ」罰する。高すぎることは問題にならない。
+        float shortfall = Mathf.Max(0f, DemandCorrMin - s.DemandReturnCorr);
+        float lc = Sq(shortfall / 0.1f) * WeightDemandCorr;
+
+        float loss = lk + la + lr + ls + ld + lc;
         return (float.IsNaN(loss) || float.IsInfinity(loss)) ? float.MaxValue : loss;
     }
 
@@ -101,12 +114,6 @@ public sealed class AbmSearchBounds
     public Vector2 HerdingGain = new Vector2(0f, 1f);
     public Vector2 InactionBandMax = new Vector2(0f, 0.99f);
 
-    /// <summary>戦略スイッチングの強さ（ロジットの逆温度 β）。0 で切り替えなし。</summary>
-    public Vector2 SwitchingIntensity = new Vector2(0f, 60f);
-
-    /// <summary>戦略の成績を評価する期間（ターン）。</summary>
-    public Vector2 SwitchingMemory = new Vector2(2f, 12f);
-
     /// <summary>価格インパクトの指数。0.5=平方根則、1.0=線形。上げるほどテールが太る。</summary>
     public Vector2 ImpactExponent = new Vector2(0.5f, 1.3f);
     public Vector2 Lambda = new Vector2(0.002f, 0.6f);
@@ -125,8 +132,6 @@ public sealed class AbmSearchBounds
         s.marketMakerGain = Mathf.Clamp(s.marketMakerGain, MarketMakerGain.x, MarketMakerGain.y);
         s.herdingGain = Mathf.Clamp(s.herdingGain, HerdingGain.x, HerdingGain.y);
         s.inactionBandMax = Mathf.Clamp(s.inactionBandMax, InactionBandMax.x, InactionBandMax.y);
-        s.switchingIntensity = Mathf.Clamp(s.switchingIntensity, SwitchingIntensity.x, SwitchingIntensity.y);
-        s.switchingMemory = Mathf.RoundToInt(Mathf.Clamp(s.switchingMemory, SwitchingMemory.x, SwitchingMemory.y));
         s.impactExponent = Mathf.Clamp(s.impactExponent, ImpactExponent.x, ImpactExponent.y);
         s.lambda = Mathf.Clamp(s.lambda, Lambda.x, Lambda.y);
         s.baseDepth = Mathf.Clamp(s.baseDepth, BaseDepth.x, BaseDepth.y);
@@ -159,17 +164,18 @@ public static class AbmCalibrator
     public static AbmCalibrationResult Fit(
         AbmCalibrationTarget target, LocalAbmSettings start = null,
         int iterations = 500, int turns = 250, int itemCount = 8, int seed = 4242,
-        Action<int, int, float> onProgress = null, AbmSearchBounds bounds = null)
+        Action<int, int, float> onProgress = null, AbmSearchBounds bounds = null, int seedCount = 1)
     {
         if (target == null) throw new ArgumentNullException(nameof(target));
 
         bounds = bounds ?? new AbmSearchBounds();
+        seedCount = Mathf.Max(1, seedCount);
 
         var rng = new System.Random(seed);
         var current = (start ?? new LocalAbmSettings()).Clone();
 
-        // Switcher 追加前に保存された設定（5要素）は、そのままだと探索対象から
-        // Switcher が漏れてしまう。列挙子の数まで 0 で埋めてから探索を始める。
+        // 保存済み設定の archetypeWeights が列挙子の数と違う場合（列挙子の増減後のセーブ）は、
+        // 足りない分を 0 で埋め、余った分を落としてから探索を始める。
         int kinds = Enum.GetValues(typeof(TraderArchetype)).Length;
         if (current.archetypeWeights == null || current.archetypeWeights.Length != kinds)
         {
@@ -184,8 +190,11 @@ public static class AbmCalibrator
 
         bounds.Clamp(current);
 
-        var currentStats = Evaluate(current, turns, itemCount, seed);
-        float currentLoss = target.Loss(currentStats);
+        // Loss は「シードごとの Loss の平均」で評価する。
+        // 統計量を平均してから Loss を取ると、良い編成と悪い編成が打ち消し合って
+        // 「平均は良いが半分のプレイで破綻する」解が選ばれる（v2 で実測）。
+        var currentStats = EvaluateMulti(current, turns, itemCount, seed, seedCount);
+        float currentLoss = MeanLoss(target, current, turns, itemCount, seed, seedCount);
 
         var best = current.Clone();
         var bestStats = currentStats;
@@ -199,8 +208,9 @@ public static class AbmCalibrator
             float temperature = Mathf.Lerp(0.45f, 0.05f, i / (float)Mathf.Max(1, iterations - 1));
 
             var candidate = Perturb(current, rng, temperature, bounds);
-            var stats = Evaluate(candidate, turns, itemCount, seed);
-            float loss = target.Loss(stats);
+            float loss = MeanLoss(target, candidate, turns, itemCount, seed, seedCount);
+            MarketStats stats = default;
+            if (loss < currentLoss) stats = EvaluateMulti(candidate, turns, itemCount, seed, seedCount);
 
             if (loss < currentLoss)
             {
@@ -239,9 +249,6 @@ public static class AbmCalibrator
         s.marketMakerGain = Jitter(s.marketMakerGain, b.MarketMakerGain.x, b.MarketMakerGain.y, rng, temperature);
         s.herdingGain = Jitter(s.herdingGain, b.HerdingGain.x, b.HerdingGain.y, rng, temperature);
         s.inactionBandMax = Jitter(s.inactionBandMax, b.InactionBandMax.x, b.InactionBandMax.y, rng, temperature);
-        s.switchingIntensity = Jitter(s.switchingIntensity, b.SwitchingIntensity.x, b.SwitchingIntensity.y, rng, temperature);
-        s.switchingMemory = Mathf.RoundToInt(
-            Jitter(s.switchingMemory, b.SwitchingMemory.x, b.SwitchingMemory.y, rng, temperature));
         s.impactExponent = Jitter(s.impactExponent, b.ImpactExponent.x, b.ImpactExponent.y, rng, temperature);
         s.lambda = Jitter(s.lambda, b.Lambda.x, b.Lambda.y, rng, temperature);
         s.baseDepth = Jitter(s.baseDepth, b.BaseDepth.x, b.BaseDepth.y, rng, temperature);
@@ -273,46 +280,6 @@ public static class AbmCalibrator
         return Mathf.Clamp(moved, min, max);
     }
 
-    // ================================================================
-    // 評価用のミニシミュレータ
-    // ================================================================
-
-    /// <summary>ABM へ渡すための最小限の銘柄表現。</summary>
-    private sealed class SimItem : IMarketView
-    {
-        public string Id;
-        public int Base, Price, StockValue;
-        public float DemandValue, PrevDemandValue, Trend, LastNet;
-
-        /// <summary>
-        /// 陳列中かどうか。実機では陳列の有無で需要の向きが反転し、
-        /// 需要が低い銘柄は板が薄くなって値動きが荒れる。
-        /// 片方の条件だけで合わせ込むともう片方で破綻するため、両方を混ぜて評価する。
-        /// </summary>
-        public bool Displayed;
-        public readonly List<int> History = new List<int>();
-
-        public int CurrentPrice => Price;
-        public int BasePrice => Base;
-        public float Demand => DemandValue;
-        public float PreviousDemand => PrevDemandValue;
-        public int Stock => StockValue;
-        public IReadOnlyList<int> PriceHistory => History;
-        public float LastNetOrder => LastNet;
-    }
-
-    // JevReferenceRun / JevMarketSimulator と同一の需要モデル定数
-    private const float TrendAmplitude = 0.30f;
-    private const float TrendConvergenceRate = 0.15f;
-    private const float TrendDriftMax = 0.12f;
-    private const float TrendDecayRate = 0.10f;
-    private const float DemandFloor = 0.05f, DemandCeiling = 1.0f;
-    private const float DisplayDemandUp = 0.02f, NotDisplayDemandDown = 0.01f;
-    private const float PriceFloorRate = 0.3f, PriceCeilingRate = 3.0f;
-
-    private static List<SimItem> _itemCache;
-    private static int _itemCacheCount = -1;
-
     /// <summary>
     /// 銘柄テンプレートをメインスレッドで読み込んでキャッシュする。
     /// <see cref="FitToFile"/> のようにバックグラウンドで評価を回す前に、必ずメインスレッドから呼ぶこと
@@ -334,7 +301,7 @@ public static class AbmCalibrator
     public static void FitToFile(
         AbmCalibrationTarget target, LocalAbmSettings start, string outputPath,
         int iterations = 400, int turns = 250, int itemCount = 8, int seed = 4242,
-        AbmSearchBounds bounds = null)
+        AbmSearchBounds bounds = null, int seedCount = 1)
     {
         if (target == null) throw new ArgumentNullException(nameof(target));
         if (string.IsNullOrEmpty(outputPath)) throw new ArgumentException("outputPath が空です。");
@@ -353,7 +320,7 @@ public static class AbmCalibrator
             var sb = new System.Text.StringBuilder();
             try
             {
-                var result = Fit(target, startCopy, iterations, turns, itemCount, seed, null, bounds);
+                var result = Fit(target, startCopy, iterations, turns, itemCount, seed, null, bounds, seedCount);
                 sb.AppendLine("INITIAL " + result.InitialStats);
                 sb.AppendLine("INITIAL_LOSS " + result.InitialLoss.ToString("F4"));
                 sb.AppendLine("BEST " + result.Stats);
@@ -377,6 +344,37 @@ public static class AbmCalibrator
     /// 1設定を評価して統計量を返す。
     /// 同じ seed / turns / itemCount なら常に同じ結果になる（探索の再現性のため）。
     /// </summary>
+    /// <summary>
+    /// トレーダー編成のシードを複数振って平均した統計量を返す。
+    /// 単一シードで合わせ込むと「引きの良い編成」に過適合し、実プレイで再現しない（v1 で実測）。
+    /// </summary>
+    /// <summary>シードごとに Loss を取って平均する。悪い編成を平均で隠さないための評価。</summary>
+    public static float MeanLoss(AbmCalibrationTarget target, LocalAbmSettings settings,
+        int turns, int itemCount, int seed, int seedCount)
+    {
+        seedCount = Mathf.Max(1, seedCount);
+        float sum = 0f;
+        for (int k = 0; k < seedCount; k++)
+        {
+            float l = target.Loss(Evaluate(settings, turns, itemCount, seed + k * 7919));
+            if (float.IsInfinity(l) || float.IsNaN(l) || l >= float.MaxValue) return float.MaxValue;
+            sum += l;
+        }
+        return sum / seedCount;
+    }
+
+    public static MarketStats EvaluateMulti(LocalAbmSettings settings, int turns, int itemCount, int seed, int seedCount)
+    {
+        if (seedCount <= 1) return Evaluate(settings, turns, itemCount, seed);
+
+        var all = new List<MarketStats>(seedCount);
+        for (int k = 0; k < seedCount; k++)
+        {
+            all.Add(Evaluate(settings, turns, itemCount, seed + k * 7919));
+        }
+        return MarketStatistics.Aggregate(all);
+    }
+
     public static MarketStats Evaluate(LocalAbmSettings settings, int turns, int itemCount, int seed)
     {
         // 実ランタイムと同じ型・同じ手順で回す。
@@ -413,10 +411,15 @@ public static class AbmCalibrator
 
         float floorRate = shopSettings.shopPriceFloorRate;
         float ceilingRate = shopSettings.shopPriceCeilingRate;
+        float premium = shopSettings.demandPricePremium;
 
-        engine.BeginTurn();
+        // 需要×リターン相関の集計用
+        double sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+        long corrN = 0;
+
         for (int turn = 0; turn < turns; turn++)
         {
+            engine.BeginTurn(turn);
             for (int i = 0; i < runtimes.Count; i++)
             {
                 var r = runtimes[i];
@@ -440,23 +443,39 @@ public static class AbmCalibrator
                     r.Demand.Value + convergence + displayDelta,
                     shopSettings.demandFloor, shopSettings.demandCeiling));
 
-                // --- 価格（実ランタイムと同じエンジン・同じクランプ）---
-                var ctx = new ShopPriceContext(r, m, shopSettings, 1f, 0f);
-                float rate = engine.GetPriceRate(in ctx);
-
-                int price = Mathf.Max(1, Mathf.RoundToInt(r.CurrentPrice.Value * rate));
+                // --- 価格（実ランタイムと同じエンジン・同じクランプ・同じ適正値）---
                 int floor = Mathf.Max(1, Mathf.RoundToInt(m.basePrice * floorRate));
                 int ceiling = Mathf.Max(floor, Mathf.RoundToInt(m.basePrice * ceilingRate));
+                float fair = ShopFairValue.Compute(m.basePrice, r.Demand.Value, premium, floor, ceiling);
+                float prevFair = ShopFairValue.Compute(m.basePrice, r.PreviousDemand, premium, floor, ceiling);
+
+                var ctx = new ShopPriceContext(r, m, shopSettings, fair, prevFair, 1f, 0f);
+                float rate = engine.GetPriceRate(in ctx);
+
+                int before = r.CurrentPrice.Value;
+                int price = Mathf.Max(1, Mathf.RoundToInt(before * rate));
                 r.UpdatePrice(Mathf.Clamp(price, floor, ceiling));
 
                 r.RecordShopHistory();
                 fullHistories[i].Add(r.CurrentPrice.Value);
+
+                if (before > 0)
+                {
+                    double ret = (double)r.CurrentPrice.Value / before - 1.0;
+                    double dem = r.Demand.Value;
+                    sx += dem; sy += ret; sxx += dem * dem; syy += ret * ret; sxy += dem * ret; corrN++;
+                }
             }
         }
 
         var stats = new List<MarketStats>(fullHistories.Count);
         foreach (var h in fullHistories) stats.Add(MarketStatistics.Compute(h));
-        return MarketStatistics.Aggregate(stats);
+        var result = MarketStatistics.Aggregate(stats);
+
+        double denom = System.Math.Sqrt(System.Math.Max(1e-12, (corrN * sxx - sx * sx) * (corrN * syy - sy * sy)));
+        double corr = corrN > 2 ? (corrN * sxy - sx * sy) / denom : 0.0;
+        result.DemandReturnCorr = (float.IsNaN((float)corr) || float.IsInfinity((float)corr)) ? 0f : (float)corr;
+        return result;
     }
 
     private static List<ItemData> _masterCache;
@@ -494,71 +513,4 @@ public static class AbmCalibrator
         return list;
     }
 
-    private static List<SimItem> BuildItems(int count, int seed)
-    {
-        // ItemData の読み込みは AssetDatabase アクセスで重いのでキャッシュする
-        if (_itemCache == null || _itemCacheCount != count)
-        {
-            _itemCache = new List<SimItem>(count);
-            foreach (var guid in AssetDatabase.FindAssets("t:ItemData"))
-            {
-                if (_itemCache.Count >= count) break;
-                var data = AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(guid));
-                if (data == null || data.basePrice <= 0) continue;
-                _itemCache.Add(new SimItem
-                {
-                    Id = string.IsNullOrEmpty(data.itemId) ? data.name : data.itemId,
-                    Base = data.basePrice,
-                    StockValue = Mathf.Max(1, data.initialStock),
-                });
-            }
-            _itemCacheCount = count;
-        }
-
-        var rng = new System.Random(seed);
-        var items = new List<SimItem>(_itemCache.Count);
-        foreach (var template in _itemCache)
-        {
-            var item = new SimItem
-            {
-                Id = template.Id,
-                Base = template.Base,
-                Price = template.Base,
-                StockValue = template.StockValue,
-                DemandValue = 0.5f,
-                PrevDemandValue = 0.5f,
-                Displayed = (items.Count % 2 == 0),
-                Trend = (float)(rng.NextDouble() - 0.5),
-            };
-            item.History.Add(item.Price);
-            items.Add(item);
-        }
-        return items;
-    }
-
-    private static void AdvanceDemand(SimItem item, System.Random rng)
-    {
-        item.PrevDemandValue = item.DemandValue;
-
-        float drift = (float)(rng.NextDouble() * 2.0 - 1.0) * TrendDriftMax;
-        item.Trend = Mathf.Clamp(item.Trend + drift - item.Trend * TrendDecayRate, -1f, 1f);
-
-        float natural = Mathf.Clamp01(0.5f + item.Trend * TrendAmplitude);
-        float displayDelta = item.Displayed ? DisplayDemandUp : -NotDisplayDemandDown;
-        item.DemandValue = Mathf.Clamp(
-            item.DemandValue + (natural - item.DemandValue) * TrendConvergenceRate + displayDelta,
-            DemandFloor, DemandCeiling);
-    }
-
-    private static void ApplyPrice(SimItem item, float rate)
-    {
-        if (float.IsNaN(rate) || float.IsInfinity(rate)) rate = 1f;
-
-        int price = Mathf.Max(1, Mathf.RoundToInt(item.Price * rate));
-        int floor = Mathf.Max(1, Mathf.RoundToInt(item.Base * PriceFloorRate));
-        int ceiling = Mathf.Max(floor, Mathf.RoundToInt(item.Base * PriceCeilingRate));
-
-        item.Price = Mathf.Clamp(price, floor, ceiling);
-        item.History.Add(item.Price);
-    }
 }

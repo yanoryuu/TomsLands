@@ -44,6 +44,7 @@ public class DebugMenuView : MonoBehaviour
 
     private float _volMultiplier = 1f;
     private float _baseLambda;
+    private int _fastForwardCount;
 
     private string _moneyInput = "10000";
     private string _bankInput = "10000";
@@ -520,14 +521,27 @@ public class DebugMenuView : MonoBehaviour
             return;
         }
 
+        // 需要→価格の効き（層1）をその場で調整する。Legacy には影響しない。
+        float prem = GUILayout.HorizontalSlider(_economySettings.demandPricePremium, 0f, 1f);
+        if (!Mathf.Approximately(prem, _economySettings.demandPricePremium))
+        {
+            _economySettings.demandPricePremium = prem;
+        }
+        GUILayout.Label($"需要→価格の強さ {_economySettings.demandPricePremium:F2}" +
+                        $"（需要0.8で基準の {1f + _economySettings.demandPricePremium * 0.6f:F2}倍が適正値）");
+
         if (GUILayout.Button("ターン経済だけ回す（×10）"))
         {
+            // 早送りでも毎回違うターン番号を渡し、ABM のターン乱数が同じ系列を繰り返さないようにする
+            int baseTurn = _gameFlowManager != null ? _gameFlowManager.CurrentTurn.Value : 0;
+            int flowSeed = _tomsModel != null ? _tomsModel.FlowSeed : 0;
             for (int i = 0; i < 10; i++)
             {
                 _itemModel.ApplyShopTurnEconomy(
                     _economySettings,
                     _tomsModel != null ? _tomsModel.BlacksmithLevel.Value : 99,
-                    _statusModel);
+                    _statusModel, 0f,
+                    baseTurn + 1000 + _fastForwardCount++, flowSeed);
             }
         }
         GUILayout.Label("※ ターンは進めず価格・需要だけ10回更新する（相場の動きを早送りで確認する用）");

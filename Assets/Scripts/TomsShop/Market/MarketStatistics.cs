@@ -38,19 +38,27 @@ public struct MarketStats
     /// <summary>最大ドローダウン（0〜1）。期間中の高値からの最大下落率。</summary>
     public float MaxDrawdown;
 
+    /// <summary>
+    /// 需要とリターンの相関（−1〜1）。「需要が高い銘柄は値上がりする」というゲームのルールが
+    /// 価格に届いているかの指標。Legacy は +0.1 前後。価格系列だけからは計算できないので
+    /// <see cref="MarketStatistics.Compute"/> では 0 のまま。需要系列を持つ呼び出し側が埋める。
+    /// </summary>
+    public float DemandReturnCorr;
+
     /// <summary>人が読める1行サマリ。</summary>
     public override string ToString()
     {
         // OS ロケールで小数点が "," にならないよう不変カルチャで整形する（ログ・CSV比較用）
         return string.Format(
             System.Globalization.CultureInfo.InvariantCulture,
-            "n={0} σ={1:F4} kurt={2:F2} |r|acf1={3:F3} racf1={4:F3} maxDD={5:F1}%",
+            "n={0} σ={1:F4} kurt={2:F2} |r|acf1={3:F3} racf1={4:F3} maxDD={5:F1}% dcorr={6:F3}",
             SampleCount,
             StdDevReturn,
             Kurtosis,
             AbsReturnAutocorr1,
             ReturnAutocorr1,
-            MaxDrawdown * 100f);
+            MaxDrawdown * 100f,
+            DemandReturnCorr);
     }
 }
 
@@ -193,6 +201,7 @@ public static class MarketStatistics
         double absAcf = 0.0;
         double retAcf = 0.0;
         double maxDd = 0.0;
+        double dcorr = 0.0;
 
         foreach (MarketStats s in stats)
         {
@@ -208,6 +217,7 @@ public static class MarketStatistics
             absAcf += SafeDouble(s.AbsReturnAutocorr1) * w;
             retAcf += SafeDouble(s.ReturnAutocorr1) * w;
             maxDd += SafeDouble(s.MaxDrawdown) * w;
+            dcorr += SafeDouble(s.DemandReturnCorr) * w;
         }
 
         if (totalWeight <= 0)
@@ -223,6 +233,7 @@ public static class MarketStatistics
         result.AbsReturnAutocorr1 = Sanitize(absAcf * inv);
         result.ReturnAutocorr1 = Sanitize(retAcf * inv);
         result.MaxDrawdown = Sanitize(maxDd * inv);
+        result.DemandReturnCorr = Sanitize(dcorr * inv);
         return result;
     }
 
