@@ -147,6 +147,12 @@ public sealed class LocalAbmSettings
     public float baseDepth = 200f;
 
     /// <summary>
+    /// 在庫が板の厚みに与える影響の強さ。既定 0 = 影響なし。
+    /// 詳細は <see cref="OrderFlowPriceEngine.Depth"/> を参照。
+    /// </summary>
+    public float stockDepthWeight;
+
+    /// <summary>
     /// 同じ値を持つ複製を返す。キャリブレーションで設定を変異させる際、元を壊さないために使う。
     /// </summary>
     public LocalAbmSettings Clone()
@@ -169,6 +175,7 @@ public sealed class LocalAbmSettings
             impactExponent = impactExponent,
             lambda = lambda,
             baseDepth = baseDepth,
+            stockDepthWeight = stockDepthWeight,
         };
 
         if (archetypeWeights != null)
@@ -496,7 +503,7 @@ public sealed class LocalAbmMarket
         // これにより「人数を変えたとき分布の"形"（尖度）がどう変わるか」だけを取り出せる。
         netOrder /= Mathf.Sqrt(Mathf.Max(1, _traders.Count));
 
-        float depth = OrderFlowPriceEngine.Depth(view.Stock, view.Demand, Settings.baseDepth);
+        float depth = OrderFlowPriceEngine.Depth(view.Stock, view.Demand, Settings.baseDepth, Settings.stockDepthWeight);
         float rate = OrderFlowPriceEngine.ToPriceRate(netOrder, depth, Settings.lambda, OrderFlowPriceEngine.DefaultMaxLogMove, Settings.impactExponent);
 
         LastNetOrder = netOrder;

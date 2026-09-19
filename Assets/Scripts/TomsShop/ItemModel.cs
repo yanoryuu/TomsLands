@@ -299,6 +299,44 @@ public class ItemModel
     /// A1〜A5: 広告ステータス（Trust/Attention/Spread/Retention/Followers）連動
     /// status が null または各係数が 0 のとき、従来挙動と完全一致する。
     /// </summary>
+    // 価格変動エンジンは設定が変わるまで使い回す。
+    // ABM はトレーダー群を生成時に確定させるため、毎ターン作り直すと相場の連続性が失われる。
+    private IShopPriceEngine _priceEngine;
+    private bool _priceEngineIsAbm;
+
+    /// <summary>
+    /// 設定に応じた価格変動エンジンを返す。
+    /// useAbmPriceEngine が false、またはプリセット未設定なら従来挙動（Legacy）。
+    /// </summary>
+    private IShopPriceEngine ResolvePriceEngine(ShopEconomySettings settings)
+    {
+        bool wantAbm = settings.useAbmPriceEngine && settings.marketModelPreset != null;
+
+        if (_priceEngine != null && _priceEngineIsAbm == wantAbm)
+        {
+            return _priceEngine;
+        }
+
+        if (wantAbm)
+        {
+            int seed = settings.abmSeed != 0 ? settings.abmSeed : Random.Range(int.MinValue, int.MaxValue);
+            _priceEngine = new AbmShopPriceEngine(settings.marketModelPreset.abm, seed);
+            Debug.Log($"[ShopEconomy] 価格変動エンジン: ABM (seed={seed})");
+        }
+        else
+        {
+            _priceEngine = new LegacyShopPriceEngine();
+            if (settings.useAbmPriceEngine)
+            {
+                Debug.LogWarning("[ShopEconomy] useAbmPriceEngine が true ですが marketModelPreset が未設定のため、" +
+                                 "従来の価格変動（Legacy）で動作します。");
+            }
+        }
+
+        _priceEngineIsAbm = wantAbm;
+        return _priceEngine;
+    }
+
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
         float machineDemandFloorBonus = 0f)
     {
@@ -346,6 +384,12 @@ public class ItemModel
             settings.shopPriceFloorRate + settings.trustFloorBoost * trustN,
             settings.shopPriceCeilingRate);
 
+        // ------------------------------------------------
+        // Step 6: 価格変動エンジンの解決（設定が変わったときだけ作り直す）
+        // ------------------------------------------------
+        var engine = ResolvePriceEngine(settings);
+        engine.BeginTurn();
+
         foreach (var runtime in RuntimeItems)
         {
             var master = GetMasterItem(runtime.ItemId);
@@ -392,37 +436,13 @@ public class ItemModel
                 dynamicDemandFloor, settings.demandCeiling);
 
             // ------------------------------------------------
-            // 案S1 改: 需要連動型じわじわ価格変動 + Attention 上振れ増幅
-            //   閾値判定は従来通り。max 端のみ attentionFactor で乗算。
-            //   low 需要レンジは attentionAffectsLowDemand フラグで切替可能。
+            // 価格変動率は差し替え可能なエンジンへ委譲する。
+            //   既定 (LegacyShopPriceEngine) … 従来の需要帯ごとの一様乱数。挙動は完全に同一。
+            //   AbmShopPriceEngine          … 仮想トレーダーの注文フローから決める。
+            // Attention 増幅(A2) と Retention 安定化(A4) はどちらのエンジンでも適用される。
             // ------------------------------------------------
-            float s1Min, s1Max;
-            if (runtime.Demand.Value >= settings.highDemandThreshold)
-            {
-                s1Min = settings.highDemandPriceRateMin;
-                s1Max = settings.highDemandPriceRateMax * attentionFactor;
-            }
-            else if (runtime.Demand.Value <= settings.lowDemandThreshold)
-            {
-                s1Min = settings.lowDemandPriceRateMin;
-                s1Max = settings.attentionAffectsLowDemand
-                    ? settings.lowDemandPriceRateMax * attentionFactor
-                    : settings.lowDemandPriceRateMax;
-            }
-            else
-            {
-                s1Min = settings.normalDemandPriceRateMin;
-                s1Max = settings.normalDemandPriceRateMax * attentionFactor;
-            }
-            // 安全: Attention 増幅で min と max が逆転しないようガード
-            if (s1Max < s1Min) s1Max = s1Min;
-            float s1Rate = Random.Range(s1Min, s1Max);
-
-            // ------------------------------------------------
-            // 案A4: Retention 安定化 — S1 を 1.0 へ Lerp で寄せる
-            //   retentionStability=0 → s1 そのまま（従来挙動）
-            // ------------------------------------------------
-            s1Rate = Mathf.Lerp(s1Rate, 1f, retentionStability);
+            var context = new ShopPriceContext(runtime, master, settings, attentionFactor, retentionStability);
+            float s1Rate = engine.GetPriceRate(in context);
 
             int newPrice = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * s1Rate));
 

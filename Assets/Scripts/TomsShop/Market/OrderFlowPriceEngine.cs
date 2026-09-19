@@ -45,10 +45,25 @@ public static class OrderFlowPriceEngine
     }
 
     /// <summary>
-    /// 板の厚み。在庫が多く需要が高いほど値が動きにくい（＝流動性が厚い）。
+    /// 板の厚み。需要が高いほど流動性が厚く、値が動きにくい。
     /// </summary>
-    public static float Depth(int stock, float demand, float baseDepth)
+    /// <param name="stock">プレイヤーの在庫数。</param>
+    /// <param name="demand">需要（0〜1）。</param>
+    /// <param name="baseDepth">基準となる板の厚み。</param>
+    /// <param name="stockWeight">
+    /// 在庫が板の厚みに与える影響の強さ。既定 0 = 影響なし。
+    ///
+    /// 在庫を線形に掛けてはいけない: 在庫 0 と 99 で厚みが 100 倍変わり、
+    /// 「プレイヤーが仕入れるほどその銘柄の価格が凍る」という不自然な挙動になる。
+    /// 相場はプレイヤーの手持ちではなく市場の需要で決まるべきなので、既定では無効。
+    /// 効かせたい場合も対数で緩やかに効かせる。
+    /// </param>
+    public static float Depth(int stock, float demand, float baseDepth, float stockWeight = 0f)
     {
-        return baseDepth * (1f + stock) * Mathf.Max(0.1f, demand);
+        float stockTerm = stockWeight > 0f
+            ? 1f + stockWeight * Mathf.Log(1f + Mathf.Max(0, stock))
+            : 1f;
+
+        return baseDepth * stockTerm * Mathf.Max(0.1f, demand);
     }
 }

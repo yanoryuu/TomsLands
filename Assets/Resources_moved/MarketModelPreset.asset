@@ -15,41 +15,42 @@ MonoBehaviour:
   abm:
     traderCount: 30
     archetypeWeights:
-    - 0.3564751
-    - 0.40781298
-    - 0.011895863
-    - 0.010457846
-    - 0.20290028
-    - 0.010457846
-    capitalParetoAlpha: 2.8086793
+    - 0.009711808
+    - 0.15019122
+    - 0.19095294
+    - 0.07757552
+    - 0.43917915
+    - 0.13238935
+    capitalParetoAlpha: 2.8549497
     capitalMin: 30
     capitalMax: 2000
-    momentumGain: 14.105175
-    valueGain: 10.990415
-    demandGain: 5.6706266
-    marketMakerGain: 6.4312077
-    herdingGain: 0.25214294
-    inactionBandMax: 0.94589454
-    switchingIntensity: 7.585346
-    switchingMemory: 2
+    momentumGain: 28.600634
+    valueGain: 11.019956
+    demandGain: 15.877964
+    marketMakerGain: 10.832252
+    herdingGain: 0
+    inactionBandMax: 0.7629893
+    switchingIntensity: 13.136921
+    switchingMemory: 12
     signalCap: 1
-    impactExponent: 1.2599038
-    lambda: 0.6091426
-    baseDepth: 672.9102
+    impactExponent: 1.1272378
+    lambda: 0.5848919
+    baseDepth: 859.29803
+    stockDepthWeight: 0
   targetKurtosis: 3.95
   targetAbsAutocorr1: 0.3
   targetAutocorr1: 0.15
   targetStdDev: 0.0145
-  achievedKurtosis: 4.0130606
-  achievedAbsAutocorr1: 0.1600051
-  achievedAutocorr1: 0.21508425
-  achievedStdDev: 0.014417939
-  loss: 0.9424
-  calibratedAt: 2026-09-19 20:09
+  achievedKurtosis: 4.495154
+  achievedAbsAutocorr1: 0.25188094
+  achievedAutocorr1: 0.1627632
+  achievedStdDev: 0.016692521
+  loss: 0.2591
+  calibratedAt: 2026-09-19 21:01
   referenceNote: "Jev \u304A\u624B\u672C(\u69CB\u6210B/lambda=0.12/60T\xD78\u9298\u67C4\xD74\u30B7\u30FC\u30C9,
-    n=1920): sigma=0.0180 kurt=3.95 absacf1=0.618 racf1=0.450\u3002racf1 \u306F 0.15
-    \u3078\u610F\u56F3\u7684\u306B\u4E0B\u3052\u3066\u3044\u308B\uFF080.45 \u306E\u307E\u307E\u3060\u306840\u30BF\u30FC\u30F3\u7D1A\u306E\u4E00\u65B9\u901A\u884C\u306B\u306A\u308A\u4E0A\u4E0B\u9650\u3078\u5F35\u308A\u4ED8\u304F\u305F\u3081\uFF09\u3002\u5C16\u5EA6\u304C
-    2 \u524D\u5F8C\u3067\u982D\u6253\u3061\u3060\u3063\u305F\u539F\u56E0\u306F\u4FA1\u683C\u30A4\u30F3\u30D1\u30AF\u30C8\u306E\u5E73\u65B9\u6839\u5247\u3002\u6307\u6570\u3092
-    1.26 \u3078\u4E0A\u3052\u3066\u89E3\u6C7A\u3057\u305F\u3002valueGain \u306B\u306F\u4E0B\u96502.0\u3001\u6700\u5927DD\u306B\u306F\u7247\u5074\u30DA\u30CA\u30EB\u30C6\u30A3\u3092\u8AB2\u3057\u3066\u3044\u308B\u3002\u691C\u8A3C:
-    60/120/200/400\u30BF\u30FC\u30F3\xD74\u30B7\u30FC\u30C9\u3067\u4E0A\u4E0B\u9650\u3078\u306E\u5F35\u308A\u4ED8\u304D
-    0/32\u3002200T\u3067 kurt 4.01\u3001400T\u3067 4.05\u3002"
+    n=1920)\u3092\u57FA\u6E96\u306B\u3001racf1 \u306E\u307F 0.15 \u3078\u610F\u56F3\u7684\u306B\u4E0B\u3052\u305F\u76EE\u6A19\u3067\u5408\u308F\u305B\u8FBC\u307F\u3002\u5C16\u5EA6\u306E\u5929\u4E95\uFF082\u524D\u5F8C\uFF09\u306E\u539F\u56E0\u306F\u4FA1\u683C\u30A4\u30F3\u30D1\u30AF\u30C8\u306E\u5E73\u65B9\u6839\u5247\u3067\u3001\u6307\u6570\u3092
+    1.13 \u3078\u4E0A\u3052\u3066\u89E3\u6C7A\u3002\u677F\u306E\u539A\u307F\u306F\u5728\u5EAB\u306B\u4F9D\u5B58\u3055\u305B\u306A\u3044\uFF08stockDepthWeight=0\uFF09:
+    \u7DDA\u5F62\u306B\u52B9\u304B\u305B\u308B\u3068\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u4ED5\u5165\u308C\u308B\u307B\u3069\u4FA1\u683C\u304C\u51CD\u308B\u3002\u691C\u8A3C:
+    \u5728\u5EAB0/5/50/99\u3067\u7D71\u8A08\u91CF\u307B\u307C\u4E0D\u5909\u300160/120/200/400\u30BF\u30FC\u30F3\xD74\u30B7\u30FC\u30C9\u3067\u4E0A\u4E0B\u9650\u3078\u306E\u5F35\u308A\u4ED8\u304D
+    0/32\u3002200T: kurt 4.50 absacf1 0.252 racf1 0.163 maxDD 13.3% / 400T: kurt
+    4.55\u3002"

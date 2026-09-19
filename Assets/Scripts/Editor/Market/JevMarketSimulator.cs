@@ -585,7 +585,7 @@ public sealed class JevMarketSimulator : EditorWindow
             {
                 float net = netOrders.TryGetValue(item.Id, out var v) ? v : 0f;
                 item.LastNet = net;
-                float depth = OrderFlowPriceEngine.Depth(item.StockValue, item.DemandValue, _abm.baseDepth);
+                float depth = OrderFlowPriceEngine.Depth(item.StockValue, item.DemandValue, _abm.baseDepth, _abm.stockDepthWeight);
                 ApplyPrice(item, OrderFlowPriceEngine.ToPriceRate(net, depth, _abm.lambda));
             }
 

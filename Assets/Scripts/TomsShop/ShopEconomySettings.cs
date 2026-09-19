@@ -7,6 +7,19 @@
 [CreateAssetMenu(fileName = "ShopEconomySettings", menuName = "ScriptableObjects/ShopEconomySettings")]
 public class ShopEconomySettings : ScriptableObject
 {
+    [Header("価格変動エンジンの選択")]
+    [Tooltip("true にすると価格変動を ABM（仮想トレーダーの注文フロー）で決める。\n" +
+             "false（既定）なら従来の需要帯ごとの一様乱数で、挙動は完全に従来どおり。\n" +
+             "有効にするには marketModelPreset の設定も必要（未設定なら従来挙動へフォールバック）。")]
+    public bool useAbmPriceEngine;
+
+    [Tooltip("ABM のキャリブレーション済みパラメータ。useAbmPriceEngine が true のときだけ使う。\n" +
+             "Assets/Resources_moved/MarketModelPreset.asset")]
+    public MarketModelPreset marketModelPreset;
+
+    [Tooltip("ABM の乱数シード。0 ならプレイごとに変わる。固定すると毎回同じ相場になる。")]
+    public int abmSeed;
+
     [Header("案S1: 需要連動型じわじわ価格変動")]
     [Tooltip("人気商品（Demand≥この値）の毎ターン価格上昇率（例: 1.02 = 2%UP）")]
     public float highDemandThreshold = 0.7f;
