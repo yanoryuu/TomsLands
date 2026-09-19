@@ -56,6 +56,8 @@ public sealed class JevMarketSimulator : EditorWindow
     [SerializeField] private bool _runJev;
     [SerializeField] private int _jevTraderCount = 30;
     [SerializeField] private LocalAbmSettings _abm = new LocalAbmSettings();
+    [SerializeField] private MarketModelPreset _preset;
+    [SerializeField] private int _calibrationIterations = 400;
 
     private Vector2 _scroll;
     private int _chartItemIndex;
@@ -207,6 +209,103 @@ public sealed class JevMarketSimulator : EditorWindow
         }
 
         EditorGUILayout.LabelField("状態", _status);
+        EditorGUILayout.Space();
+        DrawCalibration();
+    }
+
+    // ============================================================
+    // キャリブレーション（Jev のお手本統計量へ ABM を合わせ込む）
+    // ============================================================
+    private void DrawCalibration()
+    {
+        EditorGUILayout.LabelField("キャリブレーション", EditorStyles.boldLabel);
+        _preset = (MarketModelPreset)EditorGUILayout.ObjectField(
+            "プリセット", _preset, typeof(MarketModelPreset), false);
+
+        using (new EditorGUI.DisabledScope(_running || _preset == null))
+        {
+            _calibrationIterations = EditorGUILayout.IntSlider("試行回数", _calibrationIterations, 50, 2000);
+            if (GUILayout.Button("プリセットの目標値へ ABM を合わせ込む", GUILayout.Height(24)))
+            {
+                RunCalibration();
+            }
+
+            // 直近の Jev 実行結果を「お手本」としてプリセットの目標値へ取り込む
+            var jevRun = _results.Find(r => r.Label == "Jev");
+            using (new EditorGUI.DisabledScope(jevRun == null))
+            {
+                if (GUILayout.Button("直近の Jev 結果を目標値に設定"))
+                {
+                    Undo.RecordObject(_preset, "Set Calibration Target");
+                    _preset.targetKurtosis = jevRun.Stats.Kurtosis;
+                    _preset.targetAbsAutocorr1 = jevRun.Stats.AbsReturnAutocorr1;
+                    _preset.targetAutocorr1 = jevRun.Stats.ReturnAutocorr1;
+                    _preset.targetStdDev = jevRun.Stats.StdDevReturn;
+                    _preset.referenceNote =
+                        $"Jev 参照ラン: {_turns}ターン×{_itemCount}銘柄 / トレーダー{_jevTraderCount}人 / " +
+                        $"lambda={_abm.lambda} / seed={_seed}";
+                    EditorUtility.SetDirty(_preset);
+                    AssetDatabase.SaveAssets();
+                    _status = "目標値を Jev の実測値で更新しました: " + jevRun.Stats;
+                }
+            }
+        }
+
+        if (_preset == null)
+        {
+            EditorGUILayout.HelpBox(
+                "MarketModelPreset アセットを作成して割り当ててください。\n" +
+                "Project ビューで右クリック → Create → ScriptableObjects → Market → MarketModelPreset",
+                MessageType.Info);
+        }
+    }
+
+    private void RunCalibration()
+    {
+        _running = true;
+        try
+        {
+            var target = new AbmCalibrationTarget
+            {
+                Kurtosis = _preset.targetKurtosis,
+                AbsReturnAutocorr1 = _preset.targetAbsAutocorr1,
+                ReturnAutocorr1 = _preset.targetAutocorr1,
+                StdDevReturn = _preset.targetStdDev,
+            };
+
+            var result = AbmCalibrator.Fit(
+                target, _preset.abm, _calibrationIterations,
+                turns: Mathf.Max(150, _turns), itemCount: _itemCount, seed: _seed,
+                onProgress: (i, total, loss) =>
+                {
+                    if (i % 25 != 0 && i != total) return;
+                    EditorUtility.DisplayProgressBar(
+                        "ABM キャリブレーション",
+                        $"{i}/{total}  最良Loss={loss:F3}", i / (float)total);
+                });
+
+            Undo.RecordObject(_preset, "Calibrate Market Model");
+            _preset.abm = result.Best;
+            _preset.RecordResult(result.Stats, result.Loss,
+                DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
+            EditorUtility.SetDirty(_preset);
+            AssetDatabase.SaveAssets();
+
+            _abm = result.Best.Clone();
+            _status = $"キャリブレーション完了: Loss {result.InitialLoss:F3} → {result.Loss:F3} / {result.Stats}";
+            Debug.Log($"[Calibration] 開始時: {result.InitialStats}\n[Calibration] 完了時: {result.Stats}");
+        }
+        catch (Exception ex)
+        {
+            _status = "エラー: " + ex.Message;
+            Debug.LogException(ex);
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
+            _running = false;
+            Repaint();
+        }
     }
 
     // ============================================================
