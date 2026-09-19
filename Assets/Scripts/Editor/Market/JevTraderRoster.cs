@@ -105,27 +105,26 @@ public static class JevTraderRoster
     /// <param name="paretoAlpha">パレート指数。小さいほど資金が大口へ集中する。</param>
     /// <param name="capitalMin">資金の最小値。</param>
     /// <param name="capitalMax">資金の上限（外れ値クランプ）。</param>
+    /// <summary>
+    /// 既定のペルソナ比率。要素順は <see cref="TraderArchetype"/> の定義順。
+    /// ローカルABM の archetypeWeights 既定値と揃えてある。
+    /// </summary>
+    public static readonly float[] DefaultArchetypeWeights = { 0.27f, 0.20f, 0.13f, 0.13f, 0.27f };
+
     public static List<JevTraderPersona> CreateDefault(
         int traderCount = 30, int seed = 12345,
-        float paretoAlpha = 1.3f, float capitalMin = 30f, float capitalMax = 2000f)
+        float paretoAlpha = 1.3f, float capitalMin = 30f, float capitalMax = 2000f,
+        float[] archetypeWeights = null)
     {
         traderCount = Mathf.Max(1, traderCount);
         var rng = new System.Random(seed);
 
-        // ローカルABM の archetypeWeights 既定値と同じ比率
-        var mix = new[]
-        {
-            TraderArchetype.Momentum, TraderArchetype.Momentum, TraderArchetype.Momentum,
-            TraderArchetype.Contrarian, TraderArchetype.Contrarian,
-            TraderArchetype.DemandWatcher,
-            TraderArchetype.MarketMaker,
-            TraderArchetype.Noise, TraderArchetype.Noise, TraderArchetype.Noise,
-        };
+        var archetypes = BuildArchetypeSequence(archetypeWeights, traderCount);
 
         var list = new List<JevTraderPersona>(traderCount);
         for (int i = 0; i < traderCount; i++)
         {
-            var archetype = mix[i % mix.Length];
+            var archetype = archetypes[i];
 
             // パレート分布: capital = min / u^(1/alpha)
             double u = rng.NextDouble();
@@ -144,6 +143,51 @@ public static class JevTraderRoster
             });
         }
         return list;
+    }
+
+    /// <summary>
+    /// 人数比から、各トレーダーへ割り当てる性格の並びを作る。
+    /// 丸め誤差は最後の性格で吸収し、必ず traderCount 人ちょうどになるようにする。
+    /// weights が null / 長さ不一致 / 合計 0 以下なら既定比率へフォールバックする。
+    /// </summary>
+    private static TraderArchetype[] BuildArchetypeSequence(float[] weights, int traderCount)
+    {
+        int kinds = System.Enum.GetValues(typeof(TraderArchetype)).Length;
+
+        float total = 0f;
+        if (weights != null && weights.Length == kinds)
+        {
+            foreach (var w in weights) total += Mathf.Max(0f, w);
+        }
+        if (total <= 0f)
+        {
+            weights = DefaultArchetypeWeights;
+            total = 0f;
+            foreach (var w in weights) total += w;
+        }
+
+        var counts = new int[kinds];
+        int assigned = 0;
+        for (int i = 0; i < kinds - 1; i++)
+        {
+            counts[i] = Mathf.FloorToInt(traderCount * Mathf.Max(0f, weights[i]) / total);
+            assigned += counts[i];
+        }
+        counts[kinds - 1] = Mathf.Max(0, traderCount - assigned);
+
+        var sequence = new TraderArchetype[traderCount];
+        int index = 0;
+        for (int i = 0; i < kinds; i++)
+        {
+            for (int n = 0; n < counts[i] && index < traderCount; n++)
+            {
+                sequence[index++] = (TraderArchetype)i;
+            }
+        }
+        // 端数で埋まらなかった分（理論上発生しないが保険）
+        while (index < traderCount) sequence[index++] = TraderArchetype.Noise;
+
+        return sequence;
     }
 
     private const string PickSuffix =
