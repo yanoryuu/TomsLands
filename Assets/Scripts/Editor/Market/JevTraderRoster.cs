@@ -109,7 +109,7 @@ public static class JevTraderRoster
     /// 既定のペルソナ比率。要素順は <see cref="TraderArchetype"/> の定義順。
     /// ローカルABM の archetypeWeights 既定値と揃えてある。
     /// </summary>
-    public static readonly float[] DefaultArchetypeWeights = { 0.27f, 0.20f, 0.13f, 0.13f, 0.27f };
+    public static readonly float[] DefaultArchetypeWeights = { 0.27f, 0.20f, 0.13f, 0.13f, 0.27f, 0f };
 
     public static List<JevTraderPersona> CreateDefault(
         int traderCount = 30, int seed = 12345,
@@ -166,14 +166,19 @@ public static class JevTraderRoster
             foreach (var w in weights) total += w;
         }
 
+        // 丸め誤差の余りは Noise が吸収する。
+        // 末尾（Switcher）に吸わせると、Jev 側に指示文を持たない性格が混ざってしまう
+        // ——Switcher はローカルABM 専用の機構で、お手本を作る Jev では使わない。
+        const int absorber = (int)TraderArchetype.Noise;
         var counts = new int[kinds];
         int assigned = 0;
-        for (int i = 0; i < kinds - 1; i++)
+        for (int i = 0; i < kinds; i++)
         {
+            if (i == absorber) continue;
             counts[i] = Mathf.FloorToInt(traderCount * Mathf.Max(0f, weights[i]) / total);
             assigned += counts[i];
         }
-        counts[kinds - 1] = Mathf.Max(0, traderCount - assigned);
+        counts[absorber] = Mathf.Max(0, traderCount - assigned);
 
         var sequence = new TraderArchetype[traderCount];
         int index = 0;

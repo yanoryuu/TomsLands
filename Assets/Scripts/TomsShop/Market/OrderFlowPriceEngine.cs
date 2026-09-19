@@ -23,11 +23,23 @@ public static class OrderFlowPriceEngine
     /// <param name="depth">板の厚み。大きいほど値が動きにくい。</param>
     /// <param name="lambda">インパクト係数。大きいほどボラティリティが上がる。</param>
     /// <param name="maxLogMove">1ターンの対数変化幅の上限。</param>
+    /// <param name="exponent">
+    /// インパクトの指数。0.5 が平方根則（実市場の大口執行で観測される形）。
+    ///
+    /// ただし平方根は大きな注文ほど価格変化を圧縮するため、注文フローが正規分布に
+    /// 近いとリターン分布は正規分布より<b>テールの細い</b>形になる（尖度が 2 前後に落ちる）。
+    /// ファットテールが欲しい場合は 1.0（線形）に近づける。
+    /// </param>
     public static float ToPriceRate(float netOrder, float depth, float lambda,
-        float maxLogMove = DefaultMaxLogMove)
+        float maxLogMove = DefaultMaxLogMove, float exponent = 0.5f)
     {
         float safeDepth = Mathf.Max(1f, depth);
-        float impact = lambda * Mathf.Sign(netOrder) * Mathf.Sqrt(Mathf.Abs(netOrder) / safeDepth);
+        float normalized = Mathf.Abs(netOrder) / safeDepth;
+        float magnitude = Mathf.Approximately(exponent, 0.5f)
+            ? Mathf.Sqrt(normalized)
+            : Mathf.Pow(normalized, Mathf.Clamp(exponent, 0.1f, 2f));
+
+        float impact = lambda * Mathf.Sign(netOrder) * magnitude;
         impact = Mathf.Clamp(impact, -maxLogMove, maxLogMove);
         return Mathf.Exp(impact);
     }

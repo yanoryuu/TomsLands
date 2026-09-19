@@ -21,6 +21,18 @@ public enum TraderArchetype
 
     /// <summary>ノイズ。気分で売買する。地の揺らぎを作る。</summary>
     Noise,
+
+    /// <summary>
+    /// 戦略スイッチャー。順張りと逆張りを「直近どちらが儲かったか」で切り替える。
+    ///
+    /// 固定比率のモデルでは、逆張りアンカーを強くすると安定する代わりにテールが細り、
+    /// 弱くすると暴れる代わりに上下限まで走る、というトレードオフから逃げられない。
+    /// スイッチャーは<b>アンカーの強さを状況依存にする</b>ことでこれを解く:
+    /// トレンドが儲かっている間は順張りへ傾いて値動きが伸び（＝ファットテール）、
+    /// 基準価格から離れて逆張りが儲かり始めると一斉に逆張りへ傾いて引き戻される。
+    /// 一斉に傾く性質が「荒れる時期と凪の時期」＝ボラティリティ・クラスタリングを生む。
+    /// </summary>
+    Switcher,
 }
 
 /// <summary>
@@ -59,8 +71,11 @@ public sealed class LocalAbmSettings
     /// <summary>トレーダー総数。</summary>
     public int traderCount = 30;
 
-    /// <summary>各アーキタイプの人数比。要素順は TraderArchetype の定義順（5要素）。</summary>
-    public float[] archetypeWeights = { 0.27f, 0.20f, 0.13f, 0.13f, 0.27f };
+    /// <summary>
+    /// 各アーキタイプの人数比。要素順は TraderArchetype の定義順。
+    /// 5要素（Switcher 追加前のセーブ）を渡した場合は Switcher=0 として扱う。
+    /// </summary>
+    public float[] archetypeWeights = { 0.27f, 0.20f, 0.13f, 0.13f, 0.27f, 0f };
 
     /// <summary>資金分布のパレート指数。小さいほど少数の大口に資金が集中し、ファットテールが強くなる。</summary>
     public float capitalParetoAlpha = 1.3f;
@@ -93,6 +108,38 @@ public sealed class LocalAbmSettings
     /// </summary>
     public float inactionBandMax = 0.85f;
 
+    /// <summary>
+    /// 戦略スイッチングの強さ（ロジットの逆温度 β）。
+    /// 0 で切り替えなし（Switcher は順張りと逆張りの 50:50 固定ブレンドになる）。
+    /// 大きいほど「直近儲かっていた方」へ極端に寄り、群れとしての鞍替えが起きやすい。
+    /// 想定レンジ: 0〜60
+    /// </summary>
+    public float switchingIntensity = 0f;
+
+    /// <summary>
+    /// 戦略の成績を評価する期間（ターン数）。短いと目まぐるしく鞍替えし、長いと粘る。
+    /// 想定レンジ: 2〜12
+    /// </summary>
+    public int switchingMemory = 5;
+
+    /// <summary>
+    /// 1人あたりの注文量の上限（資金に対する倍率）。
+    ///
+    /// 1.0 だと、強いシグナルを持つトレーダーは全員この上限に張り付く。
+    /// その結果 netOrder は「±資金の合計」という有界な和になり、中心極限定理で
+    /// 分布が正規化してファットテールが出せなくなる（尖度が 2 前後で頭打ちになる）。
+    /// 値を上げると、確信度の高い局面だけ突出した注文が出てテールが太る。
+    /// 想定レンジ: 1〜20
+    /// </summary>
+    public float signalCap = 1f;
+
+    /// <summary>
+    /// 価格インパクトの指数。0.5 = 平方根則、1.0 = 線形。
+    /// 平方根は大口注文の価格変化を圧縮するため、尖度が正規分布より下（2前後）に張り付く。
+    /// 想定レンジ: 0.5〜1.2
+    /// </summary>
+    public float impactExponent = 0.5f;
+
     /// <summary>価格インパクト係数。大きいほどボラが上がる。</summary>
     public float lambda = 0.03f;
 
@@ -116,6 +163,10 @@ public sealed class LocalAbmSettings
             marketMakerGain = marketMakerGain,
             herdingGain = herdingGain,
             inactionBandMax = inactionBandMax,
+            switchingIntensity = switchingIntensity,
+            switchingMemory = switchingMemory,
+            signalCap = signalCap,
+            impactExponent = impactExponent,
             lambda = lambda,
             baseDepth = baseDepth,
         };
@@ -208,6 +259,17 @@ public sealed class MarketTrader
                 signal = rng != null ? (float)(rng.NextDouble() * 2.0 - 1.0) : 0f;
                 break;
 
+            case TraderArchetype.Switcher:
+            {
+                // 順張りと逆張りを、直近どちらが儲かったかで重み付けてブレンドする。
+                float w = MomentumWeight(view, settings);
+                float momentum = RecentReturn(view, Memory) * settings.momentumGain;
+                float gapNow = (view.CurrentPrice / Mathf.Max(1f, view.BasePrice)) - 1f;
+                float value = -gapNow * settings.valueGain;
+                signal = w * momentum + (1f - w) * value;
+                break;
+            }
+
             default:
                 signal = 0f;
                 break;
@@ -225,7 +287,8 @@ public sealed class MarketTrader
             return 0f;
         }
 
-        float order = Capital * Aggressiveness * Mathf.Clamp(signal, -1f, 1f);
+        float cap = Mathf.Max(0.01f, settings.signalCap);
+        float order = Capital * Aggressiveness * Mathf.Clamp(signal, -cap, cap);
 
         // 群衆行動：ノイズ勢以外は前ターンの純注文に引きずられる。
         if (Archetype != TraderArchetype.Noise && settings.herdingGain != 0f)
@@ -241,6 +304,66 @@ public sealed class MarketTrader
     /// 直近リターン。価格履歴の末尾（最新）と、そこから memory 本さかのぼった価格を比較する。
     /// 履歴が足りない場合や過去価格が 0 以下の場合は 0 を返す。
     /// </summary>
+    /// <summary>
+    /// 順張り戦略に置く重み（0〜1）。直近 switchingMemory ターンの成績から決める。
+    ///
+    /// 各ターンの成績は「その戦略が前ターンに取ったであろう向き × 実際に起きたリターン」:
+    ///   順張り … 前ターンの値動きが続くほうに賭ける → payoff = sign(r[t-1]) * r[t]
+    ///   逆張り … 基準価格へ戻るほうに賭ける         → payoff = -sign(gap[t-1]) * r[t]
+    /// これをロジット（逆温度 β = switchingIntensity）に通して重みにする。
+    ///
+    /// 状態を持たず価格履歴だけから計算するので、銘柄ごとの状態管理が要らず、
+    /// シード再現性もそのまま保たれる。
+    /// </summary>
+    private static float MomentumWeight(IMarketView view, LocalAbmSettings settings)
+    {
+        if (settings.switchingIntensity <= 0f)
+        {
+            return 0.5f; // 切り替えなし: 順張りと逆張りの中立ブレンド
+        }
+
+        var history = view.PriceHistory;
+        if (history == null || history.Count < 3)
+        {
+            return 0.5f;
+        }
+
+        float basePrice = Mathf.Max(1f, view.BasePrice);
+        int window = Mathf.Clamp(settings.switchingMemory, 1, 32);
+        int last = history.Count - 1;
+
+        float momentumPayoff = 0f, valuePayoff = 0f;
+        int samples = 0;
+
+        // t は「リターンが観測されたターン」。その1つ前の状態から各戦略の向きを決める。
+        for (int t = last; t > 1 && samples < window; t--)
+        {
+            float prev = history[t - 1], curr = history[t], prev2 = history[t - 2];
+            if (prev <= 0f || prev2 <= 0f) continue;
+
+            float r = (curr / prev) - 1f;                  // 実際に起きたリターン
+            float rPrev = (prev / prev2) - 1f;             // 前ターンのリターン（順張りの根拠）
+            float gapPrev = (prev / basePrice) - 1f;       // 前ターンの乖離（逆張りの根拠）
+
+            momentumPayoff += Mathf.Sign(rPrev) * r;
+            valuePayoff += -Mathf.Sign(gapPrev) * r;
+            samples++;
+        }
+
+        if (samples == 0)
+        {
+            return 0.5f;
+        }
+
+        momentumPayoff /= samples;
+        valuePayoff /= samples;
+
+        float x = settings.switchingIntensity * (momentumPayoff - valuePayoff);
+        x = Mathf.Clamp(x, -30f, 30f); // exp のオーバーフロー防止
+        float w = 1f / (1f + Mathf.Exp(-x));
+        return SanitizeFloat(w, 0.5f);
+    }
+
     private static float RecentReturn(IMarketView view, int memory)
     {
         var history = view.PriceHistory;
@@ -374,7 +497,7 @@ public sealed class LocalAbmMarket
         netOrder /= Mathf.Sqrt(Mathf.Max(1, _traders.Count));
 
         float depth = OrderFlowPriceEngine.Depth(view.Stock, view.Demand, Settings.baseDepth);
-        float rate = OrderFlowPriceEngine.ToPriceRate(netOrder, depth, Settings.lambda);
+        float rate = OrderFlowPriceEngine.ToPriceRate(netOrder, depth, Settings.lambda, OrderFlowPriceEngine.DefaultMaxLogMove, Settings.impactExponent);
 
         LastNetOrder = netOrder;
 
@@ -393,6 +516,15 @@ public sealed class LocalAbmMarket
     private static int[] BuildArchetypeCounts(float[] weights, int archetypeCount, int traderCount)
     {
         var counts = new int[archetypeCount];
+
+        // Switcher 追加前（5要素）のセーブデータ互換: 足りない分は 0 で埋める。
+        // ここで弾いて均等割りへフォールバックすると、保存済みプリセットの挙動が静かに変わってしまう。
+        if (weights != null && weights.Length < archetypeCount)
+        {
+            var padded = new float[archetypeCount];
+            Array.Copy(weights, padded, weights.Length);
+            weights = padded;
+        }
 
         bool usable = weights != null && weights.Length == archetypeCount;
         float total = 0f;
@@ -414,9 +546,19 @@ public sealed class LocalAbmMarket
             }
         }
 
+        // 丸め誤差の余りは Noise が吸収する。
+        // 末尾（Switcher）に吸わせてはいけない: 比率 0 を指定した設定にもスイッチャーが
+        // 混入してしまい、Switcher 追加前に保存したプリセットの挙動が静かに変わる。
+        int absorber = Mathf.Min((int)TraderArchetype.Noise, archetypeCount - 1);
+
         int assigned = 0;
-        for (int i = 0; i < archetypeCount - 1; i++)
+        for (int i = 0; i < archetypeCount; i++)
         {
+            if (i == absorber)
+            {
+                continue;
+            }
+
             float ratio = usable ? Mathf.Max(0f, weights[i]) / total : 1f / archetypeCount;
             int c = Mathf.FloorToInt(traderCount * ratio);
             if (c < 0)
@@ -431,8 +573,7 @@ public sealed class LocalAbmMarket
             assigned += c;
         }
 
-        // 丸め誤差の余りは最後のアーキタイプで吸収し、合計を traderCount に揃える。
-        counts[archetypeCount - 1] = traderCount - assigned;
+        counts[absorber] = traderCount - assigned;
         return counts;
     }
 }

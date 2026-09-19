@@ -100,6 +100,15 @@ public sealed class AbmSearchBounds
     public Vector2 MarketMakerGain = new Vector2(0f, 20f);
     public Vector2 HerdingGain = new Vector2(0f, 1f);
     public Vector2 InactionBandMax = new Vector2(0f, 0.99f);
+
+    /// <summary>戦略スイッチングの強さ（ロジットの逆温度 β）。0 で切り替えなし。</summary>
+    public Vector2 SwitchingIntensity = new Vector2(0f, 60f);
+
+    /// <summary>戦略の成績を評価する期間（ターン）。</summary>
+    public Vector2 SwitchingMemory = new Vector2(2f, 12f);
+
+    /// <summary>価格インパクトの指数。0.5=平方根則、1.0=線形。上げるほどテールが太る。</summary>
+    public Vector2 ImpactExponent = new Vector2(0.5f, 1.3f);
     public Vector2 Lambda = new Vector2(0.002f, 0.6f);
     public Vector2 BaseDepth = new Vector2(20f, 2000f);
     public Vector2 CapitalParetoAlpha = new Vector2(0.6f, 3f);
@@ -116,6 +125,9 @@ public sealed class AbmSearchBounds
         s.marketMakerGain = Mathf.Clamp(s.marketMakerGain, MarketMakerGain.x, MarketMakerGain.y);
         s.herdingGain = Mathf.Clamp(s.herdingGain, HerdingGain.x, HerdingGain.y);
         s.inactionBandMax = Mathf.Clamp(s.inactionBandMax, InactionBandMax.x, InactionBandMax.y);
+        s.switchingIntensity = Mathf.Clamp(s.switchingIntensity, SwitchingIntensity.x, SwitchingIntensity.y);
+        s.switchingMemory = Mathf.RoundToInt(Mathf.Clamp(s.switchingMemory, SwitchingMemory.x, SwitchingMemory.y));
+        s.impactExponent = Mathf.Clamp(s.impactExponent, ImpactExponent.x, ImpactExponent.y);
         s.lambda = Mathf.Clamp(s.lambda, Lambda.x, Lambda.y);
         s.baseDepth = Mathf.Clamp(s.baseDepth, BaseDepth.x, BaseDepth.y);
         s.capitalParetoAlpha = Mathf.Clamp(s.capitalParetoAlpha, CapitalParetoAlpha.x, CapitalParetoAlpha.y);
@@ -155,6 +167,21 @@ public static class AbmCalibrator
 
         var rng = new System.Random(seed);
         var current = (start ?? new LocalAbmSettings()).Clone();
+
+        // Switcher 追加前に保存された設定（5要素）は、そのままだと探索対象から
+        // Switcher が漏れてしまう。列挙子の数まで 0 で埋めてから探索を始める。
+        int kinds = Enum.GetValues(typeof(TraderArchetype)).Length;
+        if (current.archetypeWeights == null || current.archetypeWeights.Length != kinds)
+        {
+            var padded = new float[kinds];
+            if (current.archetypeWeights != null)
+            {
+                Array.Copy(current.archetypeWeights, padded,
+                    Mathf.Min(current.archetypeWeights.Length, kinds));
+            }
+            current.archetypeWeights = padded;
+        }
+
         bounds.Clamp(current);
 
         var currentStats = Evaluate(current, turns, itemCount, seed);
@@ -212,6 +239,10 @@ public static class AbmCalibrator
         s.marketMakerGain = Jitter(s.marketMakerGain, b.MarketMakerGain.x, b.MarketMakerGain.y, rng, temperature);
         s.herdingGain = Jitter(s.herdingGain, b.HerdingGain.x, b.HerdingGain.y, rng, temperature);
         s.inactionBandMax = Jitter(s.inactionBandMax, b.InactionBandMax.x, b.InactionBandMax.y, rng, temperature);
+        s.switchingIntensity = Jitter(s.switchingIntensity, b.SwitchingIntensity.x, b.SwitchingIntensity.y, rng, temperature);
+        s.switchingMemory = Mathf.RoundToInt(
+            Jitter(s.switchingMemory, b.SwitchingMemory.x, b.SwitchingMemory.y, rng, temperature));
+        s.impactExponent = Jitter(s.impactExponent, b.ImpactExponent.x, b.ImpactExponent.y, rng, temperature);
         s.lambda = Jitter(s.lambda, b.Lambda.x, b.Lambda.y, rng, temperature);
         s.baseDepth = Jitter(s.baseDepth, b.BaseDepth.x, b.BaseDepth.y, rng, temperature);
         s.capitalParetoAlpha = Jitter(s.capitalParetoAlpha, b.CapitalParetoAlpha.x, b.CapitalParetoAlpha.y, rng, temperature);
