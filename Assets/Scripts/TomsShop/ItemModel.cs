@@ -305,6 +305,12 @@ public class ItemModel
     private bool _priceEngineIsAbm;
 
     /// <summary>
+    /// 次回のターン経済更新でエンジンを作り直させる。
+    /// ABM のパラメータを実行中に変えた場合（デバッグメニュー等）に呼ぶ。
+    /// </summary>
+    public void InvalidatePriceEngine() => _priceEngine = null;
+
+    /// <summary>
     /// 設定に応じた価格変動エンジンを返す。
     /// useAbmPriceEngine が false、またはプリセット未設定なら従来挙動（Legacy）。
     /// </summary>

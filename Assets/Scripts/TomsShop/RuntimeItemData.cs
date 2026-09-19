@@ -136,7 +136,8 @@ public class RuntimeItemData
         float demand = 0.5f,
         string description = "",
         float salesRate = 1.0f,
-        int dividendPerTurn = 0)
+        int dividendPerTurn = 0,
+        float? initialTrend = null)
     {
         ItemId = itemId;
         ItemName = itemName;
@@ -157,7 +158,11 @@ public class RuntimeItemData
         DividendPerTurn = dividendPerTurn;
         PreviousDemand = demand;
         PreviousPrice = currentPrice;
-        Trend = UnityEngine.Random.Range(-0.5f, 0.5f);
+
+        // 流行度は通常ランダムに散らす。
+        // initialTrend を渡した場合は UnityEngine.Random を触らないので、
+        // メインスレッド外（キャリブレーションのバックグラウンド探索など）からも生成できる。
+        Trend = initialTrend ?? UnityEngine.Random.Range(-0.5f, 0.5f);
     }
 
     // 保存→復元CTor（Plain→Runtime）

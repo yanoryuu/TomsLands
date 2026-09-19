@@ -391,8 +391,8 @@ public static class AbmCalibrator
         var runtimes = new List<RuntimeItemData>(masters.Count);
         var fullHistories = new List<List<int>>(masters.Count);
 
-        UnityEngine.Random.InitState(seed);
-        var trendRng = new System.Random(seed);
+        // UnityEngine.Random はメインスレッド専用のため使わない（探索はバックグラウンドで走る）
+        var rng = new System.Random(seed);
 
         for (int i = 0; i < masters.Count; i++)
         {
@@ -400,12 +400,12 @@ public static class AbmCalibrator
             var r = new RuntimeItemData(
                 m.itemId, m.itemName, m.basePrice, Mathf.Max(1, m.maxStock),
                 Mathf.Max(1, m.initialStock), 5, null, null,
-                m.itemType, m.itemAttribute, 1, 0.5f, "", 1f, 0);
+                m.itemType, m.itemAttribute, 1, 0.5f, "", 1f, 0,
+                initialTrend: (float)(rng.NextDouble() - 0.5));
 
             // 陳列の有無で需要の向きが反転する。片方だけで合わせ込むと他方で破綻するので混ぜる。
             r.UpdateIsDisplay(i % 2 == 0);
             r.UpdateDisplayStock(5);
-            r.Trend = (float)(trendRng.NextDouble() - 0.5);
 
             runtimes.Add(r);
             fullHistories.Add(new List<int> { r.CurrentPrice.Value });
@@ -426,7 +426,7 @@ public static class AbmCalibrator
                 r.PreviousDemand = r.Demand.Value;
                 r.PreviousPrice = r.CurrentPrice.Value;
 
-                float drift = UnityEngine.Random.Range(-shopSettings.trendDriftMax, shopSettings.trendDriftMax);
+                float drift = (float)(rng.NextDouble() * 2.0 - 1.0) * shopSettings.trendDriftMax;
                 r.Trend = Mathf.Clamp(r.Trend + drift - r.Trend * shopSettings.trendDecayRate, -1f, 1f);
 
                 bool displaying = r.IsDisplay.Value && r.DisplayStock.Value > 0;

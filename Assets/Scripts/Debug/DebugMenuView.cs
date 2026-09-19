@@ -42,6 +42,9 @@ public class DebugMenuView : MonoBehaviour
     private int _tab;
     private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他" };
 
+    private float _volMultiplier = 1f;
+    private float _baseLambda;
+
     private string _moneyInput = "10000";
     private string _bankInput = "10000";
 
@@ -485,6 +488,23 @@ public class DebugMenuView : MonoBehaviour
             GUILayout.Label($"トレンド持続 {p.achievedAutocorr1:F3}（目標 {p.targetAutocorr1:F2}）");
             GUILayout.Label($"1ターン変動 {p.achievedStdDev:F4}（目標 {p.targetStdDev:F4}）");
             GUILayout.Label($"インパクト指数 {p.abm.impactExponent:F2} / λ {p.abm.lambda:F3}");
+
+            // 値幅の体感を確かめるためのライブ調整。
+            // λ はボラティリティの主ツマミで、上げるほど売買の利幅が広がる代わりに
+            // 変動が荒くなる。キャリブレーション値からの倍率として触る。
+            if (_baseLambda <= 0f) _baseLambda = p.abm.lambda;
+            GUILayout.Space(2);
+            float mul = GUILayout.HorizontalSlider(_volMultiplier, 0.5f, 3f);
+            if (!Mathf.Approximately(mul, _volMultiplier))
+            {
+                _volMultiplier = mul;
+                p.abm.lambda = _baseLambda * _volMultiplier;
+                _itemModel?.InvalidatePriceEngine();
+            }
+            GUILayout.Label($"ボラ倍率 ×{_volMultiplier:F2}（λ {p.abm.lambda:F3}）");
+            GUILayout.Label("×1.0 が調整済みの値。10ターン以内に+10%の機会が約11%。");
+            GUILayout.Label("※上げると利幅は増えるが値動きが毎ターン反転するノコギリ波になる");
+            GUILayout.Label("　（×1.5 で racf1 −0.56）。体感を試す用で、出荷値は ×1.0。");
             if (!string.IsNullOrEmpty(p.calibratedAt))
             {
                 GUILayout.Label($"調整日時 {p.calibratedAt}");

@@ -15,45 +15,42 @@ MonoBehaviour:
   abm:
     traderCount: 30
     archetypeWeights:
-    - 0.009711808
-    - 0.15019122
-    - 0.19095294
-    - 0.07757552
-    - 0.43917915
-    - 0.13238935
-    capitalParetoAlpha: 2.8549497
+    - 0.09094418
+    - 0.16097608
+    - 0.07665414
+    - 0.23662654
+    - 0.37559453
+    - 0.05920452
+    capitalParetoAlpha: 3
     capitalMin: 30
     capitalMax: 2000
-    momentumGain: 28.600634
-    valueGain: 11.019956
-    demandGain: 15.877964
-    marketMakerGain: 10.832252
-    herdingGain: 0
-    inactionBandMax: 0.7629893
-    switchingIntensity: 13.136921
-    switchingMemory: 12
+    momentumGain: 30
+    valueGain: 9.807291
+    demandGain: 0
+    marketMakerGain: 17.757313
+    herdingGain: 0.70569956
+    inactionBandMax: 0.94323546
+    switchingIntensity: 51.30271
+    switchingMemory: 9
     signalCap: 1
-    impactExponent: 1.1272378
-    lambda: 0.5848919
-    baseDepth: 859.29803
+    impactExponent: 0.9692067
+    lambda: 0.7649161
+    baseDepth: 1594.8075
     stockDepthWeight: 0
   targetKurtosis: 3.95
-  targetAbsAutocorr1: 0.3
-  targetAutocorr1: 0.15
-  targetStdDev: 0.0145
-  achievedKurtosis: 3.64
-  achievedAbsAutocorr1: 0.041
-  achievedAutocorr1: -0.073
-  achievedStdDev: 0.0163
-  loss: 0
-  calibratedAt: "2026-09-19 21:27\uFF08\u9054\u6210\u5024\u306F\u5B9F\u6A5F\u7D4C\u8DEF
+  targetAbsAutocorr1: 0.25
+  targetAutocorr1: 0.05
+  targetStdDev: 0.0165
+  achievedKurtosis: 3.68
+  achievedAbsAutocorr1: 0.237
+  achievedAutocorr1: 0.082
+  achievedStdDev: 0.0182
+  loss: 0.0412
+  calibratedAt: "2026-09-19 23:08\uFF08\u9054\u6210\u5024\u306F\u5B9F\u6A5F\u7D4C\u8DEF
     200T\xD729\u9298\u67C4\u306E\u5B9F\u6E2C\uFF09"
   referenceNote: "Jev \u304A\u624B\u672C(\u69CB\u6210B/lambda=0.12/60T\xD78\u9298\u67C4\xD74\u30B7\u30FC\u30C9,
-    n=1920)\u3092\u57FA\u6E96\u306B racf1 \u306E\u307F 0.15 \u3078\u4E0B\u3052\u305F\u76EE\u6A19\u3067\u5408\u308F\u305B\u8FBC\u307F\u3002\u5C16\u5EA6\u306E\u5929\u4E95(2\u524D\u5F8C)\u306E\u539F\u56E0\u306F\u4FA1\u683C\u30A4\u30F3\u30D1\u30AF\u30C8\u306E\u5E73\u65B9\u6839\u5247\u3067\u3001\u6307\u6570\u3092
-    1.13 \u3078\u4E0A\u3052\u3066\u89E3\u6C7A\u3002\u677F\u306E\u539A\u307F\u306F\u5728\u5EAB\u306B\u4F9D\u5B58\u3055\u305B\u306A\u3044(stockDepthWeight=0):
-    \u7DDA\u5F62\u3060\u3068\u30D7\u30EC\u30A4\u30E4\u30FC\u304C\u4ED5\u5165\u308C\u308B\u307B\u3069\u4FA1\u683C\u304C\u51CD\u308B\u3002\u3010\u5B9F\u6A5F\u7D4C\u8DEF
-    ItemModel.ApplyShopTurnEconomy \u5B9F\u6E2C\u30FB29\u9298\u67C4\u30FB\u9673\u521750%\u3011120T:
-    kurt 3.55 absacf1 .035 racf1 -.064 maxDD 11.6% / 200T: kurt 3.64 absacf1 .041
-    racf1 -.073 maxDD 13.0% / 400T: kurt 3.73 absacf1 .048 racf1 -.067 maxDD 14.0%\u3002\u3044\u305A\u308C\u3082\u4E0A\u4E0B\u9650\u5F35\u308A\u4ED8\u304D
-    0/29\u3002\u672A\u9054: \u30DC\u30E9\u306E\u30AF\u30E9\u30B9\u30BF\u30EA\u30F3\u30B0(absacf1)\u306F
-    0.04 \u3067\u76EE\u6A19 0.1\u301C0.3 \u306B\u5C4A\u3044\u3066\u3044\u306A\u3044\u3002"
+    n=1920)\u3092\u57FA\u6E96\u306B racf1 \u306E\u307F\u4E0B\u3052\u305F\u76EE\u6A19\u3067\u5408\u308F\u305B\u8FBC\u307F\u3002\u5C16\u5EA6\u306E\u5929\u4E95(2\u524D\u5F8C)\u306E\u539F\u56E0\u306F\u4FA1\u683C\u30A4\u30F3\u30D1\u30AF\u30C8\u306E\u5E73\u65B9\u6839\u5247\u3067\u3001\u6307\u6570\u3092\u7D041.0\u3078\u4E0A\u3052\u3066\u89E3\u6C7A\u3002\u677F\u306E\u539A\u307F\u306F\u5728\u5EAB\u306B\u4F9D\u5B58\u3055\u305B\u306A\u3044(stockDepthWeight=0)\u3002\u63A2\u7D22\u306F\u5B9F\u30E9\u30F3\u30BF\u30A4\u30E0\u578B\u30CF\u30FC\u30CD\u30B9(RuntimeItemData+AbmShopPriceEngine)\u3067
+    29\u9298\u67C4\xD7200\u30BF\u30FC\u30F3\uFF1D\u5B9F\u30D7\u30EC\u30A4\u3068\u540C\u6761\u4EF6\u3002\u3010\u5B9F\u6A5F\u5B9F\u6E2C
+    200T\xD729\u9298\u67C4\u3011kurt 3.68 absacf1 0.237 racf1 0.082 maxDD 16.5% \u5F35\u308A\u4ED8\u304D
+    0/29\u3002\u30ED\u30B9\u30BF\u30FC\u30B7\u30FC\u30C96\u7A2E\u3067\u306E absacf1
+    \u306F 0.098\u301C0.247\uFF08\u65E7\u8A2D\u5B9A\u306F -0.034\u301C0.460 \u3068\u4E0D\u5B89\u5B9A\u3060\u3063\u305F\uFF09\u3002"
