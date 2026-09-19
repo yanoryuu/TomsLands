@@ -120,6 +120,15 @@ public sealed class AbmSearchBounds
     /// <summary>価格インパクトの指数。0.5=平方根則、1.0=線形。上げるほどテールが太る。</summary>
     public Vector2 ImpactExponent = new Vector2(0.5f, 1.3f);
     public Vector2 Lambda = new Vector2(0.002f, 0.6f);
+
+    /// <summary>Heat の半減期（ターン）。</summary>
+    public Vector2 HeatHalfLife = new Vector2(2f, 8f);
+
+    /// <summary>Heat=0 のときの λ 倍率。1 未満で「凪はより静か」。</summary>
+    public Vector2 HeatCalmMultiplier = new Vector2(0.3f, 1f);
+
+    /// <summary>Heat=1 のときの λ 倍率。1 超で「荒れはより荒く」。</summary>
+    public Vector2 HeatStormMultiplier = new Vector2(1f, 3f);
     public Vector2 BaseDepth = new Vector2(20f, 2000f);
     public Vector2 CapitalParetoAlpha = new Vector2(0.6f, 3f);
 
@@ -138,6 +147,9 @@ public sealed class AbmSearchBounds
         s.inactionBandMax = Mathf.Clamp(s.inactionBandMax, InactionBandMax.x, InactionBandMax.y);
         s.impactExponent = Mathf.Clamp(s.impactExponent, ImpactExponent.x, ImpactExponent.y);
         s.lambda = Mathf.Clamp(s.lambda, Lambda.x, Lambda.y);
+        s.heatHalfLife = Mathf.Clamp(s.heatHalfLife, HeatHalfLife.x, HeatHalfLife.y);
+        s.heatCalmMultiplier = Mathf.Clamp(s.heatCalmMultiplier, HeatCalmMultiplier.x, HeatCalmMultiplier.y);
+        s.heatStormMultiplier = Mathf.Clamp(s.heatStormMultiplier, HeatStormMultiplier.x, HeatStormMultiplier.y);
         s.baseDepth = Mathf.Clamp(s.baseDepth, BaseDepth.x, BaseDepth.y);
         s.capitalParetoAlpha = Mathf.Clamp(s.capitalParetoAlpha, CapitalParetoAlpha.x, CapitalParetoAlpha.y);
     }
@@ -256,6 +268,9 @@ public static class AbmCalibrator
         s.inactionBandMax = Jitter(s.inactionBandMax, b.InactionBandMax.x, b.InactionBandMax.y, rng, temperature);
         s.impactExponent = Jitter(s.impactExponent, b.ImpactExponent.x, b.ImpactExponent.y, rng, temperature);
         s.lambda = Jitter(s.lambda, b.Lambda.x, b.Lambda.y, rng, temperature);
+        s.heatHalfLife = Jitter(s.heatHalfLife, b.HeatHalfLife.x, b.HeatHalfLife.y, rng, temperature);
+        s.heatCalmMultiplier = Jitter(s.heatCalmMultiplier, b.HeatCalmMultiplier.x, b.HeatCalmMultiplier.y, rng, temperature);
+        s.heatStormMultiplier = Jitter(s.heatStormMultiplier, b.HeatStormMultiplier.x, b.HeatStormMultiplier.y, rng, temperature);
         s.baseDepth = Jitter(s.baseDepth, b.BaseDepth.x, b.BaseDepth.y, rng, temperature);
         s.capitalParetoAlpha = Jitter(s.capitalParetoAlpha, b.CapitalParetoAlpha.x, b.CapitalParetoAlpha.y, rng, temperature);
 

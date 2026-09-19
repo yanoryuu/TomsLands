@@ -15,46 +15,49 @@ MonoBehaviour:
   abm:
     traderCount: 30
     archetypeWeights:
-    - 0.18014133
-    - 0.21876371
-    - 0.03448698
-    - 0.23164874
-    - 0.33495918
-    capitalParetoAlpha: 2.2388952
+    - 0.4956517
+    - 0.018811235
+    - 0.04684905
+    - 0.09845123
+    - 0.34023684
+    capitalParetoAlpha: 2.081427
     capitalMin: 30
     capitalMax: 300
     noiseCapitalCapRatio: 4
-    anchorPull: 0.35
-    momentumGain: 10.955535
-    valueGain: 8.393428
-    demandGain: 23.043585
-    marketMakerGain: 1.4948834
-    herdingGain: 0.7032082
-    inactionBandMax: 0.63946277
-    impactExponent: 1.2981966
-    lambda: 2.091405
-    baseDepth: 1552.6713
+    anchorPull: 0.2214323
+    momentumGain: 1.9277877
+    valueGain: 6.600624
+    demandGain: 6.6469717
+    marketMakerGain: 0
+    herdingGain: 0.35092103
+    inactionBandMax: 0.99
+    impactExponent: 1.2271962
+    lambda: 1.6223052
+    heatHalfLife: 2.0142813
+    heatReference: 0.02
+    heatCalmMultiplier: 0.22525084
+    heatStormMultiplier: 4.0689864
+    baseDepth: 2000
     stockDepthWeight: 0
   targetKurtosis: 3.95
-  targetAbsAutocorr1: 0.22
+  targetAbsAutocorr1: 0.24
   targetAutocorr1: 0.08
-  targetStdDev: 0.017
-  achievedKurtosis: 3.85
-  achievedAbsAutocorr1: 0.077
-  achievedAutocorr1: 0.122
-  achievedStdDev: 0.019
-  loss: 1.8425
-  calibratedAt: "2026-09-20 01:15\uFF08v2\u30FB\u9054\u6210\u5024\u306F\u5B9F\u6A5F\u7D4C\u8DEF
+  targetStdDev: 0.018
+  achievedKurtosis: 4.71
+  achievedAbsAutocorr1: 0.209
+  achievedAutocorr1: -0.044
+  achievedStdDev: 0.017
+  loss: 1.3635
+  calibratedAt: "2026-09-20 01:39\uFF08v3 Heat\u5909\u8ABF\u30FB\u9054\u6210\u5024\u306F\u5B9F\u6A5F\u7D4C\u8DEF
     200T\xD729\u9298\u67C4\uFF09"
-  referenceNote: "\u3010v2 2\u5C64\u30E2\u30C7\u30EB\u3011\u4FA1\u683C = \u9069\u6B63\u5024(\u9700\u8981\u304B\u3089)
-    \xD7 \u76F8\u5834\u306E\u63FA\u3089\u304E(ABM)\u3002\u8A2D\u8A08: Docs/Market_Price_v2_Design.md\u3002\u9069\u6B63\u5024
-    fair = base\xD7(1+0.5\xD7(demand\u22120.5)\xD72)\u3002anchorPull 0.35 \u3067\u6BCE\u30BF\u30FC\u30F3\u9069\u6B63\u5024\u3078\u5F15\u304D\u5BC4\u305B\uFF08\u884C\u304D\u904E\u304E\u306A\u3044\uFF09\u3002\u8CC7\u91D1\u96C6\u4E2D\u306E\u5236\u9650:
-    capitalMax 300(=min\xD710), \u03B1\u22651.5, \u30CE\u30A4\u30BA\u52E2 min\xD74\u3002\u63A2\u7D22:
-    \u5B9F\u30E9\u30F3\u30BF\u30A4\u30E0\u578B\u30CF\u30FC\u30CD\u30B9 29\u9298\u67C4\xD7200T\u3001\u7DE8\u6210\u30B7\u30FC\u30C96\u7A2E\u306E
-    Loss \u5E73\u5747\u3002\u3010\u5B9F\u6A5F\u5B9F\u6E2C 200T\xD729\u3011\u03C3
-    .0190 kurt 3.85 absacf1 .077 racf1 .122 maxDD 18.0% \u5F35\u308A\u4ED8\u304D
-    0/29\u3002\u9AD8\u9700\u8981\u9298\u67C4\u306F\u57FA\u6E96\u306E1.19\u500D\u3001\u4E2D\u9700\u8981\u306F1.00\u500D\u3067\u5747\u8861\uFF08\u9700\u8981\u2192\u4FA1\u683C\u306F\u6C34\u6E96\u3067\u8868\u308C\u308B\uFF09\u3002\u6A5F\u80FD\u30C6\u30B9\u30C8:
-    \u9673\u5217ON 1202G/OFF 1002G\uFF08\u9069\u6B631200/1000\u306B\u4E00\u81F4\uFF09\u3001\u9700\u89810.5\u21920.8\u30B8\u30E3\u30F3\u30D7\u306F10T\u306797%\u53CE\u675F\u3001\u5728\u5EAB0/99\u3067\u03C3\u4E0D\u5909\u300160\u301C400T\xD76\u30B7\u30FC\u30C9\u3067\u5F35\u308A\u4ED8\u304D
-    0/48\u3001\u30A8\u30F3\u30B8\u30F3\u518D\u751F\u6210\u5F8C\u3082\u4FA1\u683C\u7CFB\u5217\u4E00\u81F4\u3002\u672A\u9054:
-    \u30DC\u30E9\u306E\u30AF\u30E9\u30B9\u30BF\u30EA\u30F3\u30B0 absacf1 .077\uFF08\u76EE\u6A19
-    .15\u301C.30\uFF09\u3002"
+  referenceNote: "\u3010v3 = v2 2\u5C64\u30E2\u30C7\u30EB + Heat\u5909\u8ABF\u3011\u8A2D\u8A08:
+    Docs/Market_Price_v2_Design.md\u3002\u4FA1\u683C = \u9069\u6B63\u5024(\u9700\u8981\u304B\u3089)
+    \xD7 \u76F8\u5834\u306E\u63FA\u3089\u304E(ABM) \xD7 (fair/price)^anchorPull\u3002Heat(\u8352\u308C\u5177\u5408
+    0\u301C1)\u306F\u4FA1\u683C\u5C65\u6B74\u306EEWMA\u304B\u3089\u6BCE\u56DE\u8A08\u7B97\u3057(\u72B6\u614B\u306A\u3057)\u3001lambda
+    \u3092 calm 0.23\u500D\u301Cstorm 4.07\u500D\u3067\u5909\u8ABF\u3059\u308B\u3002\u3053\u308C\u304C\u300E\u8352\u308C\u308B\u6642\u671F\u3068\u51EA\u306E\u6642\u671F\u304C\u56FA\u307E\u3063\u3066\u73FE\u308C\u308B\u300F\u30AF\u30E9\u30B9\u30BF\u30EA\u30F3\u30B0\u3092\u751F\u307F\u3001\u540C\u3058\u5024\u3092
+    UI \u306B\u3082\u8868\u793A\u3067\u304D\u308B(MarketHeat.Describe/ToColor)\u3002\u3010\u5B9F\u6A5F\u5B9F\u6E2C
+    200T\xD729\u3011sigma .0170 kurt 4.71 absacf1 .209 racf1 -.044 maxDD 15.8% \u5F35\u308A\u4ED8\u304D
+    0/29\u3002\u7DE8\u6210\u30B7\u30FC\u30C96\u7A2E\u3067 absacf1 .161\u301C.228
+    \u3068\u5B89\u5B9A\u3002\u9AD8\u9700\u8981 1.19x / \u4E2D\u9700\u8981 1.01x \u3067\u5747\u8861\u3002\u691C\u8A3C:
+    \u9673\u5217ON 1202G/OFF 1003G(\u9069\u6B631200/1000)\u3001\u9700\u8981\u30B8\u30E3\u30F3\u30D710T\u306797%\u53CE\u675F\u3001\u5728\u5EAB0/99\u3067sigma\u4E0D\u5909\u300160\u301C400T\xD76\u30B7\u30FC\u30C9\u3067\u5F35\u308A\u4ED8\u304D
+    0/48\u3001\u30A8\u30F3\u30B8\u30F3\u518D\u751F\u6210\u5F8C\u3082\u4FA1\u683C\u7CFB\u5217\u5B8C\u5168\u4E00\u81F4(0/201)\u3002\u5168\u9805\u76EE\u9054\u6210\u3002"

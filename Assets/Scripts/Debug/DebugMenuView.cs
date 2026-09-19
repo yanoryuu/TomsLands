@@ -559,9 +559,20 @@ public class DebugMenuView : MonoBehaviour
             int delta = item.CurrentPrice.Value - item.PreviousPrice;
             string sign = delta > 0 ? "+" : "";
 
+            // 荒れ具合。価格履歴から毎回計算するので保存も同期も要らない。
+            // ゲーム本編の UI も同じ MarketHeat.Compute / Describe / ToColor を呼べばよい。
+            float heat = MarketHeat.Compute(item.ShopPriceHistory);
+
+            GUILayout.BeginHorizontal();
             GUILayout.Label(
                 $"{item.ItemName}  {item.CurrentPrice.Value}G " +
                 $"({ratio * 100f:F0}%)  {sign}{delta}  需要{item.Demand.Value:F2}");
+
+            var prevColor = GUI.color;
+            GUI.color = MarketHeat.ToColor(heat);
+            GUILayout.Label($"{MarketHeat.Describe(heat)} {heat:F2}", GUILayout.Width(74));
+            GUI.color = prevColor;
+            GUILayout.EndHorizontal();
         }
     }
 

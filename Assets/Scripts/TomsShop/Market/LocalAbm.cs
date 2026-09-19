@@ -146,6 +146,24 @@ public sealed class LocalAbmSettings
     /// <summary>価格インパクト係数。ボラティリティ水準の主ツマミ。</summary>
     public float lambda = 0.3f;
 
+    // --- 荒れ具合（Heat）による λ の変調 ---------------------------------
+    // 直近の値動きが大きい銘柄ほど λ を上げ、静かな銘柄は下げる。
+    // 「大きく動いた翌ターンも動きやすい」という記憶が入り、荒れる時期と凪の時期が
+    // 固まって現れる（ボラティリティ・クラスタリング）。
+    // 大きさだけに効いて向きには効かないので、トレンドが読めてしまう副作用は出ない。
+
+    /// <summary>Heat の半減期（ターン）。短いほど直近の値動きに敏感。</summary>
+    public float heatHalfLife = 4f;
+
+    /// <summary>Heat が 0.5 になる 1ターンあたりの値動きの大きさ。</summary>
+    public float heatReference = 0.02f;
+
+    /// <summary>Heat=0（完全な凪）のときの λ 倍率。1 で変調なし。</summary>
+    public float heatCalmMultiplier = 1f;
+
+    /// <summary>Heat=1（大荒れ）のときの λ 倍率。1 で変調なし。</summary>
+    public float heatStormMultiplier = 1f;
+
     /// <summary>板の厚みの基準値。</summary>
     public float baseDepth = 800f;
 
@@ -174,6 +192,10 @@ public sealed class LocalAbmSettings
             inactionBandMax = inactionBandMax,
             impactExponent = impactExponent,
             lambda = lambda,
+            heatHalfLife = heatHalfLife,
+            heatReference = heatReference,
+            heatCalmMultiplier = heatCalmMultiplier,
+            heatStormMultiplier = heatStormMultiplier,
             baseDepth = baseDepth,
             stockDepthWeight = stockDepthWeight,
         };
@@ -310,6 +332,9 @@ public sealed class LocalAbmMarket
     /// <summary>直近の Step で算出した純注文。デバッグ表示・群衆行動の入力用。</summary>
     public float LastNetOrder { get; private set; }
 
+    /// <summary>直近の Step で使った荒れ具合（0〜1）。デバッグ表示用。</summary>
+    public float LastHeat { get; private set; } = MarketHeat.Neutral;
+
     /// <summary>編成に使ったシード。</summary>
     public int Seed { get; }
 
@@ -347,9 +372,16 @@ public sealed class LocalAbmMarket
         // √N 正規化: 人数を増やしてもボラ水準が変わらないようにする（λ を人数と独立にする）
         netOrder /= Mathf.Sqrt(Mathf.Max(1, _traders.Count));
 
+        // 荒れ具合で λ を変調する（クラスタリングの源）。
+        // 値動きの「大きさ」だけに効き、「向き」には効かない。
+        float heat = MarketHeat.Compute(view.PriceHistory, Settings.heatHalfLife, Settings.heatReference);
+        LastHeat = heat;
+        float lambdaEff = Settings.lambda *
+            Mathf.Lerp(Settings.heatCalmMultiplier, Settings.heatStormMultiplier, heat);
+
         float depth = OrderFlowPriceEngine.Depth(view.Stock, view.Demand, Settings.baseDepth, Settings.stockDepthWeight);
         float rate = OrderFlowPriceEngine.ToPriceRate(
-            netOrder, depth, Settings.lambda, OrderFlowPriceEngine.DefaultMaxLogMove, Settings.impactExponent);
+            netOrder, depth, lambdaEff, OrderFlowPriceEngine.DefaultMaxLogMove, Settings.impactExponent);
 
         // 層1の引き寄せ: 価格を適正値へ anchorPull の割合だけ（対数空間で）寄せる。
         // 指数が 1 未満なので行き過ぎず、長期の上下限張り付きを原理的に防ぐ。
