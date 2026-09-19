@@ -15,6 +15,7 @@ MonoBehaviour:
   useAbmPriceEngine: 1
   marketModelPreset: {fileID: 11400000, guid: 399647cafd1a1d145910f6b9bf2d3af9, type: 2}
   abmSeed: 0
+  demandPricePremium: 0.5
   highDemandThreshold: 0.7
   highDemandPriceRateMin: 1.1
   highDemandPriceRateMax: 1.3

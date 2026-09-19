@@ -103,6 +103,18 @@ public sealed class LocalAbmSettings
     /// </summary>
     public float noiseCapitalCapRatio = 4f;
 
+    /// <summary>
+    /// 適正値への直接の引き寄せ（層1の力）。毎ターン価格を適正値へ この割合だけ（対数空間で）寄せる。
+    ///
+    ///   rate_total = rate_market × (fair / price)^anchorPull
+    ///
+    /// 逆張り勢の注文経由でも引き寄せは起きるが、注文は ±1 で飽和するため λ を上げると
+    /// 一気に行き過ぎて翌ターン反転する（ノコギリ波・racf1 が大きく負になる）。
+    /// この項は 1 未満なので原理的に行き過ぎない。結果、λ でボラだけを独立に調整できる。
+    /// 0 で無効（v2 初期の挙動）。想定レンジ 0.05〜0.35。
+    /// </summary>
+    public float anchorPull = 0.15f;
+
     /// <summary>順張りの感度。</summary>
     public float momentumGain = 2f;
 
@@ -153,6 +165,7 @@ public sealed class LocalAbmSettings
             capitalMin = capitalMin,
             capitalMax = capitalMax,
             noiseCapitalCapRatio = noiseCapitalCapRatio,
+            anchorPull = anchorPull,
             momentumGain = momentumGain,
             valueGain = valueGain,
             demandGain = demandGain,
@@ -337,6 +350,14 @@ public sealed class LocalAbmMarket
         float depth = OrderFlowPriceEngine.Depth(view.Stock, view.Demand, Settings.baseDepth, Settings.stockDepthWeight);
         float rate = OrderFlowPriceEngine.ToPriceRate(
             netOrder, depth, Settings.lambda, OrderFlowPriceEngine.DefaultMaxLogMove, Settings.impactExponent);
+
+        // 層1の引き寄せ: 価格を適正値へ anchorPull の割合だけ（対数空間で）寄せる。
+        // 指数が 1 未満なので行き過ぎず、長期の上下限張り付きを原理的に防ぐ。
+        if (Settings.anchorPull > 0f && view.FairValue > 0f && view.CurrentPrice > 0)
+        {
+            float k = Mathf.Clamp01(Settings.anchorPull);
+            rate *= Mathf.Pow(view.FairValue / view.CurrentPrice, k);
+        }
 
         LastNetOrder = netOrder;
         return (float.IsNaN(rate) || float.IsInfinity(rate)) ? 1f : rate;

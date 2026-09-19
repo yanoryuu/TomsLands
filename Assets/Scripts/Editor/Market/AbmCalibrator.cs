@@ -106,6 +106,9 @@ public sealed class AbmSearchBounds
 {
     public Vector2 MomentumGain = new Vector2(0f, 30f);
 
+    /// <summary>適正値への直接の引き寄せ。0.05 未満だと長期で漂流し、0.35 超だと相場の質感が消える。</summary>
+    public Vector2 AnchorPull = new Vector2(0.05f, 0.35f);
+
     /// <summary>逆張りの感度。下限を 0 にすると基準価格アンカーが失われる。2 以上を推奨。</summary>
     public Vector2 ValueGain = new Vector2(0f, 12f);
 
@@ -127,6 +130,7 @@ public sealed class AbmSearchBounds
     {
         if (s == null) return;
         s.momentumGain = Mathf.Clamp(s.momentumGain, MomentumGain.x, MomentumGain.y);
+        s.anchorPull = Mathf.Clamp(s.anchorPull, AnchorPull.x, AnchorPull.y);
         s.valueGain = Mathf.Clamp(s.valueGain, ValueGain.x, ValueGain.y);
         s.demandGain = Mathf.Clamp(s.demandGain, DemandGain.x, DemandGain.y);
         s.marketMakerGain = Mathf.Clamp(s.marketMakerGain, MarketMakerGain.x, MarketMakerGain.y);
@@ -244,6 +248,7 @@ public static class AbmCalibrator
         var s = source.Clone();
 
         s.momentumGain = Jitter(s.momentumGain, b.MomentumGain.x, b.MomentumGain.y, rng, temperature);
+        s.anchorPull = Jitter(s.anchorPull, b.AnchorPull.x, b.AnchorPull.y, rng, temperature);
         s.valueGain = Jitter(s.valueGain, b.ValueGain.x, b.ValueGain.y, rng, temperature);
         s.demandGain = Jitter(s.demandGain, b.DemandGain.x, b.DemandGain.y, rng, temperature);
         s.marketMakerGain = Jitter(s.marketMakerGain, b.MarketMakerGain.x, b.MarketMakerGain.y, rng, temperature);

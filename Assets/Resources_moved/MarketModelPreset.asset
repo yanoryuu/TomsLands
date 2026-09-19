@@ -15,42 +15,46 @@ MonoBehaviour:
   abm:
     traderCount: 30
     archetypeWeights:
-    - 0.09094418
-    - 0.16097608
-    - 0.07665414
-    - 0.23662654
-    - 0.37559453
-    - 0.05920452
-    capitalParetoAlpha: 3
+    - 0.18014133
+    - 0.21876371
+    - 0.03448698
+    - 0.23164874
+    - 0.33495918
+    capitalParetoAlpha: 2.2388952
     capitalMin: 30
-    capitalMax: 2000
-    momentumGain: 30
-    valueGain: 9.807291
-    demandGain: 0
-    marketMakerGain: 17.757313
-    herdingGain: 0.70569956
-    inactionBandMax: 0.94323546
-    switchingIntensity: 51.30271
-    switchingMemory: 9
-    signalCap: 1
-    impactExponent: 0.9692067
-    lambda: 0.7649161
-    baseDepth: 1594.8075
+    capitalMax: 300
+    noiseCapitalCapRatio: 4
+    anchorPull: 0.35
+    momentumGain: 10.955535
+    valueGain: 8.393428
+    demandGain: 23.043585
+    marketMakerGain: 1.4948834
+    herdingGain: 0.7032082
+    inactionBandMax: 0.63946277
+    impactExponent: 1.2981966
+    lambda: 2.091405
+    baseDepth: 1552.6713
     stockDepthWeight: 0
   targetKurtosis: 3.95
-  targetAbsAutocorr1: 0.25
-  targetAutocorr1: 0.05
-  targetStdDev: 0.0165
-  achievedKurtosis: 3.68
-  achievedAbsAutocorr1: 0.237
-  achievedAutocorr1: 0.082
-  achievedStdDev: 0.0182
-  loss: 0.0412
-  calibratedAt: "2026-09-19 23:08\uFF08\u9054\u6210\u5024\u306F\u5B9F\u6A5F\u7D4C\u8DEF
-    200T\xD729\u9298\u67C4\u306E\u5B9F\u6E2C\uFF09"
-  referenceNote: "Jev \u304A\u624B\u672C(\u69CB\u6210B/lambda=0.12/60T\xD78\u9298\u67C4\xD74\u30B7\u30FC\u30C9,
-    n=1920)\u3092\u57FA\u6E96\u306B racf1 \u306E\u307F\u4E0B\u3052\u305F\u76EE\u6A19\u3067\u5408\u308F\u305B\u8FBC\u307F\u3002\u5C16\u5EA6\u306E\u5929\u4E95(2\u524D\u5F8C)\u306E\u539F\u56E0\u306F\u4FA1\u683C\u30A4\u30F3\u30D1\u30AF\u30C8\u306E\u5E73\u65B9\u6839\u5247\u3067\u3001\u6307\u6570\u3092\u7D041.0\u3078\u4E0A\u3052\u3066\u89E3\u6C7A\u3002\u677F\u306E\u539A\u307F\u306F\u5728\u5EAB\u306B\u4F9D\u5B58\u3055\u305B\u306A\u3044(stockDepthWeight=0)\u3002\u63A2\u7D22\u306F\u5B9F\u30E9\u30F3\u30BF\u30A4\u30E0\u578B\u30CF\u30FC\u30CD\u30B9(RuntimeItemData+AbmShopPriceEngine)\u3067
-    29\u9298\u67C4\xD7200\u30BF\u30FC\u30F3\uFF1D\u5B9F\u30D7\u30EC\u30A4\u3068\u540C\u6761\u4EF6\u3002\u3010\u5B9F\u6A5F\u5B9F\u6E2C
-    200T\xD729\u9298\u67C4\u3011kurt 3.68 absacf1 0.237 racf1 0.082 maxDD 16.5% \u5F35\u308A\u4ED8\u304D
-    0/29\u3002\u30ED\u30B9\u30BF\u30FC\u30B7\u30FC\u30C96\u7A2E\u3067\u306E absacf1
-    \u306F 0.098\u301C0.247\uFF08\u65E7\u8A2D\u5B9A\u306F -0.034\u301C0.460 \u3068\u4E0D\u5B89\u5B9A\u3060\u3063\u305F\uFF09\u3002"
+  targetAbsAutocorr1: 0.22
+  targetAutocorr1: 0.08
+  targetStdDev: 0.017
+  achievedKurtosis: 3.85
+  achievedAbsAutocorr1: 0.077
+  achievedAutocorr1: 0.122
+  achievedStdDev: 0.019
+  loss: 1.8425
+  calibratedAt: "2026-09-20 01:15\uFF08v2\u30FB\u9054\u6210\u5024\u306F\u5B9F\u6A5F\u7D4C\u8DEF
+    200T\xD729\u9298\u67C4\uFF09"
+  referenceNote: "\u3010v2 2\u5C64\u30E2\u30C7\u30EB\u3011\u4FA1\u683C = \u9069\u6B63\u5024(\u9700\u8981\u304B\u3089)
+    \xD7 \u76F8\u5834\u306E\u63FA\u3089\u304E(ABM)\u3002\u8A2D\u8A08: Docs/Market_Price_v2_Design.md\u3002\u9069\u6B63\u5024
+    fair = base\xD7(1+0.5\xD7(demand\u22120.5)\xD72)\u3002anchorPull 0.35 \u3067\u6BCE\u30BF\u30FC\u30F3\u9069\u6B63\u5024\u3078\u5F15\u304D\u5BC4\u305B\uFF08\u884C\u304D\u904E\u304E\u306A\u3044\uFF09\u3002\u8CC7\u91D1\u96C6\u4E2D\u306E\u5236\u9650:
+    capitalMax 300(=min\xD710), \u03B1\u22651.5, \u30CE\u30A4\u30BA\u52E2 min\xD74\u3002\u63A2\u7D22:
+    \u5B9F\u30E9\u30F3\u30BF\u30A4\u30E0\u578B\u30CF\u30FC\u30CD\u30B9 29\u9298\u67C4\xD7200T\u3001\u7DE8\u6210\u30B7\u30FC\u30C96\u7A2E\u306E
+    Loss \u5E73\u5747\u3002\u3010\u5B9F\u6A5F\u5B9F\u6E2C 200T\xD729\u3011\u03C3
+    .0190 kurt 3.85 absacf1 .077 racf1 .122 maxDD 18.0% \u5F35\u308A\u4ED8\u304D
+    0/29\u3002\u9AD8\u9700\u8981\u9298\u67C4\u306F\u57FA\u6E96\u306E1.19\u500D\u3001\u4E2D\u9700\u8981\u306F1.00\u500D\u3067\u5747\u8861\uFF08\u9700\u8981\u2192\u4FA1\u683C\u306F\u6C34\u6E96\u3067\u8868\u308C\u308B\uFF09\u3002\u6A5F\u80FD\u30C6\u30B9\u30C8:
+    \u9673\u5217ON 1202G/OFF 1002G\uFF08\u9069\u6B631200/1000\u306B\u4E00\u81F4\uFF09\u3001\u9700\u89810.5\u21920.8\u30B8\u30E3\u30F3\u30D7\u306F10T\u306797%\u53CE\u675F\u3001\u5728\u5EAB0/99\u3067\u03C3\u4E0D\u5909\u300160\u301C400T\xD76\u30B7\u30FC\u30C9\u3067\u5F35\u308A\u4ED8\u304D
+    0/48\u3001\u30A8\u30F3\u30B8\u30F3\u518D\u751F\u6210\u5F8C\u3082\u4FA1\u683C\u7CFB\u5217\u4E00\u81F4\u3002\u672A\u9054:
+    \u30DC\u30E9\u306E\u30AF\u30E9\u30B9\u30BF\u30EA\u30F3\u30B0 absacf1 .077\uFF08\u76EE\u6A19
+    .15\u301C.30\uFF09\u3002"
