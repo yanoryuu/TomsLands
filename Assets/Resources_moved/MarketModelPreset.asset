@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6590a12d734bdc8998a91c128868a4, type: 3}
+  m_Name: MarketModelPreset
+  m_EditorClassIdentifier: 
+  abm:
+    traderCount: 30
+    archetypeWeights:
+    - 0.33982998
+    - 0.12726763
+    - 0.15285583
+    - 0.18424375
+    - 0.1958028
+    capitalParetoAlpha: 3
+    capitalMin: 30
+    capitalMax: 2000
+    momentumGain: 15.437739
+    valueGain: 0.05093306
+    demandGain: 16.73492
+    marketMakerGain: 7.219701
+    herdingGain: 0.670543
+    inactionBandMax: 0.92532474
+    lambda: 0.17350473
+    baseDepth: 2000
+  targetKurtosis: 3.95
+  targetAbsAutocorr1: 0.618
+  targetAutocorr1: 0.45
+  targetStdDev: 0.018
+  achievedKurtosis: 3.3404372
+  achievedAbsAutocorr1: 0.51557213
+  achievedAutocorr1: 0.57484394
+  achievedStdDev: 0.015801374
+  loss: 0.9293
+  calibratedAt: 2026-09-19 14:12
+  referenceNote: "Jev \u53C2\u7167\u30E9\u30F3\uFF08\u69CB\u6210B\u30FB\u8155\u304C\u6D3B\u304D\u308B\u76F8\u5834\uFF09:
+    \u30DA\u30EB\u30BD\u30CA\u6BD4\u7387 {Momentum .15 / Contrarian .30 / DemandWatcher
+    .10 / MarketMaker .25 / Noise .20}, lambda=0.12, 60\u30BF\u30FC\u30F3\xD78\u9298\u67C4\xD74\u30B7\u30FC\u30C9(2001-2004),
+    n=1920\u3002\u30AD\u30E3\u30EA\u30D6\u30EC\u30FC\u30B7\u30E7\u30F3: 60\u30BF\u30FC\u30F3\xD78\u9298\u67C4,
+    800\u53CD\u5FA9, \u5C16\u5EA6\u306E\u91CD\u307F3.0\u3002"

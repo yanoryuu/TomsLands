@@ -153,6 +153,60 @@ public static class JevReferenceRun
         return ExecuteAsync(config, ct).GetAwaiter().GetResult();
     }
 
+    /// <summary>
+    /// 複数の設定を順に実行し、結果をテキストファイルへ書き出すバックグラウンドジョブを開始する。
+    /// 呼び出しは即座に戻る。
+    ///
+    /// Unity Pipeline の eval はメインスレッドを5秒までしか占有できないため、
+    /// 長時間の Jev ランはこの形で投げてファイルをポーリングする。
+    /// 銘柄テンプレートは呼び出し時（メインスレッド）にキャッシュされる。
+    /// </summary>
+    /// <param name="configs">実行する設定の列。</param>
+    /// <param name="outputPath">結果の書き出し先。実行中は "RUNNING" 行から始まる。</param>
+    /// <param name="labels">各設定の見出し。null なら連番。</param>
+    public static void ExecuteSweepToFile(
+        IReadOnlyList<JevReferenceConfig> configs, string outputPath, IReadOnlyList<string> labels = null)
+    {
+        if (configs == null || configs.Count == 0) throw new ArgumentException("configs が空です。");
+        if (string.IsNullOrEmpty(outputPath)) throw new ArgumentException("outputPath が空です。");
+
+        // メインスレッドのうちに AssetDatabase から銘柄を読んでおく
+        int maxItems = 1;
+        foreach (var c in configs) maxItems = Mathf.Max(maxItems, c.ItemCount);
+        PrewarmItems(maxItems);
+
+        var dir = System.IO.Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(dir)) System.IO.Directory.CreateDirectory(dir);
+        System.IO.File.WriteAllText(outputPath, "RUNNING\n");
+
+        Task.Run(async () =>
+        {
+            var sb = new System.Text.StringBuilder();
+            long totalTokens = 0;
+            try
+            {
+                for (int i = 0; i < configs.Count; i++)
+                {
+                    var label = (labels != null && i < labels.Count) ? labels[i] : ("run" + i);
+                    var result = await ExecuteAsync(configs[i]).ConfigureAwait(false);
+                    totalTokens += result.InputTokens;
+                    sb.AppendLine(label + " | " + result.Stats);
+                }
+                sb.AppendLine("TOKENS " + totalTokens);
+                sb.AppendLine("COST " + JevApi.EstimateCostUsd(totalTokens).ToString("F4"));
+                sb.AppendLine("DONE");
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine("ERROR " + ex.GetType().Name + ": " + ex.Message);
+                sb.AppendLine("DONE");
+            }
+
+            try { System.IO.File.WriteAllText(outputPath, sb.ToString()); }
+            catch { /* 書き出し失敗は握りつぶす（ポーリング側がタイムアウトで気付く） */ }
+        });
+    }
+
     // ------------------------------------------------------------
     private sealed class RefItem
     {
@@ -162,28 +216,63 @@ public static class JevReferenceRun
         public readonly List<int> History = new List<int>();
     }
 
-    private static List<RefItem> LoadItems(int count)
+    // AssetDatabase はメインスレッドからしか触れないため、銘柄テンプレートを事前に読んで保持する。
+    // これにより ExecuteAsync 全体をスレッドプール上で走らせられる。
+    private static List<RefItem> _templateCache;
+    private static int _templateCacheCount = -1;
+
+    /// <summary>
+    /// 銘柄テンプレートをメインスレッドで読み込んでキャッシュする。
+    /// バックグラウンドで <see cref="ExecuteAsync"/> を回す前に、必ずメインスレッドから呼ぶこと。
+    /// </summary>
+    public static void PrewarmItems(int count)
     {
+        count = Mathf.Max(1, count);
+        if (_templateCache != null && _templateCacheCount >= count) return;
+
         var list = new List<RefItem>(count);
         var guids = AssetDatabase.FindAssets("t:ItemData");
-        if (guids == null) return list;
+        if (guids != null)
+        {
+            foreach (var guid in guids)
+            {
+                if (list.Count >= count) break;
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var data = AssetDatabase.LoadAssetAtPath<ItemData>(path);
+                if (data == null || data.basePrice <= 0) continue;
 
-        foreach (var guid in guids)
+                list.Add(new RefItem
+                {
+                    Id = string.IsNullOrEmpty(data.itemId) ? data.name : data.itemId,
+                    Name = string.IsNullOrEmpty(data.itemName) ? data.name : data.itemName,
+                    Category = data.itemType.ToString(),
+                    Element = data.itemAttribute.ToString(),
+                    BasePrice = data.basePrice,
+                    Stock = Mathf.Max(1, data.initialStock),
+                });
+            }
+        }
+        _templateCache = list;
+        _templateCacheCount = count;
+    }
+
+    private static List<RefItem> LoadItems(int count)
+    {
+        PrewarmItems(count);
+
+        var list = new List<RefItem>(count);
+        foreach (var template in _templateCache)
         {
             if (list.Count >= count) break;
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            var data = AssetDatabase.LoadAssetAtPath<ItemData>(path);
-            if (data == null || data.basePrice <= 0) continue;
-
             list.Add(new RefItem
             {
-                Id = string.IsNullOrEmpty(data.itemId) ? data.name : data.itemId,
-                Name = string.IsNullOrEmpty(data.itemName) ? data.name : data.itemName,
-                Category = data.itemType.ToString(),
-                Element = data.itemAttribute.ToString(),
-                BasePrice = data.basePrice,
-                Price = data.basePrice,
-                Stock = Mathf.Max(1, data.initialStock),
+                Id = template.Id,
+                Name = template.Name,
+                Category = template.Category,
+                Element = template.Element,
+                BasePrice = template.BasePrice,
+                Price = template.BasePrice,
+                Stock = template.Stock,
             });
         }
         return list;

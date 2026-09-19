@@ -216,6 +216,64 @@ public static class AbmCalibrator
     private static int _itemCacheCount = -1;
 
     /// <summary>
+    /// 銘柄テンプレートをメインスレッドで読み込んでキャッシュする。
+    /// <see cref="FitToFile"/> のようにバックグラウンドで評価を回す前に、必ずメインスレッドから呼ぶこと
+    /// （AssetDatabase はメインスレッド専用のため）。
+    /// </summary>
+    public static void PrewarmItems(int count)
+    {
+        BuildItems(Mathf.Max(1, count), 0);
+    }
+
+    /// <summary>
+    /// キャリブレーションをバックグラウンドで実行し、結果をテキストファイルへ書き出す。
+    /// 呼び出しは即座に戻る。
+    ///
+    /// Unity Pipeline の eval はメインスレッドを5秒までしか占有できないため、
+    /// 数百回の評価を伴う探索はこの形で投げてファイルをポーリングする。
+    /// </summary>
+    public static void FitToFile(
+        AbmCalibrationTarget target, LocalAbmSettings start, string outputPath,
+        int iterations = 400, int turns = 250, int itemCount = 8, int seed = 4242)
+    {
+        if (target == null) throw new ArgumentNullException(nameof(target));
+        if (string.IsNullOrEmpty(outputPath)) throw new ArgumentException("outputPath が空です。");
+
+        // メインスレッドのうちに銘柄を読んでおく
+        PrewarmItems(itemCount);
+
+        var startCopy = (start ?? new LocalAbmSettings()).Clone();
+
+        var dir = System.IO.Path.GetDirectoryName(outputPath);
+        if (!string.IsNullOrEmpty(dir)) System.IO.Directory.CreateDirectory(dir);
+        System.IO.File.WriteAllText(outputPath, "RUNNING\n");
+
+        System.Threading.Tasks.Task.Run(() =>
+        {
+            var sb = new System.Text.StringBuilder();
+            try
+            {
+                var result = Fit(target, startCopy, iterations, turns, itemCount, seed);
+                sb.AppendLine("INITIAL " + result.InitialStats);
+                sb.AppendLine("INITIAL_LOSS " + result.InitialLoss.ToString("F4"));
+                sb.AppendLine("BEST " + result.Stats);
+                sb.AppendLine("BEST_LOSS " + result.Loss.ToString("F4"));
+                sb.AppendLine("EVALS " + result.Evaluations);
+                sb.AppendLine("JSON " + JsonUtility.ToJson(result.Best));
+                sb.AppendLine("DONE");
+            }
+            catch (Exception ex)
+            {
+                sb.AppendLine("ERROR " + ex.GetType().Name + ": " + ex.Message);
+                sb.AppendLine("DONE");
+            }
+
+            try { System.IO.File.WriteAllText(outputPath, sb.ToString()); }
+            catch { /* 書き出し失敗はポーリング側のタイムアウトで検知される */ }
+        });
+    }
+
+    /// <summary>
     /// 1設定を評価して統計量を返す。
     /// 同じ seed / turns / itemCount なら常に同じ結果になる（探索の再現性のため）。
     /// </summary>

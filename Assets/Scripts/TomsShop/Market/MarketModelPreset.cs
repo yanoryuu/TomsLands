@@ -18,13 +18,14 @@ public class MarketModelPreset : ScriptableObject
 
     [Header("キャリブレーションの目標（Jev のお手本統計量）")]
     [Tooltip("尖度。実市場は 5〜10。大きいほど「たまに大暴落」が起きる。")]
-    public float targetKurtosis = 4.46f;
+    public float targetKurtosis = 3.95f;
     [Tooltip("|リターン| のラグ1自己相関。ボラティリティ・クラスタリング。実市場は 0.1〜0.3。")]
-    public float targetAbsAutocorr1 = 0.427f;
-    [Tooltip("リターンのラグ1自己相関。予測可能性。実市場はほぼ 0。")]
-    public float targetAutocorr1 = -0.066f;
+    public float targetAbsAutocorr1 = 0.618f;
+    [Tooltip("リターンのラグ1自己相関。予測可能性。実市場はほぼ 0 だが、" +
+             "本作は「チャートを読む腕が活きる相場」を狙うため意図的に正の値を目標にする。")]
+    public float targetAutocorr1 = 0.450f;
     [Tooltip("対数リターンの標準偏差。ボラティリティ水準。")]
-    public float targetStdDev = 0.0079f;
+    public float targetStdDev = 0.0180f;
 
     [Header("キャリブレーションの達成値（ABM の実測）")]
     public float achievedKurtosis;
@@ -40,8 +41,9 @@ public class MarketModelPreset : ScriptableObject
     [Tooltip("お手本を作った Jev の設定（ペルソナ比率・λ・ターン数など）。")]
     [TextArea(3, 8)]
     public string referenceNote =
-        "Jev 参照ラン: ペルソナ比率 {Momentum .05 / Contrarian .35 / DemandWatcher .05 / MarketMaker .45 / Noise .10}, " +
-        "lambda=0.12, 40ターン×8銘柄, seed=1001";
+        "Jev 参照ラン（構成B・腕が活きる相場）: ペルソナ比率 " +
+        "{Momentum .15 / Contrarian .30 / DemandWatcher .10 / MarketMaker .25 / Noise .20}, " +
+        "lambda=0.12, 60ターン×8銘柄×4シード(2001-2004)";
 
     /// <summary>目標統計量を <see cref="MarketStats"/> の形で返す。</summary>
     public MarketStats TargetStats()
