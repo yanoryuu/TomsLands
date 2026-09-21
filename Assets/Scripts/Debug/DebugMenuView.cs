@@ -29,6 +29,7 @@ public class DebugMenuView : MonoBehaviour
     private DungeonRepository _dungeonRepository;
     private MetaProgressModel _metaProgress;
     private List<RelicDefinition> _relicDefinitions;
+    private ShopEconomySettings _economySettings;
 
     // MetaProgressModel がスコープに無いシーン用のローカルインスタンス（metaData.json直読み書き）
     private MetaProgressModel _localMeta;
@@ -39,7 +40,11 @@ public class DebugMenuView : MonoBehaviour
     private Vector2 _scroll;
     private GUIStyle _headerStyle;
     private int _tab;
-    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "その他" };
+    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他" };
+
+    private float _volMultiplier = 1f;
+    private float _baseLambda;
+    private int _fastForwardCount;
 
     private string _moneyInput = "10000";
     private string _bankInput = "10000";
@@ -69,6 +74,7 @@ public class DebugMenuView : MonoBehaviour
         resolver.TryResolve(out _dungeonRepository);
         resolver.TryResolve(out _metaProgress);
         resolver.TryResolve(out _relicDefinitions);
+        resolver.TryResolve(out _economySettings);
     }
 
     private void Update()
@@ -113,7 +119,8 @@ public class DebugMenuView : MonoBehaviour
             case 2: DrawLevelSection(); break;
             case 3: DrawRelicSection(); break;
             case 4: DrawBuzzSection(); DrawStatusSection(); break;
-            case 5: DrawMiscSection(); break;
+            case 5: DrawMarketSection(); break;
+            case 6: DrawMiscSection(); break;
         }
 
         GUILayout.EndScrollView();
@@ -438,6 +445,137 @@ public class DebugMenuView : MonoBehaviour
     // =====================================================
     // その他
     // =====================================================
+    // =====================================================
+    // 相場（価格変動エンジンの切り替えと観測）
+    // =====================================================
+    private void DrawMarketSection()
+    {
+        GUILayout.Label("■ 価格変動エンジン", _headerStyle);
+
+        if (_economySettings == null)
+        {
+            GUILayout.Label("ShopEconomySettings なし");
+            return;
+        }
+
+        bool hasPreset = _economySettings.marketModelPreset != null;
+        bool abmActive = _economySettings.useAbmPriceEngine && hasPreset;
+
+        GUILayout.Label($"現在: {(abmActive ? "ABM（仮想トレーダー）" : "Legacy（需要帯の一様乱数）")}");
+
+        bool next = GUILayout.Toggle(_economySettings.useAbmPriceEngine, " ABM を使う");
+        if (next != _economySettings.useAbmPriceEngine)
+        {
+            _economySettings.useAbmPriceEngine = next;
+            // ItemModel 側は設定変更を検知してエンジンを作り直すため、ここでは通知だけでよい
+            Debug.Log($"[DebugMenu] 価格変動エンジンを {(next ? "ABM" : "Legacy")} に切り替えました" +
+                      "（次のターン経済更新から反映）");
+        }
+
+        if (_economySettings.useAbmPriceEngine && !hasPreset)
+        {
+            GUILayout.Label("※ marketModelPreset 未設定のため Legacy で動作中");
+        }
+
+        GUILayout.Label("※ Editor では ScriptableObject への変更が保存されます");
+
+        if (hasPreset)
+        {
+            var p = _economySettings.marketModelPreset;
+            GUILayout.Space(4);
+            GUILayout.Label("■ プリセットの達成値", _headerStyle);
+            GUILayout.Label($"尖度 {p.achievedKurtosis:F2}（目標 {p.targetKurtosis:F2}）");
+            GUILayout.Label($"ボラ集中 {p.achievedAbsAutocorr1:F3}（目標 {p.targetAbsAutocorr1:F2}）");
+            GUILayout.Label($"トレンド持続 {p.achievedAutocorr1:F3}（目標 {p.targetAutocorr1:F2}）");
+            GUILayout.Label($"1ターン変動 {p.achievedStdDev:F4}（目標 {p.targetStdDev:F4}）");
+            GUILayout.Label($"インパクト指数 {p.abm.impactExponent:F2} / λ {p.abm.lambda:F3}");
+
+            // 値幅の体感を確かめるためのライブ調整。
+            // λ はボラティリティの主ツマミで、上げるほど売買の利幅が広がる代わりに
+            // 変動が荒くなる。キャリブレーション値からの倍率として触る。
+            if (_baseLambda <= 0f) _baseLambda = p.abm.lambda;
+            GUILayout.Space(2);
+            float mul = GUILayout.HorizontalSlider(_volMultiplier, 0.5f, 3f);
+            if (!Mathf.Approximately(mul, _volMultiplier))
+            {
+                _volMultiplier = mul;
+                p.abm.lambda = _baseLambda * _volMultiplier;
+                _itemModel?.InvalidatePriceEngine();
+            }
+            GUILayout.Label($"ボラ倍率 ×{_volMultiplier:F2}（λ {p.abm.lambda:F3}）");
+            GUILayout.Label("×1.0 が調整済みの値。10ターン以内に+10%の機会が約11%。");
+            GUILayout.Label("※上げると利幅は増えるが値動きが毎ターン反転するノコギリ波になる");
+            GUILayout.Label("　（×1.5 で racf1 −0.56）。体感を試す用で、出荷値は ×1.0。");
+            if (!string.IsNullOrEmpty(p.calibratedAt))
+            {
+                GUILayout.Label($"調整日時 {p.calibratedAt}");
+            }
+        }
+
+        GUILayout.Space(6);
+        GUILayout.Label("■ 現在の相場", _headerStyle);
+
+        if (_itemModel == null)
+        {
+            GUILayout.Label("ItemModel なし");
+            return;
+        }
+
+        // 需要→価格の効き（層1）をその場で調整する。Legacy には影響しない。
+        float prem = GUILayout.HorizontalSlider(_economySettings.demandPricePremium, 0f, 1f);
+        if (!Mathf.Approximately(prem, _economySettings.demandPricePremium))
+        {
+            _economySettings.demandPricePremium = prem;
+        }
+        GUILayout.Label($"需要→価格の強さ {_economySettings.demandPricePremium:F2}" +
+                        $"（需要0.8で基準の {1f + _economySettings.demandPricePremium * 0.6f:F2}倍が適正値）");
+
+        if (GUILayout.Button("ターン経済だけ回す（×10）"))
+        {
+            // 早送りでも毎回違うターン番号を渡し、ABM のターン乱数が同じ系列を繰り返さないようにする
+            int baseTurn = _gameFlowManager != null ? _gameFlowManager.CurrentTurn.Value : 0;
+            int flowSeed = _tomsModel != null ? _tomsModel.FlowSeed : 0;
+            for (int i = 0; i < 10; i++)
+            {
+                _itemModel.ApplyShopTurnEconomy(
+                    _economySettings,
+                    _tomsModel != null ? _tomsModel.BlacksmithLevel.Value : 99,
+                    _statusModel, 0f,
+                    baseTurn + 1000 + _fastForwardCount++, flowSeed);
+            }
+        }
+        GUILayout.Label("※ ターンは進めず価格・需要だけ10回更新する（相場の動きを早送りで確認する用）");
+
+        GUILayout.Space(4);
+        foreach (var item in _itemModel.RuntimeItems)
+        {
+            if (item == null) continue;
+
+            var master = _itemModel.GetMasterItem(item.ItemId);
+            if (master == null || master.basePrice <= 0) continue;
+            if (_tomsModel != null && item.RequiredLevel.Value > _tomsModel.BlacksmithLevel.Value) continue;
+
+            float ratio = (float)item.CurrentPrice.Value / master.basePrice;
+            int delta = item.CurrentPrice.Value - item.PreviousPrice;
+            string sign = delta > 0 ? "+" : "";
+
+            // 荒れ具合。価格履歴から毎回計算するので保存も同期も要らない。
+            // ゲーム本編の UI も同じ MarketHeat.Compute / Describe / ToColor を呼べばよい。
+            float heat = MarketHeat.Compute(item.ShopPriceHistory);
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(
+                $"{item.ItemName}  {item.CurrentPrice.Value}G " +
+                $"({ratio * 100f:F0}%)  {sign}{delta}  需要{item.Demand.Value:F2}");
+
+            var prevColor = GUI.color;
+            GUI.color = MarketHeat.ToColor(heat);
+            GUILayout.Label($"{MarketHeat.Describe(heat)} {heat:F2}", GUILayout.Width(74));
+            GUI.color = prevColor;
+            GUILayout.EndHorizontal();
+        }
+    }
+
     private void DrawMiscSection()
     {
         GUILayout.Label("■ 進行", _headerStyle);

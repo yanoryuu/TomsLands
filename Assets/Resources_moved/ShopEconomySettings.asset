@@ -12,6 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10012a2dac794e59bb666be8a7ce1c06, type: 3}
   m_Name: ShopEconomySettings
   m_EditorClassIdentifier: 
+  useAbmPriceEngine: 1
+  marketModelPreset: {fileID: 11400000, guid: 399647cafd1a1d145910f6b9bf2d3af9, type: 2}
+  abmSeed: 0
+  demandPricePremium: 0.5
   highDemandThreshold: 0.7
   highDemandPriceRateMin: 1.1
   highDemandPriceRateMax: 1.3
@@ -35,6 +39,10 @@ MonoBehaviour:
   retentionStabilizer: 0.6
   followerWeight: 0.1
   followerScale: 1000
+  sellOrderDelayTurns: 1
+  sellOrderPriceClampRate: 0.2
+  sellOrderFeeRate: 0
+  useProbabilisticShopSales: 0
   trendAmplitude: 0.3
   trendConvergenceRate: 0.15
   trendDriftMax: 0.12

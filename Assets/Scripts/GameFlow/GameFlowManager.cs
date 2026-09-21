@@ -193,7 +193,8 @@ public class GameFlowManager : IDisposable, IStartable
             float demandFloorBonus = _shopMachineModel?.TotalDemandFloorBonus ?? 0f;
             if (_relicResolver != null)
                 demandFloorBonus = _relicResolver.Modify(RelicStatId.DemandFloorAdd, demandFloorBonus);
-            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus);
+            _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
+                CurrentTurn.Value, _tomsModel.FlowSeed);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");

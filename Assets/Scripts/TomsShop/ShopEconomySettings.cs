@@ -7,6 +7,27 @@
 [CreateAssetMenu(fileName = "ShopEconomySettings", menuName = "ScriptableObjects/ShopEconomySettings")]
 public class ShopEconomySettings : ScriptableObject
 {
+    [Header("価格変動エンジンの選択")]
+    [Tooltip("true にすると価格変動を ABM（仮想トレーダーの注文フロー）で決める。\n" +
+             "false（既定）なら従来の需要帯ごとの一様乱数で、挙動は完全に従来どおり。\n" +
+             "有効にするには marketModelPreset の設定も必要（未設定なら従来挙動へフォールバック）。")]
+    public bool useAbmPriceEngine;
+
+    [Tooltip("ABM のキャリブレーション済みパラメータ。useAbmPriceEngine が true のときだけ使う。\n" +
+             "Assets/Resources_moved/MarketModelPreset.asset")]
+    public MarketModelPreset marketModelPreset;
+
+    [Tooltip("ABM のトレーダー編成シード。0 ならランのシード（FlowSeed）を使い、ラン再現と揃う。固定すると毎回同じ編成になる。")]
+    public int abmSeed;
+
+    [Tooltip("需要が価格を押し上げ／押し下げる強さ（適正値の傾き）。需要0.5を中立として、\n" +
+             "0.5 なら需要0.8で基準価格の1.3倍、需要0.2で0.7倍が「適正値」になる。\n" +
+             "ABM の逆張り勢はこの適正値へ価格を引き寄せる。陳列・バズ・戦闘の属性波及・広告は\n" +
+             "すべて需要を動かすので、この1本で全部が価格へ届く。0.3=控えめ / 0.5=標準 / 0.8=需要ゲーム寄り。\n" +
+             "Legacy には影響しない。")]
+    [Range(0f, 1f)]
+    public float demandPricePremium = 0.5f;
+
     [Header("案S1: 需要連動型じわじわ価格変動")]
     [Tooltip("人気商品（Demand≥この値）の毎ターン価格上昇率（例: 1.02 = 2%UP）")]
     public float highDemandThreshold = 0.7f;
