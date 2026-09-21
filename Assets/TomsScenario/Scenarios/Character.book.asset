@@ -1,0 +1,695 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 8
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9856eecfcd6b8df42ac2ebd73cc36dff, type: 3}
+  m_Name: Character.book
+  m_EditorClassIdentifier: 
+  importVersion: 0
+  importGridList: []
+  gridList:
+  - rows:
+    - rowIndex: 0
+      debugIndex: 0
+      strings:
+      - CharacterName
+      - NameText
+      - Pattern
+      - Pivot
+      - Scale
+      - FileName
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 1
+      debugIndex: 1
+      strings:
+      - "\u30C8\u30B3"
+      - "\u30C8\u30B3"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 2
+      debugIndex: 2
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 3
+      debugIndex: 3
+      strings:
+      - 
+      - 
+      - "03_\u5927\u7B11\u3044"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 4
+      debugIndex: 4
+      strings:
+      - 
+      - 
+      - "04_\u56F0\u308A"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 5
+      debugIndex: 5
+      strings:
+      - 
+      - 
+      - "05_\u60B2\u3057\u3044"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 6
+      debugIndex: 6
+      strings:
+      - 
+      - 
+      - "07_\u6012\u308A"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 7
+      debugIndex: 7
+      strings:
+      - 
+      - 
+      - "08_\u9A5A\u304D"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 8
+      debugIndex: 8
+      strings:
+      - 
+      - 
+      - "09_\u7167\u308C"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 9
+      debugIndex: 9
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 10
+      debugIndex: 10
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u30C8\u30B3-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 11
+      debugIndex: 11
+      strings:
+      - "\u5360\u3044\u5E2B"
+      - "\u5360\u3044\u5E2B"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 12
+      debugIndex: 12
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 13
+      debugIndex: 13
+      strings:
+      - 
+      - 
+      - "03_\u5927\u7B11\u3044"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 14
+      debugIndex: 14
+      strings:
+      - 
+      - 
+      - "04_\u56F0\u308A"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 15
+      debugIndex: 15
+      strings:
+      - 
+      - 
+      - "05_\u60B2\u3057\u3044"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 16
+      debugIndex: 16
+      strings:
+      - 
+      - 
+      - "07_\u6012\u308A"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 17
+      debugIndex: 17
+      strings:
+      - 
+      - 
+      - "08_\u9A5A\u304D"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 18
+      debugIndex: 18
+      strings:
+      - 
+      - 
+      - "09_\u7167\u308C"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 19
+      debugIndex: 19
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 20
+      debugIndex: 20
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u5360\u3044\u5E2B-\u80CC\u666F\u900F\u3051 (1).png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 21
+      debugIndex: 21
+      strings:
+      - "\u52C7\u8005"
+      - "\u52C7\u8005"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 22
+      debugIndex: 22
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 23
+      debugIndex: 23
+      strings:
+      - 
+      - 
+      - "03_\u5927\u7B11\u3044"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 24
+      debugIndex: 24
+      strings:
+      - 
+      - 
+      - "04_\u56F0\u308A"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 25
+      debugIndex: 25
+      strings:
+      - 
+      - 
+      - "05_\u60B2\u3057\u3044"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 26
+      debugIndex: 26
+      strings:
+      - 
+      - 
+      - "07_\u6012\u308A"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 27
+      debugIndex: 27
+      strings:
+      - 
+      - 
+      - "08_\u9A5A\u304D"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 28
+      debugIndex: 28
+      strings:
+      - 
+      - 
+      - "09_\u7167\u308C"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 29
+      debugIndex: 29
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 30
+      debugIndex: 30
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u52C7\u8005-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 31
+      debugIndex: 31
+      strings:
+      - "\u935B\u51B6\u5C4B"
+      - "\u935B\u51B6\u5C4B"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 32
+      debugIndex: 32
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 33
+      debugIndex: 33
+      strings:
+      - 
+      - 
+      - "03_\u5927\u7B11\u3044"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 34
+      debugIndex: 34
+      strings:
+      - 
+      - 
+      - "04_\u56F0\u308A"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 35
+      debugIndex: 35
+      strings:
+      - 
+      - 
+      - "05_\u60B2\u3057\u3044"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 36
+      debugIndex: 36
+      strings:
+      - 
+      - 
+      - "07_\u6012\u308A"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 37
+      debugIndex: 37
+      strings:
+      - 
+      - 
+      - "08_\u9A5A\u304D"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 38
+      debugIndex: 38
+      strings:
+      - 
+      - 
+      - "09_\u7167\u308C"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 39
+      debugIndex: 39
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 40
+      debugIndex: 40
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u935B\u51B6\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 41
+      debugIndex: 41
+      strings:
+      - "\u60C5\u5831\u5C4B"
+      - "\u60C5\u5831\u5C4B"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 42
+      debugIndex: 42
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 43
+      debugIndex: 43
+      strings:
+      - 
+      - 
+      - "04_\u56F0\u308A"
+      - Bottom
+      - 0.45
+      - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 44
+      debugIndex: 44
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 45
+      debugIndex: 45
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 46
+      debugIndex: 46
+      strings:
+      - "\u9053\u5177\u5C4B"
+      - "\u9053\u5177\u5C4B"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 47
+      debugIndex: 47
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 48
+      debugIndex: 48
+      strings:
+      - 
+      - 
+      - "04_\u56F0\u308A"
+      - Bottom
+      - 0.45
+      - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 49
+      debugIndex: 49
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 50
+      debugIndex: 50
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 51
+      debugIndex: 51
+      strings:
+      - "\u9B54\u738B"
+      - "\u9B54\u738B"
+      - "01_\u901A\u5E38"
+      - Bottom
+      - 0.45
+      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 52
+      debugIndex: 52
+      strings:
+      - 
+      - 
+      - "02_\u7B11\u9854"
+      - Bottom
+      - 0.45
+      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 53
+      debugIndex: 53
+      strings:
+      - 
+      - 
+      - "07_\u6012\u308A"
+      - Bottom
+      - 0.45
+      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 54
+      debugIndex: 54
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.45
+      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 55
+      debugIndex: 55
+      strings:
+      - 
+      - 
+      - "12_\u30C9\u30E4\u9854"
+      - Bottom
+      - 0.45
+      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    name: Assets/TomsScenario/Scenarios/Character.csv
+    type: 0
+    textLength: 1597
+    headerRow: 0
+    sourceAssetInEditor: {fileID: 4900000, guid: 5bfd41f7e7605af4b9b67ba6a0df3dab, type: 3}

@@ -17,6 +17,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly TomsModel _tomsModel;
     private readonly HeroModel _heroModel;
     private readonly RelicRewardService _relicRewardService;
+    private readonly MetaProgressModel _metaProgress;
 
     public BattleResultHandler(
         BattleOutputData outputData,
@@ -27,8 +28,10 @@ public class BattleResultHandler : IStartable, IDisposable
         ShopEconomySettings economySettings,
         TomsModel tomsModel,
         HeroModel heroModel,
-        RelicRewardService relicRewardService)
+        RelicRewardService relicRewardService,
+        MetaProgressModel metaProgress)
     {
+        _metaProgress = metaProgress;
         _outputData = outputData;
         _inputData = inputData;
         _itemModel = itemModel;
@@ -49,6 +52,9 @@ public class BattleResultHandler : IStartable, IDisposable
 
         // GameFlowManager のインデックスを復元（シーン再生成で失われるため）
         _gameFlowManager.RestoreIndex(_inputData.GameFlowIndex);
+
+        // 初めて配信から帰ってきたターンを記録する（イベント／バズのチュートリアルの起点）
+        _metaProgress?.RecordFirstBattleTurn(_gameFlowManager.CurrentTurn.Value);
 
         // --- 売上処理（在庫を減らしてお金を加算）---
         // 在庫減算は SoldFromStock（持ち込み分のみ。バトル中の補充分は店在庫に無い）

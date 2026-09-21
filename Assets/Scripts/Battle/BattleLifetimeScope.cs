@@ -101,6 +101,10 @@ public class BattleLifetimeScope : LifetimeScope
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
 
+        // 配信チュートリアルの会話（既読フラグは metaData.json）
+        builder.Register<MetaProgressModel>(Lifetime.Singleton);
+        builder.Register<TutorialScenarioService>(Lifetime.Singleton);
+
         // StreamingSetting（品出し設定）
         builder.Register<StreamingSettingModel>(Lifetime.Singleton);
         if (streamingSettingView != null)

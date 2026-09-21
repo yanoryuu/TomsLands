@@ -31,6 +31,12 @@ public class MetaProgressModel
     /// <summary>村施設のレベル（facilityIdキー。JsonUtility対応のためList保持）。</summary>
     private readonly System.Collections.Generic.List<FacilityLevelPlain> facilityLevels = new();
 
+    /// <summary>会話チュートリアルの既読フラグ（tutorialIdキー。JsonUtility対応のためList保持）。</summary>
+    private readonly System.Collections.Generic.List<TutorialFlagPlain> tutorialFlags = new();
+
+    /// <summary>初めて配信（Battle）から帰還したターン番号。未経験なら0。</summary>
+    public int FirstBattleTurn { get; private set; }
+
     public MetaProgressModel()
     {
         LoadData();
@@ -94,6 +100,47 @@ public class MetaProgressModel
             }
         }
         facilityLevels.Add(new FacilityLevelPlain { facilityId = facilityId, level = level });
+    }
+
+    // ========================================
+    // 会話チュートリアル（ラン跨ぎで一度だけ再生する）
+    // ========================================
+
+    /// <summary>指定IDのチュートリアル会話を再生済みか。</summary>
+    public bool HasSeenTutorial(string tutorialId)
+    {
+        if (string.IsNullOrEmpty(tutorialId)) return true;
+        foreach (var entry in tutorialFlags)
+        {
+            if (entry.tutorialId == tutorialId) return entry.seen;
+        }
+        return false;
+    }
+
+    /// <summary>指定IDのチュートリアル会話を再生済みにして保存する。</summary>
+    public void MarkTutorialSeen(string tutorialId)
+    {
+        if (string.IsNullOrEmpty(tutorialId)) return;
+        foreach (var entry in tutorialFlags)
+        {
+            if (entry.tutorialId == tutorialId)
+            {
+                if (entry.seen) return;
+                entry.seen = true;
+                SaveData();
+                return;
+            }
+        }
+        tutorialFlags.Add(new TutorialFlagPlain { tutorialId = tutorialId, seen = true });
+        SaveData();
+    }
+
+    /// <summary>初回の配信帰還ターンを記録する（既に記録済みなら何もしない）。</summary>
+    public void RecordFirstBattleTurn(int turn)
+    {
+        if (FirstBattleTurn > 0 || turn <= 0) return;
+        FirstBattleTurn = turn;
+        SaveData();
     }
 
     /// <summary>
@@ -181,6 +228,8 @@ public class MetaProgressModel
             bestRank = BestRank,
             villageFunds = VillageFunds,
             facilities = new System.Collections.Generic.List<FacilityLevelPlain>(facilityLevels),
+            tutorials = new System.Collections.Generic.List<TutorialFlagPlain>(tutorialFlags),
+            firstBattleTurn = FirstBattleTurn,
         };
         File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
     }
@@ -198,6 +247,8 @@ public class MetaProgressModel
             BestRank = "";
             VillageFunds = 0;
             facilityLevels.Clear();
+            tutorialFlags.Clear();
+            FirstBattleTurn = 0;
             return;
         }
 
@@ -228,6 +279,17 @@ public class MetaProgressModel
                 facilityLevels.Add(entry);
             }
         }
+
+        tutorialFlags.Clear();
+        if (data.tutorials != null)
+        {
+            foreach (var entry in data.tutorials)
+            {
+                if (entry == null || string.IsNullOrEmpty(entry.tutorialId) || !entry.seen) continue;
+                tutorialFlags.Add(entry);
+            }
+        }
+        FirstBattleTurn = Mathf.Max(0, data.firstBattleTurn);
     }
 }
 
@@ -246,6 +308,18 @@ public class MetaProgressData
     // --- 村（メタ層）。旧セーブは欠損→0/空で正規化 ---
     public int villageFunds;
     public System.Collections.Generic.List<FacilityLevelPlain> facilities = new();
+
+    // --- 会話チュートリアル。旧セーブは欠損→空/0で正規化 ---
+    public System.Collections.Generic.List<TutorialFlagPlain> tutorials = new();
+    public int firstBattleTurn;
+}
+
+/// <summary>チュートリアル会話1本ぶんの既読フラグ（JsonUtilityはDictionary不可のためList要素）。</summary>
+[Serializable]
+public class TutorialFlagPlain
+{
+    public string tutorialId;
+    public bool seen;
 }
 
 /// <summary>村施設1つぶんのレベル保存（JsonUtilityはDictionary不可のためList要素）。</summary>

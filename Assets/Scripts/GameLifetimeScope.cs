@@ -253,6 +253,9 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<BlackSmithModel>(Lifetime.Singleton);
         builder.Register<StateManager>(Lifetime.Singleton);
         builder.Register<TurnPhaseManager>(Lifetime.Singleton);
+        // ラン跨ぎのメタ進行（会話チュートリアルの既読フラグと初配信ターンをここに持つ）
+        builder.Register<MetaProgressModel>(Lifetime.Singleton);
+        builder.Register<TutorialScenarioService>(Lifetime.Singleton);
 
         // イベント関連
         builder.Register<PendingEventData>(Lifetime.Singleton);
@@ -346,6 +349,9 @@ public class GameLifetimeScope : LifetimeScope
         // ターン行動ヒント（InspectorでturnActionHintViewを設定した場合のみ有効）
         if (turnActionHintView != null)
             builder.RegisterEntryPoint<TurnActionHintPresenter>();
+
+        // 会話チュートリアル（Utage の会話をターン進行や画面遷移に差し込む）
+        builder.RegisterEntryPoint<TutorialPresenter>();
 
         // --- 5. System Logic (Save/Delete) ---
         // セーブ削除や保存ロジックを独立したクラスとして登録

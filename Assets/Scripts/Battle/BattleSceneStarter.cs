@@ -25,6 +25,11 @@ public class BattleSceneStarter : IAsyncStartable
     private readonly BattleResultView _resultView;
     private readonly BattlePanelManager _panelManager;
     private readonly BattleControlView _controlView;
+    private readonly TutorialScenarioService _tutorialScenario;
+
+    // 配信チュートリアルのシナリオラベル
+    private const string TutorialStreamingPrepare = "Tutorial_StreamingPrepare";
+    private const string TutorialStreamingStart   = "Tutorial_StreamingStart";
 
     // ポーズ・在庫切れ管理
     private readonly BattlePauseController _pauseController = new();
@@ -48,8 +53,10 @@ public class BattleSceneStarter : IAsyncStartable
         StreamingSettingPresenter settingPresenter,
         BattleResultView resultView,
         BattlePanelManager panelManager,
-        BattleControlView controlView)
+        BattleControlView controlView,
+        TutorialScenarioService tutorialScenario)
     {
+        _tutorialScenario = tutorialScenario;
         _battleSequencer = battleSequencer;
         _inputData = inputData;
         _outputData = outputData;
@@ -83,6 +90,11 @@ public class BattleSceneStarter : IAsyncStartable
         // --- Phase 1: StreamingSetting（品出し設定） ---
         Debug.Log("[BattleSceneStarter] Phase 1: StreamingSetting");
         _panelManager?.ShowPanel(StreamingGamePhase.StreamingSetting);
+
+        // 初回だけ、占い師が品出しのやり方を説明する
+        if (_tutorialScenario != null)
+            await _tutorialScenario.PlayOnceAsync(TutorialStreamingPrepare, cancellation);
+
         var selectedItems = await _settingPresenter.RunAsync();
 
         // 選択結果を BattleInputData に書き込み
@@ -107,6 +119,10 @@ public class BattleSceneStarter : IAsyncStartable
         // 配信開始前の3秒カウントダウン（戦闘・販売ループはこの後に始まる）
         if (_controlView != null)
             await _controlView.PlayCountdownAsync(3, cancellation);
+
+        // 初回だけ、配信画面の見かたを説明する（戦闘が始まる前に挟む）
+        if (_tutorialScenario != null)
+            await _tutorialScenario.PlayOnceAsync(TutorialStreamingStart, cancellation);
 
         var targetDungeon = ResolveTargetDungeon();
         if (targetDungeon == null)
