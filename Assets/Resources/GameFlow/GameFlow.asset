@@ -22,12 +22,12 @@ MonoBehaviour:
   - EventType: 2
     EventData: 
     BattleDungeon: 0
-  - EventType: 2
-    EventData: 
-    BattleDungeon: 0
   - EventType: 1
     EventData: 
     BattleDungeon: 3
+  - EventType: 2
+    EventData: 
+    BattleDungeon: 0
   - EventType: 2
     EventData: 
     BattleDungeon: 0
