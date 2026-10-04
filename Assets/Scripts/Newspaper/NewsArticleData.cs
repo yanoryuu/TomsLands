@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 /// <summary>
 /// 記事1本分のマスター。NewsArticles.csv（タブ区切り）1行 = 1記事。
 ///
@@ -32,13 +34,41 @@ public class NewsArticleData
     public float hypeRate;        // 1.00〜1.08。掲載ターンの価格倍率。真偽に関わらず起きる
     public int durationTurns;
 
-    public string followUpId;     // 結果記事 / 訂正記事
+    /// <summary>
+    /// 決着後に出す続報の記事ID。カンマ区切りで複数書ける（結果記事と訂正記事を両方用意しておく）。
+    /// 実際に出す方は掲載時の真偽で決まる（本物 → 結果記事 / 誤報 → 訂正記事）。
+    /// 向きは「親 → 続報」の一方向。続報側の followUpId は空にする。
+    /// </summary>
+    public string followUpId;
     public string condition;      // 出現条件（nextDungeon=X / heroLevel>=N / turn>=N）
     public int weight;
     public string summaryEn;      // Jev 検証専用。製品には出さない
 
     public bool IsFalse => truth == "false";
     public bool IsExaggerated => truth == "exaggerated";
+
+    /// <summary>訂正記事。単独では抽選されず、誤報の親記事の続報としてのみ載る。</summary>
+    public bool IsCorrection => category == "correction";
+
+    /// <summary>効果の対象（属性・種別・銘柄のいずれか）が書かれているか。</summary>
+    public bool HasTarget =>
+        !string.IsNullOrEmpty(targetAttribute)
+        || !string.IsNullOrEmpty(targetType)
+        || !string.IsNullOrEmpty(targetItemId);
+
+    /// <summary>followUpId を分解した続報ID の列。</summary>
+    public IEnumerable<string> FollowUpIds
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(followUpId)) yield break;
+            foreach (var part in followUpId.Split(','))
+            {
+                var t = part.Trim();
+                if (t.Length > 0) yield return t;
+            }
+        }
+    }
 
     /// <summary>この記事の効果が指定の銘柄に及ぶか。空欄の条件は無視する。</summary>
     public bool Matches(RuntimeItemData item)
@@ -60,11 +90,7 @@ public class NewsArticleData
     }
 
     /// <summary>需要を動かす効果を持つか。持たない記事は純粋なフレーバー。</summary>
-    public bool HasEffect =>
-        (trendDelta != 0f || demandKick != 0f)
-        && (!string.IsNullOrEmpty(targetAttribute)
-            || !string.IsNullOrEmpty(targetType)
-            || !string.IsNullOrEmpty(targetItemId));
+    public bool HasEffect => (trendDelta != 0f || demandKick != 0f) && HasTarget;
 
     public override string ToString() => $"[{id}] {headline} ({category}/{page}/{truth})";
 }

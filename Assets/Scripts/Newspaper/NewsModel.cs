@@ -41,19 +41,17 @@ public class NewsModel
     }
 
     /// <summary>
-    /// そのターンに<b>効果が生きている</b>記事。
+    /// そのターンに<b>効果が生きている</b>記事（2段目）。
     /// 誤報は効果を持たない（1段目の値動きだけ起きて、実体が来ないのが誤報の正体）。
+    /// 続報（結果・訂正）も値を動かさない。
     /// </summary>
     public List<NewsIssueEntry> ActiveEffectsOn(int turn)
     {
         var list = new List<NewsIssueEntry>();
         foreach (var e in calendar)
         {
-            var a = e.Article;
-            if (a == null || a.IsFalse || !a.HasEffect) continue;
-
-            int duration = Mathf.Max(1, a.durationTurns);
-            if (turn >= e.effectTurn && turn < e.effectTurn + duration) list.Add(e);
+            if (!e.HasRealEffect) continue;
+            if (turn >= e.effectTurn && turn < e.SettleTurn) list.Add(e);
         }
         return list;
     }
@@ -64,9 +62,27 @@ public class NewsModel
         var list = new List<NewsIssueEntry>();
         foreach (var e in calendar)
         {
-            var a = e.Article;
-            if (a == null || a.IsFalse || !a.HasEffect) continue;
+            if (!e.HasRealEffect) continue;
             if (e.effectTurn == turn) list.Add(e);
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// 価格の跳ね（1段目）に関わる記事。掲載ターンに跳ね、発効ターンから
+    /// NewsTuning.HypeUnwindTurns かけて剥がれる。<b>真偽を問わない</b>。
+    /// 期間中（掲載〜剥がれ終わり）の通常記事だけを返す。
+    /// </summary>
+    public List<NewsIssueEntry> HypeSourcesOn(int turn)
+    {
+        var list = new List<NewsIssueEntry>();
+        foreach (var e in calendar)
+        {
+            if (e.kind != NewsEntryKind.Report) continue;
+            if (turn < e.publishTurn) continue;
+            int unwindEnd = Mathf.Max(e.effectTurn, e.publishTurn + 1) + NewsTuning.HypeUnwindTurns;
+            if (turn >= unwindEnd) continue;
+            list.Add(e);
         }
         return list;
     }

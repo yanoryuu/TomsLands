@@ -62,6 +62,9 @@ public static class NewsMasterLoader
 
         foreach (var c in ParseRows(text.text, 21))
         {
+            // 効果量は trendDelta だけ書けば残りは目盛り（NewsTuning）から埋まる。
+            // 空欄と「明示的に 0」は区別する（0 と書けば既定値で上書きしない）。
+            float trendDelta = ToFloat(c[13]);
             _articles.Add(new NewsArticleData
             {
                 id = c[0],
@@ -77,10 +80,10 @@ public static class NewsMasterLoader
                 targetAttribute = c[10],
                 targetType = c[11],
                 targetItemId = c[12],
-                trendDelta = ToFloat(c[13]),
-                demandKick = ToFloat(c[14]),
-                hypeRate = c[15].Length == 0 ? 1f : ToFloat(c[15]),
-                durationTurns = ToInt(c[16]),
+                trendDelta = trendDelta,
+                demandKick = c[14].Length == 0 ? NewsTuning.DefaultDemandKick(trendDelta) : ToFloat(c[14]),
+                hypeRate = c[15].Length == 0 ? NewsTuning.DefaultHypeRate(c[2], trendDelta) : ToFloat(c[15]),
+                durationTurns = c[16].Length == 0 ? NewsTuning.DefaultDuration(trendDelta) : ToInt(c[16]),
                 followUpId = c[17],
                 condition = c[18],
                 weight = c[19].Length == 0 ? 1 : ToInt(c[19]),

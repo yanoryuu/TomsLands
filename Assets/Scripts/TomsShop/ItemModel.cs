@@ -475,6 +475,8 @@ public class ItemModel
 
             // 掲載ターンの跳ね。世界中が同じ紙面を読んで飛びつくので、記事が出た時点で
             // 既に少し高い。誤報でもこれは起きる（そして実体が来ないので高値掴みになる）。
+            // 発効ターンからは跳ねが数ターンかけて剥がれる（倍率が 1 未満で返る）。
+            // 本物ならそこへ2段目の需要が来て値を支え、誤報なら値だけが落ちる。
             float newsHype = news != null ? news.HypeRate(runtime, turnIndex) : 1f;
             if (newsHype != 1f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * newsHype));
 

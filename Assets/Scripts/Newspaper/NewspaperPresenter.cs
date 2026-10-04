@@ -58,7 +58,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         view.ShowHeader($"第{turn}号", tomsModel.PlayerMoney.Value);
 
         var rows = new List<(string, string, string, string, string, bool)>();
-        foreach (var e in newsModel.IssueOf(turn))
+        foreach (var e in SortForPaper(newsModel.IssueOf(turn)))
         {
             var a = e.Article;
             var c = e.Company;
@@ -66,6 +66,43 @@ public class NewspaperPresenter : IStartable, IDisposable
             rows.Add((a.id, c?.companyName ?? "", a.headline, a.lead, a.byline, newsModel.IsRead(a.id)));
         }
         view.ShowArticles(rows);
+    }
+
+    /// <summary>
+    /// 紙面の並び順。通常記事を面の順（一面→二面→市況→うわさ）に並べ、
+    /// その後ろに結果記事、<b>訂正記事は最後（隅）</b>に置く。
+    /// 訂正は小さく目立たない場所に出すのが仕様（Docs/News_Spec.md §10.4）。見落としは自己責任。
+    /// </summary>
+    private static List<NewsIssueEntry> SortForPaper(List<NewsIssueEntry> entries)
+    {
+        var sorted = new List<NewsIssueEntry>(entries);
+        // List.Sort は安定でないので、元の並び（カレンダー順）を最後のキーにする
+        var order = new Dictionary<NewsIssueEntry, int>();
+        for (int i = 0; i < entries.Count; i++) order[entries[i]] = i;
+
+        sorted.Sort((x, y) =>
+        {
+            int c = RankOf(x).CompareTo(RankOf(y));
+            return c != 0 ? c : order[x].CompareTo(order[y]);
+        });
+        return sorted;
+    }
+
+    private static int RankOf(NewsIssueEntry e)
+    {
+        switch (e.kind)
+        {
+            case NewsEntryKind.Result: return 10;
+            case NewsEntryKind.Correction: return 20;
+        }
+        return (e.Article?.page) switch
+        {
+            "front" => 0,
+            "second" => 1,
+            "market" => 2,
+            "rumor" => 3,
+            _ => 4,
+        };
     }
 
     private void OpenArticle(string articleId)
