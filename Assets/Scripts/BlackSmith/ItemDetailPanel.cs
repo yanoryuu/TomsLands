@@ -29,7 +29,7 @@ public class ItemDetailPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI currentPriceText; // 現在価格
     [SerializeField] private TextMeshProUGUI salesRateText;    // 売れやすさ
     [SerializeField] private TextMeshProUGUI wasSoldText;      // 前ターン販売
-    [SerializeField] private TextMeshProUGUI recommendText;    // おすすめ度
+    [SerializeField] private TextMeshProUGUI recommendText;    // 現在の期待収益（未来は含まない）
     [SerializeField] private TextMeshProUGUI dividendText;     // 配当/日（配当付き武器のみ・未配線可）
 
     [Header("注文")]
@@ -103,7 +103,7 @@ public class ItemDetailPanel : MonoBehaviour
         if (currentPriceText) currentPriceText.text = $"現在 {runtime.CurrentPrice.Value:N0}G";
         if (salesRateText)  salesRateText.text = $"売率 ×{runtime.SalesRate:0.0}";
         if (wasSoldText)    wasSoldText.text = runtime.WasSoldLastTurn ? "前ターン販売 ✓" : "前ターン販売 —";
-        if (recommendText)  recommendText.text = $"おすすめ度 {recommendScore:N0}";
+        if (recommendText)  recommendText.text = $"現在の期待収益 {recommendScore:N0}";
         if (dividendText)
         {
             bool hasDividend = runtime.DividendPerTurn > 0;

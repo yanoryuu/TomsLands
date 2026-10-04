@@ -18,11 +18,19 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public event Action<string> OnHoverEnter;
     public event Action OnHoverExit;
 
-    public void SetData(Sprite icon, string itemName, float trend, float demand, string dialogueId = "")
+    /// <summary>
+    /// 1行分を描画する。
+    /// 第3引数は以前 Trend（流行度＝需要が向かう均衡値）だったが、これは「この先どう動くか」
+    /// という未来の情報で、無料で並べると「次に上がる銘柄の答え」そのものになってしまう。
+    /// 現在の値動きから計算できる Heat（相場の荒れ具合）に差し替えた。
+    /// 詳細は Docs/News_Spec.md §2 C5。
+    /// </summary>
+    public void SetData(Sprite icon, string itemName, float heat, float demand, string dialogueId = "")
     {
         if (itemIcon != null && icon != null) itemIcon.sprite = icon;
         itemNameText.text = itemName;
-        trendText.text = trend >= 0f ? $"トレンド: ▲{trend:F2}" : $"トレンド: ▼{Mathf.Abs(trend):F2}";
+        trendText.text = $"相場: {MarketHeat.Describe(heat)}";
+        trendText.color = MarketHeat.ToColor(heat);
         demandText.text = $"需要: {demand * 100f:F0}%";
         this.dialogueId = dialogueId;
     }

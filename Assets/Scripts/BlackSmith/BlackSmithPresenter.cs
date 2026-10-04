@@ -30,6 +30,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     // 次の戦闘ダンジョンの弱点属性（おすすめスコアの属性ボーナス・自動仕入れに使う）
     private ItemTypeData.ItemAttribute? nextDungeonAttr;
+    private readonly DungeonIntelModel dungeonIntel;
 
     public BlackSmithPresenter(
         TomsModel tomsModel,
@@ -41,7 +42,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         GameFlowManager gameFlowManager,
         DungeonRepository dungeonRepository,
         HeroModel heroModel,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        DungeonIntelModel dungeonIntel)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
@@ -53,6 +55,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.dungeonRepository = dungeonRepository;
         this.heroModel = heroModel;
         this.relicResolver = relicResolver;
+        this.dungeonIntel = dungeonIntel;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -94,9 +97,12 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             return;
         }
 
-        nextDungeonAttr = dungeon.requiredAttribute;
+        // 弱点は「知っている」ときだけ開示する。知らなければ null のままにして、
+        // お任せ仕入れ(DungeonFocus)の属性優先も働かせない（Docs/News_Spec.md §2 C4）。
+        bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
+        nextDungeonAttr = known ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
         int turnsUntil = gameFlowManager.GetTurnsUntilNextBattle();
-        string weakness = $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}";
+        string weakness = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
         header?.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
     }
 
@@ -122,6 +128,13 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithView.OnCloseRequested.Subscribe(_ =>
         {
             stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
+        }).AddTo(disposables);
+
+        // 仕入れ中に記事を読み返せるようにする。朝刊を閉じるとこの画面へ戻る。
+        blackSmithView.OnNewspaperRequested.Subscribe(_ =>
+        {
+            if (stateManager.HasHandler(TomsShopGamePhase.Newspaper))
+                stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
         }).AddTo(disposables);
 
         // 鍛冶屋専用の所持金表示（鍛冶屋表示中はCommonViewを出さないため常時追従）
@@ -407,7 +420,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         int currentCount = blackSmithModel.itemCount.TryGetValue(itemId, out var entry) ? entry.count.Value : 0;
         blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, quantityLimit), quantityLimit);
 
-        panel.ShowItem(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr));
+        panel.ShowItem(runtime, basePrice, ItemModel.ExpectedRevenueOf(runtime));
         // 注文ウィジェットの単価はレリック割引適用後の実効単価にする
         panel.SetPrice(BuyUnitPrice(runtime));
 
@@ -445,7 +458,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .Subscribe(_ => RefreshQuantityLimit(itemId, runtime))
             .AddTo(selectionDisposables);
         runtime.Demand
-            .Subscribe(_ => panel.RefreshMarket(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr)))
+            .Subscribe(_ => panel.RefreshMarket(runtime, basePrice, ItemModel.ExpectedRevenueOf(runtime)))
             .AddTo(selectionDisposables);
 
         // 購入確定

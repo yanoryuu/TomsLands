@@ -13,6 +13,7 @@ public class ProphetPresenter : IDisposable, IStartable
     private readonly DungeonRepository dungeonRepository;
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
+    private readonly DungeonIntelModel dungeonIntel;
     private readonly CompositeDisposable disposables = new();
     private string currentDialogue = string.Empty;
     private int characterTalkIndex;
@@ -23,7 +24,8 @@ public class ProphetPresenter : IDisposable, IStartable
         GameFlowManager gameFlowManager,
         DungeonRepository dungeonRepository,
         StateManager stateManager,
-        TomsModel tomsModel)
+        TomsModel tomsModel,
+        DungeonIntelModel dungeonIntel)
     {
         this.prophetView = prophetView;
         this.itemModel = itemModel;
@@ -31,6 +33,7 @@ public class ProphetPresenter : IDisposable, IStartable
         this.dungeonRepository = dungeonRepository;
         this.stateManager = stateManager;
         this.tomsModel = tomsModel;
+        this.dungeonIntel = dungeonIntel;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Prophet, Entry);
     }
@@ -59,7 +62,7 @@ public class ProphetPresenter : IDisposable, IStartable
         characterTalkIndex = 0;
         currentDialogue = ProphetDialogueLoader.GetDefault();
         prophetView.ShowDialogue(currentDialogue);
-        ShowTrend();
+        ShowMarketHeat();
         ShowPriceRanking();
         ShowDungeonInfo();
     }
@@ -71,15 +74,19 @@ public class ProphetPresenter : IDisposable, IStartable
         prophetView.ShowDialogue(currentDialogue);
     }
 
-    // トレンド上位3件をTrend値降順で表示
-    private void ShowTrend()
+    // 相場が荒れている銘柄の上位3件。
+    // 以前は Trend（未来の需要が向かう先）の降順で並べていたが、それは
+    // 「次に上がる銘柄」の答えを無料で配ることに等しかった（Docs/News_Spec.md §2 C5）。
+    // Heat は価格履歴だけから決まる現在の情報なので、未来は漏れない。
+    private void ShowMarketHeat()
     {
         int level = tomsModel.BlacksmithLevel.Value;
         var rows = itemModel.RuntimeItems
             .Where(r => r.RequiredLevel.Value <= level)
-            .OrderByDescending(r => r.Trend)
+            .Select(r => (r, heat: MarketHeat.Compute(r.ShopPriceHistory)))
+            .OrderByDescending(x => x.heat)
             .Take(3)
-            .Select(r => (r.ItemIcon, r.ItemName, r.Trend, r.Demand.Value))
+            .Select(x => (x.r.ItemIcon, x.r.ItemName, x.heat, x.r.Demand.Value))
             .ToList();
         prophetView.ShowTrendRows(rows);
     }
@@ -124,16 +131,21 @@ public class ProphetPresenter : IDisposable, IStartable
             return;
         }
 
-        string attributeName = $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}";
+        // 弱点は「知っている」ときだけ開示する（Docs/News_Spec.md §2 C4）。
+        bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
+        string attributeName = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
         prophetView.ShowDungeonInfo(dungeon.dungeonName, attributeName, dungeon.difficulty, turnsUntil, dungeon.dungeonIcon);
 
-        // 統一おすすめスコア（GetRecommendScore：次ダンジョン弱点属性ボーナス込み）で降順→上位3件
+        // おすすめは現在の期待収益（ExpectedRevenueOf）だけで決める。
+        // 弱点を知らないうちは属性で絞り込まない。絞り込むと、弱点を伏せていても
+        // 並んだ顔ぶれから属性が読めてしまい、C4 のゲートが意味を失うため。
         int level = tomsModel.BlacksmithLevel.Value;
         var recommended = itemModel.RuntimeItems
-            .Where(r => r.ItemAttribute == dungeon.requiredAttribute && r.RequiredLevel.Value <= level)
-            .OrderByDescending(r => itemModel.GetRecommendScore(r, dungeon.requiredAttribute))
+            .Where(r => r.RequiredLevel.Value <= level)
+            .Where(r => !known || r.ItemAttribute == dungeon.requiredAttribute)
+            .OrderByDescending(r => ItemModel.ExpectedRevenueOf(r))
             .Take(3)
-            .Select(r => (r.ItemIcon, r.ItemName, r.Trend, r.Demand.Value))
+            .Select(r => (r.ItemIcon, r.ItemName, MarketHeat.Compute(r.ShopPriceHistory), r.Demand.Value))
             .ToList();
         prophetView.ShowRecommendedRows(recommended);
     }

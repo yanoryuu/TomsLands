@@ -177,6 +177,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - EnemyData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 2a8543433198fe14d9c02989a038be4e
+    m_Address: Newspapers
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 2adb830c8f7ed8e42ac1ba7d7ac55fd0
     m_Address: Marketing/Ad_Influencer
     m_ReadOnly: 0
@@ -248,6 +254,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - ShopMachineData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 399647cafd1a1d145910f6b9bf2d3af9
+    m_Address: MarketModelPreset
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - MarketModelPreset
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 3d21827827dc9434aa556a954881174b
     m_Address: Finance/fund_dark
@@ -548,6 +560,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - ShopMachineData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 956b6474fdfc11b4aab01bc669d7519b
+    m_Address: NewsArticles
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9ab6db534c2f9df47a8caad854148a84
     m_Address: ItemData/HA1

@@ -21,6 +21,8 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly PendingEventData _pendingEventData;
     private readonly MarketingFacade _marketingFacade;
     private readonly ShopStatusModel _shopStatusModel;
+    private readonly NewsModel _newsModel;
+    private readonly NewsEffectResolver _newsEffects;
     private readonly SellOrderModel _sellOrderModel;
     private readonly PortfolioModel _portfolioModel;
     private readonly ShopMachineModel _shopMachineModel;
@@ -52,7 +54,8 @@ public class GameFlowManager : IDisposable, IStartable
         ShopStatusModel shopStatusModel, SellOrderModel sellOrderModel,
         PortfolioModel portfolioModel, ShopMachineModel shopMachineModel,
         MorningReportModel morningReport, RelicEffectResolver relicResolver,
-        RelicHookDispatcher relicHooks)
+        RelicHookDispatcher relicHooks,
+        NewsModel newsModel, NewsEffectResolver newsEffects)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -67,6 +70,8 @@ public class GameFlowManager : IDisposable, IStartable
         _pendingEventData = pendingEventData;
         _marketingFacade = marketingFacade;
         _shopStatusModel = shopStatusModel;
+        _newsModel = newsModel;
+        _newsEffects = newsEffects;
         _sellOrderModel = sellOrderModel;
         _portfolioModel = portfolioModel;
         _shopMachineModel = shopMachineModel;
@@ -193,8 +198,11 @@ public class GameFlowManager : IDisposable, IStartable
             float demandFloorBonus = _shopMachineModel?.TotalDemandFloorBonus ?? 0f;
             if (_relicResolver != null)
                 demandFloorBonus = _relicResolver.Modify(RelicStatId.DemandFloorAdd, demandFloorBonus);
+            // 発行カレンダーは周のシードから組む。既に同じシードで組んであれば何もしない。
+            _newsModel?.Build(_tomsModel.FlowSeed);
+
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
-                CurrentTurn.Value, _tomsModel.FlowSeed);
+                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");

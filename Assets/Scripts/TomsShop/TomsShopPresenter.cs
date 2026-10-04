@@ -37,6 +37,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     /// <summary>初回Entryでターンフェーズを一度だけ開始するためのフラグ。</summary>
     private bool _turnPhaseInitialized = false;
 
+    /// <summary>朝刊を開いたターン。1ターンに一度だけ自動で開くための記録。</summary>
+    private int _lastNewspaperTurn = -1;
+
     // 営業開始演出の再生中フラグ（ボタン連打防止。フェーズが変わったら解除）
     private bool _salesStarting = false;
 
@@ -291,6 +294,22 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // ターン変化はフェーズ開始判定に使うため、_lastKnownTurn が他で書き換わる前に捕捉する
         int currentTurn = gameFlowManager.CurrentTurn.Value;
         bool turnChanged = _lastKnownTurn != -1 && _lastKnownTurn != currentTurn;
+        bool firstEntry = _lastKnownTurn == -1;
+
+        // --- 朝刊 ---
+        // ターンが変わった最初の Shop 入場で一度だけ開く。
+        // ここで抜けるのは、この先の「保留イベント」「借金パネル」「朝レポート」より
+        // 前でなければならない。朝レポートは消費型（Consume で消える）なので、
+        // 表示してから画面を切り替えると内容が失われる。
+        // 抜ける時点では _lastKnownTurn をまだ更新していないので、朝刊を閉じて Shop へ
+        // 戻ったときに turnChanged が再び true になり、ターン頭の処理が正しく走る。
+        if ((turnChanged || firstEntry) && _lastNewspaperTurn != currentTurn
+            && stateManager.HasHandler(TomsShopGamePhase.Newspaper))
+        {
+            _lastNewspaperTurn = currentTurn;
+            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
+            return;
+        }
 
         ShowPendingEventIfExists();
 

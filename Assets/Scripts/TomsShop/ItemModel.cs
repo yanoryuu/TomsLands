@@ -28,29 +28,18 @@ public class ItemModel
     // おすすめ計算（単一スコアの真実の源）
     // ========================================
     // 仕入れ一覧・自動陳列・自動仕入れ・Prophet のすべてが
-    // この2つを基準にする（画面ごとに式がバラつかないようにする）。
-
-    /// <summary>おすすめスコアの Trend 重み。0 で Trend 無視。</summary>
-    private const float RecommendTrendWeight = 0.5f;
-    /// <summary>次ダンジョンの弱点属性に一致するアイテムへの倍率（&gt;1 で優遇）。</summary>
-    private const float RecommendAttributeBonus = 1.5f;
+    // この1つを基準にする（画面ごとに式がバラつかないようにする）。
 
     /// <summary>
-    /// 期待収益（需要 × 価格 × SalesRate）。陳列・収益順の基礎値。
+    /// 期待収益（需要 × 価格 × SalesRate）。陳列・収益順・おすすめのすべての基礎値。
+    ///
+    /// <b>これは「現在値」だけで決まる。未来の情報は一切含めない。</b>
+    /// 以前は Trend（流行度＝需要が向かう均衡値）と次ダンジョンの弱点属性ボーナスを
+    /// 乗せていたが、それらは「この先どう動くか」という未来の情報であり、
+    /// 無料で開示すると「おすすめの上から買うだけ」でゲームが終わってしまう。
+    /// 未来の手がかりはニュース（新聞）でのみ得られる。詳細は Docs/News_Spec.md §2。
     /// </summary>
     public static float ExpectedRevenueOf(RuntimeItemData r) => r.ExpectedRevenue;
-
-    /// <summary>
-    /// 前向きおすすめスコア。期待収益に Trend と次ダンジョン属性ボーナスを乗せたもの。
-    /// 自動仕入れ・Prophet のおすすめに使う。<paramref name="nextDungeonAttr"/> が null なら属性ボーナスなし。
-    /// </summary>
-    public float GetRecommendScore(RuntimeItemData r, ItemTypeData.ItemAttribute? nextDungeonAttr)
-    {
-        float score = r.ExpectedRevenue * (1f + RecommendTrendWeight * r.Trend);
-        if (nextDungeonAttr.HasValue && r.ItemAttribute == nextDungeonAttr.Value)
-            score *= RecommendAttributeBonus;
-        return score;
-    }
 
     public void PurchaseItem(string itemId, int quantity)
     {
@@ -354,7 +343,8 @@ public class ItemModel
     /// <param name="turnIndex">現在のターン番号。ABM がターン専用の乱数を作るのに使う（セーブ/ロード後も同じ系列になる）。</param>
     /// <param name="flowSeed">ランのシード。ABM のトレーダー編成に使う。0 なら設定または乱数にフォールバック。</param>
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
-        float machineDemandFloorBonus = 0f, int turnIndex = 0, int flowSeed = 0)
+        float machineDemandFloorBonus = 0f, int turnIndex = 0, int flowSeed = 0,
+        NewsEffectResolver news = null)
     {
         if (settings == null) return;
 
@@ -436,7 +426,13 @@ public class ItemModel
             // ------------------------------------------------
             bool displaying = runtime.IsDisplay.Value && runtime.DisplayStock.Value > 0;
 
-            float naturalDemand = Mathf.Clamp01(0.5f + runtime.Trend * settings.trendAmplitude);
+            // N1: ニュースの効果。Trend そのものには加算せず、ここで別枠として足す。
+            //     Trend はランダムウォークと減衰を続けているので、直接足すと期間終了時に
+            //     剥がせなくなる（Docs/News_Spec.md §7.2）。
+            float newsTrendBias = news != null ? news.TrendBias(runtime, turnIndex) : 0f;
+            float effectiveTrend = Mathf.Clamp(runtime.Trend + newsTrendBias, -1f, 1f);
+
+            float naturalDemand = Mathf.Clamp01(0.5f + effectiveTrend * settings.trendAmplitude);
             float convergenceDelta = (naturalDemand - runtime.Demand.Value) * settings.trendConvergenceRate;
             float displayDelta = displaying
                 ? settings.displayDemandUp * spreadFactor
@@ -447,8 +443,12 @@ public class ItemModel
                 settings.demandFloor + demandBias + machineDemandFloorBonus,
                 settings.demandCeiling);
 
+            // 発効ターンだけ乗る直撃分。需要の収束が 15%/ターンと遅く、lead 1〜3 の
+            // 短い窓では Trend バイアスだけでは体感に届かないため。
+            float newsDemandKick = news != null ? news.DemandKick(runtime, turnIndex) : 0f;
+
             runtime.Demand.Value = Mathf.Clamp(
-                runtime.Demand.Value + convergenceDelta + displayDelta,
+                runtime.Demand.Value + convergenceDelta + displayDelta + newsDemandKick,
                 dynamicDemandFloor, settings.demandCeiling);
 
             // ------------------------------------------------
@@ -472,6 +472,11 @@ public class ItemModel
             float s1Rate = engine.GetPriceRate(in context);
 
             int newPrice = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * s1Rate));
+
+            // 掲載ターンの跳ね。世界中が同じ紙面を読んで飛びつくので、記事が出た時点で
+            // 既に少し高い。誤報でもこれは起きる（そして実体が来ないので高値掴みになる）。
+            float newsHype = news != null ? news.HypeRate(runtime, turnIndex) : 1f;
+            if (newsHype != 1f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * newsHype));
 
             // ストップ高/ストップ安（元値ベース、Trust で Floor を底上げ）
             int floor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * floorRate));
@@ -497,7 +502,7 @@ public class ItemModel
     // ========================================
 
     /// <summary>
-    /// 予算内でおすすめスコア（GetRecommendScore）が高い順にアイテムを自動購入する。
+    /// 予算内で現在の期待収益（ExpectedRevenueOf）が高い順にアイテムを自動購入する。
     /// </summary>
     public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel,
         ItemTypeData.ItemAttribute? nextDungeonAttr = null, RelicEffectResolver relicResolver = null,
@@ -516,16 +521,16 @@ public class ItemModel
         {
             AutoBuyStrategy.DungeonFocus => pool
                 .OrderByDescending(r => nextDungeonAttr.HasValue && r.ItemAttribute == nextDungeonAttr.Value ? 1 : 0)
-                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+                .ThenByDescending(r => ExpectedRevenueOf(r)),
             AutoBuyStrategy.Bargain => pool
                 .OrderBy(BargainRatioOf)
-                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+                .ThenByDescending(r => ExpectedRevenueOf(r)),
             AutoBuyStrategy.Dividend => pool
                 .OrderByDescending(r => r.DividendPerTurn > 0
                     ? (float)r.DividendPerTurn / Mathf.Max(1, r.CurrentPrice.Value)
                     : 0f)
-                .ThenByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
-            _ => pool.OrderByDescending(r => GetRecommendScore(r, nextDungeonAttr)),
+                .ThenByDescending(r => ExpectedRevenueOf(r)),
+            _ => pool.OrderByDescending(r => ExpectedRevenueOf(r)),
         }).ToList();
 
         foreach (var item in candidates)

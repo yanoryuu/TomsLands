@@ -15,4 +15,5 @@ public enum TomsShopGamePhase
     Prophet,
     ShopUpgrade,
     MachineShop,
+    Newspaper,
 }
