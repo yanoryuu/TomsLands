@@ -36,7 +36,7 @@ public static class ClearProbabilityCalculator
             return CalculateLegacy(hero, dungeon);
         }
 
-        return Simulate(hero, phases);
+        return Simulate(hero, phases, HeroEquipmentBonus.Get(hero, itemModel));
     }
 
     /// <summary>実戦闘（BattleContext.InitializePhases）と同じ優先順でフェーズ構成を作る。</summary>
@@ -55,9 +55,10 @@ public static class ClearProbabilityCalculator
             phases = DungeonPhaseBuilder.BuildFromLegacy(level);
         }
 
-        return phases
+        // 実戦闘と同じく通常ウェーブの周回（normalWaveRepeat）を展開する
+        return BattleWavePlan.Expand(phases
             .Where(p => p?.enemies != null && p.enemies.Any(e => e != null))
-            .ToList();
+            .ToList());
     }
 
     /// <summary>
@@ -67,12 +68,12 @@ public static class ClearProbabilityCalculator
     /// ・勇者死亡でそのターンの残りの敵は行動中断（実装の IsBattleEnded() break と同じ）
     /// ・ターン終了時: 死亡除去 → フェーズ全滅なら次フェーズ → 同時3体まで補充
     /// </summary>
-    private static float Simulate(RuntimeHeroData hero, List<DungeonPhaseData> phases)
+    private static float Simulate(RuntimeHeroData hero, List<DungeonPhaseData> phases, HeroEquipmentBonus.Multipliers equip)
     {
-        int heroMaxHp = Mathf.Max(1, hero.hp.Value);
+        int heroMaxHp = Mathf.Max(1, Mathf.RoundToInt(hero.hp.Value * equip.Hp));
         int heroHp    = heroMaxHp;
-        int heroAtk   = Mathf.Max(1, hero.attackPower.Value);
-        int heroDef   = Mathf.Max(0, hero.defensePower.Value);
+        int heroAtk   = Mathf.Max(1, Mathf.RoundToInt(hero.attackPower.Value * equip.Attack));
+        int heroDef   = Mathf.Max(0, Mathf.RoundToInt(hero.defensePower.Value * equip.Defense));
 
         int totalEnemies = phases.Sum(p => p.enemies.Count(e => e != null));
         int defeated = 0;

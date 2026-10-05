@@ -41,6 +41,9 @@ public class BattleSequencer : MonoBehaviour
     /// <summary>バトル開始前に BattleSceneStarter から設定する。</summary>
     public void SetPauseController(BattlePauseController pc) => _pauseController = pc;
 
+    /// <summary>一時停止状態（配信コメントなど演出側の参照用。未設定なら null）。</summary>
+    public BattlePauseController PauseController => _pauseController;
+
     public Subject<(string weaponId, string armorId)> OnBattleWin { get; } = new();
     public Subject<(string weaponId, string armorId)> OnBattleDefeat { get; } = new();
     public IReadOnlyList<CharacterPresenter> CharacterPresenters =>

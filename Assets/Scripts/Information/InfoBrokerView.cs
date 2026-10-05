@@ -13,6 +13,9 @@ public class InfoBrokerView : MonoBehaviour
     [SerializeField] private TMP_Text dialogueText;
     [SerializeField] private GameObject mapTab;
 
+    [Header("キャラ表情（バズ連動・任意）")]
+    [SerializeField] private CharacterExpression characterExpression;
+
     [Header("Tab Buttons")]
     [SerializeField] private Button mapButton;
 
@@ -52,6 +55,12 @@ public class InfoBrokerView : MonoBehaviour
     public FinanceDetailPanel FinanceDetail => financeDetailPanel;
 
     private readonly Dictionary<InfoBrokerTab, Vector3> initTabPos = new();
+
+    [VContainer.Inject]
+    public void Construct(BuzzSystem buzzSystem)
+    {
+        if (characterExpression != null) characterExpression.Bind(buzzSystem);
+    }
 
     private void Awake()
     {

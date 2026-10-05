@@ -57,7 +57,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "03_\u5927\u7B11\u3044"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -75,7 +75,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -129,7 +129,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "08_\u9A5A\u304D"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -147,7 +147,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "12_\u30C9\u30E4\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -165,7 +165,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "10_\u771F\u5263"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -183,7 +183,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -215,7 +215,7 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/TurnEvent.csv
     type: 0
-    textLength: 358
+    textLength: 442
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 64f3593530245b84aafc64398181fe42, type: 3}
     entityIndexTbl: 
@@ -282,7 +282,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "03_\u5927\u7B11\u3044"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -300,7 +300,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -390,7 +390,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "08_\u9A5A\u304D"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -408,7 +408,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "12_\u30C9\u30E4\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -426,7 +426,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "10_\u771F\u5263"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -444,7 +444,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -476,6 +476,6 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/TurnEvent.csv
     type: 0
-    textLength: 411
+    textLength: 495
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 64f3593530245b84aafc64398181fe42, type: 3}

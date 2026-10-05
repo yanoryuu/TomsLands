@@ -109,6 +109,7 @@ public class SellOrderModel
             : result.BaseIncome;
 
         RefreshEstimate();
+        RunHistory.RecordSettlement(result); // リザルトの「一番儲かった商品」用
 
         Debug.Log($"[SellOrder] 約定: {result.Settled.Count}件 → 入金 {result.TotalIncome}G（基本 {result.BaseIncome}G）");
         return result;

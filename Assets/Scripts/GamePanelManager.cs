@@ -18,6 +18,7 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject prophetPanel;
     [SerializeField] private GameObject shopUpgradePanel;
     [SerializeField] private GameObject machineShopPanel;
+    [SerializeField] private GameObject newspaperPanel;
 
     /// <summary>
     /// 全パネルを非表示にする
@@ -40,6 +41,7 @@ public class GamePanelManager : MonoBehaviour
         if (prophetPanel != null) prophetPanel.SetActive(false);
         if (shopUpgradePanel != null) shopUpgradePanel.SetActive(false);
         if (machineShopPanel != null) machineShopPanel.SetActive(false);
+        if (newspaperPanel != null) newspaperPanel.SetActive(false);
     }
 
     /// <summary>パネルを表示し、開き演出（フェードイン）を再生する。</summary>
@@ -131,6 +133,11 @@ public class GamePanelManager : MonoBehaviour
             case TomsShopGamePhase.MachineShop:
                 ShowWithFx(machineShopPanel);
                 commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.Newspaper:
+                // 朝刊は鍛冶屋・情報屋と同じ全画面レイアウト。
+                // 所持金とターンは題字バーが持つので CommonView は出さない。
+                ShowWithFx(newspaperPanel);
                 break;
         }
     }

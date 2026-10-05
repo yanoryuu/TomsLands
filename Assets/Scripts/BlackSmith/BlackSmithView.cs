@@ -21,6 +21,8 @@ public class BlackSmithView : MonoBehaviour
     [Header("Prefabs & Buttons")]
     [SerializeField] private GameObject itemShopSlotPrefab;
     [SerializeField] private Button closeButton;
+    /// <summary>朝刊を読み返すボタン。仕入れ中に記事を確認できないと記憶ゲーになるため置く。</summary>
+    [SerializeField] private Button newspaperButton;
     [SerializeField] private Button weaponButton;
     [SerializeField] private Button armorButton;
     [SerializeField] private Button developButton;
@@ -34,6 +36,9 @@ public class BlackSmithView : MonoBehaviour
     [Header("Dialogue")]
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private Button characterButton;
+
+    [Header("キャラ表情（バズ連動・任意）")]
+    [SerializeField] private CharacterExpression characterExpression;
 
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
@@ -77,6 +82,7 @@ public class BlackSmithView : MonoBehaviour
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
     public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
     public Subject<Unit> OnCharacterClicked { get; private set; } = new();
+    public Subject<Unit> OnNewspaperRequested { get; private set; } = new();
     /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額と方針プリセットを通知する。</summary>
     public Subject<(int budget, AutoBuyStrategy strategy)> OnAutoBuyBudgetConfirmed { get; private set; } = new();
     /// <summary>並べ替えモードが変更されたときに通知する。</summary>
@@ -94,9 +100,17 @@ public class BlackSmithView : MonoBehaviour
     
     private readonly Dictionary<BlackSmithTab, Vector3> initTabPos = new();
 
+    [VContainer.Inject]
+    public void Construct(BuzzSystem buzzSystem)
+    {
+        if (characterExpression != null) characterExpression.Bind(buzzSystem);
+    }
+
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+        if (newspaperButton != null)
+            newspaperButton.onClick.AddListener(() => OnNewspaperRequested.OnNext(Unit.Default));
         weaponButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Weapon; OnChangePanel.OnNext(BlackSmithTab.Weapon); });
         armorButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Armor; OnChangePanel.OnNext(BlackSmithTab.Armor); });
         developButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Development; OnChangePanel.OnNext(BlackSmithTab.Development); });

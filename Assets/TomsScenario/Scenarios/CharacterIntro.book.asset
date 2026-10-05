@@ -57,7 +57,7 @@ MonoBehaviour:
       - 
       - "\u52C7\u8005"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -75,7 +75,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "03_\u5927\u7B11\u3044"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -93,7 +93,7 @@ MonoBehaviour:
       - 
       - "\u52C7\u8005"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -111,7 +111,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "03_\u5927\u7B11\u3044"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -129,7 +129,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "12_\u30C9\u30E4\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -183,7 +183,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "04_\u56F0\u308A"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -201,7 +201,7 @@ MonoBehaviour:
       - 
       - "\u9B54\u738B"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -219,7 +219,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -237,7 +237,7 @@ MonoBehaviour:
       - 
       - "\u9B54\u738B"
       - "10_\u771F\u5263"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -255,7 +255,7 @@ MonoBehaviour:
       - 
       - "\u9B54\u738B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -309,7 +309,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -327,7 +327,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "12_\u30C9\u30E4\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -345,7 +345,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -363,7 +363,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -417,7 +417,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "04_\u56F0\u308A"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -435,7 +435,7 @@ MonoBehaviour:
       - 
       - "\u60C5\u5831\u5C4B"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -453,7 +453,7 @@ MonoBehaviour:
       - 
       - "\u60C5\u5831\u5C4B"
       - "10_\u771F\u5263"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -471,7 +471,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -489,7 +489,7 @@ MonoBehaviour:
       - 
       - "\u60C5\u5831\u5C4B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -521,7 +521,7 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/CharacterIntro.csv
     type: 0
-    textLength: 1040
+    textLength: 1306
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 5572774c464fd2b47ab3b96739507bb7, type: 3}
     entityIndexTbl: 
@@ -588,7 +588,7 @@ MonoBehaviour:
       - 
       - "\u52C7\u8005"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -606,7 +606,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "03_\u5927\u7B11\u3044"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -624,7 +624,7 @@ MonoBehaviour:
       - 
       - "\u52C7\u8005"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -642,7 +642,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "03_\u5927\u7B11\u3044"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -660,7 +660,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "12_\u30C9\u30E4\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -750,7 +750,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "04_\u56F0\u308A"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -768,7 +768,7 @@ MonoBehaviour:
       - 
       - "\u9B54\u738B"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -786,7 +786,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -804,7 +804,7 @@ MonoBehaviour:
       - 
       - "\u9B54\u738B"
       - "10_\u771F\u5263"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -822,7 +822,7 @@ MonoBehaviour:
       - 
       - "\u9B54\u738B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -912,7 +912,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -930,7 +930,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "12_\u30C9\u30E4\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -948,7 +948,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -966,7 +966,7 @@ MonoBehaviour:
       - 
       - "\u5360\u3044\u5E2B"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -1056,7 +1056,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "04_\u56F0\u308A"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -1074,7 +1074,7 @@ MonoBehaviour:
       - 
       - "\u60C5\u5831\u5C4B"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -1092,7 +1092,7 @@ MonoBehaviour:
       - 
       - "\u60C5\u5831\u5C4B"
       - "10_\u771F\u5263"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -1110,7 +1110,7 @@ MonoBehaviour:
       - 
       - "\u30C8\u30B3"
       - "01_\u901A\u5E38"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -1128,7 +1128,7 @@ MonoBehaviour:
       - 
       - "\u60C5\u5831\u5C4B"
       - "02_\u7B11\u9854"
-      - 
+      - CharacterLayer
       - 
       - 
       - 
@@ -1160,6 +1160,6 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/CharacterIntro.csv
     type: 0
-    textLength: 1117
+    textLength: 1383
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 5572774c464fd2b47ab3b96739507bb7, type: 3}

@@ -20,6 +20,7 @@ public class GameLifetimeScope : LifetimeScope
     [SerializeField] private DungeonLevelUpView dungeonLevelUpView;
     [SerializeField] private AdvertisementView advertisementView;
     [SerializeField] private ProphetView prophetView;
+    [SerializeField] private NewspaperView newspaperView;
     [SerializeField] private TurnActionHintView turnActionHintView;
     [SerializeField] private DebtView debtView;
     [SerializeField] private TurnPhaseView turnPhaseView;
@@ -248,6 +249,9 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<RelicRewardService>(Lifetime.Singleton);
         builder.Register<ItemSelectionModel>(Lifetime.Singleton);
         builder.Register<InfoBrokerModel>(Lifetime.Singleton);
+        builder.Register<DungeonIntelModel>(Lifetime.Singleton);
+        builder.Register<NewsModel>(Lifetime.Singleton);
+        builder.Register<NewsEffectResolver>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);
         builder.Register<MapModel>(Lifetime.Singleton);
         builder.Register<BlackSmithModel>(Lifetime.Singleton);
@@ -305,6 +309,7 @@ public class GameLifetimeScope : LifetimeScope
         RegisterComponentSafe(builder, dungeonLevelUpView, nameof(dungeonLevelUpView));
         RegisterComponentSafe(builder, advertisementView, nameof(advertisementView));
         RegisterComponentSafe(builder, prophetView, nameof(prophetView));
+        RegisterComponentSafe(builder, newspaperView, nameof(newspaperView));
 
         if (turnActionHintView != null)
             builder.RegisterComponent(turnActionHintView);
@@ -330,7 +335,10 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<CommonPresenter>();
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>().AsSelf();
+        // 配信前の寄り道（配信日に入ったら「鍛冶屋へ寄る / このまま配信へ」を選ばせる）。View不要。
+        builder.RegisterEntryPoint<PreStreamPresenter>();
         builder.RegisterEntryPoint<TurnPhasePresenter>();
+        if (newspaperView != null) builder.RegisterEntryPoint<NewspaperPresenter>();
 
         // 広告購入画面
         builder.RegisterEntryPoint<AdvertisementPresenter>();

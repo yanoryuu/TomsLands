@@ -1,12 +1,14 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
 
 /// <summary>
 /// リザルト画面のPresenter（ResultScene 専用）。
-/// シーン開始時に統計データを集計してViewに表示し、
-/// タイトルへ戻る / もう一度遊ぶ ボタンを処理する。
+/// シーン開始時に統計データを集計し、演出（営業終了カットイン → トコの振り返り → 結果の段階表示）を流して、
+/// 村へ戻るボタンを処理する。
 /// </summary>
 public class ResultPresenter : IPresenter, IDisposable, IStartable
 {
@@ -18,6 +20,16 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
     private ResultStatisticsData _lastStatistics;
     private bool _metaAwarded;
+
+    // ランを締めるトコの会話。再生中は村へ戻るボタンを受け付けない（会話を途中で切らないため）
+    private readonly CancellationTokenSource _cts = new();
+    private bool _isTalking;
+    private bool _sequenceDone;
+
+#if UNITY_EDITOR
+    // ResultScene 単体再生の確認用（進行中のランが無いスロットで再生したとき）。精算・削除・遷移は行わない
+    private bool _isDebugDummy;
+#endif
 
     public ResultPresenter(
         ResultView resultView,
@@ -34,8 +46,65 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     public void Start()
     {
         Bind();
-        // ResultScene はシーン開始時に即表示
+        // 統計を集計し、すべて隠した状態で待機
         Entry();
+        // 営業終了カットイン → トコの振り返り → 結果を1項目ずつ → ボタン有効化
+        PlaySequenceAsync().Forget();
+    }
+
+    private async UniTaskVoid PlaySequenceAsync()
+    {
+        var ct = _cts.Token;
+        try
+        {
+            if (_resultView != null)
+                await _resultView.PlayCutInAsync(ct);
+
+            await PlayRunEndTalkAsync(ct);
+
+            if (_resultView != null)
+            {
+                _resultView.SetSkipEnabled(true);
+                await _resultView.PlayRevealAsync(_lastStatistics, ct);
+                if (_lastStatistics != null && _lastStatistics.Rank == "S")
+                    _resultView.PlayRankSCelebration();
+            }
+        }
+        catch (OperationCanceledException) { return; }
+        catch (Exception e)
+        {
+            Debug.LogError($"[ResultPresenter] リザルト演出に失敗しました。\n{e}");
+            _resultView?.ShowAllImmediate(_lastStatistics);
+        }
+
+        _sequenceDone = true;
+        if (_resultView != null)
+        {
+            _resultView.SetSkipEnabled(false);
+            _resultView.SetButtonsInteractable(true);
+        }
+    }
+
+    private async UniTask PlayRunEndTalkAsync(CancellationToken ct)
+    {
+        _isTalking = true;
+        // 会話中はクリックが会話送りに使われるので、演出のスキップ受付は止めて背景を暗くする
+        _resultView?.SetSkipEnabled(false);
+        _resultView?.SetTalkDim(true);
+        try
+        {
+            await TokoTalk.PlayAsync(TokoTalk.SelectRunClearLabel(_lastStatistics), ct);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception e)
+        {
+            Debug.LogError($"[ResultPresenter] ラン終了の会話に失敗しました。\n{e}");
+        }
+        finally
+        {
+            _isTalking = false;
+            _resultView?.SetTalkDim(false);
+        }
     }
 
     private void Bind()
@@ -65,11 +134,25 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
         SoundManager.Instance?.PlayBGM("リザルト画面");
 
         var statistics = _resultModel.BuildStatistics();
+#if UNITY_EDITOR
+        if (ResultDebugDummy.ShouldUse())
+        {
+            _isDebugDummy = true;
+            statistics = ResultDebugDummy.Create();
+            var sample = _resultModel.PeekItemForDebug();
+            if (sample != null)
+            {
+                statistics.BestItemName = sample.ItemName;
+                statistics.BestItemIcon = sample.ItemIcon;
+            }
+            Debug.LogWarning($"[ResultPresenter] 確認用のダミー統計で表示します（進行中のラン無し or ResultDebugDummy.Force）（Rank={statistics.Rank}）。");
+        }
+#endif
         _lastStatistics = statistics;
 
         if (_resultView != null)
         {
-            _resultView.UpdateContent(statistics);
+            _resultView.Prepare(statistics);
         }
 
         Debug.Log($"[ResultPresenter] Result displayed: Rank={statistics.Rank}, NetWorth={statistics.NetWorth}G");
@@ -80,6 +163,14 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     /// </summary>
     private void FinishRunAndGoVillage()
     {
+        if (_isTalking || !_sequenceDone) return;
+#if UNITY_EDITOR
+        if (_isDebugDummy)
+        {
+            Debug.LogWarning("[ResultPresenter] ダミー統計の表示中のため、精算・セーブ削除・村への遷移は行いません。");
+            return;
+        }
+#endif
         Debug.Log("[ResultPresenter] Finishing run. Deleting run save data → Village.");
         AwardMetaCurrencyOnce();
         RunSaveCleaner.DeleteRunFiles();
@@ -113,6 +204,8 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
     public void Dispose()
     {
+        _cts.Cancel();
+        _cts.Dispose();
         _disposables.Dispose();
     }
 }

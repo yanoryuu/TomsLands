@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using R3;
 using VContainer.Unity;
 
@@ -11,6 +13,10 @@ public class GameOverPresenter : IDisposable, IStartable
     private readonly CompositeDisposable disposables = new();
 
     private bool metaAwarded;
+
+    // 破産を受け止めるトコの会話。再生中は村へ戻るボタンを受け付けない（会話を途中で切らないため）
+    private readonly CancellationTokenSource cts = new();
+    private bool isTalking;
 
     public GameOverPresenter(
         GameOverView gameOverView,
@@ -36,6 +42,27 @@ public class GameOverPresenter : IDisposable, IStartable
         gameOverView.OnGoToTitleClicked
             .Subscribe(_ => FinishRunAndGoVillage())
             .AddTo(disposables);
+
+        // 破産画面のあとに、トコがその場で受け止める（いきなり終わらないように）
+        PlayBankruptTalkAsync().Forget();
+    }
+
+    private async UniTaskVoid PlayBankruptTalkAsync()
+    {
+        isTalking = true;
+        try
+        {
+            await TokoTalk.PlayAsync(TokoTalk.SelectBankruptLabel(tomsModel.DebtCycle.Value), cts.Token);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception e)
+        {
+            UnityEngine.Debug.LogError($"[GameOverPresenter] 破産の会話に失敗しました。\n{e}");
+        }
+        finally
+        {
+            isTalking = false;
+        }
     }
 
     /// <summary>
@@ -45,6 +72,7 @@ public class GameOverPresenter : IDisposable, IStartable
     /// </summary>
     private void FinishRunAndGoVillage()
     {
+        if (isTalking) return;
         if (!metaAwarded && metaProgress != null)
         {
             metaAwarded = true;
@@ -64,6 +92,8 @@ public class GameOverPresenter : IDisposable, IStartable
 
     public void Dispose()
     {
+        cts.Cancel();
+        cts.Dispose();
         disposables.Dispose();
     }
 }

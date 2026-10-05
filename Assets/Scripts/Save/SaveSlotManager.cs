@@ -50,7 +50,23 @@ public static class SaveSlotManager
 
     /// <summary>指定スロットのルートフォルダ。</summary>
     public static string SlotRoot(int slot)
-        => Path.Combine(Application.persistentDataPath, $"slot_{Mathf.Clamp(slot, 0, MaxSlots - 1)}");
+    {
+#if UNITY_EDITOR
+        // 開発専用フック（Jev AutoPlay のヘッドレス試走）。null の間は従来どおり。
+        if (!string.IsNullOrEmpty(DevRootOverride)) return DevRootOverride;
+#endif
+        return Path.Combine(Application.persistentDataPath, $"slot_{Mathf.Clamp(slot, 0, MaxSlots - 1)}");
+    }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// 【エディタ専用・開発用】全セーブの保存先を一時的に差し替える。
+    /// 自動テストプレイ（Assets/Scripts/Editor/AutoPlay）が、ユーザーのセーブスロットを
+    /// 汚さずに隔離フォルダでランを回すために使う。既定 null（=従来挙動と完全一致）。
+    /// ビルドには含まれない。
+    /// </summary>
+    public static string DevRootOverride;
+#endif
 
     /// <summary>選択中スロットのルートフォルダ。</summary>
     public static string CurrentRoot => SlotRoot(CurrentSlot);

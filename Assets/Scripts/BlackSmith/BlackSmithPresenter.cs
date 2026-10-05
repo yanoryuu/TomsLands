@@ -23,6 +23,13 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private CompositeDisposable selectionDisposables = new();
     private int characterTalkIndex;
 
+    /// <summary>鍛冶屋を開く直前のフェーズ。閉じたらここへ戻す（NewspaperPresenter と同じ流儀）。</summary>
+    /// <remarks>
+    /// 朝刊（鍛冶屋から開いて鍛冶屋へ戻る）とサマリー（再入すると日の処理が走る）は戻り先にしない。
+    /// 配信前の寄り道中は戻り先を使わず、GameFlowManager に配信の判断を返す。
+    /// </remarks>
+    private TomsShopGamePhase returnPhase = TomsShopGamePhase.Shop;
+
     // 現在のタブ・並べ替え・選択銘柄（並べ替え再描画と選択維持に使う）
     private BlackSmithTab currentTab = BlackSmithTab.Weapon;
     private BlackSmithSortMode currentSort = BlackSmithSortMode.Recommend;
@@ -30,6 +37,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     // 次の戦闘ダンジョンの弱点属性（おすすめスコアの属性ボーナス・自動仕入れに使う）
     private ItemTypeData.ItemAttribute? nextDungeonAttr;
+    private readonly DungeonIntelModel dungeonIntel;
 
     public BlackSmithPresenter(
         TomsModel tomsModel,
@@ -41,7 +49,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         GameFlowManager gameFlowManager,
         DungeonRepository dungeonRepository,
         HeroModel heroModel,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        DungeonIntelModel dungeonIntel)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
@@ -53,6 +62,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.dungeonRepository = dungeonRepository;
         this.heroModel = heroModel;
         this.relicResolver = relicResolver;
+        this.dungeonIntel = dungeonIntel;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -84,7 +94,9 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         string armorName = EquippedName(heroModel.heroData?.armorId.Value);
 
         var header = blackSmithView.Header;
-        var nextKey = gameFlowManager.GetNextBattleDungeon();
+        // 配信前の寄り道中は「今日これから配信するダンジョン」を出す（Next は今日より先を探すため）
+        bool awaitingStream = gameFlowManager.IsAwaitingStream.Value;
+        var nextKey = awaitingStream ? gameFlowManager.PendingBattleDungeon : gameFlowManager.GetNextBattleDungeon();
         var dungeon = nextKey.HasValue ? dungeonRepository.GetById(nextKey.Value) : null;
 
         if (dungeon == null)
@@ -94,11 +106,19 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             return;
         }
 
-        nextDungeonAttr = dungeon.requiredAttribute;
-        int turnsUntil = gameFlowManager.GetTurnsUntilNextBattle();
-        string weakness = $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}";
+        // 弱点は「知っている」ときだけ開示する。知らなければ null のままにして、
+        // お任せ仕入れ(DungeonFocus)の属性優先も働かせない（Docs/News_Spec.md §2 C4）。
+        bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
+        nextDungeonAttr = known ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
+        int turnsUntil = awaitingStream ? 0 : gameFlowManager.GetTurnsUntilNextBattle();
+        string weakness = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
         header?.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
     }
+
+    private static bool IsReturnablePhase(TomsShopGamePhase p) =>
+        p != TomsShopGamePhase.BlackSmith
+        && p != TomsShopGamePhase.Newspaper
+        && p != TomsShopGamePhase.TurnEndSummary;
 
     private string EquippedName(string itemId)
     {
@@ -119,9 +139,29 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
     private void Bind()
     {
+        // 鍛冶屋以外のフェーズを通るたびに戻り先を覚えておく
+        stateManager.CurrentTomsShopPhase
+            .Subscribe(p => { if (IsReturnablePhase(p)) returnPhase = p; })
+            .AddTo(disposables);
+
         blackSmithView.OnCloseRequested.Subscribe(_ =>
         {
-            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
+            // 配信前の寄り道中: 店へは戻さず（戻ると新しい営業日が始まってしまう）、配信へ進むか尋ねる
+            if (gameFlowManager.IsAwaitingStream.Value)
+            {
+                gameFlowManager.RequestPreStreamDecision(true);
+                return;
+            }
+
+            var target = stateManager.HasHandler(returnPhase) ? returnPhase : TomsShopGamePhase.Shop;
+            stateManager.ChangeTomsShopPhase(target);
+        }).AddTo(disposables);
+
+        // 仕入れ中に記事を読み返せるようにする。朝刊を閉じるとこの画面へ戻る。
+        blackSmithView.OnNewspaperRequested.Subscribe(_ =>
+        {
+            if (stateManager.HasHandler(TomsShopGamePhase.Newspaper))
+                stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
         }).AddTo(disposables);
 
         // 鍛冶屋専用の所持金表示（鍛冶屋表示中はCommonViewを出さないため常時追従）
@@ -407,7 +447,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         int currentCount = blackSmithModel.itemCount.TryGetValue(itemId, out var entry) ? entry.count.Value : 0;
         blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, quantityLimit), quantityLimit);
 
-        panel.ShowItem(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr));
+        panel.ShowItem(runtime, basePrice, ItemModel.ExpectedRevenueOf(runtime));
         // 注文ウィジェットの単価はレリック割引適用後の実効単価にする
         panel.SetPrice(BuyUnitPrice(runtime));
 
@@ -445,7 +485,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .Subscribe(_ => RefreshQuantityLimit(itemId, runtime))
             .AddTo(selectionDisposables);
         runtime.Demand
-            .Subscribe(_ => panel.RefreshMarket(runtime, basePrice, itemModel.GetRecommendScore(runtime, nextDungeonAttr)))
+            .Subscribe(_ => panel.RefreshMarket(runtime, basePrice, ItemModel.ExpectedRevenueOf(runtime)))
             .AddTo(selectionDisposables);
 
         // 購入確定

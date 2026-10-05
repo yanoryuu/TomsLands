@@ -72,10 +72,13 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
             Debug.LogError("[ScenarioPlayer] AdvEngine が未アサインです。ScenarioSystem プレハブを確認してください。");
             return;
         }
-        if (isPlaying.Value)
+        // 別の会話を再生中なら、終わるまで待ってから再生する。
+        // 以前はスキップしていたが、呼び出し側（TutorialScenarioService.PlayOnceAsync）が
+        // 再生されなかった会話を既読にしてしまうため、待ち合わせに変更した。
+        while (isPlaying.Value)
         {
-            Debug.LogWarning($"[ScenarioPlayer] 別の会話を再生中のため '{label}' をスキップしました。");
-            return;
+            if (isDisposed) return;
+            await UniTask.Yield(PlayerLoopTiming.Update, cancellationToken);
         }
 
         if (isDisposed) return;

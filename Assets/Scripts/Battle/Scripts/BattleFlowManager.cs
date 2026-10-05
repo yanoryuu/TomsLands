@@ -24,7 +24,7 @@ public class BattleFlowManager
         sequencer = ownerSequencer;
         salesController = salesCtrl;
         pauseController = pauseCtrl;
-        executor = new BattleActionExecutor(ctx, ownerSequencer);
+        executor = new BattleActionExecutor(ctx, ownerSequencer, pauseCtrl);
     }
 
     /// <summary>
@@ -42,6 +42,9 @@ public class BattleFlowManager
         await uiView.AddLogAsync("--- 戦闘開始！ ---", token);
         SetupCharacters(heroModel);
 
+        // 勇者が映ってから敵が出るまでの「間」（配信の立ち上がり）
+        await uiView.WaitScaledAsync(uiView.Tempo.battleStartSeconds, token, pauseController);
+
         // フェーズ1の敵を出現させる（最大3体。以降の補充・フェーズ進行はターン終了評価が行う）
         if (context.PhaseCount > 0)
         {
@@ -53,6 +56,10 @@ public class BattleFlowManager
         int turnCount = 1;
         while (!executor.IsBattleEnded())
         {
+            // ターン間の「間」（2ターン目以降。テンポは GameConst.battleTempo）
+            if (turnCount > 1)
+                await uiView.WaitScaledAsync(uiView.Tempo.turnIntervalSeconds, token);
+
             // ターン開始前にポーズチェック（ポーズ中はここで待機）
             if (pauseController != null)
                 await pauseController.WaitIfPausedAsync(token);

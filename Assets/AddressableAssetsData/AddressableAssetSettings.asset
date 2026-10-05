@@ -15,7 +15,7 @@ MonoBehaviour:
   m_DefaultGroup: 37e73f14ccb9bc2439468569d55785d5
   m_currentHash:
     serializedVersion: 2
-    Hash: 00000000000000000000000000000000
+    Hash: 093a0254c4de669ce5ef723a72367b86
   m_OptimizeCatalogSize: 0
   m_BuildRemoteCatalog: 0
   m_CatalogRequestsTimeout: 0
@@ -131,6 +131,7 @@ MonoBehaviour:
     - RelicData
     - RelicDefinition
     - VillageFacilityData
+    - MarketModelPreset
   m_SchemaTemplates: []
   m_GroupTemplateObjects:
   - {fileID: 11400000, guid: b0c16d405fb1f0a4a9a3fbdc9e5b14a7, type: 2}

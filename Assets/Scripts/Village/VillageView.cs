@@ -42,6 +42,9 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI conversionConvertedText;
     [SerializeField] private Button conversionCloseButton;
 
+    [Header("帰還到着演出（任意。未設定なら子→シーンから自動検索。無ければ上の収支ポップ）")]
+    [SerializeField] private VillageArrivalFx arrivalFx;
+
     public Subject<Unit> OnDepart { get; } = new();
     public Subject<Unit> OnGoTitle { get; } = new();
     public Subject<Unit> OnInvest { get; } = new();
@@ -80,10 +83,30 @@ public class VillageView : MonoBehaviour
 
     public void UpdateHud(int villageFunds, int villageLevel)
     {
-        if (villageFundsText != null) villageFundsText.text = $"村資金 {villageFunds:N0}G";
+        SetFundsDisplay(villageFunds);
         // metaCurrencyText（旧・銀行預金/のれん表示）は村資金へ統合したため使わない
         if (metaCurrencyText != null) metaCurrencyText.gameObject.SetActive(false);
         if (villageLevelText != null) villageLevelText.text = $"トムの村（総合Lv{villageLevel}）";
+    }
+
+    /// <summary>村資金HUDの数値だけ更新する（到着演出のカウントアップ用）。</summary>
+    public void SetFundsDisplay(int villageFunds)
+    {
+        if (villageFundsText != null) villageFundsText.text = $"村資金 {villageFunds:N0}G";
+    }
+
+    /// <summary>村資金HUDのテキスト（到着演出のコイン到達先）。</summary>
+    public TMP_Text FundsText => villageFundsText;
+
+    /// <summary>帰還到着演出（未配線なら子→シーンから探す。無ければnull）。</summary>
+    public VillageArrivalFx ArrivalFx
+    {
+        get
+        {
+            if (arrivalFx == null) arrivalFx = GetComponentInChildren<VillageArrivalFx>(true);
+            if (arrivalFx == null) arrivalFx = FindFirstObjectByType<VillageArrivalFx>(FindObjectsInactive.Include);
+            return arrivalFx;
+        }
     }
 
     public void ShowMessage(string message)

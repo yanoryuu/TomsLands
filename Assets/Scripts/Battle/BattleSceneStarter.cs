@@ -311,7 +311,7 @@ public class BattleSceneStarter : IAsyncStartable
             int maxQuantity = Mathf.Clamp(Mathf.Min(availableForPurchase / unitCost, stockRoom), 0, 99);
 
             // 数量選択ポップアップ（鍛冶屋と同じ購入UI。0 = キャンセル）
-            float recommendScore = _itemModel.GetRecommendScore(item, null);
+            float recommendScore = ItemModel.ExpectedRevenueOf(item);
             int quantity = await _controlView.ShowRestockQuantityPopupAsync(item, unitCost, maxQuantity, recommendScore, token);
 
             if (quantity > 0)

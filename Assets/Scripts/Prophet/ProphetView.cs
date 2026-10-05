@@ -28,6 +28,9 @@ public class ProphetView : MonoBehaviour
     [Header("セリフ")]
     [SerializeField] private TMP_Text dialogueText;
 
+    [Header("キャラ表情（バズ連動・任意）")]
+    [SerializeField] private CharacterExpression characterExpression;
+
     [Header("操作")]
     [SerializeField] private Button closeButton;
     [SerializeField] private Button characterButton;
@@ -36,6 +39,12 @@ public class ProphetView : MonoBehaviour
     public Subject<Unit> OnCharacterClicked { get; } = new();
     public Subject<string> OnRowHoverEnter { get; } = new();
     public Subject<Unit> OnRowHoverExit { get; } = new();
+
+    [VContainer.Inject]
+    public void Construct(BuzzSystem buzzSystem)
+    {
+        if (characterExpression != null) characterExpression.Bind(buzzSystem);
+    }
 
     private void Awake()
     {

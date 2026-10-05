@@ -13,6 +13,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
     private readonly TomsModel tomsModel;
     private readonly GameFlowManager gameFlowManager;
     private readonly PortfolioModel portfolioModel;
+    private readonly DungeonIntelModel dungeonIntel;
     private readonly ExchangePanelController exchange;
     private int characterTalkIndex;
 
@@ -25,7 +26,8 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         GameFlowManager gameFlowManager,
         PortfolioModel portfolioModel,
         FinanceSettings financeSettings,
-        ItemModel itemModel)
+        ItemModel itemModel,
+        DungeonIntelModel dungeonIntel)
     {
         this.infoBrokerModel = infoBrokerModel;
         this.infoBrokerView = infoBrokerView;
@@ -34,6 +36,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         this.tomsModel = tomsModel;
         this.gameFlowManager = gameFlowManager;
         this.portfolioModel = portfolioModel;
+        this.dungeonIntel = dungeonIntel;
 
         // 取引所（金融商品の売買）は情報屋の1タブとして提供する
         exchange = new ExchangePanelController(
@@ -156,6 +159,9 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         tomsModel.PurchaseItem(cost);
         tomsModel.SavePlayerMoney();
         infoBrokerModel.PurchaseDungeonInfo(dungeonName);
+        // 弱点属性を「確定した知識」として記録する。これを持って初めて
+        // 仕入れ画面のバナーと預言者が弱点を開示する（Docs/News_Spec.md §2 C4）。
+        dungeonIntel?.MarkWeaknessKnown(dungeonName);
         SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
 
         // リストを購入済み表示に更新し、右の詳細に解放された情報をそのまま見せる

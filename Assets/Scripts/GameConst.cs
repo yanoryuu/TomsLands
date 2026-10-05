@@ -159,6 +159,16 @@ public static class GameConst
     public static int HeroExpPerMob => Data.heroExpPerMob;
     public static int HeroExpPerBoss => Data.heroExpPerBoss;
     public static int HeroBaseExpToNextLevel => Data.heroBaseExpToNextLevel;
+    public static int HeroGuaranteedLevelUpsOnVictory => Data.heroGuaranteedLevelUpsOnVictory;
+    public static int HeroGuaranteedLevelUpsOnDefeat => Data.heroGuaranteedLevelUpsOnDefeat;
+    public static float HeroDefeatMobExpMultiplier => Data.heroDefeatMobExpMultiplier;
+    public static float HeroDefeatBossExpShare => Data.heroDefeatBossExpShare;
+    public static float HeroWeaponAttackBonusBase => Data.heroWeaponAttackBonusBase;
+    public static float HeroWeaponAttackBonusPerTier => Data.heroWeaponAttackBonusPerTier;
+    public static float HeroArmorDefenseBonusBase => Data.heroArmorDefenseBonusBase;
+    public static float HeroArmorDefenseBonusPerTier => Data.heroArmorDefenseBonusPerTier;
+    public static float HeroArmorHpBonusBase => Data.heroArmorHpBonusBase;
+    public static float HeroArmorHpBonusPerTier => Data.heroArmorHpBonusPerTier;
     public static int[] BlackSmithLevelUpCosts => Data.blackSmithLevelUpCosts;
 
     // --- ゲームフロー自動生成 ---

@@ -41,6 +41,23 @@ public class ResultStatisticsData
 
     /// <summary>各アイテムの最終状態リスト</summary>
     public List<ResultItemSummary> ItemSummaries;
+
+    // ---- ランの振り返り（RunHistory 由来。記録が無ければ空/0）----
+
+    /// <summary>ターン毎の所持金推移（グラフ用）</summary>
+    public List<int> MoneyHistory = new();
+
+    /// <summary>配信の勝ち数・負け数</summary>
+    public int StreamWins;
+    public int StreamLosses;
+
+    /// <summary>バズの発生回数</summary>
+    public int BuzzCount;
+
+    /// <summary>一番儲かった商品（売上累計が最大）。記録が無ければ空</summary>
+    public string BestItemName;
+    public int BestItemRevenue;
+    public UnityEngine.Sprite BestItemIcon;
 }
 
 /// <summary>

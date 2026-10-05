@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 public class PlayerMove : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
-    private ReactiveProperty<Vector2> moveInput;
+    private readonly ReactiveProperty<Vector2> moveInput = new();
     [SerializeField] private Rigidbody2D rb;
 
     [SerializeField] private PlayerInput playerInput;
@@ -22,7 +22,6 @@ public class PlayerMove : MonoBehaviour
     {
         playerStartScale = transform.localScale;
         moveDisposables = new CompositeDisposable();
-        moveInput = new ReactiveProperty<Vector2>();
         moveInput
             .Subscribe(x =>
             {
