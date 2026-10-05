@@ -90,3 +90,6 @@ crashlytics-build.properties
 
 # 市場シミュレーションの生成物（CSV・キャリブレーション結果）
 /MarketSim/
+
+# Jev AutoPlay のレポート（CSV/JSON/MD）
+/AutoPlayReports/

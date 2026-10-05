@@ -102,6 +102,20 @@ public class GameConstWindow : EditorWindow
             Row("heroExpPerMob", d.heroExpPerMob);
             Row("heroExpPerBoss", d.heroExpPerBoss);
             Row("heroBaseExpToNextLevel", d.heroBaseExpToNextLevel);
+            Row("heroGuaranteedLevelUpsOnVictory", d.heroGuaranteedLevelUpsOnVictory);
+            Row("heroGuaranteedLevelUpsOnDefeat", d.heroGuaranteedLevelUpsOnDefeat);
+            Row("heroDefeatMobExpMultiplier", d.heroDefeatMobExpMultiplier);
+            Row("heroDefeatBossExpShare", d.heroDefeatBossExpShare);
+        });
+
+        Section("勇者の装備補正", () =>
+        {
+            Row("heroWeaponAttackBonusBase", d.heroWeaponAttackBonusBase);
+            Row("heroWeaponAttackBonusPerTier", d.heroWeaponAttackBonusPerTier);
+            Row("heroArmorDefenseBonusBase", d.heroArmorDefenseBonusBase);
+            Row("heroArmorDefenseBonusPerTier", d.heroArmorDefenseBonusPerTier);
+            Row("heroArmorHpBonusBase", d.heroArmorHpBonusBase);
+            Row("heroArmorHpBonusPerTier", d.heroArmorHpBonusPerTier);
         });
 
         Section("鍛冶屋レベルアップコスト", () =>

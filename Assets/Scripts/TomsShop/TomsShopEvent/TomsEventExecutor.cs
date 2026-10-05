@@ -38,7 +38,12 @@ public class TomsEventExecutor
                     // レリック補正（強運ビルド: EventRewardMul）。もらえる金額のみ増幅し、ペナルティ(負値)はそのまま
                     if (amount > 0 && relicResolver != null)
                         amount = relicResolver.ModifyInt(RelicStatId.EventRewardMul, amount);
-                    player.PlayerMoney.Value += amount;
+                    // ペナルティ（負値）は所持金を下回らない（所持金がマイナスになると購入上限の計算や
+                    // 表示が壊れるため。払いきれない分は取り立てない）。Jev AutoPlay で検出（2026-10-05）
+                    int before = player.PlayerMoney.Value;
+                    player.PlayerMoney.Value = amount < 0 ? Mathf.Max(0, before + amount) : before + amount;
+                    if (amount < 0 && before + amount < 0)
+                        Debug.Log($"[Event] {e.id}: 支払い {-amount}G のうち {-(before + amount)}G は所持金不足のため免除");
                     player.SavePlayerMoney();
                     break;
                 }

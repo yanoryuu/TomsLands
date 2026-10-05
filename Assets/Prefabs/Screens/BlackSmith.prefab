@@ -5640,6 +5640,7 @@ GameObject:
   - component: {fileID: 3878152894644318745}
   - component: {fileID: 6117654231673619226}
   - component: {fileID: 6000417914035247494}
+  - component: {fileID: 8483384237822801998}
   m_Layer: 5
   m_Name: Chara
   m_TagString: Untagged
@@ -5748,6 +5749,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8483384237822801998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4398057794827476750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b1063d72a3c2ec46a211b643303d9a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 6117654231673619226}
+  normal: {fileID: 3954835020699359686, guid: 84d5a13516b477140b04e5e51595cf86, type: 3}
+  buzz: {fileID: -4233309380383246758, guid: fa20d39e3fbd10645905079da102308e, type: 3}
+  bigBuzz: {fileID: 4042396609241945188, guid: fa9cb5cee0688304abebef6452da5058, type: 3}
+  flame: {fileID: -3342141299694059686, guid: 1d3d211999aa22347b737a6a567bd815, type: 3}
 --- !u!1 &4491755593187900694
 GameObject:
   m_ObjectHideFlags: 0
@@ -6538,6 +6556,7 @@ MonoBehaviour:
   autoBuyBudgetPopup: {fileID: 6745317346703427233}
   dialogueText: {fileID: 3911662233306116287}
   characterButton: {fileID: 6000417914035247494}
+  characterExpression: {fileID: 8483384237822801998}
   itemDescriptionText: {fileID: 3911662233306116287}
   procurementHeader: {fileID: 1891250516084319776}
   playerMoneyText: {fileID: 3890553252390805348}

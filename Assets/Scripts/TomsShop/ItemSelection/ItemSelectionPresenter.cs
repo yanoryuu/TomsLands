@@ -88,16 +88,6 @@ public class ItemSelectionPresenter : IDisposable, IStartable
         selectionView.OnWeaponPanelRequested
             .Subscribe(_ => ChangeSelectionPanel(selectionModel.WeaponRuntimeItems, ItemTypeData.ItemType.Weapon))
             .AddTo(disposables);
-
-        selectionView.OnAutoDisplayRequested
-            .Subscribe(_ =>
-            {
-                itemModel.AutoSetDisplay(tomsModel.BlacksmithLevel.Value, MaxDisplayKinds);
-                RefreshRuntimeItems();
-                RefreshCurrentSelectionPanel();
-                RebuildDisplaySlots();
-            })
-            .AddTo(disposables);
     }
 
     private void ChangeSelectionPanel(List<RuntimeItemData> items, ItemTypeData.ItemType itemType)

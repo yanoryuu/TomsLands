@@ -20,6 +20,7 @@ public class VillagePresenter : IStartable, IDisposable
     private readonly CompositeDisposable disposables = new();
 
     private string selectedFacilityId;
+    private bool arrivalPlaying; // 帰還到着演出の再生中
 
     public VillagePresenter(VillageView view, VillageModel model, MetaProgressModel metaProgress)
     {
@@ -45,7 +46,7 @@ public class VillagePresenter : IStartable, IDisposable
         // ラン終了からの帰還なら収支報告を表示
         if (VillageArrivalReport.TryConsume(out bool cleared, out int earned, out int converted))
         {
-            view.ShowConversionPopup(cleared, earned, converted);
+            PlayArrival(cleared, earned, converted);
         }
         else
         {
@@ -57,11 +58,16 @@ public class VillagePresenter : IStartable, IDisposable
     {
         view.OnDepart.Subscribe(_ =>
         {
+            if (arrivalPlaying) return;
             Debug.Log("[VillagePresenter] 出店準備へ");
             SceneManager.LoadScene("PreparationScene");
         }).AddTo(disposables);
 
-        view.OnGoTitle.Subscribe(_ => SceneManager.LoadScene("TitleScene")).AddTo(disposables);
+        view.OnGoTitle.Subscribe(_ =>
+        {
+            if (arrivalPlaying) return;
+            SceneManager.LoadScene("TitleScene");
+        }).AddTo(disposables);
 
         // 区画の「調べる」→投資パネル
         foreach (var plot in view.Plots)
@@ -78,8 +84,31 @@ public class VillagePresenter : IStartable, IDisposable
             .AddTo(disposables);
     }
 
+    /// <summary>
+    /// 帰還の到着演出（稼ぎ→村資金へコインが飛ぶ）。VillageArrivalFx が無い/素材未設定なら旧・収支ポップ。
+    /// 演出中は区画の調べる・出撃・タイトルを受け付けない（Fx側でもプレイヤー入力とUIをブロック）。
+    /// </summary>
+    private void PlayArrival(bool cleared, int earned, int converted)
+    {
+        var fx = view.ArrivalFx;
+        if (fx == null || !fx.CanPlay || view.FundsText == null)
+        {
+            view.ShowConversionPopup(cleared, earned, converted);
+            return;
+        }
+
+        arrivalPlaying = true;
+        fx.Play(cleared, earned, converted, model.VillageFunds, view.FundsText, view.SetFundsDisplay, () =>
+        {
+            arrivalPlaying = false;
+            RefreshAll();
+            view.ShowMessage("稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。");
+        });
+    }
+
     private void SelectFacility(string facilityId)
     {
+        if (arrivalPlaying) return;
         var facility = model.GetFacility(facilityId);
         if (facility == null)
         {

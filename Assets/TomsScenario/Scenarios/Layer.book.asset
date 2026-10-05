@@ -30,16 +30,49 @@ MonoBehaviour:
     - rowIndex: 1
       debugIndex: 1
       strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 2
+      debugIndex: 2
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 3
+      debugIndex: 3
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 4
+      debugIndex: 4
+      strings:
       - CharacterLayer
       - Dummy
       - 0
       - 0
-      - 0
+      - 200
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/Layer.csv
     type: 0
-    textLength: 42
+    textLength: 197
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 0b69232a602310f4c8643fefe90d0343, type: 3}

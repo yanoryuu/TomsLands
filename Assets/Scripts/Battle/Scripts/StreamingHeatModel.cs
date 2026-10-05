@@ -66,6 +66,16 @@ public class StreamingHeatModel
     //  表示用
     // ─────────────────────────────────────────
 
+    /// <summary>0=冷め / 1=普通 / 2=盛り上がり / 3=超人気。</summary>
+    public int GetTierIndex()
+    {
+        float h = Heat.Value;
+        if (h < GetColdTierMax()) return 0;
+        if (h < GetNormalTierMax()) return 1;
+        if (h < GetHotTierMax()) return 2;
+        return 3;
+    }
+
     public string GetTierLabel()
     {
         float h = Heat.Value;

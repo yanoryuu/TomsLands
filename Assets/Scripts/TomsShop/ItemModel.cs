@@ -27,7 +27,7 @@ public class ItemModel
     // ========================================
     // おすすめ計算（単一スコアの真実の源）
     // ========================================
-    // 仕入れ一覧・自動陳列・自動仕入れ・Prophet のすべてが
+    // 仕入れ一覧・自動仕入れ・Prophet のすべてが
     // この1つを基準にする（画面ごとに式がバラつかないようにする）。
 
     /// <summary>
@@ -68,6 +68,12 @@ public class ItemModel
             {
                 item.IsDisplay.Value = false;
                 item.DisplayStock.Value = 0;
+            }
+            else if (item.DisplayStock.Value > item.Stock.Value)
+            {
+                // 配信で売れて在庫が減ったとき、陳列数が在庫を上回ったまま残らないようにする
+                // （SimulateShopSales と同じクランプ。Jev AutoPlay の display_over_stock で検出）
+                item.DisplayStock.Value = item.Stock.Value;
             }
         }
         else
@@ -566,35 +572,6 @@ public class ItemModel
         var master = GetMasterItem(runtime.ItemId);
         if (master == null || master.basePrice <= 0) return float.MaxValue;
         return (float)runtime.CurrentPrice.Value / master.basePrice;
-    }
-
-    // ========================================
-    // ③ おすすめ陳列
-    // ========================================
-
-    /// <summary>
-    /// 期待収益（需要×価格×SalesRate）が高い順に最大maxSlots枠を自動陳列する。
-    /// maxSlots は店レベル（ShopLevelSettings）由来の値を渡すこと。
-    /// 1銘柄あたりの陳列個数に上限は無い（制限は同時陳列の銘柄数のみ）。
-    /// </summary>
-    public void AutoSetDisplay(int blacksmithLevel, int maxSlots)
-    {
-        foreach (var r in RuntimeItems)
-            r.IsDisplay.Value = false;
-
-        var top = RuntimeItems
-            .Where(r => r.RequiredLevel.Value <= blacksmithLevel && r.Stock.Value > 0)
-            .OrderByDescending(ExpectedRevenueOf)
-            .Take(maxSlots);
-
-        foreach (var item in top)
-        {
-            item.IsDisplay.Value = true;
-            item.DisplayStock.Value = item.Stock.Value;
-            Debug.Log($"[AutoDisplay] {item.ItemName} 陳列設定 (score={ExpectedRevenueOf(item):F1})");
-        }
-
-        SaveData();
     }
 
     // ========================================

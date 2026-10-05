@@ -335,6 +335,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterEntryPoint<CommonPresenter>();
         builder.RegisterEntryPoint<InfoBrokerPresenter>();
         builder.RegisterEntryPoint<GameFlowManager>().AsSelf();
+        // 配信前の寄り道（配信日に入ったら「鍛冶屋へ寄る / このまま配信へ」を選ばせる）。View不要。
+        builder.RegisterEntryPoint<PreStreamPresenter>();
         builder.RegisterEntryPoint<TurnPhasePresenter>();
         if (newspaperView != null) builder.RegisterEntryPoint<NewspaperPresenter>();
 

@@ -37,6 +37,9 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private Button characterButton;
 
+    [Header("キャラ表情（バズ連動・任意）")]
+    [SerializeField] private CharacterExpression characterExpression;
+
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
 
@@ -96,6 +99,12 @@ public class BlackSmithView : MonoBehaviour
     private BlackSmithTab _currentTab = BlackSmithTab.Weapon;
     
     private readonly Dictionary<BlackSmithTab, Vector3> initTabPos = new();
+
+    [VContainer.Inject]
+    public void Construct(BuzzSystem buzzSystem)
+    {
+        if (characterExpression != null) characterExpression.Bind(buzzSystem);
+    }
 
     private void Awake()
     {

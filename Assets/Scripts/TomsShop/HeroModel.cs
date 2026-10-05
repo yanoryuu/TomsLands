@@ -119,6 +119,47 @@ public class HeroModel
         return levelUps;
     }
 
+    /// <summary>
+    /// 経験値に関係なく、指定回数ぶんレベルを上げる（最大レベルで頭打ち）。
+    /// 配信（ダンジョン挑戦）後の「最低保証レベルアップ」用。
+    /// 持ち越し経験値は新レベルの必要量未満に丸める（保証直後の連続レベルアップ防止）。
+    /// 実際に上がった回数を返し、変化があれば保存する。
+    /// </summary>
+    public int ForceLevelUp(int count)
+    {
+        if (heroData == null || count <= 0) return 0;
+
+        var loader = new HeroLevelDataLoader();
+        loader.LoadFromCSV("HeroStatusData");
+        int maxLevel = loader.GetMaxLevel();
+        int levelUps = 0;
+
+        while (levelUps < count && heroData.level.Value < maxLevel)
+        {
+            heroData.level.Value++;
+            ApplyLevelData(loader.GetLevelData(heroData.level.Value));
+            levelUps++;
+        }
+
+        if (levelUps == 0) return 0;
+
+        if (heroData.level.Value >= maxLevel)
+        {
+            heroData.experience.Value = 0;
+            heroData.expToNextLevel.Value = 0;
+        }
+        else
+        {
+            int required = GameConst.GetHeroExpToNextLevel(heroData.level.Value);
+            heroData.expToNextLevel.Value = required;
+            heroData.experience.Value = Mathf.Clamp(heroData.experience.Value, 0, Mathf.Max(0, required - 1));
+        }
+
+        SaveHeroData();
+        Debug.Log($"[HeroModel] Forced {levelUps} level up(s). Lv={heroData.level.Value}, EXP={heroData.experience.Value}/{heroData.expToNextLevel.Value}");
+        return levelUps;
+    }
+
     private void ApplyLevelData(HeroLevelData levelData)
     {
         if (levelData == null) return;

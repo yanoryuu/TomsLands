@@ -111,6 +111,7 @@ public class MarketingFacade : IStartable, IDisposable
         if (result.NewBuzzOccurred)
         {
             Debug.Log($"[MarketingFacade] 新バズ発生: {result.NewBuzzType}");
+            RunHistory.RecordBuzz(); // リザルトの振り返り用
         }
 
         // フォロワーマイルストーン状況をログ

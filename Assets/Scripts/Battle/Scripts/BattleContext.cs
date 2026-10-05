@@ -121,7 +121,8 @@ public class BattleContext
             Debug.LogWarning($"[BattleContext] フォールバックのモンスターからフェーズを自動構成しました（{phases.Count}フェーズ）。");
         }
 
-        Phases = phases.Where(p => p?.enemies != null && p.enemies.Any(e => e != null)).ToList();
+        // 通常ウェーブの周回数（GameConst.battleTempo.normalWaveRepeat。1 なら構成どおり）
+        Phases = BattleWavePlan.Expand(phases.Where(p => p?.enemies != null && p.enemies.Any(e => e != null)).ToList());
         CurrentPhaseIndex = 0;
         LoadPhaseQueue(0);
     }

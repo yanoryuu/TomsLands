@@ -46,6 +46,20 @@ public class GameFlowManager : IDisposable, IStartable
     /// </summary>
     public int CurrentIndex => _currentIndex;
 
+    /// <summary>
+    /// 配信日に入ったが、まだ FightScene へ遷移していない（配信前の寄り道中）か。
+    /// true の間は日送り(NextTurn)せず、ProceedToBattle() で配信へ進む。
+    /// セーブしない（シーン内で完結する一時状態。中断時は配信ノードの index が保存済み）。
+    /// </summary>
+    public ReactiveProperty<bool> IsAwaitingStream { get; } = new(false);
+
+    /// <summary>
+    /// 配信前の寄り道を受け持つハンドラ（PreStreamPresenter が登録）。
+    /// 引数: true=鍛冶屋から戻ってきたところ / false=配信日に入った直後。
+    /// 未登録なら従来どおり即 FightScene へ遷移する。
+    /// </summary>
+    private Action<bool> _preStreamHandler;
+
     public GameFlowManager(StateManager stateManager, DungeonRepository dungeonRepository, BattleInputData battleInputData,
         ItemModel itemModel, ShopEconomySettings economySettings, TomsModel tomsModel,
         SceneTransitionService sceneTransition, HeroModel heroModel,
@@ -169,6 +183,16 @@ public class GameFlowManager : IDisposable, IStartable
             return;
         }
 
+        // 配信前の寄り道中は日を進めない（サマリーの確認ボタン再押下などでの二重進行を防ぐ）。
+        // 判断ポップアップを出し直すだけにする。
+        if (IsAwaitingStream.Value)
+        {
+            Debug.LogWarning("[GameFlowManager] NextTurn: 配信前の寄り道中のため日送りせず、配信の判断を出し直す");
+            RequestPreStreamDecision(false);
+            return;
+        }
+
+        RunHistory.RecordMoney(CurrentTurn.Value, _tomsModel != null ? _tomsModel.PlayerMoney.Value : 0); // リザルトの所持金グラフ用（終わった日の所持金）
         _currentIndex++;
 
         if (_currentIndex >= _gameFlow.GameFlowStack.Count)
@@ -332,6 +356,17 @@ public class GameFlowManager : IDisposable, IStartable
                 _currentIndex
             );
 
+            // 配信前の寄り道（鍛冶屋での仕入れ）を受ける側がいれば、ここで一旦止めて判断を委ねる。
+            // ここまでで日送り処理とセーブ（GameFlowIndex=配信ノード）は済んでいるので、
+            // 寄り道中に終了しても「配信を FightScene 内で中断した」のと同じ状態になる。
+            if (_preStreamHandler != null)
+            {
+                IsAwaitingStream.Value = true;
+                Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → 配信前の寄り道待ち");
+                _preStreamHandler.Invoke(false);
+                return;
+            }
+
             Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → FightScene");
             _sceneTransition.GoToBattle();
             return;
@@ -479,6 +514,62 @@ public class GameFlowManager : IDisposable, IStartable
         return null;
     }
 
+    // ========================================
+    // 配信前の寄り道（鍛冶屋で仕入れてから配信へ）
+    // ========================================
+
+    /// <summary>配信前の寄り道ハンドラを登録する。null で解除（従来どおり即配信）。</summary>
+    public void SetPreStreamHandler(Action<bool> handler) => _preStreamHandler = handler;
+
+    /// <summary>
+    /// 寄り道中に「配信へ進むか」の判断を求める（鍛冶屋を閉じたとき等）。
+    /// ハンドラが無ければそのまま配信へ進む。
+    /// </summary>
+    public void RequestPreStreamDecision(bool fromProcurement)
+    {
+        if (!IsAwaitingStream.Value) return;
+        if (_preStreamHandler == null)
+        {
+            ProceedToBattle();
+            return;
+        }
+        _preStreamHandler.Invoke(fromProcurement);
+    }
+
+    /// <summary>
+    /// 寄り道中の配信日のダンジョン（＝これから配信するダンジョン）。寄り道中でなければ null。
+    /// GetNextBattleDungeon は「現在より先」を探すため、寄り道中は今日の配信を返せない。その補完。
+    /// </summary>
+    public DungeonName? PendingBattleDungeon
+    {
+        get
+        {
+            if (!IsAwaitingStream.Value || _gameFlow == null) return null;
+            if (_currentIndex < 0 || _currentIndex >= _gameFlow.GameFlowStack.Count) return null;
+            var node = _gameFlow.GameFlowStack[_currentIndex];
+            return node.EventType == GameEvent.Battle ? node.BattleDungeon : (DungeonName?)null;
+        }
+    }
+
+    /// <summary>
+    /// 寄り道を終えて FightScene へ遷移する。寄り道中の仕入れ結果を保存してから遷移する。
+    /// BattleInputData は NextTurn の配信分岐でセット済み（寄り道で変わるのは在庫と所持金のみ）。
+    /// </summary>
+    public void ProceedToBattle()
+    {
+        if (!IsAwaitingStream.Value) return;
+        IsAwaitingStream.Value = false;
+
+        _itemModel.SaveData();
+        _sellOrderModel?.SaveData();
+        _portfolioModel?.SaveData();
+        _tomsModel.GameFlowIndex = _currentIndex;
+        _tomsModel.SavePlayerMoney();
+
+        Debug.Log($"[GameFlowManager] ProceedToBattle: index={_currentIndex} → FightScene");
+        _sceneTransition.GoToBattle();
+    }
+
     /// <summary>
     /// リザルトシーンへ遷移する。遷移前にデータを保存する。
     /// </summary>
@@ -498,6 +589,6 @@ public class GameFlowManager : IDisposable, IStartable
 
     public void Dispose()
     {
-
+        IsAwaitingStream.Dispose();
     }
 }

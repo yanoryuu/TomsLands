@@ -38,7 +38,7 @@ public class RuntimeItemData
 
     /// <summary>
     /// 期待収益（需要 × 価格 × SalesRate）。おすすめ計算の単一の基礎値。
-    /// 仕入れ一覧の並べ替え・自動陳列・ダッシュボードはすべてこの値を基準にする。
+    /// 仕入れ一覧の並べ替え・ダッシュボードはすべてこの値を基準にする。
     /// </summary>
     public float ExpectedRevenue => Demand.Value * CurrentPrice.Value * SalesRate;
 

@@ -63,13 +63,15 @@ public class CharacterModel
         var runtime = savedHeroModel?.heroData;
         if (runtime != null)
         {
-            MaxHp = Scale(runtime.hp.Value);
+            // 装備補正（武器→攻撃、防具→防御/HP）。ランクが高い装備ほど強くなる
+            var equip = HeroEquipmentBonus.Get(runtime);
+            MaxHp = Scale(Mathf.RoundToInt(runtime.hp.Value * equip.Hp));
             CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = runtime.mp.Value;
             CurrentMp = new ReactiveProperty<int>(runtime.mp.Value);
-            AttackPower = Scale(runtime.attackPower.Value);
-            DefensePower = Scale(runtime.defensePower.Value);
-            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower} (powerMul={powerMul:F2})");
+            AttackPower = Scale(Mathf.RoundToInt(runtime.attackPower.Value * equip.Attack));
+            DefensePower = Scale(Mathf.RoundToInt(runtime.defensePower.Value * equip.Defense));
+            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower} (powerMul={powerMul:F2}, equip HP x{equip.Hp:F2} AT x{equip.Attack:F2} DF x{equip.Defense:F2})");
         }
         else
         {

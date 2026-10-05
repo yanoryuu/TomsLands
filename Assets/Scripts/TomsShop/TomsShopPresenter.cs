@@ -284,6 +284,19 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
     public void Entry()
     {
+        // --- 配信前の寄り道中 ---
+        // 日送りは済んで配信日に入っている。ここで店のホームを開くと
+        // 朝刊・借金・朝レポート消費・ターンフェーズ開始が「配信日の営業」として走ってしまうため、
+        // _lastKnownTurn などに一切触れずに抜け、配信の判断へ戻す（戻った先で再び鍛冶屋か配信を選ぶ）。
+        if (gameFlowManager.IsAwaitingStream.Value)
+        {
+            Debug.LogWarning("[TomsShopPresenter] 配信前の寄り道中に Shop へ入ろうとしたため、配信の判断へ戻します");
+            if (stateManager.HasHandler(TomsShopGamePhase.BlackSmith))
+                stateManager.ChangeTomsShopPhase(TomsShopGamePhase.BlackSmith);
+            gameFlowManager.RequestPreStreamDecision(true);
+            return;
+        }
+
         Initialize();
 
         SoundManager.Instance?.PlayBGM("通常営業");

@@ -587,6 +587,7 @@ MonoBehaviour:
   recommendedRowParent: {fileID: 2463265144782749572}
   recommendedRowPrefab: {fileID: 2914806622783742364, guid: cd5dd8cffea448d49b781b25faf5425c, type: 3}
   dialogueText: {fileID: 5744780468910798554}
+  characterExpression: {fileID: 5292017145917131605}
   closeButton: {fileID: 1166709587243511004}
   characterButton: {fileID: 8965917264644667730}
 --- !u!1 &1919400455996164435
@@ -784,6 +785,7 @@ GameObject:
   - component: {fileID: 4827337124434944594}
   - component: {fileID: 5818386313120636970}
   - component: {fileID: 8965917264644667730}
+  - component: {fileID: 5292017145917131605}
   m_Layer: 5
   m_Name: Chara
   m_TagString: Untagged
@@ -892,6 +894,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5292017145917131605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2560453351531496054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b1063d72a3c2ec46a211b643303d9a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 5818386313120636970}
+  normal: {fileID: -4394136732825105857, guid: 8e1440d7270a59e4fbdc37890f3c8096, type: 3}
+  buzz: {fileID: -6969326909883756330, guid: bc725f7135db2474692597c8b24e21e9, type: 3}
+  bigBuzz: {fileID: -1163301734410180203, guid: 1f5674b6747ee574a8afd07d9a9aeb98, type: 3}
+  flame: {fileID: -4128341532833420675, guid: ebdf78bdfda4b0a4e916d3b082347059, type: 3}
 --- !u!1 &2768743153805924960
 GameObject:
   m_ObjectHideFlags: 0

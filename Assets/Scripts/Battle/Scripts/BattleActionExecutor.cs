@@ -12,11 +12,13 @@ public class BattleActionExecutor
 {
     private readonly BattleContext context;
     private readonly BattleSequencer sequencer;
-    
-    public BattleActionExecutor(BattleContext ctx, BattleSequencer battleSequencer)
+    private readonly BattlePauseController pauseController;
+
+    public BattleActionExecutor(BattleContext ctx, BattleSequencer battleSequencer, BattlePauseController pauseCtrl = null)
     {
         context = ctx;
         sequencer = battleSequencer;
+        pauseController = pauseCtrl;
     }
 
     /// <summary>
@@ -37,6 +39,14 @@ public class BattleActionExecutor
             // ターゲットが既に死亡している場合はスキップ
             if (targetPresenter == null || targetPresenter.GetModel().IsDead) continue;
 
+            // 攻撃モーション（踏み込み）。踏み込み切った瞬間にダメージを入れ、戻りは並行で再生される
+            var tempo = uiView.Tempo;
+            await presenter.GetView().PlayAttackMotionAsync(
+                targetPresenter.GetView().transform.position,
+                tempo.attackLungeDistance,
+                uiView.ScaleSeconds(tempo.attackMotionSeconds),
+                token);
+
             int damageDealt = presenter.PerformAttack(targetPresenter);
             string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
             await uiView.AddLogAsync(logMessage, token);
@@ -52,7 +62,7 @@ public class BattleActionExecutor
                     sequencer.OnEnemyDefeated.OnNext(targetPresenter.GetModel());
                 }
                 
-                await targetPresenter.GetView().PlayDeathEffectAsync(token);
+                await targetPresenter.GetView().PlayDeathEffectAsync(token, tempo.deathBlinkCount, uiView.ScaleSeconds(tempo.deathBlinkInterval));
             }
         }
     }
@@ -76,6 +86,9 @@ public class BattleActionExecutor
             if (!hasNext) return; // 全フェーズクリア → IsBattleEnded() が勝利を返す
 
             await uiView.AddLogAsync($"--- フェーズ {context.CurrentPhaseIndex + 1} / {context.PhaseCount} ---", token);
+
+            // ウェーブ間インターミッション（ゲージが進む演出を見せる「間」。販売ループはこの間も動く）
+            await uiView.WaitScaledAsync(uiView.Tempo.waveIntermissionSeconds, token, pauseController);
         }
 
         // 補充（最大同時数まで現在フェーズのキューから出現）
@@ -120,7 +133,7 @@ public class BattleActionExecutor
             else if (announceReinforce)
             {
                 await uiView.AddLogAsync("敵の増援が現れた！", token);
-                await UniTask.Delay(uiView.GetSpeedScaledDelay(500), cancellationToken: token);
+                await uiView.WaitScaledAsync(uiView.Tempo.reinforceDelaySeconds, token);
             }
         }
     }

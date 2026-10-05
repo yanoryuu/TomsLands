@@ -22,6 +22,7 @@ public static class RunSaveCleaner
         "portfolioData.json",
         "shopMachineData.json",
         "relics.json",
+        RunHistory.FileName, // リザルトの振り返り用（所持金推移・ハイライト）
     };
 
     /// <summary>
