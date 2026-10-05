@@ -35,25 +35,29 @@ public class TurnAnnounceView : MonoBehaviour
     /// </summary>
     public void Show(int turn)
     {
+        announceText.text = $"— ターン {turn} —";
+        announceText.color = Color.white;
+        PlaySlideAnimation();
+    }
+
+    private void PlaySlideAnimation()
+    {
         currentSequence?.Kill();
 
-        announceText.text = $"— ターン {turn} —";
-
-        // 初期位置を開始位置に設定
         Vector2 pos = rectTransform.anchoredPosition;
         pos.x = startX;
         rectTransform.anchoredPosition = pos;
         canvasGroup.alpha = 1f;
 
         currentSequence = DOTween.Sequence()
-            // 左 → 中央へスライド
             .Append(rectTransform.DOAnchorPosX(centerX, slideDuration).SetEase(Ease.OutCubic))
-            // 中央で停止
             .AppendInterval(holdDuration)
-            // 中央 → 右へスライド（後半フェードアウト）
             .Append(rectTransform.DOAnchorPosX(endX, slideDuration).SetEase(Ease.InCubic))
             .Join(canvasGroup.DOFade(0f, fadeDuration).SetDelay(slideDuration - fadeDuration))
             .OnComplete(() => currentSequence = null);
+
+        // 演出速度設定（速い=2倍速で再生）
+        currentSequence.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
     }
 
     private void OnDestroy()

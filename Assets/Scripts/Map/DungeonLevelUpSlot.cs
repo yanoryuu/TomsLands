@@ -32,7 +32,7 @@ public class DungeonLevelUpSlot : MonoBehaviour
 
         if (dungeonIconImage) dungeonIconImage.sprite = data.Icon;
         if (dungeonNameText)  dungeonNameText.text    = data.DungeonName;
-        if (costText)         costText.text           = data.IsMaxLevel ? "MAX" : $"{data.Cost}G";
+        if (costText)         costText.text           = data.IsMaxLevel ? "MAX" : $"{data.Cost:N0}G";
 
         UpdateLevel(data.CurrentLevel, data.IsMaxLevel);
         SetAffordable(data.CanAfford);

@@ -1,0 +1,35 @@
+﻿Pixel Art Top Down - Village
+
+1.0.10
+	- Add Unity 6.5 support.
+
+1.0.9
+	- Add Unity 6.4 support.
+
+1.0.8
+	- Update included [Lucid Editor] to 1.1.0.
+
+1.0.7
+	- Add terrain shadow.
+	- Add stone bridge in vertical direction.
+
+1.0.6
+	- Fix some minor issues with the [Top Down Pixel Water Renderer Feature].
+
+1.0.5
+	 Add Unity 6.3 support.
+
+1.0.4
+	- Add PSD files.
+
+1.0.3
+	- Fix some minor issues.
+
+1.0.2
+	- Fix water renderer feature glitch when game view and scene view are active at the same time.
+
+1.0.1
+	- Add Unity 6 support.
+
+1.0.0
+	- First release.

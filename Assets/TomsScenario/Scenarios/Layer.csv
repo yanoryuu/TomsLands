@@ -1,0 +1,5 @@
+LayerName,Type,X,Y,Order
+//会話Canvas上の AdvGraphicLayerInScene と同名にすること。,,,,
+//Type は Dummy にする。Character にすると宴側が同名のレイヤーを二重生成してエラーになる。,,,,
+//セリフ行では Arg3 に CharacterLayer を指定して、このレイヤーへ立ち絵を出す。,,,,
+CharacterLayer,Dummy,0,0,200

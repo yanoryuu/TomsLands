@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a17d11cc09faa5547a018d4a94fcf6a4
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Tomb 01 V.prefab
+  uploadId: 984298

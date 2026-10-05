@@ -2,6 +2,7 @@ using UnityEngine;
 using TMPro;
 using Cysharp.Threading.Tasks;
 using System;
+using System.Threading;
 using R3;
 
 public class CharacterStatusView : MonoBehaviour
@@ -15,18 +16,27 @@ public class CharacterStatusView : MonoBehaviour
     [SerializeField] private Transform popupContainer;
 
     private SpriteRenderer characterSpriteRenderer;
+    private Color originalSpriteColor = Color.white;
+    private CancellationTokenSource damageFlashCts;
+    private int damageFlashVersion;
     private CompositeDisposable subscriptions = new CompositeDisposable(); // 複数の購読をまとめる用
 
     private void Awake()
     {
         // 親オブジェクトからSpriteRendererを探してキャッシュ
         characterSpriteRenderer = GetComponentInParent<SpriteRenderer>();
+        if (characterSpriteRenderer != null)
+        {
+            originalSpriteColor = characterSpriteRenderer.color;
+        }
     }
 
     private void OnDestroy()
     {
         // このオブジェクトが破棄される時に、全ての購読をまとめて停止
         subscriptions.Dispose();
+        damageFlashCts?.Cancel();
+        damageFlashCts?.Dispose();
     }
 
     /// <summary>
@@ -35,6 +45,7 @@ public class CharacterStatusView : MonoBehaviour
     public void Initialize(IBattleCharacterViewModel viewModel)
     {
         subscriptions.Clear();
+        ResetDamageFlash();
 
         // viewModelが誰であろうと、契約通りにHPとMPのデータをもらうだけです
         viewModel.CurrentHp.Pairwise()
@@ -71,17 +82,44 @@ public class CharacterStatusView : MonoBehaviour
             DamagePopup popup = Instantiate(damagePopupPrefab, popupContainer);
             popup.ShowAsync(damageAmount).Forget();
         }
-        PlayDamageFlash().Forget();
+        damageFlashCts?.Cancel();
+        damageFlashCts?.Dispose();
+        damageFlashCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        int version = ++damageFlashVersion;
+        PlayDamageFlash(damageFlashCts.Token, version).Forget();
     }
 
     // キャラクターが赤く光るフラッシュ効果
-    private async UniTaskVoid PlayDamageFlash()
+    private async UniTaskVoid PlayDamageFlash(CancellationToken token, int version)
     {
         if (characterSpriteRenderer == null) return;
-        Color originalColor = characterSpriteRenderer.color;
-        characterSpriteRenderer.color = Color.red;
-        await UniTask.Delay(TimeSpan.FromMilliseconds(150));
-        characterSpriteRenderer.color = originalColor;
+
+        try
+        {
+            characterSpriteRenderer.color = Color.red;
+            await UniTask.Delay(TimeSpan.FromMilliseconds(150), cancellationToken: token);
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            if (characterSpriteRenderer != null && version == damageFlashVersion)
+            {
+                characterSpriteRenderer.color = originalSpriteColor;
+            }
+        }
+    }
+
+    private void ResetDamageFlash()
+    {
+        damageFlashCts?.Cancel();
+        damageFlashCts?.Dispose();
+        damageFlashCts = null;
+        damageFlashVersion++;
+
+        if (characterSpriteRenderer != null)
+        {
+            characterSpriteRenderer.color = originalSpriteColor;
+        }
     }
 
     // HPテキストを更新する処理

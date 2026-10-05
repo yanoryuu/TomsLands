@@ -11,6 +11,9 @@ public class BattleSequencer : MonoBehaviour
     [SerializeField] private BattleUIView battleUIView;
     [SerializeField] private StreamingSalesController streamingSalesController;
 
+    [Header("フェーズ進行ゲージ")]
+    [SerializeField] private DungeonPhaseGaugeView phaseGauge;
+
     [Header("戦闘ルール設定")]
     [Tooltip("この戦闘で倒すべき通常モンスターの総数")]
     [SerializeField] private const int totalNormalEnemies = 10;
@@ -38,6 +41,9 @@ public class BattleSequencer : MonoBehaviour
     /// <summary>バトル開始前に BattleSceneStarter から設定する。</summary>
     public void SetPauseController(BattlePauseController pc) => _pauseController = pc;
 
+    /// <summary>一時停止状態（配信コメントなど演出側の参照用。未設定なら null）。</summary>
+    public BattlePauseController PauseController => _pauseController;
+
     public Subject<(string weaponId, string armorId)> OnBattleWin { get; } = new();
     public Subject<(string weaponId, string armorId)> OnBattleDefeat { get; } = new();
     public IReadOnlyList<CharacterPresenter> CharacterPresenters =>
@@ -54,6 +60,12 @@ public class BattleSequencer : MonoBehaviour
     /// </summary>
     public Subject<Unit> OnBossAppeared { get; } = new();
 
+
+    /// <summary>フェーズ進行ゲージを初期化する（BattleFlowManager から呼ばれる）。</summary>
+    public void SetupPhaseGauge(int phaseCount) => phaseGauge?.Setup(phaseCount);
+
+    /// <summary>フェーズ進行ゲージを更新する（clearedPhases = クリア済みフェーズ数）。</summary>
+    public void UpdatePhaseGauge(int clearedPhases) => phaseGauge?.SetProgress(clearedPhases);
 
     public void StartBattle(HeroModel heroModel)
     {

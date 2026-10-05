@@ -16,12 +16,12 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
     [SerializeField] private Image itemIcon;
 
-    [Header("おすすめ陳列")]
-    [SerializeField] private Button autoDisplayButton;
-
     [Header("陳列パネル")]
     [SerializeField] private Transform displayListParent;
     [SerializeField] private GameObject itemDisplaySlotPrefab;
+
+    [Header("陳列枠カウンタ（店レベル） ※未配線でも動作する")]
+    [SerializeField] private TextMeshProUGUI slotCounterText;
 
     [SerializeField] private GameObject weaponTab;
     [SerializeField] private GameObject armorTab;
@@ -30,7 +30,6 @@ public class ItemSelectionView : MonoBehaviour
     private readonly List<GameObject> activeSlots = new();
     public Subject<Unit> OnArmorPanelRequested { get; private set; } = new();
     public Subject<Unit> OnWeaponPanelRequested { get; private set; } = new();
-    public Subject<Unit> OnAutoDisplayRequested { get; private set; } = new();
 
     private readonly Dictionary<string, ItemDisplaySlot> displaySlots = new();
 
@@ -39,8 +38,6 @@ public class ItemSelectionView : MonoBehaviour
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         armorPanelButton.onClick.AddListener(() => OnArmorPanelRequested.OnNext(Unit.Default));
         weaponPanelButton.onClick.AddListener(() => OnWeaponPanelRequested.OnNext(Unit.Default));
-        if (autoDisplayButton != null)
-            autoDisplayButton.onClick.AddListener(() => OnAutoDisplayRequested.OnNext(Unit.Default));
     }
 
     public void SetDescription(string description, Sprite icon)
@@ -136,5 +133,20 @@ public class ItemSelectionView : MonoBehaviour
         foreach (var slot in displaySlots.Values)
             Destroy(slot.gameObject);
         displaySlots.Clear();
+    }
+
+    /// <summary>「陳列 3/5」の枠カウンタ表示。未配線（null）なら何もしない。</summary>
+    public void UpdateSlotCounter(int used, int max)
+    {
+        if (slotCounterText == null) return;
+        slotCounterText.text = $"陳列 {used}/{max}";
+        slotCounterText.color = used >= max ? new Color(1f, 0.55f, 0.35f) : Color.white;
+    }
+
+    /// <summary>陳列枠が足りない時の通知。カウンタを強調表示する。</summary>
+    public void NotifySlotLimitReached(int used, int max)
+    {
+        UpdateSlotCounter(used, max);
+        Debug.Log($"[ItemSelection] 陳列枠が足りない（{used}/{max}）。店を改装すると枠が増える。");
     }
 }

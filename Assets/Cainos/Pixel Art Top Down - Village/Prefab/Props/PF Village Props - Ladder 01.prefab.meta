@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: f4e3377a901f17742b3b5ee096fe8b26
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Ladder 01.prefab
+  uploadId: 984298

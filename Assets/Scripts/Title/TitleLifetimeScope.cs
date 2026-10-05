@@ -14,12 +14,12 @@ public class TitleLifetimeScope : LifetimeScope
     protected override void Configure(IContainerBuilder builder)
     {
         // StartModeData（シーン間共有データ）のロードと登録
-        var startModeData = Resources.Load<StartModeData>("SceneData/StartModeData");
+        var startModeData = AddressableLoader.Load<StartModeData>("SceneData/StartModeData");
         if (startModeData == null)
         {
             startModeData = ScriptableObject.CreateInstance<StartModeData>();
             Debug.LogWarning("[TitleLifetimeScope] Resources/SceneData/StartModeData.asset が見つかりません。" +
-                             "Tools > Create Scene Data Assets を実行してください。");
+                             "アセットが欠損しています。リポジトリから Resources_moved/SceneData を復元してください。");
         }
         builder.RegisterInstance(startModeData);
 
@@ -33,8 +33,13 @@ public class TitleLifetimeScope : LifetimeScope
             Debug.LogError("[TitleLifetimeScope] titleView が Inspector で未設定です！");
         }
 
-        // Presenter
         builder.RegisterEntryPoint<TitlePresenter>();
+        builder.Register<TitleModel>(Lifetime.Scoped);
+        builder.Register<PopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
+
+        // ※ リモートコンフィグ取得は BootScene（BootLifetimeScope）で完了済みの想定。
+        //   ここに来た時点で GameConst には適用済みの値が入っている。
 
         Debug.Log("[TitleLifetimeScope] Configured.");
     }

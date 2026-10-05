@@ -17,6 +17,7 @@ public class TurnActionHintPresenter : IStartable, IDisposable
     private readonly GameFlowManager          _gameFlowManager;
     private readonly StateManager             _stateManager;
     private readonly ItemSelectionPresenter   _itemSelectionPresenter;
+    private readonly TurnPhaseManager         _turnPhaseManager;
     private readonly CompositeDisposable      _disposables = new();
 
     private const int MaxHints = 3;
@@ -28,7 +29,8 @@ public class TurnActionHintPresenter : IStartable, IDisposable
         ShopStatusModel          shopStatus,
         GameFlowManager          gameFlowManager,
         StateManager             stateManager,
-        ItemSelectionPresenter   itemSelectionPresenter)
+        ItemSelectionPresenter   itemSelectionPresenter,
+        TurnPhaseManager         turnPhaseManager)
     {
         _view                   = view;
         _itemModel              = itemModel;
@@ -37,6 +39,7 @@ public class TurnActionHintPresenter : IStartable, IDisposable
         _gameFlowManager        = gameFlowManager;
         _stateManager           = stateManager;
         _itemSelectionPresenter = itemSelectionPresenter;
+        _turnPhaseManager       = turnPhaseManager;
 
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Shop, OnEnterShop);
     }
@@ -46,17 +49,42 @@ public class TurnActionHintPresenter : IStartable, IDisposable
         _view.OnHintTapped
             .Subscribe(Navigate)
             .AddTo(_disposables);
+
+        // フェーズが変わるたびにヒントを現フェーズ向けに更新
+        _turnPhaseManager.CurrentTurnPhase
+            .Subscribe(_ => RefreshHints())
+            .AddTo(_disposables);
     }
 
     private void OnEnterShop()
     {
-        var hints = GenerateHints();
-        _view.Populate(hints);
+        RefreshHints();
         _view.Show();
     }
 
+    /// <summary>現フェーズに属するヒントのみ表示する。</summary>
+    private void RefreshHints()
+    {
+        var hints = GenerateHints()
+            .Where(h => PhaseForTarget(h.Target) == _turnPhaseManager.CurrentTurnPhase.Value)
+            .ToList();
+        _view.Populate(hints);
+    }
+
+    /// <summary>ヒントの遷移先がどのフェーズに属するか。</summary>
+    private static TurnPhase PhaseForTarget(ActionTarget target) => target switch
+    {
+        ActionTarget.ItemSelection => TurnPhase.Display,
+        ActionTarget.BlackSmith    => TurnPhase.Procurement,
+        ActionTarget.Advertisement => TurnPhase.Procurement,
+        _                          => TurnPhase.Procurement,
+    };
+
     private void Navigate(ActionTarget target)
     {
+        // フェーズ外の画面へはジャンプさせない
+        if (PhaseForTarget(target) != _turnPhaseManager.CurrentTurnPhase.Value) return;
+
         switch (target)
         {
             case ActionTarget.ItemSelection:
@@ -70,7 +98,7 @@ public class TurnActionHintPresenter : IStartable, IDisposable
                 break;
         }
         // ヒントをタップしたら再生成して最新状態に更新
-        _view.Populate(GenerateHints());
+        RefreshHints();
     }
 
     private List<TurnActionHint> GenerateHints()

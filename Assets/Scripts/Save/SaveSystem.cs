@@ -6,7 +6,8 @@ using UnityEngine;
 public static class SaveSystem
 {
     private const string FileName = "save.json";
-    private static string SavePath => Path.Combine(Application.persistentDataPath, FileName);
+    // 選択中スロット配下（persistentDataPath/slot_N/save.json）に保存・ロードする。
+    private static string SavePath => SaveSlotManager.GetPath(FileName);
     private static string TempPath => SavePath + ".tmp";
     private static string BackupPath => SavePath + ".bak";
 

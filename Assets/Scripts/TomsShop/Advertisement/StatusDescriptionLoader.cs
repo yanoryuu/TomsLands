@@ -36,7 +36,7 @@ public static class StatusDescriptionLoader
     {
         _cache = new Dictionary<StatusType, (string, string)>();
 
-        var textAsset = Resources.Load<TextAsset>(CsvResourceName);
+        var textAsset = AddressableLoader.Load<TextAsset>(CsvResourceName);
         if (textAsset == null)
         {
             Debug.LogError($"[StatusDescriptionLoader] Resources/{CsvResourceName}.csv が見つかりません。");

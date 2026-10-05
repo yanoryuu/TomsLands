@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5fd8053a5a60848a697a4513b65547, type: 3}
+  m_Name: relic_dept_creed
+  m_EditorClassIdentifier: 
+  relicId: relic_dept_creed
+  relicName: "\u767E\u8CA8\u5E97\u306E\u7406\u5FF5"
+  description: "\u300C\u4E26\u3079\u305F\u3082\u306E\u306F\u58F2\u308C\u308B\u300D\u3002\u540C\u6642\u9673\u5217+3\u3001\u55B6\u696D\u58F2\u4E0A+5%\u3002"
+  icon: {fileID: 0}
+  rarity: 2
+  category: 0
+  isCurse: 0
+  modifiers:
+  - stat: 3
+    op: 0
+    value: 3
+  - stat: 0
+    op: 1
+    value: 1.05
+  behaviours: []

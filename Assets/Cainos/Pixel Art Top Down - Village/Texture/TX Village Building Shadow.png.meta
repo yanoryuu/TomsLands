@@ -1,0 +1,1839 @@
+fileFormatVersion: 2
+guid: 8723be495d81053409c65bb27b68bbbb
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 01
+      rect:
+        serializedVersion: 2
+        x: 76
+        y: 1731
+        width: 214
+        height: 294
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5b5666f2f6ce6184c97e04459a80ad0b
+      internalID: -1937981253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 02
+      rect:
+        serializedVersion: 2
+        x: 385
+        y: 1696
+        width: 190
+        height: 282
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e35409aad81ee544595ec682eefb2911
+      internalID: 953033628
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 03 01
+      rect:
+        serializedVersion: 2
+        x: 639
+        y: 1732
+        width: 199
+        height: 184
+      alignment: 9
+      pivot: {x: 0.49808428, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 26f5ca2b67487ed47a7d6c130d3cafa5
+      internalID: 66435631
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Well 01
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 51
+        width: 74
+        height: 48
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8b3e5412ec706b140a1ede5d6e54bf75
+      internalID: 1671861184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Shed 01 S
+      rect:
+        serializedVersion: 2
+        x: 701
+        y: 225
+        width: 119
+        height: 64
+      alignment: 9
+      pivot: {x: 0.49579832, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b010ab60f931e384eb5534477d3a6a90
+      internalID: -6977087
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Tent 01 V R
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 33
+        width: 62
+        height: 84
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 684af07f4ba726442b68a7c01b6a0b66
+      internalID: 264936497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Tent 01 H
+      rect:
+        serializedVersion: 2
+        x: 414
+        y: 69
+        width: 107
+        height: 62
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6a3bc28c3a6f0da48bc702b70a82bc63
+      internalID: -176437187
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Tent 01 V L
+      rect:
+        serializedVersion: 2
+        x: 542
+        y: 34
+        width: 67
+        height: 89
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 53d08bedbcbf69a4a906fcc1610b2f4a
+      internalID: 2126017822
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Tower 01
+      rect:
+        serializedVersion: 2
+        x: 52
+        y: 1251
+        width: 252
+        height: 341
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 220697777efa25547a1e287fb33a436d
+      internalID: 1632053309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Chapel 01 01
+      rect:
+        serializedVersion: 2
+        x: 355
+        y: 1344
+        width: 85
+        height: 309
+      alignment: 9
+      pivot: {x: 0.9764706, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4d146c295a75f941b3655795105a335
+      internalID: 1980473637
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Blacksmith 01 01
+      rect:
+        serializedVersion: 2
+        x: 958
+        y: 1834
+        width: 164
+        height: 90
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 97adcaabf5c3b634b8634b7b171e037d
+      internalID: 1547941652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Blacksmith 01 02
+      rect:
+        serializedVersion: 2
+        x: 1122
+        y: 1764
+        width: 138
+        height: 210
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a198574109ebd34ca1324a74a7a77e4
+      internalID: -2025726431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Stall 01
+      rect:
+        serializedVersion: 2
+        x: 643
+        y: 33
+        width: 107
+        height: 70
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3907673ee9d61804ea247890d9e5a8ac
+      internalID: -680239582
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Stall 02
+      rect:
+        serializedVersion: 2
+        x: 771
+        y: 33
+        width: 107
+        height: 70
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bcd43af9566dc9e4b82107ef8df5565c
+      internalID: -391578035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Stall 03
+      rect:
+        serializedVersion: 2
+        x: 899
+        y: 33
+        width: 107
+        height: 70
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fcf793ae777fd1941b587c419c6843eb
+      internalID: 2049806360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Stall 04
+      rect:
+        serializedVersion: 2
+        x: 1027
+        y: 33
+        width: 107
+        height: 70
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e976bba0aaa4ee3449c6de05d959940e
+      internalID: -1539875947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Stall 05
+      rect:
+        serializedVersion: 2
+        x: 1155
+        y: 33
+        width: 107
+        height: 70
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ffdee9ffe5c8148488c2e3c9a1322118
+      internalID: 1702732503
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Stall 06
+      rect:
+        serializedVersion: 2
+        x: 1283
+        y: 33
+        width: 107
+        height: 70
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f9b61ada9d362d4f8865f81b9a343dc
+      internalID: 2122015882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 04 01
+      rect:
+        serializedVersion: 2
+        x: 1697
+        y: 1700
+        width: 154
+        height: 314
+      alignment: 9
+      pivot: {x: 0.8051948, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 029d3fd7b2fc54c4db543a1696d89fe7
+      internalID: 470826979
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 H 01
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 225
+        width: 64
+        height: 44
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7142df93c9873764186ec07bb773db6f
+      internalID: -1268963271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 H Gate 01
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 225
+        width: 96
+        height: 43
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 37cf9de268957d740b6cd8c0d4a66195
+      internalID: 1766841092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 Coner TR 01
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 225
+        width: 46
+        height: 43
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57b310da6f0f0f747892ea8f54252309
+      internalID: -2034498711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 V
+      rect:
+        serializedVersion: 2
+        x: 532
+        y: 225
+        width: 25
+        height: 106
+      alignment: 9
+      pivot: {x: 0.002175293, y: 0.00000028790168}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0f99bceec102e5e4ab083eb6456a6fee
+      internalID: -1253088614
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 Coner TR 02
+      rect:
+        serializedVersion: 2
+        x: 357
+        y: 186
+        width: 25
+        height: 105
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 19991d17d2f850c47b2049c0d7639df4
+      internalID: -1927814362
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 Coner BL
+      rect:
+        serializedVersion: 2
+        x: 407
+        y: 225
+        width: 73
+        height: 109
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e10fa45cf2d99694eb3183a1546a0259
+      internalID: -2045326998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 05
+      rect:
+        serializedVersion: 2
+        x: 808
+        y: 801
+        width: 185
+        height: 340
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe3842351b596bd4d87a70a482d09ab5
+      internalID: 684548755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 H 02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 323
+        width: 64
+        height: 44
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 70d45de10b903c049a20b5a609fadd0b
+      internalID: 1032341176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 Coner TL 01
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 314
+        width: 25
+        height: 103
+      alignment: 6
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 70da38dad8ec01944a2b0a3175e35d82
+      internalID: 932995557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 Coner TL 02
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 355
+        width: 63
+        height: 43
+      alignment: 6
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b959abbbcf6186a499a3ab0d22affad0
+      internalID: 525856996
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 Coner BR
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 353
+        width: 92
+        height: 110
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5521fe9e8e9507f488be583394405aa5
+      internalID: -995746112
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Shed 01 W
+      rect:
+        serializedVersion: 2
+        x: 619
+        y: 225
+        width: 69
+        height: 107
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ce89755942603140bca308e6f84d669
+      internalID: -874301833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Shed 01 E
+      rect:
+        serializedVersion: 2
+        x: 832
+        y: 225
+        width: 70
+        height: 108
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 47d9016c9006ca74895a1fc57fe63fe5
+      internalID: 1838440106
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 H 03
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 417
+        width: 64
+        height: 44
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a90132f3e8d00246bebc44bd8e126c0
+      internalID: -1849816783
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Wall 01 H Gate 02
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 321
+        width: 96
+        height: 43
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f7ffc2f4b4d5cfe4ab0a050e9582e14b
+      internalID: 792598819
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Warehouse 01
+      rect:
+        serializedVersion: 2
+        x: 1696
+        y: 1441
+        width: 215
+        height: 101
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29873d9a875c68842821a9e6a812dc14
+      internalID: 597617858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 06
+      rect:
+        serializedVersion: 2
+        x: 577
+        y: 1346
+        width: 147
+        height: 259
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 78a6d80286d11874ba046d036741efe7
+      internalID: -1297198854
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 07 01
+      rect:
+        serializedVersion: 2
+        x: 801
+        y: 1417
+        width: 45
+        height: 59
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1cb6d438ec2f7b34da59e04ecbea806a
+      internalID: -887387458
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Dock 01 E
+      rect:
+        serializedVersion: 2
+        x: 1889
+        y: 425
+        width: 130
+        height: 63
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a8c52b4e0aed494cbd3f229a3a3c2d5
+      internalID: 237241277
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 07 02
+      rect:
+        serializedVersion: 2
+        x: 868
+        y: 1534
+        width: 96
+        height: 41
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fd58527591fb8754286ccad6389f7cc2
+      internalID: 524430403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 07 03
+      rect:
+        serializedVersion: 2
+        x: 990
+        y: 1416
+        width: 215
+        height: 141
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6fbdeb0f9403a44f83c12ba0d9f973c
+      internalID: -1239112734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 07 04
+      rect:
+        serializedVersion: 2
+        x: 877
+        y: 1185
+        width: 97
+        height: 215
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22a68c29228240941aa52a308b723b68
+      internalID: -1250897283
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 07 Inner
+      rect:
+        serializedVersion: 2
+        x: 1113
+        y: 1345
+        width: 30
+        height: 41
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a3fedaba2456224ca4159b6d2e2e402
+      internalID: 1644635198
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 08 01
+      rect:
+        serializedVersion: 2
+        x: 1279
+        y: 1348
+        width: 161
+        height: 318
+      alignment: 9
+      pivot: {x: 0.77018636, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9ae71ea8ee95e9845a001e4e3702302b
+      internalID: -1400566623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 09
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 999
+        width: 295
+        height: 133
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c6a6a313f240023498a68fb8679f0017
+      internalID: -1331085744
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Dock 01 S 01
+      rect:
+        serializedVersion: 2
+        x: 1939
+        y: 239
+        width: 64
+        height: 108
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e89e73c344097c24d80f0c0f57e7009d
+      internalID: 1832962414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 10 01
+      rect:
+        serializedVersion: 2
+        x: 420
+        y: 1092
+        width: 137
+        height: 209
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a4d5d194f79a674d82900bce9cf0999
+      internalID: 1321767806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 10 02
+      rect:
+        serializedVersion: 2
+        x: 557
+        y: 1147
+        width: 37
+        height: 154
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d43c008f6931b514580fc8890227d021
+      internalID: 165102430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 11 01
+      rect:
+        serializedVersion: 2
+        x: 1567
+        y: 1059
+        width: 144
+        height: 349
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eea5d97484fba1a43afc9c93c51daa72
+      internalID: -1461610499
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 11 02
+      rect:
+        serializedVersion: 2
+        x: 1540
+        y: 1235
+        width: 27
+        height: 30
+      alignment: 9
+      pivot: {x: 0.4074074, y: 0.06666667}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 02b03f93cb696fa4fa3e8df18e5f1ffe
+      internalID: -31464049
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 11 03
+      rect:
+        serializedVersion: 2
+        x: 1711
+        y: 1123
+        width: 204
+        height: 66
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a21a7f75adb78b488065c230bbecd65
+      internalID: 553565053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 11 05
+      rect:
+        serializedVersion: 2
+        x: 1915
+        y: 1080
+        width: 26
+        height: 109
+      alignment: 9
+      pivot: {x: 0, y: 0.045871556}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dd899f1ab9defb445be990ef87be6635
+      internalID: 1870205755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 11 04
+      rect:
+        serializedVersion: 2
+        x: 1711
+        y: 1080
+        width: 204
+        height: 43
+      alignment: 9
+      pivot: {x: 0.073529415, y: 0.20930232}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cd6d5b4a4e3d0ff49b1f78212587a123
+      internalID: 2091639695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Dock 01 W
+      rect:
+        serializedVersion: 2
+        x: 1646
+        y: 425
+        width: 112
+        height: 29
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fa4db1676b3a3b04eaa3962f3451a71b
+      internalID: -247112144
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Teepee 01 01
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 229
+        width: 79
+        height: 28
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2fc14ee691345e04c92b15bd3430469e
+      internalID: -1142935572
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Teepee 01 02
+      rect:
+        serializedVersion: 2
+        x: 970
+        y: 257
+        width: 79
+        height: 47
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6e271c922df6524380b04e4547d2898
+      internalID: -1613883970
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Shrine 01
+      rect:
+        serializedVersion: 2
+        x: 1441
+        y: 34
+        width: 44
+        height: 83
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 363bf8a17d1a7744dba44e1a62b97fa7
+      internalID: 1294080111
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 12 01
+      rect:
+        serializedVersion: 2
+        x: 1813
+        y: 749
+        width: 146
+        height: 239
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ba72bc9d927d7b84b8f7b6cbbe91937a
+      internalID: 1417946776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 12 02
+      rect:
+        serializedVersion: 2
+        x: 1441
+        y: 801
+        width: 337
+        height: 132
+      alignment: 9
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 311706032cbd5b042ac64e3fad1745b6
+      internalID: 1888494509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 12 03
+      rect:
+        serializedVersion: 2
+        x: 1992
+        y: 812
+        width: 35
+        height: 94
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8409c8c41a8902a40a9858c6076b0101
+      internalID: 601400993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 13 01
+      rect:
+        serializedVersion: 2
+        x: 1225
+        y: 1029
+        width: 201
+        height: 138
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6d7a44ddb6836af4cb1a80de79f6d07a
+      internalID: 2071890110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 13 02
+      rect:
+        serializedVersion: 2
+        x: 1225
+        y: 897
+        width: 94
+        height: 92
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c30ec090ea616f43a22201c222bb06d
+      internalID: 1976920916
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 14 01
+      rect:
+        serializedVersion: 2
+        x: 65
+        y: 834
+        width: 238
+        height: 133
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2dfd7c7ee013dd74a9521a5e679ed50a
+      internalID: 1649185792
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 14 02
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 673
+        width: 95
+        height: 149
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 86d293f061b23d74c84413f9f61e461c
+      internalID: -631233107
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Barn 01
+      rect:
+        serializedVersion: 2
+        x: 385
+        y: 827
+        width: 119
+        height: 182
+      alignment: 9
+      pivot: {x: 0.058823533, y: 0.032967035}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f19439d4510bec948881633f5011e1e8
+      internalID: -746349557
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 15 01
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 859
+        width: 146
+        height: 183
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f0edefbe7086bb4cb88f044d5db2411
+      internalID: -1659207014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 15 02
+      rect:
+        serializedVersion: 2
+        x: 580
+        y: 810
+        width: 146
+        height: 49
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8410e29090ca71a42ba6877eb581f845
+      internalID: 1419095880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Dock 01 N 01
+      rect:
+        serializedVersion: 2
+        x: 1788
+        y: 275
+        width: 7
+        height: 97
+      alignment: 9
+      pivot: {x: 0.5714286, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8b7e911cc09c28f42b46da6c43ffb5fd
+      internalID: -369818806
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Dock 01 N 02
+      rect:
+        serializedVersion: 2
+        x: 1651
+        y: 304
+        width: 73
+        height: 78
+      alignment: 9
+      pivot: {x: 0.91780823, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69b117eab6eb1a84694ce9dc5fbc88b2
+      internalID: -1984169906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Dock 01 S 02
+      rect:
+        serializedVersion: 2
+        x: 1843
+        y: 240
+        width: 73
+        height: 80
+      alignment: 9
+      pivot: {x: 0.91780823, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b4aa8c3756e88e4191e19c03c19f565
+      internalID: 1076966605
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Blacksmith 01 Chimney
+      rect:
+        serializedVersion: 2
+        x: 1327
+        y: 1856
+        width: 57
+        height: 85
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 90460a3eaa4405f4a8a8c8a044cd1415
+      internalID: -471455039
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Chapel 01 02
+      rect:
+        serializedVersion: 2
+        x: 440
+        y: 1360
+        width: 22
+        height: 293
+      alignment: 9
+      pivot: {x: 0.40909094, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe3bdc96be4d7794ca31f356648cfd98
+      internalID: 197873010
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Chapel 01 03
+      rect:
+        serializedVersion: 2
+        x: 462
+        y: 1377
+        width: 41
+        height: 211
+      alignment: 9
+      pivot: {x: 0.3902439, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 11b38b491b478ac4f968df6eb1c27576
+      internalID: 1508861340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 03 02
+      rect:
+        serializedVersion: 2
+        x: 838
+        y: 1752
+        width: 62
+        height: 164
+      alignment: 9
+      pivot: {x: 0.49808428, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b531ad98f5b9f294bb511f3e7e03e8c1
+      internalID: 695712984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - Blacksmith 01 03
+      rect:
+        serializedVersion: 2
+        x: 1260
+        y: 1840
+        width: 23
+        height: 79
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c127f0c0810be54db1933e56297e00f
+      internalID: -327343489
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 04 02
+      rect:
+        serializedVersion: 2
+        x: 1851
+        y: 1798
+        width: 149
+        height: 134
+      alignment: 9
+      pivot: {x: 0.7114094, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 608dbb047e6b84d439a74ca1aa8ac7fa
+      internalID: -274508188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building Shadow - House 08 02
+      rect:
+        serializedVersion: 2
+        x: 1440
+        y: 1446
+        width: 71
+        height: 115
+      alignment: 9
+      pivot: {x: 0.36619717, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb0d5e942a0991f46bc48ee8fe16bf10
+      internalID: -576307083
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      TX Village Building Shadow - Tent 01 V L: 2126017822
+      TX Village Building Shadow - Blacksmith 01 02: -2025726431
+      TX Village Building Shadow - Blacksmith 01 Chimney: -471455039
+      TX Village Building Shadow - Teepee 01 02: -1613883970
+      TX Village Building Shadow - Stall 03: 2049806360
+      TX Village Building Shadow - House 02: 953033628
+      TX Village Building Shadow - Warehouse 01: 597617858
+      TX Village Building Shadow - Shrine 01: 1294080111
+      TX Village Building Shadow - Stall 04: -1539875947
+      TX Village Building Shadow - House 01: -1937981253
+      TX Village Building Shadow - Stall 01: -680239582
+      TX Village Building Shadow - Tent 01 V R: 264936497
+      TX Village Building Shadow - Wall 01 Coner TR 02: -1927814362
+      TX Village Building Shadow - House 15 02: 1419095880
+      TX Village Building Shadow - Stall 06: 2122015882
+      TX Village Building Shadow - House 14 02: -631233107
+      TX Village Building Shadow - House 08 01: -1400566623
+      TX Village Building Shadow - Wall 01 Coner BL: -2045326998
+      TX Village Building Shadow - House 11 03: 553565053
+      TX Village Building Shadow - House 15 01: -1659207014
+      TX Village Building Shadow - Wall 01 H 02: 1032341176
+      TX Village Building Shadow - House 07 02: 524430403
+      TX Village Building Shadow - Shed 01 S: -6977087
+      TX Village Building Shadow - Blacksmith 01 03: -327343489
+      TX Village Building Shadow - Tower 01: 1632053309
+      TX Village Building Shadow - Wall 01 V: -1253088614
+      TX Village Building Shadow - Wall 01 Coner TL 01: 932995557
+      TX Village Building Shadow - House 14 01: 1649185792
+      TX Village Building Shadow - Wall 01 Coner TL 02: 525856996
+      TX Village Building Shadow - House 12 03: 601400993
+      TX Village Building Shadow - House 12 01: 1417946776
+      TX Village Building Shadow - House 11 04: 2091639695
+      TX Village Building Shadow - Barn 01: -746349557
+      TX Village Building Shadow - Chapel 01 01: 1980473637
+      TX Village Building Shadow - House 04 02: -274508188
+      TX Village Building Shadow - Dock 01 S 01: 1832962414
+      TX Village Building Shadow - House 04 01: 470826979
+      TX Village Building Shadow - House 12 02: 1888494509
+      TX Village Building Shadow - House 07 03: -1239112734
+      TX Village Building Shadow - Shed 01 E: 1838440106
+      TX Village Building Shadow - Wall 01 Coner BR: -995746112
+      TX Village Building Shadow - House 11 02: -31464049
+      TX Village Building Shadow - Wall 01 Coner TR 01: -2034498711
+      TX Village Building Shadow - Wall 01 H Gate 01: 1766841092
+      TX Village Building Shadow - House 03 02: -921221124
+      TX Village Building Shadow - Wall 01 H 03: -1849816783
+      TX Village Building Shadow - House 07 04: -1250897283
+      TX Village Building Shadow - House 10 02: 165102430
+      TX Village Building Shadow - House 13 01: 2071890110
+      TX Village Building Shadow - House 11 01: -1461610499
+      TX Village Building Shadow - House 11 05: 1870205755
+      TX Village Building Shadow - House 05: 684548755
+      TX Village Building Shadow - Wall 01 H Gate 02: 792598819
+      TX Village Building Shadow - Dock 01 E: 237241277
+      TX Village Building Shadow - House 09: -1331085744
+      TX Village Building Shadow - Dock 01 N 02: -1984169906
+      TX Village Building Shadow - House 07 Inner: 1644635198
+      TX Village Building Shadow - Wall 01 H 01: -1268963271
+      TX Village Building Shadow - Stall 05: 1702732503
+      TX Village Building Shadow - House 03 01: 66435631
+      TX Village Building Shadow - House 13 02: 1976920916
+      TX Village Building Shadow - House 06: -1297198854
+      TX Village Building Shadow - Dock 01 N 01: -369818806
+      TX Village Building Shadow - House 10 01: 1321767806
+      TX Village Building Shadow - Tent 01 H: -176437187
+      TX Village Building Shadow - Stall 02: -391578035
+      TX Village Building Shadow - House 08 02: -576307083
+      TX Village Building Shadow - Teepee 01 01: -1142935572
+      TX Village Building Shadow - Dock 01 S 02: 1076966605
+      TX Village Building Shadow - Chapel 01 03: 371711857
+      TX Village Building Shadow - Blacksmith 01 01: 1547941652
+      TX Village Building Shadow - Well 01: 1671861184
+      TX Village Building Shadow - Chapel 01 02: 197873010
+      TX Village Building Shadow - Shed 01 W: -874301833
+      TX Village Building Shadow - House 07 01: -887387458
+      TX Village Building Shadow - Dock 01 W: -247112144
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Texture/TX Village Building
+    Shadow.png
+  uploadId: 984298

@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2663f18adb82dc4ba25d7195e7f6c5a, type: 3}
+  m_Name: ST Grass Flower
+  m_EditorClassIdentifier: Assembly-CSharp::GrassTile
+  decorationRate: 1
+  seed: 0
+  basic:
+  - {fileID: 1915434749, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  decoration:
+  - {fileID: 776451721, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1968695456, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1155230352, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1040606740, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 411127884, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 79837039, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: -1353093633, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 677270098, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1169193507, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1749948631, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 523545082, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1349137824, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 1943854880, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: 369350737, guid: 1c663211e9925a246a150772a0e37f12, type: 3}
+  - {fileID: -764416704, guid: 1c663211e9925a246a150772a0e37f12, type: 3}

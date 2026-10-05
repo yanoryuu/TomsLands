@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ab81de9515fe2e74589e8dc0ac4f2aa9
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Common/Script/Utils/TriggerEventReceiver2D.cs
+  uploadId: 984298

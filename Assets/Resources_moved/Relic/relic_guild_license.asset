@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5fd8053a5a60848a697a4513b65547, type: 3}
+  m_Name: relic_guild_license
+  m_EditorClassIdentifier: 
+  relicId: relic_guild_license
+  relicName: "\u5546\u4EBA\u30AE\u30EB\u30C9\u306E\u8A3C"
+  description: "\u6B63\u4F1A\u54E1\u3060\u3051\u306E\u5378\u5024\u3002\u4ED5\u5165\u308C\u4FA1\u683C-15%\u3002"
+  icon: {fileID: 0}
+  rarity: 2
+  category: 0
+  isCurse: 0
+  modifiers:
+  - stat: 4
+    op: 1
+    value: 0.85
+  behaviours: []

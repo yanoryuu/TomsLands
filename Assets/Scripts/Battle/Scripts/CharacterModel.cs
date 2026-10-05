@@ -46,9 +46,10 @@ public class CharacterModel
     }
 
     /// <summary>
-    /// 勇者データからModelを生成するためのコンストラクタ
+    /// 勇者データからModelを生成するためのコンストラクタ。
+    /// powerMul はレリック補正（HeroPowerMul。1未満で勇者が弱くなり防衛=敗北を狙いやすくなる）。
     /// </summary>
-    public CharacterModel(HeroData masterData, HeroModel savedHeroModel)
+    public CharacterModel(HeroData masterData, HeroModel savedHeroModel, float powerMul = 1f)
     {
         Name = masterData.heroName;
         Type = CharacterType.Hero;
@@ -56,27 +57,31 @@ public class CharacterModel
         Element = ElementType.None;
         IsBoss = false;
 
+        int Scale(int value) => Mathf.Max(1, Mathf.RoundToInt(value * powerMul));
+
         // RuntimeHeroData (CSV由来) からステータスを取得
         var runtime = savedHeroModel?.heroData;
         if (runtime != null)
         {
-            MaxHp = runtime.hp.Value;
-            CurrentHp = new ReactiveProperty<int>(runtime.hp.Value);
+            // 装備補正（武器→攻撃、防具→防御/HP）。ランクが高い装備ほど強くなる
+            var equip = HeroEquipmentBonus.Get(runtime);
+            MaxHp = Scale(Mathf.RoundToInt(runtime.hp.Value * equip.Hp));
+            CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = runtime.mp.Value;
             CurrentMp = new ReactiveProperty<int>(runtime.mp.Value);
-            AttackPower = runtime.attackPower.Value;
-            DefensePower = runtime.defensePower.Value;
-            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower}");
+            AttackPower = Scale(Mathf.RoundToInt(runtime.attackPower.Value * equip.Attack));
+            DefensePower = Scale(Mathf.RoundToInt(runtime.defensePower.Value * equip.Defense));
+            Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower} (powerMul={powerMul:F2}, equip HP x{equip.Hp:F2} AT x{equip.Attack:F2} DF x{equip.Defense:F2})");
         }
         else
         {
             // フォールバック: ScriptableObject のデフォルト値を使用
-            MaxHp = masterData.hp;
-            CurrentHp = new ReactiveProperty<int>(masterData.hp);
+            MaxHp = Scale(masterData.hp);
+            CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = masterData.mp;
             CurrentMp = new ReactiveProperty<int>(masterData.mp);
-            AttackPower = masterData.attackPower;
-            DefensePower = masterData.defensePower;
+            AttackPower = Scale(masterData.attackPower);
+            DefensePower = Scale(masterData.defensePower);
             Debug.LogWarning("[CharacterModel] RuntimeHeroData が null のため、HeroData ScriptableObject のデフォルト値を使用します。");
         }
 

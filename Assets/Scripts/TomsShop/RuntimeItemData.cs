@@ -32,6 +32,17 @@ public class RuntimeItemData
     public float SalesRate { get; private set; }
 
     /// <summary>
+    /// 在庫1個あたりの毎ターン配当（配当付き武器）。マスターデータ由来でセーブ対象外。
+    /// </summary>
+    public int DividendPerTurn { get; private set; }
+
+    /// <summary>
+    /// 期待収益（需要 × 価格 × SalesRate）。おすすめ計算の単一の基礎値。
+    /// 仕入れ一覧の並べ替え・ダッシュボードはすべてこの値を基準にする。
+    /// </summary>
+    public float ExpectedRevenue => Demand.Value * CurrentPrice.Value * SalesRate;
+
+    /// <summary>
     /// 前ターンの通常営業で売れたかどうか（S3 品出し販売結果フィードバック用）。
     /// シリアライズ不要（毎ターン SimulateShopSales で更新される）。
     /// </summary>
@@ -74,6 +85,42 @@ public class RuntimeItemData
         BattlePriceHistory.Clear();
     }
 
+    /// <summary>ショップ価格チャート用の履歴保持ターン数の上限。</summary>
+    public const int ShopHistoryCapacity = 12;
+
+    /// <summary>
+    /// ショップのターンごとの価格履歴（折れ線チャート用）。永続・セーブ対象。
+    /// 末尾が最新ターン。上限 <see cref="ShopHistoryCapacity"/> を超えた分は先頭から破棄。
+    /// </summary>
+    public System.Collections.Generic.List<int> ShopPriceHistory { get; private set; }
+        = new System.Collections.Generic.List<int>();
+
+    /// <summary>
+    /// ショップのターンごとの需要履歴（折れ線チャート用）。永続・セーブ対象。
+    /// 末尾が最新ターン。上限 <see cref="ShopHistoryCapacity"/> を超えた分は先頭から破棄。
+    /// </summary>
+    public System.Collections.Generic.List<float> ShopDemandHistory { get; private set; }
+        = new System.Collections.Generic.List<float>();
+
+    /// <summary>
+    /// 現在の価格・需要をショップ履歴へ記録する（ターン経済更新の確定後に呼ぶ）。
+    /// 上限を超えたら先頭（最古）から破棄するリングバッファ運用。
+    /// </summary>
+    public void RecordShopHistory()
+    {
+        ShopPriceHistory.Add(CurrentPrice.Value);
+        ShopDemandHistory.Add(Demand.Value);
+        TrimShopHistory();
+    }
+
+    private void TrimShopHistory()
+    {
+        while (ShopPriceHistory.Count > ShopHistoryCapacity)
+            ShopPriceHistory.RemoveAt(0);
+        while (ShopDemandHistory.Count > ShopHistoryCapacity)
+            ShopDemandHistory.RemoveAt(0);
+    }
+
     public RuntimeItemData(
         string itemId,
         string itemName,
@@ -88,7 +135,9 @@ public class RuntimeItemData
         int requiredLevel,
         float demand = 0.5f,
         string description = "",
-        float salesRate = 1.0f)
+        float salesRate = 1.0f,
+        int dividendPerTurn = 0,
+        float? initialTrend = null)
     {
         ItemId = itemId;
         ItemName = itemName;
@@ -106,14 +155,21 @@ public class RuntimeItemData
         IsDisplay = new ReactiveProperty<bool>(false);
         ItemDescription = description;
         SalesRate = salesRate;
+        DividendPerTurn = dividendPerTurn;
         PreviousDemand = demand;
         PreviousPrice = currentPrice;
-        Trend = UnityEngine.Random.Range(-0.5f, 0.5f);
+
+        // 流行度は通常ランダムに散らす。
+        // initialTrend を渡した場合は UnityEngine.Random を触らないので、
+        // メインスレッド外（キャリブレーションのバックグラウンド探索など）からも生成できる。
+        Trend = initialTrend ?? UnityEngine.Random.Range(-0.5f, 0.5f);
     }
 
     // 保存→復元CTor（Plain→Runtime）
-    public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon, Sprite backgroundSprite = null)
+    // dividendPerTurn はマスターデータが真実の源のためセーブせず、復元時に外から渡す
+    public RuntimeItemData(RuntimeItemDataPlain plainData, Sprite icon, Sprite backgroundSprite = null, int dividendPerTurn = 0)
     {
+        DividendPerTurn = dividendPerTurn;
         ItemId = plainData.itemId;
         ItemName = plainData.itemName;
         CurrentPrice = new ReactiveProperty<int>(plainData.currentPrice);
@@ -134,6 +190,15 @@ public class RuntimeItemData
         PreviousDemand = plainData.previousDemand > 0f ? plainData.previousDemand : Demand.Value;
         PreviousPrice = plainData.previousPrice > 0 ? plainData.previousPrice : CurrentPrice.Value;
         Trend = plainData.trend;
+
+        // ショップ価格・需要履歴の復元。旧セーブ（履歴なし）は現在値1点でシードする。
+        ShopPriceHistory = (plainData.shopPriceHistory != null && plainData.shopPriceHistory.Count > 0)
+            ? new System.Collections.Generic.List<int>(plainData.shopPriceHistory)
+            : new System.Collections.Generic.List<int> { CurrentPrice.Value };
+        ShopDemandHistory = (plainData.shopDemandHistory != null && plainData.shopDemandHistory.Count > 0)
+            ? new System.Collections.Generic.List<float>(plainData.shopDemandHistory)
+            : new System.Collections.Generic.List<float> { Demand.Value };
+        TrimShopHistory();
     }
 
     public void UpdatePopularity()
@@ -163,12 +228,8 @@ public class RuntimeItemData
 
     public void UpdateDemand(float demand)
     {
-        demand = Mathf.Clamp(demand, 0f, 1f);
-    }
-
-    public void UpdateIsPopular(bool isPopular)
-    {
-        isPopular = IsPopular.Value;
+        Demand.Value = Mathf.Clamp(demand, 0f, 1f);
+        UpdatePopularity();
     }
 
     public void UpdateIsDisplay(bool isDisplay)
@@ -199,7 +260,9 @@ public class RuntimeItemData
             salesRate = SalesRate,
             previousDemand = PreviousDemand,
             previousPrice = PreviousPrice,
-            trend = Trend
+            trend = Trend,
+            shopPriceHistory = new System.Collections.Generic.List<int>(ShopPriceHistory),
+            shopDemandHistory = new System.Collections.Generic.List<float>(ShopDemandHistory)
         };
     }
 }
@@ -224,6 +287,8 @@ public class RuntimeItemDataPlain
     public float previousDemand;
     public int previousPrice;
     public float trend;
+    public System.Collections.Generic.List<int> shopPriceHistory;
+    public System.Collections.Generic.List<float> shopDemandHistory;
 }
 
 public class ItemTypeData

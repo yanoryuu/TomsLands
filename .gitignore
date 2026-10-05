@@ -23,6 +23,10 @@
 # Recordings can get excessive in size
 /[Rr]ecordings/
 
+# 開発中の動作確認スクリーンショット（リポジトリに含めない）
+/[Aa]ssets/Screenshots/
+/[Aa]ssets/Screenshots.meta
+
 # Uncomment this line if you wish to ignore the asset store tools plugin
 # /[Aa]ssets/AssetStoreTools*
 
@@ -83,3 +87,9 @@ crashlytics-build.properties
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db.meta
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers
 /[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta
+
+# 市場シミュレーションの生成物（CSV・キャリブレーション結果）
+/MarketSim/
+
+# Jev AutoPlay のレポート（CSV/JSON/MD）
+/AutoPlayReports/

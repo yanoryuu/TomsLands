@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 8d43606e8c4b4864abdbf863dd289ee2
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - material: {fileID: 2100000, guid: 773af669f29c8214787f3004464a74cf, type: 2}
+  - rtTerrain: {fileID: 8400000, guid: 85fccd522c079a44688a933017c6d222, type: 2}
+  - rtTerrainBlured: {fileID: 8400000, guid: d0f02530fef8cdb4dbe75c7904bc047d, type: 2}
+  - rtUnderWaterMask: {fileID: 8400000, guid: 237e1e02e02379f48a40c981cd269162, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Script/TopDownPixelWaterRendererFeature.cs
+  uploadId: 984298

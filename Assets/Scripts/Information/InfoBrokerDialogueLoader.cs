@@ -21,7 +21,7 @@ public static class InfoBrokerDialogueLoader
     {
         _cache = new Dictionary<string, string>();
 
-        var textAsset = Resources.Load<TextAsset>(CsvResourceName);
+        var textAsset = AddressableLoader.Load<TextAsset>(CsvResourceName);
         if (textAsset == null)
         {
             Debug.LogError($"[InfoBrokerDialogueLoader] Resources/{CsvResourceName}.csv が見つかりません。");

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_tavern
+  m_EditorClassIdentifier: 
+  facilityId: tavern
+  facilityName: "\u9152\u5834\uFF08\u60C5\u5831\u5C40\uFF09"
+  description: "\u9154\u3063\u305F\u53E3\u306F\u5E02\u5834\u3088\u308A\u6B63\u76F4\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 7000
+    effectText: "\u30E9\u30F3\u958B\u59CB\u6642\u304B\u3089\u60C5\u5831\u5C4B Lv2\uFF08\u91D1\u878D\u5546\u54C1\u304C\u6700\u521D\u304B\u3089\u4F7F\u3048\u308B\uFF09"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 16000
+    effectText: "\u53D6\u5F15\u6240\u306E\u58F2\u8CB7\u624B\u6570\u6599 -1%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

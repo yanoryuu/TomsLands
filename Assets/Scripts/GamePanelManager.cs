@@ -16,6 +16,9 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject eventPanel;
     [SerializeField] private GameObject advertisementPanel;
     [SerializeField] private GameObject prophetPanel;
+    [SerializeField] private GameObject shopUpgradePanel;
+    [SerializeField] private GameObject machineShopPanel;
+    [SerializeField] private GameObject newspaperPanel;
 
     /// <summary>
     /// 全パネルを非表示にする
@@ -36,6 +39,17 @@ public class GamePanelManager : MonoBehaviour
         eventPanel.SetActive(false);
         if (advertisementPanel != null) advertisementPanel.SetActive(false);
         if (prophetPanel != null) prophetPanel.SetActive(false);
+        if (shopUpgradePanel != null) shopUpgradePanel.SetActive(false);
+        if (machineShopPanel != null) machineShopPanel.SetActive(false);
+        if (newspaperPanel != null) newspaperPanel.SetActive(false);
+    }
+
+    /// <summary>パネルを表示し、開き演出（フェードイン）を再生する。</summary>
+    private static void ShowWithFx(GameObject panel)
+    {
+        if (panel == null) return;
+        panel.SetActive(true);
+        UIFx.PanelOpen(panel);
     }
 
     /// <summary>
@@ -54,11 +68,11 @@ public class GamePanelManager : MonoBehaviour
                 break;
             //リザルト画面
             case GamePhase.Result:
-                endPhasePanel.SetActive(true);
+                ShowWithFx(endPhasePanel);
                 break;
             //音量などのシステム的な各所設定
             case GamePhase.Setting:
-                settingPanel.SetActive(true);
+                ShowWithFx(settingPanel);
                 break;
         }
     }
@@ -73,43 +87,57 @@ public class GamePanelManager : MonoBehaviour
         switch (subPhase)
         {
             case TomsShopGamePhase.Shop:
-                tomsShopPanel.SetActive(true);
+                ShowWithFx(tomsShopPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Hero:
-                if (heroPanel != null) heroPanel.SetActive(true);
+                ShowWithFx(heroPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.BlackSmith:
-                blackSmithPanel.SetActive(true);
-                commonPanel.SetActive(true);
+                // 鍛冶屋はCommonView(Turn/所持金/メニュー)と自前UIが重なるため出さない。
+                // 所持金は鍛冶屋専用表示（BlackSmithView.playerMoneyText）が担う。
+                ShowWithFx(blackSmithPanel);
                 break;
             case TomsShopGamePhase.ToolShop:
-                toolShopPanel.SetActive(true);
+                ShowWithFx(toolShopPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Broker:
-                infoBrokerPanel.SetActive(true);
-                commonPanel.SetActive(true);
+                // 情報屋も鍛冶屋と同レイアウトのためCommonViewを出さない（所持金は専用表示）
+                ShowWithFx(infoBrokerPanel);
                 break;
             case TomsShopGamePhase.Map:
-                mapPanel.SetActive(true);
+                ShowWithFx(mapPanel);
                 break;
             case TomsShopGamePhase.DungeonLevelUp:
-                dungeonLevelUpPanel.SetActive(true);
+                ShowWithFx(dungeonLevelUpPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.TurnEndSummary:
-                turnEndSummaryPanel.SetActive(true);
+                ShowWithFx(turnEndSummaryPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Advertisement:
-                if (advertisementPanel != null) advertisementPanel.SetActive(true);
+                ShowWithFx(advertisementPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Prophet:
-                if (prophetPanel != null) prophetPanel.SetActive(true);
+                ShowWithFx(prophetPanel);
                 commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.ShopUpgrade:
+                ShowWithFx(shopUpgradePanel);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.MachineShop:
+                ShowWithFx(machineShopPanel);
+                commonPanel.SetActive(true);
+                break;
+            case TomsShopGamePhase.Newspaper:
+                // 朝刊は鍛冶屋・情報屋と同じ全画面レイアウト。
+                // 所持金とターンは題字バーが持つので CommonView は出さない。
+                ShowWithFx(newspaperPanel);
                 break;
         }
     }
@@ -121,7 +149,7 @@ public class GamePanelManager : MonoBehaviour
     {
         if (eventPanel != null)
         {
-            eventPanel.SetActive(true);
+            ShowWithFx(eventPanel);
         }
     }
 

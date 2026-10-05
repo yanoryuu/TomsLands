@@ -11,17 +11,21 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
     private DungeonRepository dungeonRepository;
     private DungeonInfoView dungeonInfoView;
     private StateManager stateManager;
-    
-    public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView,StateManager stateManager)
+    private HeroModel heroModel;
+    private ItemModel itemModel;
+
+    public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView,StateManager stateManager, HeroModel heroModel, ItemModel itemModel)
     {
         disposable = new CompositeDisposable();
-        
+
         this.mapModel = mapModel;
         this.mapView = mapView;
         this.dungeonRepository = dungeonRepository;
         this.dungeonInfoView = dungeonInfoView;
         this.stateManager = stateManager;
-        
+        this.heroModel = heroModel;
+        this.itemModel = itemModel;
+
         stateManager.RegisterOnEnter(TomsShopGamePhase.Map,Entry);
     }
 
@@ -50,8 +54,13 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
         mapView.OnMapIcon.Subscribe(key =>
         {
             var data = dungeonRepository.GetById(key);
-            
-            dungeonInfoView.ShowDungeonInfo(data);
+            if (data == null) return;
+
+            // 勇者の現在ステータスでのクリア確率（現在のダンジョンレベル基準）
+            float clearProbability = ClearProbabilityCalculator.Calculate(
+                heroModel.heroData, itemModel, data, data.currentDungeonLevel);
+
+            dungeonInfoView.ShowDungeonInfo(data, clearProbability);
         }).AddTo(disposable);
 
         mapView.OnBackRequested.Subscribe(_ =>

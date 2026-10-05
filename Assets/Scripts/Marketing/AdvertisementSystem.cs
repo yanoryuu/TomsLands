@@ -78,6 +78,47 @@ public class AdvertisementSystem
     }
 
     /// <summary>
+    /// 広告の実効上昇量を計算する。
+    /// AdvertisementData.statMax（広告ごとのマックス値）を超えないよう、各ステータスの上昇量を削る。
+    /// statMax が 0 の場合は全体上限（ShopStatusModel.StatMax）のみが上限となる。
+    /// マイナスの上昇量（減少）はそのまま適用する。
+    /// </summary>
+    public AdvertisementEffect GetEffectiveGains(AdvertisementData ad)
+    {
+        if (ad == null) return default;
+
+        int globalMax = _statusModel.StatMax;
+        int cap = ad.statMax > 0 ? Mathf.Min(ad.statMax, globalMax) : globalMax;
+
+        return new AdvertisementEffect
+        {
+            Trust     = CapGain(ad.trustGain,     _statusModel.Trust.Value,     cap),
+            Attention = CapGain(ad.attentionGain, _statusModel.Attention.Value, cap),
+            Spread    = CapGain(ad.spreadGain,    _statusModel.Spread.Value,    cap),
+            Retention = CapGain(ad.retentionGain, _statusModel.Retention.Value, cap),
+            Followers = ad.followerGain,
+        };
+    }
+
+    private static int CapGain(int gain, int current, int cap)
+    {
+        if (gain <= 0) return gain;
+        return Mathf.Clamp(cap - current, 0, gain);
+    }
+
+    /// <summary>
+    /// 広告の効果（実効上昇量）をステータスに適用する共通処理。
+    /// </summary>
+    private void ApplyGains(AdvertisementEffect effect)
+    {
+        if (effect.Trust != 0) _statusModel.ChangeTrust(effect.Trust);
+        if (effect.Attention != 0) _statusModel.ChangeAttention(effect.Attention);
+        if (effect.Spread != 0) _statusModel.ChangeSpread(effect.Spread);
+        if (effect.Retention != 0) _statusModel.ChangeRetention(effect.Retention);
+        if (effect.Followers != 0) _statusModel.ChangeFollowers(effect.Followers);
+    }
+
+    /// <summary>
     /// 指定した広告を購入可能かどうかを判定する。
     /// </summary>
     public bool CanExecute(AdvertisementData ad)
@@ -112,19 +153,15 @@ public class AdvertisementSystem
         // コスト消費
         _tomsModel.PlayerMoney.Value -= cost;
 
-        // ステータス上昇
-        if (ad.trustGain != 0) _statusModel.ChangeTrust(ad.trustGain);
-        if (ad.attentionGain != 0) _statusModel.ChangeAttention(ad.attentionGain);
-        if (ad.spreadGain != 0) _statusModel.ChangeSpread(ad.spreadGain);
-        if (ad.retentionGain != 0) _statusModel.ChangeRetention(ad.retentionGain);
-
-        // フォロワー獲得
-        if (ad.followerGain != 0) _statusModel.ChangeFollowers(ad.followerGain);
+        // ステータス上昇・フォロワー獲得（広告ごとの statMax で上昇量を制限）
+        var effect = GetEffectiveGains(ad);
+        ApplyGains(effect);
 
         Debug.Log($"[AdvertisementSystem] 広告実行: {ad.advertisementName}" +
                   $" | コスト: {cost}G（元: {ad.cost}G）" +
-                  $" | 信頼+{ad.trustGain} 注目+{ad.attentionGain} 拡散+{ad.spreadGain} 維持+{ad.retentionGain}" +
-                  $" | フォロワー+{ad.followerGain}");
+                  $" | 信頼+{effect.Trust} 注目+{effect.Attention} 拡散+{effect.Spread} 維持+{effect.Retention}" +
+                  $" | フォロワー+{effect.Followers}" +
+                  (ad.statMax > 0 ? $" | 広告上限: {ad.statMax}" : ""));
 
         return true;
     }
@@ -141,11 +178,7 @@ public class AdvertisementSystem
             return;
         }
 
-        if (ad.trustGain != 0) _statusModel.ChangeTrust(ad.trustGain);
-        if (ad.attentionGain != 0) _statusModel.ChangeAttention(ad.attentionGain);
-        if (ad.spreadGain != 0) _statusModel.ChangeSpread(ad.spreadGain);
-        if (ad.retentionGain != 0) _statusModel.ChangeRetention(ad.retentionGain);
-        if (ad.followerGain != 0) _statusModel.ChangeFollowers(ad.followerGain);
+        ApplyGains(GetEffectiveGains(ad));
 
         Debug.Log($"[AdvertisementSystem] 無料広告効果適用: {ad.advertisementName}");
     }
@@ -159,3 +192,14 @@ public class AdvertisementSystem
     }
 }
 
+/// <summary>
+/// 広告の実効上昇量（statMax 適用後）。プレビュー表示・実行結果表示・実際の適用で共通利用する。
+/// </summary>
+public struct AdvertisementEffect
+{
+    public int Trust;
+    public int Attention;
+    public int Spread;
+    public int Retention;
+    public int Followers;
+}

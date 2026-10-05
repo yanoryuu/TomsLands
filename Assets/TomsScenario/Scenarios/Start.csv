@@ -1,0 +1,4 @@
+Command,Arg1,Arg2,Arg3,Arg4,Arg5,Arg6,WaitType,Text,PageCtrl,Voice,WindowType
+//シート名がそのままシナリオラベル Start になるため *Start 行は書かない（二重定義エラーになる）,,,,,,,,,,,
+//会話はゲーム側から ScenarioPlayer.PlayAsync でラベル指定して呼ぶため、この開始シートは何もせず終了する,,,,,,,,,,,
+EndScenario,,,,,,,,,,,

@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10012a2dac794e59bb666be8a7ce1c06, type: 3}
+  m_Name: ShopEconomySettings
+  m_EditorClassIdentifier: 
+  useAbmPriceEngine: 1
+  marketModelPreset: {fileID: 11400000, guid: 399647cafd1a1d145910f6b9bf2d3af9, type: 2}
+  abmSeed: 0
+  demandPricePremium: 0.5
+  highDemandThreshold: 0.7
+  highDemandPriceRateMin: 1.1
+  highDemandPriceRateMax: 1.3
+  lowDemandThreshold: 0.3
+  lowDemandPriceRateMin: 0.7
+  lowDemandPriceRateMax: 0.9
+  normalDemandPriceRateMin: 0.95
+  normalDemandPriceRateMax: 1.05
+  shopPriceFloorRate: 0.3
+  shopPriceCeilingRate: 3
+  victoryAttributeDemandUp: 0.15
+  defeatAttributeDemandDown: 0.15
+  displayDemandUp: 0.03
+  notDisplayDemandDown: 0
+  demandFloor: 0.05
+  demandCeiling: 1
+  trustFloorBoost: 0.4
+  attentionPriceAmplify: 0.5
+  attentionAffectsLowDemand: 0
+  spreadDemandAmplify: 1
+  retentionStabilizer: 0.6
+  followerWeight: 0.1
+  followerScale: 1000
+  sellOrderDelayTurns: 1
+  sellOrderPriceClampRate: 0.2
+  sellOrderFeeRate: 0
+  useProbabilisticShopSales: 0
+  trendAmplitude: 0.3
+  trendConvergenceRate: 0.15
+  trendDriftMax: 0.12
+  trendDecayRate: 0.1

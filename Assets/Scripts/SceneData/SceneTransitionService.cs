@@ -16,13 +16,30 @@ public class SceneTransitionService
         _battleOutputData = battleOutputData;
     }
 
+#if UNITY_EDITOR
+    /// <summary>
+    /// 【エディタ専用・開発用】シーンロードの横取りフック。引数はシーン名、true を返すとロードしない。
+    /// Jev AutoPlay のヘッドレス試走で「配信へ / リザルトへ / ゲームオーバーへ」の遷移を
+    /// 実際のシーンロード無しに検知するために使う。既定 null（=従来挙動と完全一致）。ビルドには含まれない。
+    /// </summary>
+    public static System.Func<string, bool> DevSceneLoadInterceptor;
+#endif
+
+    private static void LoadScene(string sceneName)
+    {
+#if UNITY_EDITOR
+        if (DevSceneLoadInterceptor != null && DevSceneLoadInterceptor(sceneName)) return;
+#endif
+        SceneManager.LoadScene(sceneName);
+    }
+
     /// <summary>
     /// EventScene へ遷移する。事前に EventInputData を書き込んでおくこと。
     /// </summary>
     public void GoToEvent()
     {
         Debug.Log("[SceneTransition] Loading EventScene...");
-        SceneManager.LoadScene("EventScene");
+        LoadScene("EventScene");
     }
 
     /// <summary>
@@ -32,7 +49,7 @@ public class SceneTransitionService
     {
         _battleOutputData.Clear();
         Debug.Log("[SceneTransition] Loading FightScene...");
-        SceneManager.LoadScene("FightScene");
+        LoadScene("FightScene");
     }
 
     /// <summary>
@@ -41,7 +58,7 @@ public class SceneTransitionService
     public void ReturnToTomsShop()
     {
         Debug.Log("[SceneTransition] Returning to TomsShop...");
-        SceneManager.LoadScene("TomsShop");
+        LoadScene("TomsShop");
     }
 
     /// <summary>
@@ -50,7 +67,7 @@ public class SceneTransitionService
     public void GoToTitle()
     {
         Debug.Log("[SceneTransition] Returning to Title (Start)...");
-        SceneManager.LoadScene("TitleScene");
+        LoadScene("TitleScene");
     }
 
     /// <summary>
@@ -59,7 +76,26 @@ public class SceneTransitionService
     public void GoToResult()
     {
         Debug.Log("[SceneTransition] Loading ResultScene...");
-        SceneManager.LoadScene("ResultScene");
+        LoadScene("ResultScene");
+    }
+
+    /// <summary>
+    /// GameOver シーンへ遷移する。借金返済不能時に呼び出す。
+    /// </summary>
+    public void GoToGameOver()
+    {
+        Debug.Log("[SceneTransition] Loading GameOver...");
+        LoadScene("GameOver");
+    }
+
+    /// <summary>
+    /// 村シーン（メタ層）へ遷移する。ラン終了後の帰還先。
+    /// 事前に VillageArrivalReport を書き込んでおくと収支ポップが表示される。
+    /// </summary>
+    public void GoToVillage()
+    {
+        Debug.Log("[SceneTransition] Loading VillageScene...");
+        LoadScene("VillageScene");
     }
 }
 

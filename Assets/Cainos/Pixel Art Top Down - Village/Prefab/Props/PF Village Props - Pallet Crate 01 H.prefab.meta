@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 279388785afcb084bb74c36b5962f87a
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Pallet Crate 01 H.prefab
+  uploadId: 984298

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc065c56bb702ac4f86609b547c0f5ac, type: 3}
+  m_Name: machine_money_l
+  m_EditorClassIdentifier: 
+  machineId: machine_money_l
+  machineName: "\u9EC4\u91D1\u306E\u8CAF\u91D1\u30B4\u30FC\u30EC\u30E0"
+  description: "\u6BCE\u671D\u307E\u3068\u307E\u3063\u305F\u7A3C\u304E\u3092\u6301\u3063\u3066\u304F\u308B\u5927\u578B\u30B4\u30FC\u30EC\u30E0\u3002"
+  icon: {fileID: 0}
+  shopSprite: {fileID: 0}
+  cost: 12000
+  placementType: 0
+  requiredShopLevel: 3
+  effectType: 0
+  dailyMoney: 2200
+  dailyItemId: 
+  dailyItemCount: 1
+  revenueMultiplierBonus: 0.05
+  demandFloorBonus: 0.05

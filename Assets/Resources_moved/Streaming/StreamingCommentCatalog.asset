@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9ba9c70e7123664798f7b2f0a289b26, type: 3}
+  m_Name: StreamingCommentCatalog
+  m_EditorClassIdentifier: 
+  csv: {fileID: 4900000, guid: b04bd492fa723df459bb0105924b4f46, type: 3}
+  entries: []
+  bursts: []
+  idleIntervalAtHeat0: 2.6
+  idleIntervalAtHeat100: 0.45
+  referenceViewers: 150
+  minDensityScale: 0.5
+  maxDensityScale: 2.5
+  maxConcurrent: 40

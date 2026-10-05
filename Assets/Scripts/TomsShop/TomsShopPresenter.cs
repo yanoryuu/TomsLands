@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using R3;
 using UnityEngine;
@@ -20,9 +21,27 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private readonly EventView eventView;
     private readonly TomsEventExecutor tomsEventExecutor;
     private readonly MarketingFacade marketingFacade;
+    private readonly DebtPresenter debtPresenter;
+    private readonly TurnPhaseManager turnPhaseManager;
+    private readonly SalesPhaseView salesPhaseView;
+    private readonly MorningReportModel morningReportModel;
+    private readonly ShopMachineModel shopMachineModel;
+    private readonly RelicInventoryModel relicInventory;
+    private readonly RelicRewardService relicRewardService;
+    private readonly RelicEffectResolver relicResolver;
+    private readonly PopUpManager popUpManager;
 
     /// <summary>前回Entry()時のターン番号。初回はスキップ用に-1。</summary>
     private int _lastKnownTurn = -1;
+
+    /// <summary>初回Entryでターンフェーズを一度だけ開始するためのフラグ。</summary>
+    private bool _turnPhaseInitialized = false;
+
+    /// <summary>朝刊を開いたターン。1ターンに一度だけ自動で開くための記録。</summary>
+    private int _lastNewspaperTurn = -1;
+
+    // 営業開始演出の再生中フラグ（ボタン連打防止。フェーズが変わったら解除）
+    private bool _salesStarting = false;
 
     public TomsShopPresenter(
         TomsShopView tomsShopView,
@@ -37,7 +56,16 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         EventView eventView,
         TomsEventExecutor tomsEventExecutor,
         GamePanelManager gamePanelManager,
-        MarketingFacade marketingFacade)
+        MarketingFacade marketingFacade,
+        DebtPresenter debtPresenter,
+        TurnPhaseManager turnPhaseManager,
+        SalesPhaseView salesPhaseView,
+        MorningReportModel morningReportModel,
+        ShopMachineModel shopMachineModel,
+        RelicInventoryModel relicInventory,
+        RelicRewardService relicRewardService,
+        RelicEffectResolver relicResolver,
+        PopUpManager popUpManager)
     {
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
@@ -51,7 +79,16 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         this.eventView = eventView;
         this.tomsEventExecutor = tomsEventExecutor;
         this.marketingFacade = marketingFacade;
-        
+        this.debtPresenter = debtPresenter;
+        this.turnPhaseManager = turnPhaseManager;
+        this.salesPhaseView = salesPhaseView;
+        this.morningReportModel = morningReportModel;
+        this.shopMachineModel = shopMachineModel;
+        this.relicInventory = relicInventory;
+        this.relicRewardService = relicRewardService;
+        this.relicResolver = relicResolver;
+        this.popUpManager = popUpManager;
+
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
         
@@ -60,7 +97,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     
     public void Start()
     {
-        Bind();   
+        SoundManager.Instance?.PlayBGM("通常営業");
+        Bind();
     }
 
     private void Bind()
@@ -114,9 +152,90 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Prophet))
             .AddTo(disposables);
 
-        //　次のターンに進むボタン → サマリーパネルを表示
-        tomsShopView.OnNextTurnClicked
-            .Subscribe(_ => turnEndSummaryPresenter.ShowSummary())
+        //　店の改装（店レベルアップ）画面ボタン
+        tomsShopView.OnShopUpgradeClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ShopUpgrade))
+            .AddTo(disposables);
+
+        //　マシンショップ（店カスタマイズ）画面ボタン
+        tomsShopView.OnMachineShopClicked
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.MachineShop))
+            .AddTo(disposables);
+
+        //　レリック3択の選択/スキップ
+        tomsShopView.OnRelicChoiceSelected
+            .Subscribe(index =>
+            {
+                if (relicRewardService != null &&
+                    relicRewardService.ChoosePending(index, gameFlowManager.CurrentTurn.Value))
+                {
+                    SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+                }
+                tomsShopView.HideRelicChoices();
+                RefreshRelicBar();
+            })
+            .AddTo(disposables);
+
+        // レリックバーのアイコンクリック → 説明ポップアップ
+        tomsShopView.OnRelicIconClicked
+            .Subscribe(relicId => ShowRelicDetailPopup(relicId))
+            .AddTo(disposables);
+
+        tomsShopView.OnRelicChoiceSkipped
+            .Subscribe(_ =>
+            {
+                // 辞退したら代わりにゴールドをもらう（額は選択肢の最高レア度で決まる）
+                int gold = relicRewardService?.DeclineForGold() ?? 0;
+                if (gold > 0)
+                {
+                    tomsShopModel.AddRevenue(gold);
+                    tomsShopModel.SavePlayerMoney();
+                    SoundManager.Instance?.PlaySE("営業/SE_売上音");
+                    Debug.Log($"[Relic] レリックを辞退して {gold}G を獲得");
+                }
+                tomsShopView.HideRelicChoices();
+            })
+            .AddTo(disposables);
+
+        //　営業フェーズの「営業開始」ボタン → 簡易演出 → サマリー表示
+        tomsShopView.OnStartShopClicked
+            .Subscribe(_ =>
+            {
+                if (turnPhaseManager.CurrentTurnPhase.Value != TurnPhase.Sales) return;
+                if (_salesStarting) return; // 演出中の連打防止
+                _salesStarting = true;
+                tomsShopView.SetStartShopInteractable(false);
+                salesPhaseView.PlayAndThen(() =>
+                {
+                    // 演出中に「戻る」等でフェーズが変わっていたら営業開始をキャンセル
+                    if (turnPhaseManager.CurrentTurnPhase.Value != TurnPhase.Sales) return;
+                    turnEndSummaryPresenter.ShowSummary();
+                });
+            })
+            .AddTo(disposables);
+
+        // フェーズが動いたら営業開始ボタンの連打ガードを解除する
+        // （次ターンのSales再突入時や、演出中に戻った場合の復帰用）
+        turnPhaseManager.CurrentTurnPhase
+            .Subscribe(_ =>
+            {
+                _salesStarting = false;
+                tomsShopView.SetStartShopInteractable(true);
+            })
+            .AddTo(disposables);
+
+        // 借金返済ボタン → 任意払いパネルを表示
+        tomsShopView.OnDebtPaymentClicked
+            .Subscribe(_ => debtPresenter.ShowVoluntary())
+            .AddTo(disposables);
+
+        // 返済完了 → 返済報酬のレリック3択を即表示し、次回返済表示を更新
+        debtPresenter.OnDebtPaid
+            .Subscribe(_ =>
+            {
+                RefreshNextDebtDisplay();
+                ShowPendingRelicChoicesIfAny();
+            })
             .AddTo(disposables);
         
         //　ターン表示の更新（CommonView）
@@ -124,8 +243,28 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(turn => commonView.UpdateCurrentTurn(turn))
             .AddTo(disposables);
 
+        // 次回借金返済額と残りターン数の表示（DebtCycle または CurrentTurn が変わるたびに再計算）
+        tomsShopModel.DebtCycle
+            .Subscribe(_ => RefreshNextDebtDisplay())
+            .AddTo(disposables);
+
+        gameFlowManager.CurrentTurn
+            .Subscribe(_ => RefreshNextDebtDisplay())
+            .AddTo(disposables);
+
         // ※ターン切り替え演出は Entry() 内で一元管理する
         //   バズ発生時はバズ演出のみ表示し、ターン演出はスキップするため
+
+        // バズ中の常時演出（バズモードオーバーレイ）
+        // IsBuzzActive と CurrentBuzzType は BuzzSystem 内で別々に更新されるため CombineLatest で同期する
+        marketingFacade.Buzz.IsBuzzActive
+            .CombineLatest(marketingFacade.Buzz.CurrentBuzzType, (isActive, buzzType) => (isActive, buzzType))
+            .Subscribe(x => tomsShopView.SetBuzzModeActive(x.isActive, x.buzzType))
+            .AddTo(disposables);
+
+        marketingFacade.Buzz.RemainingTurns
+            .Subscribe(turns => tomsShopView.UpdateBuzzRemainingTurns(turns))
+            .AddTo(disposables);
 
         // イベントポップアップの確認ボタン押下時
         eventView.OnConfirmClicked
@@ -133,23 +272,145 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .AddTo(disposables);
     }
     
+    private void RefreshNextDebtDisplay()
+    {
+        int cycle = tomsShopModel.DebtCycle.Value;
+        // 借入・猶予証・レリック補正込みの額（実際の支払いと同じ DebtCalculator を使う）
+        int nextAmount = DebtCalculator.GetAmount(cycle + 1, tomsShopModel, relicResolver);
+        int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
+        int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
+        tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);
+    }
+
     public void Entry()
     {
-        //ここにこの画面に移動した時にここを呼び出す。
+        // --- 配信前の寄り道中 ---
+        // 日送りは済んで配信日に入っている。ここで店のホームを開くと
+        // 朝刊・借金・朝レポート消費・ターンフェーズ開始が「配信日の営業」として走ってしまうため、
+        // _lastKnownTurn などに一切触れずに抜け、配信の判断へ戻す（戻った先で再び鍛冶屋か配信を選ぶ）。
+        if (gameFlowManager.IsAwaitingStream.Value)
+        {
+            Debug.LogWarning("[TomsShopPresenter] 配信前の寄り道中に Shop へ入ろうとしたため、配信の判断へ戻します");
+            if (stateManager.HasHandler(TomsShopGamePhase.BlackSmith))
+                stateManager.ChangeTomsShopPhase(TomsShopGamePhase.BlackSmith);
+            gameFlowManager.RequestPreStreamDecision(true);
+            return;
+        }
+
         Initialize();
 
         SoundManager.Instance?.PlayBGM("通常営業");
 
-        // 机の陳列を更新
         tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
+        tomsShopView.RefreshMachineDisplay(shopMachineModel);
 
-        // 保留イベントがあればポップアップを表示
+        // ターン変化はフェーズ開始判定に使うため、_lastKnownTurn が他で書き換わる前に捕捉する
+        int currentTurn = gameFlowManager.CurrentTurn.Value;
+        bool turnChanged = _lastKnownTurn != -1 && _lastKnownTurn != currentTurn;
+        bool firstEntry = _lastKnownTurn == -1;
+
+        // --- 朝刊 ---
+        // ターンが変わった最初の Shop 入場で一度だけ開く。
+        // ここで抜けるのは、この先の「保留イベント」「借金パネル」「朝レポート」より
+        // 前でなければならない。朝レポートは消費型（Consume で消える）なので、
+        // 表示してから画面を切り替えると内容が失われる。
+        // 抜ける時点では _lastKnownTurn をまだ更新していないので、朝刊を閉じて Shop へ
+        // 戻ったときに turnChanged が再び true になり、ターン頭の処理が正しく走る。
+        if ((turnChanged || firstEntry) && _lastNewspaperTurn != currentTurn
+            && stateManager.HasHandler(TomsShopGamePhase.Newspaper))
+        {
+            _lastNewspaperTurn = currentTurn;
+            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
+            return;
+        }
+
         ShowPendingEventIfExists();
 
-        // ターン変更を検出し、バズ演出またはターン演出を表示する
+        // 借金返済チェック: 支払うべきサイクル数 > 支払い済みサイクル数 なら強制返済パネルを表示
+        if (currentTurn / GameConst.DebtPaymentInterval > tomsShopModel.DebtCycle.Value)
+        {
+            _lastKnownTurn = currentTurn;
+            debtPresenter.ShowForced();
+        }
+
         ShowTurnOrBuzzAnnounce();
+
+        // 朝レポート（売り注文の持ち越し精算・配当・債券償還・マシンの設備収入/生成）
+        // 消費型: NextTurn 中に溜まった行を1つの通知にまとめて表示する
+        if (morningReportModel != null && morningReportModel.HasLines)
+        {
+            var lines = morningReportModel.Consume();
+            string reportText = string.Join("\n", lines);
+            if (!tomsShopView.ShowMorningReport(reportText))
+            {
+                // パネル未配線時はログにフォールバック（お金は適用済み）
+                Debug.Log($"[MorningReport]\n{reportText}");
+            }
+        }
+
+        // 配信勝利報酬のレリック3択（保留があれば表示）
+        ShowPendingRelicChoicesIfAny();
+
+        // 所持レリックバーの更新
+        RefreshRelicBar();
+
+        // --- ターン進行フェーズの開始 / 再適用 ---
+        if (turnChanged || !_turnPhaseInitialized)
+        {
+            // 新ターン（または初回Entry）: 保留イベントがあればEvent、無ければProcurementから開始
+            _turnPhaseInitialized = true;
+            turnPhaseManager.BeginTurnPhases(pendingEventData.HasPendingEvent);
+        }
+        else
+        {
+            // 詳細画面からのホーム復帰: 現フェーズのUIを再適用（フェーズは保持）
+            turnPhaseManager.CurrentTurnPhase.ForceNotify();
+        }
     }
     
+    /// <summary>
+    /// 配信勝利報酬のレリック3択を表示する。
+    /// パネル未配線の場合は最初の候補を自動獲得してログに残す（機能自体は成立させる）。
+    /// </summary>
+    private void ShowPendingRelicChoicesIfAny()
+    {
+        if (relicRewardService == null || relicRewardService.PendingChoices.Count == 0) return;
+
+        var choices = relicRewardService.PendingChoices
+            .Select(c => (c.relicName, c.description))
+            .ToList();
+
+        string skipLabel = $"辞退して {relicRewardService.GetDeclineGold():N0}G もらう";
+        if (!tomsShopView.ShowRelicChoices(choices, skipLabel))
+        {
+            string autoName = relicRewardService.PendingChoices[0].relicName;
+            relicRewardService.ChoosePending(0, gameFlowManager.CurrentTurn.Value);
+            Debug.Log($"[Relic] 3択パネル未配線のため自動獲得: {autoName}");
+            RefreshRelicBar();
+        }
+    }
+
+    private void RefreshRelicBar()
+    {
+        if (relicInventory == null) return;
+        tomsShopView.UpdateRelicBar(relicInventory.OwnedDefinitions().ToList());
+    }
+
+    /// <summary>レリックアイコンのクリック → 説明ポップアップ。</summary>
+    private void ShowRelicDetailPopup(string relicId)
+    {
+        var relic = relicInventory?.OwnedDefinitions().FirstOrDefault(d => d != null && d.relicId == relicId);
+        if (relic == null) return;
+
+        popUpManager?.Show(new PopUpData
+        {
+            Title = relic.relicName,
+            Message = string.IsNullOrEmpty(relic.description) ? "（効果の説明はまだない）" : relic.description,
+            IsCloseOnly = true,
+            Size = PopupSizeEnum.Medium,
+        });
+    }
+
     //初期化
     private void Initialize()
     {
@@ -202,7 +463,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         }
         else
         {
-            // バズなし → 通常のターン切り替え演出
             tomsShopView.ShowTurnAnnounce(currentTurn);
         }
     }
@@ -217,11 +477,18 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         var tomsEvent = pendingEventData.PendingEvent;
         Debug.Log($"[TomsShopPresenter] Showing pending event popup: {tomsEvent.title}");
 
-        // エフェクトテキストを構築
-        string effectText = BuildEffectText(tomsEvent.commands);
-
-        // ポップアップを表示
-        eventView.ShowEvent(tomsEvent.title, tomsEvent.description, effectText);
+        // イベント表示の失敗で Entry 全体（ターンフェーズ開始）を巻き込まないようにガードする。
+        // 失敗した場合は保留イベントを破棄してターンを続行する。
+        try
+        {
+            string effectText = BuildEffectText(tomsEvent.commands);
+            eventView.ShowEvent(tomsEvent.title, tomsEvent.description, effectText);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[TomsShopPresenter] イベントポップアップ表示に失敗したためスキップします: {tomsEvent.id} {tomsEvent.title}\n{e}");
+            pendingEventData.Clear();
+        }
     }
 
     /// <summary>
@@ -239,6 +506,12 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         // 保留データをクリア
         pendingEventData.Clear();
+
+        // イベントフェーズ完了 → 仕入れフェーズへ前進
+        if (turnPhaseManager.CurrentTurnPhase.Value == TurnPhase.Event)
+        {
+            turnPhaseManager.AdvanceTurnPhase();
+        }
     }
 
     /// <summary>
@@ -253,17 +526,16 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                    if (cmd.parameters.TryGetValue("amount", out var moneyStr))
+                    // 不正なマスターデータ（数値でないamount）でも落とさない
+                    if (cmd.parameters.TryGetValue("amount", out var moneyStr) && int.TryParse(moneyStr, out var amount))
                     {
-                        int amount = int.Parse(moneyStr);
-                        sb.AppendLine(amount >= 0 ? $"所持金 +{amount}G" : $"所持金 {amount}G");
+                        sb.AppendLine(amount >= 0 ? $"所持金 +{amount:N0}G" : $"所持金 {amount:N0}G");
                     }
                     break;
 
                 case "ChangeTrust":
-                    if (cmd.parameters.TryGetValue("amount", out var trustStr))
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
                     {
-                        float trustAmount = float.Parse(trustStr);
                         sb.AppendLine(trustAmount >= 0 ? $"信頼度 +{trustAmount}" : $"信頼度 {trustAmount}");
                     }
                     break;

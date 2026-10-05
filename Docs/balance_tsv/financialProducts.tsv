@@ -1,0 +1,10 @@
+id	productName:string	description:string	kind:int	unlockInfoBrokerLevel:int	bondUnitPrice:int	bondInterestRate:float	bondMaturityTurns:int	fundBaseUnitPrice:int	useAttributeFilter:bool	attribute:int
+bond_long	ギルド長期債	ギルドの遠征への出資。12日後に元本+25%で償還される。返済日との兼ね合いに注意。	0	2	5000	0.25	12	1000	false	0
+bond_short	ギルド短期債	ギルドへの短期出資。5日後に元本+10%で償還される。満期まで資金はロックされる。	0	1	2000	0.1	5	1000	false	0
+fund_dark	闇属性ファンド	闇属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。	1	2	2000	0.15	8	1000	true	5
+fund_earth	土属性ファンド	土属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。	1	2	2000	0.15	8	1000	true	2
+fund_fire	火属性ファンド	火属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。	1	2	2000	0.15	8	1000	true	0
+fund_light	光属性ファンド	光属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。	1	2	2000	0.15	8	1000	true	4
+fund_market	武具市場ファンド	全銘柄の市場価格に連動するインデックスファンド。市場全体の地合いが分かる。いつでも解約可能。	1	1	2000	0.15	8	1000	false	0
+fund_water	水属性ファンド	水属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。	1	2	2000	0.15	8	1000	true	1
+fund_wind	風属性ファンド	風属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。	1	2	2000	0.15	8	1000	true	3

@@ -10,7 +10,7 @@ public enum BuzzType
     Flame,
     /// <summary>通常バズ</summary>
     Normal,
-    /// <summary>大バズ</summary>
+    /// <summary>超バズ（旧: 大バズ）</summary>
     Big
 }
 

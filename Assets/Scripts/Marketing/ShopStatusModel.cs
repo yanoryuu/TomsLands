@@ -33,7 +33,8 @@ public class ShopStatusData
 /// </summary>
 public class ShopStatusModel
 {
-    private static readonly string SavePath = Application.persistentDataPath + "/shopStatusData.json";
+    // 選択中スロット配下を参照する（static readonly だと型初期化時のスロットに固定されるためプロパティにする）。
+    private static string SavePath => SaveSlotManager.GetPath("shopStatusData.json");
 
     // =====================================================
     // リアクティブプロパティ（UIバインディング用）

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ce1b54cab2739e84b9461d1a9c49d84c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Gravestone 06.prefab
+  uploadId: 984298

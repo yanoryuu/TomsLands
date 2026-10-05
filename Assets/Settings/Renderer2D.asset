@@ -1,5 +1,82 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6034754705371362234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 243e32d7eeec74648adfb24fcc65b9cb, type: 3}
+  m_Name: BlurRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shaderDownSample: {fileID: 4800000, guid: 27ce29ad5f0846eaadc4d0d5db6230ba, type: 3}
+  shaderGauss: {fileID: 4800000, guid: 41d28a4d90ea4d2dba116b099d516537, type: 3}
+  shaderSgxGauss: {fileID: 4800000, guid: 6c26598dc29f4beaacffa89858c6842e, type: 3}
+  shaderGraphDownSample: {fileID: -6465566751694194690, guid: 1dc11e6e992146e4cba22cc469a91060, type: 3}
+--- !u!114 &-2083946837846315702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 616915dd54c9a92459e30a1bf14f46bb, type: 3}
+  m_Name: RuleFadeRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 09ecb96942957084bbf93247bc39cf80, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: 11c313458b36ae247b6161eb447427fa, type: 3}
+--- !u!114 &-1968524961815243186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab18a3769bc045f4887c3d218cbadefb, type: 3}
+  m_Name: SepiaRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 2a1f432e247e2114896a58773922f9ee, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: 75ceb7fbfe5e9d04c81e373a66d1d6e2, type: 3}
+--- !u!114 &-676902634987867269
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb238eb9ca0891d4f897e485932852ab, type: 3}
+  m_Name: NegaPosiRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 072b8818aeb6c48458f57480fa0b5a0c, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: 38af1a5376605d842b18bf03e6bcbf06, type: 3}
+--- !u!114 &-2070493872563570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53d3a45954086db47bc279834c5e9ae9, type: 3}
+  m_Name: FishEyeRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 6107a82838b37e647a8bc9784442ea0a, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: 98048854639d052449ddea0341edb3c8, type: 3}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23,8 +100,20 @@ MonoBehaviour:
     probeVolumeSamplingDebugShader: {fileID: 4800000, guid: 8f96cd657dc40064aa21efcc7e50a2e7, type: 3}
     probeSamplingDebugMesh: {fileID: -3555484719484374845, guid: 57d7c4c16e2765b47a4d2069b311bffe, type: 3}
     probeSamplingDebugTexture: {fileID: 2800000, guid: 24ec0e140fb444a44ab96ee80844e18e, type: 3}
-  m_RendererFeatures: []
-  m_RendererFeatureMap: 
+    probeVolumeBlendStatesCS: {fileID: 0}
+  m_RendererFeatures:
+  - {fileID: 6414514368506387958}
+  - {fileID: 949419845244686714}
+  - {fileID: 3803409458982541829}
+  - {fileID: -676902634987867269}
+  - {fileID: -1968524961815243186}
+  - {fileID: -2070493872563570}
+  - {fileID: 2777624389130737853}
+  - {fileID: 8300592087744275728}
+  - {fileID: -6034754705371362234}
+  - {fileID: 6162970168091069294}
+  - {fileID: -2083946837846315702}
+  m_RendererFeatureMap: f65d7625d5ee04597a1184aa51042d0d05da036ac06cc8347bb305cea3289bf64e568317fa64aee48e5a3794e5a4f8ffbd589959aa1a8c2610656a7f86a03173460cb9a7913e40ac6ecb650eb74487554a2d5f67645514e3
   m_UseNativeRenderPass: 0
   m_TransparencySortMode: 0
   m_TransparencySortAxis: {x: 0, y: 1, z: 0}
@@ -49,21 +138,94 @@ MonoBehaviour:
   m_CameraSortingLayerDownsamplingMethod: 0
   m_MaxLightRenderTextureCount: 16
   m_MaxShadowRenderTextureCount: 1
-  m_LightShader: {fileID: 4800000, guid: 3f6c848ca3d7bca4bbe846546ac701a1, type: 3}
-  m_CoreBlitShader: {fileID: 4800000, guid: 93446b5c5339d4f00b85c159e1159b7c, type: 3}
-  m_CoreBlitColorAndDepthPS: {fileID: 4800000, guid: d104b2fc1ca6445babb8e90b0758136b, type: 3}
-  m_BlitHDROverlay: {fileID: 4800000, guid: a89bee29cffa951418fc1e2da94d1959, type: 3}
-  m_SamplingShader: {fileID: 4800000, guid: 04c410c9937594faa893a11dceb85f7e, type: 3}
-  m_ProjectedShadowShader: {fileID: 4800000, guid: ce09d4a80b88c5a4eb9768fab4f1ee00, type: 3}
-  m_SpriteShadowShader: {fileID: 4800000, guid: 44fc62292b65ab04eabcf310e799ccf6, type: 3}
-  m_SpriteUnshadowShader: {fileID: 4800000, guid: de02b375720b5c445afe83cd483bedf3, type: 3}
-  m_GeometryShadowShader: {fileID: 4800000, guid: 19349a0f9a7ed4c48a27445bcf92e5e1, type: 3}
-  m_GeometryUnshadowShader: {fileID: 4800000, guid: 77774d9009bb81447b048c907d4c6273, type: 3}
-  m_FallbackErrorShader: {fileID: 4800000, guid: e6e9a19c3678ded42a3bc431ebef7dbd, type: 3}
   m_PostProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
-  m_FallOffLookup: {fileID: 2800000, guid: 5688ab254e4c0634f8d6c8e0792331ca, type: 3}
   m_DefaultMaterialType: 0
   m_DefaultCustomMaterial: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
-  m_DefaultLitMaterial: {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
-  m_DefaultUnlitMaterial: {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_DefaultMaskMaterial: {fileID: 2100000, guid: 15d0c3709176029428a0da2f8cecf0b5, type: 2}
+--- !u!114 &949419845244686714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abe302444d4dc9b49a4a96742c856374, type: 3}
+  m_Name: GrayScaleRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: cec0a7e004fe48044954c3c20110f03a, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: ed56e9317ea93b844a4a9793c9b50c9b, type: 3}
+--- !u!114 &2777624389130737853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e55b3c6ef5fc75543bcd6b68007dba8f, type: 3}
+  m_Name: TwirlRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 20fb1b22057ea744084eaa886d7120f2, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: b5ddb7117991cfd4fb252bc93f980ea8, type: 3}
+--- !u!114 &3803409458982541829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42998c646b166284a82d614774980b7f, type: 3}
+  m_Name: MosaicRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 349a330ee4aa2f14693ae667ba881676, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: 4263948526e6e8149ab5b47dd57a09dc, type: 3}
+--- !u!114 &6162970168091069294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a8de49c111749fea020f64aea6a17d6, type: 3}
+  m_Name: ColorFadeRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 99911b19beba955489d7a41660081882, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: 6a118a38894069c4e919667b22077116, type: 3}
+--- !u!114 &6414514368506387958
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce7c559436a349f78b6837a930c199e1, type: 3}
+  m_Name: CaptureRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+--- !u!114 &8300592087744275728
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e42166354176594ba4ae90a6a5b9b61, type: 3}
+  m_Name: VortexRenderFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  shader: {fileID: 4800000, guid: 1c03a8a6c36d2574599752d93d64696e, type: 3}
+  shaderGraph: {fileID: -6465566751694194690, guid: aab7150b3cf883d49818a969c3f6592f, type: 3}

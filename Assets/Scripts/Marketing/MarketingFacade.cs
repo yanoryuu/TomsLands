@@ -111,6 +111,7 @@ public class MarketingFacade : IStartable, IDisposable
         if (result.NewBuzzOccurred)
         {
             Debug.Log($"[MarketingFacade] 新バズ発生: {result.NewBuzzType}");
+            RunHistory.RecordBuzz(); // リザルトの振り返り用
         }
 
         // フォロワーマイルストーン状況をログ
@@ -148,6 +149,14 @@ public class MarketingFacade : IStartable, IDisposable
     public bool CanExecuteAdvertisement(AdvertisementData ad)
     {
         return _adSystem.CanExecute(ad);
+    }
+
+    /// <summary>
+    /// 広告の実効上昇量（広告ごとの statMax 適用後）を取得する。
+    /// </summary>
+    public AdvertisementEffect GetAdvertisementEffect(AdvertisementData ad)
+    {
+        return _adSystem.GetEffectiveGains(ad);
     }
 
     // =====================================================

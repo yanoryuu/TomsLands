@@ -140,6 +140,14 @@ public class StateManager : IDisposable
         }
     }
 
+    /// <summary>
+    /// そのサブフェーズに受け手（OnEnter）が登録されているか。
+    /// View が未配線のプレゼンターは登録自体されないので、これで「その画面が使えるか」を判定できる。
+    /// 使えない画面へ遷移すると、閉じるボタンの無い空画面で操作不能になるため、遷移前に必ず確認する。
+    /// </summary>
+    public bool HasHandler(TomsShopGamePhase subPhase) =>
+        onEnterTomsShop.TryGetValue(subPhase, out var h) && h != null;
+
 
     /// <summary>
     /// 現在のフェーズを変更。購読側で自動的に切替・処理が実行される。

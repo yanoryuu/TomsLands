@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5fd8053a5a60848a697a4513b65547, type: 3}
+  m_Name: relic_signboard
+  m_EditorClassIdentifier: 
+  relicId: relic_signboard
+  relicName: "\u624B\u63CF\u304D\u306E\u770B\u677F"
+  description: "\u5FC3\u306E\u3053\u3082\u3063\u305F\u770B\u677F\u3002\u55B6\u696D\u58F2\u4E0A+10%\u3002"
+  icon: {fileID: 0}
+  rarity: 0
+  category: 0
+  isCurse: 0
+  modifiers:
+  - stat: 0
+    op: 1
+    value: 1.1
+  behaviours: []

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a1fe8c8a86ee9034887b165c2e61173c
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Road Lamp 01 R.prefab
+  uploadId: 984298

@@ -1,0 +1,421 @@
+@startuml TomsLands_Architecture
+title TomsLands - 主要アーキテクチャ クラス図
+
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+hide empty members
+
+' =====================================================
+'  Enums (状態・分類)
+' =====================================================
+package "Enums" <<Folder>> {
+    enum GamePhase {
+        TomsShop
+        Result
+        Setting
+    }
+    enum TomsShopGamePhase {
+        Shop
+        Hero
+        BlackSmith
+        ToolShop
+        Broker
+        Map
+        DungeonLevelUp
+        TurnEndSummary
+        Advertisement
+        Prophet
+    }
+    enum TurnPhase {
+        Event
+        Procurement
+        Display
+        Sales
+    }
+    enum GameEvent {
+        Start
+        Battle
+        Shop
+        Event
+        End
+    }
+    enum BuzzType {
+        Flame
+        Normal
+        Big
+    }
+    enum StatusType {
+        Trust
+        Attention
+        Spread
+        Retention
+        Followers
+    }
+    enum DungeonName {
+        MausoleumOblivion
+        ScorchingVolcanoPrison
+        IceMistCave
+        DeepGreenBeastForest
+        AncientMechanicalCastle
+        DemonKingCastle
+    }
+    enum HeroTactics {
+        Aggressive
+        Defensive
+        Balanced
+        Stealth
+        MagicFocused
+    }
+}
+
+' =====================================================
+'  DI ルート / 状態管理
+' =====================================================
+package "Core / Lifecycle" <<Folder>> {
+    class GameLifetimeScope {
+        + Configure(IContainerBuilder) : void
+        -- VContainer DI ルート --
+    }
+
+    class StateManager {
+        + CurrentPhase : ReactiveProperty<GamePhase>
+        + CurrentTomsShopPhase : ReactiveProperty<TomsShopGamePhase>
+        + RegisterOnEnter(GamePhase, Action) : void
+        + ChangePhase(GamePhase) : void
+        + ChangeTomsShopPhase(TomsShopGamePhase) : void
+    }
+
+    class GamePanelManager <<MonoBehaviour>> {
+        + ShowPanel(GamePhase) : void
+        + ShowTomsShopPanel(TomsShopGamePhase) : void
+        + ShowEventPanel() : void
+    }
+
+    class GameFlowManager <<IStartable>> {
+        + CurrentTurn : ReactiveProperty<int>
+        + BattleCount : ReactiveProperty<int>
+        + InitializeFlow(useAuto, GameModeId, seed) : void
+        + NextTurn() : void
+        + GetNextBattleDungeon() : DungeonName?
+        + RestoreIndex(int) : void
+    }
+
+    class TurnPhaseManager {
+        + CurrentTurnPhase : ReactiveProperty<TurnPhase>
+        + BeginTurnPhases(hasPendingEvent) : void
+        + AdvanceTurnPhase() : void
+        + GetPhaseForScreen(TomsShopGamePhase) : TurnPhase?
+    }
+
+    class SceneTransitionService {
+        + GoToBattle() : void
+        + GoToEvent() : void
+        + ReturnToTomsShop() : void
+        + GoToResult() : void
+        + GoToGameOver() : void
+    }
+
+    class GameLifecycleHandler <<IStartable>> {
+        + Start() : void
+        + Dispose() : void
+        .. NewGame / Continue 分岐 ..
+    }
+    class BattleResultHandler <<IStartable>>
+    class EventResultHandler <<IStartable>>
+
+    class GameFlow <<ScriptableObject>> {
+        + GameFlowStack : List<GameFlowNode>
+    }
+    class GameFlowNode {
+        + EventType : GameEvent
+        + BattleDungeon : DungeonName
+    }
+    class StartModeData <<ScriptableObject>> {
+        + Mode : StartMode
+        + SelectedMode : GameModeId
+        + UseAutoGeneration : bool
+    }
+}
+
+' =====================================================
+'  MVP プレゼンテーション層
+' =====================================================
+package "Presentation (MVP)" <<Folder>> {
+    interface IPresenter {
+        + Entry() : void
+    }
+
+    class TomsShopPresenter <<IStartable>>
+    class TurnPhasePresenter <<IStartable>>
+    class TurnEndSummaryPresenter <<IStartable>>
+    class ItemSelectionPresenter <<IStartable>>
+    class BlackSmithPresenter <<IStartable>>
+    class InfoBrokerPresenter <<IStartable>>
+    class MapPresenter <<IStartable>>
+    class HeroPanelPresenter <<IStartable>>
+    class AdvertisementPresenter <<IStartable>>
+    class ProphetPresenter <<IStartable>>
+    class DebtPresenter <<IStartable>>
+
+    class TomsShopView <<MonoBehaviour>>
+    class TurnPhaseView <<MonoBehaviour>>
+    class SalesPhaseView <<MonoBehaviour>>
+    class ItemSelectionView <<MonoBehaviour>>
+    class MapView <<MonoBehaviour>>
+    class AdvertisementView <<MonoBehaviour>>
+}
+
+' =====================================================
+'  ドメインモデル (VContainer Singleton)
+' =====================================================
+package "Domain Models" <<Folder>> {
+    class ItemModel {
+        + RuntimeItems : List<RuntimeItemData>
+        + AutoPurchase(...) : List<AutoPurchaseResult>
+        + AutoSetDisplay(level, maxSlots) : void
+        + ApplyShopTurnEconomy(...) : void
+        + ApplyBattleResult(BattleResult, ...) : void
+        + SaveData() / LoadData() : void
+    }
+    class RuntimeItemData <<Serializable>> {
+        + ItemId : string
+        + CurrentPrice : ReactiveProperty<int>
+        + Stock : ReactiveProperty<int>
+        + Demand : ReactiveProperty<float>
+        + ItemType : ItemType
+        + ItemAttribute : ItemAttribute
+        + ExpectedRevenue : float
+    }
+    class ItemData <<ScriptableObject>> {
+        + itemId : string
+        + basePrice : int
+        + maxStock : int
+        + itemType : ItemType
+        + itemAttribute : ItemAttribute
+    }
+
+    class TomsModel {
+        + PlayerMoney : ReactiveProperty<int>
+        + BlacksmithLevel : ReactiveProperty<int>
+        + CurrentTurn : ReactiveProperty<int>
+        + GameFlowIndex : int
+        + PurchaseItem(price) : void
+        + Settlement(price) : void
+    }
+
+    class HeroModel {
+        + EquippedItemIds : List<string>
+        + heroData : RuntimeHeroData
+        + EquipItem(itemId) : void
+        + AddExperience(exp) : int
+    }
+    class RuntimeHeroData {
+        + level : ReactiveProperty<int>
+        + hp : ReactiveProperty<int>
+        + attackPower : ReactiveProperty<int>
+        + tactics : ReactiveProperty<HeroTactics>
+    }
+
+    class BlackSmithModel {
+        + weaponRuntimeItems : List<RuntimeItemData>
+        + armorRuntimeItems : List<RuntimeItemData>
+        + PurchaseItem(itemId, maxStock) : int
+    }
+    class ItemSelectionModel {
+        + WeaponRuntimeItems : List<RuntimeItemData>
+        + AarmorRuntimeItems : List<RuntimeItemData>
+    }
+    class InfoBrokerModel {
+        + heroPurchaseHistory : List<HeroPurchaseHistory>
+        + availableDungeons : List<DungeonData>
+        + PurchaseDungeonInfo(DungeonName) : void
+    }
+    class MapModel
+}
+
+' =====================================================
+'  ダンジョン / データ
+' =====================================================
+package "Dungeon / Data" <<Folder>> {
+    class DungeonRepository <<MonoBehaviour>> {
+        + availableDungeons : List<DungeonData>
+        + GetById(DungeonName) : DungeonData
+        + Save() / TryLoadAndRebuild() : void
+    }
+    class DungeonData <<Serializable>> {
+        + key : DungeonName
+        + currentDungeonLevel : int
+        + levelDataList : DungeonLevelData[]
+    }
+    class DungeonLevelData
+    class EnemyData
+    class GameSaveData <<Serializable>> {
+        + dungeons : List<DungeonSaveData>
+        + Gold : int
+    }
+}
+
+' =====================================================
+'  マーケティング サブシステム (Facade)
+' =====================================================
+package "Marketing" <<Folder>> {
+    class MarketingFacade <<IStartable>> {
+        + Status : ShopStatusModel
+        + Ads : AdvertisementSystem
+        + Buzz : BuzzSystem
+        + Followers : FollowerSystem
+        + Sales : SalesCalculator
+        + ProcessTurn() : BuzzTurnResult
+        + CalculateFinalRevenue(int) : int
+        + ExecuteAdvertisement(AdvertisementData) : bool
+    }
+    class ShopStatusModel {
+        + Trust : ReactiveProperty<int>
+        + Attention : ReactiveProperty<int>
+        + Spread : ReactiveProperty<int>
+        + Retention : ReactiveProperty<int>
+        + Followers : ReactiveProperty<int>
+    }
+    class AdvertisementSystem {
+        + Execute(AdvertisementData) : bool
+        + GetDiscountedCost(AdvertisementData) : int
+    }
+    class BuzzSystem {
+        + IsBuzzActive : ReactiveProperty<bool>
+        + CurrentBuzzType : ReactiveProperty<BuzzType>
+        + ProcessTurnStart() : BuzzTurnResult
+        + GetCurrentRevenueMultiplier() : float
+    }
+    class FollowerSystem {
+        + GetCurrentMilestone() : FollowerMilestoneData
+        + GetSalesBonusRate() : float
+    }
+    class SalesCalculator {
+        + CalculateFinalRevenue(int) : int
+        + GetBreakdown(int) : SalesBreakdown
+    }
+
+    class AdvertisementData <<ScriptableObject>>
+    class BuzzEffectData <<ScriptableObject>>
+    class FollowerMilestoneData <<ScriptableObject>>
+    class GameBalanceData <<ScriptableObject>>
+}
+
+' =====================================================
+'  関連 (Relationships)
+' =====================================================
+
+' --- DI ルートが各 EntryPoint / View を生成・登録 ---
+GameLifetimeScope ..> StateManager : registers
+GameLifetimeScope ..> GameFlowManager : registers
+GameLifetimeScope ..> TurnPhaseManager : registers
+GameLifetimeScope ..> MarketingFacade : registers
+GameLifetimeScope ..> TomsShopPresenter : registers
+GameLifetimeScope ..> GamePanelManager : registers
+
+' --- 状態管理の連携 ---
+StateManager --> GamePanelManager : drives UI
+StateManager ..> GamePhase
+StateManager ..> TomsShopGamePhase
+TurnPhaseManager ..> TurnPhase
+GameFlow *-- GameFlowNode
+GameFlowNode ..> GameEvent
+GameFlowNode ..> DungeonName
+
+' --- GameFlowManager の依存 ---
+GameFlowManager --> StateManager
+GameFlowManager --> SceneTransitionService
+GameFlowManager --> DungeonRepository
+GameFlowManager --> MarketingFacade
+GameFlowManager --> ItemModel
+GameFlowManager --> TomsModel
+GameFlowManager --> HeroModel
+
+' --- Lifecycle ハンドラ ---
+GameLifecycleHandler --> GameFlowManager
+GameLifecycleHandler --> ItemModel
+GameLifecycleHandler --> TomsModel
+GameLifecycleHandler --> HeroModel
+GameLifecycleHandler --> StartModeData
+BattleResultHandler --> ItemModel
+BattleResultHandler --> HeroModel
+BattleResultHandler --> GameFlowManager
+
+' --- MVP: Presenter は IPresenter を実装し、View / Model を仲介 ---
+TomsShopPresenter ..|> IPresenter
+TurnEndSummaryPresenter ..|> IPresenter
+ItemSelectionPresenter ..|> IPresenter
+BlackSmithPresenter ..|> IPresenter
+InfoBrokerPresenter ..|> IPresenter
+MapPresenter ..|> IPresenter
+AdvertisementPresenter ..|> IPresenter
+
+TomsShopPresenter --> TomsShopView
+TomsShopPresenter --> StateManager
+TomsShopPresenter --> GameFlowManager
+TomsShopPresenter --> TurnPhaseManager
+TomsShopPresenter --> MarketingFacade
+TomsShopPresenter --> ItemModel
+TomsShopPresenter --> TomsModel
+TomsShopPresenter --> SalesPhaseView
+TomsShopPresenter --> TurnEndSummaryPresenter
+TomsShopPresenter --> DebtPresenter
+
+TurnPhasePresenter --> TurnPhaseView
+TurnPhasePresenter --> TurnPhaseManager
+
+TurnEndSummaryPresenter --> ItemModel
+TurnEndSummaryPresenter --> MarketingFacade
+TurnEndSummaryPresenter --> GameFlowManager
+
+ItemSelectionPresenter --> ItemSelectionView
+ItemSelectionPresenter --> ItemModel
+MapPresenter --> MapView
+MapPresenter --> MapModel
+AdvertisementPresenter --> AdvertisementView
+AdvertisementPresenter --> MarketingFacade
+
+' --- ドメインモデルの集約 ---
+ItemModel "1" *-- "*" RuntimeItemData
+ItemModel --> ItemData : master
+ItemModel ..> ShopStatusModel
+HeroModel "1" *-- "1" RuntimeHeroData
+RuntimeHeroData ..> HeroTactics
+BlackSmithModel o-- RuntimeItemData
+ItemSelectionModel o-- RuntimeItemData
+InfoBrokerModel o-- DungeonData
+InfoBrokerModel --> ItemModel
+InfoBrokerModel --> HeroModel
+InfoBrokerModel --> DungeonRepository
+
+' --- ダンジョン ---
+DungeonRepository "1" *-- "*" DungeonData
+DungeonData "1" *-- "*" DungeonLevelData
+DungeonLevelData "1" *-- "*" EnemyData
+DungeonData ..> DungeonName
+
+' --- マーケティング Facade の集約 ---
+MarketingFacade *-- ShopStatusModel
+MarketingFacade *-- AdvertisementSystem
+MarketingFacade *-- BuzzSystem
+MarketingFacade *-- FollowerSystem
+MarketingFacade *-- SalesCalculator
+
+AdvertisementSystem --> ShopStatusModel
+AdvertisementSystem --> TomsModel
+AdvertisementSystem --> FollowerSystem
+AdvertisementSystem o-- AdvertisementData
+BuzzSystem --> ShopStatusModel
+BuzzSystem --> FollowerSystem
+BuzzSystem --> AdvertisementSystem
+BuzzSystem o-- BuzzEffectData
+BuzzSystem ..> BuzzType
+FollowerSystem --> ShopStatusModel
+FollowerSystem o-- FollowerMilestoneData
+SalesCalculator --> BuzzSystem
+SalesCalculator --> FollowerSystem
+ShopStatusModel --> GameBalanceData
+ShopStatusModel ..> StatusType
+
+@enduml

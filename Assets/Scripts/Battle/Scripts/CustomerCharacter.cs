@@ -73,6 +73,7 @@ public class CustomerCharacter : MonoBehaviour
         try
         {
             await MoveToAsync(destPos, token);
+            if (token.IsCancellationRequested || this == null) return;
 
             PlayState(PlayerState.IDLE);
             ShowItem(itemSprite);
@@ -84,6 +85,8 @@ public class CustomerCharacter : MonoBehaviour
         }
         catch (OperationCanceledException) { }
 
+        if (token.IsCancellationRequested || this == null) return;
+
         // アイドルに戻して非表示（プール待機状態）
         PlayState(PlayerState.IDLE);
         gameObject.SetActive(false);
@@ -94,6 +97,9 @@ public class CustomerCharacter : MonoBehaviour
     /// </summary>
     private async UniTask MoveToAsync(Vector3 target, CancellationToken token)
     {
+        token.ThrowIfCancellationRequested();
+        if (this == null) return;
+
         float dist = Vector3.Distance(transform.position, target);
         if (dist < 0.01f) return;
 
@@ -113,6 +119,8 @@ public class CustomerCharacter : MonoBehaviour
             transform.position = pos;
             await UniTask.Yield(cancellationToken: token);
         }
+
+        if (token.IsCancellationRequested || this == null) return;
 
         transform.position = target;
     }
@@ -145,6 +153,8 @@ public class CustomerCharacter : MonoBehaviour
 
     private void PlayState(PlayerState state)
     {
+        if (this == null) return;
+
         if (spumCharacter == null)
         {
             Debug.LogWarning($"[CustomerCharacter] spumCharacter が未設定です: {gameObject.name}", this);

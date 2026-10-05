@@ -1,0 +1,116 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b79cc5a82b9e660449d4c7eb0231d0ab, type: 3}
+  m_Name: GameConstSettings
+  m_EditorClassIdentifier: 
+  data:
+    maxDungeonLevel: 5
+    maxBlackSmithLevel: 5
+    maxToolShopLevel: 5
+    maxInfoBrokerLevel: 5
+    maxItemStock: 99
+    minItemStock: 0
+    initMoney: 10000
+    debtPaymentInterval: 7
+    debtBaseAmount: 5000
+    debtMultiplier: 1.8
+    heroExpPerMob: 10
+    heroExpPerBoss: 100
+    heroBaseExpToNextLevel: 100
+    heroGuaranteedLevelUpsOnVictory: 1
+    heroGuaranteedLevelUpsOnDefeat: 1
+    heroDefeatMobExpMultiplier: 1.5
+    heroDefeatBossExpShare: 0.5
+    heroWeaponAttackBonusBase: 0.1
+    heroWeaponAttackBonusPerTier: 0.08
+    heroArmorDefenseBonusBase: 0.15
+    heroArmorDefenseBonusPerTier: 0.1
+    heroArmorHpBonusBase: 0.05
+    heroArmorHpBonusPerTier: 0.05
+    blackSmithLevelUpCosts: 00000000b80b000070170000e02e0000204e0000
+    infoBrokerLevelUpCosts: 00000000c409000070170000e02e0000204e0000
+    flowGeneration:
+      useAutoGeneration: 1
+      randomSeed: 0
+      modes:
+      - mode: 0
+        dungeonCount: 2
+        minShopTurnsBetweenBattles: 2
+        maxShopTurnsBetweenBattles: 3
+        eventRate: 0.3
+      - mode: 1
+        dungeonCount: 4
+        minShopTurnsBetweenBattles: 2
+        maxShopTurnsBetweenBattles: 4
+        eventRate: 0.3
+      - mode: 2
+        dungeonCount: 6
+        minShopTurnsBetweenBattles: 3
+        maxShopTurnsBetweenBattles: 5
+        eventRate: 0.35
+      dungeonWeights: []
+      earlyTargetDifficulty: 1
+      lateTargetDifficulty: 10
+      difficultyBias: 0.5
+    relicSettings:
+      maxEquipSlots: 0
+      rewardChoiceCount: 3
+      commonWeight: 60
+      rareWeight: 30
+      epicWeight: 10
+      declineGoldCommon: 500
+      declineGoldRare: 1200
+      declineGoldEpic: 2500
+    preparation:
+      bankCarryLimits: 8813000010270000204e000050c30000
+      baseCarrySlots: 2
+      borrowInterestRate: 0.5
+      creditLineAmounts: 000000008813000010270000204e0000
+      creditLineUpgradeCosts: 1e00000050000000c8000000
+      metaCurrencyDivisor: 5000
+      rankBonuses: c800000078000000460000002800000014000000
+      metaCurrencyPerTurn: 2
+      flyerCost: 20
+      flyerAttention: 20
+      flyerFollowers: 100
+      appraisalCost: 25
+      appraisalDemandBoost: 0.15
+      graceCost: 30
+      graceDiscountRate: 0.3
+    village:
+      conversionRate: 0.5
+      bankruptcyConversionRate: 0.1
+      debtScalePerVillageLevel: 0
+    battleTempo:
+      speedMultiplier: 1
+      logSeconds: 0.4
+      attackMotionSeconds: 0.35
+      attackLungeDistance: 0.6
+      turnIntervalSeconds: 0.4
+      battleStartSeconds: 1
+      waveIntermissionSeconds: 2
+      reinforceDelaySeconds: 0.5
+      deathBlinkCount: 5
+      deathBlinkInterval: 0.15
+      normalWaveRepeat: 4
+      salesLoopIntervalSeconds: 40
+      salesLoopRandomness: 6
+    streamingAudience:
+      baseViewers: 60
+      viewersPerFollower: 0.5
+      buzzMultiplier: 1.6
+      superBuzzMultiplier: 3
+      flameMultiplier: 1.4
+      heatMultiplierAt0: 0.6
+      heatMultiplierAt100: 1.8
+      approachPerSecond: 0.35
+      jitter: 0.03

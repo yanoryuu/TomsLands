@@ -124,11 +124,12 @@ public class HeroPanelView : MonoBehaviour
         if (heroLevelText != null)
             heroLevelText.text = $"Lv {hero.level.Value}\nEXP {expText}";
 
+        // 「HP」「MP」の静的ラベルがパネル側にあるため、ここでは数値のみを表示する
         if (heroHpText != null)
-            heroHpText.text = $"HP {hero.hp.Value}";
+            heroHpText.text = $"{hero.hp.Value}";
 
         if (heroMpText != null)
-            heroMpText.text = $"MP {hero.mp.Value}";
+            heroMpText.text = $"{hero.mp.Value}";
 
         if (heroStatusText != null)
         {

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using R3;
 
-public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     [Header("UI")]
     [SerializeField] private Image icon;
@@ -17,6 +17,20 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [SerializeField] private TextMeshProUGUI quantityText;
     [SerializeField] private Button infoButton;
     [SerializeField] private Button purchaseButton;
+
+    [Header("市況（ティッカー行）")]
+    [Tooltip("需要を%表示するテキスト")]
+    [SerializeField] private TextMeshProUGUI demandText;
+    [Tooltip("需要を 0〜1 のバーで表示するスライダー（任意）")]
+    [SerializeField] private Slider demandBar;
+    [Tooltip("前回比トレンド矢印（↑→↓）")]
+    [SerializeField] private TextMeshProUGUI priceTrendText;
+    [Tooltip("人気バッジ（Demand高 or 前ターン販売）")]
+    [SerializeField] private GameObject popularBadge;
+    [Tooltip("品薄バッジ（在庫1〜2）")]
+    [SerializeField] private GameObject lowStockBadge;
+    [Tooltip("選択中のハイライト（任意）")]
+    [SerializeField] private GameObject selectedHighlight;
 
     [Header("Step Buttons")]
     [SerializeField] private Button plusButton;
@@ -34,6 +48,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     public Subject<string> OnIconClicked { get; } = new();         // アイコン押下 → 市場分析ポップアップ
     public Subject<string> OnHoverEnter { get; } = new();          // ホバー開始 → アイテムID
     public Subject<Unit> OnHoverExit { get; } = new();             // ホバー終了
+    public Subject<string> OnRowSelected { get; } = new();         // 行クリック → 詳細パネル表示
 
     // 内部状態（UI表示用）
     private int displayQuantity;
@@ -78,11 +93,120 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         }
         if (nameText) nameText.text = itemName;
         SetPrice(price);
-        stockText?.SetText($"{currentStock}");
+        SetCurrentStock(currentStock);
+        if (popularBadge) popularBadge.SetActive(isPopular);
 
         SetMaxDisplayQuantity(Mathf.Max(0, maxStock));
         SetDisplayQuantity(0);
         UpdateButtonsInteractable();
+    }
+
+    /// <summary>
+    /// 金融商品モードで行を設定する（武具と同列の見た目に統一するための共用化）。
+    /// 在庫・数量系のUIを隠し、需要欄には利回り/前日比などの市況ラベルを表示する。
+    /// </summary>
+    public void SetFinance(string productId, string productName, Sprite sprite, int unitPrice,
+        int heldUnits, string marketLabel, Color marketColor, int previousPrice, bool unlocked)
+    {
+        itemId = productId;
+        if (icon)
+        {
+            icon.sprite = sprite;
+            icon.enabled = sprite != null;
+        }
+        if (backgroundImage) backgroundImage.enabled = false;
+        if (nameText) nameText.text = productName;
+        SetPrice(unitPrice);
+        SetPriceTrend(unitPrice, previousPrice);
+
+        // 行内の固定キャプション（プレハブの静的Text）を金融向けの文言に差し替える
+        var demandLabel = transform.Find("DemandLabel");
+        if (demandLabel != null)
+        {
+            var label = demandLabel.GetComponent<TextMeshProUGUI>();
+            if (label != null) label.text = "市況";
+        }
+        var stockLabel = transform.Find("StockLabel");
+        if (stockLabel != null)
+        {
+            var label = stockLabel.GetComponent<TextMeshProUGUI>();
+            if (label != null) label.text = "保有";
+        }
+
+        if (stockText) stockText.text = heldUnits > 0 ? $"{heldUnits}口" : "-";
+        if (demandText)
+        {
+            demandText.text = marketLabel;
+            demandText.color = marketColor;
+        }
+
+        // 金融商品に無い概念のUIを隠す
+        if (demandBar) demandBar.gameObject.SetActive(false);
+        if (popularBadge) popularBadge.SetActive(false);
+        if (lowStockBadge) lowStockBadge.SetActive(false);
+        if (quantitySlider) quantitySlider.gameObject.SetActive(false);
+        if (quantityText) quantityText.gameObject.SetActive(false);
+        if (plusButton) plusButton.gameObject.SetActive(false);
+        if (minusButton) minusButton.gameObject.SetActive(false);
+        if (purchaseButton) purchaseButton.gameObject.SetActive(false);
+
+        // 未解禁は行ごと薄くする（選択は可能にして解禁条件の案内を出す）。
+        // 登場フェード（CanvasGroupをDOFadeで1へ）と競合するため、未解禁時はTweenを止めてから設定する
+        if (!unlocked)
+        {
+            var cg = GetComponent<CanvasGroup>();
+            if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
+            DG.Tweening.DOTween.Kill(cg);
+            cg.alpha = 0.55f;
+        }
+    }
+
+    /// <summary>需要(0〜1)を温度色付きの%表示と人気バッジに反映する。</summary>
+    public void SetDemand(float demand, bool isPopular)
+    {
+        demand = Mathf.Clamp01(demand);
+        if (demandText != null)
+        {
+            demandText.text = $"{demand:P0}";
+            demandText.color = DemandColor(demand);
+        }
+        if (demandBar) demandBar.value = demand; // バー未使用時はnull（旧レイアウト互換）
+        if (popularBadge) popularBadge.SetActive(isPopular);
+    }
+
+    /// <summary>需要の高さを温度で表す色（低=青灰 / 中=白 / 高=オレンジ）。</summary>
+    private static Color DemandColor(float demand)
+    {
+        if (demand < 0.4f) return new Color(0.55f, 0.68f, 0.8f);  // 低: 青灰
+        if (demand < 0.7f) return Color.white;                     // 中: 白
+        return new Color(1f, 0.6f, 0.25f);                          // 高: オレンジ
+    }
+
+    /// <summary>前回比トレンド矢印（↑赤／→灰／↓水色）を更新する。</summary>
+    public void SetPriceTrend(int current, int previous)
+    {
+        if (priceTrendText == null) return;
+        if (current > previous)
+        {
+            priceTrendText.text = "↑";
+            priceTrendText.color = Color.red;
+        }
+        else if (current < previous)
+        {
+            priceTrendText.text = "↓";
+            priceTrendText.color = Color.cyan;
+        }
+        else
+        {
+            priceTrendText.text = "→";
+            priceTrendText.color = Color.gray;
+        }
+    }
+
+    /// <summary>この行の選択ハイライトを切り替える。</summary>
+    public void SetSelected(bool selected)
+    {
+        if (selectedHighlight) selectedHighlight.SetActive(selected);
     }
 
     public void SetPrice(int price)
@@ -94,7 +218,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     private void UpdatePriceText()
     {
         int total = unitPrice * Mathf.Max(displayQuantity, 1);
-        priceText?.SetText($"{total}G");
+        priceText?.SetText($"{total:N0}G");
     }
 
     // === 表示だけ更新（通知しない） ===
@@ -117,6 +241,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     public void SetCurrentStock(int currentStock)
     {
         stockText?.SetText($"{currentStock}");
+        if (lowStockBadge) lowStockBadge.SetActive(currentStock > 0 && currentStock <= 2);
     }
 
     // === 最大値変更（通知しない） ===
@@ -163,6 +288,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter.OnNext(itemId);
     public void OnPointerExit(PointerEventData eventData) => OnHoverExit.OnNext(Unit.Default);
+    public void OnPointerClick(PointerEventData eventData) => OnRowSelected.OnNext(itemId);
 
     private void OnDestroy()
     {

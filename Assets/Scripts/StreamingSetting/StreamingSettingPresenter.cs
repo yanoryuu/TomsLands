@@ -13,6 +13,7 @@ public class StreamingSettingPresenter : IDisposable
     private readonly ItemModel             _itemModel;
     private readonly BattleInputData       _battleInputData;
     private readonly IDungeonCatalog       _dungeonCatalog;
+    private readonly PopUpManager          _popUpManager;
     private readonly CompositeDisposable   _d = new CompositeDisposable();
 
     /// <summary>
@@ -26,13 +27,15 @@ public class StreamingSettingPresenter : IDisposable
         StreamingSettingView  view,
         ItemModel             itemModel,
         BattleInputData       battleInputData,
-        IDungeonCatalog       dungeonCatalog)
+        IDungeonCatalog       dungeonCatalog,
+        PopUpManager          popUpManager)
     {
         _model           = model;
         _view            = view;
         _itemModel       = itemModel;
         _battleInputData = battleInputData;
         _dungeonCatalog  = dungeonCatalog;
+        _popUpManager    = popUpManager;
     }
 
     /// <summary>
@@ -111,8 +114,32 @@ public class StreamingSettingPresenter : IDisposable
     /// <summary>
     /// 確定ボタン押下時の処理。
     /// 選択データを保存し、UniTaskCompletionSource を完了させる。
+    /// 品出しゼロのまま確定しようとした場合は確認ポップアップを挟む
+    /// （手ぶらで配信に突入すると売るものがなくやることがないため）。
     /// </summary>
     private void HandleConfirm()
+    {
+        if (_model.Selected.Count == 0 && _popUpManager != null)
+        {
+            bool hasAnyStock = _itemModel.RuntimeItems.Any(item => item != null && item.Stock.Value > 0);
+            _popUpManager.Show(new PopUpData
+            {
+                Title = "品出しゼロで配信します",
+                Message = hasAnyStock
+                    ? "商品をひとつも並べていません。\nこのまま配信を始めると何も売れませんが、始めますか？"
+                    : "在庫がひとつもありません……。\nこのまま配信を始めると何も売れませんが、始めますか？",
+                ConfirmButtonText = "配信する",
+                CancelButtonText = "やめる",
+                Size = PopupSizeEnum.Medium,
+                OnConfirm = ConfirmSelection,
+            });
+            return;
+        }
+
+        ConfirmSelection();
+    }
+
+    private void ConfirmSelection()
     {
         _model.SaveData();
         _itemModel.SaveData();

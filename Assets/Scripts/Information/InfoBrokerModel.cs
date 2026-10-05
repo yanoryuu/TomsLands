@@ -117,7 +117,7 @@ public class InfoBrokerModel
     {
         var result = new Dictionary<DungeonName, int[]>();
 
-        TextAsset csvFile = Resources.Load<TextAsset>(csvFileName);
+        TextAsset csvFile = AddressableLoader.Load<TextAsset>(csvFileName);
         if (csvFile == null)
         {
             Debug.LogError($"CSV file not found: {csvFileName}");
@@ -194,7 +194,7 @@ public class InfoBrokerModel
 
         string weaponName = currentHeroData?.weaponName.Value ?? "";
         string armorName = currentHeroData?.armorName.Value ?? "";
-        var settings = Resources.Load<BattlePriceSettings>("BattlePriceSettings");
+        var settings = RemoteBalance.ApplyOverwrite("battlePrice", AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings"));
         return HeroBattleInfluence.BuildSummary(currentHeroData, weaponName, armorName, settings);
     }
 
@@ -228,6 +228,8 @@ public class InfoBrokerModel
         }
 
         dungeon.isShowedInfo = true;
+        // 購入直後に永続化（保存しないと「続きから」で情報が未購入に戻る）
+        dungeonRepository.Save();
         Debug.Log($"Purchased dungeon info: {dungeonName}");
     }
 

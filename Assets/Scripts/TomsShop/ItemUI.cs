@@ -50,7 +50,7 @@ public class ItemUI : MonoBehaviour
 
     public void UpdatePrice(int price)
     {
-        priceText.text = $"{price}G";
+        priceText.text = $"{price:N0}G";
     }
 
     public void UpdateStock(int stock)

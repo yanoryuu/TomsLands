@@ -16,15 +16,18 @@ public static class EventDataLoader
     {
         if (_cachedEvents != null) return _cachedEvents;
 
-        var textAsset = Resources.Load<TextAsset>("EventDatas");
+        var textAsset = AddressableLoader.Load<TextAsset>("EventDatas");
         if (textAsset == null)
         {
             Debug.LogError("[EventDataLoader] Resources/EventDatas.csv が見つかりません。");
             return new List<TomsEvent>();
         }
 
-        _cachedEvents = ParseCsv(textAsset.text);
-        Debug.Log($"[EventDataLoader] Loaded {_cachedEvents.Count} events from CSV.");
+        var baked = ParseCsv(textAsset.text);
+
+        // サーバー配信（balance.json の events 区画）があれば全置換、無ければCSVのベイク値
+        _cachedEvents = RemoteBalance.ApplyEvents(baked);
+        Debug.Log($"[EventDataLoader] Loaded {_cachedEvents.Count} events (CSV={baked.Count}, remote={( _cachedEvents != baked ? "適用" : "なし")}).");
         return _cachedEvents;
     }
 
@@ -67,6 +70,9 @@ public static class EventDataLoader
 
             var columns = SplitCsvLine(line);
             if (columns.Count < 3) continue;
+
+            // 空行（idだけでタイトルが無い行）は抽選プールに入れない
+            if (string.IsNullOrWhiteSpace(columns[0]) || string.IsNullOrWhiteSpace(columns[1])) continue;
 
             var e = new TomsEvent
             {

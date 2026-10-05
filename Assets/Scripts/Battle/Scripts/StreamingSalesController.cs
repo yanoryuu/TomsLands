@@ -37,8 +37,37 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>売り場のアイテムの在庫がゼロになった時に発火する。</summary>
     public R3.Subject<RuntimeItemData> OnItemStockDepleted { get; } = new();
 
+    /// <summary>販売中か（StartStreamingPhase〜StopSales の間）。配信コメントの開始・停止判定に使う。</summary>
+    public bool IsSalesActive => _salesActive;
+
+    /// <summary>現在の配信熱（0〜100。未開始なら 0）。</summary>
+    public float CurrentHeat => _heatModel != null ? _heatModel.Heat.Value : 0f;
+
+    /// <summary>現在の配信熱ティア（0=冷め / 1=普通 / 2=盛り上がり / 3=超人気。未開始なら -1）。</summary>
+    public int CurrentHeatTier => _heatModel != null ? _heatModel.GetTierIndex() : -1;
+
     /// <summary>バトル中の累計売上金額を返す。</summary>
     public int GetTotalSalesValue() => _model != null ? _model.GetCurrentTotalSales() : 0;
+
+    /// <summary>
+    /// 販売ループを停止する。戦闘終了時（結果集計の前）に必ず呼ぶこと。
+    /// 呼ばないとリザルト画面表示中も売れ続け、集計スナップショットとの差分が消失する。
+    /// </summary>
+    public void StopSales()
+    {
+        // ターン販売（ExecuteTurnSales）も止める。配信終了ボタン経由だと戦闘ループ自体は
+        // リザルト表示中も裏で回り続けるため、ここで止めないとスナップショット後に売上が積まれて消える。
+        _salesActive = false;
+        if (_salesCts == null) return;
+        _salesCts.Cancel();
+        _salesCts.Dispose();
+        _salesCts = null;
+        Debug.Log("[StreamingSalesController] 販売ループを停止しました。");
+    }
+
+    private System.Threading.CancellationTokenSource _salesCts;
+    /// <summary>販売中か（StartStreamingPhase で true、StopSales で false）。ターン販売のゲート。</summary>
+    private bool _salesActive;
 
     private ItemModel _mainItemModel;
     private StreamingSalesPresenter _presenter;
@@ -58,7 +87,7 @@ public class StreamingSalesController : MonoBehaviour
             if (battlePriceSettings == null && !_priceSettingsLoadAttempted)
             {
                 _priceSettingsLoadAttempted = true;
-                battlePriceSettings = Resources.Load<BattlePriceSettings>("BattlePriceSettings");
+                battlePriceSettings = RemoteBalance.ApplyOverwrite("battlePrice", AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings"));
             }
             if (battlePriceSettings != null)
             {
@@ -124,7 +153,13 @@ public class StreamingSalesController : MonoBehaviour
             itemsForSale = new List<RuntimeItemData>();
         }
 
-        _model = new StreamingSalesModel(baseSalesInterval, intervalRandomness);
+        // 時間経過販売の間隔は GameConst.battleTempo を優先（0 以下ならシーンの値）。
+        // 戦闘テンポを落とした分だけ伸ばし、1配信あたりの時間販売回数を据え置く。
+        var tempo = GameConst.Data?.battleTempo;
+        float salesInterval = tempo != null && tempo.salesLoopIntervalSeconds > 0f ? tempo.salesLoopIntervalSeconds : baseSalesInterval;
+        float salesRandomness = tempo != null && tempo.salesLoopIntervalSeconds > 0f ? Mathf.Max(0f, tempo.salesLoopRandomness) : intervalRandomness;
+        _model = new StreamingSalesModel(salesInterval, salesRandomness);
+        _salesActive = true;
         _model.PauseController = _pauseController;
         _model.SetItemsForSale(itemsForSale);
 
@@ -168,7 +203,11 @@ public class StreamingSalesController : MonoBehaviour
             item.RecordBattlePrice();
         }
 
-        _model.StartSalesLoopAsync(_mainItemModel, this.GetCancellationTokenOnDestroy()).Forget();
+        // 戦闘終了時に StopSales() で止められるよう、破棄トークンとリンクした専用CTSで開始する
+        _salesCts?.Cancel();
+        _salesCts?.Dispose();
+        _salesCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+        _model.StartSalesLoopAsync(_mainItemModel, _salesCts.Token).Forget();
 
         // アイテムが売れた時の通知（顧客演出・店主演出・外部イベント）
         _model.OnItemSold
@@ -357,6 +396,9 @@ public class StreamingSalesController : MonoBehaviour
     /// </summary>
     public void ExecuteTurnSales()
     {
+        // StopSales 後（結果集計済み）は一切売らない
+        if (!_salesActive) return;
+
         if (_model == null || _mainItemModel == null)
         {
             Debug.LogWarning("[StreamingSalesController] Model が未初期化のため、ターン売買をスキップします。");
@@ -416,6 +458,7 @@ public class StreamingSalesController : MonoBehaviour
     private void HandleItemClicked(ItemSlotView slot)
     {
         if (slot == null || slot.CurrentItem == null) return;
+        if (slot.CurrentItem.Stock.Value == 0) return; // 在庫切れはBattleSceneStarterの補充ポップアップで処理
         priceGraphView?.Show(slot.CurrentItem);
     }
 
@@ -589,6 +632,9 @@ private void RefreshSellDisplay()
 
     private void OnDestroy()
     {
+        _salesCts?.Cancel();
+        _salesCts?.Dispose();
+        _salesCts = null;
         _presenter?.Dispose();
         _battleDisposables.Dispose();
         ItemSlotView.OnItemDropped -= HandleItemSwap;

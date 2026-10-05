@@ -1,0 +1,2227 @@
+fileFormatVersion: 2
+guid: dd0b36d958b780745890f34c58e5ce62
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMasterTextureLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Server
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: iPhone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: 4
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: TX Village Building - House 01 02
+      rect:
+        serializedVersion: 2
+        x: 126
+        y: 1727
+        width: 162
+        height: 320
+      alignment: 9
+      pivot: {x: 0.39506173, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8401abacb447aab41be68c2588d846e2
+      internalID: 1508567734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 02
+      rect:
+        serializedVersion: 2
+        x: 352
+        y: 1696
+        width: 224
+        height: 352
+      alignment: 9
+      pivot: {x: 0.5714286, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7aceb12c51434994b8a4ea734df4d7dc
+      internalID: -1600301139
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 01 01
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 1796
+        width: 62
+        height: 252
+      alignment: 9
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cc94c08db980a6d4895e7b694ace1904
+      internalID: -1819673597
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 03 01
+      rect:
+        serializedVersion: 2
+        x: 634
+        y: 1731
+        width: 194
+        height: 215
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 205fc62867e75dc46a8278b0d53ea0ec
+      internalID: 1249819727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 03 02
+      rect:
+        serializedVersion: 2
+        x: 828
+        y: 1751
+        width: 59
+        height: 195
+      alignment: 6
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e468dde3dd06fd40bb57987b0dedee3
+      internalID: 1074166381
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Well 01
+      rect:
+        serializedVersion: 2
+        x: 31
+        y: 32
+        width: 73
+        height: 92
+      alignment: 9
+      pivot: {x: 0.43835616, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c698a156ec9084b4a9c661fdd36bde0c
+      internalID: 1854874221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Shed 01 S
+      rect:
+        serializedVersion: 2
+        x: 694
+        y: 224
+        width: 116
+        height: 101
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 69d4c6350c1f37545a133ea595d4d9be
+      internalID: 1797936350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Shed 01 S Back
+      rect:
+        serializedVersion: 2
+        x: 707
+        y: 200
+        width: 90
+        height: 14
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8b43b07f2051df7448cbc6a48a918669
+      internalID: -2111381322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Tent 01 V R
+      rect:
+        serializedVersion: 2
+        x: 315
+        y: 31
+        width: 55
+        height: 131
+      alignment: 9
+      pivot: {x: 0.49090907, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dcb76ee279763e04a88853a84c925901
+      internalID: -1436146120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Tent 01 H
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 67
+        width: 97
+        height: 101
+      alignment: 9
+      pivot: {x: 0.49484533, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22b2ba7c6fd34114d88de1e64b2d8398
+      internalID: 2146293289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Tent 01 V L
+      rect:
+        serializedVersion: 2
+        x: 539
+        y: 32
+        width: 55
+        height: 131
+      alignment: 9
+      pivot: {x: 0.49090907, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e6eea049157cf93439659e3e4c56b2fb
+      internalID: -321096532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Tower 01 02
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 1282
+        width: 25
+        height: 411
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 39490c99fb8571544b7600b71fc40db2
+      internalID: -152149859
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Tower 01 01
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 1288
+        width: 46
+        height: 405
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2e48e6b639478324f9d4f64eee856ae9
+      internalID: 1585517484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Tower 01 03
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 1251
+        width: 142
+        height: 442
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9cb2be9c5061caf41ba07e8c712b82d1
+      internalID: 1240962266
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 01
+      rect:
+        serializedVersion: 2
+        x: 348
+        y: 1376
+        width: 35
+        height: 282
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 17851219eccfafd4b8c2c88b6fb8d5e9
+      internalID: 321422938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 02
+      rect:
+        serializedVersion: 2
+        x: 383
+        y: 1359
+        width: 12
+        height: 299
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: aafb64fded29623468a6f545a0ad7631
+      internalID: 1109993800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 03
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 1343
+        width: 7
+        height: 315
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ce2d420e7ed70b24dab760e9c66bd554
+      internalID: 1285052070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 04
+      rect:
+        serializedVersion: 2
+        x: 402
+        y: 1349
+        width: 29
+        height: 309
+      alignment: 9
+      pivot: {x: 0.4827586, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c45b23115d3bbf0419cb0275302c2164
+      internalID: 1862014743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 05
+      rect:
+        serializedVersion: 2
+        x: 431
+        y: 1343
+        width: 7
+        height: 315
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43f8ddcc105b2064da1bf2c7b597c1b6
+      internalID: 1417533575
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 06
+      rect:
+        serializedVersion: 2
+        x: 438
+        y: 1359
+        width: 11
+        height: 299
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6a705bbd771e8e8498f7724636030368
+      internalID: 710608319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Chape 01 07
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 1376
+        width: 35
+        height: 282
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5279f7e3e32f248408d9d950d703f49c
+      internalID: -1783221430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Blacksmith 01 01
+      rect:
+        serializedVersion: 2
+        x: 950
+        y: 1839
+        width: 165
+        height: 115
+      alignment: 9
+      pivot: {x: 0.99999994, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e7902c6b121bdcf4fb28c5e9431d66ab
+      internalID: 1041381984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Blacksmith 01 02
+      rect:
+        serializedVersion: 2
+        x: 1115
+        y: 1762
+        width: 89
+        height: 218
+      alignment: 9
+      pivot: {x: 0.505618, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 23ee399c747b5a94ebc11b5f7c848467
+      internalID: -2037434580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Blacksmith 01 03
+      rect:
+        serializedVersion: 2
+        x: 1204
+        y: 1839
+        width: 63
+        height: 115
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 433cbef8ceda00d44a7ad8249c24984b
+      internalID: -833420715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 03 Inner
+      rect:
+        serializedVersion: 2
+        x: 665
+        y: 1664
+        width: 142
+        height: 40
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ce5d287fde018914abd1fb6abafb195e
+      internalID: 249843856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Stall 01
+      rect:
+        serializedVersion: 2
+        x: 635
+        y: 32
+        width: 106
+        height: 102
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 557824121cca0e04dae57d5e64164d4e
+      internalID: -1283969889
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Stall 02
+      rect:
+        serializedVersion: 2
+        x: 763
+        y: 32
+        width: 106
+        height: 102
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1905e5c15bc4d843bfb541d06c9fb0e
+      internalID: -1970078689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Stall 03
+      rect:
+        serializedVersion: 2
+        x: 891
+        y: 32
+        width: 106
+        height: 102
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5856de557804284ebbe2e417b55a622
+      internalID: -1251038297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Stall 04
+      rect:
+        serializedVersion: 2
+        x: 1021
+        y: 32
+        width: 106
+        height: 102
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3ac4682dd1991864aacccc17abc2bc0e
+      internalID: -12814110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Stall 05
+      rect:
+        serializedVersion: 2
+        x: 1147
+        y: 32
+        width: 106
+        height: 102
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d0e722b98536374998ec7264c07a558
+      internalID: 1103208066
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Stall 06
+      rect:
+        serializedVersion: 2
+        x: 1275
+        y: 32
+        width: 106
+        height: 102
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d0f5fc0a49b3afd418bee9ca23036a7c
+      internalID: 1221455242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 04 01
+      rect:
+        serializedVersion: 2
+        x: 1691
+        y: 1699
+        width: 139
+        height: 319
+      alignment: 9
+      pivot: {x: 0.4964029, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fbf938c22245d5545a2f346c2dbfb29c
+      internalID: -437913526
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 04 02
+      rect:
+        serializedVersion: 2
+        x: 1830
+        y: 1797
+        width: 138
+        height: 205
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dccdeb1958ed6134db6812cd9c139253
+      internalID: -664289660
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 H 01
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 224
+        width: 64
+        height: 71
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1064f89f03ff27d4e9b8886867749130
+      internalID: -1347629011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 H Gate
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 224
+        width: 96
+        height: 72
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 72566fdf61dd58c4ab56ff406f034346
+      internalID: 562905441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 Coner TR 01
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 224
+        width: 63
+        height: 71
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5fd0b5674a220834385a9959f70383a4
+      internalID: 112972629
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 Coner TR 02
+      rect:
+        serializedVersion: 2
+        x: 334
+        y: 185
+        width: 37
+        height: 112
+      alignment: 9
+      pivot: {x: 0.4864865, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1f2a430488f4a144cbf8631ca3d4afc3
+      internalID: 543440531
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 V
+      rect:
+        serializedVersion: 2
+        x: 510
+        y: 224
+        width: 37
+        height: 112
+      alignment: 9
+      pivot: {x: 0.4864865, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7381f69c0be2e0b4e81b3368a5d9da92
+      internalID: 923924007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 Coner BL
+      rect:
+        serializedVersion: 2
+        x: 390
+        y: 224
+        width: 90
+        height: 115
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 08cae9868b738e64589b57fc64828e6a
+      internalID: 530456191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 05 01
+      rect:
+        serializedVersion: 2
+        x: 791
+        y: 800
+        width: 185
+        height: 345
+      alignment: 9
+      pivot: {x: 0.49729732, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ab4eae86d6609dd448ad2fe987bf2bf2
+      internalID: 251507027
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 H 02
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 320
+        width: 64
+        height: 71
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1025d936ae3804d4ab6fe5686143efb4
+      internalID: -485152101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 Coner TL 01
+      rect:
+        serializedVersion: 2
+        x: 268
+        y: 313
+        width: 38
+        height: 112
+      alignment: 9
+      pivot: {x: 0.47368422, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 085afb25988cfec4c889454042a518ae
+      internalID: -1130358399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 Coner TL 02
+      rect:
+        serializedVersion: 2
+        x: 321
+        y: 352
+        width: 63
+        height: 71
+      alignment: 9
+      pivot: {x: 1, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 932082d8218529f49a465eb56d66c57e
+      internalID: 401718380
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 Coner BR
+      rect:
+        serializedVersion: 2
+        x: 416
+        y: 352
+        width: 92
+        height: 115
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a532015fbfbd71f4589fee8b1b25f05c
+      internalID: 1357070497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 05 02
+      rect:
+        serializedVersion: 2
+        x: 803
+        y: 736
+        width: 120
+        height: 53
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 83f2552322860fa4885944ef49306c98
+      internalID: -289666714
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Shed 01 W
+      rect:
+        serializedVersion: 2
+        x: 614
+        y: 224
+        width: 60
+        height: 148
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71e184bfccf4a3c4baf2a93fde703135
+      internalID: -2067524291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Shed 01 E
+      rect:
+        serializedVersion: 2
+        x: 830
+        y: 224
+        width: 60
+        height: 147
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a977db25cbfe8844e877e54d125ba127
+      internalID: -824677095
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Wall 01 H 03
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 416
+        width: 64
+        height: 71
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bef959f966c09b042ba444d1971a4304
+      internalID: -1765808798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Warehouse 01
+      rect:
+        serializedVersion: 2
+        x: 1690
+        y: 1440
+        width: 203
+        height: 134
+      alignment: 9
+      pivot: {x: 0.49753693, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1f55d718329a6f149a1446f52939f0e5
+      internalID: 1441466353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 06
+      rect:
+        serializedVersion: 2
+        x: 569
+        y: 1344
+        width: 142
+        height: 279
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 73255cb46792c604db77e0278508498e
+      internalID: -1679128948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 07 01
+      rect:
+        serializedVersion: 2
+        x: 796
+        y: 1416
+        width: 62
+        height: 112
+      alignment: 9
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4d22bc100dbdc534f9b864e8d5d47a7f
+      internalID: 1449631234
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 E 01
+      rect:
+        serializedVersion: 2
+        x: 1832
+        y: 444
+        width: 182
+        height: 58
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d654678775535e342b12d75d5a3d6f55
+      internalID: -1536645311
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 07 02
+      rect:
+        serializedVersion: 2
+        x: 859
+        y: 1408
+        width: 113
+        height: 250
+      alignment: 9
+      pivot: {x: 0.49557522, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 965d1b813378d1b4bb88f46129ca67a6
+      internalID: 577195011
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 07 03
+      rect:
+        serializedVersion: 2
+        x: 990
+        y: 1416
+        width: 193
+        height: 133
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e40a1a011b632b3448a7eb73c678b071
+      internalID: -164127745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 07 04
+      rect:
+        serializedVersion: 2
+        x: 873
+        y: 1184
+        width: 87
+        height: 223
+      alignment: 9
+      pivot: {x: 0.49425286, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b8828fc4cd7104f49b7846158f5635d3
+      internalID: 862690638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 07 Inner
+      rect:
+        serializedVersion: 2
+        x: 1015
+        y: 1344
+        width: 139
+        height: 42
+      alignment: 9
+      pivot: {x: 0.4964029, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e5cf1aa5efc1a1349b13e4b39025f6d7
+      internalID: 929223268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 E 02
+      rect:
+        serializedVersion: 2
+        x: 1928
+        y: 423
+        width: 86
+        height: 21
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2a2cc41c30d4e314b87d50ccda66ed03
+      internalID: 1562274491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 08 01
+      rect:
+        serializedVersion: 2
+        x: 1271
+        y: 1347
+        width: 136
+        height: 330
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3bca717ee1414144784f50800958e4c2
+      internalID: -157376038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 08 02
+      rect:
+        serializedVersion: 2
+        x: 1407
+        y: 1445
+        width: 68
+        height: 182
+      alignment: 9
+      pivot: {x: -0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e136aa9fd54db3e4ab0f383662c7e0d6
+      internalID: -566176441
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 08 Inner 01
+      rect:
+        serializedVersion: 2
+        x: 1293
+        y: 1280
+        width: 45
+        height: 48
+      alignment: 9
+      pivot: {x: 0.4888889, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ac06fdc1f4e97ba4fa455019a816f37d
+      internalID: 1735995204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 08 Inner 02
+      rect:
+        serializedVersion: 2
+        x: 1347
+        y: 1280
+        width: 45
+        height: 48
+      alignment: 9
+      pivot: {x: 0.4888889, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 192e607f2f9228d46bc5207b05f01ae9
+      internalID: 2012800385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 09
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 997
+        width: 271
+        height: 204
+      alignment: 9
+      pivot: {x: 0.49815497, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0a61a198bd2592c44b3c7e333f0780e6
+      internalID: 1730132348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 S 01
+      rect:
+        serializedVersion: 2
+        x: 1932
+        y: 255
+        width: 70
+        height: 143
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fe0a6b769faa992478e048904520e9c8
+      internalID: -383767611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 S 02
+      rect:
+        serializedVersion: 2
+        x: 1833
+        y: 237
+        width: 77
+        height: 87
+      alignment: 9
+      pivot: {x: 0.49315068, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e59ed3fea97ca9747a554669640a294f
+      internalID: 1621526345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 10 01
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 1089
+        width: 158
+        height: 216
+      alignment: 9
+      pivot: {x: 0.43670887, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b2b89fc025b85b848b965b7e3e30529d
+      internalID: 404467726
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 10 02
+      rect:
+        serializedVersion: 2
+        x: 576
+        y: 1145
+        width: 52
+        height: 104
+      alignment: 9
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 22dacb90670d2cd4ab06c17c62839f14
+      internalID: 913489288
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 11 01
+      rect:
+        serializedVersion: 2
+        x: 1557
+        y: 1059
+        width: 145
+        height: 354
+      alignment: 9
+      pivot: {x: 0.49655172, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8741a6193d4a77640be463097092e106
+      internalID: -1441482764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 11 02
+      rect:
+        serializedVersion: 2
+        x: 1491
+        y: 1234
+        width: 43
+        height: 126
+      alignment: 9
+      pivot: {x: 1, y: 0.023809526}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f06e9b9b5554bc459d397f0c3fc025e
+      internalID: -1589923630
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 11 03
+      rect:
+        serializedVersion: 2
+        x: 1759
+        y: 1079
+        width: 226
+        height: 55
+      alignment: 9
+      pivot: {x: 0, y: 0.16363636}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a8d3db0f057e9148b5830f97dd72ca8
+      internalID: 354369025
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 11 Chimney
+      rect:
+        serializedVersion: 2
+        x: 1728
+        y: 1291
+        width: 28
+        height: 115
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 644b503702c7dd44da32f2caead0caf7
+      internalID: -604443375
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 11 04
+      rect:
+        serializedVersion: 2
+        x: 1709
+        y: 1156
+        width: 280
+        height: 93
+      alignment: 9
+      pivot: {x: -0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 38d9bd94ea9ccae4d93a55439a8f6721
+      internalID: 462312801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 11 Inner
+      rect:
+        serializedVersion: 2
+        x: 1918
+        y: 1024
+        width: 32
+        height: 45
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42b5a1424fce3d2438967b44e66fca0a
+      internalID: -874213847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 W 01
+      rect:
+        serializedVersion: 2
+        x: 1633
+        y: 444
+        width: 182
+        height: 58
+      alignment: 9
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bee74e3de62069b46806364f8e031691
+      internalID: -1032454425
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 W 02
+      rect:
+        serializedVersion: 2
+        x: 1633
+        y: 423
+        width: 87
+        height: 21
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8854bd83cc352d54eaeaddf140c5bbaa
+      internalID: -1307189706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Teepee 01
+      rect:
+        serializedVersion: 2
+        x: 967
+        y: 227
+        width: 82
+        height: 108
+      alignment: 9
+      pivot: {x: 0.49999997, y: 0.055555556}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4b4e0d06be890f648a1846ea41925eb1
+      internalID: -2099075269
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Shrine 01
+      rect:
+        serializedVersion: 2
+        x: 1435
+        y: 32
+        width: 42
+        height: 90
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape:
+      - - {x: -12, y: -44}
+        - {x: -12, y: -31}
+        - {x: -15, y: -31}
+        - {x: -15, y: -16}
+        - {x: 16, y: -16}
+        - {x: 16, y: -31}
+        - {x: 13, y: -31}
+        - {x: 13, y: -44}
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb4f231cbeaf2ab4ebcac281df15e6c2
+      internalID: -512258666
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Shrine 01 Lit
+      rect:
+        serializedVersion: 2
+        x: 1499
+        y: 32
+        width: 42
+        height: 90
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 76d95b3ca68ceeb4380cc3485bd3563f
+      internalID: 1049674931
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 12 01
+      rect:
+        serializedVersion: 2
+        x: 1807
+        y: 748
+        width: 132
+        height: 244
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b7b71ca3a650b794895099d60e8437bb
+      internalID: -1275020715
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 12 02
+      rect:
+        serializedVersion: 2
+        x: 1434
+        y: 800
+        width: 356
+        height: 145
+      alignment: 9
+      pivot: {x: 1, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 29878aa1a046e4247a0343254d533eca
+      internalID: -771086897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 12 03
+      rect:
+        serializedVersion: 2
+        x: 1992
+        y: 818
+        width: 29
+        height: 118
+      alignment: 9
+      pivot: {x: 0, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 284fa3015bb6bf742bb99bca12c10bd5
+      internalID: -1765868868
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 13 01
+      rect:
+        serializedVersion: 2
+        x: 1220
+        y: 1028
+        width: 189
+        height: 187
+      alignment: 9
+      pivot: {x: 0.49735448, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f5018e14a25765149a6f90c36dce0a5b
+      internalID: -461629110
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 13 02
+      rect:
+        serializedVersion: 2
+        x: 1220
+        y: 896
+        width: 87
+        height: 97
+      alignment: 9
+      pivot: {x: 0.49425286, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ec56f0db7a047b4baf794fd3bc8cb72
+      internalID: -1586711873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 14 01
+      rect:
+        serializedVersion: 2
+        x: 59
+        y: 832
+        width: 223
+        height: 146
+      alignment: 9
+      pivot: {x: 0.49775788, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d0ebeef77a98fa4fac185affcb51bd3
+      internalID: 2003560657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 14 02
+      rect:
+        serializedVersion: 2
+        x: 86
+        y: 672
+        width: 86
+        height: 153
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d4e1810cf9bc99546a73325d8a79eade
+      internalID: 1059880272
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Barn 01
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 826
+        width: 114
+        height: 188
+      alignment: 9
+      pivot: {x: 0.5, y: 0.053191487}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 63b30ca9a9402ec469385b37075b2124
+      internalID: 1926213930
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Barn 01 Inner
+      rect:
+        serializedVersion: 2
+        x: 419
+        y: 768
+        width: 32
+        height: 45
+      alignment: 9
+      pivot: {x: 0.5, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dac02c99ea950f440a37c5909ead25a1
+      internalID: -1192502602
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - House 15
+      rect:
+        serializedVersion: 2
+        x: 571
+        y: 814
+        width: 144
+        height: 232
+      alignment: 9
+      pivot: {x: 0.5069445, y: 0.20689654}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 32bbbe471171cb949982dc4f4bfe22dc
+      internalID: 152645679
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 N 01
+      rect:
+        serializedVersion: 2
+        x: 1726
+        y: 243
+        width: 68
+        height: 140
+      alignment: 9
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5fbcf4689b88e87488d86f7bde4785b2
+      internalID: 1359237453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Dock 01 N 02
+      rect:
+        serializedVersion: 2
+        x: 1641
+        y: 301
+        width: 77
+        height: 87
+      alignment: 9
+      pivot: {x: 0.4935065, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e551d8badc2b6e049aec03ae6b12bda4
+      internalID: -647739944
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Blacksmith 01 Chimney
+      rect:
+        serializedVersion: 2
+        x: 1315
+        y: 1853
+        width: 59
+        height: 168
+      alignment: 9
+      pivot: {x: 0.4915254, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5a34b8feec1516740b5ff94b5398b75f
+      internalID: 230532994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Blacksmith 01 Chimney Lit
+      rect:
+        serializedVersion: 2
+        x: 1411
+        y: 1853
+        width: 59
+        height: 168
+      alignment: 9
+      pivot: {x: 0.4915254, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 71a40f74fd3ccc240b563dca87dd772d
+      internalID: 1698540348
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building - Blacksmith 01 Chimney Inner Mask
+      rect:
+        serializedVersion: 2
+        x: 1331
+        y: 1824
+        width: 27
+        height: 11
+      alignment: 9
+      pivot: {x: 0.4814815, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 745125052a7886147b58734496810978
+      internalID: -1914696125
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: TX Village Building_0
+      rect:
+        serializedVersion: 2
+        x: 1331
+        y: 1824
+        width: 27
+        height: 11
+      alignment: 9
+      pivot: {x: 0.4814815, y: -0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 02903b59d3c85e54b99e58d3dd8ab014
+      internalID: 1570833063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      TX Village Building - Tower 01 - Shed: -1739351416
+      TX Village Building - Wall 01 Coner TL 01: -1130358399
+      TX Village Building - House 14 02: 1059880272
+      TX Village Building - House 12 01: -1275020715
+      TX Village Building - House 12 02: -771086897
+      TX Village Building - Tower 01 03: 1585517484
+      TX Village Building - House 08 02: -566176441
+      TX Village Building - House 15: 152645679
+      TX Village Building - House 01 02: 1508567734
+      TX Village Building - Wall 01 Coner TR 01: 112972629
+      TX Village Building - Dock 01 E 01: -1536645311
+      TX Village Building - Dock 01 S 02: 1621526345
+      TX Village Building - Stall 03: 1249819727
+      TX Village Building - Wall 01 V: 923924007
+      TX Village Building - Dock 01 N 02: -647739944
+      TX Village Building - House 14 01: 2003560657
+      TX Village Building - Chape 01 06: -1283969889
+      TX Village Building - Chape 01 07: 1797936350
+      TX Village Building - Shed 01 W: -2067524291
+      TX Village Building - Stall 06: 1221455242
+      TX Village Building_2: 1386868516
+      TX Village Building - House 12 03: -1765868868
+      TX Village Building - House 05 01: 251507027
+      TX Village Building - Well 01: 321422938
+      TX Village Building - Chape 01 01: -12814110
+      TX Village Building - Wall 01 Coner TL 02: 401718380
+      TX Village Building - Warehouse 01: 1441466353
+      TX Village Building - Dock 01 N 01: 1359237453
+      TX Village Building - Blacksmith 01 Chimney Lit: 1698540348
+      TX Village Building - Blacksmith 01 03: -833420715
+      TX Village Building - House 07 01: 1449631234
+      TX Village Building - Tower 01 - Stairs B: -1309858519
+      TX Village Building - Tower 01 - Stairs M: 2115182465
+      TX Village Building_0: 1570833063
+      TX Village Building - Shrine 01: -512258666
+      TX Village Building - House 02: 1109993800
+      TX Village Building - House 13 02: -1586711873
+      TX Village Building - House 11 03: 354369025
+      TX Village Building - House 10 01: 404467726
+      TX Village Building - House 10 02: 913489288
+      TX Village Building - Stall 01: -321096532
+      TX Village Building - House 07 02: 577195011
+      TX Village Building - House 11 02: -1589923630
+      TX Village Building - Tent 01 V L: -1783221430
+      TX Village Building - Tower 01 02: -1970078689
+      TX Village Building - Teepee 01: -2099075269
+      TX Village Building - Tower 01 01: -1251038297
+      TX Village Building - Barn 01 Inner: -1192502602
+      TX Village Building - Chape 01 04: 1862014743
+      TX Village Building - Wall 01 H Gate: 562905441
+      TX Village Building - House 01 01: -1819673597
+      TX Village Building - Wall 01 H 01: -1347629011
+      TX Village Building - Shrine 01 Lit: 1049674931
+      TX Village Building - House 11 Inner: -874213847
+      TX Village Building - House 03 Inner: 249843856
+      TX Village Building - Tent 01 H: 2146293289
+      TX Village Building - House 07 Inner: 929223268
+      TX Village Building - House 07 03: -164127745
+      TX Village Building - Shed 01 S: 1797936350
+      TX Village Building - Wall 01 Coner BR: 1357070497
+      TX Village Building - House 09: 1730132348
+      TX Village Building - Stall 05: 1103208066
+      TX Village Building - Dock 01 S 01: -383767611
+      TX Village Building - Wall 01 H 03: -1765808798
+      TX Village Building - Wall 01 Coner BL: 530456191
+      TX Village Building - House 08 Inner 02: 2012800385
+      TX Village Building - House 11 Chimney: -604443375
+      TX Village Building - Stall 02: 1854874221
+      TX Village Building - Wall 01 H 02: -485152101
+      TX Village Building - Stall 04: -472747565
+      TX Village Building - Shed 01 S Back: -2111381322
+      TX Village Building - Blacksmith 01 Chimney Inner Mask: -1914696125
+      TX Village Building - Chape 01 05: 1417533575
+      TX Village Building - House 06: -1679128948
+      TX Village Building - Dock 01 E 02: 1562274491
+      TX Village Building - House 11 01: -1441482764
+      TX Village Building - House 08 Inner 01: 1735995204
+      TX Village Building - House 03 02: 1074166381
+      TX Village Building - Tent 01 V R: -1436146120
+      TX Village Building - Barn 01: 1926213930
+      TX Village Building - House 04 02: -664289660
+      TX Village Building - Shed 01 E: -824677095
+      TX Village Building - Dock Platform 01: -1145947853
+      TX Village Building - Blacksmith 01 02: -2037434580
+      TX Village Building - Wall 01 Coner TR 02: 543440531
+      TX Village Building - Dock 01 W 02: -1307189706
+      TX Village Building - House 05 02: -289666714
+      TX Village Building - House 03 01: -1600301139
+      TX Village Building - Chape 01 02: 284815137
+      TX Village Building - Tower 01 - Door: 1285052070
+      TX Village Building - House 13 01: -461629110
+      TX Village Building - Chape 01 03: 1041381984
+      TX Village Building - Blacksmith 01 01: 710608319
+      TX Village Building - House 11 04: 462312801
+      TX Village Building - House 04 01: -437913526
+      TX Village Building - House 07 04: 862690638
+      TX Village Building - Blacksmith 01 Chimney: 230532994
+      TX Village Building - House 08 01: -157376038
+      TX Village Building - Dock 01 W 01: -1032454425
+      TX Village Building - Tower 01 - Stairs F: -152149859
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Texture/TX Village Building.png
+  uploadId: 984298

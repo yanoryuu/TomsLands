@@ -24,15 +24,41 @@ public class GameBalanceData : ScriptableObject
     // =====================================================
     // バズ確率計算
     // =====================================================
-    [Header("バズ確率計算")]
-    [Tooltip("バズ発生確率における注目度の係数（基本確率 = 注目度 × この値 + 信頼度 × 信頼度係数）")]
+    [Header("バズ確率計算（強化度合いの算出用）")]
+    [Tooltip("強化度合いにおける注目度の係数（強化ボーナス = 注目度 × この値 + 信頼度 × 信頼度係数 + フォロワーボーナス）")]
     public float buzzAttentionCoeff = 0.5f;
 
-    [Tooltip("バズ発生確率における信頼度の係数")]
+    [Tooltip("強化度合いにおける信頼度の係数")]
     public float buzzTrustCoeff = 0.2f;
 
-    [Tooltip("バズ発生確率の最大値（フォロワーボーナスを除く、%単位）")]
+    [Tooltip("強化ボーナスの正規化基準値。強化ボーナスがこの値に達すると発生率が最大になる（%単位）")]
     public float buzzMaxBaseChance = 50f;
+
+    [Header("バズ発生率")]
+    [Tooltip("通常バズの基礎発生率（%）。強化なしのときの毎ターン発生率")]
+    [Range(0f, 100f)]
+    public float buzzBaseChance = 10f;
+
+    [Tooltip("通常バズの最大発生率（%）。強化が最大のときの発生率")]
+    [Range(0f, 100f)]
+    public float buzzMaxChance = 20f;
+
+    [Tooltip("超バズの基礎発生率（%）。強化なしのときの毎ターン発生率")]
+    [Range(0f, 100f)]
+    public float bigBuzzBaseChance = 1f;
+
+    [Tooltip("超バズの最大発生率（%）。強化が最大のときの発生率")]
+    [Range(0f, 100f)]
+    public float bigBuzzMaxChance = 5f;
+
+    [Header("バズ継続・発展")]
+    [Tooltip("バズが次のターンも継続する確率（%）。失敗するとそのターンで終了する")]
+    [Range(0f, 100f)]
+    public float buzzContinueChance = 50f;
+
+    [Tooltip("通常バズが超バズへ発展する確率（%）。バズ継続中に毎ターン判定される")]
+    [Range(0f, 100f)]
+    public float buzzEvolveToBigChance = 20f;
 
     // =====================================================
     // バズ種類判定
@@ -45,8 +71,8 @@ public class GameBalanceData : ScriptableObject
     [Range(0f, 100f)]
     public float flameChance = 30f;
 
-    [Tooltip("大バズになる信頼度の閾値（信頼度がこの値以上のとき大バズになる）")]
-    public int bigBuzzTrustThreshold = 80;
+    // ※旧 bigBuzzTrustThreshold（信頼度閾値による大バズ確定）は
+    //   バズ確率の新方式（bigBuzzBaseChance～bigBuzzMaxChance の独立ロール）移行に伴い廃止。
 
     // =====================================================
     // 初期値

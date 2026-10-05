@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_press
+  m_EditorClassIdentifier: 
+  facilityId: press
+  facilityName: "\u5370\u5237\u6240"
+  description: "\u5642\u306F\u5237\u3063\u3066\u5E83\u3081\u308B\u6642\u4EE3\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 4000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
+      +10"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 9000
+    effectText: "\u3055\u3089\u306B\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
+      +10\uFF08\u8A08+1,000/+20\uFF09"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

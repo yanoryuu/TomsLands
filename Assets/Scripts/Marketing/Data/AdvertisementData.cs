@@ -34,6 +34,11 @@ public class AdvertisementData : ScriptableObject
     [Tooltip("顧客維持力の上昇量（0〜100）")]
     public int retentionGain;
 
+    [Tooltip("この広告で上げられる各ステータス（信頼/注目/拡散/維持。フォロワーは対象外）の上限（マックス）。" +
+             "現在値がこの値以上のステータスは上昇しない（上限を超えないよう上昇量が削られる）。" +
+             "0 = 個別上限なし（GameBalanceData.statMax まで上がる）。")]
+    public int statMax;
+
     [Header("フォロワー")]
     [Tooltip("フォロワー獲得量")]
     public int followerGain;

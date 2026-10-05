@@ -63,7 +63,10 @@ public class BattleOutputData : ScriptableObject
 public class BattleOutputSoldItem
 {
     public string ItemId;
+    /// <summary>実際に売れた総数（バトル中の補充分も含む。リザルト表示用）</summary>
     public int SoldQuantity;
+    /// <summary>ショップ在庫から減らす数（持ち込み数が上限。補充分は店在庫に無いため含めない）</summary>
+    public int SoldFromStock;
     public int SoldPrice;
 }
 

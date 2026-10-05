@@ -13,7 +13,10 @@ public class DungeonLevelUpView : MonoBehaviour
     [Header("詳細パネル")]
     [SerializeField] private TextMeshProUGUI detailDungeonNameText;
     [SerializeField] private TextMeshProUGUI detailLevelText;
+    [Tooltip("防衛報酬（勇者敗北時のrewardGold）の変化表示")]
     [SerializeField] private TextMeshProUGUI detailRewardText;
+    [Tooltip("勇者のクリア確率の変化表示")]
+    [SerializeField] private TextMeshProUGUI detailClearProbabilityText;
 
     [Header("モンスター表示")]
     [SerializeField] private Transform  currentMonsterContainer;
@@ -47,9 +50,10 @@ public class DungeonLevelUpView : MonoBehaviour
 
     public void ShowDungeonDetail(DungeonLevelUpDetailData detail)
     {
-        if (detailDungeonNameText) detailDungeonNameText.text = detail.DungeonName;
-        if (detailLevelText)       detailLevelText.text       = detail.LevelText;
-        if (detailRewardText)      detailRewardText.text      = detail.RewardText;
+        if (detailDungeonNameText)      detailDungeonNameText.text      = detail.DungeonName;
+        if (detailLevelText)            detailLevelText.text            = detail.LevelText;
+        if (detailRewardText)           detailRewardText.text           = detail.RewardText;
+        if (detailClearProbabilityText) detailClearProbabilityText.text = detail.ClearProbabilityText;
 
         PopulateMonsterContainer(currentMonsterContainer, currentMonsterObjects, detail.CurrentMonsters);
         PopulateMonsterContainer(nextMonsterContainer,    nextMonsterObjects,    detail.NextMonsters);
@@ -57,9 +61,10 @@ public class DungeonLevelUpView : MonoBehaviour
 
     public void ClearDungeonDetail()
     {
-        if (detailDungeonNameText) detailDungeonNameText.text = string.Empty;
-        if (detailLevelText)       detailLevelText.text       = string.Empty;
-        if (detailRewardText)      detailRewardText.text      = string.Empty;
+        if (detailDungeonNameText)      detailDungeonNameText.text      = string.Empty;
+        if (detailLevelText)            detailLevelText.text            = string.Empty;
+        if (detailRewardText)           detailRewardText.text           = string.Empty;
+        if (detailClearProbabilityText) detailClearProbabilityText.text = string.Empty;
 
         ClearMonsterObjects(currentMonsterObjects);
         ClearMonsterObjects(nextMonsterObjects);
@@ -132,7 +137,10 @@ public class DungeonLevelUpDetailData
 {
     public string          DungeonName;
     public string          LevelText;
+    /// <summary>防衛報酬（勇者敗北時のrewardGold）の変化表示</summary>
     public string          RewardText;
+    /// <summary>勇者のクリア確率の変化表示</summary>
+    public string          ClearProbabilityText;
     public List<EnemyData> CurrentMonsters;
     public List<EnemyData> NextMonsters;
 }

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 3ea9c95b914d3f146831e7fb82bf56f6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Washtub 02.prefab
+  uploadId: 984298

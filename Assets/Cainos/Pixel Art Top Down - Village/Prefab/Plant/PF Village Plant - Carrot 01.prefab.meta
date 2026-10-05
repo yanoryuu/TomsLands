@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0b987dea51bc1364aae8587cca51ecd6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Plant/PF Village Plant
+    - Carrot 01.prefab
+  uploadId: 984298

@@ -38,13 +38,13 @@ public class BattleLifetimeScope : LifetimeScope
         // SO を共有データとして登録
         if (battleInputData == null)
         {
-            battleInputData = Resources.Load<BattleInputData>("SceneData/BattleInputData") ?? ScriptableObject.CreateInstance<BattleInputData>();
+            battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData") ?? ScriptableObject.CreateInstance<BattleInputData>();
             Debug.LogWarning("[BattleLifetimeScope] BattleInputData が未設定だったため、Resourcesまたは実行時インスタンスを使用します。");
         }
 
         if (battleOutputData == null)
         {
-            battleOutputData = Resources.Load<BattleOutputData>("SceneData/BattleOutputData") ?? ScriptableObject.CreateInstance<BattleOutputData>();
+            battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData") ?? ScriptableObject.CreateInstance<BattleOutputData>();
             Debug.LogWarning("[BattleLifetimeScope] BattleOutputData が未設定だったため、Resourcesまたは実行時インスタンスを使用します。");
         }
 
@@ -53,7 +53,7 @@ public class BattleLifetimeScope : LifetimeScope
 
         // ダンジョンカタログを構築して登録
         // Inspector リストが空/不足なら、プロジェクト内の全 DungeonInfoScriptableObj を自動収集
-        var allDungeons = CollectAllDungeonInfos();
+        var allDungeons = RemoteBalance.ApplyList("dungeons", CollectAllDungeonInfos(), d => d.key.ToString());
         var catalog = new DungeonCatalog(allDungeons);
         builder.RegisterInstance<IDungeonCatalog>(catalog);
 
@@ -80,12 +80,12 @@ public class BattleLifetimeScope : LifetimeScope
             Debug.LogWarning("[BattleLifetimeScope] StreamingSalesController が未設定です。");
         }
 
-        // ItemModel（マスターデータ）を構築して登録
-        var masterItems = Resources.LoadAll<ItemData>("ItemData").ToList();
+        // ItemModel（マスターデータ）を構築して登録。スプレッドシート由来の上書きを適用。
+        var masterItems = ItemMaster.ApplyOverrides(AddressableLoader.LoadAll<ItemData>("ItemData"));
         builder.RegisterInstance(masterItems);
 
         // ItemVisualSettings のロードと登録
-        var itemVisualSettings = Resources.Load<ItemVisualSettings>("ItemVisualSettings");
+        var itemVisualSettings = AddressableLoader.Load<ItemVisualSettings>("ItemVisualSettings");
         if (itemVisualSettings == null)
         {
             itemVisualSettings = ScriptableObject.CreateInstance<ItemVisualSettings>();
@@ -100,6 +100,10 @@ public class BattleLifetimeScope : LifetimeScope
 
         // シーン遷移サービス
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
+
+        // 配信チュートリアルの会話（既読フラグは metaData.json）
+        builder.Register<MetaProgressModel>(Lifetime.Singleton);
+        builder.Register<TutorialScenarioService>(Lifetime.Singleton);
 
         // StreamingSetting（品出し設定）
         builder.Register<StreamingSettingModel>(Lifetime.Singleton);
@@ -138,6 +142,12 @@ public class BattleLifetimeScope : LifetimeScope
 
         // 戦闘開始の EntryPoint（IAsyncStartable）
         builder.RegisterEntryPoint<BattleSceneStarter>();
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F12で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
 
         Debug.Log($"[BattleLifetimeScope] Configured. Dungeon catalog size: {allDungeons.Count}");
     }

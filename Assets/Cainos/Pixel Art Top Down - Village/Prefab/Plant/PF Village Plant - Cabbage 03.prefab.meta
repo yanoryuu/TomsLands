@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d3461097b8392e54a8cdf4c4e94d5b57
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Plant/PF Village Plant
+    - Cabbage 03.prefab
+  uploadId: 984298

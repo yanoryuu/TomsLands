@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ba5fd8053a5a60848a697a4513b65547, type: 3}
+  m_Name: relic_fairy_coin
+  m_EditorClassIdentifier: 
+  relicId: relic_fairy_coin
+  relicName: "\u5996\u7CBE\u306E\u30B3\u30A4\u30F3"
+  description: "\u826F\u3044\u3053\u3068\u304C\u8D77\u304D\u3084\u3059\u3044\u6C17\u304C\u3059\u308B\u3002\u30A4\u30D9\u30F3\u30C8\u3067\u5F97\u308B\u91D1\u984D+50%\u3002"
+  icon: {fileID: 0}
+  rarity: 0
+  category: 0
+  isCurse: 0
+  modifiers:
+  - stat: 9
+    op: 1
+    value: 1.5
+  behaviours: []

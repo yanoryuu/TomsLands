@@ -1,0 +1,99 @@
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using R3;
+using VContainer.Unity;
+
+public class GameOverPresenter : IDisposable, IStartable
+{
+    private readonly GameOverView gameOverView;
+    private readonly TomsModel tomsModel;
+    private readonly SceneTransitionService sceneTransitionService;
+    private readonly MetaProgressModel metaProgress;
+    private readonly CompositeDisposable disposables = new();
+
+    private bool metaAwarded;
+
+    // 破産を受け止めるトコの会話。再生中は村へ戻るボタンを受け付けない（会話を途中で切らないため）
+    private readonly CancellationTokenSource cts = new();
+    private bool isTalking;
+
+    public GameOverPresenter(
+        GameOverView gameOverView,
+        TomsModel tomsModel,
+        SceneTransitionService sceneTransitionService,
+        MetaProgressModel metaProgress)
+    {
+        this.gameOverView = gameOverView;
+        this.tomsModel = tomsModel;
+        this.sceneTransitionService = sceneTransitionService;
+        this.metaProgress = metaProgress;
+    }
+
+    public void Start()
+    {
+        gameOverView.Setup(tomsModel.CurrentTurn.Value);
+
+        // もう一度 / タイトルへ: いずれも村へ帰還する（村に[タイトルへ]ボタンがある）
+        gameOverView.OnRetryClicked
+            .Subscribe(_ => FinishRunAndGoVillage())
+            .AddTo(disposables);
+
+        gameOverView.OnGoToTitleClicked
+            .Subscribe(_ => FinishRunAndGoVillage())
+            .AddTo(disposables);
+
+        // 破産画面のあとに、トコがその場で受け止める（いきなり終わらないように）
+        PlayBankruptTalkAsync().Forget();
+    }
+
+    private async UniTaskVoid PlayBankruptTalkAsync()
+    {
+        isTalking = true;
+        try
+        {
+            await TokoTalk.PlayAsync(TokoTalk.SelectBankruptLabel(tomsModel.DebtCycle.Value), cts.Token);
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception e)
+        {
+            UnityEngine.Debug.LogError($"[GameOverPresenter] 破産の会話に失敗しました。\n{e}");
+        }
+        finally
+        {
+            isTalking = false;
+        }
+    }
+
+    /// <summary>
+    /// 破産ランの後始末: メタ通貨を少量精算（到達ターン分）+ 手元現金の一部を村資金へ変換
+    /// （「破産したけど村は育った」= 敗北の無害化）してから、ラン内セーブを削除し村へ帰還する
+    /// （残すと「続きから」で破産直前が復活してしまう）。
+    /// </summary>
+    private void FinishRunAndGoVillage()
+    {
+        if (isTalking) return;
+        if (!metaAwarded && metaProgress != null)
+        {
+            metaAwarded = true;
+            int earned = metaProgress.RecordRunEnd(
+                cleared: false, netWorth: 0, rank: "", totalTurns: tomsModel.CurrentTurn.Value);
+
+            int finalCash = tomsModel.PlayerMoney.Value;
+            int converted = metaProgress.ConvertRunToVillageFunds(
+                cleared: false, netWorth: 0, finalCash: finalCash);
+            VillageArrivalReport.Set(cleared: false, earned: finalCash, converted: converted);
+
+            UnityEngine.Debug.Log($"[GameOverPresenter] 破産: 村資金+{converted}G（救済レート適用）");
+        }
+        RunSaveCleaner.DeleteRunFiles();
+        sceneTransitionService.GoToVillage();
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        disposables.Dispose();
+    }
+}

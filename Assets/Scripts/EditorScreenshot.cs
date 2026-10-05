@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class EditorScreenshot
 {
-    [MenuItem("Tools/Screenshot")]
+    [MenuItem("Tools/TomsLands/デバッグ/スクリーンショット")]
     private static void TakeScreenshot()
     {
         var now = DateTime.Now;

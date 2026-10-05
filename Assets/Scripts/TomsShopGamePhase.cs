@@ -13,4 +13,7 @@ public enum TomsShopGamePhase
     TurnEndSummary,
     Advertisement,
     Prophet,
+    ShopUpgrade,
+    MachineShop,
+    Newspaper,
 }

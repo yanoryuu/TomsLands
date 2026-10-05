@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: b1eb1622071c7914485bf3594c70c259
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Barrel 05.prefab
+  uploadId: 984298

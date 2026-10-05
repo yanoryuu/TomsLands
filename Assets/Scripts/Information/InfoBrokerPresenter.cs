@@ -11,6 +11,10 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
     private readonly StateManager stateManager;
     private readonly MapInfoView mapInfoView;
     private readonly TomsModel tomsModel;
+    private readonly GameFlowManager gameFlowManager;
+    private readonly PortfolioModel portfolioModel;
+    private readonly DungeonIntelModel dungeonIntel;
+    private readonly ExchangePanelController exchange;
     private int characterTalkIndex;
 
     public InfoBrokerPresenter(
@@ -18,13 +22,28 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         InfoBrokerView infoBrokerView,
         StateManager stateManager,
         MapInfoView mapInfoView,
-        TomsModel tomsModel)
+        TomsModel tomsModel,
+        GameFlowManager gameFlowManager,
+        PortfolioModel portfolioModel,
+        FinanceSettings financeSettings,
+        ItemModel itemModel,
+        DungeonIntelModel dungeonIntel)
     {
         this.infoBrokerModel = infoBrokerModel;
         this.infoBrokerView = infoBrokerView;
         this.stateManager = stateManager;
         this.mapInfoView = mapInfoView;
         this.tomsModel = tomsModel;
+        this.gameFlowManager = gameFlowManager;
+        this.portfolioModel = portfolioModel;
+        this.dungeonIntel = dungeonIntel;
+
+        // 取引所（金融商品の売買）は情報屋の1タブとして提供する
+        exchange = new ExchangePanelController(
+            portfolioModel, financeSettings, tomsModel, itemModel, gameFlowManager,
+            infoBrokerView.PopulateFinanceRows,
+            () => infoBrokerView.FinanceDetail,
+            infoBrokerView.ShowDialogue);
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Broker, Entry);
     }
@@ -54,6 +73,21 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => infoBrokerView.ShowDialogue(GetNextCharacterTalk()))
             .AddTo(disposables);
 
+        // 情報屋専用の所持金表示（情報屋表示中はCommonViewを出さないため常時追従）
+        // 所持金の変化で開発パネルのボタン活性も追従させる
+        tomsModel.PlayerMoney
+            .Subscribe(money =>
+            {
+                infoBrokerView.UpdatePlayerMoney(money);
+                RefreshDevelopmentPanel();
+            })
+            .AddTo(disposables);
+
+        // レベルアップボタン
+        infoBrokerView.OnLevelUpRequested
+            .Subscribe(_ => HandleLevelUp())
+            .AddTo(disposables);
+
         infoBrokerView.OnRefreshRequested
             .Subscribe(_ => infoBrokerModel.UpdateInfoMessages())
             .AddTo(disposables);
@@ -63,10 +97,20 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             {
                 infoBrokerView.SortItemTab(tab);
                 infoBrokerView.ShowPanel(tab);
-                infoBrokerView.ShowDialogue(InfoBrokerDialogueLoader.Get("map"));
-                if (tab == InfoBrokerTab.Map)
+                switch (tab)
                 {
-                    ShowMapInfo();
+                    case InfoBrokerTab.Map:
+                        infoBrokerView.ShowDialogue(InfoBrokerDialogueLoader.Get("map"));
+                        ShowMapInfo();
+                        break;
+                    case InfoBrokerTab.Exchange:
+                        infoBrokerView.ShowDialogue("取引所へようこそ。債券やファンドで余った資金を働かせよう。");
+                        exchange.Refresh();
+                        break;
+                    case InfoBrokerTab.Development:
+                        infoBrokerView.ShowDialogue("情報網に投資するかい？レベルが上がれば、取引所で扱える商品が増えるよ。");
+                        RefreshDevelopmentPanel();
+                        break;
                 }
             })
             .AddTo(disposables);
@@ -87,7 +131,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         mapInfoView.SetMapSlot(
             infoBrokerModel.availableDungeons,
             infoBrokerModel.GetDungeonInfoCosts(),
-            1);
+            gameFlowManager.BattleCount.Value + 1);
     }
 
     private void PurchaseDungeonInfo(DungeonName dungeonName)
@@ -99,14 +143,15 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             return;
         }
 
-        int currentTurn = tomsModel.CurrentTurn.Value;
+        int battleCount = gameFlowManager.BattleCount.Value;
         int[] costArray = costs[dungeonName];
-        int cost = costArray.Length >= currentTurn && currentTurn > 0
-            ? costArray[currentTurn - 1]
+        int cost = costArray.Length > battleCount
+            ? costArray[battleCount]
             : costArray[costArray.Length - 1];
 
         if (tomsModel.PlayerMoney.Value < cost)
         {
+            infoBrokerView.ShowDialogue($"金が足りないな。その情報は {cost:N0}G だ。");
             Debug.Log($"[InfoBrokerPresenter] 所持金不足: 必要 {cost}G / 所持 {tomsModel.PlayerMoney.Value}G");
             return;
         }
@@ -114,8 +159,73 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         tomsModel.PurchaseItem(cost);
         tomsModel.SavePlayerMoney();
         infoBrokerModel.PurchaseDungeonInfo(dungeonName);
-        mapInfoView.RemoveSlot(dungeonName);
+        // 弱点属性を「確定した知識」として記録する。これを持って初めて
+        // 仕入れ画面のバナーと預言者が弱点を開示する（Docs/News_Spec.md §2 C4）。
+        dungeonIntel?.MarkWeaknessKnown(dungeonName);
+        SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+
+        // リストを購入済み表示に更新し、右の詳細に解放された情報をそのまま見せる
+        ShowMapInfo();
+        mapInfoView.SelectDungeon(dungeonName);
+        infoBrokerView.ShowDialogue("いい買い物だ。右の詳細を見てくれ。弱点を突けば配信も楽になる。");
         Debug.Log($"[InfoBrokerPresenter] {dungeonName} の情報を {cost}G で購入しました。残金: {tomsModel.PlayerMoney.Value}G");
+    }
+
+    // =====================================================
+    // 開発（情報屋レベルアップ）タブ — 鍛冶屋の開発パネルと同じ流儀
+    // =====================================================
+
+    /// <summary>開発パネルのレベル・費用・解禁プレビュー表示を最新化する。</summary>
+    private void RefreshDevelopmentPanel()
+    {
+        int currentLevel = tomsModel.InfoBrokerLevel.Value;
+        int cost = GameConst.GetInfoBrokerLevelUpCost(currentLevel);
+        if (cost < 0) cost = 0; // MAX時
+
+        infoBrokerView.UpdateDevelopmentPanel(
+            currentLevel,
+            GameConst.MaxInfoBrokerLevel,
+            cost,
+            tomsModel.PlayerMoney.Value);
+
+        // 次レベルで解禁される金融商品のプレビュー
+        bool isMax = currentLevel >= GameConst.MaxInfoBrokerLevel;
+        if (isMax)
+        {
+            infoBrokerView.UpdateUnlockPreview("最大レベル", "これ以上解禁される商品はありません。");
+            return;
+        }
+
+        int nextLevel = currentLevel + 1;
+        var unlocks = new System.Collections.Generic.List<string>();
+        foreach (var p in portfolioModel.AllProducts)
+        {
+            if (p == null || p.unlockInfoBrokerLevel != nextLevel) continue;
+            string kind = p.kind == FinancialProductKind.Bond
+                ? $"債券・利率{p.bondInterestRate:P0}・{p.bondMaturityTurns}日満期"
+                : "ファンド・いつでも解約可";
+            unlocks.Add($"・{p.productName}（{kind}）");
+        }
+
+        infoBrokerView.UpdateUnlockPreview(
+            $"Lv.{nextLevel} で取引所に並ぶ商品",
+            unlocks.Count > 0 ? string.Join("\n", unlocks) : "Lv." + nextLevel + " で追加される商品はありません。");
+    }
+
+    /// <summary>情報屋レベルアップ処理。</summary>
+    private void HandleLevelUp()
+    {
+        int prevLevel = tomsModel.InfoBrokerLevel.Value;
+
+        if (!tomsModel.UpgradeInfoBroker())
+        {
+            infoBrokerView.ShowDialogue("資金が足りないか、もう鍛えるところがないね。");
+            return;
+        }
+
+        SoundManager.Instance?.PlaySE("営業/SE_開発完了");
+        infoBrokerView.ShowDialogue($"いい投資だ。情報網が広がった（Lv.{prevLevel} → Lv.{tomsModel.InfoBrokerLevel.Value}）。取引所を見てみな。");
+        RefreshDevelopmentPanel();
     }
 
     public void RecordHeroPurchase(string itemId, int quantity, int price)
@@ -125,6 +235,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
 
     public void Dispose()
     {
+        exchange.Dispose();
         disposables.Dispose();
     }
 }

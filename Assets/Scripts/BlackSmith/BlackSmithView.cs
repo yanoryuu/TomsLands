@@ -21,6 +21,8 @@ public class BlackSmithView : MonoBehaviour
     [Header("Prefabs & Buttons")]
     [SerializeField] private GameObject itemShopSlotPrefab;
     [SerializeField] private Button closeButton;
+    /// <summary>朝刊を読み返すボタン。仕入れ中に記事を確認できないと記憶ゲーになるため置く。</summary>
+    [SerializeField] private Button newspaperButton;
     [SerializeField] private Button weaponButton;
     [SerializeField] private Button armorButton;
     [SerializeField] private Button developButton;
@@ -29,13 +31,31 @@ public class BlackSmithView : MonoBehaviour
     [Header("オート購入")]
     [SerializeField] private Button autoBuyButton;
     [SerializeField] private TMPro.TextMeshProUGUI autoBuyResultText;
+    [SerializeField] private AutoBuyBudgetPopup autoBuyBudgetPopup;
 
     [Header("Dialogue")]
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private Button characterButton;
 
+    [Header("キャラ表情（バズ連動・任意）")]
+    [SerializeField] private CharacterExpression characterExpression;
+
     [Header("Description")]
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
+
+    [Header("次ダンジョン情報バナー")]
+    [SerializeField] private ProcurementHeaderView procurementHeader;
+
+    [Header("所持金表示")]
+    [Tooltip("鍛冶屋専用の所持金テキスト（鍛冶屋表示中はCommonViewを出さないため）")]
+    [SerializeField] private TextMeshProUGUI playerMoneyText;
+
+    [Header("選択銘柄 詳細パネル")]
+    [SerializeField] private ItemDetailPanel itemDetailPanel;
+
+    [Header("並べ替え")]
+    [Tooltip("収益/需要/価格 の並べ替えドロップダウン（任意。0:収益 1:需要 2:価格）")]
+    [SerializeField] private TMP_Dropdown sortDropdown;
 
     [Header("Development Panel")]
     [SerializeField] private GameObject developmentPanel;         // 開発タブ専用パネル（レベルアップUI）
@@ -44,11 +64,35 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private Button levelUpButton;                // レベルアップボタン
     [SerializeField] private TextMeshProUGUI levelUpButtonText;   // ボタン内テキスト
 
+    [Header("Development Panel - 次レベル解放プレビュー")]
+    [SerializeField] private TextMeshProUGUI unlockHeaderText;    // 見出し（Lv.X で追加される商品）
+    [SerializeField] private Transform unlockListRoot;            // エントリの親（GridLayoutGroup）
+    [SerializeField] private GameObject unlockEntryTemplate;      // エントリ雛形（非アクティブで配置）
+
+    [Header("Development Panel - 解放商品の詳細（レベルアップフレーム上部）")]
+    [SerializeField] private GameObject unlockDetailContent;             // 詳細の中身（選択時に表示）
+    [SerializeField] private TextMeshProUGUI unlockDetailPlaceholder;    // 未選択時の案内テキスト
+    [SerializeField] private Image unlockDetailIcon;
+    [SerializeField] private TextMeshProUGUI unlockDetailName;
+    [SerializeField] private TextMeshProUGUI unlockDetailInfo;
+    [SerializeField] private TextMeshProUGUI unlockDetailDescription;
+
     public Subject<Unit> OnCloseRequested { get; private set; } = new();
     public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
     public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
     public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
     public Subject<Unit> OnCharacterClicked { get; private set; } = new();
+    public Subject<Unit> OnNewspaperRequested { get; private set; } = new();
+    /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額と方針プリセットを通知する。</summary>
+    public Subject<(int budget, AutoBuyStrategy strategy)> OnAutoBuyBudgetConfirmed { get; private set; } = new();
+    /// <summary>並べ替えモードが変更されたときに通知する。</summary>
+    public Subject<BlackSmithSortMode> OnSortChanged { get; private set; } = new();
+
+    /// <summary>選択銘柄の詳細パネル。Presenter が選択時に結線する。</summary>
+    public ItemDetailPanel DetailPanel => itemDetailPanel;
+
+    /// <summary>次ダンジョン情報バナー。Presenter が Entry 時に更新する。</summary>
+    public ProcurementHeaderView Header => procurementHeader;
 
     private readonly List<ItemShopSlot> activeSlots = new();
 
@@ -56,9 +100,17 @@ public class BlackSmithView : MonoBehaviour
     
     private readonly Dictionary<BlackSmithTab, Vector3> initTabPos = new();
 
+    [VContainer.Inject]
+    public void Construct(BuzzSystem buzzSystem)
+    {
+        if (characterExpression != null) characterExpression.Bind(buzzSystem);
+    }
+
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+        if (newspaperButton != null)
+            newspaperButton.onClick.AddListener(() => OnNewspaperRequested.OnNext(Unit.Default));
         weaponButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Weapon; OnChangePanel.OnNext(BlackSmithTab.Weapon); });
         armorButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Armor; OnChangePanel.OnNext(BlackSmithTab.Armor); });
         developButton.onClick.AddListener(() => { _currentTab = BlackSmithTab.Development; OnChangePanel.OnNext(BlackSmithTab.Development); });
@@ -70,8 +122,15 @@ public class BlackSmithView : MonoBehaviour
         if (autoBuyButton != null)
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
 
+        if (autoBuyBudgetPopup != null)
+            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget =>
+                OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)));
+
         if (characterButton != null)
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+
+        if (sortDropdown != null)
+            sortDropdown.onValueChanged.AddListener(v => OnSortChanged.OnNext((BlackSmithSortMode)v));
 
         // 開発パネルは初期非表示
         if (developmentPanel)
@@ -88,19 +147,14 @@ public class BlackSmithView : MonoBehaviour
     /// </summary>
     public List<ItemShopSlot> PopulateItemList(List<RuntimeItemData> runtimeItems)
     {
-        // 既存スロット破棄（Content配下の全子オブジェクトを削除）
-        for (int i = blackSmithContent.transform.childCount - 1; i >= 0; i--)
-        {
-            Destroy(blackSmithContent.transform.GetChild(i).gameObject);
-        }
-        activeSlots.Clear();
+        ClearCatalog();
 
-        // 再生成
+        // 再生成（上から順にフェード＋ポップで登場させる）
         List<ItemShopSlot> slots = new();
+        int index = 0;
         foreach (var item in runtimeItems)
         {
-            var slotObj = Instantiate(itemShopSlotPrefab, blackSmithContent.transform);
-            var slot = slotObj.GetComponent<ItemShopSlot>();
+            var slot = CreateCatalogSlot(index++);
             slot.SetItem(
                 item.ItemId,
                 item.ItemName,
@@ -115,11 +169,76 @@ public class BlackSmithView : MonoBehaviour
             activeSlots.Add(slot);
         }
 
-        // スクロール位置を先頭にリセット
+        ResetScroll();
+        return slots;
+    }
+
+    /// <summary>カタログリストの全行を破棄する。</summary>
+    private void ClearCatalog()
+    {
+        for (int i = blackSmithContent.transform.childCount - 1; i >= 0; i--)
+        {
+            Destroy(blackSmithContent.transform.GetChild(i).gameObject);
+        }
+        activeSlots.Clear();
+    }
+
+    /// <summary>行を1つ生成し、登場演出（フェード＋ポップ）を付ける。</summary>
+    private ItemShopSlot CreateCatalogSlot(int index)
+    {
+        var slotObj = Instantiate(itemShopSlotPrefab, blackSmithContent.transform);
+        var slot = slotObj.GetComponent<ItemShopSlot>();
+
+        var cg = slotObj.GetComponent<CanvasGroup>();
+        if (cg == null) cg = slotObj.AddComponent<CanvasGroup>();
+        float delay = Mathf.Min(index * 0.035f, 0.35f); // 後半はまとめて出す
+        cg.alpha = 0f;
+        cg.DOFade(1f, 0.18f).SetDelay(delay).SetLink(slotObj);
+        slotObj.transform.localScale = Vector3.one * 0.94f;
+        slotObj.transform.DOScale(1f, 0.22f).SetDelay(delay).SetEase(Ease.OutCubic).SetLink(slotObj);
+
+        return slot;
+    }
+
+    /// <summary>スクロール位置を先頭にリセットする。</summary>
+    private void ResetScroll()
+    {
         if (scrollRect)
             scrollRect.normalizedPosition = new Vector2(0, 1);
+    }
 
-        return slots;
+    private int displayedMoney;
+    private bool moneyInitialized;
+    private Tween moneyTween;
+
+    /// <summary>鍛冶屋専用の所持金表示を更新する（カウントアップ演出付き）。</summary>
+    public void UpdatePlayerMoney(int money)
+    {
+        if (playerMoneyText == null) return;
+
+        // 初回は即時反映（画面を開いた瞬間に0からカウントさせない）
+        if (!moneyInitialized || !playerMoneyText.gameObject.activeInHierarchy)
+        {
+            moneyInitialized = true;
+            displayedMoney = money;
+            playerMoneyText.text = $"{money:N0}G";
+            return;
+        }
+
+        if (displayedMoney == money) return;
+
+        moneyTween?.Kill();
+        moneyTween = DOTween.To(() => displayedMoney, x =>
+            {
+                displayedMoney = x;
+                playerMoneyText.text = $"{x:N0}G";
+            }, money, 0.35f)
+            .SetEase(Ease.OutCubic)
+            .SetLink(playerMoneyText.gameObject);
+
+        playerMoneyText.transform.DOKill(true);
+        playerMoneyText.transform.DOPunchScale(Vector3.one * 0.1f, 0.25f, 6, 0.7f)
+            .SetLink(playerMoneyText.gameObject);
     }
 
     public void ShowDialogue(string message)
@@ -130,6 +249,18 @@ public class BlackSmithView : MonoBehaviour
     public void SetDescription(string description)
     {
         if (itemDescriptionText != null) itemDescriptionText.text = description;
+    }
+
+    public void ShowBudgetPopup(int playerMoney)
+    {
+        if (autoBuyBudgetPopup != null)
+            autoBuyBudgetPopup.Show(playerMoney);
+    }
+
+    public void HideBudgetPopup()
+    {
+        if (autoBuyBudgetPopup != null)
+            autoBuyBudgetPopup.Hide();
     }
 
     public void ShowAutoBuyResult(List<AutoPurchaseResult> results, int playerMoney)
@@ -146,40 +277,33 @@ public class BlackSmithView : MonoBehaviour
         var sb = new System.Text.StringBuilder("【オート購入】\n");
         foreach (var r in results)
         {
-            sb.AppendLine($"  {r.ItemName} ×{r.Quantity}  {r.TotalCost}G");
+            sb.AppendLine($"  {r.ItemName} ×{r.Quantity}  {r.TotalCost:N0}G");
             total += r.TotalCost;
         }
-        sb.Append($"合計 {total}G  残金 {playerMoney}G");
+        sb.Append($"合計 {total:N0}G  残金 {playerMoney:N0}G");
         autoBuyResultText.text = sb.ToString();
     }
 
     public void SortItemTab(BlackSmithTab type)
     {
-        var weaponSeq =  weaponTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Weapon].y, 0.1f);
-        var armorSeq = armorTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Armor].y, 0.1f);
-        var developmentSeq = developmentTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Development].y, 0.1f);
-        var specialSeq = specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y, 0.1f);
-        
-        // タブを一番上に持ってくる動作はそのまま
-        switch (type)
-        {
-            case BlackSmithTab.Weapon:
-                weaponSeq.Kill();
-                weaponTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Weapon].y+10, 0.2f);
-                break;
-            case BlackSmithTab.Armor:
-                armorSeq.Kill();
-                armorTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Armor].y + 10, 0.2f);
-                break;
-            case BlackSmithTab.Development:
-                developmentSeq.Kill();
-                developmentTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Development].y + 10, 0.2f);
-                break;
-            case BlackSmithTab.Special:
-                specialSeq.Kill();
-                specialTab.transform.DOLocalMoveY(initTabPos[BlackSmithTab.Special].y + 10, 0.2f);
-                break;
-        }
+        MoveTab(weaponTab, BlackSmithTab.Weapon, type);
+        MoveTab(armorTab, BlackSmithTab.Armor, type);
+        MoveTab(developmentTab, BlackSmithTab.Development, type);
+        MoveTab(specialTab, BlackSmithTab.Special, type);
+    }
+
+    /// <summary>
+    /// 選択タブだけ少し持ち上げ、他は基準位置へ戻す。
+    /// 既存Tweenを必ず殺してから動かす（多重Tweenでタブが浮きっぱなしになるのを防ぐ）。
+    /// </summary>
+    private void MoveTab(GameObject tab, BlackSmithTab tabType, BlackSmithTab selected)
+    {
+        if (tab == null) return;
+
+        tab.transform.DOKill();
+        float baseY = initTabPos[tabType].y;
+        bool isSelected = tabType == selected;
+        tab.transform.DOLocalMoveY(isSelected ? baseY + 10 : baseY, isSelected ? 0.2f : 0.1f);
     }
 
     public void SwitchPanel(BlackSmithTab tab)
@@ -188,6 +312,85 @@ public class BlackSmithView : MonoBehaviour
 
         if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
+        // 並べ替えUIは武具の指標（収益/需要/価格）専用なので武具タブ以外では隠す
+        if (sortDropdown)      sortDropdown.gameObject.SetActive(tab == BlackSmithTab.Weapon || tab == BlackSmithTab.Armor);
+    }
+
+    private readonly List<GameObject> unlockEntries = new();
+
+    /// <summary>
+    /// 次レベルで解放される商品のプレビューを更新する。
+    /// </summary>
+    public void UpdateUnlockPreview(int nextLevel, bool isMax, List<UnlockItemDisplayData> items)
+    {
+        foreach (var e in unlockEntries) Destroy(e);
+        unlockEntries.Clear();
+
+        if (unlockHeaderText)
+        {
+            if (isMax)
+                unlockHeaderText.text = "最大レベル：これ以上追加される商品はありません";
+            else if (items == null || items.Count == 0)
+                unlockHeaderText.text = $"Lv.{nextLevel} で追加される商品はありません";
+            else
+                unlockHeaderText.text = $"Lv.{nextLevel} で追加される商品";
+        }
+
+        // リストを作り直すタイミングで詳細は未選択状態に戻す
+        ResetUnlockDetail();
+
+        if (isMax || items == null || unlockListRoot == null || unlockEntryTemplate == null) return;
+
+        foreach (var item in items)
+        {
+            var entry = Instantiate(unlockEntryTemplate, unlockListRoot);
+            entry.SetActive(true);
+
+            var icon = entry.transform.Find("Icon")?.GetComponent<Image>();
+            var nameText = entry.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
+            var infoText = entry.transform.Find("Info")?.GetComponent<TextMeshProUGUI>();
+
+            if (icon)
+            {
+                icon.sprite = item.Icon;
+                icon.enabled = item.Icon != null;
+            }
+            if (nameText) nameText.text = item.Name;
+            if (infoText) infoText.text = item.Info;
+
+            // タップで詳細を表示
+            var button = entry.GetComponent<Button>();
+            if (button != null)
+            {
+                var captured = item;
+                button.onClick.AddListener(() => ShowUnlockDetail(captured));
+            }
+
+            unlockEntries.Add(entry);
+        }
+    }
+
+    /// <summary>解放商品の詳細を表示する（レベルアップフレーム上部の詳細欄）。</summary>
+    public void ShowUnlockDetail(UnlockItemDisplayData item)
+    {
+        if (unlockDetailContent) unlockDetailContent.SetActive(true);
+        if (unlockDetailPlaceholder) unlockDetailPlaceholder.gameObject.SetActive(false);
+
+        if (unlockDetailIcon)
+        {
+            unlockDetailIcon.sprite = item.Icon;
+            unlockDetailIcon.enabled = item.Icon != null;
+        }
+        if (unlockDetailName) unlockDetailName.text = item.Name;
+        if (unlockDetailInfo) unlockDetailInfo.text = item.Info;
+        if (unlockDetailDescription) unlockDetailDescription.text = item.Description;
+    }
+
+    /// <summary>解放商品の詳細を未選択状態（案内表示）に戻す。</summary>
+    private void ResetUnlockDetail()
+    {
+        if (unlockDetailContent) unlockDetailContent.SetActive(false);
+        if (unlockDetailPlaceholder) unlockDetailPlaceholder.gameObject.SetActive(true);
     }
 
     /// <summary>
@@ -208,11 +411,20 @@ public class BlackSmithView : MonoBehaviour
         }
         else
         {
-            if (levelUpCostText) levelUpCostText.text = $"{cost}G";
+            if (levelUpCostText) levelUpCostText.text = $"{cost:N0}G";
             if (levelUpButtonText) levelUpButtonText.text = "レベルアップ";
             if (levelUpButton) levelUpButton.interactable = playerMoney >= cost;
         }
     }
+}
+
+/// <summary>次レベル解放プレビュー1件分の表示データ。</summary>
+public class UnlockItemDisplayData
+{
+    public Sprite Icon;
+    public string Name;
+    public string Info;        // 例: 「武器・火属性・1,200G」
+    public string Description; // アイテム説明文（詳細表示用）
 }
 
 public enum BlackSmithTab
@@ -221,4 +433,12 @@ public enum BlackSmithTab
     Armor,
     Development,
     Special
+}
+
+/// <summary>仕入れ一覧の並べ替えモード（ドロップダウンの index と一致）。</summary>
+public enum BlackSmithSortMode
+{
+    Recommend = 0, // 期待収益（おすすめ順）
+    Demand = 1,    // 需要
+    Price = 2      // 価格
 }

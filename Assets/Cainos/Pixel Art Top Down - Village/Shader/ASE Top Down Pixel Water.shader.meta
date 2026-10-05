@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 894e4e243c8a1724bae673871ed62976
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Shader/ASE Top Down Pixel
+    Water.shader
+  uploadId: 984298

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 9cb854a94b77b0f47a38f55f5e460997
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 317193
+  packageName: Pixel Art Top Down - Village
+  packageVersion: 1.0.10
+  assetPath: Assets/Cainos/Pixel Art Top Down - Village/Prefab/Props/PF Village Props
+    - Billboard 01.prefab
+  uploadId: 984298
