@@ -52,7 +52,14 @@ public sealed class AutoPlayWindow : EditorWindow
             EditorGUILayout.LabelField("ボット", EditorStyles.boldLabel);
             _config.UseGreedyBot = EditorGUILayout.ToggleLeft("貪欲（おすすめ通り＝おまかせ仕入れ・API不要）", _config.UseGreedyBot);
             _config.UseRandomBot = EditorGUILayout.ToggleLeft("ランダム（バグ探索・API不要）", _config.UseRandomBot);
-            _config.UseDungeonBot = EditorGUILayout.ToggleLeft("ダンジョン側全振り（防衛報酬狙いの上限・API不要）", _config.UseDungeonBot);
+            _config.UseDungeonBot = EditorGUILayout.ToggleLeft("防衛報酬狙い（魔王軍支援×ダンジョン側介入・API不要）", _config.UseDungeonBot);
+            if (_config.UseDungeonBot)
+            {
+                string v = EditorGUILayout.TextField(
+                    new GUIContent("  型（カンマ区切り）", "i=介入のみ / s5=Lv5まで支援のみ / s4i=Lv4まで支援＋介入"),
+                    string.Join(",", _config.DungeonBotVariants));
+                _config.DungeonBotVariants = v.Split(',').Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+            }
 
             bool hasKey = JevApi.HasApiKey;
             using (new EditorGUI.DisabledScope(!hasKey))
@@ -95,7 +102,7 @@ public sealed class AutoPlayWindow : EditorWindow
         }
 
         _config.JevPersonas = AutoPlayPersona.All.Where((p, i) => _personaOn[i]).Select(p => p.Id).ToList();
-        int bots = (_config.UseGreedyBot ? 1 : 0) + (_config.UseRandomBot ? 1 : 0) + (_config.UseDungeonBot ? 1 : 0) + _config.JevPersonas.Count;
+        int bots = (_config.UseGreedyBot ? 1 : 0) + (_config.UseRandomBot ? 1 : 0) + (_config.UseDungeonBot ? _config.DungeonBotVariants.Count : 0) + _config.JevPersonas.Count;
         if (_config.EnableInterventions && _config.ControlRunsWithoutInterventions)
             bots += (_config.UseGreedyBot ? 1 : 0) + (_config.UseRandomBot ? 1 : 0) + (_config.ControlRunsIncludeJev ? _config.JevPersonas.Count : 0);
         double usd = AutoPlayBatch.EstimateJevCostUsd(_config);

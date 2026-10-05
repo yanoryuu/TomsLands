@@ -288,7 +288,11 @@ public sealed class AutoPlayRunner
         {
             if (Enum.TryParse<DungeonName>(plan.SupportDungeon, out var key))
             {
-                if (_game.SupportDungeon(key).Ok) Result.Supports++;
+                for (int i = 0; i < Mathf.Max(1, plan.SupportTimes); i++)
+                {
+                    if (!_game.SupportDungeon(key).Ok) break;
+                    Result.Supports++;
+                }
             }
         }
 

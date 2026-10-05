@@ -137,6 +137,15 @@ public static class AutoPlayReport
         /// <summary>ダンジョン側の介入の元が取れたか: 介入で反転した配信の防衛報酬 ÷ ダンジョン側の支出（1以上で黒字）。</summary>
         public double DungeonRoi;
         public int HeroFlips;
+
+        // --- 防衛報酬狙いの収支（魔王軍支援＋介入） ---
+        public int DefeatRewardsTotal;
+        public int SupportSpendTotal;
+        public int InterventionNetTotal;
+        /// <summary>防衛報酬 ÷ (支援費 ＋ 介入の純支出)。1 を超えれば防衛報酬だけで元が取れている。</summary>
+        public double DefenseRoi;
+        /// <summary>1ラン単位で ROI が 1 を超えたラン数。</summary>
+        public int RunsWithDefenseRoiAbove1;
         public double HeroWinRate;
         public double HeroFinalLevelMean;
         public double ShopIncomeMean;
@@ -239,6 +248,16 @@ public static class AutoPlayReport
             b.DungeonFlipRewardsTotal = list.Sum(r => r.DungeonFlipRewards);
             b.DungeonRoi = b.DungeonSideSpentTotal > 0 ? b.DungeonFlipRewardsTotal / (double)b.DungeonSideSpentTotal : 0;
             b.HeroFlips = list.Sum(r => r.HeroFlips);
+            b.DefeatRewardsTotal = list.Sum(r => r.TotalDefeatRewards);
+            b.SupportSpendTotal = list.Sum(r => r.TotalSupportSpend);
+            b.InterventionNetTotal = list.Sum(r => r.InterventionSpent - r.InterventionRefund);
+            int invest = b.SupportSpendTotal + b.InterventionNetTotal;
+            b.DefenseRoi = invest > 0 ? b.DefeatRewardsTotal / (double)invest : 0;
+            b.RunsWithDefenseRoiAbove1 = list.Count(r =>
+            {
+                int inv = r.TotalSupportSpend + r.InterventionSpent - r.InterventionRefund;
+                return inv > 0 && r.TotalDefeatRewards > inv;
+            });
 
             foreach (var kind in list.SelectMany(r => r.Anomalies).GroupBy(a => a.Kind))
                 b.AnomalyKinds[kind.Key] = kind.Count();
@@ -369,6 +388,20 @@ public static class AutoPlayReport
             }
             md.AppendLine();
         }
+
+        md.AppendLine("## 防衛報酬狙いの収支（魔王軍支援＋ダンジョン側介入）");
+        md.AppendLine();
+        md.AppendLine("ROI = 防衛報酬の総額 ÷ (支援費 ＋ 介入の純支出)。介入なしでも勇者が負けていた配信の防衛報酬も含む。");
+        md.AppendLine();
+        md.AppendLine("| ボット | 勇者勝率 | 防衛報酬 合計 | 支援費 合計 | 介入 純支出 合計 | ROI | ROI>1 のラン | 純資産中央値 | 破産率 | 反転率 |");
+        md.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
+        foreach (var b in s.Bots)
+        {
+            md.AppendLine($"| {b.Bot} | {b.HeroWinRate:P0} | {b.DefeatRewardsTotal:N0} | {b.SupportSpendTotal:N0} | {b.InterventionNetTotal:N0} | " +
+                          (b.SupportSpendTotal + b.InterventionNetTotal > 0 ? b.DefenseRoi.ToString("F2") : "-") +
+                          $" | {b.RunsWithDefenseRoiAbove1}/{b.Runs} | {b.NetWorthMedian:N0} | {b.BankruptcyRate:P0} | {b.InterventionFlipRate:P0} |");
+        }
+        md.AppendLine();
 
         md.AppendLine("## 異常検知");
         md.AppendLine();

@@ -161,31 +161,69 @@ public sealed class AutoPlayRandomBot : IAutoPlayBot
 }
 
 /// <summary>
-/// ダンジョン側全振りボット（API 不要）。「防衛報酬狙いを本気でやったら勝敗をどこまで揺らせるか」の上限側の基準。
-/// - 営業日: 貪欲と同じ。ただし翌日が配信なら、ダンジョン側の介入に使う額を手元に残す
-/// - 配信: ダンジョン側の介入を重ねて予定に入れる（ボス強化→開幕 / 呪い→序盤 / 罠×3→序盤・中盤・終盤）
+/// 防衛報酬狙いボット（API 不要）。「魔王軍支援でダンジョンを育てる × 配信でダンジョン側の介入を重ねる」の検証用。
+/// variant の書式: "s{N}" = 次の配信ダンジョンを配信前日に Lv N まで魔王軍支援 / "i" = 配信でダンジョン側の介入を重ねる。
+///   例 "i"（介入のみ）・"s5"（支援のみ Lv5）・"s4i"（Lv4 まで支援＋介入）。
+/// 店の営業は貪欲と同じ。配信前日は支援費・介入費のぶん仕入れを控える。
 /// </summary>
 public sealed class AutoPlayDungeonBot : IAutoPlayBot
 {
     private readonly AutoPlayGreedyBot _shop = new AutoPlayGreedyBot();
 
-    public string Name => "dungeon";
+    public readonly string Variant;
+    /// <summary>魔王軍支援で上げる目標レベル（0 = 支援しない）。</summary>
+    public readonly int SupportTarget;
+    /// <summary>配信でダンジョン側の介入を使うか。</summary>
+    public readonly bool UseInterventions;
+
+    public AutoPlayDungeonBot(string variant = "i")
+    {
+        Variant = string.IsNullOrEmpty(variant) ? "i" : variant.ToLowerInvariant();
+        UseInterventions = Variant.Contains("i");
+        var digits = new string(Variant.SkipWhile(c => c != 's').Skip(1).TakeWhile(char.IsDigit).ToArray());
+        SupportTarget = int.TryParse(digits, out var n) ? n : 0;
+    }
+
+    public string Name => "dungeon_" + Variant;
     public int Requests => 0;
     public long InputTokens => 0;
 
-    /// <summary>配信前日に残す現金の上限（ダンジョン側4種の合計を目安にする）。</summary>
+    /// <summary>配信前日に介入用として残す現金の上限（ダンジョン側4種の合計が目安）。</summary>
     public int StreamReserve = 190000;
+    /// <summary>配信の何日前から現金を貯める（支援もこの期間に払えた段から行う）。</summary>
+    public int ReserveDays = 3;
 
     public async Task<AutoPlayDayPlan> PlanDayAsync(AutoPlaySnapshot s, CancellationToken ct)
     {
         var plan = await _shop.PlanDayAsync(s, ct);
-        if (s.TurnsUntilStream >= 0 && s.TurnsUntilStream <= 1)
+        // 配信の ReserveDays 日前から仕入れを控えて現金を貯める（貪欲は毎日ほぼ全額仕入れるため、
+        // 前日だけ控えても支援・介入に回す現金が残らない）
+        if (s.TurnsUntilStream < 0 || s.TurnsUntilStream > ReserveDays) return plan;
+
+        // 魔王軍支援: 次の配信ダンジョンを目標レベルまで（費用は1段ごとに本体側で判定される。払えた段まで上がる）
+        int supportBudget = 0;
+        var next = s.Dungeons.FirstOrDefault(d => d.IsNextStream);
+        if (SupportTarget > 0 && next != null && next.Level < SupportTarget)
         {
-            int reserve = Mathf.Min(StreamReserve, Mathf.RoundToInt(s.Money * 0.6f));
-            plan.AutoBuyBudget = Mathf.Max(0, plan.AutoBuyBudget - reserve);
-            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "stream_reserve", Chosen = reserve.ToString() });
+            plan.SupportDungeon = next.Id;
+            plan.SupportTimes = SupportTarget - next.Level;
+            supportBudget = EstimateSupportCost(next, SupportTarget);
+            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "support",
+                Chosen = $"{next.Id} Lv{next.Level}→{SupportTarget} (~{supportBudget})" });
         }
+
+        int reserve = UseInterventions ? Mathf.Min(StreamReserve, Mathf.RoundToInt(s.Money * 0.6f)) : 0;
+        plan.AutoBuyBudget = Mathf.Max(0, plan.AutoBuyBudget - reserve - supportBudget);
+        plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "stream_reserve", Chosen = (reserve + supportBudget).ToString() });
         return plan;
+    }
+
+    /// <summary>現在の段の費用から上の段を見積もる（本体の表は段ごとに倍。正確な額は実行時に本体が判定）。</summary>
+    private static int EstimateSupportCost(AutoPlayDungeonView d, int target)
+    {
+        int total = 0, cost = Mathf.Max(0, d.SupportCost);
+        for (int lv = d.Level; lv < target; lv++) { total += cost; cost *= 2; }
+        return total;
     }
 
     public async Task<AutoPlayStreamPlan> PlanStreamAsync(AutoPlaySnapshot s, CancellationToken ct)
@@ -194,14 +232,14 @@ public sealed class AutoPlayDungeonBot : IAutoPlayBot
         plan.Interventions.Clear();
         plan.Decisions.RemoveAll(d => d.Question == "stream_intervene");
         var info = s.Stream;
-        if (info != null && info.InterventionsEnabled)
+        if (UseInterventions && info != null && info.InterventionsEnabled)
         {
             void Add(AutoPlayInterventionKind k, float timing)
             {
                 if (info.Options.Any(o => o.Kind == k)) plan.Interventions.Add(new AutoPlayInterventionOrder(k, timing));
             }
+            // クールダウンの許す限り重ねる（罠は安いので3回）。増援は配信が延びて勇者に有利なこともあるので使わない。
             // 払えるかどうかは配信中の利用可能残高（売上込み）で判定されるので、ここでは全部予定に入れる
-            // クールダウンの許す限り重ねる（罠は安いので3回）。増援は配信が延びて勇者に有利なこともあるので使わない
             Add(AutoPlayInterventionKind.BossBuff, 0f);
             Add(AutoPlayInterventionKind.Curse, 0.1f);
             Add(AutoPlayInterventionKind.Trap, 0.3f);

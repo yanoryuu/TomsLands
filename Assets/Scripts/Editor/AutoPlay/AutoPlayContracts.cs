@@ -215,6 +215,8 @@ public sealed class AutoPlayDayPlan
     public float DisplayFraction = 1f;
     /// <summary>魔王軍支援するダンジョン（null = しない）。</summary>
     public string SupportDungeon;
+    /// <summary>同じダンジョンを何段続けて支援するか（1段ごとに費用と最大レベルを本体が判定）。</summary>
+    public int SupportTimes = 1;
     /// <summary>none / blacksmith / shop</summary>
     public string Upgrade = "none";
 

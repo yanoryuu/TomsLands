@@ -18,6 +18,8 @@ public sealed class AutoPlayBatchConfig
     public bool UseGreedyBot = true;
     /// <summary>ダンジョン側全振りボット（防衛報酬狙いの上限側の基準・API 不要）。</summary>
     public bool UseDungeonBot;
+    /// <summary>防衛報酬狙いボットの型（"i" 介入のみ / "s5" Lv5まで支援のみ / "s4i" 支援＋介入 …）。UseDungeonBot が true のとき全部回す。</summary>
+    public List<string> DungeonBotVariants = new List<string> { "i" };
     public List<string> JevPersonas = new List<string>();
     public AutoPlayJevDecisionMode JevDecisionMode = AutoPlayJevDecisionMode.Sample;
     /// <summary>同時に進めるラン数（メインスレッド上の交互実行。Jev の待ち時間を重ねるためのもの）。</summary>
@@ -154,7 +156,9 @@ public static class AutoPlayBatch
                 var bots = new List<(IAutoPlayBot bot, bool interventions)>();
                 if (config.UseGreedyBot) bots.Add((new AutoPlayGreedyBot(), config.EnableInterventions));
                 if (config.UseRandomBot) bots.Add((new AutoPlayRandomBot(seed), config.EnableInterventions));
-                if (config.UseDungeonBot && config.EnableInterventions) bots.Add((new AutoPlayDungeonBot(), true));
+                if (config.UseDungeonBot)
+                    foreach (var v in config.DungeonBotVariants ?? new List<string> { "i" })
+                        bots.Add((new AutoPlayDungeonBot(v), config.EnableInterventions));
                 foreach (var p in personas)
                     bots.Add((new AutoPlayJevBot(AutoPlayPersona.Find(p), config.JevDecisionMode, seed), config.EnableInterventions));
                 if (config.EnableInterventions && config.ControlRunsWithoutInterventions)
