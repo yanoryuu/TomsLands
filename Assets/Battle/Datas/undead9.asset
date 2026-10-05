@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: undead9
   m_EditorClassIdentifier: 
+  enemyId: 
   enemyName: undead9
-  hp: 80
-  attackPower: 25
-  defensePower: 13
+  hp: 237
+  attackPower: 60
+  defensePower: 14
   elementType: 5
   enemySprite: {fileID: 21300000, guid: 9ce0cbae8a6f9499ca2c66a199d3b234, type: 3}
   skills: []

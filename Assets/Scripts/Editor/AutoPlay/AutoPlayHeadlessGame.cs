@@ -440,6 +440,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             s.HeroHp = hero.hp.Value;
             s.HeroAttack = hero.attackPower.Value;
             s.HeroDefense = hero.defensePower.Value;
+            s.HeroWeaponId = hero.weaponId.Value;
+            s.HeroArmorId = hero.armorId.Value;
         }
 
         s.BuzzActive = Marketing.Buzz.IsBuzzActive.Value;
@@ -454,7 +456,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             s.NextStreamDungeon = next.Value.ToString();
             s.NextStreamDungeonLevel = d?.currentDungeonLevel ?? 1;
             s.NextStreamClearChancePct = d != null
-                ? ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel) : 0f;
+                ? ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver) : 0f;
         }
 
         // --- 銘柄 ---
@@ -499,7 +501,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 MaxLevel = GameConst.MaxDungeonLevel,
                 SupportCost = isMax ? 0 : d.levelUpCost,
                 DefeatReward = d.rewardGold,
-                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel),
+                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver),
                 IsNextStream = next.HasValue && next.Value == d.key,
             });
         }
@@ -651,6 +653,38 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         if (!TomsModel.UpgradeBlacksmith()) return Reject("鍛冶屋レベルアップ不可");
         Today.UpgradeSpend += before - TomsModel.PlayerMoney.Value;
         return AutoPlayActionResult.Success($"鍛冶屋 Lv{TomsModel.BlacksmithLevel.Value}");
+    }
+
+    /// <summary>HeroPanelPresenter.SetWeapon / SetArmor / SaveEquipment の写し（所持・在庫は問われない＝本体と同じ）。</summary>
+    public AutoPlayActionResult EquipHero(string weaponId, string armorId)
+    {
+        var hero = HeroModel.heroData;
+        if (hero == null) return Reject("勇者データなし");
+        bool changed = false;
+        if (weaponId != null)
+        {
+            var w = string.IsNullOrEmpty(weaponId) ? null : ItemModel.GetRuntimeItem(weaponId);
+            if (weaponId != "" && (w == null || w.ItemType != ItemTypeData.ItemType.Weapon)) return Reject($"{weaponId} は武器ではない");
+            hero.weaponId.Value = weaponId;
+            hero.weaponName.Value = w != null ? w.ItemName : string.Empty;
+            changed = true;
+        }
+        if (armorId != null)
+        {
+            var a = string.IsNullOrEmpty(armorId) ? null : ItemModel.GetRuntimeItem(armorId);
+            if (armorId != "" && (a == null || a.ItemType != ItemTypeData.ItemType.Armor)) return Reject($"{armorId} は防具ではない");
+            hero.armorId.Value = armorId;
+            hero.armorName.Value = a != null ? a.ItemName : string.Empty;
+            changed = true;
+        }
+        if (!changed) return AutoPlayActionResult.Success();
+
+        HeroModel.ClearEquippedItems();
+        if (!string.IsNullOrEmpty(hero.weaponId.Value)) HeroModel.EquipItem(hero.weaponId.Value);
+        if (!string.IsNullOrEmpty(hero.armorId.Value)) HeroModel.EquipItem(hero.armorId.Value);
+        _battleIn.EquippedItemIds = new List<string>(HeroModel.EquippedItemIds);
+        HeroModel.SaveHeroData();
+        return AutoPlayActionResult.Success($"装備 {hero.weaponId.Value}/{hero.armorId.Value}");
     }
 
     public AutoPlayActionResult UpgradeShop()
@@ -871,6 +905,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             Selected = selected,
             SalesTicksPerTurn = Mathf.Max(0f, Config.StreamSalesScale),
             Settings = Assets.Interaction,
+            Relic = RelicResolver,
             Orders = orders,
             StartMoney = startMoney,
             SecondsPerTurn = Config.SecondsPerBattleTurn,
@@ -899,7 +934,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         {
             Dungeon = key.Value.ToString(),
             Level = level,
-            DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level),
+            DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver),
             HasBoss = hasBoss,
             EnemyCount = count,
             DefeatReward = Mathf.RoundToInt((dungeon.GetLevelData(level)?.rewardGold ?? 0) * rewardMul),

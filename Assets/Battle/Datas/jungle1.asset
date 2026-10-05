@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: jungle1
   enemyName: "\u30A2\u30AB\u30DE\u30A4\u30DE\u30A4"
-  hp: 25
-  attackPower: 8
-  defensePower: 3
+  hp: 77
+  attackPower: 19
+  defensePower: 4
   elementType: 3
   enemySprite: {fileID: 21300000, guid: 98ed54a0334334a59be42cc42b353045, type: 3}
   skills: []

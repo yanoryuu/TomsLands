@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: "\u9B54\u738B\u57CE boss v.5"
   m_EditorClassIdentifier: 
+  enemyId: 
   enemyName: "\u9B54\u738B\u57CE boss v.5"
-  hp: 250
-  attackPower: 50
-  defensePower: 40
+  hp: 1372
+  attackPower: 158
+  defensePower: 37
   elementType: 5
   enemySprite: {fileID: 0}
   skills: []

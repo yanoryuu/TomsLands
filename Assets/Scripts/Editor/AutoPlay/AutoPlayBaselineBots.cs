@@ -33,8 +33,19 @@ public sealed class AutoPlayGreedyBot : IAutoPlayBot
             .Select(i => i.Id)
             .ToList();
         plan.DisplayFraction = 1f;
+        // 勇者には解放済みで最高ランクの武具を持たせる（装備は在庫を消費しない＝本体と同じ）
+        (plan.HeroWeapon, plan.HeroArmor) = BestGear(s);
         plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "budget", Chosen = plan.AutoBuyBudget.ToString() });
         return Task.FromResult(plan);
+    }
+
+    /// <summary>解放済みの武器・防具のうち最高ランク（同ランクは基準価格の高い方）。今と同じなら null（変えない）。</summary>
+    public static (string weapon, string armor) BestGear(AutoPlaySnapshot s)
+    {
+        string Best(string type) => s.Items.Where(i => i.Unlocked && i.Type == type)
+            .OrderByDescending(i => i.Tier).ThenByDescending(i => i.BasePrice).Select(i => i.Id).FirstOrDefault();
+        string w = Best("Weapon"), a = Best("Armor");
+        return (w == s.HeroWeaponId ? null : w, a == s.HeroArmorId ? null : a);
     }
 
     public Task<AutoPlayStreamPlan> PlanStreamAsync(AutoPlaySnapshot s, CancellationToken ct)
@@ -108,6 +119,13 @@ public sealed class AutoPlayRandomBot : IAutoPlayBot
         }
         plan.DisplayPriority = s.Items.OrderBy(_ => _rng.Next()).Select(i => i.Id).ToList();
         plan.DisplayFraction = (float)_rng.NextDouble();
+        if (_rng.NextDouble() < 0.2)
+        {
+            var ws = s.Items.Where(i => i.Unlocked && i.Type == "Weapon").ToList();
+            var ars = s.Items.Where(i => i.Unlocked && i.Type == "Armor").ToList();
+            plan.HeroWeapon = ws.Count == 0 || _rng.NextDouble() < 0.3 ? "" : ws[_rng.Next(ws.Count)].Id;
+            plan.HeroArmor = ars.Count == 0 || _rng.NextDouble() < 0.3 ? "" : ars[_rng.Next(ars.Count)].Id;
+        }
 
         if (_rng.NextDouble() < 0.1)
         {
@@ -162,7 +180,7 @@ public sealed class AutoPlayRandomBot : IAutoPlayBot
 
 /// <summary>
 /// 防衛報酬狙いボット（API 不要）。「魔王軍支援でダンジョンを育てる × 配信でダンジョン側の介入を重ねる」の検証用。
-/// variant の書式: "s{N}" = 次の配信ダンジョンを配信前日に Lv N まで魔王軍支援 / "i" = 配信でダンジョン側の介入を重ねる。
+/// variant の書式: "s{N}" = 次の配信ダンジョンを Lv N まで魔王軍支援 / "i" = 配信でダンジョン側の介入を重ねる / "t" = 安い介入だけ（呪い＋罠）。
 ///   例 "i"（介入のみ）・"s5"（支援のみ Lv5）・"s4i"（Lv4 まで支援＋介入）。
 /// 店の営業は貪欲と同じ。配信前日は支援費・介入費のぶん仕入れを控える。
 /// </summary>
@@ -175,11 +193,17 @@ public sealed class AutoPlayDungeonBot : IAutoPlayBot
     public readonly int SupportTarget;
     /// <summary>配信でダンジョン側の介入を使うか。</summary>
     public readonly bool UseInterventions;
+    /// <summary>"t": 安い介入だけ（呪い＋罠×3。ボス強化は使わない）。</summary>
+    public readonly bool CheapOnly;
+    /// <summary>"e": 期待値で使う（勇者が勝ちそうなときだけ、1回で負けに変えられる最安の介入を防衛報酬より安ければ使う）。</summary>
+    public readonly bool Smart;
 
     public AutoPlayDungeonBot(string variant = "i")
     {
         Variant = string.IsNullOrEmpty(variant) ? "i" : variant.ToLowerInvariant();
-        UseInterventions = Variant.Contains("i");
+        UseInterventions = Variant.Contains("i") || Variant.Contains("t") || Variant.Contains("e");
+        CheapOnly = Variant.Contains("t");
+        Smart = Variant.Contains("e");
         var digits = new string(Variant.SkipWhile(c => c != 's').Skip(1).TakeWhile(char.IsDigit).ToArray());
         SupportTarget = int.TryParse(digits, out var n) ? n : 0;
     }
@@ -196,6 +220,9 @@ public sealed class AutoPlayDungeonBot : IAutoPlayBot
     public async Task<AutoPlayDayPlan> PlanDayAsync(AutoPlaySnapshot s, CancellationToken ct)
     {
         var plan = await _shop.PlanDayAsync(s, ct);
+        // 防衛報酬狙いなので勇者には装備を持たせない
+        plan.HeroWeapon = string.IsNullOrEmpty(s.HeroWeaponId) ? null : "";
+        plan.HeroArmor = string.IsNullOrEmpty(s.HeroArmorId) ? null : "";
         // 配信の ReserveDays 日前から仕入れを控えて現金を貯める（貪欲は毎日ほぼ全額仕入れるため、
         // 前日だけ控えても支援・介入に回す現金が残らない）
         if (s.TurnsUntilStream < 0 || s.TurnsUntilStream > ReserveDays) return plan;
@@ -212,7 +239,7 @@ public sealed class AutoPlayDungeonBot : IAutoPlayBot
                 Chosen = $"{next.Id} Lv{next.Level}→{SupportTarget} (~{supportBudget})" });
         }
 
-        int reserve = UseInterventions ? Mathf.Min(StreamReserve, Mathf.RoundToInt(s.Money * 0.6f)) : 0;
+        int reserve = UseInterventions ? Mathf.Min(CheapOnly ? 60000 : Smart ? 100000 : StreamReserve, Mathf.RoundToInt(s.Money * 0.6f)) : 0;
         plan.AutoBuyBudget = Mathf.Max(0, plan.AutoBuyBudget - reserve - supportBudget);
         plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "stream_reserve", Chosen = (reserve + supportBudget).ToString() });
         return plan;
@@ -232,7 +259,19 @@ public sealed class AutoPlayDungeonBot : IAutoPlayBot
         plan.Interventions.Clear();
         plan.Decisions.RemoveAll(d => d.Question == "stream_intervene");
         var info = s.Stream;
-        if (UseInterventions && info != null && info.InterventionsEnabled)
+        if (Smart && info != null && info.InterventionsEnabled)
+        {
+            // "e": 勇者が放っておいても負けるなら何もしない。勝ちそうなら、1回で負けに変えられる最安のダンジョン側介入
+            //      （オラクルの what-if）を、防衛報酬より安い場合だけ使う
+            if (info.BaselineHeroWins)
+            {
+                var pick = info.Options
+                    .Where(o => o.Affordable && !AutoPlayInterventionKinds.IsHeroSide(o.Kind) && !o.WhatIfHeroWins && o.Price < info.DefeatReward)
+                    .OrderBy(o => o.Price).FirstOrDefault();
+                if (pick != null) plan.Interventions.Add(new AutoPlayInterventionOrder(pick.Kind, 0.5f));
+            }
+        }
+        else if (UseInterventions && info != null && info.InterventionsEnabled)
         {
             void Add(AutoPlayInterventionKind k, float timing)
             {
@@ -240,7 +279,7 @@ public sealed class AutoPlayDungeonBot : IAutoPlayBot
             }
             // クールダウンの許す限り重ねる（罠は安いので3回）。増援は配信が延びて勇者に有利なこともあるので使わない。
             // 払えるかどうかは配信中の利用可能残高（売上込み）で判定されるので、ここでは全部予定に入れる
-            Add(AutoPlayInterventionKind.BossBuff, 0f);
+            if (!CheapOnly) Add(AutoPlayInterventionKind.BossBuff, 0f);
             Add(AutoPlayInterventionKind.Curse, 0.1f);
             Add(AutoPlayInterventionKind.Trap, 0.3f);
             Add(AutoPlayInterventionKind.Trap, 0.55f);

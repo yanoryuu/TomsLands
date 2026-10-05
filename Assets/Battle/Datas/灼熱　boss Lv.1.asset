@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: fire boss lv.1
   enemyName: "\u30A4\u30EF\u30D5\u30EC\u30A4\u30E0"
-  hp: 55
-  attackPower: 13
-  defensePower: 10
+  hp: 281
+  attackPower: 33
+  defensePower: 8
   elementType: 2
   enemySprite: {fileID: 21300000, guid: 434a7633efddb4c6bb6db3687f6f2bb6, type: 3}
   skills: []

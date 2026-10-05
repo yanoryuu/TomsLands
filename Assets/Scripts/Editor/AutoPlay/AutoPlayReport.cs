@@ -54,13 +54,14 @@ public static class AutoPlayReport
         // --- streams.csv（配信1回1行・介入の内訳） ---
         sb.Clear();
         sb.AppendLine("runId,bot,turn,dungeon,clearPct,baselineHeroWin,heroWin,planned,executed,skipped,heroSideSpent,dungeonSideSpent," +
-                      "refund,specialMoves,viewerSpecials,rawSales,defeatReward,turns,baselineTurns");
+                      "refund,specialMoves,viewerSpecials,rawSales,defeatReward,turns,baselineTurns,heroLevel,weaponTier,armorTier");
         foreach (var r in runs)
         foreach (var x in r.StreamRows)
         {
             sb.AppendLine(string.Join(",", Csv(x.RunId), Csv(r.Bot), x.Turn, Csv(x.Dungeon), x.DisplayedClearPct.ToString("F0", inv),
                 x.BaselineHeroWin ? 1 : 0, x.HeroWin ? 1 : 0, Csv(x.Planned), Csv(x.Executed), Csv(x.Skipped), x.HeroSideSpent,
-                x.DungeonSideSpent, x.Refund, x.SpecialMoves, x.ViewerSpecials, x.RawSales, x.DefeatReward, x.Turns, x.BaselineTurns));
+                x.DungeonSideSpent, x.Refund, x.SpecialMoves, x.ViewerSpecials, x.RawSales, x.DefeatReward, x.Turns, x.BaselineTurns,
+                x.HeroLevel, x.WeaponTier, x.ArmorTier));
         }
         File.WriteAllText(Path.Combine(dir, "streams.csv"), sb.ToString(), new UTF8Encoding(true));
 
@@ -312,6 +313,7 @@ public static class AutoPlayReport
         md.AppendLine($"- 作成: {s.CreatedAt}");
         md.AppendLine($"- モード: {config.Mode} / シード {config.BaseSeed}〜{config.BaseSeed + config.Seeds - 1}（{config.Seeds}本）/ ボット: {string.Join(", ", s.Bots.Select(b => b.Bot))}");
         md.AppendLine($"- 配信サロゲート: 販売回数倍率 {config.StreamSalesScale:F2} / 勝敗 {(config.ProbabilisticBattle ? "クリア確率で抽選" : "ドライラン（決定論）")}");
+        md.AppendLine($"- リモート配信: {AutoPlayBatch.LastRemoteInfo}");
         md.AppendLine($"- Jev: {s.TotalJevRequests} リクエスト / 入力 {s.TotalInputTokens:N0} tokens / 約 ${s.TotalCostUsd:F4}（≒{s.TotalCostJpyApprox:F1}円）");
         md.AppendLine();
         md.AppendLine("> 配信（戦闘・配信販売）はサロゲートで解決している。配信の売上と勝敗は実機と一致しない可能性がある（Docs/Jev_AutoPlay_Design.md §2.4）。");

@@ -1,0 +1,773 @@
+{
+  "version": 8,
+  "schemaVersion": 1,
+  "updatedAt": "2026-10-05T02:18:49.028Z",
+  "shopEconomy": {
+    "highDemandThreshold": 0.7,
+    "highDemandPriceRateMin": 1.1,
+    "highDemandPriceRateMax": 1.3,
+    "lowDemandThreshold": 0.3,
+    "lowDemandPriceRateMin": 0.7,
+    "lowDemandPriceRateMax": 0.9,
+    "normalDemandPriceRateMin": 0.95,
+    "normalDemandPriceRateMax": 1.05,
+    "shopPriceFloorRate": 0.3,
+    "shopPriceCeilingRate": 3,
+    "victoryAttributeDemandUp": 0.15,
+    "defeatAttributeDemandDown": 0.15,
+    "displayDemandUp": 0.03,
+    "notDisplayDemandDown": 0,
+    "demandFloor": 0.05,
+    "demandCeiling": 1,
+    "trustFloorBoost": 0.4,
+    "attentionPriceAmplify": 0.5,
+    "attentionAffectsLowDemand": false,
+    "spreadDemandAmplify": 1,
+    "retentionStabilizer": 0.6,
+    "followerWeight": 0.1,
+    "followerScale": 1000,
+    "trendAmplitude": 0.3,
+    "trendConvergenceRate": 0.15,
+    "trendDriftMax": 0.12,
+    "trendDecayRate": 0.1
+  },
+  "gameBalance": {
+    "statMin": 0,
+    "statMax": 1000,
+    "followerMin": 0,
+    "buzzAttentionCoeff": 0.5,
+    "buzzTrustCoeff": 0.2,
+    "buzzMaxBaseChance": 50,
+    "flameTrustThreshold": 50,
+    "flameChance": 30,
+    "bigBuzzTrustThreshold": 80,
+    "buzzBaseChance": 10,
+    "buzzMaxChance": 20,
+    "bigBuzzBaseChance": 1,
+    "bigBuzzMaxChance": 5,
+    "buzzContinueChance": 50,
+    "buzzEvolveToBigChance": 20,
+    "initialTrust": 50,
+    "initialAttention": 0,
+    "initialSpread": 0,
+    "initialRetention": 0,
+    "initialFollowers": 0
+  },
+  "battlePrice": {
+    "weaponPriceUpOnHit": 1.1,
+    "weaponPriceDownOnNonKill": 0.95,
+    "armorPriceDownOnHit": 0.98,
+    "armorPriceUpOnBlock": 1.05,
+    "effectiveAttributeRate": 1.1,
+    "weakAttributeRate": 1,
+    "priceFloorRate": 0.2,
+    "priceCeilingRate": 10,
+    "initialHeat": 30,
+    "heatTurnDecay": 5,
+    "coldTierMax": 25,
+    "normalTierMax": 50,
+    "hotTierMax": 75,
+    "coldPriceMultiplier": 0.9,
+    "normalPriceMultiplier": 1,
+    "hotPriceMultiplier": 1.1,
+    "superHotPriceMultiplier": 1.2,
+    "demandEffectiveAttributeUp": 0.2,
+    "demandWeakAttributeDown": 0.1,
+    "buzzBonus2Turn": 0.05,
+    "buzzBonus3PlusTurn": 0.1,
+    "unsoldPenalty": 0.08,
+    "highPriceThreshold": 2,
+    "lowPriceThreshold": 0.5,
+    "highPriceDemandDecay": 0.92,
+    "lowPriceDemandGrowth": 1.08
+  },
+  "finance": {
+    "fundBuyFeeRate": 0.02,
+    "fundSellFeeRate": 0.02,
+    "forcedSaleExtraFeeRate": 0.1,
+    "bondEarlyRedemptionRate": 0.85,
+    "navHistoryCapacity": 12
+  },
+  "advertisements": [
+    {
+      "id": "総合マーケティング",
+      "advertisementName": "総合マーケティング",
+      "cost": "300000",
+      "trustGain": "1500",
+      "attentionGain": "1500",
+      "spreadGain": "1500",
+      "retentionGain": "1500",
+      "followerGain": "0",
+      "statMax": "0"
+    },
+    {
+      "id": "SNSフォロワーキャンペーン",
+      "advertisementName": "SNSフォロワーキャンペーン",
+      "cost": "120000",
+      "trustGain": "0",
+      "attentionGain": "1000",
+      "spreadGain": "0",
+      "retentionGain": "0",
+      "followerGain": "10000",
+      "statMax": "0"
+    },
+    {
+      "id": "インフルエンサー起用",
+      "advertisementName": "インフルエンサー起用",
+      "cost": "200000",
+      "trustGain": "0",
+      "attentionGain": "2000",
+      "spreadGain": "3000",
+      "retentionGain": "0",
+      "followerGain": "0",
+      "statMax": "0"
+    },
+    {
+      "id": "リピーター施策",
+      "advertisementName": "リピーター施策",
+      "cost": "180000",
+      "trustGain": "2000",
+      "attentionGain": "0",
+      "spreadGain": "0",
+      "retentionGain": "3000",
+      "followerGain": "0",
+      "statMax": "0"
+    },
+    {
+      "id": "SNS広告",
+      "advertisementName": "SNS広告",
+      "cost": "100000",
+      "trustGain": "0",
+      "attentionGain": "3000",
+      "spreadGain": "0",
+      "retentionGain": "2000",
+      "followerGain": "0",
+      "statMax": "0"
+    },
+    {
+      "id": "口コミキャンペーン",
+      "advertisementName": "口コミキャンペーン",
+      "cost": "150000",
+      "trustGain": "3000",
+      "attentionGain": "0",
+      "spreadGain": "2000",
+      "retentionGain": "0",
+      "followerGain": "0",
+      "statMax": "0"
+    }
+  ],
+  "buzzEffects": [
+    {
+      "id": "Big",
+      "buzzType": "2",
+      "immediateRevenueMultiplierBase": "2.5",
+      "immediateRevenueSpreadCoeff": "0.01",
+      "immediateTrustChange": "15",
+      "immediateAttentionChange": "20",
+      "immediateFollowerBase": "0",
+      "immediateFollowerSpreadCoeff": "30",
+      "immediateFollowerFixed": "0",
+      "durationBase": "3",
+      "durationRetentionDivisor": "25",
+      "sustainedAllStatGain": "5",
+      "sustainedFollowerGain": "300",
+      "sustainedTrustChange": "0",
+      "sustainedRevenueMultiplier": "0",
+      "sustainedAdDiscountRate": "0.3",
+      "afterTrustChange": "20",
+      "afterAttentionChange": "0",
+      "afterGrantFreeMarketing": "1"
+    },
+    {
+      "id": "Flame",
+      "buzzType": "0",
+      "immediateRevenueMultiplierBase": "0.5",
+      "immediateRevenueSpreadCoeff": "0",
+      "immediateTrustChange": "-30",
+      "immediateAttentionChange": "20",
+      "immediateFollowerBase": "-500",
+      "immediateFollowerSpreadCoeff": "0",
+      "immediateFollowerFixed": "1",
+      "durationBase": "3",
+      "durationRetentionDivisor": "25",
+      "sustainedAllStatGain": "0",
+      "sustainedFollowerGain": "0",
+      "sustainedTrustChange": "-5",
+      "sustainedRevenueMultiplier": "0.5",
+      "sustainedAdDiscountRate": "0",
+      "afterTrustChange": "0",
+      "afterAttentionChange": "-10",
+      "afterGrantFreeMarketing": "0"
+    },
+    {
+      "id": "Normal",
+      "buzzType": "1",
+      "immediateRevenueMultiplierBase": "1.5",
+      "immediateRevenueSpreadCoeff": "0.01",
+      "immediateTrustChange": "5",
+      "immediateAttentionChange": "0",
+      "immediateFollowerBase": "0",
+      "immediateFollowerSpreadCoeff": "10",
+      "immediateFollowerFixed": "0",
+      "durationBase": "3",
+      "durationRetentionDivisor": "25",
+      "sustainedAllStatGain": "2",
+      "sustainedFollowerGain": "100",
+      "sustainedTrustChange": "0",
+      "sustainedRevenueMultiplier": "0",
+      "sustainedAdDiscountRate": "0",
+      "afterTrustChange": "10",
+      "afterAttentionChange": "0",
+      "afterGrantFreeMarketing": "0"
+    }
+  ],
+  "followerMilestones": [
+    {
+      "id": "1000",
+      "requiredFollowers": "1000",
+      "salesBonusRate": "0.05",
+      "buzzChanceBonus": "0",
+      "adDiscountRate": "0"
+    },
+    {
+      "id": "5000",
+      "requiredFollowers": "5000",
+      "salesBonusRate": "0.15",
+      "buzzChanceBonus": "5",
+      "adDiscountRate": "0"
+    },
+    {
+      "id": "10000",
+      "requiredFollowers": "10000",
+      "salesBonusRate": "0.3",
+      "buzzChanceBonus": "10",
+      "adDiscountRate": "0.1"
+    },
+    {
+      "id": "50000",
+      "requiredFollowers": "50000",
+      "salesBonusRate": "0.5",
+      "buzzChanceBonus": "15",
+      "adDiscountRate": "0.2"
+    }
+  ],
+  "enemies": [
+    {
+      "id": "slime",
+      "hp": 60,
+      "attackPower": 12,
+      "elementType": 2
+    }
+  ],
+  "dungeons": [
+    {
+      "id": "ScorchingVolcanoPrison",
+      "key": "1",
+      "dungeonName": "灼熱の火山牢",
+      "dungeonDescription": "マグマが流れる火山の中に築かれた古代の監獄。今や炎をまとう魔物たちが跋扈する無法地帯と化している。",
+      "initDungeonLevel": "1",
+      "recommendedLevel": "5",
+      "difficulty": "5",
+      "requiredAttribute": "1"
+    },
+    {
+      "id": "DemonKingCastle",
+      "key": "5",
+      "dungeonName": "魔王城",
+      "dungeonDescription": "世界の頂、空の果て。そこが最後の決戦の地、魔王城。城の周囲を覆う邪悪な光が、魔王の強大な力を物語っている。",
+      "initDungeonLevel": "1",
+      "recommendedLevel": "10",
+      "difficulty": "10",
+      "requiredAttribute": "4"
+    },
+    {
+      "id": "DeepGreenBeastForest",
+      "key": "3",
+      "dungeonName": "深緑の獣林",
+      "dungeonDescription": "光が差し込まない鬱蒼とした森。魔獣と木の魔物の巣窟で、\\n多くの新人冒険者がこの地を訪れる。",
+      "initDungeonLevel": "1",
+      "recommendedLevel": "1",
+      "difficulty": "1",
+      "requiredAttribute": "0"
+    },
+    {
+      "id": "IceMistCave",
+      "key": "2",
+      "dungeonName": "氷霧の洞窟",
+      "dungeonDescription": "雪と氷に閉ざされた洞窟。視界の悪さに加え、肌を刺すような寒さが冒険者を襲う。滑りやすい氷の床にも注意が必要だ。",
+      "initDungeonLevel": "1",
+      "recommendedLevel": "3",
+      "difficulty": "3",
+      "requiredAttribute": "2"
+    },
+    {
+      "id": "MausoleumOblivion",
+      "key": "0",
+      "dungeonName": "忘却の霊廟",
+      "dungeonDescription": "かつての偉大なる王が眠る巨大な地下墓地。闇に魅入られた死者たちがさまよい、訪れしものたちの精神を蝕む。",
+      "initDungeonLevel": "1",
+      "recommendedLevel": "7",
+      "difficulty": "7",
+      "requiredAttribute": "4"
+    },
+    {
+      "id": "AncientMechanicalCastle",
+      "key": "4",
+      "dungeonName": "古代機構城メタリオン",
+      "dungeonDescription": "魔王軍の技術によって建造された鋼鉄の城塞。無数の歯車と機関が絶えず稼働し、中に潜むモンスターたちは侵入者をすべて排除する。",
+      "initDungeonLevel": "1",
+      "recommendedLevel": "8",
+      "difficulty": "9",
+      "requiredAttribute": "5"
+    }
+  ],
+  "events": [
+    {
+      "id": "001",
+      "title": "記念硬貨の発見",
+      "description": "「今日も良いバズが見れたなー！」と言いながら、トコは閉店後のカウンターで売上金を数えていた。その時、キラリと光る見慣れない硬貨が一つ。それはなんと、古い時代に発行されていた希少な記念硬貨だった！コレクターの間では高値で取引されているらしい。ちょっとした臨時収入に、ラッキー！",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "30000"
+    },
+    {
+      "id": "002",
+      "title": "常連さんからのスパチャ！？",
+      "description": "閉店間際、いつもの常連冒険者が、興奮冷めやらぬ様子で駆け込んできた。「トコちゃん、聞いてくれよ！この間の剣、最高だったぜ！勇者様みたいにバッサバッサと魔物を倒せたんだ！これは、感謝の投げ銭だ！」そう言って、彼は普段より多めに金貨を置いていった。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "3000"
+    },
+    {
+      "id": "003",
+      "title": "へそくり発見",
+      "description": "トコは店の倉庫を掃除していた。年季の入ったタンスを動かしたその時、裏から古びた革袋が転がり出てきた。中には、ぎっしり詰められた金貨が！どうやら、トコの両親がこっそり隠していたへそくりだったらしい。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "30000"
+    },
+    {
+      "id": "004",
+      "title": "ガラクタが芸術品に！？",
+      "description": "ある日、場違いなほど豪華な身なりの貴族がふらりと来店。最新のトレンド装備には目もくれず、店の隅でホコリをかぶっていた売れ残りの装飾剣を手に取った。なんでも、その独特なフォルムが芸術的感性に突き刺さったらしく、言い値の数十倍もの金貨を置いていった。誰にとってのバズかは、分からないものだ。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "50000"
+    },
+    {
+      "id": "005",
+      "title": "ダメ元のおまじない",
+      "description": "冒険者の間で「街の噴水に珍しい薬草を供えると、幸運が訪れる」という真偽不明の噂が流れていた。多くの者が無視する中、トコは「これも何かのバズの予兆かも」と、軽い気持ちで試してみることに。翌朝、薬草は消え、代わりに金貨が数枚置かれていた。どうやら、人嫌いの魔法使いが人知れず材料を集める方法だったらしい。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "3000"
+    },
+    {
+      "id": "006",
+      "title": "モニター協力してみた",
+      "description": "街の魔道具工房が、開発中の新作アイテムのテストユーザーを探していた。「トレンドに敏感な人にぜひ」と、トコに白羽の矢が立つ。一週間アイテムを感想を使ったレポートにまとめると、「メリット、デメリットが事細かでとても参考になった。」と礼金をもらった。最先端に関わるのも、立派なビジネスなのだ。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "100000"
+    },
+    {
+      "id": "007",
+      "title": "闘技場のスター選手を輩出！",
+      "description": "まだ​無名だった​闘技場の​​選手が​見事に​トーナメントで​優勝！​彼は​インタビューで​「この​勝利は、​トムトムランドの​トコさんの​売っている武器のおかげだ！」と​涙ながらに​語った。​店の​評判が​大きく​上がった。​",
+      "command1": "ChangeTrust",
+      "param1Key1": "amount",
+      "param1Value1": "30"
+    },
+    {
+      "id": "008",
+      "title": "騎士団からの感謝状",
+      "description": "トコが​販売している​​防具の​おかげで、​騎士団が​誰も​重傷者を​出すことなく、​強力な​ドラゴンの​討伐に​成功したらしい。​後日、​騎士団長自らが​店を​訪れ、​王家の​名の​下に​特別な​感謝状と​勲章を​授与してくれた。​",
+      "command1": "ChangeTrust",
+      "param1Key1": "amount",
+      "param1Value1": "50"
+    },
+    {
+      "id": "009",
+      "title": "商人ギルドの模範店に認定！",
+      "description": "トコの​誠実かつ​革新的な​商売スタイルが、​保守的な​商人ギルドの​重鎮たちの​心を​動かした。​「これからの​時代の​商人の​あるべき姿だ」と​絶賛され、​ギルドが​全ての​商人に​推奨する​「模範店」と​して​認定された。​",
+      "command1": "ChangeTrust",
+      "param1Key1": "amount",
+      "param1Value1": "20"
+    },
+    {
+      "id": "010",
+      "title": "中央広場の管理費支払い",
+      "description": "中央​広場の​管理人から​「いつも​君の​配信の​おかげで​広場は​賑わっているが、​その分、​警備や​清掃の​費用も​馬鹿に​ならんのだ。​今後も​ここで​配信を​続けたいなら、​会場の​管理費を​支払って​もら​おうか」と​請求される。​",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-5000"
+    },
+    {
+      "id": "011",
+      "title": "大聖堂の再建プロジェクト",
+      "description": "先日、魔物の​襲撃で、​町の​大聖堂が​半壊してしまった。​司教から​「聖堂は​民の​心の​支え。​この​再建に​最も​貢献してくださった方を、​神の​名の​下に​『聖人』と​して​祝福しましょう」と、​多額の​寄付を​募られる。​",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-7000"
+    },
+    {
+      "id": "012",
+      "title": "冒険者ギルドへの投資",
+      "description": "ギルドマスターから​「有望な​若手を​育てる​ための​訓練施設を​新設したい。​もし、​建設費用を​投資してくれる​なら、​君の​店を​『ギルド公認の​優良武具店』と​して​全ギルドメンバーに​推薦しよう」と​持ちかけられる。​",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-10000"
+    },
+    {
+      "id": "013",
+      "title": "酒場のマスターへの援助",
+      "description": "酒場の​マスターが​「最近、​質の​悪い客に​絡まれて、​店の​備品を​壊されて​困っているんだ…。​修理代を​少し​援助してくれたら、​うちの​店で​君の​お店の​宣伝を​してあげるよ」と​相談してくる。​",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-8000"
+    },
+    {
+      "id": "014",
+      "title": "預言者のうまい儲け話",
+      "description": "例の​預言者が、とんでもない儲け話をちらつかせてきた。なんでも「ある筋からのインサイダー情報」で、とある古代の壺の価値がもうすぐ爆上がりするらしい。バズの匂いに目をつけたトコは、未来への投資として大金をはたいて壺を購入した。しかし、後日やってきた鑑定士いわく、それはガラクタだった。未来への投資は、痛すぎる勉強代となったのだった。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-3000"
+    },
+    {
+      "id": "015",
+      "title": "村の大洪水への復興援助",
+      "description": "​とある村が記録的な​大水害に​見​舞われ、​甚大な​被害が​出たらしい。そのニュースを受け、​国王は​復興資金を​捻出する​ため、​全土の​商人に​援助を依頼。​トコの​店も​例外ではなかった。​世間のトレンドが人道支援ムード一色となれば、「乗るしかない、このビッグウェーブに」とトコは支援を決めた。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-10000"
+    },
+    {
+      "id": "016",
+      "title": "テレクリスタルの維持費",
+      "description": "預言者が​ひょっこり店に​現れた。​「やあ、​トコちゃん。​この​テレクリスタルが​最高の​性能を​維持できているのは、​誰かさんが​魔法で管理してあげているから​なんだよ？と​いうわけで、​管理費、​きっちり​徴収させて​もらうよ！」​ 知らされていない​理不尽な​請求だが、​配信が​できなくなると​困る​ため、​しぶしぶ維持費を​支払った......。​",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-10000"
+    },
+    {
+      "id": "017",
+      "title": "泥棒にやられた！",
+      "description": "穏やかな午後のこと。トコの頭の中は、次のバズのことでいっぱいだった。新しい商品の大ヒットを夢想し、カウンターでついニヤニヤ......。その油断こそが、プロの狙い目だったらしい。誰かがこっそり手を伸ばしていたことなど、空想にふける彼女が知る由もない。ハッと我に返った時、そこにあったはずの売上金は綺麗さっぱり消えていた。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-5000"
+    },
+    {
+      "id": "018",
+      "title": "ニセのトレンド情報",
+      "description": "「未来の流行を確実に予測できる」と豪語する情報屋が現れた。トコは、考えなしに高額な料金を払って、その極秘トレンドリストを購入。しかし、リストに書かれていた商品が流行る気配は一向になく、情報屋は姿を消した。先行投資は、まんまと空振りに終わった。",
+      "command1": "ChangeMoney",
+      "param1Key1": "amount",
+      "param1Value1": "-10000"
+    },
+    {
+      "id": "019",
+      "title": "魔王軍への援助疑惑！？",
+      "description": "トコが​魔王軍と​取引していると​いう​情報が​何者かに​よって​言い​ふらされてしまった！​（真実ではあるが）​冒険者たちからの​信用が​落ちてしまった​......。​",
+      "command1": "ChangeTrust",
+      "param1Key1": "amount",
+      "param1Value1": "-50"
+    },
+    {
+      "id": "020",
+      "title": "商品が炎上！",
+      "description": "ある冒険者が、商品が破損していると言いふらした！店の評判に傷がついてしまった。",
+      "command1": "ChangeTrust",
+      "param1Key1": "amount",
+      "param1Value1": "-50"
+    },
+    {
+      "id": "021",
+      "title": "預言者との黒い噂",
+      "description": "胡散臭い​ことで​有名な​預言者と、​トコが​頻繁に​会っている​ことが町で​話題に​なっている。​「あの​預言者と​つるんでいる​なんて、​トコちゃんも​何か裏が​あるんじゃないか？」と、​あらぬ疑いを​かけられ、​少し評判を​落と​してしまった。​",
+      "command1": "ChangeTrust",
+      "param1Key1": "amount",
+      "param1Value1": "-50"
+    }
+  ],
+  "villageFacilities": [
+    {
+      "id": "hall",
+      "facilityName": "領主館",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 1000000,
+          "effectText": "全施設の Lv2 への拡張を解禁"
+        },
+        {
+          "cost": 4000000,
+          "effectText": "全施設の Lv3 への拡張と、祠の建設を解禁"
+        },
+        {
+          "cost": 10000000,
+          "effectText": "産業の土地スロット +1（産業投資は今後実装）"
+        }
+      ]
+    },
+    {
+      "id": "guild",
+      "facilityName": "冒険者ギルド",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 1000000,
+          "effectText": "レリック Tier1（5種）が報酬の抽選に加わる"
+        },
+        {
+          "cost": 2500000,
+          "effectText": "レリック Tier2（4種）が加わる"
+        },
+        {
+          "cost": 5000000,
+          "effectText": "レリック Tier3（4種）が加わる"
+        }
+      ]
+    },
+    {
+      "id": "antique",
+      "facilityName": "骨董品店",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 4500000,
+          "effectText": "スターターレリックの候補に Rare が並ぶ"
+        },
+        {
+          "cost": 2500000,
+          "effectText": "レリック3択を辞退したときの買取額 +50%"
+        }
+      ]
+    },
+    {
+      "id": "shrine",
+      "facilityName": "祠",
+      "requiredHallLevel": 2,
+      "levels": [
+        {
+          "cost": 3000000,
+          "effectText": "レリック報酬の選択肢が 3 → 4 になる"
+        }
+      ]
+    },
+    {
+      "id": "bank",
+      "facilityName": "銀行",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 5000000,
+          "effectText": "借入枠の最終段階（20,000G）の拡張を解放"
+        },
+        {
+          "cost": 12000000,
+          "effectText": "借入の利息 50% → 45%"
+        },
+        {
+          "cost": 22000000,
+          "effectText": "借入の利息 45% → 40%"
+        }
+      ]
+    },
+    {
+      "id": "warehouse",
+      "facilityName": "倉庫",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 6000000,
+          "effectText": "持ち込み枠 +1（計3）"
+        },
+        {
+          "cost": 14000000,
+          "effectText": "持ち込み枠 +1（計4）"
+        },
+        {
+          "cost": 24000000,
+          "effectText": "持ち込み枠 +1（計5）"
+        }
+      ]
+    },
+    {
+      "id": "road",
+      "facilityName": "街道整備",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 2000000,
+          "effectText": "ラン開始時の初期資金 +1,000G"
+        },
+        {
+          "cost": 6000000,
+          "effectText": "初期資金 さらに +1,000G（計+2,000G）"
+        },
+        {
+          "cost": 13000000,
+          "effectText": "初期資金 さらに +1,000G（計+3,000G）"
+        }
+      ]
+    },
+    {
+      "id": "press",
+      "facilityName": "印刷所",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 4000000,
+          "effectText": "開始時フォロワー +500・注目 +10"
+        },
+        {
+          "cost": 9000000,
+          "effectText": "さらにフォロワー +500・注目 +10（計+1,000/+20）"
+        }
+      ]
+    },
+    {
+      "id": "artisan",
+      "facilityName": "職人組合",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 7000000,
+          "effectText": "ラン開始時から鍛冶屋 Lv2"
+        },
+        {
+          "cost": 16000000,
+          "effectText": "鍛冶屋の開発費 -15%"
+        }
+      ]
+    },
+    {
+      "id": "tavern",
+      "facilityName": "酒場（情報局）",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 7000000,
+          "effectText": "ラン開始時から情報屋 Lv2（金融商品が最初から使える）"
+        },
+        {
+          "cost": 16000000,
+          "effectText": "取引所の売買手数料 -1%"
+        }
+      ]
+    },
+    {
+      "id": "workshop",
+      "facilityName": "工房区画",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 6000000,
+          "effectText": "マシン設置枠 +1"
+        },
+        {
+          "cost": 15000000,
+          "effectText": "マシンの購入費 -15%"
+        }
+      ]
+    },
+    {
+      "id": "farm",
+      "facilityName": "農場",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 3000000,
+          "effectText": "毎朝 +所持金の5%G（朝レポート「村からの収穫」）"
+        },
+        {
+          "cost": 7000000,
+          "effectText": "毎朝 +所持金の10%G"
+        },
+        {
+          "cost": 14000000,
+          "effectText": "毎朝 +所持金の20%G"
+        }
+      ]
+    },
+    {
+      "id": "training",
+      "facilityName": "訓練所",
+      "requiredHallLevel": 0,
+      "levels": [
+        {
+          "cost": 5000000,
+          "effectText": "配信の売上 +5%"
+        },
+        {
+          "cost": 12000000,
+          "effectText": "配信の売上 +10%"
+        }
+      ]
+    }
+  ],
+  "heroLevels": [
+    {
+      "Level": 1,
+      "MaxHp": 300,
+      "Attack": 55,
+      "Defense": 10
+    },
+    {
+      "Level": 2,
+      "MaxHp": 430,
+      "Attack": 70,
+      "Defense": 13
+    },
+    {
+      "Level": 3,
+      "MaxHp": 580,
+      "Attack": 90,
+      "Defense": 16
+    },
+    {
+      "Level": 4,
+      "MaxHp": 760,
+      "Attack": 115,
+      "Defense": 19
+    },
+    {
+      "Level": 5,
+      "MaxHp": 980,
+      "Attack": 145,
+      "Defense": 23
+    },
+    {
+      "Level": 6,
+      "MaxHp": 1220,
+      "Attack": 180,
+      "Defense": 26
+    },
+    {
+      "Level": 7,
+      "MaxHp": 1480,
+      "Attack": 220,
+      "Defense": 29
+    },
+    {
+      "Level": 8,
+      "MaxHp": 1780,
+      "Attack": 265,
+      "Defense": 32
+    },
+    {
+      "Level": 9,
+      "MaxHp": 2120,
+      "Attack": 315,
+      "Defense": 35
+    },
+    {
+      "Level": 10,
+      "MaxHp": 2500,
+      "Attack": 370,
+      "Defense": 38
+    }
+  ]
+}

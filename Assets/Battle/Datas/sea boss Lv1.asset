@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: sea boss Lv1
   enemyName: "\u30A6\u30AA\u30BF\u30A4\u30C1\u30E7\u30FC"
-  hp: 55
-  attackPower: 13
-  defensePower: 10
+  hp: 268
+  attackPower: 31
+  defensePower: 7
   elementType: 1
   enemySprite: {fileID: 21300000, guid: 5dcae583edc274fffbb1ba44289c74de, type: 3}
   skills: []

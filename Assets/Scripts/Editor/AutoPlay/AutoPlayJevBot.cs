@@ -147,6 +147,16 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
         if (upgradeOptions.Count > 1)
             req.Questions["upgrade"] = JevQuestion.Choice(who + "Should you invest in the shop today?", upgradeOptions);
 
+        // 勇者の装備（無料で付け外しできる）。強くすれば勝ちやすく、外せば負けやすく＝防衛報酬が狙える
+        req.Questions["hero_gear"] = JevQuestion.Choice(
+            who + "You can equip the hero for free with any unlocked weapon and armor. What should the hero carry into the next stream?",
+            new Dictionary<string, string>
+            {
+                ["best"] = "Equip the strongest unlocked weapon and armor: the hero gets stronger and is more likely to win.",
+                ["keep"] = "Keep the current equipment.",
+                ["none"] = "Remove all equipment: the hero is weaker and more likely to lose (you earn the defeat reward if the hero loses).",
+            });
+
         var resp = await SendAsync(req, ct);
         if (resp == null)
         {
@@ -194,6 +204,14 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
         {
             plan.Upgrade = Pick(upg) ?? "none";
             Record(plan.Decisions, s, "day", "upgrade", resp, plan.Upgrade);
+        }
+
+        if (resp.Answers.TryGetValue("hero_gear", out var gear))
+        {
+            string g = Pick(gear) ?? "keep";
+            if (g == "best") (plan.HeroWeapon, plan.HeroArmor) = AutoPlayGreedyBot.BestGear(s);
+            else if (g == "none") { plan.HeroWeapon = ""; plan.HeroArmor = ""; }
+            Record(plan.Decisions, s, "day", "hero_gear", resp, g);
         }
 
         return plan;
@@ -371,7 +389,12 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
                 blacksmithLevel = s.BlacksmithLevel,
                 buzz = s.BuzzActive ? s.BuzzType : "none",
             },
-            ["hero"] = new { level = s.HeroLevel, hp = s.HeroHp, attack = s.HeroAttack, defense = s.HeroDefense },
+            ["hero"] = new
+            {
+                level = s.HeroLevel, hp = s.HeroHp, attack = s.HeroAttack, defense = s.HeroDefense,
+                weapon = string.IsNullOrEmpty(s.HeroWeaponId) ? "none" : s.HeroWeaponId,
+                armor = string.IsNullOrEmpty(s.HeroArmorId) ? "none" : s.HeroArmorId,
+            },
             ["nextStream"] = s.NextStreamDungeon == null ? null : new
             {
                 dungeon = s.NextStreamDungeon,

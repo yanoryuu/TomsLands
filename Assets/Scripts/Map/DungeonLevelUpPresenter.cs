@@ -13,6 +13,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     private readonly StateManager        stateManager;
     private readonly HeroModel           heroModel;
     private readonly ItemModel           itemModel;
+    private readonly RelicEffectResolver relicResolver;
 
     private readonly CompositeDisposable disposables     = new();
     private          CompositeDisposable slotDisposables = new();
@@ -26,8 +27,10 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         TomsModel          tomsModel,
         StateManager       stateManager,
         HeroModel          heroModel,
-        ItemModel          itemModel)
+        ItemModel          itemModel,
+        RelicEffectResolver relicResolver)
     {
+        this.relicResolver = relicResolver;
         this.view              = view;
         this.dungeonRepository = dungeonRepository;
         this.tomsModel         = tomsModel;
@@ -226,10 +229,10 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     {
         if (!data.isShowedInfo) return "クリア確率: ？？？";
 
-        float currentProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, currentLevel);
+        float currentProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, currentLevel, relicResolver);
         if (isMax) return $"クリア確率 {currentProb:F0}%";
 
-        float nextProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, nextLevel);
+        float nextProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, nextLevel, relicResolver);
         return $"クリア確率 {currentProb:F0}% → {nextProb:F0}%";
     }
 

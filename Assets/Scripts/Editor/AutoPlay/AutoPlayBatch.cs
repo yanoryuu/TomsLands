@@ -37,6 +37,12 @@ public sealed class AutoPlayBatchConfig
     /// <summary>true = ゲーム本体の Debug.Log をそのまま出す（遅い）。false = 警告以上のみ。</summary>
     public bool VerboseLogs;
 
+    /// <summary>
+    /// リモート配信（gameconst.json / balance.json / items.json）をどこから当てるか。本番は Boot で Firebase の値が上書きされるため、
+    /// 既定は Docs/balance_upload/（アップロード予定の値。無ければ本番を取得）。None はローカルの SO/CSV だけ。
+    /// </summary>
+    public AutoPlayRemoteConfigSource RemoteConfig = AutoPlayRemoteConfigSource.UploadFolder;
+
     // --- 配信中の介入（Docs/Jev_AutoPlay_Design.md §2.5） ---
     /// <summary>ボットに配信中の介入（スパチャ）を使わせる。</summary>
     public bool EnableInterventions = true;
@@ -134,6 +140,8 @@ public static class AutoPlayBatch
 
         try
         {
+            LastRemoteInfo = await ApplyRemoteConfigAsync(config.RemoteConfig);
+            Debug.Log("[AutoPlay] リモート配信: " + LastRemoteInfo);
             var assets = AutoPlayAssets.Load(out var error);
             if (assets == null)
             {
@@ -250,6 +258,7 @@ public static class AutoPlayBatch
             Application.logMessageReceived -= OnLog;
             SceneTransitionService.DevSceneLoadInterceptor = null;
             SaveSlotManager.DevRootOverride = null;
+            ResetRemoteConfig();
             TryDeleteDirectory(saveRoot);
             IsRunning = false;
             _cts?.Dispose();
@@ -273,6 +282,66 @@ public static class AutoPlayBatch
                 return;
             }
         }
+    }
+
+    // =================================================================
+    // リモート配信（Boot の RemoteConfigService / ItemMasterService / RemoteBalanceService と同じ上書きを当てる）
+    // =================================================================
+
+    private const string ProductionBase = "https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/";
+    public static string UploadFolder => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Docs", "balance_upload");
+
+    /// <summary>直近のバッチで当てたリモート配信の説明（どの値で回ったか）。</summary>
+    public static string LastRemoteInfo { get; private set; } = "";
+
+    private static async Task<string> ApplyRemoteConfigAsync(AutoPlayRemoteConfigSource source)
+    {
+        ResetRemoteConfig();
+        if (source == AutoPlayRemoteConfigSource.None) return "なし（ローカルの SO/CSV のみ）";
+
+        var parts = new List<string>();
+        foreach (var name in new[] { "gameconst", "items", "balance" })
+        {
+            string json = null, from = null;
+            string local = Path.Combine(UploadFolder, name + ".json");
+            if (source == AutoPlayRemoteConfigSource.UploadFolder && File.Exists(local))
+            {
+                json = File.ReadAllText(local);
+                from = "upload";
+            }
+            else
+            {
+                try
+                {
+                    using (var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(20) })
+                        json = await http.GetStringAsync(ProductionBase + name + ".json");
+                    from = "production";
+                }
+                catch (Exception e)
+                {
+                    parts.Add($"{name}=取得失敗({e.Message})");
+                    continue;
+                }
+            }
+
+            int v = name switch
+            {
+                "gameconst" => GameConst.OverrideFromEnvelope(json),
+                "items" => ItemMaster.OverrideFromEnvelope(json),
+                _ => RemoteBalance.OverrideFromBundle(json),
+            };
+            parts.Add($"{name}=v{v}({from})");
+        }
+        EventDataLoader.ClearCache();
+        return string.Join(" / ", parts);
+    }
+
+    private static void ResetRemoteConfig()
+    {
+        GameConst.ResetToDefault();
+        ItemMaster.ResetToDefault();
+        RemoteBalance.ResetToDefault();
+        EventDataLoader.ClearCache();
     }
 
     private static bool OnSceneLoad(string sceneName)
@@ -326,4 +395,14 @@ public static class AutoPlayBatch
         Directory.CreateDirectory(ReportsRoot);
         EditorUtility.RevealInFinder(LastReportDir ?? ReportsRoot);
     }
+}
+
+public enum AutoPlayRemoteConfigSource
+{
+    /// <summary>ローカルの SO / CSV だけ（リモート配信を当てない）。</summary>
+    None,
+    /// <summary>Docs/balance_upload/ の gameconst.json / balance.json / items.json（アップロード予定の値）。無いファイルは本番から取得。</summary>
+    UploadFolder,
+    /// <summary>本番（Firebase）の配信を取得して当てる。</summary>
+    Production,
 }

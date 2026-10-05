@@ -281,6 +281,7 @@ public sealed class AutoPlayRunner
 
     private void ApplyDayPlan(AutoPlayDayPlan plan)
     {
+        if (plan.HeroWeapon != null || plan.HeroArmor != null) _game.EquipHero(plan.HeroWeapon, plan.HeroArmor);
         if (plan.Upgrade == "blacksmith") _game.UpgradeBlacksmith();
         else if (plan.Upgrade == "shop") _game.UpgradeShop();
 
@@ -344,6 +345,9 @@ public sealed class AutoPlayRunner
             DefeatReward = day.DefeatReward,
             Turns = b.Turns,
             BaselineTurns = b.BaselineTurns,
+            HeroLevel = snap.HeroLevel,
+            WeaponTier = snap.Items.FirstOrDefault(i => i.Id == snap.HeroWeaponId)?.Tier ?? 0,
+            ArmorTier = snap.Items.FirstOrDefault(i => i.Id == snap.HeroArmorId)?.Tier ?? 0,
         };
         Result.StreamRows.Add(row);
 
@@ -533,4 +537,7 @@ public sealed class AutoPlayStreamRow
     public int DefeatReward;
     public int Turns;
     public int BaselineTurns;
+    public int HeroLevel;
+    public int WeaponTier;
+    public int ArmorTier;
 }

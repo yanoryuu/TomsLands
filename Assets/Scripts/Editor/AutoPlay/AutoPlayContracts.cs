@@ -29,6 +29,8 @@ public interface IPlayerActions
     AutoPlayActionResult UpgradeBlacksmith();
     /// <summary>店レベルアップ（陳列枠が増える）。</summary>
     AutoPlayActionResult UpgradeShop();
+    /// <summary>勇者の装備を変える（HeroPanelPresenter.SetWeapon/SetArmor と同等。null = 変えない / "" = 外す）。</summary>
+    AutoPlayActionResult EquipHero(string weaponId, string armorId);
 
     // --- 陳列フェーズ ---
     /// <summary>陳列を全部外す。</summary>
@@ -104,6 +106,8 @@ public sealed class AutoPlaySnapshot
     public int HeroHp;
     public int HeroAttack;
     public int HeroDefense;
+    public string HeroWeaponId;
+    public string HeroArmorId;
 
     public bool BuzzActive;
     public string BuzzType;
@@ -219,6 +223,9 @@ public sealed class AutoPlayDayPlan
     public int SupportTimes = 1;
     /// <summary>none / blacksmith / shop</summary>
     public string Upgrade = "none";
+    /// <summary>勇者の装備（null = 変えない / "" = 外す / 銘柄ID）。</summary>
+    public string HeroWeapon;
+    public string HeroArmor;
 
     public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
 }

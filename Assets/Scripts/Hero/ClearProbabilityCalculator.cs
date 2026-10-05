@@ -25,9 +25,14 @@ public static class ClearProbabilityCalculator
         RuntimeHeroData hero,
         ItemModel itemModel,
         DungeonData dungeon,
-        int dungeonLevel)
+        int dungeonLevel,
+        RelicEffectResolver relicResolver = null)
     {
         if (hero == null || dungeon == null) return 50f;
+
+        // レリックの勇者弱体化（HeroPowerMul）は実戦闘（CharacterModel）で掛かるので表示にも掛ける
+        // （以前は掛けておらず「表示 60% なのに負ける」が起きていた。Jev AutoPlay の clearprob_mismatch で検出）
+        float powerMul = relicResolver != null ? Mathf.Max(0.1f, relicResolver.Modify(RelicStatId.HeroPowerMul, 1f)) : 1f;
 
         var phases = BuildPhases(dungeon, dungeonLevel);
         if (phases.Count == 0)
@@ -36,7 +41,7 @@ public static class ClearProbabilityCalculator
             return CalculateLegacy(hero, dungeon);
         }
 
-        return Simulate(hero, phases, HeroEquipmentBonus.Get(hero, itemModel));
+        return Simulate(hero, phases, HeroEquipmentBonus.Get(hero, itemModel), powerMul);
     }
 
     /// <summary>実戦闘（BattleContext.InitializePhases）と同じ優先順でフェーズ構成を作る。</summary>
@@ -68,12 +73,19 @@ public static class ClearProbabilityCalculator
     /// ・勇者死亡でそのターンの残りの敵は行動中断（実装の IsBattleEnded() break と同じ）
     /// ・ターン終了時: 死亡除去 → フェーズ全滅なら次フェーズ → 同時3体まで補充
     /// </summary>
-    private static float Simulate(RuntimeHeroData hero, List<DungeonPhaseData> phases, HeroEquipmentBonus.Multipliers equip)
+    private static float Simulate(RuntimeHeroData hero, List<DungeonPhaseData> phases, HeroEquipmentBonus.Multipliers equip, float powerMul = 1f)
     {
         int heroMaxHp = Mathf.Max(1, Mathf.RoundToInt(hero.hp.Value * equip.Hp));
-        int heroHp    = heroMaxHp;
         int heroAtk   = Mathf.Max(1, Mathf.RoundToInt(hero.attackPower.Value * equip.Attack));
         int heroDef   = Mathf.Max(0, Mathf.RoundToInt(hero.defensePower.Value * equip.Defense));
+        if (!Mathf.Approximately(powerMul, 1f))
+        {
+            // CharacterModel のコンストラクタと同じ丸め（max(1, round(v × powerMul))）
+            heroMaxHp = Mathf.Max(1, Mathf.RoundToInt(Mathf.RoundToInt(hero.hp.Value * equip.Hp) * powerMul));
+            heroAtk   = Mathf.Max(1, Mathf.RoundToInt(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack) * powerMul));
+            heroDef   = Mathf.Max(1, Mathf.RoundToInt(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense) * powerMul));
+        }
+        int heroHp    = heroMaxHp;
 
         int totalEnemies = phases.Sum(p => p.enemies.Count(e => e != null));
         int defeated = 0;

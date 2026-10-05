@@ -68,6 +68,8 @@ public static class AutoPlayBattleSurrogate
 
         // --- 介入 ---
         public StreamingInteractionSettings Settings;
+        /// <summary>表示クリア確率にレリックの HeroPowerMul を掛けるため（null = 掛けない）。</summary>
+        public RelicEffectResolver Relic;
         public IReadOnlyList<AutoPlayInterventionOrder> Orders;
         /// <summary>配信開始時の所持金（利用可能残高 = 所持金 + 戦闘中売上 − 介入支出）。</summary>
         public int StartMoney;
@@ -112,7 +114,7 @@ public static class AutoPlayBattleSurrogate
             return outcome;
         }
 
-        outcome.DisplayedClearPct = ClearProbabilityCalculator.Calculate(input.Hero, input.ItemModel, input.Dungeon, input.Level);
+        outcome.DisplayedClearPct = ClearProbabilityCalculator.Calculate(input.Hero, input.ItemModel, input.Dungeon, input.Level, input.Relic);
         var phases = BuildPhases(input.Dungeon, input.Level);
         if (phases.Count == 0)
         {
