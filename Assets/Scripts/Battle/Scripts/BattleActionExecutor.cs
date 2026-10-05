@@ -13,12 +13,15 @@ public class BattleActionExecutor
     private readonly BattleContext context;
     private readonly BattleSequencer sequencer;
     private readonly BattlePauseController pauseController;
+    // 介入の指示キュー（null なら介入なし＝従来と同じ挙動）
+    private readonly InterventionCommandQueue interventions;
 
-    public BattleActionExecutor(BattleContext ctx, BattleSequencer battleSequencer, BattlePauseController pauseCtrl = null)
+    public BattleActionExecutor(BattleContext ctx, BattleSequencer battleSequencer, BattlePauseController pauseCtrl = null, InterventionCommandQueue interventionQueue = null)
     {
         context = ctx;
         sequencer = battleSequencer;
         pauseController = pauseCtrl;
+        interventions = interventionQueue;
     }
 
     /// <summary>
@@ -35,6 +38,16 @@ public class BattleActionExecutor
 
             if (presenter.GetModel().IsDead) continue;
 
+            // 介入: 勇者側の指示は勇者の手番、ダンジョン側の指示は魔物の手番の頭で実行（§4-4）
+            if (interventions != null)
+            {
+                if (presenter.GetModel().Type == CharacterType.Hero)
+                    await interventions.OnHeroTurnAsync(context, token);
+                else
+                    interventions.OnEnemyTurn(context);
+                if (IsBattleEnded()) break;
+            }
+
             var targetPresenter = GetAttackTarget(presenter);
             // ターゲットが既に死亡している場合はスキップ
             if (targetPresenter == null || targetPresenter.GetModel().IsDead) continue;
@@ -47,7 +60,10 @@ public class BattleActionExecutor
                 uiView.ScaleSeconds(tempo.attackMotionSeconds),
                 token);
 
-            int damageDealt = presenter.PerformAttack(targetPresenter);
+            var modifier = interventions != null
+                ? interventions.ResolveAttack(context, presenter.GetModel(), targetPresenter.GetModel())
+                : InterventionAttackModifier.None;
+            int damageDealt = presenter.PerformAttack(targetPresenter, modifier.Multiplier, modifier.BonusDamage);
             string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
             await uiView.AddLogAsync(logMessage, token);
 
@@ -177,6 +193,9 @@ public class BattleActionExecutor
     {
         if (attacker.GetModel().Type == CharacterType.Hero)
         {
+            // 介入（青・赤スパ）で敵をタップ指定していればその敵（無ければ従来どおり先頭の生存敵）
+            var picked = interventions?.PickHeroTarget(context);
+            if (picked != null) return picked;
             return context.EnemyPresenters.FirstOrDefault(p => !p.GetModel().IsDead);
         }
         else

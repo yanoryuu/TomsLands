@@ -124,7 +124,9 @@ UnityEngine.Random・AssetDatabase・モデルのファイル I/O はメイン�
 |---|---|---|
 | 勝敗 | `BattleFlowManager` の決定論戦闘 | `ClearProbabilityCalculator` と同じルールのドライラン（＋`HeroPowerMul` を `CharacterModel` と同じ丸めで適用）。オプションで「表示確率で抽選」 |
 | 撃破数（経験値） | 実際の撃破 | ドライランの撃破数 |
-| 配信販売 | 時間ループ＋戦闘ターン毎の販売、`BattleDemandTracker`、配信熱による価格変動、属性相性の値動き | `StreamingSalesModel.ProcessSingleItemSale` と同じ式（需要×SalesRate×max(1,陳列数)、端数は確率）を **戦闘ターン数×倍率** 回。価格は配信開始時のまま |
+| 配信販売 | 時間ループ＋戦闘ターン毎の販売、`BattleDemandTracker`、配信熱による価格変動、属性相性の値動き | `StreamingSalesModel.ProcessSingleItemSale` と同じ式（需要×SalesRate×max(1,陳列数)、端数は確率）を **戦闘1ターンごとに `StreamSalesScale` 回**（戦闘中の売上は介入の利用可能残高にも入る）。価格は配信開始時のまま |
+| 介入（スパチャ） | `InterventionPresenter` / `InterventionCommandQueue` / 各 Command | 写し（§2.5） |
+| 視聴者スパチャ | `SuperChatGenerator`（同接・熱で発生率が変わる） | 赤スパ起点の必殺技だけを「1戦闘ターンあたり確率 p」で再現（収入には入れない） |
 | 補充ポップアップ | あり | なし |
 | 防衛報酬 | `rewardGold × DefeatRewardMul` | 同じ |
 
@@ -133,6 +135,44 @@ Phase 3 で Play モードの実配信を数十回記録し、`StreamSalesScale`
 
 表示確率とドライランが食い違ったら `clearprob_mismatch` を出す（例: レリックの HeroPowerMul は**表示確率に反映されていない**ので、
 弱体化レリック所持時に「表示 70% なのに負ける」が起きうる＝実バグ候補）。
+整合チェックは「介入なし」のドライランで行う（介入で勝敗が変わるのは仕様なので異常にしない）。
+
+### 2.5 配信中の介入（スパチャ）のモデル化（2026-10-05 追加）
+
+仕様は Docs/Streaming_Redesign.md §4・§5。本体（`Battle/Intervention/`）は読むだけで変更せず、AutoPlay 側に写しを持つ。
+数値（金額・倍率・上限・クールダウン）はすべて `StreamingInteractionSettings`（Addressable → RemoteBalance → 既定値。`StreamingInteractionSettings.Load()`）から読む。
+
+**写した処理**（`AutoPlayBattleSurrogate.BattleRun`）
+
+| 本体 | 写し |
+|---|---|
+| `InterventionCommandQueue`（指示は同時に1件、勇者側は勇者の手番の頭・ダンジョン側は魔物の手番の頭で実行、視聴者の必殺技は別枠1件で勇者側の指示が無いときに実行） | 同じ順序 |
+| `InterventionCommandQueue.ResolveAttack`（勇者の攻撃: 強化倍率→呪い×→ボス強化中ボスへは被ダメ×。魔物の攻撃: ボス強化中ボスは攻撃×、罠は最大HP×割合の防御無視ダメージを1回） | 同じ式・同じ消費順 |
+| `CharacterPresenter.PerformAttack` / `CharacterModel.ApplyDamage`（max(1, 攻撃 − 防御)）/ `ApplyBonusDamage`（倒れていたら入らない）/ `Heal`（最大HPまで） | 同じ式 |
+| `ReinforceCommand`（現在フェーズの通常魔物から抽選→全フェーズの通常魔物。ボスは出さない） | 同じ（抽選はランの System.Random） |
+| `InterventionPresenter.Stop`（決着で未実行の指示は返金） | 同じ |
+| 必殺技の上限（プレイヤー＋視聴者、予約ベースで数える）・ボス強化の上限 | 同じ |
+| 精算 `純利益 = 売上 − 補充 + 返金 + 防衛報酬 − 介入支出 + 未実行の返金`、利用可能残高 `所持金 + 戦闘中売上 − 補充 − 介入支出` | 同じ（補充は未再現なので 0） |
+
+**時間の近似（離散モデル）**: 戦闘は一括で解くので、ボットは配信前に「何を・配信のどのあたり（timing 0〜1）で使うか」の**予定リスト**を渡す。
+
+- timing → 戦闘ターン: 介入なしで何ターンかかるか（H）を先にドライランし、`round(timing × (H−1))` ターン目の頭で出す。
+- その時点で指示が実行待ち、またはクールダウン中なら、出せるターンまで**待つ**。上限超過・残高不足ならその予定は**捨てて**次の予定を見る（理由は streams.csv の skipped）。
+- クールダウン（秒）は `ceil(cooldownSeconds / SecondsPerBattleTurn)` ターン（既定 6秒 ÷ 3秒 = 2ターン）。`SecondsPerBattleTurn` は較正値（設定で変更可）。
+- 視聴者の赤スパ: SO の `viewerSuperChatEnabled && viewerRedTriggersSpecial` が ON のとき（設定で強制 ON/OFF も可）、1戦闘ターンあたり確率 `ViewerRedChancePerTurn`（既定 0.03・較正値）で必殺技を予約。同接・熱による発生率の変化は再現しない。
+- 抽選モード（勝敗を表示確率で抽選）では、介入で勝敗がドライランから変わったときだけドライランの結果を採用し、それ以外は従来どおり抽選する。
+
+**判断の手**（`IPlayerActions.StartStream(items, interventions)`）: 配信日のスナップショットに `Stream`（ダンジョン・表示クリア確率・ボス有無・魔物数・防衛報酬の見込み・装備込みの勇者の HP/攻撃/防御・介入メニュー（価格・払えるか・英語の効果説明））を載せる。
+メニューには貪欲ボット用の**オラクル**（その介入を中盤に1回使ったら勝敗とターン数がどうなるか、介入なしの勝敗）も入るが、**Jev の state には載せない**（プレイヤーは見られない）。
+
+| ボット | 介入の手 |
+|---|---|
+| 貪欲 | 期待値ベース（オラクル使用＝上限側の基準）: `EV = 防衛報酬の増減（勝敗が反転するか） + 配信が延び/縮むぶんの売上 − 価格` が正で最大の1件を中盤に |
+| ランダム | 30% で1件（うち 1/3 は2件）、種類・タイミングとも一様 |
+| Jev | §3.2 の `stream_intervene` / `intervene_timing` |
+
+**対照群**: `ControlRunsWithoutInterventions`（既定 ON）で、同じシードを介入なしで回すボット `greedy+noint` / `random+noint` を自動で足す（Jev を含めるかは `ControlRunsIncludeJev`、費用2倍）。
+各配信は「介入なしならどうだったか」もドライランで記録するので、対照群が無くても配信単位の反転は測れる。
 
 ---
 
@@ -165,6 +205,9 @@ Phase 3 で Play モードの実配信を数十回記録し、`StreamSalesScale`
 | `upgrade` | Choice（none/blacksmith/shop） | 設備投資するか | 同上 |
 
 配信日: `stream_pick`（Choice・在庫あり銘柄・分布で上位6銘柄を選ぶ）＋ `stream_amount`（Score 5段階）。
+＋ 介入（§2.5）: `stream_intervene`（Choice: none ＋ 払える介入 heal / skill / special / trap / curse / reinforce / bossbuff。説明に価格と効果を英語で）と
+`intervene_timing`（Score 5段階: 開幕/序盤/中盤/終盤/最後＝ボス付近 → timing 0/0.25/0.5/0.75/1）。1件目は Sample/Argmax、2番手の確率が 25% 以上なら timing+0.3 で重ねる。
+state の `stream` に 勇者の HP/攻撃/防御（装備込み）・表示クリア確率・魔物数・ボス有無・防衛報酬・所持金 を載せる。
 レリック: `relic`（Choice・候補＋decline。説明は日本語しか無いのでレア度と ID が主）。
 
 **分布を使う理由**: 市場シミュの教訓（argmax だと全員同じ手になり分布の情報が消える）。配分系はそのまま比率に、
@@ -178,8 +221,10 @@ Phase 3 で Play モードの実配信を数十回記録し、`StreamSalesScale`
 |---|---|---|
 | steady | 堅実 | 破産回避最優先・返済額を残す・分散・無署名の噂は信じない |
 | speculator | 投機 | 新聞の原因から値上がりを読み、1〜2銘柄に集中。損失を許容 |
-| streamer | 配信重視 | 配信日に向けて仕入れて溜める。店売りは二の次 |
-| demonlord | 魔王軍支援 | 防衛報酬が費用を上回るなら次の配信ダンジョンを強化 |
+| streamer | 配信重視 | 配信日に向けて仕入れて溜める。店売りは二の次。配信中は勇者側スパチャ（回復・スキル・必殺技）を好む |
+| demonlord | 魔王軍支援 | 防衛報酬が費用を上回るなら次の配信ダンジョンを強化。配信中はダンジョン側の介入（罠・呪い・増援・ボス強化）を好む |
+
+（堅実は「明らかに得なときだけ」、投機は「勝敗を振れるなら一発勝負」の文言を介入についても足してある）
 
 ペルソナ × シードの全組み合わせを1バッチで交互実行する。比較の基準として毎回 貪欲・ランダムを同じシードで並走させる。
 
@@ -196,6 +241,14 @@ Phase 3 で Play モードの実配信を数十回記録し、`StreamSalesScale`
 例: 4ペルソナ × 20シード × Medium ≒ 80ラン ≒ **約60円**。ウィンドウに概算が出る。実測値は summary に出る（`usage.input_tokens` を合算）。
 レート制限 1200 req/分に対して、同時8ラン × 1req/〜0.4秒 なので余裕あり（429 は JevApi が指数バックオフ）。
 
+**実測（2026-10-05）**: Medium 80ラン（4ペルソナ×20シード）で 1,654 リクエスト・入力 7.99M tokens（≒4.8k/req）・**$0.336（≒50円）**。
+介入の質問は配信日のリクエストに相乗りする（リクエスト数は増えない）。メニュー説明のぶん配信日の入力が +0.5〜1k tokens 増える見込み → **同条件で約55円**。
+対照群は貪欲・ランダムだけなら無料。Jev を含めると約2倍（`ControlRunsIncludeJev`）。`CostLimitUsd`（既定 ≒100円）で自動停止する。
+
+**介入の試走の推奨条件**: Medium・20シード・4ペルソナ・貪欲/ランダム＋対照群（Jev 対照なし）・視聴者赤スパ FollowSettings。
+まず API なしで貪欲/ランダムだけ回して ROI・反転率の桁を見る → 問題なければ Jev（≒55円）。
+較正値（`SecondsPerBattleTurn` 3秒・`ViewerRedChancePerTurn` 0.03）は実配信の記録で見直す。
+
 ---
 
 ## 4. 出力
@@ -208,8 +261,11 @@ Phase 3 で Play モードの実配信を数十回記録し、`StreamSalesScale`
 | `turns.csv` | 1日1行: 所持金・在庫評価額・未約定の売り注文・純資産・その日の支出/入金/配信売上/防衛報酬/返済/支援/投資・勝敗・クリア確率・勇者Lv・バズ・陳列種類数 |
 | `decisions.csv` | 判断1件1行: 質問・選択・score・confidence・確率分布（上位8） |
 | `anomalies.csv` | 異常1件1行 |
+| `streams.csv` | 配信1回1行: 表示クリア確率・介入なしの勝敗・実際の勝敗・予定/実行/見送り（理由）・勇者側/ダンジョン側の支出・返金・必殺技（うち視聴者）・配信売上・防衛報酬・ターン数（介入なしのターン数） |
 | `summary.json` | ボット別集計（破産率・所持金の平均/中央値/P10/P90・勇者勝率・判断の頻度・ターン別平均所持金）＋設定 |
-| `summary.md` | 上記の表＋所持金推移表＋異常の種類別件数と例＋判断の分布＋警告ログの抜粋 |
+| `summary.md` | 上記の表＋所持金推移表＋**配信中の介入**（介入/ラン・支出・返金・勇者側/ダンジョン側・介入あり/なしの配信の勇者勝率・反転率・ダンジョン側で負けに反転させた回数と防衛報酬・**ROI＝反転させた配信の防衛報酬 ÷ ダンジョン側支出**・種類別の実行回数・対照群との勝率/純資産の差）＋異常の種類別件数と例＋判断の分布＋警告ログの抜粋 |
+
+runs.csv にも介入の列（回数・支出・返金・勇者側/ダンジョン側・反転回数・反転の防衛報酬・ダンジョン側配信の防衛報酬）を足した。turns.csv に `interventionNet`。
 
 ### 4.1 異常検知
 
@@ -275,6 +331,11 @@ Jev の累計コストが `CostLimitUsd`（既定 ≒100円）を超えたらバ
 - 情報屋（弱点の購入）・広告・金融商品・マシン・勇者の装備変更はまだボットの手に無い（API に足せば Jev の質問も足せる）。
 - 「営業日の計画は1リクエスト」なので、仕入れの結果を見てから陳列を考え直すことはしない（陳列は買う予定の銘柄も候補に含める）。
 - レリックの説明文は日本語のみ（英訳列が無い）。
+- 介入（§2.5）: 配信中に戦況を見て判断し直すことはしない（予定リストを配信前に1回決めるだけ）。熱・同接・武器の需要UP/価格UP（スキル・必殺技の副作用）、
+  勇者のタップ指定（対象選択。総ダメージは同じ）、カットインの時間は再現しない。視聴者スパチャは赤スパの必殺技だけ。
+  介入した配信の「反転」は介入なしドライランとの比較なので、同じ配信で視聴者の必殺技が出た影響も含まれる（streams.csv の viewerSpecials で区別できる）。
+- 写しの追従: `InterventionCommandQueue.ResolveAttack`・各 Command・`BattleSceneStarter` の精算式が変わったら `AutoPlayBattleSurrogate` を直す。
+  `BattleOutputData.SetStreamingStats` を呼んでいるので、その引数が変わったら `AutoPlayHeadlessGame.StartStream` も直す。
 
 ---
 

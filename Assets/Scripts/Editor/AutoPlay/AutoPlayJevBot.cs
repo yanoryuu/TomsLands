@@ -18,25 +18,25 @@ public sealed class AutoPlayPersona
         {
             Id = "steady", LabelJa = "堅実",
             Instruction = "You are a cautious, steady shopkeeper. Never risk bankruptcy: always keep enough cash for the next debt payment. " +
-                          "Prefer items with solid demand and calm prices, spread purchases over several items, and avoid rumors from unsigned sources.",
+                          "Prefer items with solid demand and calm prices, spread purchases over several items, and avoid rumors from unsigned sources. During streams you rarely pay for super chats unless the gain clearly exceeds the price.",
         },
         new AutoPlayPersona
         {
             Id = "speculator", LabelJa = "投機",
             Instruction = "You are an aggressive speculator. You read the newspaper for causes that will move demand, " +
-                          "concentrate cash on the one or two items you expect to rise, and accept the risk of losses.",
+                          "concentrate cash on the one or two items you expect to rise, and accept the risk of losses. During streams you make bold one-shot bets with super chats when they could swing the result.",
         },
         new AutoPlayPersona
         {
             Id = "streamer", LabelJa = "配信重視",
             Instruction = "You focus on the live streams. You stock up on goods to sell to stream viewers on stream days, " +
-                          "prefer items with high demand, and treat daily shop sales as secondary.",
+                          "prefer items with high demand, and treat daily shop sales as secondary. During streams you like hero-side super chats (heal, skill, special move) that excite viewers and keep the stream going longer.",
         },
         new AutoPlayPersona
         {
             Id = "demonlord", LabelJa = "魔王軍支援",
             Instruction = "You profit when the hero loses. You pay the demon army to strengthen the dungeon of the next stream " +
-                          "when the defeat reward is worth more than the cost, and otherwise run the shop normally.",
+                          "when the defeat reward is worth more than the cost, and otherwise run the shop normally. During streams you prefer dungeon-side interventions (trap, curse, reinforcements, boss buff) that can make the hero lose.",
         },
     };
 
@@ -206,17 +206,41 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
     public async Task<AutoPlayStreamPlan> PlanStreamAsync(AutoPlaySnapshot s, CancellationToken ct)
     {
         var stocked = s.Items.Where(i => i.Stock > 0).ToList();
-        if (stocked.Count == 0) return new AutoPlayStreamPlan();
+        var info = s.Stream;
+        var interveneOptions = new Dictionary<string, string>();
+        if (info != null && info.InterventionsEnabled)
+        {
+            interveneOptions["none"] = "Do not pay for any super chat or intervention in this stream.";
+            foreach (var o in info.Options.Where(o => o.Affordable))
+                interveneOptions[AutoPlayInterventionKinds.Key(o.Kind)] = $"Pay {o.Price}G. {o.DescriptionEn}";
+            if (interveneOptions.Count == 1) interveneOptions.Clear();
+        }
+        if (stocked.Count == 0 && interveneOptions.Count == 0) return new AutoPlayStreamPlan();
 
         var req = new JevRequest { State = BuildState(s) };
         string who = _persona.Instruction + " ";
-        req.Questions["stream_pick"] = JevQuestion.Choice(
-            who + $"Today is a stream day ({s.NextStreamDungeon}, hero clear chance {s.NextStreamClearChancePct:F0}%). " +
-            "Which item should you bring to sell to the stream viewers? Items sell at today's price, faster when demand is high.",
-            stocked.ToDictionary(i => i.Id, DescribeItem));
-        req.Questions["stream_amount"] = JevQuestion.Score(
-            who + "How much of the stock of the chosen items should you bring to the stream?",
-            new[] { "Bring almost nothing", "Bring about a quarter", "Bring about half", "Bring about three quarters", "Bring all of it" });
+        if (stocked.Count > 0)
+        {
+            req.Questions["stream_pick"] = JevQuestion.Choice(
+                who + $"Today is a stream day ({s.NextStreamDungeon}, hero clear chance {s.NextStreamClearChancePct:F0}%). " +
+                "Which item should you bring to sell to the stream viewers? Items sell at today's price, faster when demand is high.",
+                stocked.ToDictionary(i => i.Id, DescribeItem));
+            req.Questions["stream_amount"] = JevQuestion.Score(
+                who + "How much of the stock of the chosen items should you bring to the stream?",
+                new[] { "Bring almost nothing", "Bring about a quarter", "Bring about half", "Bring about three quarters", "Bring all of it" });
+        }
+        if (interveneOptions.Count > 0)
+        {
+            // 側（勇者/ダンジョン）と種類を1問で聞く。払うお金は所持金から（視聴者のスパチャは収入にならない）
+            req.Questions["stream_intervene"] = JevQuestion.Choice(
+                who + "During the stream you may pay money for one intervention: hero-side super chats help the hero win and " +
+                "make the stream more exciting; dungeon-side interventions help the monsters, and if the hero loses you earn " +
+                "the defeat reward (see 'stream' in the state). The price is paid from your cash and is not returned. " +
+                "Which intervention is worth it in this stream, if any?", interveneOptions);
+            req.Questions["intervene_timing"] = JevQuestion.Score(
+                who + "If you intervene, at which point of the battle should you do it?",
+                new[] { "Right at the start", "Early", "In the middle", "Late", "Near the end (e.g. at the boss)" });
+        }
 
         var resp = await SendAsync(req, ct);
         if (resp == null)
@@ -227,18 +251,38 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
         }
 
         var plan = new AutoPlayStreamPlan();
-        float frac = Fraction(resp, "stream_amount", 5, 1f);
         if (resp.Answers.TryGetValue("stream_pick", out var pick) && pick.Probabilities != null)
         {
+            float frac = Fraction(resp, "stream_amount", 5, 1f);
             foreach (var kv in TopShares(pick.Probabilities, minShare: 0.05f, maxKinds: 6))
             {
-                var item = stocked.First(i => i.Id == kv.Key);
+                var item = stocked.FirstOrDefault(i => i.Id == kv.Key);
+                if (item == null) continue;
                 int qty = Mathf.Clamp(Mathf.RoundToInt(item.Stock * frac), 0, item.Stock);
                 if (qty > 0) plan.Items.Add(new AutoPlayStreamItem(item.Id, qty));
             }
             Record(plan.Decisions, s, "stream", "stream_pick", resp, pick.Choice);
+            Record(plan.Decisions, s, "stream", "stream_amount", resp, frac.ToString("F2"));
         }
-        Record(plan.Decisions, s, "stream", "stream_amount", resp, frac.ToString("F2"));
+
+        if (resp.Answers.TryGetValue("stream_intervene", out var iv))
+        {
+            float timing = Fraction(resp, "intervene_timing", 5, 0.5f);
+            string first = Pick(iv) ?? "none";
+            if (AutoPlayInterventionKinds.TryParse(first, out var k1))
+            {
+                plan.Interventions.Add(new AutoPlayInterventionOrder(k1, timing));
+                // 2番手も強く推されていれば（25%以上）、少し後に重ねる（同時に1件・クールダウンはサロゲートが守る）
+                var second = iv.Probabilities?
+                    .Where(kv => kv.Key != first && kv.Key != "none" && kv.Value >= 0.25f)
+                    .OrderByDescending(kv => kv.Value).Select(kv => kv.Key).FirstOrDefault();
+                if (second != null && AutoPlayInterventionKinds.TryParse(second, out var k2))
+                    plan.Interventions.Add(new AutoPlayInterventionOrder(k2, Mathf.Clamp01(timing + 0.3f)));
+            }
+            Record(plan.Decisions, s, "stream", "stream_intervene", resp,
+                plan.Interventions.Count == 0 ? "none" : string.Join("+", plan.Interventions.Select(i => AutoPlayInterventionKinds.Key(i.Kind))));
+            Record(plan.Decisions, s, "stream", "intervene_timing", resp, timing.ToString("F2"));
+        }
         return plan;
     }
 
@@ -360,6 +404,21 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
                 defeatReward = d.DefeatReward,
                 supportCost = d.SupportCost,
             }).ToList(),
+            // 配信日だけ: 配信画面で見える情報（勇者の強さ・クリア確率・ボスの有無・防衛報酬）。オラクルの what-if は載せない
+            ["stream"] = s.Stream == null ? null : new
+            {
+                dungeon = s.Stream.Dungeon,
+                dungeonLevel = s.Stream.Level,
+                heroClearChancePct = Mathf.RoundToInt(s.Stream.DisplayedClearPct),
+                heroMaxHp = s.Stream.HeroMaxHp,
+                heroAttack = s.Stream.HeroAttack,
+                heroDefense = s.Stream.HeroDefense,
+                monsters = s.Stream.EnemyCount,
+                bossPresent = s.Stream.HasBoss,
+                defeatRewardIfHeroLoses = s.Stream.DefeatReward,
+                cashAvailableForSuperChats = s.Money,
+                interventionsEnabled = s.Stream.InterventionsEnabled,
+            },
             ["newspaper"] = s.News.Select(n => new
             {
                 paper = n.Company,

@@ -19,6 +19,16 @@ public enum StreamingCommentTrigger
     HeatDown,
     Victory,
     Defeat,
+    // ── 介入・スパチャ（Docs/Streaming_Redesign.md §4・§5）──
+    SuperChat,          // 視聴者スパチャ（青〜桃）への反応
+    RedSuperChat,       // 赤スパへの反応（大弾幕）
+    InterventionHeal,   // 緑スパ: 回復
+    InterventionSkill,  // 青スパ: スキル攻撃
+    SpecialMove,        // 赤スパ: 必殺技（「うおおおお」弾幕）
+    DungeonTrap,
+    DungeonCurse,
+    DungeonReinforce,
+    DungeonBossBuff,
 }
 
 public enum NicoCommentSize { Small, Medium, Big }

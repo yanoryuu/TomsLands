@@ -40,9 +40,38 @@ public sealed class AutoPlayGreedyBot : IAutoPlayBot
     public Task<AutoPlayStreamPlan> PlanStreamAsync(AutoPlaySnapshot s, CancellationToken ct)
     {
         var plan = new AutoPlayStreamPlan();
-        foreach (var i in s.Items.Where(i => i.Stock > 0).OrderByDescending(i => i.Demand * i.Price * i.SalesRate))
+        var brought = s.Items.Where(i => i.Stock > 0).OrderByDescending(i => i.Demand * i.Price * i.SalesRate).Take(6).ToList();
+        foreach (var i in brought)
             plan.Items.Add(new AutoPlayStreamItem(i.Id, i.Stock));
         plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "stream", Question = "stream_kinds", Chosen = plan.Items.Count.ToString() });
+
+        // 介入: 期待値ベース（オラクル what-if を使う上限側の基準）。
+        //   EV = 防衛報酬の増減（勝敗が反転するか）＋ 配信が延びる/縮むぶんの売上 − 価格。正で最大の1件だけ使う
+        var info = s.Stream;
+        string chosen = "none";
+        if (info != null && info.InterventionsEnabled)
+        {
+            float perTurn = brought.Sum(i => Mathf.Min(i.Stock, Mathf.Clamp01(i.Demand) * i.SalesRate * Mathf.Max(1, i.DisplayStock)) * i.Price);
+            float stockValue = brought.Sum(i => (float)i.Stock * i.Price);
+            float SalesOver(int turns) => Mathf.Min(stockValue, perTurn * turns);
+
+            AutoPlayInterventionOption best = null;
+            float bestEv = 0f;
+            foreach (var o in info.Options.Where(o => o.Affordable))
+            {
+                float reward = 0f;
+                if (info.BaselineHeroWins && !o.WhatIfHeroWins) reward += info.DefeatReward;
+                if (!info.BaselineHeroWins && o.WhatIfHeroWins) reward -= info.DefeatReward;
+                float ev = reward + SalesOver(o.WhatIfTurns) - SalesOver(info.BaselineTurns) - o.Price;
+                if (ev > bestEv) { bestEv = ev; best = o; }
+            }
+            if (best != null)
+            {
+                plan.Interventions.Add(new AutoPlayInterventionOrder(best.Kind, 0.5f));
+                chosen = AutoPlayInterventionKinds.Key(best.Kind);
+            }
+        }
+        plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "stream", Question = "stream_intervene", Chosen = chosen });
         return Task.FromResult(plan);
     }
 
@@ -102,6 +131,23 @@ public sealed class AutoPlayRandomBot : IAutoPlayBot
             if (_rng.NextDouble() < 0.5) continue;
             plan.Items.Add(new AutoPlayStreamItem(i.Id, _rng.Next(1, i.Stock + 1)));
         }
+
+        // 介入: 30% で1件、さらに 10% で2件目（種類・タイミングとも一様）
+        var info = s.Stream;
+        if (info != null && info.InterventionsEnabled && info.Options.Count > 0)
+        {
+            int n = _rng.NextDouble() < 0.3 ? (_rng.NextDouble() < 0.33 ? 2 : 1) : 0;
+            for (int k = 0; k < n; k++)
+            {
+                var o = info.Options[_rng.Next(info.Options.Count)];
+                plan.Interventions.Add(new AutoPlayInterventionOrder(o.Kind, (float)_rng.NextDouble()));
+            }
+        }
+        plan.Decisions.Add(new AutoPlayDecision
+        {
+            Turn = s.RunTurn, Phase = "stream", Question = "stream_intervene",
+            Chosen = plan.Interventions.Count == 0 ? "none" : string.Join("+", plan.Interventions.Select(i => AutoPlayInterventionKinds.Key(i.Kind))),
+        });
         return Task.FromResult(plan);
     }
 

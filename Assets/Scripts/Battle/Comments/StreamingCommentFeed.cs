@@ -132,6 +132,16 @@ public sealed class StreamingCommentFeed : IDisposable
         }
     }
 
+    /// <summary>
+    /// 文言を直接差し込む（スパチャの同色の上固定コメなど、カタログに無い文言用）。即時に出す。
+    /// </summary>
+    public void PushText(string text, Color color, NicoCommentSize size = NicoCommentSize.Medium,
+        NicoCommentPosition position = NicoCommentPosition.Top, int priority = 4)
+    {
+        if (!IsRunning || string.IsNullOrEmpty(text)) return;
+        _scheduled.Add((_now, new StreamingCommentRequest(Fill(text, null), color, size, position, priority)));
+    }
+
     private float NextIdleInterval()
     {
         float t = Mathf.Clamp01(Heat / 100f);

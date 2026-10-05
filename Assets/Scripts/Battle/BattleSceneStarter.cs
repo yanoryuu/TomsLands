@@ -26,6 +26,8 @@ public class BattleSceneStarter : IAsyncStartable
     private readonly BattlePanelManager _panelManager;
     private readonly BattleControlView _controlView;
     private readonly TutorialScenarioService _tutorialScenario;
+    private readonly InterventionPresenter _interventions; // 介入（勇者側・ダンジョン側）
+    private readonly SuperChatGenerator _superChats;       // 視聴者ランダムスパチャ（収入にしない）
 
     // 配信チュートリアルのシナリオラベル
     private const string TutorialStreamingPrepare = "Tutorial_StreamingPrepare";
@@ -54,8 +56,12 @@ public class BattleSceneStarter : IAsyncStartable
         BattleResultView resultView,
         BattlePanelManager panelManager,
         BattleControlView controlView,
-        TutorialScenarioService tutorialScenario)
+        TutorialScenarioService tutorialScenario,
+        InterventionPresenter interventions,
+        SuperChatGenerator superChats)
     {
+        _interventions = interventions;
+        _superChats = superChats;
         _tutorialScenario = tutorialScenario;
         _battleSequencer = battleSequencer;
         _inputData = inputData;
@@ -207,6 +213,10 @@ public class BattleSceneStarter : IAsyncStartable
         }
         ItemSlotView.OnItemClicked += OnDepletedItemClicked;
 
+        // 介入の受付開始（キューを BattleSequencer に渡すので StartBattle より前）。
+        // 補充費用は利用可能残高の計算に使う
+        _interventions?.Start(_salesController, () => _battleSpending);
+
         _battleSequencer.StartBattle(heroModel);
 
         // バトル終了待ち
@@ -216,6 +226,12 @@ public class BattleSceneStarter : IAsyncStartable
         // バトル終了 → ポーズ解除してからループキャンセル（WaitIfPausedAsync が抜けられるように）
         _pauseController.Resume();
         battleCts.Cancel();
+
+        // 介入の受付を閉じる（未実行の指示は返金）→ 視聴者スパチャの発生を止める。
+        // どちらも StopSales・スナップショットより前（§5-3 の停止順序）
+        int interventionRefund = _interventions != null ? _interventions.Stop() : 0;
+        _superChats?.Stop();
+
         ItemSlotView.OnItemClicked -= OnDepletedItemClicked;
         disposables.Dispose();
 
@@ -229,17 +245,24 @@ public class BattleSceneStarter : IAsyncStartable
         int rawSales = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
         int restockRefund = CalculateUnsoldRestockRefund(soldItems); // 補充分の売れ残りは返金
         int defeatReward = CalculateDefeatReward(battleResult.result); // 勇者敗北時（ダンジョン防衛成功）の報酬
-        int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward;
+        // 介入: 払った総額を引き、未実行分の返金を戻す（介入なしならどちらも 0 で従来と同じ式）
+        int interventionSpent = _interventions != null ? _interventions.TotalSpent : 0;
+        int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward - interventionSpent + interventionRefund;
         if (restockRefund > 0)
             Debug.Log($"[BattleSceneStarter] 補充分の売れ残りを返金: {restockRefund}G");
         _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings, defeatedMobCount, defeatedBossCount);
+        if (_interventions != null)
+        {
+            _outputData.SetStreamingStats(interventionSpent, _interventions.TotalRefunded, _interventions.PeakViewers,
+                _interventions.ViewerSuperChatCount, _interventions.SpecialMovesUsed);
+        }
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
         _panelManager?.ShowPanel(StreamingGamePhase.StreamingResult);
         if (_resultView != null)
         {
-            await _resultView.ShowResultAsync(battleResult.result, soldItems, totalEarnings);
+            await _resultView.ShowResultAsync(battleResult.result, soldItems, totalEarnings, _outputData.InterventionNetSpending);
         }
         else
         {
@@ -306,7 +329,8 @@ public class BattleSceneStarter : IAsyncStartable
             // （UpdateStock が MaxStock で黙ってクランプするため、在庫の空き枠も上限に含める。
             //   超過分を請求すると精算が狂う）
             int battleEarnings = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
-            int availableForPurchase = (_tomsModel != null ? _tomsModel.PlayerMoney.Value : 0) + battleEarnings - _battleSpending;
+            int interventionSpending = _interventions != null ? _interventions.NetSpending : 0; // 介入の支出も同じ残高から
+            int availableForPurchase = (_tomsModel != null ? _tomsModel.PlayerMoney.Value : 0) + battleEarnings - _battleSpending - interventionSpending;
             int stockRoom = Mathf.Max(0, item.MaxStock.Value - item.Stock.Value);
             int maxQuantity = Mathf.Clamp(Mathf.Min(availableForPurchase / unitCost, stockRoom), 0, 99);
 

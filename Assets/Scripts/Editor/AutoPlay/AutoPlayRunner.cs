@@ -27,6 +27,7 @@ public sealed class AutoPlayTurnRow
     public int DebtPaid;
     public int SupportSpend;
     public int UpgradeSpend;
+    public int InterventionNet;
     public string Battle;
     public string BattleDungeon;
     public float ClearPct;
@@ -75,6 +76,22 @@ public sealed class AutoPlayRunResult
     public long InputTokens;
     public double CostUsd;
     public double WallSeconds;
+
+    // --- 配信中の介入 ---
+    public int InterventionCount;
+    public int InterventionSpent;
+    public int InterventionRefund;
+    public int HeroSideSpent;
+    public int DungeonSideSpent;
+    /// <summary>ダンジョン側の介入で「介入なしなら勇者が勝っていた」配信を負けに変えた回数と、そこで得た防衛報酬。</summary>
+    public int DungeonFlips;
+    public int DungeonFlipRewards;
+    /// <summary>ダンジョン側の介入を使った配信の防衛報酬の合計（反転かどうかを問わない）。</summary>
+    public int DungeonStreamRewards;
+    /// <summary>勇者側の介入で負け→勝ちに変えた回数。</summary>
+    public int HeroFlips;
+    public readonly Dictionary<string, int> InterventionKinds = new Dictionary<string, int>();
+    public readonly List<AutoPlayStreamRow> StreamRows = new List<AutoPlayStreamRow>();
 
     public readonly List<AutoPlayTurnRow> TurnRows = new List<AutoPlayTurnRow>();
     public readonly List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
@@ -194,7 +211,7 @@ public sealed class AutoPlayRunner
                     using (_ctx.Enter())
                     {
                         Result.Decisions.AddRange(plan.Decisions);
-                        var r = _game.StartStream(plan.Items);
+                        var r = _game.StartStream(plan.Items, plan.Interventions);
                         if (!r.Ok)
                         {
                             AddAnomaly(snap.RunTurn, "stream_failed", r.Message);
@@ -211,6 +228,7 @@ public sealed class AutoPlayRunner
                                 (Mathf.Approximately(RelicBattleEffects.HeroPowerMul, 1f) ? "" : $"（HeroPowerMul={RelicBattleEffects.HeroPowerMul:F2} は表示確率に未反映）"));
 
                         RecordRow("stream", snap.RunTurn, snap.FlowIndex);
+                        RecordStream(snap, b, plan);
                         CheckInvariants(snap.RunTurn);
                         DrainLogs(snap.RunTurn);
                     }
@@ -299,6 +317,55 @@ public sealed class AutoPlayRunner
     // 記録
     // -----------------------------------------------------------------
 
+    private void RecordStream(AutoPlaySnapshot snap, AutoPlayBattleSurrogate.Outcome b, AutoPlayStreamPlan plan)
+    {
+        var day = _game.Today;
+        var row = new AutoPlayStreamRow
+        {
+            RunId = Result.RunId,
+            Turn = snap.RunTurn,
+            Dungeon = day.BattleDungeon,
+            DisplayedClearPct = b.DisplayedClearPct,
+            BaselineHeroWin = b.BaselineVictory,
+            HeroWin = b.Victory,
+            Planned = string.Join("+", plan.Interventions.Select(i => $"{AutoPlayInterventionKinds.Key(i.Kind)}@{i.Timing:F2}")),
+            Executed = string.Join("+", b.Executed),
+            Skipped = string.Join("+", b.Skipped),
+            HeroSideSpent = b.HeroSideSpent,
+            DungeonSideSpent = b.DungeonSideSpent,
+            Refund = b.InterventionRefund,
+            SpecialMoves = b.SpecialMoves,
+            ViewerSpecials = b.ViewerSpecials,
+            RawSales = b.RawSales,
+            DefeatReward = day.DefeatReward,
+            Turns = b.Turns,
+            BaselineTurns = b.BaselineTurns,
+        };
+        Result.StreamRows.Add(row);
+
+        int executedPlayer = b.Executed.Count(e => !e.StartsWith("viewer_"));
+        Result.InterventionCount += executedPlayer;
+        Result.InterventionSpent += b.InterventionSpent;
+        Result.InterventionRefund += b.InterventionRefund;
+        Result.HeroSideSpent += b.HeroSideSpent;
+        Result.DungeonSideSpent += b.DungeonSideSpent;
+        foreach (var e in b.Executed)
+        {
+            string kind = e.Split('@')[0];
+            Result.InterventionKinds[kind] = (Result.InterventionKinds.TryGetValue(kind, out var n) ? n : 0) + 1;
+        }
+        if (b.DungeonSideSpent > 0)
+        {
+            Result.DungeonStreamRewards += day.DefeatReward;
+            if (b.BaselineVictory && !b.Victory)
+            {
+                Result.DungeonFlips++;
+                Result.DungeonFlipRewards += day.DefeatReward;
+            }
+        }
+        if (b.HeroSideSpent > 0 && !b.BaselineVictory && b.Victory) Result.HeroFlips++;
+    }
+
     private void RecordRow(string stage, int turn = -1, int flowIndex = -1)
     {
         var day = _game.Today;
@@ -324,6 +391,7 @@ public sealed class AutoPlayRunner
             DebtPaid = day.DebtPaid,
             SupportSpend = day.SupportSpend,
             UpgradeSpend = day.UpgradeSpend,
+            InterventionNet = day.InterventionSpent - day.InterventionRefund,
             Battle = day.BattleResult,
             BattleDungeon = day.BattleDungeon,
             ClearPct = day.BattleClearPct,
@@ -437,4 +505,28 @@ public sealed class AutoPlayRunner
 
     private static string Truncate(string s, int max) =>
         string.IsNullOrEmpty(s) || s.Length <= max ? s : s.Substring(0, max) + "…";
+}
+
+/// <summary>配信1回分の記録（streams.csv）。</summary>
+public sealed class AutoPlayStreamRow
+{
+    public string RunId;
+    public int Turn;
+    public string Dungeon;
+    public float DisplayedClearPct;
+    /// <summary>介入なしでもサロゲート上は勇者が勝っていたか。</summary>
+    public bool BaselineHeroWin;
+    public bool HeroWin;
+    public string Planned;
+    public string Executed;
+    public string Skipped;
+    public int HeroSideSpent;
+    public int DungeonSideSpent;
+    public int Refund;
+    public int SpecialMoves;
+    public int ViewerSpecials;
+    public int RawSales;
+    public int DefeatReward;
+    public int Turns;
+    public int BaselineTurns;
 }

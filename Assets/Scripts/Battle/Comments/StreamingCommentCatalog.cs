@@ -219,6 +219,15 @@ public class StreamingCommentCatalog : ScriptableObject
         yield return B(StreamingCommentTrigger.HeatDown, 1, 2, 0.8f, cd: 3f, prio: 1);
         yield return B(StreamingCommentTrigger.Victory, 10, 14, 1.6f, prio: 5);
         yield return B(StreamingCommentTrigger.Defeat, 8, 12, 1.6f, prio: 5);
+        yield return B(StreamingCommentTrigger.SuperChat, 1, 2, 0.5f, cd: 0.5f, prio: 2);
+        yield return B(StreamingCommentTrigger.RedSuperChat, 6, 9, 1.2f, prio: 4);
+        yield return B(StreamingCommentTrigger.InterventionHeal, 2, 3, 0.6f, prio: 2);
+        yield return B(StreamingCommentTrigger.InterventionSkill, 3, 4, 0.6f, prio: 3);
+        yield return B(StreamingCommentTrigger.SpecialMove, 9, 13, 1.2f, prio: 5);
+        yield return B(StreamingCommentTrigger.DungeonTrap, 2, 3, 0.6f, prio: 2);
+        yield return B(StreamingCommentTrigger.DungeonCurse, 2, 3, 0.6f, prio: 2);
+        yield return B(StreamingCommentTrigger.DungeonReinforce, 3, 4, 0.8f, prio: 3);
+        yield return B(StreamingCommentTrigger.DungeonBossBuff, 5, 7, 1.0f, prio: 4);
     }
 
     private static IEnumerable<Entry> BuiltInEntries()
@@ -235,5 +244,14 @@ public class StreamingCommentCatalog : ScriptableObject
         yield return E(StreamingCommentTrigger.StockDepleted, "売り切れ草");
         yield return E(StreamingCommentTrigger.Victory, "うぽつ");
         yield return E(StreamingCommentTrigger.Defeat, "ああああ");
+        yield return E(StreamingCommentTrigger.SuperChat, "ナイスパ");
+        yield return E(StreamingCommentTrigger.RedSuperChat, "赤スパきたああ");
+        yield return E(StreamingCommentTrigger.InterventionHeal, "回復助かる");
+        yield return E(StreamingCommentTrigger.InterventionSkill, "スキルきた");
+        yield return E(StreamingCommentTrigger.SpecialMove, "うおおおお");
+        yield return E(StreamingCommentTrigger.DungeonTrap, "罠www");
+        yield return E(StreamingCommentTrigger.DungeonCurse, "呪われてて草");
+        yield return E(StreamingCommentTrigger.DungeonReinforce, "なんか湧いた");
+        yield return E(StreamingCommentTrigger.DungeonBossBuff, "ボス強くなってない？");
     }
 }

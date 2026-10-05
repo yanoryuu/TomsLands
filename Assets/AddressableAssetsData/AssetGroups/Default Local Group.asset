@@ -592,9 +592,10 @@ MonoBehaviour:
     - ShopMachineData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c1c04777074e77438e9e33f0db6e17b
-    m_Address: StreamingCommentCatalog
+    m_Address: Streaming/StreamingCommentCatalog
     m_ReadOnly: 0
-    m_SerializedLabels: []
+    m_SerializedLabels:
+    - StreamingCommentCatalog
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 9c968e11611d75647b0dfb42c8f02239
     m_Address: EnemyData/New EnemyData 1
@@ -664,6 +665,12 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - EventInputData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b04bd492fa723df459bb0105924b4f46
+    m_Address: Streaming/StreamingComments
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b1280309f6ba2914fb72b49c16bdc347
     m_Address: SceneData/StartModeData
@@ -988,6 +995,12 @@ MonoBehaviour:
     m_Address: "\u55B6\u696D/SE_\u58F2\u4E0A\u97F3"
     m_ReadOnly: 0
     m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: ffa4855dbf084602adc56181418c48d2
+    m_Address: StreamingInteractionSettings
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - StreamingInteractionSettings
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: b669e2faec2592e47a80d19a7080fcc5, type: 2}
