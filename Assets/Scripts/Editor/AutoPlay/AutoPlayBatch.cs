@@ -16,6 +16,8 @@ public sealed class AutoPlayBatchConfig
     public int BaseSeed = 1001;
     public bool UseRandomBot = true;
     public bool UseGreedyBot = true;
+    /// <summary>ダンジョン側全振りボット（防衛報酬狙いの上限側の基準・API 不要）。</summary>
+    public bool UseDungeonBot;
     public List<string> JevPersonas = new List<string>();
     public AutoPlayJevDecisionMode JevDecisionMode = AutoPlayJevDecisionMode.Sample;
     /// <summary>同時に進めるラン数（メインスレッド上の交互実行。Jev の待ち時間を重ねるためのもの）。</summary>
@@ -152,6 +154,7 @@ public static class AutoPlayBatch
                 var bots = new List<(IAutoPlayBot bot, bool interventions)>();
                 if (config.UseGreedyBot) bots.Add((new AutoPlayGreedyBot(), config.EnableInterventions));
                 if (config.UseRandomBot) bots.Add((new AutoPlayRandomBot(seed), config.EnableInterventions));
+                if (config.UseDungeonBot && config.EnableInterventions) bots.Add((new AutoPlayDungeonBot(), true));
                 foreach (var p in personas)
                     bots.Add((new AutoPlayJevBot(AutoPlayPersona.Find(p), config.JevDecisionMode, seed), config.EnableInterventions));
                 if (config.EnableInterventions && config.ControlRunsWithoutInterventions)

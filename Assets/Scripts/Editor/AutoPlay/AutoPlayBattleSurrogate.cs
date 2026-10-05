@@ -304,7 +304,7 @@ public static class AutoPlayBattleSurrogate
                         trapArmed = true;
                         break;
                     case AutoPlayInterventionKind.Curse:
-                        curseLeft = Mathf.Max(curseLeft, _s.curseHeroAttacks);
+                        curseLeft = Mathf.Max(curseLeft, _s.curseHeroHits);
                         break;
                     case AutoPlayInterventionKind.Reinforce:
                     {
@@ -364,7 +364,6 @@ public static class AutoPlayBattleSurrogate
                     {
                         // InterventionCommandQueue.ResolveAttack（勇者が攻撃する側）の写し
                         if (armedStrike.HasValue) { mul *= armedStrike.Value; armedStrike = null; }
-                        if (curseLeft > 0) { mul *= _s.curseAttackMul; curseLeft--; }
                         if (bossBuff && target.Boss) mul *= _s.bossBuffDamageTakenMul;
                     }
                     // CharacterPresenter.PerformAttack → CharacterModel.ApplyDamage の写し
@@ -385,15 +384,29 @@ public static class AutoPlayBattleSurrogate
                         Execute(k, t, ref heroHp);
                     }
 
-                    float emul = interventions && bossBuff && enemy.Boss ? _s.bossBuffAttackMul : 1f;
+                    // InterventionCommandQueue.ResolveAttack（魔物が勇者を攻撃する側）の写し:
+                    // 倍率（ボス強化）→ 通常ダメージ max(1, 攻撃−防御) → 防御を削った分の差（呪い・ボスの防御貫通）と罠を
+                    // 防御無視の追加ダメージとして上乗せ（ApplyBonusDamage は倒れた相手には入らない）
+                    bool buffedBoss = interventions && bossBuff && enemy.Boss;
+                    float emul = buffedBoss ? _s.bossBuffAttackMul : 1f;
                     int eatk = emul == 1f ? enemy.Atk : Mathf.Max(1, Mathf.RoundToInt(enemy.Atk * emul));
-                    heroHp -= Mathf.Max(1, eatk - heroDef);
-                    if (interventions && trapArmed)
+                    int normal = Mathf.Max(1, eatk - heroDef);
+                    int bonus = 0;
+                    if (interventions)
                     {
-                        trapArmed = false;
-                        // ApplyBonusDamage は倒れた相手には入らない
-                        if (heroHp > 0) heroHp -= Mathf.Max(1, Mathf.RoundToInt(heroMaxHp * _s.trapBonusDamageRatio));
+                        float defFactor = 1f;
+                        if (curseLeft > 0) { defFactor *= _s.curseDefenseMul; curseLeft--; }
+                        if (buffedBoss) defFactor *= 1f - Mathf.Clamp01(_s.bossBuffDefensePierce);
+                        if (defFactor < 1f)
+                            bonus += Mathf.Max(0, Mathf.Max(1, eatk - Mathf.RoundToInt(heroDef * defFactor)) - normal);
+                        if (trapArmed)
+                        {
+                            trapArmed = false;
+                            bonus += Mathf.Max(1, Mathf.RoundToInt(heroMaxHp * _s.trapBonusDamageRatio));
+                        }
                     }
+                    heroHp -= normal;
+                    if (heroHp > 0 && bonus > 0) heroHp -= bonus;
                     if (heroHp <= 0) break;
                 }
 

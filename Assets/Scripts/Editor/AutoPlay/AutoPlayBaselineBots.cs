@@ -159,3 +159,62 @@ public sealed class AutoPlayRandomBot : IAutoPlayBot
         return Task.FromResult(plan);
     }
 }
+
+/// <summary>
+/// ダンジョン側全振りボット（API 不要）。「防衛報酬狙いを本気でやったら勝敗をどこまで揺らせるか」の上限側の基準。
+/// - 営業日: 貪欲と同じ。ただし翌日が配信なら、ダンジョン側の介入に使う額を手元に残す
+/// - 配信: ダンジョン側の介入を重ねて予定に入れる（ボス強化→開幕 / 呪い→序盤 / 罠×3→序盤・中盤・終盤）
+/// </summary>
+public sealed class AutoPlayDungeonBot : IAutoPlayBot
+{
+    private readonly AutoPlayGreedyBot _shop = new AutoPlayGreedyBot();
+
+    public string Name => "dungeon";
+    public int Requests => 0;
+    public long InputTokens => 0;
+
+    /// <summary>配信前日に残す現金の上限（ダンジョン側4種の合計を目安にする）。</summary>
+    public int StreamReserve = 190000;
+
+    public async Task<AutoPlayDayPlan> PlanDayAsync(AutoPlaySnapshot s, CancellationToken ct)
+    {
+        var plan = await _shop.PlanDayAsync(s, ct);
+        if (s.TurnsUntilStream >= 0 && s.TurnsUntilStream <= 1)
+        {
+            int reserve = Mathf.Min(StreamReserve, Mathf.RoundToInt(s.Money * 0.6f));
+            plan.AutoBuyBudget = Mathf.Max(0, plan.AutoBuyBudget - reserve);
+            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "stream_reserve", Chosen = reserve.ToString() });
+        }
+        return plan;
+    }
+
+    public async Task<AutoPlayStreamPlan> PlanStreamAsync(AutoPlaySnapshot s, CancellationToken ct)
+    {
+        var plan = await _shop.PlanStreamAsync(s, ct);
+        plan.Interventions.Clear();
+        plan.Decisions.RemoveAll(d => d.Question == "stream_intervene");
+        var info = s.Stream;
+        if (info != null && info.InterventionsEnabled)
+        {
+            void Add(AutoPlayInterventionKind k, float timing)
+            {
+                if (info.Options.Any(o => o.Kind == k)) plan.Interventions.Add(new AutoPlayInterventionOrder(k, timing));
+            }
+            // 払えるかどうかは配信中の利用可能残高（売上込み）で判定されるので、ここでは全部予定に入れる
+            // クールダウンの許す限り重ねる（罠は安いので3回）。増援は配信が延びて勇者に有利なこともあるので使わない
+            Add(AutoPlayInterventionKind.BossBuff, 0f);
+            Add(AutoPlayInterventionKind.Curse, 0.1f);
+            Add(AutoPlayInterventionKind.Trap, 0.3f);
+            Add(AutoPlayInterventionKind.Trap, 0.55f);
+            Add(AutoPlayInterventionKind.Trap, 0.8f);
+        }
+        plan.Decisions.Add(new AutoPlayDecision
+        {
+            Turn = s.RunTurn, Phase = "stream", Question = "stream_intervene",
+            Chosen = plan.Interventions.Count == 0 ? "none" : string.Join("+", plan.Interventions.Select(i => AutoPlayInterventionKinds.Key(i.Kind))),
+        });
+        return plan;
+    }
+
+    public Task<AutoPlayRelicPlan> PlanRelicAsync(AutoPlaySnapshot s, CancellationToken ct) => _shop.PlanRelicAsync(s, ct);
+}

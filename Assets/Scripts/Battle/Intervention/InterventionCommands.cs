@@ -134,13 +134,13 @@ public sealed class TrapCommand : DungeonInterventionCommand
     protected override void Execute(InterventionExecutionScope scope) => scope.Effects.TrapArmed = true;
 }
 
-/// <summary>呪い: 勇者の攻撃力を curseHeroAttacks 回ぶん ×curseAttackMul。</summary>
+/// <summary>呪い: 勇者の防御力を curseHeroHits 回の被弾ぶん ×curseDefenseMul（ダメージ式 max(1, 攻撃−防御) の防御側を削る）。</summary>
 public sealed class CurseCommand : DungeonInterventionCommand
 {
     public CurseCommand(int paid) : base(paid) { }
     public override DungeonInterventionType Type => DungeonInterventionType.Curse;
     protected override void Execute(InterventionExecutionScope scope)
-        => scope.Effects.CurseAttacksLeft = Mathf.Max(scope.Effects.CurseAttacksLeft, scope.Settings.curseHeroAttacks);
+        => scope.Effects.CurseHitsLeft = Mathf.Max(scope.Effects.CurseHitsLeft, scope.Settings.curseHeroHits);
 }
 
 /// <summary>

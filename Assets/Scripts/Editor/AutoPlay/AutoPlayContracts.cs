@@ -300,9 +300,9 @@ public static class AutoPlayInterventionKinds
         AutoPlayInterventionKind.Skill => $"Hero side (blue super chat): the hero's next attack deals x{s.skillMultiplier:0.##}.",
         AutoPlayInterventionKind.Special => $"Hero side (red super chat): special move, the hero's next attack deals x{s.specialMultiplier:0.##} (max {s.specialMaxPerStream} per stream incl. viewers).",
         AutoPlayInterventionKind.Trap => $"Dungeon side: trap, the hero's next hit taken deals extra {s.trapBonusDamageRatio:P0} of max HP ignoring defense.",
-        AutoPlayInterventionKind.Curse => $"Dungeon side: curse, the hero's attack x{s.curseAttackMul:0.##} for {s.curseHeroAttacks} attacks.",
+        AutoPlayInterventionKind.Curse => $"Dungeon side: curse, the hero's defense x{s.curseDefenseMul:0.##} for the next {s.curseHeroHits} hits taken (monsters deal attack minus defense).",
         AutoPlayInterventionKind.Reinforce => $"Dungeon side: reinforcements, {s.reinforceCount} extra monster(s) join the current wave. Longer battle, hero slightly weaker.",
-        _ => $"Dungeon side: boss buff for this stream, boss attack x{s.bossBuffAttackMul:0.##} and damage taken x{s.bossBuffDamageTakenMul:0.##} (once per stream).",
+        _ => $"Dungeon side: boss buff for this stream, boss attack x{s.bossBuffAttackMul:0.##} and damage taken x{s.bossBuffDamageTakenMul:0.##}, boss ignores {s.bossBuffDefensePierce:P0} of the hero's defense (once per stream).",
     };
 }
 

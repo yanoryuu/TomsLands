@@ -14,7 +14,8 @@ public sealed class InterventionEffects
     /// <summary>次の勇者の攻撃に掛ける倍率（青・赤スパ）。null = なし。</summary>
     public float? ArmedStrikeMultiplier { get; private set; }
     public bool TrapArmed { get; set; }
-    public int CurseAttacksLeft { get; set; }
+    /// <summary>呪い: 勇者の防御が下がったまま受ける残り被弾回数。</summary>
+    public int CurseHitsLeft { get; set; }
     public bool BossBuffActive { get; set; }
 
     public bool HasArmedStrike => ArmedStrikeMultiplier.HasValue;
@@ -184,11 +185,6 @@ public sealed class InterventionCommandQueue : IDisposable
                 usedStrike = true;
                 if (context != null) context.SelectedTarget.Value = null; // 指定は1回で解除
             }
-            if (Effects.CurseAttacksLeft > 0)
-            {
-                mul *= _settings.curseAttackMul;
-                Effects.CurseAttacksLeft--;
-            }
             if (Effects.BossBuffActive && target.IsBoss)
                 mul *= _settings.bossBuffDamageTakenMul;
             return new InterventionAttackModifier(mul, 0, usedStrike);
@@ -196,12 +192,35 @@ public sealed class InterventionCommandQueue : IDisposable
 
         if (target.Type == CharacterType.Hero)
         {
-            float mul = Effects.BossBuffActive && attacker.IsBoss ? _settings.bossBuffAttackMul : 1f;
+            bool bossBuffed = Effects.BossBuffActive && attacker.IsBoss;
+            float mul = bossBuffed ? _settings.bossBuffAttackMul : 1f;
+
+            // 防御を削る効果（呪い・ボス強化の防御貫通）。ダメージ式は CharacterModel.ApplyDamage の
+            // max(1, 攻撃 − 防御) なので、防御を下げた場合との差分を「防御無視の追加ダメージ」として上乗せする
+            // （CharacterModel / CharacterPresenter を変えずに済ませるため）。
+            float defenseFactor = 1f;
+            if (Effects.CurseHitsLeft > 0)
+            {
+                defenseFactor *= _settings.curseDefenseMul;
+                Effects.CurseHitsLeft--;
+            }
+            if (bossBuffed)
+                defenseFactor *= 1f - Mathf.Clamp01(_settings.bossBuffDefensePierce);
+
             int bonus = 0;
+            if (defenseFactor < 1f)
+            {
+                // CharacterPresenter.PerformAttack と同じ攻撃値の丸め
+                int attack = mul == 1f ? attacker.AttackPower : Mathf.Max(1, Mathf.RoundToInt(attacker.AttackPower * mul));
+                int normal = Mathf.Max(1, attack - target.DefensePower);
+                int reduced = Mathf.Max(1, attack - Mathf.RoundToInt(target.DefensePower * defenseFactor));
+                bonus += Mathf.Max(0, reduced - normal);
+            }
+
             if (Effects.TrapArmed)
             {
                 Effects.TrapArmed = false;
-                bonus = Mathf.Max(1, Mathf.RoundToInt(target.MaxHp * _settings.trapBonusDamageRatio));
+                bonus += Mathf.Max(1, Mathf.RoundToInt(target.MaxHp * _settings.trapBonusDamageRatio));
             }
             return new InterventionAttackModifier(mul, bonus, false);
         }

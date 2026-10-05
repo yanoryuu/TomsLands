@@ -45,14 +45,14 @@ public class StreamingInteractionSettings : ScriptableObject
     [Header("罠: 勇者の次の被弾に追加ダメージ")]
     [Min(0)] public int trapPrice = 10000;
     [Tooltip("追加ダメージ = 勇者の最大HP × この割合（防御無視）")]
-    [Range(0f, 1f)] public float trapBonusDamageRatio = 0.10f;
+    [Range(0f, 1f)] public float trapBonusDamageRatio = 0.30f;
 
-    [Header("呪い: 勇者の攻撃力を一時ダウン")]
+    [Header("呪い: 勇者の防御力を一時ダウン（2026-10-05 攻撃ダウンから変更）")]
     [Min(0)] public int cursePrice = 30000;
-    [Tooltip("勇者の攻撃力に掛ける倍率")]
-    [Range(0.1f, 1f)] public float curseAttackMul = 0.7f;
-    [Tooltip("効果が続く勇者の攻撃回数")]
-    [Min(1)] public int curseHeroAttacks = 2;
+    [Tooltip("勇者の防御力に掛ける倍率（魔物の攻撃を受けるとき）。ダメージ = max(1, 攻撃 − 防御×この値)")]
+    [Range(0f, 1f)] public float curseDefenseMul = 0.5f;
+    [Tooltip("効果が続く勇者の被弾回数（魔物の攻撃1回 = 1）")]
+    [Min(1)] public int curseHeroHits = 9;
 
     [Header("増援: 現在フェーズのキューに魔物を追加")]
     [Min(0)] public int reinforcePrice = 50000;
@@ -64,6 +64,8 @@ public class StreamingInteractionSettings : ScriptableObject
     [Min(1f)] public float bossBuffAttackMul = 1.25f;
     [Tooltip("ボスが受ける勇者の攻撃力に掛ける倍率（実質の耐久UP）")]
     [Range(0.1f, 1f)] public float bossBuffDamageTakenMul = 0.8f;
+    [Tooltip("防御貫通: ボスの攻撃が勇者の防御のこの割合を無視する（0 = 無視しない / 1 = 完全に無視）")]
+    [Range(0f, 1f)] public float bossBuffDefensePierce = 0.5f;
     [Min(0)] public int bossBuffMaxPerStream = 1;
 
     [Header("ダンジョン側の実行時の配信熱")]
