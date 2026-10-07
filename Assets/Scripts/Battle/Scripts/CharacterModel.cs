@@ -87,6 +87,24 @@ public class CharacterModel
 
         Skills = new List<SkillData>();
     }
+    /// <summary>HP を回復する（最大HPまで）。実際に回復した量を返す。介入（緑スパ）用。</summary>
+    public int Heal(int amount)
+    {
+        if (IsDead || amount <= 0) return 0;
+        int before = CurrentHp.Value;
+        CurrentHp.Value = Mathf.Min(MaxHp, before + amount);
+        return CurrentHp.Value - before;
+    }
+
+    /// <summary>防御を無視した追加ダメージ（介入の罠用）。実際に減った量を返す。</summary>
+    public int ApplyBonusDamage(int damage)
+    {
+        if (IsDead || damage <= 0) return 0;
+        int before = CurrentHp.Value;
+        CurrentHp.Value = before - damage;
+        return before - CurrentHp.Value;
+    }
+
     public int ApplyDamage(int damage)
     {
         if (IsDead) return 0;

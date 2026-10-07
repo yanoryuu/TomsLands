@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a611f8035aec44a5b5c01f00dfe897c6, type: 3}
+  m_Name: StreamingInteractionSettings
+  m_EditorClassIdentifier: 
+  healPrice: 10000
+  healRatio: 0.3
+  healHeat: 0
+  skillPrice: 50000
+  skillMultiplier: 1.5
+  skillHeat: 10
+  skillWeaponDemandUp: 0.1
+  specialPrice: 100000
+  specialMultiplier: 3
+  specialHeat: 20
+  specialWeaponDemandUp: 0.2
+  specialWeaponPriceMul: 1.05
+  specialMaxPerStream: 2
+  trapPrice: 10000
+  trapBonusDamageRatio: 0.3
+  cursePrice: 30000
+  curseDefenseMul: 0.5
+  curseHeroHits: 9
+  reinforcePrice: 50000
+  reinforceCount: 1
+  bossBuffPrice: 100000
+  bossBuffAttackMul: 1.25
+  bossBuffDamageTakenMul: 0.8
+  bossBuffDefensePierce: 0.5
+  bossBuffMaxPerStream: 1
+  dungeonInterventionHeat: 5
+  cooldownSeconds: 6
+  viewerSuperChatEnabled: 1
+  viewerRedTriggersSpecial: 1
+  viewersPerUnit: 100
+  heatBase: 0.5
+  maxPerMinute: 8
+  startDelaySeconds: 4
+  colorWeights:
+  - 30
+  - 25
+  - 18
+  - 12
+  - 8
+  - 5
+  - 2
+  redViewerReference: 400
+  warmColorViewerScale: 0.5
+  superBuzzRedMul: 3
+  amountRanges:
+  - {x: 100, y: 199}
+  - {x: 200, y: 499}
+  - {x: 500, y: 999}
+  - {x: 1000, y: 1999}
+  - {x: 2000, y: 4999}
+  - {x: 5000, y: 9999}
+  - {x: 10000, y: 50000}
+  heatPerTier: 0.5
+  viewerSpikePerTier: 0.004
+  redOverLimitHeat: 8
+  lowMessages:
+  - 
+  - 
+  - "\u308F\u3053\u3064"
+  - "\u5FDC\u63F4\u3057\u3066\u307E\u3059"
+  - "\u304C\u3093\u3070\u308C\u30FC"
+  - "\u521D\u898B\u3067\u3059"
+  - "{hero}\u304B\u308F\u3044\u3044"
+  midMessages:
+  - 
+  - "\u30CA\u30A4\u30B9\u30D5\u30A1\u30A4\u30C8"
+  - "{hero}\u3044\u3051\u30FC\uFF01"
+  - "\u5E97\u9577\u3044\u3064\u3082\u3042\u308A\u304C\u3068\u3046"
+  - "\u305D\u306E\u88C5\u5099\u307B\u3057\u3044"
+  - "\u30DC\u30B9\u5012\u3057\u3066\uFF01"
+  redMessages:
+  - "\u5FC5\u6BBA\u6280\u898B\u305B\u3066\uFF01"
+  - "{hero}\u3076\u3061\u304B\u307E\u305B\uFF01"
+  - "\u8D64\u30B9\u30D1\u3067\u6BB4\u308C"
+  - "\u5168\u8CA1\u7523\u3076\u3063\u3053\u3080"
+  - "\u5FC5\u6BBA\u6280\u3044\u3051\u3048\u3048"
+  playerHealMessage: "\u56DE\u5FA9\u3057\u3066\uFF01"
+  playerSkillMessage: "\u30B9\u30AD\u30EB\u3044\u3051\uFF01"
+  playerSpecialMessage: "\u5FC5\u6BBA\u6280\u3060\uFF01"

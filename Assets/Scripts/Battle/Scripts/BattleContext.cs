@@ -136,6 +136,19 @@ public class BattleContext
         return true;
     }
 
+    /// <summary>現在のフェーズ（全クリア後は null）。</summary>
+    public DungeonPhaseData CurrentPhase => CurrentPhaseIndex >= 0 && CurrentPhaseIndex < Phases.Count ? Phases[CurrentPhaseIndex] : null;
+
+    /// <summary>
+    /// 介入（増援）: 現在フェーズの未出現キューの末尾に魔物を足す。
+    /// 出現は既存の SpawnFromPhaseQueueAsync（ターン終了評価）が行う。キューが残る間はフェーズクリアにならない。
+    /// </summary>
+    public void EnqueueReinforcement(EnemyData enemy)
+    {
+        if (enemy == null || AllPhasesCleared) return;
+        _phaseSpawnQueue.Enqueue(enemy);
+    }
+
     /// <summary>現在フェーズの次に出現する敵を覗く（無ければ null）。</summary>
     public EnemyData PeekNextSpawn() => _phaseSpawnQueue.Count > 0 ? _phaseSpawnQueue.Peek() : null;
 

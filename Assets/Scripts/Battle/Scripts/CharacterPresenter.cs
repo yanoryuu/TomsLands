@@ -45,14 +45,27 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel,IStarta
         view.Initialize(this, model.Name, model.CharacterSprite);
 
         view.OnClicked
-            .Subscribe(_ => Debug.Log($"{model.Name} がクリックされました！(Presenterが検知)"))
+            .Subscribe(_ =>
+            {
+                Debug.Log($"{model.Name} がクリックされました！(Presenterが検知)");
+                // 介入（青スパ）の対象指定に使う。購読側が無ければ何も起きない
+                if (sequencer != null) sequencer.OnCharacterClicked.OnNext(this);
+            })
             .AddTo(disposables);
     }
 
-    public int PerformAttack(CharacterPresenter targetPresenter)
+    /// <summary>
+    /// 攻撃する。damageMultiplier は攻撃力に掛ける倍率（介入: スキル・必殺技・呪い・ボス強化）、
+    /// bonusDamage は防御無視の追加ダメージ（介入: 罠）。既定値（1, 0）なら従来と同じ計算。
+    /// </summary>
+    public int PerformAttack(CharacterPresenter targetPresenter, float damageMultiplier = 1f, int bonusDamage = 0)
     {
         var targetModel = targetPresenter.GetModel();
-        int damageDealt = targetModel.ApplyDamage(this.model.AttackPower);
+        int attack = damageMultiplier == 1f
+            ? this.model.AttackPower
+            : Mathf.Max(1, Mathf.RoundToInt(this.model.AttackPower * damageMultiplier));
+        int damageDealt = targetModel.ApplyDamage(attack);
+        if (bonusDamage > 0) damageDealt += targetModel.ApplyBonusDamage(bonusDamage);
         targetPresenter.OnTakeDamage.OnNext(this.model);
         sequencer.OnCharacterDamaged.OnNext((this.model, targetModel));
         return damageDealt;

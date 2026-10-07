@@ -13,8 +13,9 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
     private StateManager stateManager;
     private HeroModel heroModel;
     private ItemModel itemModel;
+    private RelicEffectResolver relicResolver;
 
-    public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView,StateManager stateManager, HeroModel heroModel, ItemModel itemModel)
+    public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView,StateManager stateManager, HeroModel heroModel, ItemModel itemModel, RelicEffectResolver relicResolver)
     {
         disposable = new CompositeDisposable();
 
@@ -25,6 +26,7 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
         this.stateManager = stateManager;
         this.heroModel = heroModel;
         this.itemModel = itemModel;
+        this.relicResolver = relicResolver;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Map,Entry);
     }
@@ -58,7 +60,7 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
 
             // 勇者の現在ステータスでのクリア確率（現在のダンジョンレベル基準）
             float clearProbability = ClearProbabilityCalculator.Calculate(
-                heroModel.heroData, itemModel, data, data.currentDungeonLevel);
+                heroModel.heroData, itemModel, data, data.currentDungeonLevel, relicResolver);
 
             dungeonInfoView.ShowDungeonInfo(data, clearProbability);
         }).AddTo(disposable);

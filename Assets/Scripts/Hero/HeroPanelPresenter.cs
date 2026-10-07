@@ -10,6 +10,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
     private readonly HeroPanelView view;
     private readonly HeroModel heroModel;
     private readonly ItemModel itemModel;
+    private readonly RelicEffectResolver relicResolver;
     private readonly TomsModel tomsModel;
     private readonly StateManager stateManager;
     private readonly BattleInputData battleInputData;
@@ -27,8 +28,10 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         TomsModel tomsModel,
         StateManager stateManager,
         BattleInputData battleInputData,
-        DungeonRepository dungeonRepository)
+        DungeonRepository dungeonRepository,
+        RelicEffectResolver relicResolver)
     {
+        this.relicResolver = relicResolver;
         this.view = view;
         this.heroModel = heroModel;
         this.itemModel = itemModel;
@@ -196,7 +199,8 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
             hero,
             itemModel,
             dungeon,
-            battleInputData.DungeonLevel);
+            battleInputData.DungeonLevel,
+            relicResolver);
 
         view.SetClearProbability(probability, true);
     }

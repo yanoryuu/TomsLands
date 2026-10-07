@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: jungle7
   enemyName: "\u30E2\u30B9\u30B4\u30FC\u30EC\u30E0"
-  hp: 40
-  attackPower: 12
+  hp: 140
+  attackPower: 37
   defensePower: 8
   elementType: 3
   enemySprite: {fileID: 21300000, guid: b0a36e330ce0e48fcaf0f36f0bb6bf1d, type: 3}

@@ -16,7 +16,7 @@ public class BattleFlowManager
     private readonly StreamingSalesController salesController;
     private readonly BattlePauseController pauseController;
 
-    public BattleFlowManager(BattleContext ctx, CharacterFactory charaFactory, BattleUIView battleUI, BattleSequencer ownerSequencer, StreamingSalesController salesCtrl = null, BattlePauseController pauseCtrl = null)
+    public BattleFlowManager(BattleContext ctx, CharacterFactory charaFactory, BattleUIView battleUI, BattleSequencer ownerSequencer, StreamingSalesController salesCtrl = null, BattlePauseController pauseCtrl = null, InterventionCommandQueue interventions = null)
     {
         context = ctx;
         factory = charaFactory;
@@ -24,7 +24,7 @@ public class BattleFlowManager
         sequencer = ownerSequencer;
         salesController = salesCtrl;
         pauseController = pauseCtrl;
-        executor = new BattleActionExecutor(ctx, ownerSequencer, pauseCtrl);
+        executor = new BattleActionExecutor(ctx, ownerSequencer, pauseCtrl, interventions);
     }
 
     /// <summary>

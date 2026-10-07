@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-22T07:07:23.606Z",
+  "data": {
+    "maxDungeonLevel": 5,
+    "maxBlackSmithLevel": 5,
+    "maxToolShopLevel": 5,
+    "maxInfoBrokerLevel": 5,
+    "maxItemStock": 99,
+    "minItemStock": 0,
+    "initMoney": 100000,
+    "debtPaymentInterval": 10,
+    "debtBaseAmount": 5000,
+    "debtMultiplier": 1.8,
+    "heroExpPerMob": 10,
+    "heroExpPerBoss": 100,
+    "heroBaseExpToNextLevel": 100,
+    "blackSmithLevelUpCosts": [
+      0,
+      3000,
+      6000,
+      12000,
+      20000
+    ]
+  }
+}

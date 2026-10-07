@@ -50,7 +50,7 @@ public class StreamingCommentDirector : MonoBehaviour
         if (salesController == null) salesController = FindFirstObjectByType<StreamingSalesController>(FindObjectsInactive.Include);
         if (layerView == null) layerView = FindFirstObjectByType<NicoCommentLayerView>(FindObjectsInactive.Include);
         if (viewerCountView == null) viewerCountView = FindFirstObjectByType<StreamingViewerCountView>(FindObjectsInactive.Include);
-        if (catalog == null) catalog = AddressableLoader.Load<StreamingCommentCatalog>("StreamingCommentCatalog");
+        if (catalog == null) catalog = AddressableLoader.Load<StreamingCommentCatalog>("Streaming/StreamingCommentCatalog");
 
         _feed = new StreamingCommentFeed(catalog);
         if (layerView != null)

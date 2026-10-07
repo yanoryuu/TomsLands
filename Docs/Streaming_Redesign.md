@@ -190,9 +190,9 @@ FightScene 単体再生・Lv1（通常2体→ボス1体）・「はい」押下�
 | 介入 | 金額（仮） | 効果 |
 |---|---|---|
 | **増援を呼ぶ** | 50,000G | 魔物を1体追加（またはウェーブを1つ追加）。配信が延びて販売機会↑、勇者はやや不利 |
-| **罠を仕掛ける** | 10,000G | 勇者が次に受ける攻撃に追加ダメージ（または状態異常）。防具の需要・値下がりに効く |
-| **ボス強化** | 100,000G | この配信中だけボスのステータスを上げる。防衛報酬狙いの大きな賭け。**1配信1回まで** |
-| **呪い** | 30,000G | 勇者の攻撃力（または命中）を一時的に下げる。勇者側の赤スパ（必殺技）への対抗手段 |
+| **罠を仕掛ける** | 10,000G | 勇者が次に受ける攻撃に **最大HP×30% の防御無視ダメージ**を追加（2026-10-05 10%→30%）。防具の需要・値下がりに効く |
+| **ボス強化** | 100,000G | この配信中だけボスを強化: 攻撃×1.25・受けるダメージ×0.8・**勇者の防御を50%貫通**（2026-10-05 追加）。防衛報酬狙いの大きな賭け。**1配信1回まで** |
+| **呪い** | 30,000G | **勇者の防御×0.5 を次の被弾9回ぶん**（2026-10-05 攻撃ダウンから変更。ダメージ式 max(1, 攻撃−防御) の防御側を削るので被弾が実際に増える） |
 
 - ダンジョン側に魔物の必殺技・スキル・回復はない（旧案を削除）。旧「ターゲット指示（単独）」は青スパの対象指定に吸収。「増援を呼ぶ」は一度廃止したが**復活**
 - **属性フィールド（ダンジョンの属性を変える）案は不採用**（ダンジョンごとの属性は既に決まっているため変えない）
@@ -241,7 +241,7 @@ InterventionCommandQueue (plain C#) … 1件だけ保持。勇者/魔物の手�
    ├ SkillCommand(target?)             ← 青スパ（敵タップで対象指定可）
    ├ HealCommand                       ← 緑スパ（勇者の回復）
    ├ ReinforceCommand                  ← 増援（現在フェーズのキューに魔物1体、またはウェーブ追加）
-   ├ TrapCommand / CurseCommand        ← 罠（勇者の次の被弾に追加）/ 呪い（勇者の攻撃力を一時ダウン）
+   ├ TrapCommand / CurseCommand        ← 罠（勇者の次の被弾に追加）/ 呪い（勇者の防御力を一時ダウン）
    ├ BossBuffCommand                   ← ボス強化（その配信中のみ。1配信1回）
 StreamingInteractionSettings (SO)   … 各介入の金額・倍率・上限・クールダウン
 SpecialMoveCutInView (MB)           … 勇者立ち絵＋赤帯
@@ -251,6 +251,39 @@ SpecialMoveCutInView (MB)           … 勇者立ち絵＋赤帯
 - 増援は `BattleContext` の現在フェーズのキューに足す（`SpawnFromPhaseQueueAsync` が既存の流れで出す）
 - `GetAttackTarget(hero)` は `context.SelectedTarget`（青スパで指定）が生存していればそれを返す
 - ダメージ倍率は `CharacterPresenter.PerformAttack` に引数を足す（`OnCharacterDamaged` はそのまま発火＝価格変動・熱は既存経路で動く）
+
+### 4-5. 実装メモ（ロジック・2026-10-05 / feature/stream-intervention）
+
+配置: `Assets/Scripts/Battle/Intervention/`。UI（カード・カットイン）は `InterventionContracts.cs` のインターフェース越しに接続する（未配線でもロジックは動く）。
+
+| クラス | 役割 |
+|---|---|
+| `StreamingInteractionSettings`（SO, Addressable `StreamingInteractionSettings`, RemoteBalance 区画 `streamingInteraction`） | 金額・倍率・上限・クールダウン・視聴者スパチャの発生率/色/金額/文言。`viewerSuperChatEnabled` / `viewerRedTriggersSpecial` で視聴者スパチャを OFF にできる |
+| `InterventionCommandQueue` | プレイヤーの指示1件＋視聴者赤スパの必殺技1件を保持。勇者の手番の頭で勇者側、魔物の手番の頭でダンジョン側を実行。`Close()` で未実行分を返す（返金用）。`InterventionEffects`（次の攻撃の倍率・罠・呪い回数・ボス強化）を持ち、`ResolveAttack` で攻撃1回分の補正を返す |
+| `HealCommand` / `SkillCommand` / `SpecialMoveCommand` / `TrapCommand` / `CurseCommand` / `ReinforceCommand` / `BossBuffCommand` | 各介入（下表） |
+| `InterventionPresenter` | カードのボタン → 判定（受付中・指示なし・クールダウン明け・一時停止中でない・回数・残高）→ 支払い → キュー。実行後に熱・武器需要・コメント。視聴者スパチャの反映。敵タップ → `BattleContext.SelectedTarget` |
+| `SuperChatGenerator` | 視聴者ランダムスパチャ（ポアソン発生）。金額は表示のみ |
+| `InterventionSceneRefs` | カード・カットイン・コメント Director の参照（Inspector → シーン検索の順で解決） |
+
+効き方（仮値）:
+
+| 介入 | 実行タイミング | 効果 |
+|---|---|---|
+| 緑 回復 10,000G | 勇者の手番の頭 | 勇者 HP +最大HP×30%（その手番は通常どおり攻撃） |
+| 青 スキル 50,000G | 勇者の手番の頭 | 次の勇者の攻撃の攻撃力×1.5。タップ指定の敵が生きていればその敵を狙う。熱+10・武器需要+0.10 |
+| 赤 必殺技 100,000G | 勇者の手番の頭 | カットイン（無ければ省略）→ 次の攻撃×3（同上の対象指定）。熱+20・武器需要+0.20・武器価格×1.05 |
+| 罠 10,000G | 魔物の手番の頭 | 勇者の次の被弾に 最大HP×30%（`trapBonusDamageRatio`）の防御無視ダメージ |
+| 呪い 30,000G | 魔物の手番の頭 | 勇者が次に受ける9回（`curseHeroHits`）の被弾で、勇者の防御×0.5（`curseDefenseMul`） |
+| 増援 50,000G | 魔物の手番の頭 | 現在フェーズの未出現キュー末尾に通常魔物1体（現在フェーズの通常魔物から抽選）。出現は既存の `SpawnFromPhaseQueueAsync` |
+| ボス強化 100,000G | 魔物の手番の頭 | この配信中、ボスの攻撃力×1.25・ボスが受ける勇者の攻撃力×0.8・ボスの攻撃は勇者の防御を50%無視（`bossBuffDefensePierce`）（出現前でも有効） |
+
+- 倍率は攻撃力に掛け、その後に従来どおり防御を引く（`CharacterPresenter.PerformAttack(target, multiplier, bonusDamage)`、既定値 1/0 なら従来と同じ式）
+- 防御を削る効果（呪い・ボス強化の貫通）は `ResolveAttack` が「防御を下げた場合のダメージ − 通常ダメージ」を防御無視の追加ダメージ（`bonusDamage`）として返す方式（`CharacterModel`/`CharacterPresenter` は変更しない）。罠の追加ダメージも同じ枠に足す
+- 上限: 必殺技 2回（プレイヤー＋視聴者赤スパの予約で数える）・ボス強化 1回・同時に有効な指示 1件・指示後クールダウン 6秒（一時停止中は進まない）
+- 視聴者スパチャ: 1分あたりの期待件数 = 同接/100 ×(0.5+熱/100)（上限8件）。色の重み 青30/水25/緑18/黄12/橙8/桃5/赤2、赤は ×(1+同接/400)・超バズ中×3。受信で熱 +0.5×段階・同接 +0.4%×段階。赤スパは上限内なら必殺技を予約、上限後は熱+8＋大弾幕
+- コメント: トリガー `SuperChat` / `RedSuperChat` / `InterventionHeal` / `InterventionSkill` / `SpecialMove` / `DungeonTrap` / `DungeonCurse` / `DungeonReinforce` / `DungeonBossBuff` を追加（CSV に文言）。スパチャ本文は `StreamingCommentFeed.PushText` で同色の上固定コメ
+- 精算: `BattleSceneStarter` で決着 → Resume → `battleCts.Cancel()` → `InterventionPresenter.Stop()`（未実行の指示を返金）→ `SuperChatGenerator.Stop()` → `StopSales()` → スナップショット。補充ポップアップの利用可能残高にも介入の純支出を含める。`BattleOutputData` に `InterventionSpending` / `InterventionRefund` / `PeakViewers` / `ViewerSuperChatCount` / `SpecialMoveCount`（`SetStreamingStats`）
+- 未実装: 視聴者スパチャの「お願い」（期限内達成で熱+5）、`FollowerGain`（P4）
 
 ---
 

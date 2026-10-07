@@ -46,6 +46,34 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>現在の配信熱ティア（0=冷め / 1=普通 / 2=盛り上がり / 3=超人気。未開始なら -1）。</summary>
     public int CurrentHeatTier => _heatModel != null ? _heatModel.GetTierIndex() : -1;
 
+    /// <summary>配信熱を直接加減する（介入・視聴者スパチャ用。勇者の戦術補正は掛けない）。販売停止後は何もしない。</summary>
+    public void AddHeat(float delta)
+    {
+        if (!_salesActive || delta == 0f) return;
+        _heatModel?.AddHeat(delta);
+    }
+
+    /// <summary>
+    /// 指定種別（武器など）の需要と価格を動かす（介入: 青・赤スパの「その剣なに？」）。販売停止後は何もしない。
+    /// demandDelta=0・priceMultiplier=1 なら何もしない。
+    /// </summary>
+    public void BoostItemType(ItemTypeData.ItemType type, float demandDelta, float priceMultiplier)
+    {
+        if (!_salesActive || _model == null) return;
+        bool changed = false;
+        if (demandDelta != 0f && _demandTracker != null)
+        {
+            _demandTracker.AdjustDemandByType(type, demandDelta, _model.ItemsForSale, inventorySlotItemRefs);
+            changed = true;
+        }
+        if (priceMultiplier != 1f)
+        {
+            _model.AdjustPricesByType(type, priceMultiplier, inventorySlotItemRefs, GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+            changed = true;
+        }
+        if (changed) RefreshAllSlotDisplays();
+    }
+
     /// <summary>バトル中の累計売上金額を返す。</summary>
     public int GetTotalSalesValue() => _model != null ? _model.GetCurrentTotalSales() : 0;
 

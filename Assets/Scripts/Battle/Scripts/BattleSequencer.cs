@@ -44,6 +44,17 @@ public class BattleSequencer : MonoBehaviour
     /// <summary>一時停止状態（配信コメントなど演出側の参照用。未設定なら null）。</summary>
     public BattlePauseController PauseController => _pauseController;
 
+    private InterventionCommandQueue _interventions;
+
+    /// <summary>介入の指示キュー。バトル開始前に BattleSceneStarter から設定する（未設定なら介入なし）。</summary>
+    public void SetInterventionQueue(InterventionCommandQueue queue) => _interventions = queue;
+
+    /// <summary>実行中の戦闘の状態（StartBattle 前は null）。介入カードの前列魔物表示・対象指定に使う。</summary>
+    public BattleContext Context => battleContext;
+
+    /// <summary>キャラクター（勇者・敵）がタップされた。介入（青スパ）の対象指定に使う。</summary>
+    public Subject<CharacterPresenter> OnCharacterClicked { get; } = new();
+
     public Subject<(string weaponId, string armorId)> OnBattleWin { get; } = new();
     public Subject<(string weaponId, string armorId)> OnBattleDefeat { get; } = new();
     public IReadOnlyList<CharacterPresenter> CharacterPresenters =>
@@ -79,7 +90,7 @@ public class BattleSequencer : MonoBehaviour
         {
             // ★ ここで戦闘ルールをContextに渡す
             battleContext = new BattleContext(currentDungeon, currentDungeonLevel, totalNormalEnemies, maxConcurrentEnemies);
-            var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController, _pauseController);
+            var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController, _pauseController, _interventions);
 
             await flowManager.ExecuteBattleAsync(heroModel, token);
             Debug.Log("戦闘が終了しました。 (BattleSequencer)");

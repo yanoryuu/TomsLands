@@ -40,6 +40,14 @@ public class ItemPriceGraphView : MonoBehaviour
     [Tooltip("点を丸くするスプライト（null の場合は四角）")]
     [SerializeField] private Sprite pointSprite;
 
+    [Header("小さく出す（商品詳細パネル内）")]
+    [Tooltip("ON: graphContainer の大きさに合わせて横幅・高さを自動で決め、ラベル文字を出さない。値の文字は詳細パネル側に出す")]
+    [SerializeField] private bool compactMode = false;
+    [Tooltip("compactMode で表示する直近の点数（多いと潰れるため）")]
+    [SerializeField] private int compactMaxPoints = 12;
+    [Tooltip("compactMode の左右の余白（px）")]
+    [SerializeField] private float compactPaddingX = 10f;
+
     [Header("カラー")]
     [SerializeField] private Color lineColorUp   = new Color(0.25f, 0.85f, 0.35f);
     [SerializeField] private Color lineColorDown = new Color(0.90f, 0.25f, 0.25f);
@@ -72,18 +80,34 @@ public class ItemPriceGraphView : MonoBehaviour
         if (itemNameText != null)
             itemNameText.text = item.ItemName;
 
-        if (currentPriceText != null)
-            currentPriceText.text = $"現在価格: {item.CurrentPrice.Value} G";
-
         var history = item.BattlePriceHistory;
-        int totalChange = history.Count > 0 ? item.CurrentPrice.Value - history[0] : 0;
-        if (totalChangeText != null)
+        if (compactMode)
         {
-            string sign = totalChange >= 0 ? "+" : "";
-            totalChangeText.text = $"累計変動: {sign}{totalChange} G";
-            totalChangeText.color = totalChange > 0 ? lineColorUp
-                                  : totalChange < 0 ? lineColorDown
-                                  : lineColorFlat;
+            // 詳細パネルには「現在価格」「前ターン比」の見出しが既にあるので、値だけを書く
+            if (currentPriceText != null)
+                currentPriceText.text = $"{item.CurrentPrice.Value:N0}G";
+            int prev = history.Count >= 2 ? history[history.Count - 2] : item.CurrentPrice.Value;
+            int diff = item.CurrentPrice.Value - prev;
+            if (totalChangeText != null)
+            {
+                totalChangeText.text = diff > 0 ? $"+{diff:N0}G" : diff < 0 ? $"-{-diff:N0}G" : "±0G";
+                totalChangeText.color = diff > 0 ? lineColorUp : diff < 0 ? lineColorDown : Color.white;
+            }
+        }
+        else
+        {
+            if (currentPriceText != null)
+                currentPriceText.text = $"現在価格: {item.CurrentPrice.Value} G";
+
+            int totalChange = history.Count > 0 ? item.CurrentPrice.Value - history[0] : 0;
+            if (totalChangeText != null)
+            {
+                string sign = totalChange >= 0 ? "+" : "";
+                totalChangeText.text = $"累計変動: {sign}{totalChange} G";
+                totalChangeText.color = totalChange > 0 ? lineColorUp
+                                      : totalChange < 0 ? lineColorDown
+                                      : lineColorFlat;
+            }
         }
 
         BuildLineGraph(history);
@@ -112,6 +136,12 @@ public class ItemPriceGraphView : MonoBehaviour
             Destroy(child.gameObject);
 
         if (history == null || history.Count == 0) return;
+
+        if (compactMode)
+        {
+            BuildCompactGraph(history);
+            return;
+        }
 
         int maxP = history.Max();
         int minP = history.Min();
@@ -174,6 +204,64 @@ public class ItemPriceGraphView : MonoBehaviour
                 new Vector2(points[i].x, drawBottom - labelBottomOffset),
                 fontSize: 7f, color: lc, pivot: new Vector2(0.5f, 1f));
         }
+    }
+
+    /// <summary>
+    /// 小さい領域向け: 直近の点だけを、領域の幅・高さいっぱいに描く。文字ラベルは出さない。
+    /// </summary>
+    private void BuildCompactGraph(List<int> history)
+    {
+        int count = Mathf.Clamp(compactMaxPoints, 2, 64);
+        int start = Mathf.Max(0, history.Count - count);
+        var data = history.GetRange(start, history.Count - start);
+        int n = data.Count;
+
+        var rect = graphContainer.rect;
+        float w = Mathf.Max(10f, rect.width - compactPaddingX * 2f);
+        float h = Mathf.Max(10f, rect.height);
+        float padY = Mathf.Max(pointSize, h * 0.16f);
+        float bottom = padY, top = h - padY;
+
+        int maxP = data.Max();
+        int minP = data.Min();
+        int range = Mathf.Max(1, maxP - minP);
+        // 2点の差が小さいときに線が上下端へ張り付かないよう、値幅に下限を設ける
+        float minRange = Mathf.Max(1f, maxP * 0.04f);
+        float mid = (maxP + minP) * 0.5f;
+        float half = Mathf.Max(range, minRange) * 0.5f;
+
+        var pts = new Vector2[n];
+        for (int i = 0; i < n; i++)
+        {
+            float x = compactPaddingX + (n == 1 ? w * 0.5f : w * i / (n - 1));
+            float t = (data[i] - (mid - half)) / (half * 2f);
+            pts[i] = new Vector2(x, Mathf.Lerp(bottom, top, Mathf.Clamp01(t)));
+        }
+
+        // 開始価格の目安線（薄く）
+        DrawRect("Base", graphContainer,
+            pos: new Vector2(compactPaddingX, pts[0].y),
+            size: new Vector2(w, 1.5f),
+            pivot: new Vector2(0f, 0.5f),
+            color: axisColor,
+            rotation: 0f);
+
+        for (int i = 1; i < n; i++)
+        {
+            Color c = data[i] > data[i - 1] ? lineColorUp : data[i] < data[i - 1] ? lineColorDown : lineColorFlat;
+            DrawSegment(graphContainer, pts[i - 1], pts[i], c);
+        }
+        for (int i = 0; i < n; i++)
+        {
+            Color c = i == 0 ? lineColorFlat
+                    : data[i] > data[i - 1] ? lineColorUp
+                    : data[i] < data[i - 1] ? lineColorDown
+                    : lineColorFlat;
+            DrawPoint(graphContainer, pts[i], c);
+        }
+        // 最新の点を少し大きく
+        var last = graphContainer.GetChild(graphContainer.childCount - 1) as RectTransform;
+        if (last != null) last.sizeDelta = Vector2.one * pointSize * 1.6f;
     }
 
     // ─────────────────────────────────────────

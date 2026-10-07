@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: fire5
   enemyName: "\u30DE\u30EB\u30B0\u30EA"
-  hp: 40
-  attackPower: 12
-  defensePower: 8
+  hp: 130
+  attackPower: 34
+  defensePower: 7
   elementType: 2
   enemySprite: {fileID: 21300000, guid: 50e54a5be45d84ccdbc2bbebe5aac55b, type: 3}
   skills: []

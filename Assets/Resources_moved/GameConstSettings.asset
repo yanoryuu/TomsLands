@@ -26,7 +26,7 @@ MonoBehaviour:
     heroExpPerMob: 10
     heroExpPerBoss: 100
     heroBaseExpToNextLevel: 100
-    heroGuaranteedLevelUpsOnVictory: 1
+    heroGuaranteedLevelUpsOnVictory: 0
     heroGuaranteedLevelUpsOnDefeat: 1
     heroDefeatMobExpMultiplier: 1.5
     heroDefeatBossExpShare: 0.5

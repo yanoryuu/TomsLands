@@ -35,6 +35,8 @@ public sealed class AutoPlayAssets
     public BuzzEffectData NormalBuzz;
     public BuzzEffectData BigBuzz;
     public List<DungeonInfoScriptableObj> Dungeons;
+    /// <summary>配信中の介入・視聴者スパチャの調整値（Addressable → RemoteBalance → 既定値）。</summary>
+    public StreamingInteractionSettings Interaction;
 
     /// <summary>
     /// GameLifetimeScope.Configure と同じ経路（Addressables + RemoteBalance）で読む。
@@ -82,6 +84,7 @@ public sealed class AutoPlayAssets
                 .Where(d => d != null)
                 .ToList();
             a.Dungeons = RemoteBalance.ApplyList("dungeons", a.Dungeons, d => d.key.ToString());
+            a.Interaction = StreamingInteractionSettings.Load();
             if (a.Dungeons.Count == 0)
             {
                 error = "DungeonInfoScriptableObj が見つかりませんでした。";
@@ -189,6 +192,14 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public int StreamMaxKinds = 6;
         /// <summary>true = 勝敗をクリア確率で抽選 / false = ドライランで決定論（実戦闘と同じ扱い）。</summary>
         public bool ProbabilisticBattle;
+        /// <summary>配信中の介入（スパチャ）をボットに使わせるか。false = 予定を渡されても無視（介入なしの比較用）。</summary>
+        public bool EnableInterventions = true;
+        /// <summary>視聴者の赤スパで必殺技が出るか。</summary>
+        public AutoPlayViewerSuperChatMode ViewerSuperChat = AutoPlayViewerSuperChatMode.FollowSettings;
+        /// <summary>視聴者の赤スパが1戦闘ターンに起きる確率（較正値）。</summary>
+        public float ViewerRedChancePerTurn = 0.03f;
+        /// <summary>1戦闘ターン ≒ 何秒か（クールダウンの換算用。較正値）。</summary>
+        public float SecondsPerBattleTurn = 3f;
     }
 
     // --- 当日の集計（ランナーが読む） ---
@@ -202,6 +213,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public int SupportSpend;
         public int UpgradeSpend;
         public string BattleResult = "";
+        public int InterventionSpent;
+        public int InterventionRefund;
         public string BattleDungeon = "";
         public float BattleClearPct;
         public int RejectedActions;
@@ -427,6 +440,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             s.HeroHp = hero.hp.Value;
             s.HeroAttack = hero.attackPower.Value;
             s.HeroDefense = hero.defensePower.Value;
+            s.HeroWeaponId = hero.weaponId.Value;
+            s.HeroArmorId = hero.armorId.Value;
         }
 
         s.BuzzActive = Marketing.Buzz.IsBuzzActive.Value;
@@ -441,7 +456,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             s.NextStreamDungeon = next.Value.ToString();
             s.NextStreamDungeonLevel = d?.currentDungeonLevel ?? 1;
             s.NextStreamClearChancePct = d != null
-                ? ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel) : 0f;
+                ? ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver) : 0f;
         }
 
         // --- 銘柄 ---
@@ -486,7 +501,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 MaxLevel = GameConst.MaxDungeonLevel,
                 SupportCost = isMax ? 0 : d.levelUpCost,
                 DefeatReward = d.rewardGold,
-                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel),
+                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver),
                 IsNextStream = next.HasValue && next.Value == d.key,
             });
         }
@@ -521,6 +536,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             });
         }
         s.RelicDeclineGold = RelicRewards.GetDeclineGold();
+
+        if (Stage == AutoPlayStage.StreamDay) s.Stream = BuildStreamInfo(s.Money);
 
         return s;
     }
@@ -638,6 +655,38 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"鍛冶屋 Lv{TomsModel.BlacksmithLevel.Value}");
     }
 
+    /// <summary>HeroPanelPresenter.SetWeapon / SetArmor / SaveEquipment の写し（所持・在庫は問われない＝本体と同じ）。</summary>
+    public AutoPlayActionResult EquipHero(string weaponId, string armorId)
+    {
+        var hero = HeroModel.heroData;
+        if (hero == null) return Reject("勇者データなし");
+        bool changed = false;
+        if (weaponId != null)
+        {
+            var w = string.IsNullOrEmpty(weaponId) ? null : ItemModel.GetRuntimeItem(weaponId);
+            if (weaponId != "" && (w == null || w.ItemType != ItemTypeData.ItemType.Weapon)) return Reject($"{weaponId} は武器ではない");
+            hero.weaponId.Value = weaponId;
+            hero.weaponName.Value = w != null ? w.ItemName : string.Empty;
+            changed = true;
+        }
+        if (armorId != null)
+        {
+            var a = string.IsNullOrEmpty(armorId) ? null : ItemModel.GetRuntimeItem(armorId);
+            if (armorId != "" && (a == null || a.ItemType != ItemTypeData.ItemType.Armor)) return Reject($"{armorId} は防具ではない");
+            hero.armorId.Value = armorId;
+            hero.armorName.Value = a != null ? a.ItemName : string.Empty;
+            changed = true;
+        }
+        if (!changed) return AutoPlayActionResult.Success();
+
+        HeroModel.ClearEquippedItems();
+        if (!string.IsNullOrEmpty(hero.weaponId.Value)) HeroModel.EquipItem(hero.weaponId.Value);
+        if (!string.IsNullOrEmpty(hero.armorId.Value)) HeroModel.EquipItem(hero.armorId.Value);
+        _battleIn.EquippedItemIds = new List<string>(HeroModel.EquippedItemIds);
+        HeroModel.SaveHeroData();
+        return AutoPlayActionResult.Success($"装備 {hero.weaponId.Value}/{hero.armorId.Value}");
+    }
+
     public AutoPlayActionResult UpgradeShop()
     {
         int before = TomsModel.PlayerMoney.Value;
@@ -747,7 +796,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"→ turn {CurrentTurn} / {Stage}");
     }
 
-    public AutoPlayActionResult StartStream(IReadOnlyList<AutoPlayStreamItem> items)
+    public AutoPlayActionResult StartStream(IReadOnlyList<AutoPlayStreamItem> items, IReadOnlyList<AutoPlayInterventionOrder> interventions = null)
     {
         if (Stage != AutoPlayStage.StreamDay) return Reject("配信日ではない");
         Today = new DayLedger();
@@ -769,19 +818,17 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         RelicBattleEffects.SetFrom(RelicResolver);
 
         _streamPending = false;
+        int moneyAtStart = TomsModel.PlayerMoney.Value;
         Flow.ProceedToBattle(); // セーブ → GoToBattle（シーンロードは横取りされる）
         Context.LastSceneRequest = null;
         _battleIn.SelectedItems = selected;
 
         var dungeon = Dungeons.GetById(_battleIn.DungeonKey);
         int level = _battleIn.DungeonLevel;
-        var outcome = AutoPlayBattleSurrogate.Resolve(HeroModel.heroData, ItemModel, dungeon, level,
-            RelicBattleEffects.HeroPowerMul, Config.ProbabilisticBattle, _rng);
+        var outcome = AutoPlayBattleSurrogate.Simulate(BuildStreamInput(dungeon, level, selected,
+            Config.EnableInterventions ? interventions : null, moneyAtStart));
         LastBattle = outcome;
-
-        var sold = AutoPlayBattleSurrogate.SimulateStreamSales(selected, ItemModel,
-            Mathf.Max(1, Mathf.RoundToInt(outcome.Turns * Mathf.Max(0f, Config.StreamSalesScale))), _rng);
-        int rawSales = sold.Sum(x => x.SoldQuantity * x.SoldPrice);
+        int rawSales = outcome.RawSales;
 
         // BattleSceneStarter.CalculateDefeatReward の写し
         int defeatReward = 0;
@@ -791,14 +838,20 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
         }
 
+        // 純利益 = 売上 − 補充(なし) + 返金(なし) + 防衛報酬 − 介入支出 + 未実行介入の返金（BattleSceneStarter の写し）
+        int totalEarnings = rawSales + defeatReward - outcome.InterventionSpent + outcome.InterventionRefund;
+
         string weaponId = _battleIn.EquippedItemIds.Count > 0 ? _battleIn.EquippedItemIds[0] : "";
         string armorId = _battleIn.EquippedItemIds.Count > 1 ? _battleIn.EquippedItemIds[1] : "";
         var result = outcome.Victory ? BattleResult.Victory : BattleResult.Defeat;
-        _battleOut.SetResult(result, weaponId, armorId, sold, rawSales + defeatReward,
+        _battleOut.SetResult(result, weaponId, armorId, outcome.Sold, totalEarnings,
             outcome.MobsDefeated, outcome.BossesDefeated);
+        _battleOut.SetStreamingStats(outcome.InterventionSpent, outcome.InterventionRefund, 0, outcome.ViewerSpecials, outcome.SpecialMoves);
 
         Today.StreamEarnings = rawSales;
         Today.DefeatReward = defeatReward;
+        Today.InterventionSpent = outcome.InterventionSpent;
+        Today.InterventionRefund = outcome.InterventionRefund;
         Today.BattleResult = outcome.Victory ? "HeroWin" : "HeroLose";
         Today.BattleDungeon = $"{_battleIn.DungeonKey} Lv{level}";
         Today.BattleClearPct = outcome.DisplayedClearPct;
@@ -817,6 +870,115 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
         ResolveStageAfterFlow();
         return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G");
+    }
+
+    // =================================================================
+    // 配信中の介入（Docs/Jev_AutoPlay_Design.md §2.5）
+    // =================================================================
+
+    private float ViewerRedChance
+    {
+        get
+        {
+            var s = Assets.Interaction;
+            return Config.ViewerSuperChat switch
+            {
+                AutoPlayViewerSuperChatMode.Off => 0f,
+                AutoPlayViewerSuperChatMode.On => Config.ViewerRedChancePerTurn,
+                _ => s != null && s.viewerSuperChatEnabled && s.viewerRedTriggersSpecial ? Config.ViewerRedChancePerTurn : 0f,
+            };
+        }
+    }
+
+    private AutoPlayBattleSurrogate.StreamInput BuildStreamInput(DungeonData dungeon, int level, List<BattleInputItem> selected,
+        IReadOnlyList<AutoPlayInterventionOrder> orders, int startMoney)
+    {
+        return new AutoPlayBattleSurrogate.StreamInput
+        {
+            Hero = HeroModel.heroData,
+            ItemModel = ItemModel,
+            Dungeon = dungeon,
+            Level = level,
+            HeroPowerMul = RelicBattleEffects.HeroPowerMul,
+            Probabilistic = Config.ProbabilisticBattle,
+            Rng = _rng,
+            Selected = selected,
+            SalesTicksPerTurn = Mathf.Max(0f, Config.StreamSalesScale),
+            Settings = Assets.Interaction,
+            Relic = RelicResolver,
+            Orders = orders,
+            StartMoney = startMoney,
+            SecondsPerTurn = Config.SecondsPerBattleTurn,
+            ViewerRedChancePerTurn = ViewerRedChance,
+        };
+    }
+
+    /// <summary>配信日の介入メニュー（＋貪欲ボット用のオラクル what-if）。</summary>
+    private AutoPlayStreamInfo BuildStreamInfo(int money)
+    {
+        var key = Flow.PendingBattleDungeon;
+        if (!key.HasValue) return null;
+        var dungeon = Dungeons.GetById(key.Value);
+        if (dungeon == null) return null;
+        int level = dungeon.currentDungeonLevel;
+        var hero = HeroModel.heroData;
+        var s = Assets.Interaction;
+
+        float powerMul = Mathf.Max(0.1f, RelicResolver.Modify(RelicStatId.HeroPowerMul, 1f));
+        float rewardMul = Mathf.Max(0f, RelicResolver.Modify(RelicStatId.DefeatRewardMul, 1f));
+        var equip = HeroEquipmentBonus.Get(hero, ItemModel);
+        int Scale(int v) => Mathf.Max(1, Mathf.RoundToInt(v * powerMul));
+        var (count, hasBoss) = AutoPlayBattleSurrogate.DescribeEnemies(dungeon, level);
+
+        var info = new AutoPlayStreamInfo
+        {
+            Dungeon = key.Value.ToString(),
+            Level = level,
+            DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver),
+            HasBoss = hasBoss,
+            EnemyCount = count,
+            DefeatReward = Mathf.RoundToInt((dungeon.GetLevelData(level)?.rewardGold ?? 0) * rewardMul),
+            HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
+            HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
+            HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,
+            InterventionsEnabled = Config.EnableInterventions && s != null,
+            CooldownTurns = s != null ? Mathf.CeilToInt(s.cooldownSeconds / Mathf.Max(0.1f, Config.SecondsPerBattleTurn)) : 0,
+        };
+
+        // オラクル: 介入なし／各介入を中盤に1回だけ使った場合（販売・視聴者赤スパなし、乱数は固定）
+        AutoPlayBattleSurrogate.Outcome WhatIf(AutoPlayInterventionOrder order)
+        {
+            var input = BuildStreamInput(dungeon, level, null, order != null ? new[] { order } : null, money);
+            input.Probabilistic = false;
+            input.ViewerRedChancePerTurn = 0f;
+            input.HeroPowerMul = powerMul;
+            input.Rng = new System.Random(Config.Seed);
+            return AutoPlayBattleSurrogate.Simulate(input);
+        }
+
+        var baseline = WhatIf(null);
+        info.BaselineHeroWins = baseline.Victory;
+        info.BaselineTurns = baseline.Turns;
+
+        if (info.InterventionsEnabled)
+        {
+            foreach (AutoPlayInterventionKind k in Enum.GetValues(typeof(AutoPlayInterventionKind)))
+            {
+                if (k == AutoPlayInterventionKind.BossBuff && !hasBoss) continue;
+                int price = AutoPlayInterventionKinds.Price(k, s);
+                var w = WhatIf(new AutoPlayInterventionOrder(k, 0.5f));
+                info.Options.Add(new AutoPlayInterventionOption
+                {
+                    Kind = k,
+                    Price = price,
+                    Affordable = price <= money,
+                    DescriptionEn = AutoPlayInterventionKinds.DescribeEn(k, s),
+                    WhatIfHeroWins = w.Victory,
+                    WhatIfTurns = w.Turns,
+                });
+            }
+        }
+        return info;
     }
 
     private AutoPlayActionResult Reject(string message)

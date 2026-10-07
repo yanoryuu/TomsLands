@@ -24,6 +24,21 @@ public class BattleOutputData : ScriptableObject
     public int DefeatedMobCount;
     public int DefeatedBossCount;
 
+    [Header("配信（介入・視聴者）")]
+    [Tooltip("介入で払った総額（返金前）。純利益（TotalEarnings）には反映済み")]
+    public int InterventionSpending;
+    [Tooltip("未実行のまま配信が終わった介入の返金額。純利益には反映済み")]
+    public int InterventionRefund;
+    [Tooltip("この配信の最大同接")]
+    public int PeakViewers;
+    [Tooltip("視聴者スパチャの件数（収入には含めない）")]
+    public int ViewerSuperChatCount;
+    [Tooltip("必殺技の回数（プレイヤー・視聴者の赤スパ起点の合計。予約ベース）")]
+    public int SpecialMoveCount;
+
+    /// <summary>リザルトの「介入」1行に出す額（純支出 = 支出 − 返金）。</summary>
+    public int InterventionNetSpending => InterventionSpending - InterventionRefund;
+
     [Header("フラグ")]
     public bool HasResult;
 
@@ -39,8 +54,25 @@ public class BattleOutputData : ScriptableObject
         TotalEarnings = totalEarnings;
         DefeatedMobCount = Mathf.Max(0, defeatedMobCount);
         DefeatedBossCount = Mathf.Max(0, defeatedBossCount);
+        // 配信集計は SetStreamingStats で上書きする（呼ばれなければ 0 のまま）
+        InterventionSpending = 0;
+        InterventionRefund = 0;
+        PeakViewers = 0;
+        ViewerSuperChatCount = 0;
+        SpecialMoveCount = 0;
         HasResult = true;
         Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}, mobs={DefeatedMobCount}, bosses={DefeatedBossCount}");
+    }
+
+    /// <summary>配信（介入・視聴者）の集計を書き込む。SetResult の後に呼ぶ。</summary>
+    public void SetStreamingStats(int interventionSpending, int interventionRefund, int peakViewers, int viewerSuperChatCount, int specialMoveCount)
+    {
+        InterventionSpending = Mathf.Max(0, interventionSpending);
+        InterventionRefund = Mathf.Max(0, interventionRefund);
+        PeakViewers = Mathf.Max(0, peakViewers);
+        ViewerSuperChatCount = Mathf.Max(0, viewerSuperChatCount);
+        SpecialMoveCount = Mathf.Max(0, specialMoveCount);
+        Debug.Log($"[BattleOutputData] SetStreamingStats: intervention={InterventionSpending} refund={InterventionRefund} peakViewers={PeakViewers} superChats={ViewerSuperChatCount} specials={SpecialMoveCount}");
     }
 
     public void Clear()
@@ -52,6 +84,11 @@ public class BattleOutputData : ScriptableObject
         TotalEarnings = 0;
         DefeatedMobCount = 0;
         DefeatedBossCount = 0;
+        InterventionSpending = 0;
+        InterventionRefund = 0;
+        PeakViewers = 0;
+        ViewerSuperChatCount = 0;
+        SpecialMoveCount = 0;
         HasResult = false;
     }
 }

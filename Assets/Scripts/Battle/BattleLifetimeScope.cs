@@ -26,6 +26,13 @@ public class BattleLifetimeScope : LifetimeScope
     [Header("バトル操作UI（一時停止・終了・在庫切れ）")]
     [SerializeField] private BattleControlView battleControlView;
 
+    [Header("介入（Docs/Streaming_Redesign.md §4・§5）。未設定ならシーンから自動検索、無ければ介入UIなし")]
+    [Tooltip("IInterventionCardView を実装した MonoBehaviour（介入カード）")]
+    [SerializeField] private MonoBehaviour interventionCardView;
+    [Tooltip("ISpecialMoveCutIn を実装した MonoBehaviour（必殺技カットイン）")]
+    [SerializeField] private MonoBehaviour specialMoveCutIn;
+    [SerializeField] private StreamingCommentDirector streamingCommentDirector;
+
     [Header("ダンジョンデータ（Inspector で設定。不足分は自動補完）")]
     [SerializeField] private List<DungeonInfoScriptableObj> dungeonInfos;
 
@@ -139,6 +146,12 @@ public class BattleLifetimeScope : LifetimeScope
             builder.RegisterComponent(dummy);
             Debug.LogWarning("[BattleLifetimeScope] BattleControlView が未設定のため、一時停止・終了・補充機能は無効です。");
         }
+
+        // 介入（勇者側・ダンジョン側）と視聴者スパチャ。View が未配線でもロジックは動く（null-safe）
+        builder.RegisterInstance(StreamingInteractionSettings.Load());
+        builder.RegisterInstance(InterventionSceneRefs.Resolve(interventionCardView, specialMoveCutIn, streamingCommentDirector));
+        builder.Register<SuperChatGenerator>(Lifetime.Singleton);
+        builder.Register<InterventionPresenter>(Lifetime.Singleton);
 
         // 戦闘開始の EntryPoint（IAsyncStartable）
         builder.RegisterEntryPoint<BattleSceneStarter>();

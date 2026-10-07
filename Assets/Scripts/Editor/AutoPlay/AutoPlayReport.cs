@@ -24,29 +24,46 @@ public static class AutoPlayReport
         var sb = new StringBuilder();
         sb.AppendLine("runId,bot,seed,mode,outcome,turns,finalMoney,peakMoney,minMoney,finalNetWorth,battles,heroWins,heroLosses,heroFinalLevel," +
                       "shopIncome,streamEarnings,defeatRewards,spend,debtPaid,supportSpend,upgradeSpend,supports,rejectedActions," +
-                      "anomalies,logErrors,logWarnings,jevRequests,inputTokens,costUsd,wallSeconds");
+                      "anomalies,logErrors,logWarnings,jevRequests,inputTokens,costUsd,wallSeconds," +
+                      "interventions,interventionSpent,interventionRefund,heroSideSpent,dungeonSideSpent,dungeonFlips,dungeonFlipRewards,dungeonStreamRewards,heroFlips");
         foreach (var r in runs)
         {
             sb.AppendLine(string.Join(",", Csv(r.RunId), Csv(r.Bot), r.Seed, r.Mode, r.Outcome, r.Turns, r.FinalMoney, r.PeakMoney, r.MinMoney,
                 r.FinalNetWorth, r.Battles, r.HeroWins, r.HeroLosses, r.HeroFinalLevel, r.TotalShopIncome, r.TotalStreamEarnings,
                 r.TotalDefeatRewards, r.TotalSpend, r.TotalDebtPaid, r.TotalSupportSpend, r.TotalUpgradeSpend, r.Supports, r.RejectedActions,
                 r.Anomalies.Count, r.LogErrors, r.LogWarnings, r.JevRequests, r.InputTokens,
-                r.CostUsd.ToString("F6", inv), r.WallSeconds.ToString("F1", inv)));
+                r.CostUsd.ToString("F6", inv), r.WallSeconds.ToString("F1", inv),
+                r.InterventionCount, r.InterventionSpent, r.InterventionRefund, r.HeroSideSpent, r.DungeonSideSpent,
+                r.DungeonFlips, r.DungeonFlipRewards, r.DungeonStreamRewards, r.HeroFlips));
         }
         File.WriteAllText(Path.Combine(dir, "runs.csv"), sb.ToString(), new UTF8Encoding(true));
 
         // --- turns.csv（所持金推移） ---
         sb.Clear();
         sb.AppendLine("runId,bot,turn,flowIndex,stage,money,stockValue,pendingOrders,netWorth,spend,shopIncome,streamEarnings,defeatReward," +
-                      "debtPaid,supportSpend,upgradeSpend,battle,battleDungeon,clearPct,heroLevel,buzz,displayedKinds,rejected");
+                      "debtPaid,supportSpend,upgradeSpend,battle,battleDungeon,clearPct,heroLevel,buzz,displayedKinds,rejected,interventionNet");
         foreach (var r in runs)
         foreach (var t in r.TurnRows)
         {
             sb.AppendLine(string.Join(",", Csv(t.RunId), Csv(r.Bot), t.Turn, t.FlowIndex, t.Stage, t.Money, t.StockValue, t.PendingOrders, t.NetWorth,
                 t.Spend, t.ShopIncome, t.StreamEarnings, t.DefeatReward, t.DebtPaid, t.SupportSpend, t.UpgradeSpend, Csv(t.Battle),
-                Csv(t.BattleDungeon), t.ClearPct.ToString("F0", inv), t.HeroLevel, Csv(t.Buzz), t.DisplayedKinds, t.Rejected));
+                Csv(t.BattleDungeon), t.ClearPct.ToString("F0", inv), t.HeroLevel, Csv(t.Buzz), t.DisplayedKinds, t.Rejected, t.InterventionNet));
         }
         File.WriteAllText(Path.Combine(dir, "turns.csv"), sb.ToString(), new UTF8Encoding(true));
+
+        // --- streams.csv（配信1回1行・介入の内訳） ---
+        sb.Clear();
+        sb.AppendLine("runId,bot,turn,dungeon,clearPct,baselineHeroWin,heroWin,planned,executed,skipped,heroSideSpent,dungeonSideSpent," +
+                      "refund,specialMoves,viewerSpecials,rawSales,defeatReward,turns,baselineTurns,heroLevel,weaponTier,armorTier");
+        foreach (var r in runs)
+        foreach (var x in r.StreamRows)
+        {
+            sb.AppendLine(string.Join(",", Csv(x.RunId), Csv(r.Bot), x.Turn, Csv(x.Dungeon), x.DisplayedClearPct.ToString("F0", inv),
+                x.BaselineHeroWin ? 1 : 0, x.HeroWin ? 1 : 0, Csv(x.Planned), Csv(x.Executed), Csv(x.Skipped), x.HeroSideSpent,
+                x.DungeonSideSpent, x.Refund, x.SpecialMoves, x.ViewerSpecials, x.RawSales, x.DefeatReward, x.Turns, x.BaselineTurns,
+                x.HeroLevel, x.WeaponTier, x.ArmorTier));
+        }
+        File.WriteAllText(Path.Combine(dir, "streams.csv"), sb.ToString(), new UTF8Encoding(true));
 
         // --- decisions.csv（判断と確率分布） ---
         sb.Clear();
@@ -100,6 +117,36 @@ public static class AutoPlayReport
         /// <summary>合格ラインの判定（項目 → "OK/NG 実測値"）。</summary>
         public Dictionary<string, string> Verdicts = new Dictionary<string, string>();
         public bool Passed;
+
+        // --- 配信中の介入 ---
+        public double InterventionsPerRun;
+        public double InterventionSpentMean;
+        public double InterventionRefundMean;
+        public double HeroSideSpentMean;
+        public double DungeonSideSpentMean;
+        public Dictionary<string, int> InterventionKinds = new Dictionary<string, int>();
+        public int StreamsWithIntervention;
+        public int StreamsWithoutIntervention;
+        public double HeroWinRateWithIntervention;
+        public double HeroWinRateWithoutIntervention;
+        /// <summary>介入した配信のうち「介入なしなら勝敗が違った」割合。</summary>
+        public double InterventionFlipRate;
+        public int DungeonSideSpentTotal;
+        public int DungeonStreamRewardsTotal;
+        public int DungeonFlips;
+        public int DungeonFlipRewardsTotal;
+        /// <summary>ダンジョン側の介入の元が取れたか: 介入で反転した配信の防衛報酬 ÷ ダンジョン側の支出（1以上で黒字）。</summary>
+        public double DungeonRoi;
+        public int HeroFlips;
+
+        // --- 防衛報酬狙いの収支（魔王軍支援＋介入） ---
+        public int DefeatRewardsTotal;
+        public int SupportSpendTotal;
+        public int InterventionNetTotal;
+        /// <summary>防衛報酬 ÷ (支援費 ＋ 介入の純支出)。1 を超えれば防衛報酬だけで元が取れている。</summary>
+        public double DefenseRoi;
+        /// <summary>1ラン単位で ROI が 1 を超えたラン数。</summary>
+        public int RunsWithDefenseRoiAbove1;
         public double HeroWinRate;
         public double HeroFinalLevelMean;
         public double ShopIncomeMean;
@@ -180,6 +227,39 @@ public static class AutoPlayReport
             b.NetWorthMedian = Percentile(nw, 0.5);
             b.NetWorthP10 = Percentile(nw, 0.1);
 
+            // --- 配信中の介入 ---
+            b.InterventionsPerRun = list.Average(r => (double)r.InterventionCount);
+            b.InterventionSpentMean = list.Average(r => (double)r.InterventionSpent);
+            b.InterventionRefundMean = list.Average(r => (double)r.InterventionRefund);
+            b.HeroSideSpentMean = list.Average(r => (double)r.HeroSideSpent);
+            b.DungeonSideSpentMean = list.Average(r => (double)r.DungeonSideSpent);
+            foreach (var kv in list.SelectMany(r => r.InterventionKinds).GroupBy(kv => kv.Key))
+                b.InterventionKinds[kv.Key] = kv.Sum(x => x.Value);
+            var streams = list.SelectMany(r => r.StreamRows).ToList();
+            var withIv = streams.Where(x => x.HeroSideSpent + x.DungeonSideSpent > 0).ToList();
+            var withoutIv = streams.Where(x => x.HeroSideSpent + x.DungeonSideSpent == 0).ToList();
+            b.StreamsWithIntervention = withIv.Count;
+            b.StreamsWithoutIntervention = withoutIv.Count;
+            b.HeroWinRateWithIntervention = withIv.Count > 0 ? withIv.Count(x => x.HeroWin) / (double)withIv.Count : 0;
+            b.HeroWinRateWithoutIntervention = withoutIv.Count > 0 ? withoutIv.Count(x => x.HeroWin) / (double)withoutIv.Count : 0;
+            b.InterventionFlipRate = withIv.Count > 0 ? withIv.Count(x => x.HeroWin != x.BaselineHeroWin) / (double)withIv.Count : 0;
+            b.DungeonSideSpentTotal = list.Sum(r => r.DungeonSideSpent);
+            b.DungeonStreamRewardsTotal = list.Sum(r => r.DungeonStreamRewards);
+            b.DungeonFlips = list.Sum(r => r.DungeonFlips);
+            b.DungeonFlipRewardsTotal = list.Sum(r => r.DungeonFlipRewards);
+            b.DungeonRoi = b.DungeonSideSpentTotal > 0 ? b.DungeonFlipRewardsTotal / (double)b.DungeonSideSpentTotal : 0;
+            b.HeroFlips = list.Sum(r => r.HeroFlips);
+            b.DefeatRewardsTotal = list.Sum(r => r.TotalDefeatRewards);
+            b.SupportSpendTotal = list.Sum(r => r.TotalSupportSpend);
+            b.InterventionNetTotal = list.Sum(r => r.InterventionSpent - r.InterventionRefund);
+            int invest = b.SupportSpendTotal + b.InterventionNetTotal;
+            b.DefenseRoi = invest > 0 ? b.DefeatRewardsTotal / (double)invest : 0;
+            b.RunsWithDefenseRoiAbove1 = list.Count(r =>
+            {
+                int inv = r.TotalSupportSpend + r.InterventionSpent - r.InterventionRefund;
+                return inv > 0 && r.TotalDefeatRewards > inv;
+            });
+
             foreach (var kind in list.SelectMany(r => r.Anomalies).GroupBy(a => a.Kind))
                 b.AnomalyKinds[kind.Key] = kind.Count();
 
@@ -233,6 +313,7 @@ public static class AutoPlayReport
         md.AppendLine($"- 作成: {s.CreatedAt}");
         md.AppendLine($"- モード: {config.Mode} / シード {config.BaseSeed}〜{config.BaseSeed + config.Seeds - 1}（{config.Seeds}本）/ ボット: {string.Join(", ", s.Bots.Select(b => b.Bot))}");
         md.AppendLine($"- 配信サロゲート: 販売回数倍率 {config.StreamSalesScale:F2} / 勝敗 {(config.ProbabilisticBattle ? "クリア確率で抽選" : "ドライラン（決定論）")}");
+        md.AppendLine($"- リモート配信: {AutoPlayBatch.LastRemoteInfo}");
         md.AppendLine($"- Jev: {s.TotalJevRequests} リクエスト / 入力 {s.TotalInputTokens:N0} tokens / 約 ${s.TotalCostUsd:F4}（≒{s.TotalCostJpyApprox:F1}円）");
         md.AppendLine();
         md.AppendLine("> 配信（戦闘・配信販売）はサロゲートで解決している。配信の売上と勝敗は実機と一致しない可能性がある（Docs/Jev_AutoPlay_Design.md §2.4）。");
@@ -269,6 +350,59 @@ public static class AutoPlayReport
         md.AppendLine("|---|" + string.Concat(s.Bots.Select(_ => "---|")));
         foreach (var t in turns)
             md.AppendLine($"| {t} | " + string.Join(" | ", s.Bots.Select(b => b.MoneyByTurn.TryGetValue(t, out var m) ? m.ToString("N0") : "")) + " |");
+        md.AppendLine();
+
+        md.AppendLine("## 配信中の介入（スパチャ）");
+        md.AppendLine();
+        md.AppendLine("「反転」= 同じ配信を介入なしでドライランした場合と勝敗が変わったもの。ROI = 反転させた配信の防衛報酬 ÷ ダンジョン側の支出（1以上で元が取れている）。");
+        md.AppendLine();
+        md.AppendLine("| ボット | 介入/ラン | 支出 平均 | 返金 平均 | 勇者側 | ダンジョン側 | 介入あり配信 | 勇者勝率(あり) | 勇者勝率(なし) | 反転率 | 勇者側で勝ちに反転 | ダンジョン側で負けに反転 | 反転の防衛報酬 | ダンジョン側配信の防衛報酬 | ROI |");
+        md.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|");
+        foreach (var b in s.Bots)
+        {
+            md.AppendLine($"| {b.Bot} | {b.InterventionsPerRun:F1} | {b.InterventionSpentMean:N0} | {b.InterventionRefundMean:N0} | {b.HeroSideSpentMean:N0} | " +
+                          $"{b.DungeonSideSpentMean:N0} | {b.StreamsWithIntervention}/{b.StreamsWithIntervention + b.StreamsWithoutIntervention} | " +
+                          $"{b.HeroWinRateWithIntervention:P0} | {b.HeroWinRateWithoutIntervention:P0} | {b.InterventionFlipRate:P0} | {b.HeroFlips} | " +
+                          $"{b.DungeonFlips} | {b.DungeonFlipRewardsTotal:N0} | {b.DungeonStreamRewardsTotal:N0} | " +
+                          (b.DungeonSideSpentTotal > 0 ? $"{b.DungeonRoi:F2}{(b.DungeonRoi >= 1 ? "（黒字）" : "（赤字）")}" : "-") + " |");
+        }
+        md.AppendLine();
+        md.AppendLine("**種類別の実行回数**（viewer_special = 視聴者の赤スパ起点の必殺技）");
+        md.AppendLine();
+        foreach (var b in s.Bots.Where(b => b.InterventionKinds.Count > 0))
+            md.AppendLine($"- {b.Bot}: " + string.Join(", ", b.InterventionKinds.OrderByDescending(kv => kv.Value).Select(kv => $"{kv.Key}×{kv.Value}")));
+        md.AppendLine();
+
+        // 対照群（介入なしで同じシードを回したボット「〜+noint」）との比較
+        var pairs = s.Bots.Where(b => !b.Bot.EndsWith(AutoPlayBatch.NoInterventionSuffix))
+            .Select(b => (with: b, without: s.Bots.FirstOrDefault(x => x.Bot == b.Bot + AutoPlayBatch.NoInterventionSuffix)))
+            .Where(p => p.without != null).ToList();
+        if (pairs.Count > 0)
+        {
+            md.AppendLine("**介入あり／なし（同じシードの対照群）**");
+            md.AppendLine();
+            md.AppendLine("| ボット | 勇者勝率 あり→なし | 純資産中央値 あり | なし | 差 | 破産率 あり→なし |");
+            md.AppendLine("|---|---|---|---|---|---|");
+            foreach (var (with, without) in pairs)
+            {
+                md.AppendLine($"| {with.Bot} | {with.HeroWinRate:P0} → {without.HeroWinRate:P0} | {with.NetWorthMedian:N0} | {without.NetWorthMedian:N0} | " +
+                              $"{with.NetWorthMedian - without.NetWorthMedian:+#,0;-#,0;0} | {with.BankruptcyRate:P0} → {without.BankruptcyRate:P0} |");
+            }
+            md.AppendLine();
+        }
+
+        md.AppendLine("## 防衛報酬狙いの収支（魔王軍支援＋ダンジョン側介入）");
+        md.AppendLine();
+        md.AppendLine("ROI = 防衛報酬の総額 ÷ (支援費 ＋ 介入の純支出)。介入なしでも勇者が負けていた配信の防衛報酬も含む。");
+        md.AppendLine();
+        md.AppendLine("| ボット | 勇者勝率 | 防衛報酬 合計 | 支援費 合計 | 介入 純支出 合計 | ROI | ROI>1 のラン | 純資産中央値 | 破産率 | 反転率 |");
+        md.AppendLine("|---|---|---|---|---|---|---|---|---|---|");
+        foreach (var b in s.Bots)
+        {
+            md.AppendLine($"| {b.Bot} | {b.HeroWinRate:P0} | {b.DefeatRewardsTotal:N0} | {b.SupportSpendTotal:N0} | {b.InterventionNetTotal:N0} | " +
+                          (b.SupportSpendTotal + b.InterventionNetTotal > 0 ? b.DefenseRoi.ToString("F2") : "-") +
+                          $" | {b.RunsWithDefenseRoiAbove1}/{b.Runs} | {b.NetWorthMedian:N0} | {b.BankruptcyRate:P0} | {b.InterventionFlipRate:P0} |");
+        }
         md.AppendLine();
 
         md.AppendLine("## 異常検知");

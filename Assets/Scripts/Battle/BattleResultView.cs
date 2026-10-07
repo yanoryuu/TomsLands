@@ -42,7 +42,7 @@ public class BattleResultView : MonoBehaviour
     /// リザルト画面のコンテンツを設定し、確認ボタンが押されるまで待機する。
     /// パネルの表示/非表示は BattlePanelManager が事前に行う。
     /// </summary>
-    public async UniTask ShowResultAsync(BattleResult result, List<BattleOutputSoldItem> soldItems, int totalEarnings = 0)
+    public async UniTask ShowResultAsync(BattleResult result, List<BattleOutputSoldItem> soldItems, int totalEarnings = 0, int interventionNetSpending = 0)
     {
         _confirmTcs = new UniTaskCompletionSource();
 
@@ -55,7 +55,9 @@ public class BattleResultView : MonoBehaviour
         // 売上サマリー（StreamingSalesModel が集計した正確な金額を使用）
         if (resultDetailText != null)
         {
-            resultDetailText.text = $"売上: {totalEarnings} G";
+            resultDetailText.text = interventionNetSpending > 0
+                ? $"売上: {totalEarnings} G\n介入: -{interventionNetSpending} G" // 介入の純支出（売上には反映済み）
+                : $"売上: {totalEarnings} G";
         }
 
         // 売れたアイテムスロット生成

@@ -29,6 +29,8 @@ public interface IPlayerActions
     AutoPlayActionResult UpgradeBlacksmith();
     /// <summary>店レベルアップ（陳列枠が増える）。</summary>
     AutoPlayActionResult UpgradeShop();
+    /// <summary>勇者の装備を変える（HeroPanelPresenter.SetWeapon/SetArmor と同等。null = 変えない / "" = 外す）。</summary>
+    AutoPlayActionResult EquipHero(string weaponId, string armorId);
 
     // --- 陳列フェーズ ---
     /// <summary>陳列を全部外す。</summary>
@@ -47,7 +49,9 @@ public interface IPlayerActions
     /// <summary>サマリーの「確認」= 日送り（GameFlowManager.NextTurn）。</summary>
     AutoPlayActionResult EndDay();
     /// <summary>配信を開始する（品出し内容を渡す）。戦闘と配信販売はサロゲートで解決する。</summary>
-    AutoPlayActionResult StartStream(IReadOnlyList<AutoPlayStreamItem> items);
+    /// <remarks>interventions = 配信中の介入（スパチャ）の予定。戦闘は一括で解決するため、
+    /// 「配信のどのあたりで何を使うか」を先に渡す離散モデル（Docs/Jev_AutoPlay_Design.md §2.5）。</remarks>
+    AutoPlayActionResult StartStream(IReadOnlyList<AutoPlayStreamItem> items, IReadOnlyList<AutoPlayInterventionOrder> interventions = null);
 }
 
 /// <summary>操作の結果。失敗しても例外は投げず ok=false と理由を返す（ボットの不正手を数えるため）。</summary>
@@ -102,6 +106,8 @@ public sealed class AutoPlaySnapshot
     public int HeroHp;
     public int HeroAttack;
     public int HeroDefense;
+    public string HeroWeaponId;
+    public string HeroArmorId;
 
     public bool BuzzActive;
     public string BuzzType;
@@ -111,6 +117,9 @@ public sealed class AutoPlaySnapshot
     public List<AutoPlayNewsView> News = new List<AutoPlayNewsView>();
     public List<AutoPlayRelicChoiceView> PendingRelicChoices = new List<AutoPlayRelicChoiceView>();
     public int RelicDeclineGold;
+
+    // --- 配信日の介入（StreamDay のときだけ埋まる） ---
+    public AutoPlayStreamInfo Stream;
 }
 
 public sealed class AutoPlayItemView
@@ -210,8 +219,13 @@ public sealed class AutoPlayDayPlan
     public float DisplayFraction = 1f;
     /// <summary>魔王軍支援するダンジョン（null = しない）。</summary>
     public string SupportDungeon;
+    /// <summary>同じダンジョンを何段続けて支援するか（1段ごとに費用と最大レベルを本体が判定）。</summary>
+    public int SupportTimes = 1;
     /// <summary>none / blacksmith / shop</summary>
     public string Upgrade = "none";
+    /// <summary>勇者の装備（null = 変えない / "" = 外す / 銘柄ID）。</summary>
+    public string HeroWeapon;
+    public string HeroArmor;
 
     public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
 }
@@ -219,6 +233,8 @@ public sealed class AutoPlayDayPlan
 public sealed class AutoPlayStreamPlan
 {
     public List<AutoPlayStreamItem> Items = new List<AutoPlayStreamItem>();
+    /// <summary>配信中の介入の予定（上から順に、timing の位置で出せるようになったら出す）。</summary>
+    public List<AutoPlayInterventionOrder> Interventions = new List<AutoPlayInterventionOrder>();
     public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
 }
 
@@ -240,4 +256,116 @@ public interface IAutoPlayBot
     /// <summary>外部 API の使用量（Jev 以外は 0）。</summary>
     int Requests { get; }
     long InputTokens { get; }
+}
+
+// ---------------------------------------------------------------------
+// 配信中の介入（スパチャ）— Docs/Streaming_Redesign.md §4・§5
+// ---------------------------------------------------------------------
+
+/// <summary>介入の種類（勇者側3種＋ダンジョン側4種）。</summary>
+public enum AutoPlayInterventionKind
+{
+    Heal,
+    Skill,
+    Special,
+    Trap,
+    Curse,
+    Reinforce,
+    BossBuff,
+}
+
+public static class AutoPlayInterventionKinds
+{
+    public static bool IsHeroSide(AutoPlayInterventionKind k) =>
+        k == AutoPlayInterventionKind.Heal || k == AutoPlayInterventionKind.Skill || k == AutoPlayInterventionKind.Special;
+
+    public static string Key(AutoPlayInterventionKind k) => k.ToString().ToLowerInvariant();
+
+    public static bool TryParse(string key, out AutoPlayInterventionKind kind)
+    {
+        foreach (AutoPlayInterventionKind k in System.Enum.GetValues(typeof(AutoPlayInterventionKind)))
+        {
+            if (Key(k) == key) { kind = k; return true; }
+        }
+        kind = default;
+        return false;
+    }
+
+    public static int Price(AutoPlayInterventionKind k, StreamingInteractionSettings s) => k switch
+    {
+        AutoPlayInterventionKind.Heal => s.GetPrice(HeroInterventionType.Heal),
+        AutoPlayInterventionKind.Skill => s.GetPrice(HeroInterventionType.Skill),
+        AutoPlayInterventionKind.Special => s.GetPrice(HeroInterventionType.Special),
+        AutoPlayInterventionKind.Trap => s.GetPrice(DungeonInterventionType.Trap),
+        AutoPlayInterventionKind.Curse => s.GetPrice(DungeonInterventionType.Curse),
+        AutoPlayInterventionKind.Reinforce => s.GetPrice(DungeonInterventionType.Reinforce),
+        _ => s.GetPrice(DungeonInterventionType.BossBuff),
+    };
+
+    /// <summary>Jev に見せる英語の効果説明（数値は SO から）。</summary>
+    public static string DescribeEn(AutoPlayInterventionKind k, StreamingInteractionSettings s) => k switch
+    {
+        AutoPlayInterventionKind.Heal => $"Hero side (green super chat): heal the hero by {s.healRatio:P0} of max HP. Longer battle = more selling time.",
+        AutoPlayInterventionKind.Skill => $"Hero side (blue super chat): the hero's next attack deals x{s.skillMultiplier:0.##}.",
+        AutoPlayInterventionKind.Special => $"Hero side (red super chat): special move, the hero's next attack deals x{s.specialMultiplier:0.##} (max {s.specialMaxPerStream} per stream incl. viewers).",
+        AutoPlayInterventionKind.Trap => $"Dungeon side: trap, the hero's next hit taken deals extra {s.trapBonusDamageRatio:P0} of max HP ignoring defense.",
+        AutoPlayInterventionKind.Curse => $"Dungeon side: curse, the hero's defense x{s.curseDefenseMul:0.##} for the next {s.curseHeroHits} hits taken (monsters deal attack minus defense).",
+        AutoPlayInterventionKind.Reinforce => $"Dungeon side: reinforcements, {s.reinforceCount} extra monster(s) join the current wave. Longer battle, hero slightly weaker.",
+        _ => $"Dungeon side: boss buff for this stream, boss attack x{s.bossBuffAttackMul:0.##} and damage taken x{s.bossBuffDamageTakenMul:0.##}, boss ignores {s.bossBuffDefensePierce:P0} of the hero's defense (once per stream).",
+    };
+}
+
+/// <summary>介入の予定1件。timing は配信の進み具合（0=開幕・1=終盤）。</summary>
+public sealed class AutoPlayInterventionOrder
+{
+    public AutoPlayInterventionKind Kind;
+    public float Timing;
+
+    public AutoPlayInterventionOrder(AutoPlayInterventionKind kind, float timing)
+    {
+        Kind = kind;
+        Timing = timing;
+    }
+}
+
+/// <summary>介入メニュー1行（配信日のスナップショット）。</summary>
+public sealed class AutoPlayInterventionOption
+{
+    public AutoPlayInterventionKind Kind;
+    public int Price;
+    public bool Affordable;
+    public string DescriptionEn;
+    /// <summary>【オラクル】この介入を中盤に1回だけ使った場合のサロゲート勝敗。貪欲ボット専用（Jev には見せない）。</summary>
+    public bool WhatIfHeroWins;
+    public int WhatIfTurns;
+}
+
+/// <summary>配信日の情報（プレイヤーが配信画面で見られるもの＋オラクル）。</summary>
+public sealed class AutoPlayStreamInfo
+{
+    public string Dungeon;
+    public int Level;
+    public float DisplayedClearPct;
+    public bool HasBoss;
+    public int EnemyCount;
+    /// <summary>勇者が負けたときの防衛報酬（レリック補正込み）。</summary>
+    public int DefeatReward;
+    public int HeroMaxHp;
+    public int HeroAttack;
+    public int HeroDefense;
+    public bool InterventionsEnabled;
+    public int CooldownTurns;
+    public List<AutoPlayInterventionOption> Options = new List<AutoPlayInterventionOption>();
+    /// <summary>【オラクル】介入なしのサロゲート勝敗とターン数。</summary>
+    public bool BaselineHeroWins;
+    public int BaselineTurns;
+}
+
+/// <summary>視聴者の赤スパ（必殺技の自動発動）の扱い。</summary>
+public enum AutoPlayViewerSuperChatMode
+{
+    /// <summary>StreamingInteractionSettings の viewerSuperChatEnabled / viewerRedTriggersSpecial に従う。</summary>
+    FollowSettings,
+    Off,
+    On,
 }

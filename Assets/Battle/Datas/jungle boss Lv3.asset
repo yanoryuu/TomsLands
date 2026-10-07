@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: jungle boss Lv3
   enemyName: "\u30AA\u30AA\u30B5\u30F3\u30D5\u30E9\u30EF\u30FC"
-  hp: 100
-  attackPower: 20
-  defensePower: 15
+  hp: 369
+  attackPower: 46
+  defensePower: 10
   elementType: 3
   enemySprite: {fileID: 21300000, guid: dca118eabeb334aa2baa927af2339ae0, type: 3}
   skills: []

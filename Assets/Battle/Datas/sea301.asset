@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyId: sea301
   enemyName: "\u30E4\u30C9\u30AB\u30EA\u30AF\u30F3"
-  hp: 25
-  attackPower: 8
-  defensePower: 3
+  hp: 83
+  attackPower: 21
+  defensePower: 5
   elementType: 1
   enemySprite: {fileID: 21300000, guid: 358b80e8e30f14e4c8f0679a413501f3, type: 3}
   skills: []
