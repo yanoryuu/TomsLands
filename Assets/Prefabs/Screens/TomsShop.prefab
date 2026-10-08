@@ -723,12 +723,25 @@ MonoBehaviour:
   DungeonLevelUpButton: {fileID: 3486474901381431012}
   AdvertisementButton: {fileID: 9119057986559437996}
   ProphetButton: {fileID: 4757683380593874836}
+  ShopUpgradeButton: {fileID: 0}
+  MachineShopButton: {fileID: 0}
   turnAnnounceView: {fileID: 8227555253588560536}
   buzzAnnounceView: {fileID: 1415950170431760195}
   buzzModeOverlayView: {fileID: 4924392406337608445}
   shopDeskDisplay: {fileID: 1386925894296690293}
+  shopMachineDisplay: {fileID: 0}
   nextDebtText: {fileID: 2464462683530780066}
   debtPaymentButton: {fileID: 5655452826784979173}
+  morningReportPanel: {fileID: 0}
+  morningReportText: {fileID: 0}
+  morningReportCloseButton: {fileID: 0}
+  relicChoicePanel: {fileID: 0}
+  relicChoiceButtons: []
+  relicChoiceNameTexts: []
+  relicChoiceDescTexts: []
+  relicChoiceSkipButton: {fileID: 0}
+  relicBarParent: {fileID: 0}
+  relicIconSize: 56
 --- !u!114 &7008396103817808464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -747,11 +760,12 @@ MonoBehaviour:
   itemSelectionPanel: {fileID: 748725647778717684}
   armorPanelButton: {fileID: 5282571135156433448}
   weaponPanelButton: {fileID: 4467239990535041306}
+  autoDisplayButton: {fileID: 8775928488871513669}
   itemDescriptionText: {fileID: 6248284563974213273}
   itemIcon: {fileID: 3750397579970783724}
-  autoDisplayButton: {fileID: 8775928488871513669}
   displayListParent: {fileID: 1154168748688278277}
   itemDisplaySlotPrefab: {fileID: 4659216629918582525, guid: d3dd9dc0ac907479ebd53dc7b1680442, type: 3}
+  slotCounterText: {fileID: 0}
   weaponTab: {fileID: 7451113209708417752}
   armorTab: {fileID: 2485729549320064720}
   toolTab: {fileID: 71993276274932950}
@@ -820,6 +834,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 229154020e2d48642a94d8b3c796ef82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  maxSlots: 16
   itemSlots:
   - {fileID: 8634052504858446318}
   - {fileID: 7606606289664822821}
@@ -873,6 +888,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   phaseLabel: {fileID: 676994606062248959}
   advanceButton: {fileID: 7507234799956515073}
+  backButton: {fileID: 0}
+  backButtonSalesPosition: {x: 170, y: -449}
   procurementGroup: {fileID: 4142417664302872806}
   displayGroup: {fileID: 7602497757217759781}
   salesGroup: {fileID: 5297992330927720747}
@@ -897,7 +914,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   overlay: {fileID: 2052736024692958140}
   coinIcon: {fileID: 0}
-  duration: 0.8
+  fadeInDuration: 0.5
+  holdDuration: 0.3
+  fadeOutDuration: 0.4
 --- !u!1 &487331018195171847
 GameObject:
   m_ObjectHideFlags: 0
@@ -5996,7 +6015,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &7723310268011064469
 RectTransform:
   m_ObjectHideFlags: 0
