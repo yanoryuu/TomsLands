@@ -259,6 +259,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     private int _lastDayBeginTurn = -1;
 
     public AutoPlayStage Stage { get; private set; } = AutoPlayStage.ShopDay;
+    /// <summary>新聞の発行カレンダーの概要（フェーズ3のデータで回っているかの確認用）。</summary>
+    public string NewsInfo { get; private set; } = "";
     public DayLedger Today { get; private set; } = new DayLedger();
     public AutoPlayBattleSurrogate.Outcome LastBattle { get; private set; }
 
@@ -342,6 +344,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         TomsModel.SavePlayerMoney();
         ItemModel.SaveData();
         News.Build(Config.Seed);
+        NewsInfo = $"phase3={News.IsPhase3} events={News.Events.Count} calendar={News.Calendar.Count}";
 
         Stage = AutoPlayStage.ShopDay;
     }

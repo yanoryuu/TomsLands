@@ -76,6 +76,7 @@ public sealed class AutoPlayRunResult
     public long InputTokens;
     public double CostUsd;
     public double WallSeconds;
+    public string NewsInfo = "";
 
     // --- 配信中の介入 ---
     public int InterventionCount;
@@ -141,6 +142,7 @@ public sealed class AutoPlayRunner
             using (_ctx.Enter())
             {
                 _game.StartNewRun();
+                Result.NewsInfo = _game.NewsInfo;
                 DrainLogs(0);
             }
 

@@ -314,6 +314,8 @@ public static class AutoPlayReport
         md.AppendLine($"- モード: {config.Mode} / シード {config.BaseSeed}〜{config.BaseSeed + config.Seeds - 1}（{config.Seeds}本）/ ボット: {string.Join(", ", s.Bots.Select(b => b.Bot))}");
         md.AppendLine($"- 配信サロゲート: 販売回数倍率 {config.StreamSalesScale:F2} / 勝敗 {(config.ProbabilisticBattle ? "クリア確率で抽選" : "ドライラン（決定論）")}");
         md.AppendLine($"- リモート配信: {AutoPlayBatch.LastRemoteInfo}");
+        int phase3Runs = runs.Count(r => (r.NewsInfo ?? "").Contains("phase3=True"));
+        md.AppendLine("- 新聞: phase3 のラン " + phase3Runs + "/" + runs.Count + "（例: " + (runs.FirstOrDefault()?.NewsInfo ?? "") + "）");
         md.AppendLine($"- Jev: {s.TotalJevRequests} リクエスト / 入力 {s.TotalInputTokens:N0} tokens / 約 ${s.TotalCostUsd:F4}（≒{s.TotalCostJpyApprox:F1}円）");
         md.AppendLine();
         md.AppendLine("> 配信（戦闘・配信販売）はサロゲートで解決している。配信の売上と勝敗は実機と一致しない可能性がある（Docs/Jev_AutoPlay_Design.md §2.4）。");
