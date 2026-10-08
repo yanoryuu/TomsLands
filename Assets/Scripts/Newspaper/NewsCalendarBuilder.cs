@@ -355,13 +355,34 @@ public static class NewsCalendarBuilder
         }
         if (!ev.IsFalse)
         {
-            foreach (var c in candidates)
-                if (rng.NextDouble() < c.reportRate) reporters.Add(c);
-            if (reporters.Count == 0)
+            // 報じられる日（発効 − lead）が周の中に収まる社だけが候補
+            var able = candidates.FindAll(c => ev.effectTurn - Math.Max(0, c.leadTurns) >= 1);
+            if (able.Count == 0) able = candidates;
+
+            if (able.Count >= 2 && rng.NextDouble() >= NewsTuning.TrueSingleReportRate)
             {
-                var best = candidates[0];
-                foreach (var c in candidates) if (c.reportRate > best.reportRate) best = c;
-                reporters.Add(best);
+                // 複数社が報じる（クロスリファレンスが成立する）。最低2社
+                foreach (var c in able)
+                    if (rng.NextDouble() < c.reportRate) reporters.Add(c);
+                while (reporters.Count < 2)
+                {
+                    var rest = able.FindAll(c => !reporters.Contains(c));
+                    if (rest.Count == 0) break;
+                    reporters.Add(rest[rng.Next(rest.Count)]);
+                }
+            }
+            else
+            {
+                // 本物でも1社だけが報じる（仕様 U2: 25%）。「同報なし＝誤報」と機械的に読めないように
+                float sum = 0f;
+                foreach (var c in able) sum += Math.Max(0.01f, c.reportRate);
+                double roll = rng.NextDouble() * sum;
+                foreach (var c in able)
+                {
+                    roll -= Math.Max(0.01f, c.reportRate);
+                    if (roll < 0) { reporters.Add(c); break; }
+                }
+                if (reporters.Count == 0) reporters.Add(able[able.Count - 1]);
             }
         }
 
@@ -517,8 +538,23 @@ public static class NewsCalendarBuilder
             else
             {
                 string tp = p.template?.page;
-                if (!string.IsNullOrEmpty(tp) && Free(tp)) page = tp;
+                // 誤報の一部（FalseReportHideRate）だけ目立たない面へ。全部を隠すと載り方だけで見抜けてしまう
+                bool isFalse = p.entry.kind == NewsEntryKind.Report && p.ev != null && p.ev.IsFalse
+                    && StableHash(p.ev.key + "|page") % 100 < (int)(NewsTuning.FalseReportHideRate * 100);
+                if (isFalse)
+                {
+                    // 誤報は目立たない面へ寄せる（うわさ欄 → 一面以外の面）。手がかりを「社」ではなく「載り方」に置く
+                    if (Free("rumor")) page = "rumor";
+                    if (page == null)
+                    {
+                        string cp = NewsTuning.PageOfCategory(p.ev.category);
+                        if (cp != "front" && Free(cp)) page = cp;
+                    }
+                    page ??= FirstFree(allowFront: false);
+                }
+                // 本物の報道は、その日の最初の1本を一面に（かわら版の本物も一面に載る）
                 if (page == null && p.entry.kind == NewsEntryKind.Report && !topReportPlaced && Free("front")) page = "front";
+                if (page == null && !string.IsNullOrEmpty(tp) && Free(tp)) page = tp;
                 if (page == null)
                 {
                     string cp = NewsTuning.PageOfCategory(p.ev?.category);
@@ -607,7 +643,8 @@ public static class NewsCalendarBuilder
 
         // 跳ね（1段目）: 報道の日ごと・同じ事象は1日1回（その日の一番大きい面）
         if (ev != null && e.kind == NewsEntryKind.Report && ev.HasTarget && ev.trendDelta != 0f)
-            ev.AddHype(day, NewsTuning.DefaultHypeRate(page, ev.trendDelta));
+            // 誤報は目立たない面に載せるが、噂は広まるので跳ねは一面並みにする（高値掴みの大きさを変えないため）
+            ev.AddHype(day, NewsTuning.DefaultHypeRate(ev.IsFalse ? "front" : page, ev.trendDelta));
     }
 
     /// <summary>署名。同じ事象・同じ社は同じ記者（続報も）。署名率を外れたら無署名。</summary>
@@ -615,7 +652,11 @@ public static class NewsCalendarBuilder
     {
         if (c.bylines.Count == 0) return string.Empty;
         var r = ev != null ? new Random(StableHash(ev.key + "|" + c.companyId)) : local;
-        if (r.NextDouble() >= c.bylineRate) return string.Empty;
+        // 誤報は無署名に寄せる（記者が裏を取っていない）。本物は社の署名率どおり
+        float rate = ev != null && ev.IsFalse && e.kind == NewsEntryKind.Report
+            ? c.bylineRate * NewsTuning.FalseReportBylineFactor
+            : c.bylineRate;
+        if (r.NextDouble() >= rate) return string.Empty;
         return c.bylines[r.Next(c.bylines.Count)];
     }
 

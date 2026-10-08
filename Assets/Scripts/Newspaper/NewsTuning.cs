@@ -167,4 +167,13 @@ public static class NewsTuning
     public static readonly string[] Villages = { "ハルム村", "ロウエン村", "ミルデ村", "カスト村", "ベルン村" };
     public static readonly string[] Seasons = { "春", "夏", "秋", "冬" };
     public static readonly string[] Monsters = { "甲殻種", "群狼", "大蜘蛛", "岩喰い", "影の獣" };
+
+    /// <summary>本物でも1社しか報じない事象の割合（Docs/News_Phase3_Spec.md §12 U2）。</summary>
+    public const float TrueSingleReportRate = 0.25f;
+
+    /// <summary>誤報の報道に署名が付く確率の倍率（社の署名率 × これ）。誤報は無署名に寄せる。</summary>
+    public const float FalseReportBylineFactor = 0.7f;
+
+    /// <summary>誤報の報道を一面以外（うわさ欄など）へ回す割合。残りは本物と同じく一面に載る。</summary>
+    public const float FalseReportHideRate = 0.4f;
 }
