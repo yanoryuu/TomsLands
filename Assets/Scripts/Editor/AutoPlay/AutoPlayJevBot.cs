@@ -157,6 +157,41 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
                 ["none"] = "Remove all equipment: the hero is weaker and more likely to lose (you earn the defeat reward if the hero loses).",
             });
 
+        // 新聞の購読（枠が空いているときだけ）。購読した社の紙面は翌日から読める
+        var subOptions = new Dictionary<string, string> { ["none"] = "Do not subscribe to a newspaper today." };
+        if (s.SubscriptionUsed < s.SubscriptionSlots)
+            foreach (var c in s.Newspapers.Where(c => c.CanSubscribe))
+                subOptions[c.Id] = $"Subscribe to {c.Id} for {c.Price}G ({c.ContractTurns} days): trust {c.Trust}/5, speed {c.Speed}/5, " +
+                                   $"{c.Pages} pages, covers {c.Categories}" + (c.MeasuredAccuracy >= 0 ? $", your measured accuracy {c.MeasuredAccuracy:P0}" : "");
+        if (subOptions.Count > 1)
+            req.Questions["subscribe"] = JevQuestion.Choice(who +
+                $"Newspaper slots used {s.SubscriptionUsed}/{s.SubscriptionSlots}" + (s.WallPaperOnly ? " (you only see the free wall paper now)" : "") +
+                ". Which newspaper is worth subscribing to?", subOptions);
+
+        // スクラップ（無料・枠3）と確認（1,500G / 3件 4,000G）
+        var pinnable = s.News.Where(n => n.CanPin).ToList();
+        if (pinnable.Count > 0 && s.Scraps.Count < s.ScrapCapacity)
+        {
+            var pinOptions = new Dictionary<string, string> { ["none"] = "Do not clip any article today." };
+            for (int k = 0; k < pinnable.Count; k++)
+                pinOptions["a" + k] = $"{pinnable[k].Company}/{pinnable[k].Page}: {(string.IsNullOrEmpty(pinnable[k].SummaryEn) ? pinnable[k].HeadlineJa : pinnable[k].SummaryEn)}";
+            req.Questions["scrap_pin"] = JevQuestion.Choice(who +
+                "You may clip one report to your scrapbook (free, 3 slots, cannot be removed). After it settles you can pay to learn " +
+                "whether it was true, which builds each paper's measured accuracy. Which report is worth clipping?", pinOptions);
+        }
+        int unconfirmed = s.Scraps.Count(x => x.State == "Unconfirmed");
+        if (unconfirmed > 0)
+        {
+            var confOptions = new Dictionary<string, string>
+            {
+                ["none"] = "Do not pay to check clipped reports today.",
+                ["one"] = $"Pay {NewsTuning.ConfirmCost}G to check one settled clipped report (frees a slot, shows if the paper was right).",
+            };
+            if (unconfirmed >= NewsTuning.ConfirmBatchCount)
+                confOptions["batch"] = $"Pay {NewsTuning.ConfirmBatchCost}G to check {NewsTuning.ConfirmBatchCount} settled clipped reports at once.";
+            req.Questions["scrap_confirm"] = JevQuestion.Choice(who + "Is it worth paying to check your settled clipped reports?", confOptions);
+        }
+
         var resp = await SendAsync(req, ct);
         if (resp == null)
         {
@@ -212,6 +247,26 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
             if (g == "best") (plan.HeroWeapon, plan.HeroArmor) = AutoPlayGreedyBot.BestGear(s);
             else if (g == "none") { plan.HeroWeapon = ""; plan.HeroArmor = ""; }
             Record(plan.Decisions, s, "day", "hero_gear", resp, g);
+        }
+
+        if (resp.Answers.TryGetValue("subscribe", out var sub))
+        {
+            string pick = Pick(sub) ?? "none";
+            if (pick != "none") plan.SubscribeNewspapers.Add(pick);
+            Record(plan.Decisions, s, "day", "subscribe", resp, pick);
+        }
+        if (resp.Answers.TryGetValue("scrap_pin", out var pinA))
+        {
+            string pick = Pick(pinA) ?? "none";
+            var pinList = s.News.Where(n => n.CanPin).ToList();
+            if (pick.StartsWith("a") && int.TryParse(pick.Substring(1), out var idx) && idx < pinList.Count)
+                plan.PinScraps.Add(pinList[idx].EntryKey);
+            Record(plan.Decisions, s, "day", "scrap_pin", resp, pick == "none" ? "none" : "clip");
+        }
+        if (resp.Answers.TryGetValue("scrap_confirm", out var conf))
+        {
+            plan.ConfirmScraps = Pick(conf) ?? "none";
+            Record(plan.Decisions, s, "day", "scrap_confirm", resp, plan.ConfirmScraps);
         }
 
         return plan;
@@ -441,6 +496,19 @@ public sealed class AutoPlayJevBot : IAutoPlayBot
                 defeatRewardIfHeroLoses = s.Stream.DefeatReward,
                 cashAvailableForSuperChats = s.Money,
                 interventionsEnabled = s.Stream.InterventionsEnabled,
+            },
+            ["newspaperSubscriptions"] = new
+            {
+                slotsUsed = s.SubscriptionUsed,
+                slots = s.SubscriptionSlots,
+                wallPaperOnly = s.WallPaperOnly,
+                papers = s.Newspapers.Select(c => new
+                {
+                    id = c.Id, price = c.Price, trust = c.Trust, speed = c.Speed, pages = c.Pages, covers = c.Categories,
+                    subscribed = c.Subscribed, daysLeft = c.TurnsLeft,
+                    measuredAccuracy = c.MeasuredAccuracy >= 0 ? (object)Math.Round(c.MeasuredAccuracy, 2) : "unknown",
+                }).ToList(),
+                scrapbook = s.Scraps.Select(x => new { paper = x.Company, day = x.PublishTurn, state = x.State }).ToList(),
             },
             ["newspaper"] = s.News.Select(n => new
             {

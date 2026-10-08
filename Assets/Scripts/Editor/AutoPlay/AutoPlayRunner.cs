@@ -68,6 +68,7 @@ public sealed class AutoPlayRunResult
     public int TotalDebtPaid;
     public int TotalSupportSpend;
     public int TotalUpgradeSpend;
+    public int TotalNewspaperSpend;
     public int Supports;
     public int RejectedActions;
     public int LogErrors;
@@ -283,6 +284,16 @@ public sealed class AutoPlayRunner
 
     private void ApplyDayPlan(AutoPlayDayPlan plan)
     {
+        // 新聞: 購読 → スクラップ → 確認（購読した社の紙面は翌日から盤面に載る）
+        foreach (var id in plan.SubscribeNewspapers ?? new List<string>()) _game.SubscribeNewspaper(id);
+        foreach (var key in plan.PinScraps ?? new List<string>()) _game.PinScrap(key);
+        if (plan.ConfirmScraps == "batch") _game.ConfirmScrapBatch();
+        else if (plan.ConfirmScraps == "one")
+        {
+            var target = _game.Scrapbook.Pinned.FirstOrDefault(sc =>
+                ScrapbookModel.StateOf(sc, _game.News.FindEntry(sc.entryKey), _game.CurrentTurn) == ScrapState.Unconfirmed);
+            if (target != null) _game.ConfirmScrap(target.entryKey);
+        }
         if (plan.HeroWeapon != null || plan.HeroArmor != null) _game.EquipHero(plan.HeroWeapon, plan.HeroArmor);
         if (plan.Upgrade == "blacksmith") _game.UpgradeBlacksmith();
         else if (plan.Upgrade == "shop") _game.UpgradeShop();
@@ -421,6 +432,7 @@ public sealed class AutoPlayRunner
         Result.TotalDebtPaid += day.DebtPaid;
         Result.TotalSupportSpend += day.SupportSpend;
         Result.TotalUpgradeSpend += day.UpgradeSpend;
+        Result.TotalNewspaperSpend += day.NewspaperSpend;
         Result.RejectedActions += day.RejectedActions;
     }
 

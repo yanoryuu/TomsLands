@@ -52,7 +52,7 @@ public static class AutoPlayNewsJevCheck
     private static void RunFromMenu() => Start();
 
     /// <summary>非同期で開始（async void）。メインスレッドで同期待ちしないこと。</summary>
-    public static async void Start(int seeds = 6, double costLimitUsd = 0.9)
+    public static async void Start(int seeds = 6, double costLimitUsd = 0.9, string only = null)
     {
         if (IsRunning) return;
         if (!JevApi.HasApiKey) { LastMessage = "TYPESAFE_API_KEY が無い"; return; }
@@ -85,6 +85,7 @@ public static class AutoPlayNewsJevCheck
                 .GroupBy(e => e.articleId).Select(g => g.First()).ToList();
             var unseen = templates.Values.Where(t => t.kind == "report" && !firstByTemplate.Any(e => e.articleId == t.templateId)).Select(t => t.templateId).ToList();
 
+            if (only != null && !only.Contains("J1")) goto SkipJ1;
             // --- J1: 報道1本 ---
             foreach (var e in firstByTemplate)
             {
@@ -135,6 +136,8 @@ public static class AutoPlayNewsJevCheck
                 }
             }
 
+        SkipJ1:
+            if (only != null && !only.Contains("J2")) goto SkipJ2;
             // --- J2: 誤報の見抜きやすさ（本物と誤報を同数） ---
             var falses = reports.Where(e => e.eventInstance.truth == "false").Take(60).ToList();
             var trues = reports.Where(e => e.eventInstance.truth == "true").OrderBy(e => StableHash(e.Key)).Take(Math.Max(20, falses.Count)).ToList();
@@ -170,6 +173,8 @@ public static class AutoPlayNewsJevCheck
                 });
             }
 
+        SkipJ2:
+            if (only != null && !only.Contains("J3")) goto Done;
             // --- J3: 社の個性（社名・署名を伏せる） ---
             var companyOptions = companies.ToDictionary(c => c.companyId, c => $"{c.companyName}: {c.styleNote}");
             foreach (var e in firstByTemplate)

@@ -56,6 +56,8 @@ public sealed class AutoPlayBatchConfig
     public float ViewerRedChancePerTurn = 0.03f;
     /// <summary>1戦闘ターン ≒ 何秒か（クールダウン 6 秒をターンに直す換算。較正値）。</summary>
     public float SecondsPerBattleTurn = 3f;
+    /// <summary>同じシードで「新聞を購読しない貪欲」（greedy+nonews）も回す。新聞の効果の測定用。</summary>
+    public bool ControlRunsWithoutNewspaper;
 }
 
 /// <summary>ボット名に接尾辞を付けるだけのラッパー（対照群の識別用）。</summary>
@@ -169,6 +171,8 @@ public static class AutoPlayBatch
                         bots.Add((new AutoPlayDungeonBot(v), config.EnableInterventions));
                 foreach (var p in personas)
                     bots.Add((new AutoPlayJevBot(AutoPlayPersona.Find(p), config.JevDecisionMode, seed), config.EnableInterventions));
+                if (config.ControlRunsWithoutNewspaper && config.UseGreedyBot)
+                    bots.Add((new AutoPlayRenamedBot(new AutoPlayGreedyBot(), "+nonews"), config.EnableInterventions));
                 if (config.EnableInterventions && config.ControlRunsWithoutInterventions)
                 {
                     if (config.UseGreedyBot) bots.Add((new AutoPlayRenamedBot(new AutoPlayGreedyBot(), NoInterventionSuffix), false));
@@ -194,6 +198,7 @@ public static class AutoPlayBatch
                         ViewerSuperChat = config.ViewerSuperChat,
                         ViewerRedChancePerTurn = config.ViewerRedChancePerTurn,
                         SecondsPerBattleTurn = config.SecondsPerBattleTurn,
+                        AllowNewspaper = !bot.Name.EndsWith("+nonews"),
                     }, assets, ctx);
                     Runners.Add(new AutoPlayRunner(game, bot, ctx, config.MaxStepsPerRun));
                 }

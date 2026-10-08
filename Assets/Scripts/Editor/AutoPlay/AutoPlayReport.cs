@@ -25,7 +25,7 @@ public static class AutoPlayReport
         sb.AppendLine("runId,bot,seed,mode,outcome,turns,finalMoney,peakMoney,minMoney,finalNetWorth,battles,heroWins,heroLosses,heroFinalLevel," +
                       "shopIncome,streamEarnings,defeatRewards,spend,debtPaid,supportSpend,upgradeSpend,supports,rejectedActions," +
                       "anomalies,logErrors,logWarnings,jevRequests,inputTokens,costUsd,wallSeconds," +
-                      "interventions,interventionSpent,interventionRefund,heroSideSpent,dungeonSideSpent,dungeonFlips,dungeonFlipRewards,dungeonStreamRewards,heroFlips");
+                      "interventions,interventionSpent,interventionRefund,heroSideSpent,dungeonSideSpent,dungeonFlips,dungeonFlipRewards,dungeonStreamRewards,heroFlips,newspaperSpend");
         foreach (var r in runs)
         {
             sb.AppendLine(string.Join(",", Csv(r.RunId), Csv(r.Bot), r.Seed, r.Mode, r.Outcome, r.Turns, r.FinalMoney, r.PeakMoney, r.MinMoney,
@@ -34,7 +34,7 @@ public static class AutoPlayReport
                 r.Anomalies.Count, r.LogErrors, r.LogWarnings, r.JevRequests, r.InputTokens,
                 r.CostUsd.ToString("F6", inv), r.WallSeconds.ToString("F1", inv),
                 r.InterventionCount, r.InterventionSpent, r.InterventionRefund, r.HeroSideSpent, r.DungeonSideSpent,
-                r.DungeonFlips, r.DungeonFlipRewards, r.DungeonStreamRewards, r.HeroFlips));
+                r.DungeonFlips, r.DungeonFlipRewards, r.DungeonStreamRewards, r.HeroFlips, r.TotalNewspaperSpend));
         }
         File.WriteAllText(Path.Combine(dir, "runs.csv"), sb.ToString(), new UTF8Encoding(true));
 
@@ -145,6 +145,7 @@ public static class AutoPlayReport
         public int InterventionNetTotal;
         /// <summary>防衛報酬 ÷ (支援費 ＋ 介入の純支出)。1 を超えれば防衛報酬だけで元が取れている。</summary>
         public double DefenseRoi;
+        public double NewspaperSpendMean;
         /// <summary>1ラン単位で ROI が 1 を超えたラン数。</summary>
         public int RunsWithDefenseRoiAbove1;
         public double HeroWinRate;
@@ -250,6 +251,7 @@ public static class AutoPlayReport
             b.DungeonRoi = b.DungeonSideSpentTotal > 0 ? b.DungeonFlipRewardsTotal / (double)b.DungeonSideSpentTotal : 0;
             b.HeroFlips = list.Sum(r => r.HeroFlips);
             b.DefeatRewardsTotal = list.Sum(r => r.TotalDefeatRewards);
+            b.NewspaperSpendMean = list.Average(r => (double)r.TotalNewspaperSpend);
             b.SupportSpendTotal = list.Sum(r => r.TotalSupportSpend);
             b.InterventionNetTotal = list.Sum(r => r.InterventionSpent - r.InterventionRefund);
             int invest = b.SupportSpendTotal + b.InterventionNetTotal;
@@ -392,6 +394,18 @@ public static class AutoPlayReport
             }
             md.AppendLine();
         }
+
+        md.AppendLine("## 新聞（購読・スクラップ確認）");
+        md.AppendLine();
+        md.AppendLine("| ボット | 新聞費 平均/ラン | 購読した社（回数） | 確認 |");
+        md.AppendLine("|---|---|---|---|");
+        foreach (var b in s.Bots)
+        {
+            string subs = b.DecisionCounts.TryGetValue("day.subscribe", out var sc) ? string.Join(", ", sc.Where(kv => kv.Key != "none").Select(kv => $"{kv.Key}×{kv.Value}")) : "";
+            string conf = b.DecisionCounts.TryGetValue("day.scrap_confirm", out var cc) ? string.Join(", ", cc.Select(kv => $"{kv.Key}×{kv.Value}")) : "";
+            md.AppendLine($"| {b.Bot} | {b.NewspaperSpendMean:N0} | {subs} | {conf} |");
+        }
+        md.AppendLine();
 
         md.AppendLine("## 防衛報酬狙いの収支（魔王軍支援＋ダンジョン側介入）");
         md.AppendLine();

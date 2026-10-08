@@ -35,8 +35,42 @@ public sealed class AutoPlayGreedyBot : IAutoPlayBot
         plan.DisplayFraction = 1f;
         // 勇者には解放済みで最高ランクの武具を持たせる（装備は在庫を消費しない＝本体と同じ）
         (plan.HeroWeapon, plan.HeroArmor) = BestGear(s);
+        PlanNewspaper(s, plan, reserve);
         plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "budget", Chosen = plan.AutoBuyBudget.ToString() });
         return Task.FromResult(plan);
+    }
+
+    /// <summary>
+    /// 新聞の単純な基準: 枠が空いていれば「信頼 × 面の数 ÷ 料金」が最大の社を、返済額＋6万Gを残せる範囲で購読（貪欲は紙面を読まないので余裕のあるときだけ）。
+    /// スクラップは空き枠に今日の一面（無ければ最初）の通常記事を貼り、決着・未確認が3件そろって所持金に余裕があればまとめて確認。
+    /// </summary>
+    public static void PlanNewspaper(AutoPlaySnapshot s, AutoPlayDayPlan plan, int reserve)
+    {
+        string chosen = "none";
+        if (s.SubscriptionUsed < s.SubscriptionSlots)
+        {
+            var best = s.Newspapers
+                .Where(c => c.CanSubscribe && s.Money - c.Price >= reserve + 60000)
+                .OrderByDescending(c => c.Trust * c.Pages / (double)Mathf.Max(1, c.Price))
+                .FirstOrDefault();
+            if (best != null)
+            {
+                plan.SubscribeNewspapers.Add(best.Id);
+                chosen = best.Id;
+            }
+            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "subscribe", Chosen = chosen });
+        }
+
+        int free = s.ScrapCapacity - s.Scraps.Count;
+        if (free > 0)
+        {
+            var pin = s.News.Where(n => n.CanPin && n.Kind == "Report").OrderBy(n => n.Page == "front" ? 0 : 1).FirstOrDefault();
+            if (pin != null) plan.PinScraps.Add(pin.EntryKey);
+        }
+        int unconfirmed = s.Scraps.Count(x => x.State == "Unconfirmed");
+        plan.ConfirmScraps = unconfirmed >= 3 && s.Money - NewsTuning.ConfirmBatchCost >= reserve + 20000 ? "batch" : "none";
+        if (unconfirmed > 0)
+            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "scrap_confirm", Chosen = plan.ConfirmScraps });
     }
 
     /// <summary>解放済みの武器・防具のうち最高ランク（同ランクは基準価格の高い方）。今と同じなら null（変えない）。</summary>
@@ -119,6 +153,19 @@ public sealed class AutoPlayRandomBot : IAutoPlayBot
         }
         plan.DisplayPriority = s.Items.OrderBy(_ => _rng.Next()).Select(i => i.Id).ToList();
         plan.DisplayFraction = (float)_rng.NextDouble();
+
+        // 新聞: 枠が空いていれば 30% で払える社を1つ。スクラップは 50% で1本、確認は未確認があれば 30% で1件
+        if (s.SubscriptionUsed < s.SubscriptionSlots && _rng.NextDouble() < 0.3)
+        {
+            var can = s.Newspapers.Where(c => c.CanSubscribe).ToList();
+            if (can.Count > 0) plan.SubscribeNewspapers.Add(can[_rng.Next(can.Count)].Id);
+            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "subscribe", Chosen = plan.SubscribeNewspapers.FirstOrDefault() ?? "none" });
+        }
+        var pinnable = s.News.Where(n => n.CanPin).ToList();
+        if (pinnable.Count > 0 && s.Scraps.Count < s.ScrapCapacity && _rng.NextDouble() < 0.5)
+            plan.PinScraps.Add(pinnable[_rng.Next(pinnable.Count)].EntryKey);
+        if (s.Scraps.Any(x => x.State == "Unconfirmed") && _rng.NextDouble() < 0.3) plan.ConfirmScraps = "one";
+
         if (_rng.NextDouble() < 0.2)
         {
             var ws = s.Items.Where(i => i.Unlocked && i.Type == "Weapon").ToList();
