@@ -220,6 +220,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - EventOutputData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 319e9d9f1d9602d489d09b8cc7ea2b7d
+    m_Address: NewsTemplates
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 324e5ee30bb743746a7d4807e37f17a7
     m_Address: Village/Village_hall
     m_ReadOnly: 0
@@ -678,6 +684,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - StartModeData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b14e0db6c5aa905428155572d22ae5ec
+    m_Address: NewsFillers
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b19468514059a3443bc365caead6b051
     m_Address: Marketing/Ad_SNS
     m_ReadOnly: 0
@@ -701,6 +713,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - RelicData
     - RelicDefinition
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: b79f3af860c030143ae6002163295399
+    m_Address: NewsEvents
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - TextAsset
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: b7cdc7fbd33c06945a26b9b958580cda
     m_Address: Village/Village_artisan

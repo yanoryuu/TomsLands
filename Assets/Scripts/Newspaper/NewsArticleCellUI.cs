@@ -42,6 +42,17 @@ public class NewsArticleCellUI : MonoBehaviour
         if (bodyRoot != null) bodyRoot.SetActive(false);
     }
 
+    /// <summary>3ペイン版の小記事。署名は呼び出し側で整形済み（社の紙面なら社名を省く）。</summary>
+    public void SetData(NewspaperView.ArticleData a)
+    {
+        ArticleId = a.entryKey;
+        if (headlineText != null) headlineText.text = a.headline;
+        if (leadText != null) leadText.text = a.lead;
+        if (bylineText != null) bylineText.text = a.byline;
+        if (newBadge != null) newBadge.SetActive(!a.isRead);
+        if (bodyRoot != null) bodyRoot.SetActive(false);
+    }
+
     public void ShowBody(string body)
     {
         if (bodyText != null) bodyText.text = body;

@@ -180,3 +180,104 @@ Newspaper                  … 全画面
 4. Debug メニュー（F12）の「相場」タブで、誤報の対象銘柄が**掲載日に跳ね、発効予定日から下がる**こと
    （N011 は風の防具、N012 は闇の武器、N007 は闇の武器）
 5. ログ `[ShopEconomy]` の price が、記事のない銘柄では従来と同じ動きであること
+
+---
+
+## 8. 3ペイン化（購読・スクラップ・相場）— 2026-10-08 実装・プレハブ組み立て・Play 確認済み
+
+フェーズ4（購読と枠）・フェーズ5（スクラップと確認）のロジックと、C案の左右ペインの View を実装した。
+プレハブは §8.5 のとおり組み立て済み（`Newspaper.prefab` を3ペインに組み直し、部品は `Assets/Prefabs/News/`）。
+
+### 8.1 追加・変更したコード
+
+| ファイル | 内容 |
+|---|---|
+| `Newspaper/NewspaperSubscriptionModel.cs` | 契約（社・開始・終了ターン）。枠・二重契約・所持金の判定。**契約中は解約・乗り換え不可、自動更新なし**（切れたターンに枠が空き、そこで選び直す＝更新ターンのみ変更可） |
+| `Newspaper/ScrapbookModel.cs` | ピン留め（枠3）・状態（保留/未確認/○/×）・確認で名鑑へ移動・社の実測的中率 |
+| `Newspaper/NewspaperSaveStore.cs` | `newspaperData.json`（`SaveSlotManager.GetPath`）。契約・スクラップ・名鑑・実測・**既読**。`runSeed` が違えば読み捨て |
+| `Newspaper/NewsMarketSummary.cs` | 相場欄の集計。種別ごとに ShopPriceHistory を等ウェイト指数化、5ターン変動率、MarketHeat 平均と5段階 |
+| `Newspaper/UI/*.cs` | `NewspaperCompanyCardUI` / `NewsRatingBarUI` / `NewsLeadArticleUI` / `NewsScrapCardUI` / `NewsMarketRowUI` / `NewsPageTabUI` |
+| `NewspaperView.cs` / `NewspaperPresenter.cs` | 3ペイン化。旧フィールド名（mastheadText 等）は維持 |
+| `NewsTuning.cs` | 購読枠（確定 Lv1〜2:1 / Lv3〜4:2 / Lv5:3）、壁新聞2本、確認 1,500G / 3件 4,000G、枠3 |
+| `NewsScheduler.cs` / `NewsModel.cs` | 掲載キー `NewsIssueEntry.Key`（ターン:社:記事）と `FindEntry`。**カレンダー生成は無変更**（経済は従来と同一） |
+| `GameLifetimeScope.cs` | `NewspaperSubscriptionModel` / `ScrapbookModel` を Singleton 登録（2行） |
+| `RunSaveCleaner.cs` | 新規ランで `newspaperData.json` を削除（1行） |
+| `MorningReportModel.cs` | `Peek()`（自店面が消費せずに読む。1メソッド） |
+
+### 8.2 画面の振る舞い
+
+- 開いたとき: 前回読んでいた社がまだ購読中ならその社、無ければ最初の購読社、契約0件なら**壁新聞**（全社の一面記事から2本）
+- 左: 未購読カードの「購読する」で即契約（一括払い・所持金保存）。購読中カードのクリックで読む社を切替
+- 中央: 面タブは社の `pages` ＋「自店」。社が持たない面の記事（結果記事など）は一面へ寄せる。
+  訂正記事は面に関係なく**一面の「お詫びと訂正」枠**へ。小記事クリックで一面トップへ差し替わり本文が開く
+- 右上: 一面トップの「スクラップする」で貼る（通常記事のみ。満杯・貼り済みは押せない）。
+  決着後のカードにだけ「確認 1,500G」。未確認が3件そろうと「まとめて確認 4,000G」。確認した日はカードに答えを出したまま枠を空ける
+- 右下: 行ごとに `NewsMarketRowUI.itemType` で集計対象を決める
+
+### 8.3 プレハブ組み立て設計（1920×1080）
+
+```
+y  20 ┌ 上部バー h100 ───────────────────────────────────────────────┐
+      │[閉じる] 情報ターミナル   [2日付: 第12号]  次の戦闘まで 3日   [3ゴールド: 48,600G] │
+ 140  ├ 左 x30–430 ─┐ ┌ 中央 x450–1470 ─────────────┐ ┌ 右 x1490–1890 ┐
+      │ 1枠         │ │ 8紙面ベース y140–960           │ │ 19台紙 y140–640 │
+      │ 社カード×5   │ │  9題字枠 h96（紋章80×2）        │ │  29見出し「スクラップ3/3」│
+      │ 384×140     │ │  10−1罫線太 h8                │ │  カード 360×116 ×3 │
+      │ 間隔8       │ │  一面トップ 12記事ボックス大 h270 │ │  24まとめて確認 300×56 │
+      │             │ │  小記事 2×2 Grid 460×140 間隔10 │ ├ 1枠 y656–1040 ─┤
+ 908  │ 7プレート h120│ │  17お詫びと訂正 h64            │ │  29見出し「相場」    │
+1040  └─────────────┘ └ 面タブ行 y966–1040 ─────────────┘ │  25相場行 360×72 ×3〜4│
+                       [28左] 11面タブ 160×66 ×5 [28右]       └─────────────────┘
+```
+
+| ノード | 部品 | 寸法・設定 | 参照先（View フィールド） |
+|---|---|---|---|
+| TopBar/Close | 鍛冶屋 `9−0閉じる` | 80×80 | closeButton |
+| TopBar/Title | TMP 32pt 濃茶「情報ターミナル」 | 固定文字 | — |
+| TopBar/Issue | `基本/2日付` ＋ TMP 28pt | 260×80 | issueText |
+| TopBar/NextBattle | TMP 28pt | 中央 | nextBattleRoot / nextBattleText |
+| TopBar/Money | `基本/3ゴールド` ＋ TMP 28pt 金 | 300×80 右寄せ | moneyText |
+| Left/Cards | VerticalLayoutGroup（spacing 8, padding 8/8/16/0） | 400×744 | companyCardParent |
+| Left/SlotPlate | `7購読枠プレート` ＋ TMP 30pt「購読枠 2/3」＋ TMP 20pt | 384×120 | slotText / renewalText |
+| Center/Paper/Masthead | `9題字枠`（境界70）＋左右に紋章 Image 80×80 ＋ TMP 56pt | 956×96 | mastheadText / mastheadEmblems |
+| Center/Paper/Articles | 記事群のまとめ（自店面で隠す） | — | paperArticlesRoot |
+| …/Lead | `12記事ボックス大`（**境界未設定→要設定 約60**）＋ NewsLeadArticleUI | 956×270 | leadArticle |
+| …/Lead 内 | 見出し TMP 40 / リード 20（2行）/ Body(TMP 20, 既定非表示) / Photo(`14写真枠`, 任意) / 署名 `15署名ボックス` 240×40 / `18スクラップする` 200×52（SpriteSwap 18−1） | | |
+| …/Grid | ScrollRect＞Content: GridLayoutGroup cell 470×140 spacing 10 | 956×290 | articleParent |
+| …/Grid セル | `NewsArticleCell` の小型版（13記事ボックス小、**pixelsPerUnitMultiplier 2**で境界を39相当に、padding 28/28/18/14、ContentSizeFitter 外す） | 470×140 | articleCellPrefab |
+| …/Correction | `17お詫びと訂正枠` ＋ TMP 18「お詫びと訂正」（固定）＋ TMP 15 | 956×64 | correctionRoot / correctionText |
+| Center/Paper/ShopPage | TMP 22 左上揃え | 紙面内いっぱい | shopPageRoot / shopReportText |
+| Center/Tabs | HorizontalLayoutGroup: `28ページ送り左` 64×64 ＋ NewsPageTabUI×5（front/second/market/rumor/shop、`11−0/11−1`、TMP 26） ＋ `28右` | 1020×74 | pageTabs / prevPageButton / nextPageButton |
+| Right/Scrap | `19スクラップ台紙` ＋ `29見出しラベル` 220×52（上辺に半分かぶせる）＋ TMP 24 | 400×500 | scrapHeaderText |
+| …/Cards | VerticalLayoutGroup spacing 10, top 60 | 360×368 | scrapCardParent |
+| …/Batch | `24−0/24−1まとめて確認` ＋ TMP 20 | 300×56 | batchConfirmButton / batchConfirmLabel |
+| Right/Market | `1枠` ＋ `29見出しラベル`「相場」 | 400×384 | — |
+| …/Row×3（武器/防具/道具） | NewsMarketRowUI（itemType を行ごとに設定） | 360×72 | marketRows |
+
+**部品プレハブ**
+
+- `NewspaperCompanyCard.prefab`（384×140）: 背景 `2−0/2−1社カード` / 紋章 88×88（左, x34） / 社名 TMP 26 / 料金 TMP 20 金「20,000G / 5ターン」/
+  信頼・速報・網羅: ラベル TMP 16 ＋ NewsRatingBarUI（`3−0/3−1星` 18×16 ×5, spacing 3）/ 実測バー（Image Filled 横, 高さ4, 信頼の真下, 任意）/
+  `5購読中リボン` 72×58 右上＋TMP 16「購読中」/ `4−0購読する`（SpriteSwap 4−1）120×50 右下＋TMP 20「購読する」/ ルート Button
+  - 社カードの PNG は**上 約90px が透明**（リボンの逃げ）。9スライス（例 L40 R40 T130 B40）にするかスプライト矩形で切ってから使う
+  - `emblems` に5社の紋章を登録（royal=王立官報 / guild=冒険者ギルド報 / commerce=週刊商業新聞 / tabloid=街角かわら版 / craft=職人季報）
+- `NewsScrapCard.prefab`（360×116）: `20スクラップカード` / `21留め具` 22×36 上中央 / バッジ `22−2/22−1/22−0` 64×64 左 /
+  見出し TMP 20 / リード TMP 15（2行で切る）/ `23−0確認`（SpriteSwap 23−1）96×56 右＋TMP 15「確認\n1,500G」
+- 相場行: `25相場行` / 種別アイコン 48×48 / TMP 20 種別名 / `27スパークライン枠` 120×44 の内側に PriceChartView（drawDemand=false, lineThickness 2, padding 4）/
+  TMP 20 変動率 / `26Heat` ドット 24×24（heatSprites に 凪→荒れ の順）/ TMP 18 Heat 語
+
+### 8.4 組み立て結果（2026-10-08・完了）
+
+- 部品プレハブ: `Assets/Prefabs/News/NewspaperCompanyCard.prefab`（392×152）/ `NewsScrapCard.prefab`（372×118）/ `NewsArticleCellSmall.prefab`（458×150）。`Newspaper.prefab` は3ペインに組み直し、View 全参照・紋章5社を配線済み
+- 9スライス境界を設定: 記事ボックス大・台紙・スクラップカード・訂正枠・相場行・プレート・見出し・面タブ・確認系ボタン・署名・スパークライン枠
+- 書体は **`MPLUSRounded1c-Bold SDFPlusPaddingNoOutLine`**（他画面の本文と同じ）。`SDFNoOutLine` のマテリアルは UNDERLAY_ON で、小さい文字に箱状の影が出る
+- 素材の手直し: `2−0/2−1社カード` は透明帯の位置が状態で上下逆だったので本体だけに切り詰め（Sprite Mode を Single へ）。`4−0/4−1購読する` も各自の外接矩形で切り詰め
+- 追加素材: `22−3状態バッジ誤報.png`（×。確定バッジと同じ円形、配色規定の RED）
+- 一面トップは挿絵なし・本文を常時表示。一面に記事が無い日は、記事のある最初の面を開く
+- 相場は 武器 / 防具 / 全体 の3行（道具の銘柄がマスターに無いため）
+- 通し確認のキャプチャ: `Assets/Screenshots/news_3pane_01_wall` 〜 `08_confirmed.png`
+
+**Play 確認のハマりどころ**: エディタが非フォーカスだと Play のフレームが進まない（`Time.frameCount` が止まる）。
+`EditorApplication.isPaused = true` → `EditorApplication.Step()` を必要回数 → `isPaused = false` で同期的に進められる。
+`playModeStartScene` はドメインリロードで BootScene に戻る。
+
