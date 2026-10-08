@@ -318,6 +318,15 @@ public static class AutoPlayReport
         md.AppendLine($"- リモート配信: {AutoPlayBatch.LastRemoteInfo}");
         int phase3Runs = runs.Count(r => (r.NewsInfo ?? "").Contains("phase3=True"));
         md.AppendLine("- 新聞: phase3 のラン " + phase3Runs + "/" + runs.Count + "（例: " + (runs.FirstOrDefault()?.NewsInfo ?? "") + "）");
+        var arcCounts = new Dictionary<string, int>();
+        foreach (var r in runs)
+            foreach (var part in (r.ArcInfo ?? "").Split(' '))
+            {
+                var kv = part.Split('=');
+                if (kv.Length == 2 && kv[0] != "lastStream" && int.TryParse(kv[1], out var n))
+                    arcCounts[kv[0]] = (arcCounts.TryGetValue(kv[0], out var m) ? m : 0) + n;
+            }
+        md.AppendLine("- 連載（全ラン合計）: " + string.Join(" / ", arcCounts.OrderBy(kv => kv.Key).Select(kv => kv.Key + "=" + kv.Value)));
         md.AppendLine($"- Jev: {s.TotalJevRequests} リクエスト / 入力 {s.TotalInputTokens:N0} tokens / 約 ${s.TotalCostUsd:F4}（≒{s.TotalCostJpyApprox:F1}円）");
         md.AppendLine();
         md.AppendLine("> 配信（戦闘・配信販売）はサロゲートで解決している。配信の売上と勝敗は実機と一致しない可能性がある（Docs/Jev_AutoPlay_Design.md §2.4）。");

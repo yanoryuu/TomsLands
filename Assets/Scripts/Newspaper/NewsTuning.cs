@@ -176,4 +176,38 @@ public static class NewsTuning
 
     /// <summary>誤報の報道を一面以外（うわさ欄など）へ回す割合。残りは本物と同じく一面に載る。</summary>
     public const float FalseReportHideRate = 0.4f;
+
+    // ---------------------------------------------------------------
+    // 難易度とレア（Docs/News_Phase3_Spec.md §16）
+    // ---------------------------------------------------------------
+
+    /// <summary>1周の事象の難易度構成の目標（易しい / 普通 / 難しい）。レアは別枠。</summary>
+    public const float DifficultyEasyShare = 0.65f;
+    public const float DifficultyNormalShare = 0.25f;
+    public const float DifficultyHardShare = 0.10f;
+
+    /// <summary>事象1件がレアになる確率（別枠）。Long 30ターン ≒ 事象30件で 1〜2件。</summary>
+    public const float RareEventRate = 0.05f;
+
+    /// <summary>
+    /// 規模 huge（レア用。「大」より上）。trendDelta は合計で ±1 にクランプされるので「大」と同じ 1.0 に留め、
+    /// 直撃と持続を大きくする。
+    /// </summary>
+    public const float TrendHuge = 1.0f, KickHuge = 0.15f; public const int DurationHuge = 5;
+
+    // ---------------------------------------------------------------
+    // 連載（ストーリーアーク。Docs/News_Phase3_Spec.md §17）
+    // ---------------------------------------------------------------
+
+    /// <summary>同時に進行できる連載の数。</summary>
+    public const int ArcMaxConcurrent = 2;
+
+    /// <summary>1周の事象に占める連載の割合の目標（15〜20% の中央）。</summary>
+    public const float ArcShareTarget = 0.175f;
+
+    /// <summary>連載を始められるターンで、実際に始める確率（同じターンに固まらないように）。</summary>
+    public const float ArcStartChance = 0.5f;
+
+    /// <summary>話と話の間隔（前の話の発効から次の話の分岐決定まで）1〜このターン数。次の話の発効はさらに最大 lead 後。</summary>
+    public const int ArcGapMax = 3;
 }

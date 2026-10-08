@@ -96,6 +96,8 @@ public class NewspaperPresenter : IStartable, IDisposable
 
         // 周のシードからカレンダーを組む（GameFlowManager 側でも呼ぶので通常は何もしない）
         newsModel.Build(seed);
+        // 連載の分岐の取りこぼし（ロード直後など）をここでも決める。通常は GameFlowManager が日送りで決めている
+        newsModel.ResolveArcs(Turn, ev => itemModel != null && itemModel.RuntimeItems.Exists(i => i.Stock.Value > 0 && ev.Matches(i)));
         EnsureLoaded(seed);
         // カレンダーの形式が変わる（旧形式 → フェーズ3）と、旧セーブのスクラップは掲載を引けなくなる。
         // 引けないまま枠を占有し続けないよう、ここで捨てる

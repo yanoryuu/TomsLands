@@ -20,6 +20,8 @@ public static class NewsCalendarBuilder
     {
         public readonly List<NewsEventInstance> events = new();
         public readonly List<NewsIssueEntry> entries = new();
+        /// <summary>連載の予約枠（§17）。分岐を事前に決められないものは未決定のまま残る。</summary>
+        public readonly List<NewsArcSlot> arcSlots = new();
     }
 
     private static readonly Regex Placeholder = new(@"\{([a-zA-Z_]+)\}", RegexOptions.Compiled);
@@ -54,7 +56,7 @@ public static class NewsCalendarBuilder
 
         // ---- 1〜3. 事象・報道・続報 ----
         var pending = new Dictionary<(string company, int day), List<Pending>>();
-        PlaceEvents(rng, maxTurn, companies, events, idx, world, result.events, pending);
+        PlaceEvents(rng, seed, maxTurn, companies, events, idx, world, result.events, pending, result.arcSlots);
 
         // ---- 4〜5. 号を詰めて面を割り当てる ----
         var lastFillerUse = new Dictionary<(string company, string filler), int>();
@@ -128,16 +130,26 @@ public static class NewsCalendarBuilder
     // =====================================================================
 
     private static void PlaceEvents(
-        Random rng, int maxTurn,
+        Random rng, int seed, int maxTurn,
         IReadOnlyList<NewspaperCompanyData> companies,
         IReadOnlyList<NewsEventData> events,
         TemplateIndex idx, NewsWorld world,
         List<NewsEventInstance> outEvents,
-        Dictionary<(string, int), List<Pending>> pending)
+        Dictionary<(string, int), List<Pending>> pending,
+        List<NewsArcSlot> arcSlots)
     {
         var lastPlaced = new Dictionary<string, int>();
         var lastBinding = new Dictionary<string, int>();
         int largeSince = 0;
+        var rareCredit = new RareCredit { value = (float)rng.NextDouble() };
+
+        // 連載（§17）: 第1話だけをここで置き、続きは予約枠にする
+        var arcLength = new Dictionary<string, int>();
+        foreach (var e in events)
+            if (e.IsArc) arcLength[e.arcId] = Math.Max(arcLength.TryGetValue(e.arcId, out var l) ? l : 1, Math.Max(1, e.arcStep));
+        var arcBusyUntil = new Dictionary<string, int>();
+        int arcEvents = 0, singleEvents = 0;
+        int maxLead = MaxLead(companies);
 
         for (int turn = 2; turn <= maxTurn; turn++)
         {
@@ -148,15 +160,37 @@ public static class NewsCalendarBuilder
             bool forceLarge = turn - largeSince >= 12;
             if (forceLarge && n == 0) n = 1;
 
+            // 連載を始めるか: 同時進行2本まで、1周の事象に占める連載の割合を目標（15〜20%）へ寄せる
+            int active = 0;
+            foreach (var kv in arcBusyUntil) if (kv.Value >= turn) active++;
+            double share = (double)arcEvents / Math.Max(1, arcEvents + singleEvents);
+            if (arcLength.Count > 0 && active < NewsTuning.ArcMaxConcurrent && share < NewsTuning.ArcShareTarget
+                && rng.NextDouble() < NewsTuning.ArcStartChance)
+            {
+                var start = PickArcStart(rng, turn, events, idx, world, lastPlaced, arcBusyUntil);
+                if (start != null)
+                {
+                    lastPlaced[start.data.Family] = turn;
+                    int len = arcLength.TryGetValue(start.data.arcId, out var al) ? al : 1;
+                    arcEvents += len;
+                    arcBusyUntil[start.data.arcId] = turn + (len - 1) * (NewsTuning.ArcGapMax + maxLead);
+                    outEvents.Add(start.ev);
+                    AddReports(rng, start.ev, companies, idx, pending, maxTurn);
+                    QueueNextArcSlot(seed, maxTurn, start.data, start.ev, companies, events, idx, world, outEvents, pending, arcSlots, null);
+                    n = Math.Max(0, n - 1);
+                }
+            }
+
             for (int k = 0; k < n; k++)
             {
                 var ev = PickAndInstantiate(rng, turn, events, idx, world, lastPlaced, lastBinding,
-                    requireLarge: forceLarge && k == 0);
+                    requireLarge: forceLarge && k == 0, rare: rareCredit);
                 if (ev == null && forceLarge && k == 0)
-                    ev = PickAndInstantiate(rng, turn, events, idx, world, lastPlaced, lastBinding, requireLarge: false);
+                    ev = PickAndInstantiate(rng, turn, events, idx, world, lastPlaced, lastBinding, requireLarge: false, rare: rareCredit);
                 if (ev == null) continue;
 
                 if (ev.scaleRank >= 3) largeSince = turn;
+                singleEvents++;
                 outEvents.Add(ev);
                 AddReports(rng, ev, companies, idx, pending, maxTurn);
             }
@@ -165,23 +199,39 @@ public static class NewsCalendarBuilder
 
     private static NewsEventInstance PickAndInstantiate(
         Random rng, int turn, IReadOnlyList<NewsEventData> events, TemplateIndex idx, NewsWorld world,
-        Dictionary<string, int> lastPlaced, Dictionary<string, int> lastBinding, bool requireLarge)
+        Dictionary<string, int> lastPlaced, Dictionary<string, int> lastBinding, bool requireLarge, RareCredit rare)
     {
         var candidates = new List<NewsEventData>();
-        int total = 0;
         foreach (var e in events)
         {
             if (e.weight <= 0) continue;
+            if (e.IsArc) continue;   // 連載は第1話も含めて通常の抽選に混ぜない（PickArcStart で置く）
             if (requireLarge && e.ScaleRank < 3) continue;
             if (!idx.HasReports(e.eventId)) continue;
-            if (lastPlaced.TryGetValue(e.eventId, out var last) && turn - last < Math.Max(1, e.cooldown)) continue;
+            // cooldown は系統（family）単位。次ダンジョン別に分けた事象が続けて出ないように
+            if (lastPlaced.TryGetValue(e.Family, out var last) && turn - last < Math.Max(1, e.cooldown)) continue;
             if (!ConditionOk(e.condition, turn, world)) continue;
             candidates.Add(e);
-            total += e.weight;
         }
 
-        for (int attempt = 0; attempt < 6 && candidates.Count > 0; attempt++)
+        // 難易度とレア（§16）: まずレアかどうか（別枠）、次に難易度の層を目標の割合で選び、その層の中で weight 抽選
+        var all = candidates;
+        candidates = ChooseTier(rng, all, requireLarge, rare);
+        int total = 0;
+        foreach (var c in candidates) total += c.weight;
+
+        for (int attempt = 0; attempt < 8; attempt++)
         {
+            if (candidates.Count == 0)
+            {
+                // 選んだ層が尽きたら（ダンジョンを差し込めない等）、レア以外の残り全体から選び直す
+                if (ReferenceEquals(candidates, all)) break;
+                all.RemoveAll(e => e.IsRare);
+                candidates = all;
+                total = 0;
+                foreach (var c in candidates) total += c.weight;
+                if (candidates.Count == 0) break;
+            }
             int roll = rng.Next(Math.Max(1, total));
             NewsEventData pick = candidates[candidates.Count - 1];
             foreach (var c in candidates)
@@ -200,7 +250,7 @@ public static class NewsCalendarBuilder
 
             // 同じ具体化（パターン＋ダンジョン）は近いうちに繰り返さない
             ev.bindings.TryGetValue("dungeon", out var dn);
-            string bindKey = pick.eventId + "|" + dn;
+            string bindKey = pick.Family + "|" + dn;
             if (lastBinding.TryGetValue(bindKey, out var lb) && turn - lb < Math.Max(1, pick.cooldown) * 3)
             {
                 candidates.Remove(pick);
@@ -208,14 +258,75 @@ public static class NewsCalendarBuilder
                 continue;
             }
 
-            lastPlaced[pick.eventId] = turn;
+            lastPlaced[pick.Family] = turn;
             lastBinding[bindKey] = turn;
+            rare.Count(pick);
             return ev;
         }
         return null;
     }
 
-    private static NewsEventInstance Instantiate(Random rng, NewsEventData e, int effectTurn, TemplateIndex idx, NewsWorld world)
+    /// <summary>
+    /// 候補を「レア」か「難易度の1層」に絞る。目標: レア 5%（別枠）・易しい65% / 普通25% / 難しい10%。
+    /// 選んだ層に候補が無ければ、候補のある層だけで割合を配り直す。乱数はシードから引くので再現できる。
+    /// </summary>
+    private static List<NewsEventData> ChooseTier(Random rng, List<NewsEventData> candidates, bool requireLarge, RareCredit credit)
+    {
+        var rare = candidates.FindAll(e => e.IsRare);
+        var common = candidates.FindAll(e => !e.IsRare);
+
+        // レアは「貯金」方式: 1件選ぶごとに RareEventRate ずつ貯まり、1 に届いたらレアを出す（出せなければ持ち越す）。
+        // 貯金の初期値は周のシードで散らすので、どの周の何件目に出るかは周ごとに違う。周全体でほぼ 5% になる
+        credit.value += NewsTuning.RareEventRate;
+        if (!requireLarge && rare.Count > 0 && (common.Count == 0 || credit.value >= 1f))
+        {
+            credit.value = Math.Max(0f, credit.value - 1f);
+            return rare;
+        }
+        if (common.Count == 0) return rare;
+
+        var tiers = new[]
+        {
+            (key: "easy", share: NewsTuning.DifficultyEasyShare),
+            (key: "normal", share: NewsTuning.DifficultyNormalShare),
+            (key: "hard", share: NewsTuning.DifficultyHardShare),
+        };
+        // 目標の割合に対して一番足りていない層を選ぶ（cooldown で層が空いた周回の偏りを後で取り返す）。
+        // 揺らぎを少し入れて、毎回同じ順で並ばないようにする
+        string best = null;
+        double bestScore = double.MinValue;
+        foreach (var t in tiers)
+        {
+            if (!common.Exists(e => DifficultyKey(e) == t.key)) continue;
+            int have = credit.tierCount.TryGetValue(t.key, out var c) ? c : 0;
+            double score = t.share * (credit.tierTotal + 1) - have + rng.NextDouble() * 0.5;
+            if (score > bestScore) { bestScore = score; best = t.key; }
+        }
+        return best != null ? common.FindAll(e => DifficultyKey(e) == best) : common;
+    }
+
+    /// <summary>レアの貯金（1周の生成の間だけ持つ）。</summary>
+    private class RareCredit
+    {
+        public float value;
+        public readonly Dictionary<string, int> tierCount = new();
+        public int tierTotal;
+
+        public void Count(NewsEventData e)
+        {
+            if (e.IsRare) return;
+            var k = DifficultyKey(e);
+            tierCount[k] = (tierCount.TryGetValue(k, out var n) ? n : 0) + 1;
+            tierTotal++;
+        }
+    }
+
+    /// <summary>易しい / 普通 / 難しい以外の値は易しい扱い。</summary>
+    private static string DifficultyKey(NewsEventData e) =>
+        e.difficulty == "normal" || e.difficulty == "hard" ? e.difficulty : "easy";
+
+    private static NewsEventInstance Instantiate(Random rng, NewsEventData e, int effectTurn, TemplateIndex idx, NewsWorld world,
+        Dictionary<string, string> inherit = null)
     {
         var ev = new NewsEventInstance
         {
@@ -225,7 +336,15 @@ public static class NewsCalendarBuilder
             scaleRank = e.ScaleRank,
             effectTurn = effectTurn,
             hasResult = e.hasResult,
+            difficulty = DifficultyKey(e),
+            isRare = e.IsRare,
+            arcId = e.arcId,
+            arcStep = e.arcStep,
         };
+
+        // 連載の続きは、前の話の差し込み枠（ダンジョン・地名など）を引き継ぐ
+        if (inherit != null)
+            foreach (var kv in inherit) ev.bindings[kv.Key] = kv.Value;
 
         // --- 差し込み枠 ---
         string dungeonKey = null;
@@ -235,6 +354,7 @@ public static class NewsCalendarBuilder
 
         foreach (var kv in binds)
         {
+            if (ev.bindings.ContainsKey(kv.Key)) continue;   // 引き継いだ値を優先
             if (kv.Key == "dungeon")
             {
                 if (world == null || world.dungeons.Count == 0) return null;
@@ -268,6 +388,11 @@ public static class NewsCalendarBuilder
         ev.trendDelta = e.HasEffectRule ? td : 0f;
         ev.demandKick = e.HasEffectRule ? NewsTuning.DefaultDemandKick(td) : 0f;
         ev.durationTurns = NewsTuning.DefaultDuration(td);
+        if (e.scale == "huge")
+        {
+            ev.demandKick = e.HasEffectRule ? NewsTuning.KickHuge * (td < 0f ? -1f : 1f) : 0f;
+            ev.durationTurns = NewsTuning.DurationHuge;
+        }
 
         // --- 真偽 ---
         float sum = e.wTrue + e.wExaggerated + e.wFalse;
@@ -359,7 +484,12 @@ public static class NewsCalendarBuilder
             var able = candidates.FindAll(c => ev.effectTurn - Math.Max(0, c.leadTurns) >= 1);
             if (able.Count == 0) able = candidates;
 
-            if (able.Count >= 2 && rng.NextDouble() >= NewsTuning.TrueSingleReportRate)
+            if (ev.isRare)
+            {
+                // レアは街中の大騒ぎ。報じうる社はすべて報じる
+                reporters.AddRange(able);
+            }
+            else if (able.Count >= 2 && rng.NextDouble() >= NewsTuning.TrueSingleReportRate)
             {
                 // 複数社が報じる（クロスリファレンスが成立する）。最低2社
                 foreach (var c in able)
@@ -451,6 +581,224 @@ public static class NewsCalendarBuilder
                     effectScale = 0f,
                 },
             });
+        }
+    }
+
+    // =====================================================================
+    // 連載（ストーリーアーク。§17）
+    // =====================================================================
+
+    private class ArcStart
+    {
+        public NewsEventData data;
+        public NewsEventInstance ev;
+    }
+
+    private static int MaxLead(IReadOnlyList<NewspaperCompanyData> companies)
+    {
+        int m = 0;
+        foreach (var c in companies) m = Math.Max(m, c.leadTurns);
+        return m;
+    }
+
+    private static ArcStart PickArcStart(
+        Random rng, int turn, IReadOnlyList<NewsEventData> events, TemplateIndex idx, NewsWorld world,
+        Dictionary<string, int> lastPlaced, Dictionary<string, int> arcBusyUntil)
+    {
+        var cands = new List<NewsEventData>();
+        int total = 0;
+        foreach (var e in events)
+        {
+            if (!e.IsArcStart || e.weight <= 0 || !idx.HasReports(e.eventId)) continue;
+            if (arcBusyUntil.TryGetValue(e.arcId, out var busy) && busy >= turn) continue;
+            if (lastPlaced.TryGetValue(e.Family, out var last) && turn - last < Math.Max(1, e.cooldown)) continue;
+            if (!ConditionOk(e.condition, turn, world)) continue;
+            cands.Add(e);
+            total += e.weight;
+        }
+        for (int attempt = 0; attempt < 4 && cands.Count > 0; attempt++)
+        {
+            int roll = rng.Next(Math.Max(1, total));
+            var pick = cands[cands.Count - 1];
+            foreach (var c in cands) { if (roll < c.weight) { pick = c; break; } roll -= c.weight; }
+            var ev = Instantiate(rng, pick, turn, idx, world);
+            if (ev != null) return new ArcStart { data = pick, ev = ev };
+            cands.Remove(pick);
+            total -= pick.weight;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// 次の話の予約枠を作る。分岐が rand / always だけなら、その場で（シードから）決めて続きを置く。
+    /// pending が null のとき（ゲーム中の確定）は、組み上がった紙面へ直接差し込む（calendar に追加）。
+    /// </summary>
+    private static void QueueNextArcSlot(
+        int seed, int maxTurn, NewsEventData data, NewsEventInstance ev,
+        IReadOnlyList<NewspaperCompanyData> companies, IReadOnlyList<NewsEventData> events,
+        TemplateIndex idx, NewsWorld world, List<NewsEventInstance> outEvents,
+        Dictionary<(string, int), List<Pending>> pending, List<NewsArcSlot> arcSlots, List<NewsIssueEntry> calendar)
+    {
+        if (data == null || !data.IsArc || data.arcNext.Count == 0) return;
+
+        var r = new Random(StableHash($"{seed}|{ev.key}|gap"));
+        int decision = ev.effectTurn + 1 + r.Next(Math.Max(1, NewsTuning.ArcGapMax));
+        int effect = decision + MaxLead(companies);
+        if (effect > maxTurn) return;
+
+        int step = Math.Max(1, data.arcStep) + 1;
+        var slot = new NewsArcSlot
+        {
+            key = $"{data.arcId}#{step}@{decision}",
+            arcId = data.arcId,
+            step = step,
+            prevEventKey = ev.key,
+            decisionTurn = decision,
+            effectTurn = effect,
+            options = new List<(string, string)>(data.arcNext),
+        };
+        arcSlots.Add(slot);
+
+        // 状態に依らない分岐（rand / always）は事前に決めてよい
+        bool stateFree = slot.options.TrueForAll(o => o.cond == "rand" || o.cond == "always");
+        if (!stateFree) return;
+
+        string chosen = ChooseArcBranch(seed, slot, null, null);
+        ApplyArcBranch(seed, maxTurn, slot, chosen, companies, events, idx, world, outEvents, pending, arcSlots, calendar);
+    }
+
+    /// <summary>
+    /// 分岐を選ぶ。状態の条件（heroWin / heroLose / hasStock / noStock）に合うものを並び順で優先し、
+    /// 無ければ rand の中からシードで抽選、それも無ければ always、最後は候補全体からシードで抽選。
+    /// </summary>
+    public static string ChooseArcBranch(int seed, NewsArcSlot slot, bool? heroWon, Func<bool> hasStock)
+    {
+        if (slot.options.Count == 0) return "-";
+        // 在庫の判定は1回だけ評価する（hasStock / noStock の両方で同じ答えを使う）
+        bool? stockCache = null;
+        bool HasStock() => stockCache ??= hasStock != null && hasStock();
+        foreach (var o in slot.options)
+        {
+            bool hit = o.cond switch
+            {
+                "heroWin" => heroWon == true,
+                "heroLose" => heroWon == false,
+                "hasStock" => hasStock != null && HasStock(),
+                "noStock" => hasStock != null && !HasStock(),
+                _ => false,
+            };
+            if (hit) return o.eventId;
+        }
+        var rands = slot.options.FindAll(o => o.cond == "rand");
+        if (rands.Count > 0) return rands[new Random(StableHash($"{seed}|{slot.key}|rand")).Next(rands.Count)].eventId;
+        var always = slot.options.Find(o => o.cond == "always");
+        if (!string.IsNullOrEmpty(always.eventId)) return always.eventId;
+        // どの条件にも当たらない（まだ配信していない等）ときは、先頭に偏らないようシードで選ぶ
+        return slot.options[new Random(StableHash($"{seed}|{slot.key}|fallback")).Next(slot.options.Count)].eventId;
+    }
+
+    private static void ApplyArcBranch(
+        int seed, int maxTurn, NewsArcSlot slot, string eventId,
+        IReadOnlyList<NewspaperCompanyData> companies, IReadOnlyList<NewsEventData> events,
+        TemplateIndex idx, NewsWorld world, List<NewsEventInstance> outEvents,
+        Dictionary<(string, int), List<Pending>> pending, List<NewsArcSlot> arcSlots, List<NewsIssueEntry> calendar)
+    {
+        slot.resolvedEventId = string.IsNullOrEmpty(eventId) ? "-" : eventId;
+        NewsEventData data = null;
+        foreach (var e in events) if (e.eventId == eventId) { data = e; break; }
+        if (data == null) { slot.resolvedEventId = "-"; return; }
+
+        NewsEventInstance prev = null;
+        foreach (var e in outEvents) if (e.key == slot.prevEventKey) { prev = e; break; }
+
+        var r = new Random(StableHash($"{seed}|{slot.key}|ev"));
+        var ev = Instantiate(r, data, slot.effectTurn, idx, world, prev?.bindings);
+        if (ev == null) { slot.resolvedEventId = "-"; return; }
+        ev.arcId = slot.arcId;
+        ev.arcStep = slot.step;
+        outEvents.Add(ev);
+
+        if (pending != null)
+        {
+            AddReports(r, ev, companies, idx, pending, maxTurn);
+        }
+        else if (calendar != null)
+        {
+            var local = new Dictionary<(string, int), List<Pending>>();
+            AddReports(r, ev, companies, idx, local, maxTurn);
+            var keys = new List<(string, int)>(local.Keys);
+            keys.Sort((a, b) => a.Item2 != b.Item2 ? a.Item2.CompareTo(b.Item2) : string.CompareOrdinal(a.Item1, b.Item1));
+            foreach (var k in keys)
+            {
+                var company = FindCompany(companies, k.Item1);
+                if (company != null) InsertIntoIssue(company, k.Item2, local[k], calendar);
+            }
+        }
+
+        QueueNextArcSlot(seed, maxTurn, data, ev, companies, events, idx, world, outEvents, pending, arcSlots, calendar);
+    }
+
+    /// <summary>
+    /// ゲーム中に分岐が決まったとき、組み上がった紙面へ話を差し込む（§17）。
+    /// 号の本数が上限を超える分は、その号の埋め草を外して空ける。
+    /// </summary>
+    public static void ResolveArcSlot(
+        int seed, int maxTurn, NewsArcSlot slot, string eventId,
+        IReadOnlyList<NewspaperCompanyData> companies, IReadOnlyList<NewsEventData> events,
+        IReadOnlyList<NewsTemplateData> templates, NewsWorld world,
+        List<NewsEventInstance> outEvents, List<NewsIssueEntry> calendar, List<NewsArcSlot> arcSlots)
+    {
+        var idx = new TemplateIndex(templates ?? (IReadOnlyList<NewsTemplateData>)Array.Empty<NewsTemplateData>());
+        ApplyArcBranch(seed, maxTurn, slot, eventId, companies, events, idx, world, outEvents, null, arcSlots, calendar);
+    }
+
+    private static NewspaperCompanyData FindCompany(IReadOnlyList<NewspaperCompanyData> companies, string id)
+    {
+        foreach (var c in companies) if (c.companyId == id) return c;
+        return null;
+    }
+
+    private static void InsertIntoIssue(NewspaperCompanyData company, int day, List<Pending> items, List<NewsIssueEntry> calendar)
+    {
+        items.Sort((a, b) => b.priority.CompareTo(a.priority));
+        foreach (var p in items)
+        {
+            var existing = calendar.FindAll(e => e.publishTurn == day && e.companyId == company.companyId);
+            if (p.entry.kind != NewsEntryKind.Correction)
+            {
+                int count = existing.FindAll(e => e.kind != NewsEntryKind.Correction).Count;
+                if (count >= Math.Max(1, company.issueMax))
+                {
+                    var filler = existing.FindLast(e => e.kind == NewsEntryKind.Filler);
+                    if (filler != null) { calendar.Remove(filler); existing.Remove(filler); }
+                }
+            }
+
+            var used = new Dictionary<string, int>();
+            bool reportOnFront = false;
+            foreach (var e in existing)
+            {
+                var pg = e.Article?.page ?? "front";
+                used[pg] = (used.TryGetValue(pg, out var n) ? n : 0) + 1;
+                if (pg == "front" && e.kind == NewsEntryKind.Report) reportOnFront = true;
+            }
+            bool Free(string pg) => company.HasPage(pg) && (used.TryGetValue(pg, out var n) ? n : 0) < company.SlotOf(pg);
+
+            string page = null;
+            if (p.entry.kind == NewsEntryKind.Correction) page = company.HasPage("rumor") ? "rumor" : "front";
+            else if (p.ev != null && p.ev.IsFalse && p.entry.kind == NewsEntryKind.Report)
+            {
+                if (Free("rumor")) page = "rumor";
+                page ??= company.pages.Find(pg => pg != "front" && Free(pg));
+            }
+            if (page == null && p.entry.kind == NewsEntryKind.Report && !reportOnFront) page = "front";
+            if (page == null && !string.IsNullOrEmpty(p.template?.page) && Free(p.template.page)) page = p.template.page;
+            if (page == null) { var cp = NewsTuning.PageOfCategory(p.ev?.category); if (Free(cp)) page = cp; }
+            page ??= company.pages.Find(Free);
+            page ??= company.pages.Count > 0 ? company.pages[0] : "front";
+
+            Render(p, company, day, page);
+            calendar.Add(p.entry);
         }
     }
 

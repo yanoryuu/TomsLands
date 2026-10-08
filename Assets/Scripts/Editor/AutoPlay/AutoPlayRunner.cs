@@ -78,6 +78,7 @@ public sealed class AutoPlayRunResult
     public double CostUsd;
     public double WallSeconds;
     public string NewsInfo = "";
+    public string ArcInfo = "";
 
     // --- 配信中の介入 ---
     public int InterventionCount;
@@ -449,6 +450,7 @@ public sealed class AutoPlayRunner
                     int stockValue = _game.ItemModel.RuntimeItems.Sum(r => r.Stock.Value * r.CurrentPrice.Value);
                     Result.FinalNetWorth = Result.FinalMoney + stockValue + _game.SellOrders.PendingTotalEstimate.Value;
                     Result.HeroFinalLevel = _game.HeroModel.heroData?.level.Value ?? 0;
+                    Result.ArcInfo = _game.ArcSummary();
                 }
                 DrainLogs(SafeTurn());
                 _game.Dispose();

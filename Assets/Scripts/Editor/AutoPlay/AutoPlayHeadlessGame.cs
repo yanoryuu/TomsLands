@@ -744,6 +744,24 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
     // ---------------- 新聞（NewspaperPresenter.Subscribe / ConfirmOne / ConfirmBatch の写し） ----------------
 
+    /// <summary>連載の分岐がどの条件で決まったか（ヘッドレスでも heroWin/heroLose/hasStock/noStock が評価されているかの確認用）。</summary>
+    public string ArcSummary()
+    {
+        if (News == null) return "";
+        var counts = new Dictionary<string, int>();
+        int resolved = 0;
+        foreach (var slot in News.ArcSlots)
+        {
+            if (!slot.IsResolved) continue;
+            resolved++;
+            string cond = slot.resolvedEventId == "-" ? "end"
+                : slot.options.Where(o => o.eventId == slot.resolvedEventId).Select(o => o.cond).FirstOrDefault() ?? "?";
+            counts[cond] = (counts.TryGetValue(cond, out var n) ? n : 0) + 1;
+        }
+        return $"arcs={News.ArcSlots.Count} resolved={resolved} " + string.Join(" ", counts.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}"))
+               + $" lastStream={(News.LastStreamWon.HasValue ? (News.LastStreamWon.Value ? "win" : "lose") : "none")}";
+    }
+
     public AutoPlayActionResult SubscribeNewspaper(string companyId)
     {
         if (!Config.AllowNewspaper) return Reject("新聞なしの対照群");
@@ -977,6 +995,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         {
             handler.Dispose();
         }
+        // 新聞の連載（heroWin / heroLose）は BattleResultHandler が RunHistory に書いた勝敗から次の朝に読まれる。
+        // 念のため直接も伝えておく（新聞担当の申し送り。RunHistory を通らない経路でも分岐できるように）
+        News?.SetLastStreamResult(outcome.Victory);
 
         ResolveStageAfterFlow();
         return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G");

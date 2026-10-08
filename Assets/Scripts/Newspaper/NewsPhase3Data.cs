@@ -11,6 +11,21 @@ using UnityEngine;
 public class NewsEventData
 {
     public string eventId;
+    /// <summary>系統。cooldown はこの単位で効く（次ダンジョン別に分割した事象を同じ系統にまとめる）。空 = eventId。</summary>
+    public string family;
+    /// <summary>難易度 easy / normal / hard（空 = easy）。1周の構成比を NewsTuning の目標に寄せる。</summary>
+    public string difficulty = "easy";
+    /// <summary>common / rare（空 = common）。レアは別枠で低確率、全社が報じる。</summary>
+    public string rarity = "common";
+
+    // --- 連載（ストーリーアーク。§17） ---
+    public string arcId;          // 単発は空
+    public int arcStep;           // 1,2,3…（単発は 0）
+    /// <summary>次の話の候補（条件, 事象ID）。最終話は空。条件: rand / always / heroWin / heroLose / hasStock / noStock</summary>
+    public List<(string cond, string eventId)> arcNext = new();
+
+    public bool IsArc => !string.IsNullOrEmpty(arcId);
+    public bool IsArcStart => IsArc && arcStep <= 1;
     public string category;      // dungeon / hero / rival / supply / culture / economy / village
     public string scale;         // small / medium / large
     public int sign = 1;         // +1 売れる / -1 売れなくなる
@@ -23,13 +38,18 @@ public class NewsEventData
     public int cooldown = 10;
     public string summaryEn;
 
+    public string Family => string.IsNullOrEmpty(family) ? eventId : family;
+
+    public bool IsRare => rarity == "rare";
+
     public bool HasEffectRule => !string.IsNullOrEmpty(targetRule);
 
-    public int ScaleRank => scale switch { "large" => 3, "medium" => 2, _ => 1 };
+    public int ScaleRank => scale switch { "huge" => 4, "large" => 3, "medium" => 2, _ => 1 };
 
     /// <summary>目盛り（NewsTuning）から引いた trendDelta（符号込み）。</summary>
     public float TrendDelta => (scale switch
     {
+        "huge" => NewsTuning.TrendHuge,
         "large" => NewsTuning.TrendLarge,
         "medium" => NewsTuning.TrendMedium,
         _ => NewsTuning.TrendSmall,
@@ -89,6 +109,10 @@ public class NewsEventInstance
     public string truth = "true"; // true / exaggerated / false
     public float effectScale = 1f;
     public bool hasResult;
+    public string difficulty = "easy";
+    public bool isRare;
+    public string arcId;      // 連載の話なら連載ID
+    public int arcStep;
 
     // 効果
     public float trendDelta;
@@ -197,4 +221,22 @@ public class NewsWorld
         foreach (var b in battles) sb.Append(b.turn).Append(b.key).Append(';');
         return sb.ToString();
     }
+}
+
+/// <summary>
+/// 連載の「次の話」の予約枠（§17）。分岐は決定ターンの朝に、その時点の状態で決める。
+/// 決まった分岐（resolvedEventId）はセーブに残し、ロード後も同じ紙面を再現する。
+/// </summary>
+public class NewsArcSlot
+{
+    public string key;            // 周の中で一意（arcId#step@決定ターン）
+    public string arcId;
+    public int step;
+    public string prevEventKey;   // 前の話の事象（hasStock の判定と差し込み枠の引き継ぎに使う）
+    public int decisionTurn;      // この朝に分岐を決める（= 最初の社が報じる日）
+    public int effectTurn;        // 次の話の発効ターン
+    public List<(string cond, string eventId)> options = new();
+    public string resolvedEventId; // 決まった事象。空 = 未決定 / "-" = 連載はここで終わり
+
+    public bool IsResolved => !string.IsNullOrEmpty(resolvedEventId);
 }

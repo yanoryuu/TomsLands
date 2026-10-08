@@ -89,6 +89,12 @@ public static class NewsMasterLoader
             var e = new NewsEventData
             {
                 eventId = id,
+                family = r.Get("family"),
+                difficulty = string.IsNullOrEmpty(r.Get("difficulty")) ? "easy" : r.Get("difficulty").ToLowerInvariant(),
+                rarity = string.IsNullOrEmpty(r.Get("rarity")) ? "common" : r.Get("rarity").ToLowerInvariant(),
+                arcId = r.Get("arcId"),
+                arcStep = ToInt(r.Get("arcStep")),
+                arcNext = ParseArcNext(r.Get("arcNext")),
                 category = r.Get("category"),
                 scale = string.IsNullOrEmpty(r.Get("scale")) ? "small" : r.Get("scale").ToLowerInvariant(),
                 sign = ToInt(r.Get("sign")) < 0 ? -1 : 1,
@@ -362,6 +368,23 @@ public static class NewsMasterLoader
             map[part.Substring(0, k).Trim()] = part.Substring(k + 1).Trim();
         }
         return map;
+    }
+
+    /// <summary>「条件:事象ID|条件:事象ID」。条件を省いた「事象ID」だけの項目は always 扱い。</summary>
+    private static List<(string, string)> ParseArcNext(string s)
+    {
+        var list = new List<(string, string)>();
+        foreach (var part in SplitList(s, '|'))
+        {
+            int k = part.IndexOf(':');
+            if (k < 0) list.Add(("always", part));
+            else list.Add((part.Substring(0, k).Trim().ToLowerInvariant() switch
+            {
+                "herowin" => "heroWin", "herolose" => "heroLose", "hasstock" => "hasStock", "nostock" => "noStock",
+                var c => c,
+            }, part.Substring(k + 1).Trim()));
+        }
+        return list;
     }
 
     private static Dictionary<string, float> ParseFloatMap(string s)

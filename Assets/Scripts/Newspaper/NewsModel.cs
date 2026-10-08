@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 /// <summary>
@@ -17,6 +19,18 @@ public class NewsModel
     private readonly List<NewsIssueEntry> calendar = new();
     private readonly List<NewsEventInstance> events = new();
     private readonly HashSet<string> readArticleIds = new();
+    private readonly List<NewsArcSlot> arcSlots = new();
+
+    // 連載の分岐（§17）: ゲーム中に決まった分岐（予約枠キー → 事象ID）。セーブに残す
+    private readonly Dictionary<string, string> arcResolutions = new();
+    private int arcStateSeed;
+    private bool arcStateLoaded;
+
+    /// <summary>直近の配信の勝敗（heroWin / heroLose の判定）。null = まだ配信していない。</summary>
+    public bool? LastStreamWon { get; private set; }
+    private int seenStreamWins, seenStreamLosses;
+
+    public IReadOnlyList<NewsArcSlot> ArcSlots => arcSlots;
 
     private NewsWorld world;
     private string builtWorldPrint;
@@ -48,6 +62,8 @@ public class NewsModel
         builtWorldPrint = print;
         calendar.Clear();
         events.Clear();
+        arcSlots.Clear();
+        LoadArcState(seed);
 
         var companies = NewsMasterLoader.LoadCompanies();
         var evMaster = NewsMasterLoader.LoadEvents();
@@ -60,6 +76,8 @@ public class NewsModel
                 NewsMasterLoader.LoadFillers(), world);
             events.AddRange(r.events);
             calendar.AddRange(r.entries);
+            arcSlots.AddRange(r.arcSlots);
+            ReapplyArcResolutions();
         }
         else
         {
@@ -101,6 +119,136 @@ public class NewsModel
             if (a.HasTarget && a.hypeRate > 0f) ev.AddHype(e.publishTurn, a.hypeRate);
             e.eventInstance = ev;
             events.Add(ev);
+        }
+    }
+
+    // =====================================================================
+    // 連載の分岐（§17）
+    // =====================================================================
+
+    /// <summary>
+    /// 決定ターンを迎えた連載の分岐を決め、紙面へ差し込む。<b>そのターンの経済計算・朝刊より前</b>に呼ぶ
+    /// （GameFlowManager.NextTurn が呼ぶ。AutoPlay も同じ経路を通る）。
+    /// hasStock: その連載の前の話の効き先の商品を、プレイヤーが在庫に持つか。
+    /// </summary>
+    public void ResolveArcs(int turn, Func<NewsEventInstance, bool> hasStock)
+    {
+        if (!IsPhase3) return;
+        bool changed = false;
+        for (int i = 0; i < arcSlots.Count; i++)   // 決めた結果で枠が増えることがあるので添字で回す
+        {
+            var slot = arcSlots[i];
+            if (slot.IsResolved || slot.decisionTurn > turn) continue;
+
+            NewsEventInstance prev = null;
+            foreach (var e in events) if (e.key == slot.prevEventKey) { prev = e; break; }
+            string chosen = NewsCalendarBuilder.ChooseArcBranch(Seed, slot, LastStreamWon,
+                () => prev != null && hasStock != null && hasStock(prev));
+
+            arcResolutions[slot.key] = chosen;
+            ApplyArc(slot, chosen);
+            changed = true;
+            Debug.Log($"[NewsModel] 連載 {slot.arcId} 第{slot.step}話 → {chosen}（配信={(LastStreamWon.HasValue ? (LastStreamWon.Value ? "勝ち" : "負け") : "なし")}）");
+        }
+        if (changed) SaveArcState();
+    }
+
+    /// <summary>配信の勝敗を直接伝える（AutoPlay など、RunHistory を通らない経路用）。</summary>
+    public void SetLastStreamResult(bool won)
+    {
+        LastStreamWon = won;
+        SaveArcState();
+    }
+
+    /// <summary>
+    /// 配信の勝敗の累計（RunHistory）を渡す。前回から増えた方を「直近の配信」とみなす。
+    /// </summary>
+    public void ObserveStreamTotals(int wins, int losses)
+    {
+        if (wins > seenStreamWins) LastStreamWon = true;
+        else if (losses > seenStreamLosses) LastStreamWon = false;
+        if (wins != seenStreamWins || losses != seenStreamLosses)
+        {
+            seenStreamWins = wins;
+            seenStreamLosses = losses;
+            SaveArcState();
+        }
+    }
+
+    private void ApplyArc(NewsArcSlot slot, string eventId)
+    {
+        NewsCalendarBuilder.ResolveArcSlot(Seed, CalendarTurns, slot, eventId,
+            NewsMasterLoader.LoadCompanies(), NewsMasterLoader.LoadEvents(), NewsMasterLoader.LoadTemplates(),
+            world, events, calendar, arcSlots);
+    }
+
+    /// <summary>カレンダーを組み直したとき、保存してある分岐を決定ターン順に当て直す（ロードで同じ紙面になる）。</summary>
+    private void ReapplyArcResolutions()
+    {
+        for (int i = 0; i < arcSlots.Count; i++)
+        {
+            var slot = arcSlots[i];
+            if (slot.IsResolved) continue;
+            if (arcResolutions.TryGetValue(slot.key, out var id)) ApplyArc(slot, id);
+        }
+    }
+
+    [Serializable]
+    private class ArcSave
+    {
+        public int runSeed;
+        public List<string> keys = new();
+        public List<string> values = new();
+        public bool hasLast;
+        public bool lastWon;
+        public int wins, losses;
+    }
+
+    public const string ArcFileName = "newsArcs.json";
+
+    private void LoadArcState(int seed)
+    {
+        if (arcStateLoaded && arcStateSeed == seed) return;
+        arcStateLoaded = true;
+        arcStateSeed = seed;
+        arcResolutions.Clear();
+        LastStreamWon = null;
+        seenStreamWins = seenStreamLosses = 0;
+        try
+        {
+            string path = SaveSlotManager.GetPath(ArcFileName);
+            if (!File.Exists(path)) return;
+            var d = JsonUtility.FromJson<ArcSave>(File.ReadAllText(path));
+            if (d == null || d.runSeed != seed) return;
+            for (int i = 0; i < d.keys.Count && i < d.values.Count; i++) arcResolutions[d.keys[i]] = d.values[i];
+            LastStreamWon = d.hasLast ? d.lastWon : (bool?)null;
+            seenStreamWins = d.wins;
+            seenStreamLosses = d.losses;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NewsModel] 連載の保存データを読めませんでした: {ex.Message}");
+        }
+    }
+
+    private void SaveArcState()
+    {
+        try
+        {
+            var d = new ArcSave
+            {
+                runSeed = Seed,
+                hasLast = LastStreamWon.HasValue,
+                lastWon = LastStreamWon ?? false,
+                wins = seenStreamWins,
+                losses = seenStreamLosses,
+            };
+            foreach (var kv in arcResolutions) { d.keys.Add(kv.Key); d.values.Add(kv.Value); }
+            File.WriteAllText(SaveSlotManager.GetPath(ArcFileName), JsonUtility.ToJson(d, true));
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[NewsModel] 連載の保存に失敗しました: {ex.Message}");
         }
     }
 
