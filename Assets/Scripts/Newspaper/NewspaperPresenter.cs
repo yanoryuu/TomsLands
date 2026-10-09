@@ -42,7 +42,8 @@ public class NewspaperPresenter : IStartable, IDisposable
     private string leadKey;             // 一面トップに出している掲載
     private readonly HashSet<string> openedBodies = new();
 
-    private int Turn => tomsModel.CurrentTurn.Value;
+    // TomsModel.CurrentTurn はラン終了時にしか同期されないので、進行中のターンは GameFlowManager から取る
+    private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
 
     public NewspaperPresenter(
         NewspaperView view,
@@ -111,6 +112,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         openedBodies.Clear();
 
         RenderAll();  // パネルのフェードは GamePanelManager が行う
+        view.PlayIntro();
     }
 
     private void EnsureLoaded(int seed)
@@ -279,13 +281,13 @@ public class NewspaperPresenter : IStartable, IDisposable
             var entry = newsModel.FindEntry(s.entryKey);
             var state = ScrapbookModel.StateOf(s, entry, turn);
             if (state == ScrapState.Unconfirmed) unconfirmed++;
-            list.Add(ToScrap(s, state, money >= NewsTuning.ConfirmCost));
+            list.Add(ToScrap(s, entry, state, money >= NewsTuning.ConfirmCost));
         }
         // 今日確認したものは、空いた枠にそのまま答えを見せておく（翌日には名鑑へ消える）
         foreach (var s in scrapbook.ConfirmedOn(turn))
         {
             if (list.Count >= scrapbook.Capacity) break;
-            list.Add(ToScrap(s, ScrapbookModel.StateOf(s, null, turn), false));
+            list.Add(ToScrap(s, newsModel.FindEntry(s.entryKey), ScrapbookModel.StateOf(s, null, turn), false));
         }
 
         bool canBatch = unconfirmed >= NewsTuning.ConfirmBatchCount && money >= NewsTuning.ConfirmBatchCost;
@@ -293,14 +295,18 @@ public class NewspaperPresenter : IStartable, IDisposable
             NewsTuning.ConfirmCost, NewsTuning.ConfirmBatchCost);
     }
 
-    private static NewspaperView.ScrapData ToScrap(ScrapbookModel.Scrap s, ScrapState state, bool canAfford)
+    private static NewspaperView.ScrapData ToScrap(ScrapbookModel.Scrap s, NewsIssueEntry entry, ScrapState state, bool canAfford)
     {
-        var a = NewsMasterLoader.FindArticle(s.articleId);
+        // フェーズ3の記事は事象×テンプレートで組み立てて掲載に持たせているので、マスター検索では引けない。掲載から引く
+        var a = entry?.Article ?? NewsMasterLoader.FindArticle(s.articleId);
+        var company = string.IsNullOrEmpty(s.companyId) ? null : NewsMasterLoader.FindCompany(s.companyId);
         return new NewspaperView.ScrapData
         {
             entryKey = s.entryKey,
             headline = a?.headline ?? "",
             lead = a?.lead ?? "",
+            body = a?.body ?? "",
+            byline = $"第{s.publishTurn}号／{FormatByline(a?.byline, company?.companyName)}",
             state = state,
             canAfford = canAfford,
         };
@@ -484,6 +490,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         Save();
         RenderPaper();
         RenderScraps();
+        view.FlyToScrap(entryKey);
     }
 
     private void SelectCompany(string companyId)
@@ -494,6 +501,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         leadKey = null;
         RenderCompanies();
         RenderPaper();
+        view.AnimatePaper(0);
     }
 
     private void Subscribe(string companyId)
@@ -513,6 +521,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         leadKey = null;
         RenderAll();
         view.PopCompany(companyId);
+        view.AnimatePaper(0);
     }
 
     private void SelectPage(string page)
@@ -520,9 +529,11 @@ public class NewspaperPresenter : IStartable, IDisposable
         if (page == selectedPage) return;
         var company = selectedCompanyId != null ? NewsMasterLoader.FindCompany(selectedCompanyId) : null;
         if (!VisiblePages(company).Contains(page)) return;
+        int dir = Math.Sign(Array.IndexOf(PageOrder, page) - Array.IndexOf(PageOrder, selectedPage));
         selectedPage = page;
         leadKey = null;
         RenderPaper();
+        view.AnimatePaper(dir);
     }
 
     private void StepPage(int dir)

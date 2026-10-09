@@ -104,6 +104,8 @@ public class GameFlowManager : IDisposable, IStartable
         // ターン番号はEventノードを除外してカウント
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
         BattleCount.Value = CalculateBattleCount(_currentIndex);
+        // 店の日付表示・新聞・ゲームオーバー等が参照する TomsModel 側のターンも毎ターン同期する
+        if (_tomsModel != null) _tomsModel.CurrentTurn.Value = CurrentTurn.Value;
         Debug.Log($"[GameFlowManager] Index restored to {_currentIndex}, turn={CurrentTurn.Value}, battleCount={BattleCount.Value}");
     }
 
@@ -259,6 +261,7 @@ public class GameFlowManager : IDisposable, IStartable
         // Event以外のノードではターン番号を進める
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
         BattleCount.Value = CalculateBattleCount(_currentIndex);
+        if (_tomsModel != null) _tomsModel.CurrentTurn.Value = CurrentTurn.Value;
 
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {

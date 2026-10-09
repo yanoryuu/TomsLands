@@ -157,13 +157,6 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             stateManager.ChangeTomsShopPhase(target);
         }).AddTo(disposables);
 
-        // 仕入れ中に記事を読み返せるようにする。朝刊を閉じるとこの画面へ戻る。
-        blackSmithView.OnNewspaperRequested.Subscribe(_ =>
-        {
-            if (stateManager.HasHandler(TomsShopGamePhase.Newspaper))
-                stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
-        }).AddTo(disposables);
-
         // 鍛冶屋専用の所持金表示（鍛冶屋表示中はCommonViewを出さないため常時追従）
         tomsModel.PlayerMoney
             .Subscribe(money => blackSmithView.UpdatePlayerMoney(money))

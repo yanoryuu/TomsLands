@@ -73,6 +73,8 @@ public static class NewsMarketSummary
             index[i] = v;
             row.spark.Add(Mathf.RoundToInt(v * 1000f));
         }
+        // 履歴が1点しか無い（周の初日）でも横ばいの線を出す（空の枠にしない）
+        if (row.spark.Count == 1) row.spark.Add(row.spark[0]);
 
         if (len >= 2)
         {
@@ -86,7 +88,7 @@ public static class NewsMarketSummary
         row.heat = heatSum / histories.Count;
         row.heatLabel = MarketHeat.Describe(row.heat);
         row.heatLevel = HeatLevel(row.heat);
-        row.hasData = len >= 2;
+        row.hasData = len >= 1;
         return row;
     }
 

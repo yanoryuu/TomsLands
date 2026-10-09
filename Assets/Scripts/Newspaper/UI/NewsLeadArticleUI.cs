@@ -22,6 +22,8 @@ public class NewsLeadArticleUI : MonoBehaviour
     [SerializeField] private Button scrapButton;   // 18スクラップする
 
     public string EntryKey { get; private set; }
+    /// <summary>スクラップへ飛ぶ演出の出発点（「スクラップする」ボタン。無ければ記事そのもの）。</summary>
+    public RectTransform ScrapSource => scrapButton != null ? (RectTransform)scrapButton.transform : (RectTransform)transform;
     public event Action<string> OnClicked;
     public event Action<string> OnScrapClicked;
 

@@ -48,6 +48,7 @@ public class NewspaperCompanyCardUI : MonoBehaviour
     [SerializeField] private Color subscribedTextColor = new Color32(0x4A, 0x2E, 0x1E, 0xFF);
 
     public string CompanyId { get; private set; }
+    private bool wasSelected;
     public event Action<string> OnSelectClicked;
     public event Action<string> OnSubscribeClicked;
 
@@ -93,7 +94,12 @@ public class NewspaperCompanyCardUI : MonoBehaviour
             subscribeButton.gameObject.SetActive(!d.subscribed);
             subscribeButton.interactable = d.canSubscribe;
         }
-        if (selectedMark != null) selectedMark.SetActive(d.selected);
+        if (selectedMark != null)
+        {
+            selectedMark.SetActive(d.selected);
+            if (d.selected && !wasSelected) UIFx.Pop(selectedMark.transform, 1.08f, 0.2f);
+        }
+        wasSelected = d.selected;
         if (rootButton != null) rootButton.interactable = d.subscribed;
         if (canvasGroup != null) canvasGroup.alpha = d.subscribed ? 1f : 0.85f;
         if (stateTexts != null)
