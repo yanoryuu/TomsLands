@@ -32,6 +32,16 @@ public interface IPlayerActions
     /// <summary>勇者の装備を変える（HeroPanelPresenter.SetWeapon/SetArmor と同等。null = 変えない / "" = 外す）。</summary>
     AutoPlayActionResult EquipHero(string weaponId, string armorId);
 
+    // --- 新聞（Docs/News_Spec.md §8・§9） ---
+    /// <summary>新聞を購読する（NewspaperPresenter.Subscribe と同等。5ターン契約・枠は店レベル・自動更新なし）。</summary>
+    AutoPlayActionResult SubscribeNewspaper(string companyId);
+    /// <summary>今日の紙面の通常記事をスクラップに貼る（無料・枠3。剥がせない）。</summary>
+    AutoPlayActionResult PinScrap(string entryKey);
+    /// <summary>決着したスクラップ1件の真偽を確認する（1,500G）。</summary>
+    AutoPlayActionResult ConfirmScrap(string entryKey);
+    /// <summary>決着・未確認の3件をまとめて確認する（4,000G）。</summary>
+    AutoPlayActionResult ConfirmScrapBatch();
+
     // --- 陳列フェーズ ---
     /// <summary>陳列を全部外す。</summary>
     AutoPlayActionResult ClearDisplay();
@@ -115,6 +125,14 @@ public sealed class AutoPlaySnapshot
     public List<AutoPlayItemView> Items = new List<AutoPlayItemView>();
     public List<AutoPlayDungeonView> Dungeons = new List<AutoPlayDungeonView>();
     public List<AutoPlayNewsView> News = new List<AutoPlayNewsView>();
+    /// <summary>新聞社（購読の判断材料）。</summary>
+    public List<AutoPlayCompanyView> Newspapers = new List<AutoPlayCompanyView>();
+    public int SubscriptionSlots;
+    public int SubscriptionUsed;
+    /// <summary>true = 購読0件で壁新聞（全社の一面から2本）しか読めない。</summary>
+    public bool WallPaperOnly;
+    public List<AutoPlayScrapView> Scraps = new List<AutoPlayScrapView>();
+    public int ScrapCapacity;
     public List<AutoPlayRelicChoiceView> PendingRelicChoices = new List<AutoPlayRelicChoiceView>();
     public int RelicDeclineGold;
 
@@ -167,6 +185,9 @@ public sealed class AutoPlayNewsView
     public string Kind;
     public string HeadlineJa;
     public string SummaryEn;   // Docs/News_Spec.md §13（Jev 検証専用列）
+    /// <summary>掲載キー（スクラップに使う）。</summary>
+    public string EntryKey;
+    public bool CanPin;
 }
 
 public sealed class AutoPlayRelicChoiceView
@@ -226,6 +247,12 @@ public sealed class AutoPlayDayPlan
     /// <summary>勇者の装備（null = 変えない / "" = 外す / 銘柄ID）。</summary>
     public string HeroWeapon;
     public string HeroArmor;
+    /// <summary>購読する社（枠が空いているときだけ有効）。</summary>
+    public List<string> SubscribeNewspapers = new List<string>();
+    /// <summary>スクラップに貼る掲載キー。</summary>
+    public List<string> PinScraps = new List<string>();
+    /// <summary>none / one（未確認の先頭1件 1,500G）/ batch（3件 4,000G）。</summary>
+    public string ConfirmScraps = "none";
 
     public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
 }
@@ -368,4 +395,30 @@ public enum AutoPlayViewerSuperChatMode
     FollowSettings,
     Off,
     On,
+}
+
+/// <summary>新聞社1社（購読画面に出ている情報＋自分のスクラップの実測）。</summary>
+public sealed class AutoPlayCompanyView
+{
+    public string Id;
+    public string Name;
+    public int Price;
+    public int ContractTurns;
+    public int Trust;
+    public int Speed;
+    public int Pages;
+    public string Categories;
+    public bool Subscribed;
+    public int TurnsLeft;          // 購読中なら残りターン
+    public bool CanSubscribe;
+    /// <summary>確認したスクラップでの的中率（未確認なら -1）。</summary>
+    public float MeasuredAccuracy = -1f;
+}
+
+public sealed class AutoPlayScrapView
+{
+    public string EntryKey;
+    public string Company;
+    public int PublishTurn;
+    public string State;   // Pending / Unconfirmed / ConfirmedHit / ConfirmedMiss
 }

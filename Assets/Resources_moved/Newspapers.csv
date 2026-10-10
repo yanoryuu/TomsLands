@@ -1,6 +1,6 @@
-companyId	companyName	price	contractTurns	trustRating	speedRating	leadTurns	falseRate	pages	categories	articlesPerIssue
-royal	王立官報	20000	5	5	1	1	0.00	front	economy,dungeon	2
-guild	冒険者ギルド報	15000	5	4	3	2	0.05	front,second,market	dungeon,hero,rival	6
-commerce	週刊商業新聞	12000	5	3	3	2	0.10	front,market	rival,supply,economy	4
-tabloid	街角かわら版	6000	5	1	5	3	0.35	front,rumor	culture,hero	5
-craft	職人季報	6000	5	4	2	1	0.05	front	supply	2
+companyId	companyName	price	contractTurns	trustRating	speedRating	leadTurns	falseRate	pages	categories	articlesPerIssue	issueMin	issueMax	pageSlots	bylines	bylineRate	clarityWeights	reportRate	styleNote
+royal	王立官報	20000	5	5	1	1	0.00	front	economy,dungeon	1	1	1	front:1	王立広報局	1.0	confirmed:1,presumed:0,anonymous:0	0.6	硬い公文書調。断定と通達。感情語を使わない
+guild	冒険者ギルド報	15000	5	4	3	2	0.12	front,second,market	dungeon,hero,rival,village	3	2	3	front:1,second:1,market:1	トレイシー・モルガン|イザベラ・ハートウェル|ルーファス・グレインズ	0.9	confirmed:0.6,presumed:0.4,anonymous:0	0.9	実務的。現場の冒険者の証言と装備・討伐の目線
+commerce	週刊商業新聞	12000	5	3	3	2	0.15	front,market	rival,supply,economy,village	2	2	2	front:1,market:1	メリッサ・コースト|グラハム・ベネット	0.8	confirmed:0.4,presumed:0.5,anonymous:0.1	0.8	数字と商い目線。仕入れ・相場・商会の動き（具体の銘柄名と数値は書かない）
+tabloid	街角かわら版	6000	5	1	5	3	0.22	front,rumor	culture,hero,village	3	2	3	front:1,rumor:2	ジャック・ピーター|ノラ・ベル	0.6	confirmed:0.05,presumed:0.35,anonymous:0.6	0.7	噂・誇張調。「〜らしい」「〜という話だ」。感嘆と疑問
+craft	職人季報	6000	5	4	2	1	0.10	front	supply	1	1	1	front:1	オズワルド・ブラント|ヘレナ・ストーン	0.9	confirmed:0.7,presumed:0.3,anonymous:0	0.8	素材と技術目線。鍛冶・鉱石・工房の話

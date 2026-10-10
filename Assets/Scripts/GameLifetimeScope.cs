@@ -252,6 +252,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<DungeonIntelModel>(Lifetime.Singleton);
         builder.Register<NewsModel>(Lifetime.Singleton);
         builder.Register<NewsEffectResolver>(Lifetime.Singleton);
+        builder.Register<NewspaperSubscriptionModel>(Lifetime.Singleton);
+        builder.Register<ScrapbookModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);
         builder.Register<MapModel>(Lifetime.Singleton);
         builder.Register<BlackSmithModel>(Lifetime.Singleton);

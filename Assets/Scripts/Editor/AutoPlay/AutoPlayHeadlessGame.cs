@@ -200,6 +200,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public float ViewerRedChancePerTurn = 0.03f;
         /// <summary>1戦闘ターン ≒ 何秒か（クールダウンの換算用。較正値）。</summary>
         public float SecondsPerBattleTurn = 3f;
+        /// <summary>false = 新聞を購読できない（新聞の効果を測る対照群「+nonews」用）。</summary>
+        public bool AllowNewspaper = true;
     }
 
     // --- 当日の集計（ランナーが読む） ---
@@ -214,6 +216,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public int UpgradeSpend;
         public string BattleResult = "";
         public int InterventionSpent;
+        public int NewspaperSpend;
         public int InterventionRefund;
         public string BattleDungeon = "";
         public float BattleClearPct;
@@ -238,6 +241,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     public ShopStatusModel ShopStatus { get; private set; }
     public MarketingFacade Marketing { get; private set; }
     public NewsModel News { get; private set; }
+    public NewspaperSubscriptionModel Subscriptions { get; private set; }
+    public ScrapbookModel Scrapbook { get; private set; }
     public GameFlowManager Flow { get; private set; }
     public DungeonRepository Dungeons { get; private set; }
 
@@ -259,6 +264,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     private int _lastDayBeginTurn = -1;
 
     public AutoPlayStage Stage { get; private set; } = AutoPlayStage.ShopDay;
+    /// <summary>新聞の発行カレンダーの概要（フェーズ3のデータで回っているかの確認用）。</summary>
+    public string NewsInfo { get; private set; } = "";
     public DayLedger Today { get; private set; } = new DayLedger();
     public AutoPlayBattleSurrogate.Outcome LastBattle { get; private set; }
 
@@ -296,6 +303,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         var relicHooks = new RelicHookDispatcher(RelicInventory, new RelicBehaviourRegistry());
         RelicRewards = new RelicRewardService(RelicInventory);
         News = new NewsModel();
+        Subscriptions = new NewspaperSubscriptionModel();
+        Scrapbook = new ScrapbookModel();
         var newsEffects = new NewsEffectResolver(News);
         HeroModel = new HeroModel();
         _pendingEvent = new PendingEventData();
@@ -342,6 +351,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         TomsModel.SavePlayerMoney();
         ItemModel.SaveData();
         News.Build(Config.Seed);
+        NewsInfo = $"phase3={News.IsPhase3} events={News.Events.Count} calendar={News.Calendar.Count}";
 
         Stage = AutoPlayStage.ShopDay;
     }
@@ -506,14 +516,36 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             });
         }
 
-        // --- 今日の朝刊（購読制は未実装のため紙面全体が見える） ---
-        foreach (var e in News.IssueOf(CurrentTurn))
+        // --- 今日の朝刊: 購読中の社の号だけ。購読0件なら壁新聞（NewspaperPresenter.TodaysEntries の写し） ---
+        int turnNow = CurrentTurn;
+        var issue = News.IssueOf(turnNow);
+        var visible = new List<NewsIssueEntry>();
+        var subscribedNow = Subscriptions.ActiveOn(turnNow).Select(c => c.companyId).ToHashSet();
+        s.WallPaperOnly = subscribedNow.Count == 0;
+        if (!s.WallPaperOnly)
+        {
+            visible.AddRange(issue.Where(e => subscribedNow.Contains(e.companyId)));
+        }
+        else
+        {
+            var sorted = issue.OrderBy(e => e.kind == NewsEntryKind.Report ? 0 : e.kind == NewsEntryKind.Result ? 1 : e.kind == NewsEntryKind.Filler ? 2 : 3).ToList();
+            foreach (var e in sorted)
+            {
+                if (visible.Count >= NewsTuning.WallPaperArticles) break;
+                if (e.kind == NewsEntryKind.Report && e.Article?.page == "front") visible.Add(e);
+            }
+            if (visible.Count == 0) { var r = sorted.FirstOrDefault(e => e.kind == NewsEntryKind.Report); if (r != null) visible.Add(r); }
+            if (visible.Count == 0) { var f = sorted.FirstOrDefault(e => e.kind == NewsEntryKind.Filler); if (f != null) visible.Add(f); }
+        }
+        foreach (var e in visible)
         {
             var a = e.Article;
             if (a == null) continue;
             s.News.Add(new AutoPlayNewsView
             {
                 ArticleId = a.id,
+                EntryKey = e.Key,
+                CanPin = Scrapbook.CanPin(e),
                 Company = e.Company != null ? e.Company.companyId : e.companyId,
                 Page = a.page,
                 SourceClarity = a.sourceClarity,
@@ -523,6 +555,29 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 SummaryEn = a.summaryEn,
             });
         }
+
+        // --- 新聞社と購読枠・スクラップ ---
+        s.SubscriptionSlots = NewsTuning.SubscriptionSlotsFor(TomsModel.ShopLevel.Value);
+        s.SubscriptionUsed = Subscriptions.UsedSlots(turnNow);
+        foreach (var c in NewsMasterLoader.LoadCompanies())
+        {
+            var contract = Subscriptions.ActiveOn(turnNow).FirstOrDefault(x => x.companyId == c.companyId);
+            s.Newspapers.Add(new AutoPlayCompanyView
+            {
+                Id = c.companyId, Name = c.companyName, Price = c.price, ContractTurns = c.contractTurns,
+                Trust = c.trustRating, Speed = c.speedRating, Pages = c.pages.Count, Categories = string.Join(",", c.categories),
+                Subscribed = contract != null, TurnsLeft = contract != null ? contract.endTurn - turnNow : 0,
+                CanSubscribe = Subscriptions.CanSubscribe(c, turnNow, s.SubscriptionSlots, s.Money),
+                MeasuredAccuracy = Scrapbook.MeasuredAccuracy(c.companyId),
+            });
+        }
+        s.ScrapCapacity = Scrapbook.Capacity;
+        foreach (var sc in Scrapbook.Pinned)
+            s.Scraps.Add(new AutoPlayScrapView
+            {
+                EntryKey = sc.entryKey, Company = sc.companyId, PublishTurn = sc.publishTurn,
+                State = ScrapbookModel.StateOf(sc, News.FindEntry(sc.entryKey), turnNow).ToString(),
+            });
 
         // --- レリック3択 ---
         foreach (var c in RelicRewards.PendingChoices)
@@ -685,6 +740,79 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         _battleIn.EquippedItemIds = new List<string>(HeroModel.EquippedItemIds);
         HeroModel.SaveHeroData();
         return AutoPlayActionResult.Success($"装備 {hero.weaponId.Value}/{hero.armorId.Value}");
+    }
+
+    // ---------------- 新聞（NewspaperPresenter.Subscribe / ConfirmOne / ConfirmBatch の写し） ----------------
+
+    /// <summary>連載の分岐がどの条件で決まったか（ヘッドレスでも heroWin/heroLose/hasStock/noStock が評価されているかの確認用）。</summary>
+    public string ArcSummary()
+    {
+        if (News == null) return "";
+        var counts = new Dictionary<string, int>();
+        int resolved = 0;
+        foreach (var slot in News.ArcSlots)
+        {
+            if (!slot.IsResolved) continue;
+            resolved++;
+            string cond = slot.resolvedEventId == "-" ? "end"
+                : slot.options.Where(o => o.eventId == slot.resolvedEventId).Select(o => o.cond).FirstOrDefault() ?? "?";
+            counts[cond] = (counts.TryGetValue(cond, out var n) ? n : 0) + 1;
+        }
+        return $"arcs={News.ArcSlots.Count} resolved={resolved} " + string.Join(" ", counts.OrderBy(kv => kv.Key).Select(kv => $"{kv.Key}={kv.Value}"))
+               + $" lastStream={(News.LastStreamWon.HasValue ? (News.LastStreamWon.Value ? "win" : "lose") : "none")}";
+    }
+
+    public AutoPlayActionResult SubscribeNewspaper(string companyId)
+    {
+        if (!Config.AllowNewspaper) return Reject("新聞なしの対照群");
+        var company = NewsMasterLoader.FindCompany(companyId);
+        int turn = CurrentTurn;
+        int slots = NewsTuning.SubscriptionSlotsFor(TomsModel.ShopLevel.Value);
+        if (!Subscriptions.CanSubscribe(company, turn, slots, TomsModel.PlayerMoney.Value)) return Reject($"{companyId} を購読できない（枠・所持金・契約中）");
+        TomsModel.PurchaseItem(company.price);
+        Subscriptions.Subscribe(company, turn);
+        TomsModel.SavePlayerMoney();
+        Today.NewspaperSpend += company.price;
+        return AutoPlayActionResult.Success($"購読 {companyId}");
+    }
+
+    public AutoPlayActionResult PinScrap(string entryKey)
+    {
+        var entry = News.FindEntry(entryKey);
+        if (entry == null || entry.publishTurn != CurrentTurn) return Reject($"{entryKey} は今日の紙面に無い");
+        if (!Subscriptions.IsSubscribed(entry.companyId, CurrentTurn) && Subscriptions.UsedSlots(CurrentTurn) > 0) return Reject("購読していない社の記事");
+        if (!Scrapbook.Pin(entry, CurrentTurn)) return Reject("スクラップできない（枠が一杯・貼れない種類）");
+        return AutoPlayActionResult.Success($"スクラップ {entryKey}");
+    }
+
+    public AutoPlayActionResult ConfirmScrap(string entryKey)
+    {
+        if (TomsModel.PlayerMoney.Value < NewsTuning.ConfirmCost) return Reject("確認の費用が足りない");
+        var entry = News.FindEntry(entryKey);
+        if (entry == null || !Scrapbook.Confirm(entryKey, entry, CurrentTurn)) return Reject("確認できない（未決着・未スクラップ）");
+        TomsModel.PurchaseItem(NewsTuning.ConfirmCost);
+        TomsModel.SavePlayerMoney();
+        Today.NewspaperSpend += NewsTuning.ConfirmCost;
+        return AutoPlayActionResult.Success($"確認 {entryKey}");
+    }
+
+    public AutoPlayActionResult ConfirmScrapBatch()
+    {
+        if (TomsModel.PlayerMoney.Value < NewsTuning.ConfirmBatchCost) return Reject("まとめて確認の費用が足りない");
+        int turn = CurrentTurn;
+        var targets = new List<(string key, NewsIssueEntry entry)>();
+        foreach (var sc in Scrapbook.Pinned)
+        {
+            var entry = News.FindEntry(sc.entryKey);
+            if (ScrapbookModel.StateOf(sc, entry, turn) == ScrapState.Unconfirmed) targets.Add((sc.entryKey, entry));
+            if (targets.Count >= NewsTuning.ConfirmBatchCount) break;
+        }
+        if (targets.Count < NewsTuning.ConfirmBatchCount) return Reject("決着・未確認が3件そろっていない");
+        foreach (var (key, entry) in targets) Scrapbook.Confirm(key, entry, turn);
+        TomsModel.PurchaseItem(NewsTuning.ConfirmBatchCost);
+        TomsModel.SavePlayerMoney();
+        Today.NewspaperSpend += NewsTuning.ConfirmBatchCost;
+        return AutoPlayActionResult.Success("まとめて確認");
     }
 
     public AutoPlayActionResult UpgradeShop()
@@ -867,6 +995,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         {
             handler.Dispose();
         }
+        // 新聞の連載（heroWin / heroLose）は BattleResultHandler が RunHistory に書いた勝敗から次の朝に読まれる。
+        // 念のため直接も伝えておく（新聞担当の申し送り。RunHistory を通らない経路でも分岐できるように）
+        News?.SetLastStreamResult(outcome.Victory);
 
         ResolveStageAfterFlow();
         return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G");
