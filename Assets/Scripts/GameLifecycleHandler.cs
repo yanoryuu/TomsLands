@@ -66,18 +66,32 @@ public class GameLifecycleHandler : IStartable, IDisposable
         var dungeonCatalog = _dungeonRepository.CreateCatalog();
         _dungeonRepository.SetCatalog(dungeonCatalog);
 
-        // FightScene / EventScene から帰還した場合は、
-        // StartModeData に関わらず必ずセーブデータをロードする
-        bool isReturningFromScene = _battleOutputData.HasResult || _eventOutputData.HasResult;
+        // 新規ランの判定。NewGame はタイトルの「初めから」と準備シーンの出店でだけ立つ
+        // （TomsShop 入場後は下で Continue に戻すので、シーン帰還時に NewGame のことはない）。
+        // 「続きから」でもラン内セーブが無ければ復帰する中身が無いので新規扱いにする
+        // （空セーブのまま続きからに入ると、手動フロー・準備設定なしでランが進んでしまう）
+        bool hasRunSave = SaveSlotManager.Exists(SaveSlotManager.CurrentSlot);
+        bool isNewRun = _startModeData.Mode == StartMode.NewGame || !hasRunSave;
+        if (_startModeData.Mode != StartMode.NewGame && !hasRunSave)
+            Debug.LogWarning("[GameLifecycleHandler] 続きからだがラン内セーブが無い → 新規ランとして開始");
 
-        if (isReturningFromScene)
+        // FightScene / EventScene から帰還した場合は、必ずセーブデータをロードする
+        bool isReturningFromScene = !isNewRun && (_battleOutputData.HasResult || _eventOutputData.HasResult);
+
+        if (isNewRun)
+        {
+            // 前のランの配信/イベント結果が SO に残っていたら捨てる
+            // （残すと BattleResultHandler が前ランの売上・フロー位置を新しいランに適用してしまう）
+            if (_battleOutputData.HasResult || _eventOutputData.HasResult)
+                Debug.LogWarning("[GameLifecycleHandler] 前のランの配信/イベント結果が残っていたので破棄");
+            _battleOutputData.Clear();
+            _eventOutputData.Clear();
+            InitializeNewGame();
+        }
+        else if (isReturningFromScene)
         {
             Debug.Log("[GameLifecycleHandler] 戦闘/イベントシーンから帰還 → セーブデータをロード");
             InitializeContinue();
-        }
-        else if (_startModeData.Mode == StartMode.NewGame)
-        {
-            InitializeNewGame();
         }
         else
         {
