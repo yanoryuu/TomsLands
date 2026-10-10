@@ -13,6 +13,8 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private GameObject itemSelectionPanel;
     [SerializeField] private Button armorPanelButton;
     [SerializeField] private Button weaponPanelButton;
+    /// <summary>おすすめ陳列（期待収益の高い順に枠いっぱい並べる）。</summary>
+    [SerializeField] private Button autoDisplayButton;
     [SerializeField] private TextMeshProUGUI itemDescriptionText;
     [SerializeField] private Image itemIcon;
 
@@ -30,6 +32,7 @@ public class ItemSelectionView : MonoBehaviour
     private readonly List<GameObject> activeSlots = new();
     public Subject<Unit> OnArmorPanelRequested { get; private set; } = new();
     public Subject<Unit> OnWeaponPanelRequested { get; private set; } = new();
+    public Subject<Unit> OnAutoDisplayRequested { get; private set; } = new();
 
     private readonly Dictionary<string, ItemDisplaySlot> displaySlots = new();
 
@@ -38,6 +41,10 @@ public class ItemSelectionView : MonoBehaviour
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         armorPanelButton.onClick.AddListener(() => OnArmorPanelRequested.OnNext(Unit.Default));
         weaponPanelButton.onClick.AddListener(() => OnWeaponPanelRequested.OnNext(Unit.Default));
+
+        // 未配線でも落ちないようにする（他のボタンと違い、後から足した任意要素のため）
+        if (autoDisplayButton != null)
+            autoDisplayButton.onClick.AddListener(() => OnAutoDisplayRequested.OnNext(Unit.Default));
     }
 
     public void SetDescription(string description, Sprite icon)
