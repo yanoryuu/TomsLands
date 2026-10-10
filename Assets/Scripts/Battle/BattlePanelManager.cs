@@ -16,6 +16,13 @@ public class BattlePanelManager : MonoBehaviour
     [Header("配信リザルトパネル（結果画面）")]
     [SerializeField] private GameObject streamingResultPanel;
 
+    private void Awake()
+    {
+        // 配信中パネルのパッド/キー操作（介入カード・狙う敵・スロット持ち上げ）。シーン配置不要
+        if (streamingPanel != null && GetComponent<BattleGamepadController>() == null)
+            gameObject.AddComponent<BattleGamepadController>().Initialize(streamingPanel);
+    }
+
     /// <summary>
     /// 全パネルを非表示にする
     /// </summary>
@@ -47,6 +54,16 @@ public class BattlePanelManager : MonoBehaviour
                 if (streamingResultPanel != null) streamingResultPanel.SetActive(true);
                 break;
         }
+
+        // パッド/キー操作中なら、新しく出たパネルへフォーカスを移す（マウス中は何もしない）
+        var shown = phase switch
+        {
+            StreamingGamePhase.StreamingSetting => streamingSettingPanel,
+            StreamingGamePhase.Streaming => streamingPanel,
+            StreamingGamePhase.StreamingResult => streamingResultPanel,
+            _ => null,
+        };
+        if (shown != null) UIFocusManager.NotifyPanelShown(shown);
 
         Debug.Log($"[BattlePanelManager] Panel switched to: {phase}");
     }

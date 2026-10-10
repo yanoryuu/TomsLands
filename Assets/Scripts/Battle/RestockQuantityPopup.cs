@@ -29,6 +29,18 @@ public class RestockQuantityPopup : MonoBehaviour
     {
         if (cancelButton) cancelButton.onClick.AddListener(() => Close(0));
         if (panel) panel.SetActive(false);
+
+        // パッド/キー: 表示中は最前面のモーダル。B でキャンセル、最初は数量スライダー
+        if (panel)
+        {
+            var scope = UIFocusScope.GetOrAdd(panel);
+            scope.Modal = true;
+            scope.Priority = 50;
+            scope.RememberLastSelected = false;
+            if (cancelButton) scope.SetCancelButton(cancelButton);
+            var slider = detailPanel != null ? detailPanel.GetComponentInChildren<Slider>(true) : null;
+            if (slider != null) scope.FirstSelected = slider;
+        }
     }
 
     /// <summary>

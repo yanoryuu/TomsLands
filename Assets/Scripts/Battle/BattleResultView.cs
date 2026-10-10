@@ -35,6 +35,12 @@ public class BattleResultView : MonoBehaviour
         {
             confirmButton.onClick.AddListener(OnConfirmClicked);
         }
+
+        // パッド/キー: 確認ボタンへフォーカス（A で次へ）
+        var scope = UIFocusScope.GetOrAdd(gameObject);
+        if (confirmButton != null) scope.FirstSelected = confirmButton;
+        foreach (var scroll in GetComponentsInChildren<ScrollRect>(true))
+            if (scroll.GetComponent<ScrollRectAutoFollow>() == null) scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
         // パネルの表示/非表示は BattlePanelManager が管理するため、ここでは制御しない
     }
 

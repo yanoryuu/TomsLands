@@ -34,6 +34,23 @@ public class ItemSelectionSlot : MonoBehaviour
 
     public string itemId { get; private set; }
 
+    /// <summary>パッド操作で最初に選ぶ要素（「並べる」ボタン）。</summary>
+    public Selectable DefaultSelectable => selectButton != null ? selectButton : infoButton;
+
+    private void Awake()
+    {
+        // パッド操作: 行内のどの要素を選んでも説明欄をその商品に切り替える（マウスのアイコン押下と同じ）
+        foreach (var s in GetComponentsInChildren<Selectable>(true))
+        {
+            var relay = PadSelectRelay.GetOrAdd(s.gameObject);
+            if (relay != null)
+                relay.Selected += () =>
+                {
+                    if (!string.IsNullOrEmpty(itemId)) OnInfoRequested.OnNext(itemId);
+                };
+        }
+    }
+
     private int maxQuantity;
     private bool suppressEvents;
     private bool isSelected;

@@ -30,6 +30,11 @@ public class EventSceneView : MonoBehaviour
         {
             confirmButton.onClick.AddListener(OnClickConfirm);
         }
+
+        // パッド/キー: 確認ボタン1つ（A で読み進める）。パネルが出ている間だけ有効なスコープにする
+        var scopeHost = eventPanel != null ? eventPanel : gameObject;
+        var scope = UIFocusScope.GetOrAdd(scopeHost);
+        scope.FirstSelected = confirmButton;
     }
 
     /// <summary>

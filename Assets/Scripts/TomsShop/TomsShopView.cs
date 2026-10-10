@@ -254,6 +254,38 @@ public class TomsShopView : MonoBehaviour
             relicChoiceSkipButton.onClick.AddListener(() => OnRelicChoiceSkipped.OnNext(Unit.Default));
         if (debtPaymentButton != null)
             debtPaymentButton.onClick.AddListener(() => OnDebtPaymentClicked.OnNext(Unit.Default));
+
+        SetupPadFocusForOverlays();
+    }
+
+    /// <summary>
+    /// パッド操作: 店ホーム上に重なるパネル（朝レポート・レリック3択）をモーダルのフォーカス単位にする。
+    /// パネルはシーン側で配線されるため、コードで付与する（未配線なら何もしない）。
+    /// </summary>
+    private void SetupPadFocusForOverlays()
+    {
+        if (morningReportPanel != null)
+        {
+            var scope = UIFocusScope.GetOrAdd(morningReportPanel);
+            scope.Modal = true;
+            scope.Priority = Mathf.Max(scope.Priority, 20);
+            if (morningReportCloseButton != null)
+            {
+                scope.FirstSelected = morningReportCloseButton;
+                if (!scope.HasCancel) scope.SetCancelButton(morningReportCloseButton);
+            }
+        }
+
+        if (relicChoicePanel != null)
+        {
+            // 辞退（ゴールド受け取り）を B に割り当てると誤爆するので Cancel は無し
+            var scope = UIFocusScope.GetOrAdd(relicChoicePanel);
+            scope.Modal = true;
+            scope.Priority = Mathf.Max(scope.Priority, 20);
+            scope.RememberLastSelected = false;
+            if (relicChoiceButtons != null && relicChoiceButtons.Length > 0 && relicChoiceButtons[0] != null)
+                scope.FirstSelected = relicChoiceButtons[0];
+        }
     }
 
     public void Initialize()
@@ -318,6 +350,10 @@ public class TomsShopView : MonoBehaviour
     {
         if (StartShopButton != null)
             StartShopButton.interactable = interactable;
+
+        // パッド操作: 営業開始演出の間は自動選択を止める（A 連打が隣の「戻る」に移って営業を取り消す誤爆を防ぐ）
+        var scope = GetComponentInParent<UIFocusScope>(true);
+        if (scope != null) scope.AutoSelect = interactable;
     }
 
     public void RefreshDeskDisplay(List<RuntimeItemData> runtimeItems)

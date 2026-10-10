@@ -24,6 +24,9 @@ public class BattleControlView : MonoBehaviour
     [Tooltip("配信開始前の3秒カウントダウン。未設定の場合はカウントダウンなしで即開始する")]
     [SerializeField] private StreamingCountdownView countdownView;
 
+    /// <summary>一時停止ボタン（パッドの Start から押すため）。未配線なら null。</summary>
+    public Button PauseButton => pauseButton;
+
     public Subject<Unit> OnPauseToggled { get; } = new();
     public Subject<Unit> OnEndBattleRequested { get; } = new();
 

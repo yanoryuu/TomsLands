@@ -15,6 +15,16 @@ public class AvailableItemSlot : MonoBehaviour, IPointerClickHandler
 
     public event Action<string> OnItemSelected;
 
+    private void Awake()
+    {
+        // パッド/キーで選べるようにする（A で左クリックと同じ OnPointerClick を転送。マウス時は何もしない）
+        if (GetComponent<PointerEventBridge>() == null) gameObject.AddComponent<PointerEventBridge>();
+        // 選択枠はカードの見た目（BackGround）に合わせる（ルートの矩形はレイアウト用で見た目とずれている）
+        var background = transform.Find("BackGround") as RectTransform;
+        if (background != null && GetComponent<UIFocusHighlightOverride>() == null)
+            gameObject.AddComponent<UIFocusHighlightOverride>().target = background;
+    }
+
     /// <summary>アイテムID、アイコン、表示名、在庫数、属性を設定。</summary>
     public void Initialize(string itemId, Sprite sprite, string displayName, int stock, ItemTypeData.ItemAttribute attribute)
     {

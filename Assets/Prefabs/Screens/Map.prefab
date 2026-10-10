@@ -685,6 +685,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4464749422426862992}
   - component: {fileID: 1527024825550522857}
+  - component: {fileID: 153251295193358614}
   m_Layer: 0
   m_Name: Map
   m_TagString: Untagged
@@ -1125,6 +1126,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4527745208899087681}
   - component: {fileID: 9141102870267314194}
+  - component: {fileID: 1664420266474034766}
   m_Layer: 0
   m_Name: DungeonInfoPanel
   m_TagString: Untagged
@@ -3902,3 +3904,77 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6503201819672489854, guid: b90a872142437b242a9e11dbb58d5334, type: 3}
   m_PrefabInstance: {fileID: 9151955095455593117}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &153251295193358614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1461691895564023167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f63e027f8ec1bc346b2371ebfdeb2679, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 7732312956581593702}
+  autoSelect: 1
+  rememberLastSelected: 1
+  modal: 0
+  priority: 1
+  cancelMode: 1
+  cancelButton: {fileID: 8999289762814254553}
+  onCancel:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabRight:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonX:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonY:
+    m_PersistentCalls:
+      m_Calls: []
+  onMenu:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &1664420266474034766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2756828336469617088}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f63e027f8ec1bc346b2371ebfdeb2679, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 4089551390146827051}
+  autoSelect: 1
+  rememberLastSelected: 1
+  modal: 1
+  priority: 10
+  cancelMode: 1
+  cancelButton: {fileID: 4089551390146827051}
+  onCancel:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabRight:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonX:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonY:
+    m_PersistentCalls:
+      m_Calls: []
+  onMenu:
+    m_PersistentCalls:
+      m_Calls: []

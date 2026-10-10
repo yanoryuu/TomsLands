@@ -152,6 +152,8 @@ public class PreparationView : MonoBehaviour
         if (departButton != null) departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
         if (backButton != null) backButton.onClick.AddListener(() => OnBack.OnNext(Unit.Default));
 
+        SetupFocusScope();
+
         // ラベル類のはみ出し防止（折り返し＋枠に収まるまで自動縮小）。
         // シーン側の設定に依らずコードで揃える。
         FitText(messageText);
@@ -186,6 +188,19 @@ public class PreparationView : MonoBehaviour
         DOTween.To(() => relicScroll.horizontalNormalizedPosition,
                 v => relicScroll.horizontalNormalizedPosition = v, target, 0.25f)
             .SetEase(Ease.OutCubic).SetLink(gameObject);
+    }
+
+    /// <summary>パッド/キー用のフォーカス単位。Cancel=戻る。出店ボタンは誤爆防止のため最初には選ばない。</summary>
+    private void SetupFocusScope()
+    {
+        var scope = UIFocusScope.GetOrAdd(gameObject);
+        scope.FirstSelected = normalButton != null ? normalButton : (easyButton != null ? easyButton : borrowPlusButton);
+        scope.SetCancelButton(backButton);
+
+        // レリック一覧が ScrollRect 内なら、選択に合わせて自動スクロール
+        var scroll = relicCatalogParent != null ? relicCatalogParent.GetComponentInParent<ScrollRect>() : null;
+        if (scroll != null && scroll.GetComponent<ScrollRectAutoFollow>() == null)
+            scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
     }
 
     /// <summary>

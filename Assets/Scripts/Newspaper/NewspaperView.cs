@@ -204,11 +204,65 @@ public class NewspaperView : MonoBehaviour
 
         foreach (var rt in new[] { topBarPane, leftPane, centerPane, rightPane, paperContent })
             if (rt != null) homePositions[rt] = rt.anchoredPosition;
+
+        // パッド/キー: LB/RB で面送り（← → ボタンと同じ）
+        focusScope = GetComponentInParent<UIFocusScope>();
+        if (focusScope != null)
+        {
+            focusScope.OnButton
+                .Subscribe(b =>
+                {
+                    if (b == ControllerButton.LB) ClickIfUsable(prevPageButton);
+                    else if (b == ControllerButton.RB) ClickIfUsable(nextPageButton);
+                })
+                .AddTo(this);
+        }
     }
+
+    private void OnEnable() => pendingFocus.Request(true);
 
     private void OnDisable()
     {
         if (articlePopupRoot != null) articlePopupRoot.SetActive(false);
+    }
+
+    // ---------------- パッド/キー ----------------
+
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+    private string focusArticleKey;
+
+    private void LateUpdate() => pendingFocus.Tick(focusScope, PaperFocusTarget);
+
+    /// <summary>紙面で最初に選ばせる要素（一面トップ → 小記事 → 新聞社カード）。</summary>
+    private Selectable PaperFocusTarget()
+    {
+        // 記事を開いた（本文表示で作り直した）ときは同じ記事に留まる
+        if (!string.IsNullOrEmpty(focusArticleKey))
+            foreach (var cell in currentCells)
+            {
+                if (cell == null || cell.ArticleId != focusArticleKey) continue;
+                var s = cell.GetComponent<Selectable>();
+                if (s != null && UIFocusManager.IsUsable(s.gameObject)) return s;
+            }
+        if (leadArticle != null && leadArticle.gameObject.activeInHierarchy)
+        {
+            var lead = leadArticle.GetComponent<Selectable>();
+            if (lead != null && UIFocusManager.IsUsable(lead.gameObject)) return lead;
+        }
+        foreach (var cell in currentCells)
+        {
+            if (cell == null) continue;
+            var s = cell.GetComponent<Selectable>();
+            if (s != null && UIFocusManager.IsUsable(s.gameObject)) return s;
+        }
+        return companyCardParent != null ? ControllerFocusUtil.FirstUsable(companyCardParent) : null;
+    }
+
+    private static void ClickIfUsable(Button button)
+    {
+        if (button == null || !button.isActiveAndEnabled || !button.IsInteractable()) return;
+        button.onClick.Invoke();
     }
 
     // ---------------- 上部バー ----------------
@@ -279,6 +333,14 @@ public class NewspaperView : MonoBehaviour
     public void ShowPaper(PaperData p)
     {
         if (p == null) return;
+
+        // 記事を選んだまま紙面を作り直す（面送り・社の切替）なら、新しい紙面の先頭へフォーカスを移す
+        bool focusInPaper = (articleParent != null && ControllerFocusUtil.IsSelectionInside(articleParent))
+                            || (leadArticle != null && ControllerFocusUtil.IsSelectionInside(leadArticle.transform));
+        focusArticleKey = null;
+        foreach (var cell in currentCells)
+            if (cell != null && ControllerFocusUtil.IsSelectionInside(cell.transform)) focusArticleKey = cell.ArticleId;
+        pendingFocus.Request(focusInPaper);
 
         if (mastheadText != null) mastheadText.text = p.masthead;
         if (mastheadEmblems != null)

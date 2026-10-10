@@ -3,6 +3,7 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
+using UnityEngine.UI;
 using Utage;
 
 /// <summary>
@@ -23,6 +24,11 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
 
     private readonly ReactiveProperty<bool> isPlaying = new(false);
     private bool isDisposed;
+
+    // ゲームパッド対応: 会話中は背面の画面へ Cancel 等と決定・フォーカスが届かないようにする
+    private UIFocusScope dialogScope;
+    private IDisposable scopeInputBlock;
+    private int playingCount;
 
     /// <summary>会話を再生中かどうか。ゲーム側の入力抑止などに使う。</summary>
     public ReadOnlyReactiveProperty<bool> IsPlaying => isPlaying;
@@ -83,6 +89,7 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
 
         if (isDisposed) return;
         isPlaying.Value = true;
+        BeginDialogInput();
         try
         {
             // 会話UIの開閉は宴側（AdvUguiManager）が行うため、エンジン自体は一度有効にしたら落とさない
@@ -115,7 +122,78 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
         finally
         {
             // 破棄後（Play終了時）に書き込むと ObjectDisposedException になる
+            EndDialogInput();
             if (!isDisposed) isPlaying.Value = false;
+        }
+    }
+
+    /// <summary>会話中の入力まわり（背面UIの操作を止め、選択肢ボタンへフォーカスを渡す）。</summary>
+    private void BeginDialogInput()
+    {
+        playingCount++;
+        // Utage 側の InputSystemStrategy（BeforeSceneLoad）と登録順が競合して上書きされることがあるため、会話開始ごとに入れ直す
+        GamepadInputStrategy.Install();
+        GamepadInputStrategy.IsMessageWindowHidden = IsMessageWindowHidden;
+        if (scopeInputBlock == null) scopeInputBlock = UIFocusManager.BlockScopeInput();
+        if (dialogScope == null)
+        {
+            dialogScope = UIFocusScope.GetOrAdd(gameObject);
+            dialogScope.Modal = true;
+            dialogScope.Priority = 50;
+            dialogScope.RememberLastSelected = false;
+        }
+        dialogScope.AutoSelect = false; // 選択肢が出るまでは何も選ばない（背面の選択も外す）
+        dialogScope.FirstSelected = null;
+        dialogScope.enabled = true;
+    }
+
+    private bool IsMessageWindowHidden()
+        => engine != null && engine.UiManager != null && engine.UiManager.Status == AdvUiManager.UiStatus.HideMessageWindow;
+
+    private void EndDialogInput()
+    {
+        playingCount = Mathf.Max(0, playingCount - 1);
+        if (playingCount > 0) return;
+        GamepadInputStrategy.SelectionActive = false;
+        scopeInputBlock?.Dispose();
+        scopeInputBlock = null;
+        if (dialogScope != null) dialogScope.enabled = false;
+    }
+
+    private bool selectionWasActive;
+
+    private void Update()
+    {
+        if (dialogScope == null || !dialogScope.enabled || engine == null) return;
+
+        bool selecting = engine.SelectionManager != null && engine.SelectionManager.IsWaitInput;
+        GamepadInputStrategy.SelectionActive = selecting;
+
+        Button first = null;
+        if (selecting)
+        {
+            foreach (var item in GetComponentsInChildren<AdvUguiSelection>(false))
+            {
+                var b = item.GetComponent<Button>();
+                if (b != null && b.isActiveAndEnabled && b.IsInteractable()) { first = b; break; }
+            }
+        }
+
+        if (first != null)
+        {
+            dialogScope.AutoSelect = true;
+            if (!selectionWasActive || dialogScope.FirstSelected == null || !dialogScope.FirstSelected.isActiveAndEnabled)
+            {
+                dialogScope.FirstSelected = first;
+                dialogScope.Refocus(true);
+            }
+            selectionWasActive = true;
+        }
+        else
+        {
+            dialogScope.AutoSelect = false;
+            dialogScope.FirstSelected = null;
+            selectionWasActive = false;
         }
     }
 
@@ -141,6 +219,7 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
     protected override void Awake()
     {
         base.Awake();
+        GamepadInputStrategy.Install(); // Utage の入力にゲームパッドを追加
         if (engine == null) engine = GetComponentInChildren<AdvEngine>(true);
         // 宴のカメラを各シーンの Base カメラへ Overlay として積む（Base のままだと URP が画面を黄色でクリアする）
         if (!TryGetComponent<UtageCameraStacker>(out _)) gameObject.AddComponent<UtageCameraStacker>();
@@ -149,6 +228,9 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
     private void OnDestroy()
     {
         isDisposed = true;
+        scopeInputBlock?.Dispose();
+        GamepadInputStrategy.SelectionActive = false;
+        GamepadInputStrategy.IsMessageWindowHidden = null;
         isPlaying.Dispose();
     }
 }

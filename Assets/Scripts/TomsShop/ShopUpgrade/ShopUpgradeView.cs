@@ -35,6 +35,14 @@ public class ShopUpgradeView : MonoBehaviour
             upgradeButton.onClick.AddListener(() => OnUpgradeClicked.OnNext(Unit.Default));
         if (closeButton != null)
             closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+
+        // パッド操作: B=閉じる。改装（支払い）は誤爆防止のため初期フォーカスにしない
+        var scope = UIFocusScope.GetOrAdd(gameObject);
+        if (scope != null)
+        {
+            if (!scope.HasCancel && closeButton != null) scope.SetCancelButton(closeButton);
+            if (scope.FirstSelected == null) scope.FirstSelected = closeButton;
+        }
     }
 
     public void UpdateContent(

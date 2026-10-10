@@ -38,8 +38,17 @@ public class MapPurchaseSlot : MonoBehaviour
             if (btn == null) btn = bg.gameObject.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(Select);
+            focusTarget = btn;
+
+            // パッド/キー: 行にフォーカスが来たら選択（マウスのクリック選択と同じ結果）
+            ControllerSelectRelay.GetOrAdd(btn).Selected += Select;
         }
     }
+
+    private Selectable focusTarget;
+
+    /// <summary>パッド/キーでこの行を選ぶときのフォーカス先（行全体のボタン）。</summary>
+    public Selectable FocusTarget => focusTarget;
 
     private void Select()
     {

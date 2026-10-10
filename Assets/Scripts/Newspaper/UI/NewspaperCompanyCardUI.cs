@@ -58,6 +58,8 @@ public class NewspaperCompanyCardUI : MonoBehaviour
             rootButton.onClick.AddListener(() => OnSelectClicked?.Invoke(CompanyId));
         if (subscribeButton != null)
             subscribeButton.onClick.AddListener(() => OnSubscribeClicked?.Invoke(CompanyId));
+        // パッド/キー: カードの内側にある「購読する」へ右で移れるようにする
+        if (rootButton != null && subscribeButton != null) InnerSelectableNavigation.Attach(rootButton, subscribeButton);
     }
 
     public void SetData(Data d)

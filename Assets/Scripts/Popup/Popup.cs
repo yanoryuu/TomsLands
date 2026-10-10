@@ -45,6 +45,13 @@ public class Popup : MonoBehaviour
                 cancelButton.onClick.AddListener(() => data.OnCancel?.Invoke());
             }
         }
+
+        // パッド/キー操作: 確認系はキャンセル側を初期選択にする（決定の連打で確定してしまう誤爆を防ぐ）
+        var focus = data.IsCloseOnly
+            ? closeButton
+            : (cancelButton != null && cancelButton.gameObject.activeInHierarchy ? cancelButton : confirmButton);
+        if (focus != null && focus.gameObject.activeInHierarchy && ControllerInput.IsNavigating.CurrentValue)
+            UIFocusManager.Select(focus.gameObject);
     }
 }
 

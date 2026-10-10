@@ -42,6 +42,8 @@ public class NewsScrapCardUI : MonoBehaviour
         if (rootButton == null) rootButton = GetComponent<Button>();
         if (rootButton != null)
             rootButton.onClick.AddListener(() => OnCardClicked?.Invoke(EntryKey));
+        // パッド/キー: カードの内側にある「確認」へ右で移れるようにする
+        if (rootButton != null && confirmButton != null) InnerSelectableNavigation.Attach(rootButton, confirmButton);
     }
 
     /// <param name="reveal">直前の表示から状態が変わった（確認の結果が出た）ときに true。バッジの演出を出す</param>

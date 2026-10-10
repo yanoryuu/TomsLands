@@ -50,6 +50,8 @@ public class GamePanelManager : MonoBehaviour
         if (panel == null) return;
         panel.SetActive(true);
         UIFx.PanelOpen(panel);
+        // パッド/キー操作時のフォーカスをこのパネルへ（フェード中でも入る）。マウス操作時は何もしない
+        UIFocusManager.NotifyPanelShown(panel);
     }
 
     /// <summary>

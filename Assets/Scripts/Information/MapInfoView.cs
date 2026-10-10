@@ -57,6 +57,9 @@ public class MapInfoView : MonoBehaviour
         currentTurnForCost = currentTurn;
 
         slotDisposables.Clear();
+        // パッド/キー: 行を選んだまま作り直した（購入直後など）なら、同じダンジョンの行へフォーカスを戻す
+        bool refocusRow = (mapInfoContent != null && ControllerFocusUtil.IsSelectionInside(mapInfoContent.transform))
+                          || (purchaseButton != null && ControllerFocusUtil.IsSelectionInside(purchaseButton.transform));
         for (int i = mapInfoContent.transform.childCount - 1; i >= 0; i--)
         {
             Destroy(mapInfoContent.transform.GetChild(i).gameObject);
@@ -87,6 +90,41 @@ public class MapInfoView : MonoBehaviour
             SelectDungeon(currentMaps[0].key);
         else if (detailPanel != null)
             detailPanel.SetActive(false);
+
+        if (refocusRow) pendingFocus.Request(true);
+    }
+
+    private readonly PendingFocus pendingFocus = new();
+
+    private UIFocusScope focusScope;
+
+    private void LateUpdate()
+    {
+        if (focusScope == null) focusScope = GetComponentInParent<UIFocusScope>();
+        pendingFocus.Tick(focusScope, () => SelectedRowTarget() ?? FirstRowTarget());
+    }
+
+    /// <summary>先頭行のフォーカス先（パッド/キー用。無ければ null）。</summary>
+    public Selectable FirstRowTarget()
+    {
+        foreach (var slot in activeSlots)
+        {
+            if (slot == null || slot.FocusTarget == null) continue;
+            if (UIFocusManager.IsUsable(slot.FocusTarget.gameObject)) return slot.FocusTarget;
+        }
+        return null;
+    }
+
+    /// <summary>選択中ダンジョンの行のフォーカス先（パッド/キー用。無ければ null）。</summary>
+    public Selectable SelectedRowTarget()
+    {
+        if (!selectedKey.HasValue) return null;
+        foreach (var slot in activeSlots)
+        {
+            if (slot == null || slot.FocusTarget == null || slot.DungeonKey != selectedKey.Value) continue;
+            if (UIFocusManager.IsUsable(slot.FocusTarget.gameObject)) return slot.FocusTarget;
+        }
+        return null;
     }
 
     /// <summary>ダンジョンを選択して詳細を表示する（購入直後の再表示にも使う）。</summary>

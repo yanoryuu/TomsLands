@@ -50,11 +50,36 @@ public class ProphetView : MonoBehaviour
     {
         closeButton.onClick.AddListener(() => OnCloseClicked.OnNext(Unit.Default));
         if (characterButton != null)
+        {
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+            characterButton.navigation = new Navigation { mode = Navigation.Mode.None }; // 立ち絵はパッドで選ばない（画面より大きい枠が出るため）
+        }
+        focusScope = GetComponentInParent<UIFocusScope>();
+    }
+
+    // パッド/キー: 開いたときはトレンドの先頭行へ（行は PointerEventBridge で選択＝ホバー扱い）
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+
+    private void OnEnable() => pendingFocus.Request(true);
+
+    private void LateUpdate() => pendingFocus.Tick(focusScope, FirstRow);
+
+    private Selectable FirstRow()
+    {
+        return ControllerFocusUtil.FirstUsable(trendRowParent)
+            ?? ControllerFocusUtil.FirstUsable(rankingRowParent)
+            ?? ControllerFocusUtil.FirstUsable(recommendedRowParent);
+    }
+
+    private void RequestRowFocus(Transform parent)
+    {
+        pendingFocus.Request(ControllerFocusUtil.IsSelectionInside(parent));
     }
 
     public void ShowTrendRows(List<(Sprite icon, string name, float trend, float demand)> items)
     {
+        RequestRowFocus(trendRowParent);
         ClearChildren(trendRowParent);
         for (int i = 0; i < items.Count; i++)
         {
@@ -68,6 +93,7 @@ public class ProphetView : MonoBehaviour
 
     public void ShowRankingRows(List<(int rank, Sprite icon, string name, int price)> items)
     {
+        RequestRowFocus(rankingRowParent);
         ClearChildren(rankingRowParent);
         for (int i = 0; i < items.Count; i++)
         {
@@ -90,6 +116,7 @@ public class ProphetView : MonoBehaviour
 
     public void ShowRecommendedRows(List<(Sprite icon, string name, float trend, float demand)> items)
     {
+        RequestRowFocus(recommendedRowParent);
         ClearChildren(recommendedRowParent);
         for (int i = 0; i < items.Count; i++)
         {
@@ -108,6 +135,7 @@ public class ProphetView : MonoBehaviour
 
     private static void ClearChildren(Transform parent)
     {
+        if (parent == null) return;
         for (int i = parent.childCount - 1; i >= 0; i--)
             Destroy(parent.GetChild(i).gameObject);
     }
