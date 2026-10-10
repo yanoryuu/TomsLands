@@ -65,7 +65,7 @@ MVP: Model=Singleton / View=MonoBehaviour（R3 Subject公開）/ Presenter=IStar
 - unity-editor-mcp: `recompile`/`recompile_status`, `console`/`clear_console`, `editor_play`/`editor_stop`, `capture_game_view`/`screenshot`, `get_scene_hierarchy`/`find_gameobjects`, `get/set_serialized_field`, `save_prefab_contents`, `eval`/`eval_file`, `run_tests`, `build`
 - 注意: エディタ非フォーカスだとPlay/コンパイルが進まない（`editor_focus`）。ScreenSpaceOverlay Canvasはキャプチャに写らない。evalではDIインスタンスを取れない
 - テストコードは無し。F12 DebugMenu で所持金・NextTurn・バズを操作可能
-- 旧UnityMCP（CoplayDev）は不安定。unity-editor-mcp を優先
+- 旧UnityMCP（CoplayDev）は削除済み。エディタ操作は Unity CLI（unity-editor-mcp = `unity mcp`）を使う
 
 ## 7. Docs
 - 配線手順: Docs/*_UnityWiring.md（新機能はこの形式で残す）
