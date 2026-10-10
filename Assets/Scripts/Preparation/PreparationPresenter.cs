@@ -52,6 +52,8 @@ public class PreparationPresenter : IStartable, IDisposable
         {
             Debug.Log("[PreparationPresenter] 準備UIが未配線のため素通り → TomsShop（Docs/Preparation_UnityWiring.md 参照）");
             runSetupData.Clear();
+            // 準備シーンは新規ランの入口。前のランの TomsShop 入場で Continue になったままなので戻す
+            startModeData.SetNewGame();
             SceneManager.LoadScene("TomsShop");
             return;
         }
@@ -160,6 +162,8 @@ public class PreparationPresenter : IStartable, IDisposable
 
         // このランの難易度を確定（タイトルではなくここで選ぶ）
         startModeData.SetFlowSelection(model.Difficulty, startModeData.UseAutoGeneration);
+        // 新規ランとして始める（前のランの TomsShop 入場で Continue になったまま残っているため）
+        startModeData.SetNewGame();
 
         runSetupData.HasSetup = true;
         runSetupData.CarriedGold = model.CarryAmount;
