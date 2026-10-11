@@ -38,7 +38,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     private bool _turnPhaseInitialized = false;
 
     /// <summary>朝刊を開いたターン。1ターンに一度だけ自動で開くための記録。</summary>
-    private int _lastNewspaperTurn = -1;
 
     // 営業開始演出の再生中フラグ（ボタン連打防止。フェーズが変わったら解除）
     private bool _salesStarting = false;
@@ -160,6 +159,15 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         //　マシンショップ（店カスタマイズ）画面ボタン
         tomsShopView.OnMachineShopClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.MachineShop))
+            .AddTo(disposables);
+
+        //　朝刊（情報ターミナル）。閉じると NewspaperPresenter が開く前のフェーズ（Shop）へ戻す
+        tomsShopView.OnNewspaperClicked
+            .Subscribe(_ =>
+            {
+                if (stateManager.HasHandler(TomsShopGamePhase.Newspaper))
+                    stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
+            })
             .AddTo(disposables);
 
         //　レリック3択の選択/スキップ
@@ -309,20 +317,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         bool turnChanged = _lastKnownTurn != -1 && _lastKnownTurn != currentTurn;
         bool firstEntry = _lastKnownTurn == -1;
 
-        // --- 朝刊 ---
-        // ターンが変わった最初の Shop 入場で一度だけ開く。
-        // ここで抜けるのは、この先の「保留イベント」「借金パネル」「朝レポート」より
-        // 前でなければならない。朝レポートは消費型（Consume で消える）なので、
-        // 表示してから画面を切り替えると内容が失われる。
-        // 抜ける時点では _lastKnownTurn をまだ更新していないので、朝刊を閉じて Shop へ
-        // 戻ったときに turnChanged が再び true になり、ターン頭の処理が正しく走る。
-        if ((turnChanged || firstEntry) && _lastNewspaperTurn != currentTurn
-            && stateManager.HasHandler(TomsShopGamePhase.Newspaper))
-        {
-            _lastNewspaperTurn = currentTurn;
-            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
-            return;
-        }
+        // 朝刊はターン頭に自動では開かない（店画面のボタンから開く）
 
         ShowPendingEventIfExists();
 

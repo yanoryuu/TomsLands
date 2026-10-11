@@ -19,6 +19,8 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Button ProphetButton;
     [SerializeField] private Button ShopUpgradeButton;
     [SerializeField] private Button MachineShopButton;
+    /// <summary>朝刊（情報ターミナル）を開くボタン。仕入れフェーズに置く。</summary>
+    [SerializeField] private Button NewspaperButton;
     [SerializeField] private TurnAnnounceView turnAnnounceView;
     [SerializeField] private BuzzAnnounceView buzzAnnounceView;
 
@@ -77,6 +79,8 @@ public class TomsShopView : MonoBehaviour
     public Subject<Unit> OnShopUpgradeClicked { get; } = new();
     //マシンショップ（店カスタマイズ）画面を開く
     public Subject<Unit> OnMachineShopClicked { get; } = new();
+    /// <summary>朝刊ボタンがクリックされた</summary>
+    public Subject<Unit> OnNewspaperClicked { get; } = new();
     //借金返済パネルを開く
     public Subject<Unit> OnDebtPaymentClicked { get; } = new();
     //レリック3択の選択（index）とスキップ
@@ -231,6 +235,8 @@ public class TomsShopView : MonoBehaviour
             ShopUpgradeButton.onClick.AddListener(() => OnShopUpgradeClicked.OnNext(Unit.Default));
         if (MachineShopButton != null)
             MachineShopButton.onClick.AddListener(() => OnMachineShopClicked.OnNext(Unit.Default));
+        if (NewspaperButton != null)
+            NewspaperButton.onClick.AddListener(() => OnNewspaperClicked.OnNext(Unit.Default));
         if (morningReportCloseButton != null && morningReportPanel != null)
             morningReportCloseButton.onClick.AddListener(() => morningReportPanel.SetActive(false));
 

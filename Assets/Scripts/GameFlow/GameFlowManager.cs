@@ -104,6 +104,8 @@ public class GameFlowManager : IDisposable, IStartable
         // ターン番号はEventノードを除外してカウント
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
         BattleCount.Value = CalculateBattleCount(_currentIndex);
+        // 店の日付表示・新聞・ゲームオーバー等が参照する TomsModel 側のターンも毎ターン同期する
+        if (_tomsModel != null) _tomsModel.CurrentTurn.Value = CurrentTurn.Value;
         Debug.Log($"[GameFlowManager] Index restored to {_currentIndex}, turn={CurrentTurn.Value}, battleCount={BattleCount.Value}");
     }
 
@@ -160,6 +162,7 @@ public class GameFlowManager : IDisposable, IStartable
                 Debug.LogError("[GameFlowManager] 手動フロー GameFlow/GameFlow が見つかりません。");
             else
                 Debug.Log($"[GameFlowManager] 手動フローをロード（nodes={_gameFlow.GameFlowStack.Count}）");
+            _newsModel?.SetWorld(BuildNewsWorld());
             return;
         }
 
@@ -170,6 +173,49 @@ public class GameFlowManager : IDisposable, IStartable
         var eventIdPool = EventDataLoader.LoadAll().Select(e => e.id).ToList();
 
         _gameFlow = GameFlowGenerator.Generate(config, settings, dungeons, eventIdPool, seed);
+        _newsModel?.SetWorld(BuildNewsWorld());
+    }
+
+    /// <summary>
+    /// 朝刊の発行カレンダー用に、ダンジョンの名前・弱点と戦闘の予定（ターン）を渡す。
+    /// 事象の差し込み枠（{dungeon}）と、因果の3法則（L1/L2）の対象決めに使う（Docs/News_Phase3_Spec.md §3）。
+    /// </summary>
+    /// <summary>
+    /// 朝刊の連載（Docs/News_Phase3_Spec.md §17）の分岐を、この朝の状態で決める。
+    /// 直近の配信の勝敗は RunHistory の累計から、在庫は ItemModel から見る。経済計算より前に呼ぶ。
+    /// </summary>
+    private void ResolveNewsArcs()
+    {
+        if (_newsModel == null) return;
+        var history = RunHistory.Load();
+        if (history != null) _newsModel.ObserveStreamTotals(history.streamWins, history.streamLosses);
+        _newsModel.ResolveArcs(CurrentTurn.Value, ev =>
+            _itemModel != null && _itemModel.RuntimeItems.Exists(i => i.Stock.Value > 0 && ev.Matches(i)));
+    }
+
+    private NewsWorld BuildNewsWorld()
+    {
+        var world = new NewsWorld();
+        if (_dungeonRepository != null)
+        {
+            foreach (var d in _dungeonRepository.GetAll())
+                world.dungeons.Add(new NewsWorld.Dungeon
+                {
+                    key = d.key.ToString(),
+                    name = d.dungeonName,
+                    weakness = d.requiredAttribute.ToString(),
+                });
+        }
+        if (_gameFlow != null)
+        {
+            for (int i = 0; i < _gameFlow.GameFlowStack.Count; i++)
+            {
+                var node = _gameFlow.GameFlowStack[i];
+                if (node.EventType == GameEvent.Battle)
+                    world.battles.Add((CalculateTurnNumber(i), node.BattleDungeon.ToString()));
+            }
+        }
+        return world;
     }
 
     /// <summary>
@@ -215,6 +261,7 @@ public class GameFlowManager : IDisposable, IStartable
         // Event以外のノードではターン番号を進める
         CurrentTurn.Value = CalculateTurnNumber(_currentIndex);
         BattleCount.Value = CalculateBattleCount(_currentIndex);
+        if (_tomsModel != null) _tomsModel.CurrentTurn.Value = CurrentTurn.Value;
 
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {
@@ -224,6 +271,7 @@ public class GameFlowManager : IDisposable, IStartable
                 demandFloorBonus = _relicResolver.Modify(RelicStatId.DemandFloorAdd, demandFloorBonus);
             // 発行カレンダーは周のシードから組む。既に同じシードで組んであれば何もしない。
             _newsModel?.Build(_tomsModel.FlowSeed);
+            ResolveNewsArcs();
 
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
                 CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects);

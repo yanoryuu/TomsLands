@@ -30,6 +30,7 @@ public class NewsEffectResolver
     /// <b>RuntimeItemData.Trend には加算しない。</b>Trend 自身はランダムウォークと減衰を
     /// 続けており、そこへ足すと期間終了時に剥がせなくなるため、別枠で保持して
     /// naturalDemand を求めるときにだけ足す。
+    /// 効果は<b>事象ごとに1回</b>（同じ事象を何社が報じても重ならない。Docs/News_Phase3_Spec.md §3.3）。
     /// </summary>
     public float TrendBias(RuntimeItemData item, int turn)
     {
@@ -37,10 +38,7 @@ public class NewsEffectResolver
 
         float sum = 0f;
         foreach (var e in newsModel.ActiveEffectsOn(turn))
-        {
-            var a = e.Article;
-            if (a != null && a.Matches(item)) sum += a.trendDelta * e.effectScale;
-        }
+            if (e.Matches(item)) sum += e.trendDelta * e.effectScale;
         return Mathf.Clamp(sum, -1f, 1f);
     }
 
@@ -51,18 +49,15 @@ public class NewsEffectResolver
 
         float sum = 0f;
         foreach (var e in newsModel.JustTriggeredOn(turn))
-        {
-            var a = e.Article;
-            if (a != null && a.Matches(item)) sum += a.demandKick * e.effectScale;
-        }
+            if (e.Matches(item)) sum += e.demandKick * e.effectScale;
         return sum;
     }
 
     /// <summary>
     /// そのターンの価格に掛ける倍率（1段目）。
-    ///   掲載ターン      … × hypeRate（記事が派手な面ほど大きく、高く買わされる）
-    ///   発効ターンから  … × hypeRate^(-1/N) を N ターン（N = HypeUnwindTurns）。合計で跳ねが剥がれる
-    /// 誤報でも同じように起きる。掲載から発効までの間は跳ねたまま据え置かれるので、
+    ///   報じられた日   … × その日の跳ね（同じ事象は1日1回。その日の一番大きい面の値）
+    ///   剥がれ始めから … × (跳ねの累計)^(-1/N) を N ターン（N = HypeUnwindTurns）。合計で跳ねが剥がれる
+    /// 誤報でも同じように起きる。報道から発効までの間は跳ねたまま据え置かれるので、
     /// 「本当に来るか」はその間の値動きからは判別できない。
     /// </summary>
     public float HypeRate(RuntimeItemData item, int turn)
@@ -73,19 +68,17 @@ public class NewsEffectResolver
         float rate = 1f;
         foreach (var e in newsModel.HypeSourcesOn(turn))
         {
-            var a = e.Article;
-            if (a == null || a.hypeRate <= 0f || Mathf.Approximately(a.hypeRate, 1f)) continue;
-            if (!a.Matches(item)) continue;
+            if (!e.Matches(item)) continue;
 
-            if (turn == e.publishTurn)
+            if (e.hypeByDay.TryGetValue(turn, out var today))
             {
-                rate *= a.hypeRate;
+                rate *= today;
                 continue;
             }
 
-            int unwindStart = Mathf.Max(e.effectTurn, e.publishTurn + 1);
-            if (unwindTurns > 0 && turn >= unwindStart)
-                rate *= Mathf.Pow(a.hypeRate, -1f / unwindTurns);
+            int start = e.UnwindStart;
+            if (unwindTurns > 0 && turn >= start && turn < start + unwindTurns)
+                rate *= Mathf.Pow(e.TotalHype, -1f / unwindTurns);
         }
         return Mathf.Clamp(rate, NewsTuning.HypeMin, NewsTuning.HypeMax);
     }

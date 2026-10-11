@@ -41,6 +41,12 @@ public class TitleLifetimeScope : LifetimeScope
         // ※ リモートコンフィグ取得は BootScene（BootLifetimeScope）で完了済みの想定。
         //   ここに来た時点で GameConst には適用済みの値が入っている。
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F11で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log("[TitleLifetimeScope] Configured.");
     }
 }

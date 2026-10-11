@@ -91,4 +91,123 @@ public static class NewsTuning
     /// 有料の「確認」（§9.1）が売っているのはこの遅れ（時間と確実性）。
     /// </summary>
     public const int CorrectionDelay = 1;
+
+    // ---------------------------------------------------------------
+    // 購読（§8）
+    // ---------------------------------------------------------------
+
+    /// <summary>購読枠の上限。5社の全購読はできない（情報は完全にならない）。</summary>
+    public const int MaxSubscriptionSlots = 3;
+
+    /// <summary>
+    /// 店レベル → 購読枠。<b>枠の解放は店レベルのみ</b>（村メタでは増やさない）。
+    /// 確定（§14 T4・2026-10-08）: Lv1=1枠 / Lv3=2枠 / Lv5=3枠。
+    /// </summary>
+    public static int SubscriptionSlotsFor(int shopLevel)
+    {
+        int slots = shopLevel >= 5 ? 3 : shopLevel >= 3 ? 2 : 1;
+        return Mathf.Clamp(slots, 1, MaxSubscriptionSlots);
+    }
+
+    /// <summary>未購読（契約0件）のときに一面へ出す無料の壁新聞の本数。</summary>
+    public const int WallPaperArticles = 2;
+
+    // ---------------------------------------------------------------
+    // スクラップと確認（§9）
+    // ---------------------------------------------------------------
+
+    /// <summary>スクラップ枠。確認すると名鑑へ移って空く。</summary>
+    public const int ScrapCapacity = 3;
+
+    /// <summary>決着した記事1件の真偽を確認する費用。</summary>
+    public const int ConfirmCost = 1500;
+
+    /// <summary>まとめて確認の件数と費用（3件 4,000G）。</summary>
+    public const int ConfirmBatchCount = 3;
+    public const int ConfirmBatchCost = 4000;
+
+    // ---------------------------------------------------------------
+    // フェーズ3: 事象＋社別テンプレート＋埋め草（Docs/News_Phase3_Spec.md）
+    // ---------------------------------------------------------------
+
+    /// <summary>
+    /// draft / reviewed のテンプレート・埋め草も読み込むか（§12 U6）。
+    /// エディタと開発ビルドでは読む。製品は approved（と状態の空欄）だけ。
+    /// </summary>
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    public static bool IncludeDraftTemplates = true;
+#else
+    public static bool IncludeDraftTemplates = false;
+#endif
+
+    /// <summary>1ターンに置く（発効させる）事象の数の確率。0件 / 1件 / 2件。</summary>
+    public const float EventsPerTurnZero = 0.2f;
+    public const float EventsPerTurnTwo = 0.2f;
+
+    /// <summary>1周に置く「大」の事象の下限（Short は1）。</summary>
+    public const int MinLargeEventsPerRun = 2;
+
+    /// <summary>埋め草の既定の再登場間隔（同じ社で何ターン空けるか）。</summary>
+    public const int FillerDefaultCooldown = 8;
+
+    /// <summary>L3（客の法則）で対象にする最低の requiredLevel。高額帯の銘柄に効く。</summary>
+    public const int L3MinRequiredLevel = 3;
+
+    /// <summary>カテゴリから面を決める（§4 の規則3）。社が持たない面なら一面。</summary>
+    public static string PageOfCategory(string category) => category switch
+    {
+        "dungeon" or "hero" => "second",
+        "rival" or "supply" or "economy" => "market",
+        "culture" or "village" => "rumor",
+        _ => "front",
+    };
+
+    /// <summary>差し込み枠の候補（{region} {village} {season} {monster}）。事象・埋め草の binds に指定が無いときに使う。</summary>
+    public static readonly string[] Regions = { "北の街道", "南の港町", "東の丘陵", "西の宿場", "王都の下町", "川沿いの集落" };
+    public static readonly string[] Villages = { "ハルム村", "ロウエン村", "ミルデ村", "カスト村", "ベルン村" };
+    public static readonly string[] Seasons = { "春", "夏", "秋", "冬" };
+    public static readonly string[] Monsters = { "甲殻種", "群狼", "大蜘蛛", "岩喰い", "影の獣" };
+
+    /// <summary>本物でも1社しか報じない事象の割合（Docs/News_Phase3_Spec.md §12 U2）。</summary>
+    public const float TrueSingleReportRate = 0.25f;
+
+    /// <summary>誤報の報道に署名が付く確率の倍率（社の署名率 × これ）。誤報は無署名に寄せる。</summary>
+    public const float FalseReportBylineFactor = 0.7f;
+
+    /// <summary>誤報の報道を一面以外（うわさ欄など）へ回す割合。残りは本物と同じく一面に載る。</summary>
+    public const float FalseReportHideRate = 0.4f;
+
+    // ---------------------------------------------------------------
+    // 難易度とレア（Docs/News_Phase3_Spec.md §16）
+    // ---------------------------------------------------------------
+
+    /// <summary>1周の事象の難易度構成の目標（易しい / 普通 / 難しい）。レアは別枠。</summary>
+    public const float DifficultyEasyShare = 0.65f;
+    public const float DifficultyNormalShare = 0.25f;
+    public const float DifficultyHardShare = 0.10f;
+
+    /// <summary>事象1件がレアになる確率（別枠）。Long 30ターン ≒ 事象30件で 1〜2件。</summary>
+    public const float RareEventRate = 0.05f;
+
+    /// <summary>
+    /// 規模 huge（レア用。「大」より上）。trendDelta は合計で ±1 にクランプされるので「大」と同じ 1.0 に留め、
+    /// 直撃と持続を大きくする。
+    /// </summary>
+    public const float TrendHuge = 1.0f, KickHuge = 0.15f; public const int DurationHuge = 5;
+
+    // ---------------------------------------------------------------
+    // 連載（ストーリーアーク。Docs/News_Phase3_Spec.md §17）
+    // ---------------------------------------------------------------
+
+    /// <summary>同時に進行できる連載の数。</summary>
+    public const int ArcMaxConcurrent = 2;
+
+    /// <summary>1周の事象に占める連載の割合の目標（15〜20% の中央）。</summary>
+    public const float ArcShareTarget = 0.175f;
+
+    /// <summary>連載を始められるターンで、実際に始める確率（同じターンに固まらないように）。</summary>
+    public const float ArcStartChance = 0.5f;
+
+    /// <summary>話と話の間隔（前の話の発効から次の話の分岐決定まで）1〜このターン数。次の話の発効はさらに最大 lead 後。</summary>
+    public const int ArcGapMax = 3;
 }

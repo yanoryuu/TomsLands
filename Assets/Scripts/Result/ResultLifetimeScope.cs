@@ -71,6 +71,12 @@ public class ResultLifetimeScope : LifetimeScope
         // --- 5. Presenters (EntryPoints) ---
         builder.RegisterEntryPoint<ResultPresenter>();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F11で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log("[ResultLifetimeScope] Configured.");
     }
 }

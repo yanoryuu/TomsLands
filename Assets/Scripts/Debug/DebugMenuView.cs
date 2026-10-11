@@ -5,7 +5,7 @@ using VContainer;
 
 /// <summary>
 /// 開発用デバッグメニュー（OnGUI/IMGUIオーバーレイ）。仕様: Docs/DebugMenu_Spec.md
-/// F12キーで開閉する。各シーンの LifetimeScope から自動生成されるためシーン配線は不要。
+/// F11キーで開閉する（旧F12も互換で有効）。各機能タブは DebugMenuView.*.cs の partial に分割。各シーンの LifetimeScope から自動生成されるためシーン配線は不要。
 /// Editor と Development Build でのみコンパイルされ、リリースビルドには一切含まれない
 /// （保険としてランタイムでも Debug.isDebugBuild を確認する）。
 ///
@@ -14,7 +14,7 @@ using VContainer;
 /// 例外: MetaProgressModel（村資金/村施設Lv）はスコープ未登録のシーンでは
 /// ローカル生成して metaData.json を直接読み書きする。
 /// </summary>
-public class DebugMenuView : MonoBehaviour
+public partial class DebugMenuView : MonoBehaviour
 {
     private TomsModel _tomsModel;
     private GameFlowManager _gameFlowManager;
@@ -36,11 +36,11 @@ public class DebugMenuView : MonoBehaviour
     private MetaProgressModel Meta => _metaProgress ?? (_localMeta ??= new MetaProgressModel());
 
     private bool _visible;
-    private Rect _windowRect = new Rect(24, 24, 400, 640);
+    private Rect _windowRect = new Rect(24, 24, 520, 640);
     private Vector2 _scroll;
     private GUIStyle _headerStyle;
     private int _tab;
-    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他" };
+    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他", "画面移動", "オート", "便利" };
 
     private float _volMultiplier = 1f;
     private float _baseLambda;
@@ -80,7 +80,7 @@ public class DebugMenuView : MonoBehaviour
     private void Update()
     {
         if (!Debug.isDebugBuild) return;
-        if (Input.GetKeyDown(KeyCode.F12))
+        if (Input.GetKeyDown(KeyCode.F11) || Input.GetKeyDown(KeyCode.F12))
         {
             _visible = !_visible;
         }
@@ -104,12 +104,12 @@ public class DebugMenuView : MonoBehaviour
             _headerStyle.normal.textColor = Color.yellow;
         }
 
-        _windowRect = GUILayout.Window(GetInstanceID(), _windowRect, DrawWindow, "デバッグメニュー [F12で閉じる]");
+        _windowRect = GUILayout.Window(GetInstanceID(), _windowRect, DrawWindow, "デバッグメニュー [F11で閉じる]");
     }
 
     private void DrawWindow(int windowId)
     {
-        _tab = GUILayout.Toolbar(_tab, TabNames);
+        _tab = GUILayout.SelectionGrid(_tab, TabNames, 5);
         _scroll = GUILayout.BeginScrollView(_scroll, GUILayout.Height(560));
 
         switch (_tab)
@@ -121,6 +121,9 @@ public class DebugMenuView : MonoBehaviour
             case 4: DrawBuzzSection(); DrawStatusSection(); break;
             case 5: DrawMarketSection(); break;
             case 6: DrawMiscSection(); break;
+            case 7: DrawNavigationSection(); break;   // DebugMenuView.Navigation.cs
+            case 8: DrawAutoPlaySection(); break;     // DebugMenuView.AutoPlay.cs
+            case 9: DrawUtilitySection(); break;      // DebugMenuView.Utility.cs
         }
 
         GUILayout.EndScrollView();

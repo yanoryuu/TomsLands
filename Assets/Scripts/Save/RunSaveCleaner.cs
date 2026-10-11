@@ -22,6 +22,8 @@ public static class RunSaveCleaner
         "portfolioData.json",
         "shopMachineData.json",
         "relics.json",
+        NewspaperSaveStore.FileName, // 新聞の購読・スクラップ・既読
+        NewsModel.ArcFileName,       // 新聞の連載で決まった分岐
         RunHistory.FileName, // リザルトの振り返り用（所持金推移・ハイライト）
     };
 
