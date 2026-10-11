@@ -361,7 +361,7 @@ public class InfoBrokerModel
         // ?e?_???W???????_??????`
         var effectiveAttributes = dungeon.key switch
         {
-            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Fire }, // ?X?????L??
+            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Earth }, // ?X?????L??
             DungeonName.DeepGreenBeastForest => new[] { ItemTypeData.ItemAttribute.Fire, ItemTypeData.ItemAttribute.Light }, // ????A????
             DungeonName.ScorchingVolcanoPrison => new[] { ItemTypeData.ItemAttribute.Water }, // ???????L??
             DungeonName.MausoleumOblivion => new[] { ItemTypeData.ItemAttribute.Light }, // ???????L??

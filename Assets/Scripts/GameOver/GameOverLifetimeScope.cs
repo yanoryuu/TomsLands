@@ -28,6 +28,12 @@ public class GameOverLifetimeScope : LifetimeScope
 
         builder.RegisterEntryPoint<GameOverPresenter>();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F11で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log("[GameOverLifetimeScope] Configured.");
     }
 }

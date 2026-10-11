@@ -68,6 +68,7 @@ public sealed class AutoPlayRunResult
     public int TotalDebtPaid;
     public int TotalSupportSpend;
     public int TotalUpgradeSpend;
+    public int TotalNewspaperSpend;
     public int Supports;
     public int RejectedActions;
     public int LogErrors;
@@ -76,6 +77,8 @@ public sealed class AutoPlayRunResult
     public long InputTokens;
     public double CostUsd;
     public double WallSeconds;
+    public string NewsInfo = "";
+    public string ArcInfo = "";
 
     // --- 配信中の介入 ---
     public int InterventionCount;
@@ -141,6 +144,7 @@ public sealed class AutoPlayRunner
             using (_ctx.Enter())
             {
                 _game.StartNewRun();
+                Result.NewsInfo = _game.NewsInfo;
                 DrainLogs(0);
             }
 
@@ -281,6 +285,16 @@ public sealed class AutoPlayRunner
 
     private void ApplyDayPlan(AutoPlayDayPlan plan)
     {
+        // 新聞: 購読 → スクラップ → 確認（購読した社の紙面は翌日から盤面に載る）
+        foreach (var id in plan.SubscribeNewspapers ?? new List<string>()) _game.SubscribeNewspaper(id);
+        foreach (var key in plan.PinScraps ?? new List<string>()) _game.PinScrap(key);
+        if (plan.ConfirmScraps == "batch") _game.ConfirmScrapBatch();
+        else if (plan.ConfirmScraps == "one")
+        {
+            var target = _game.Scrapbook.Pinned.FirstOrDefault(sc =>
+                ScrapbookModel.StateOf(sc, _game.News.FindEntry(sc.entryKey), _game.CurrentTurn) == ScrapState.Unconfirmed);
+            if (target != null) _game.ConfirmScrap(target.entryKey);
+        }
         if (plan.HeroWeapon != null || plan.HeroArmor != null) _game.EquipHero(plan.HeroWeapon, plan.HeroArmor);
         if (plan.Upgrade == "blacksmith") _game.UpgradeBlacksmith();
         else if (plan.Upgrade == "shop") _game.UpgradeShop();
@@ -419,6 +433,7 @@ public sealed class AutoPlayRunner
         Result.TotalDebtPaid += day.DebtPaid;
         Result.TotalSupportSpend += day.SupportSpend;
         Result.TotalUpgradeSpend += day.UpgradeSpend;
+        Result.TotalNewspaperSpend += day.NewspaperSpend;
         Result.RejectedActions += day.RejectedActions;
     }
 
@@ -435,6 +450,7 @@ public sealed class AutoPlayRunner
                     int stockValue = _game.ItemModel.RuntimeItems.Sum(r => r.Stock.Value * r.CurrentPrice.Value);
                     Result.FinalNetWorth = Result.FinalMoney + stockValue + _game.SellOrders.PendingTotalEstimate.Value;
                     Result.HeroFinalLevel = _game.HeroModel.heroData?.level.Value ?? 0;
+                    Result.ArcInfo = _game.ArcSummary();
                 }
                 DrainLogs(SafeTurn());
                 _game.Dispose();

@@ -68,6 +68,12 @@ public class EventLifetimeScope : LifetimeScope
         // Presenter（EntryPoint）
         builder.RegisterEntryPoint<EventScenePresenter>();
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // デバッグメニュー（F11で開閉、リリースビルドには含まれない）
+        builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
+        builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
+#endif
+
         Debug.Log("[EventLifetimeScope] Configured.");
     }
 }

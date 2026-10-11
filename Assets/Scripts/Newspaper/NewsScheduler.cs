@@ -7,6 +7,7 @@ public enum NewsEntryKind
     Report,      // 通常の記事（原因の報道）。効果を持ちうる
     Result,      // 結果記事。本物の記事が決着したことの報道。効果なし
     Correction,  // 訂正記事。誤報だったことの報道。効果なし。紙面の最後（隅）に置く
+    Filler,      // 埋め草（フェーズ3）。効果なし。号の本数を満たすために使う
 }
 
 /// <summary>紙面に載った記事1本。どの社が、何ターン目に載せ、いつ効き始めるか。</summary>
@@ -35,13 +36,32 @@ public class NewsIssueEntry
     // 経済計算で品目数 × カレンダー本数ぶん引かれるので、マスターの線形検索を1回で済ませる
     private NewsArticleData _article;
     public NewsArticleData Article => _article ??= NewsMasterLoader.FindArticle(articleId);
+
+    /// <summary>フェーズ3: 事象＋テンプレートから組み立てた記事を直接持たせる（マスター検索をしない）。</summary>
+    public void SetArticle(NewsArticleData article) => _article = article;
+
+    /// <summary>
+    /// この掲載が報じている事象。<b>効果は事象が持つ</b>（同じ事象を何社が報じても効果は1回）。
+    /// 埋め草は null。旧形式（フェーズ1〜2）の掲載は、掲載1件ごとに事象を1つ持つ。
+    /// </summary>
+    public NewsEventInstance eventInstance;
     public NewspaperCompanyData Company => NewsMasterLoader.FindCompany(companyId);
+
+    /// <summary>
+    /// 掲載1件を一意に指すキー。同じ記事が一巡して再掲されることがあるので、
+    /// 記事IDだけでなく掲載ターンと社まで含める（スクラップの保存・紙面の選択に使う）。
+    /// </summary>
+    public string Key => MakeKey(publishTurn, companyId, articleId);
+
+    public static string MakeKey(int publishTurn, string companyId, string articleId) =>
+        $"{publishTurn}:{companyId}:{articleId}";
 
     /// <summary>決着ターン（発効 + duration）。この日に効果が切れる。</summary>
     public int SettleTurn
     {
         get
         {
+            if (eventInstance != null) return eventInstance.SettleTurn;
             var a = Article;
             return effectTurn + Math.Max(1, a != null ? a.durationTurns : 1);
         }

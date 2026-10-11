@@ -24,6 +24,9 @@ public class MorningReportModel
         foreach (var line in newLines) Add(line);
     }
 
+    /// <summary>溜まった行を消費せずに覗く（朝刊の「自店」面が使う。ホーム画面の消費より先に開くため）。</summary>
+    public IReadOnlyList<string> Peek() => lines;
+
     /// <summary>溜まった行を取り出してクリアする（消費型）。</summary>
     public List<string> Consume()
     {

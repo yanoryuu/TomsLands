@@ -142,6 +142,8 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
     {
         base.Awake();
         if (engine == null) engine = GetComponentInChildren<AdvEngine>(true);
+        // 宴のカメラを各シーンの Base カメラへ Overlay として積む（Base のままだと URP が画面を黄色でクリアする）
+        if (!TryGetComponent<UtageCameraStacker>(out _)) gameObject.AddComponent<UtageCameraStacker>();
     }
 
     private void OnDestroy()
