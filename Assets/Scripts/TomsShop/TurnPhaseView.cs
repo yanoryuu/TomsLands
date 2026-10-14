@@ -106,6 +106,16 @@ public class TurnPhaseView : MonoBehaviour
         UpdateStepper(phase, phaseChanged);
     }
 
+    /// <summary>
+    /// 「次へ」「戻る」の押下可否を切り替える（会話チュートリアルで鍛冶屋以外を押せなくする間だけ使う）。
+    /// 表示/非表示は ShowForPhase が決めるので、ここでは interactable だけを触る。
+    /// </summary>
+    public void SetAdvanceLocked(bool locked)
+    {
+        if (advanceButton != null) advanceButton.interactable = !locked;
+        if (backButton != null) backButton.interactable = !locked;
+    }
+
     /// <summary>フェーズグループの入場演出（フェード＋下からのスライド）。</summary>
     private void AnimateGroupEnter(GameObject group)
     {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -258,6 +259,58 @@ public class TomsShopView : MonoBehaviour
     public void Initialize()
     {
 
+    }
+
+    // ========================================
+    // 会話チュートリアル：鍛冶屋だけ押せる状態
+    // ========================================
+
+    private Tween blacksmithPulseTween;
+    private Vector3 blacksmithBaseScale = Vector3.one;
+
+    /// <summary>
+    /// 初回チュートリアルの「鍛冶屋以外クリック不可」を切り替える。
+    /// 鍛冶屋以外の施設・陳列・営業・朝刊・返済ボタンを押せなくし、鍛冶屋ボタンを脈動させる。
+    /// （「次へ」は TurnPhaseView.SetAdvanceLocked で別途止める）
+    /// </summary>
+    public void SetTutorialBlacksmithOnly(bool on)
+    {
+        bool free = !on;
+        SetInteractableSafe(HeroButton, free);
+        SetInteractableSafe(SetItemButton, free);
+        SetInteractableSafe(InfoButton, free);
+        SetInteractableSafe(ToolButton, free);
+        SetInteractableSafe(MapButton, free);
+        SetInteractableSafe(DungeonLevelUpButton, free);
+        SetInteractableSafe(AdvertisementButton, free);
+        SetInteractableSafe(ProphetButton, free);
+        SetInteractableSafe(ShopUpgradeButton, free);
+        SetInteractableSafe(MachineShopButton, free);
+        SetInteractableSafe(NewspaperButton, free);
+        SetInteractableSafe(debtPaymentButton, free);
+        if (on) SetInteractableSafe(StartShopButton, false);
+        SetInteractableSafe(BlaskSmithButton, true);
+
+        if (BlaskSmithButton == null) return;
+        var t = BlaskSmithButton.transform;
+        if (blacksmithPulseTween != null)
+        {
+            // 脈動を止めて元の大きさへ戻す（脈動していないときは触らない）
+            blacksmithPulseTween.Kill();
+            blacksmithPulseTween = null;
+            t.localScale = blacksmithBaseScale;
+        }
+        if (!on) return;
+        blacksmithBaseScale = t.localScale;
+        blacksmithPulseTween = t.DOScale(blacksmithBaseScale * 1.1f, 0.45f)
+            .SetEase(Ease.InOutSine)
+            .SetLoops(-1, LoopType.Yoyo)
+            .SetLink(BlaskSmithButton.gameObject);
+    }
+
+    private static void SetInteractableSafe(Selectable selectable, bool interactable)
+    {
+        if (selectable != null) selectable.interactable = interactable;
     }
 
     /// <summary>営業開始ボタンの押下可否を切り替える（演出中の連打防止用）。</summary>

@@ -246,10 +246,82 @@ public class BlackSmithView : MonoBehaviour
         if (itemDescriptionText != null) itemDescriptionText.text = description;
     }
 
-    public void ShowBudgetPopup(int playerMoney)
+    public void ShowBudgetPopup(int playerMoney, bool locked = false)
     {
         if (autoBuyBudgetPopup != null)
-            autoBuyBudgetPopup.Show(playerMoney);
+            autoBuyBudgetPopup.Show(playerMoney, locked);
+    }
+
+    // ========================================
+    // 会話チュートリアル用の操作制限
+    // ========================================
+
+    private bool tutorialAutoBuyOnly;
+    private Tween autoBuyPulseTween;
+    private Vector3 autoBuyBaseScale = Vector3.one;
+
+    /// <summary>
+    /// 初回チュートリアルの「オート購入だけ押せる」状態を切り替える。
+    /// 閉じる・タブ・並べ替え・商品一覧・詳細パネル（個別の仕入れ）を押せなくし、
+    /// オート購入ボタンを脈動させて誘導する。Presenter 側でも入力を無視する（二重の安全策）。
+    /// </summary>
+    public void SetTutorialAutoBuyOnly(bool on)
+    {
+        tutorialAutoBuyOnly = on;
+        bool free = !on;
+
+        SetInteractableSafe(closeButton, free);
+        SetInteractableSafe(weaponButton, free);
+        SetInteractableSafe(armorButton, free);
+        SetInteractableSafe(developButton, free);
+        SetInteractableSafe(specialWeaponButton, free);
+        if (sortDropdown != null) sortDropdown.interactable = free;
+
+        // 商品一覧（行クリックは IPointerClickHandler なのでレイキャストごと止める）と詳細パネル
+        if (scrollRect != null) SetCanvasGroupLock(scrollRect.gameObject, on);
+        if (itemDetailPanel != null) SetCanvasGroupLock(itemDetailPanel.gameObject, on);
+
+        // オート購入ボタンの脈動
+        if (autoBuyButton != null)
+        {
+            autoBuyButton.interactable = true;
+            var t = autoBuyButton.transform;
+            if (autoBuyPulseTween != null)
+            {
+                // 脈動を止めて元の大きさへ戻す（脈動していないときは触らない）
+                autoBuyPulseTween.Kill();
+                autoBuyPulseTween = null;
+                t.localScale = autoBuyBaseScale;
+            }
+            if (on)
+            {
+                autoBuyBaseScale = t.localScale;
+                autoBuyPulseTween = t.DOScale(autoBuyBaseScale * 1.12f, 0.45f)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo)
+                    .SetLink(autoBuyButton.gameObject);
+            }
+        }
+    }
+
+    /// <summary>チュートリアルの「オート購入だけ」状態か。</summary>
+    public bool IsTutorialAutoBuyOnly => tutorialAutoBuyOnly;
+
+    private static void SetInteractableSafe(Selectable selectable, bool interactable)
+    {
+        if (selectable != null) selectable.interactable = interactable;
+    }
+
+    private static void SetCanvasGroupLock(GameObject target, bool locked)
+    {
+        var cg = target.GetComponent<CanvasGroup>();
+        if (cg == null)
+        {
+            if (!locked) return; // 解除時にわざわざ足す必要はない
+            cg = target.AddComponent<CanvasGroup>();
+        }
+        cg.interactable = !locked;
+        cg.blocksRaycasts = !locked;
     }
 
     public void HideBudgetPopup()

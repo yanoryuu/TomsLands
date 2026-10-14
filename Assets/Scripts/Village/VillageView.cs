@@ -109,6 +109,60 @@ public class VillageView : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 村HUDのキャンバスを描いているカメラ（Screen Space - Camera の場合）。
+    /// チュートリアルの暗幕を宴の立ち絵より下に描くために使う。取れなければ null。
+    /// </summary>
+    public Camera UiCamera
+    {
+        get
+        {
+            var canvas = RootCanvas;
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay && canvas.worldCamera != null)
+                return canvas.worldCamera;
+            return Camera.main;
+        }
+    }
+
+    private Canvas RootCanvas
+    {
+        get
+        {
+            var anchor = departButton != null ? departButton.transform : transform;
+            var canvas = anchor.GetComponentInParent<Canvas>(true);
+            return canvas != null ? canvas.rootCanvas : null;
+        }
+    }
+
+    private CanvasGroup uiLockGroup;
+    private bool uiLockPrevBlocks = true;
+    private bool uiLocked;
+
+    /// <summary>
+    /// 村HUD（出店・タイトル・投資パネル等）のクリックを止める/戻す。会話チュートリアル中に使う。
+    /// 見た目を変えないよう interactable ではなく blocksRaycasts を切り替える。
+    /// </summary>
+    public void SetUiInputLocked(bool locked)
+    {
+        if (locked == uiLocked) return;
+        if (locked)
+        {
+            var canvas = RootCanvas;
+            if (canvas == null) return;
+            uiLockGroup = canvas.GetComponent<CanvasGroup>();
+            if (uiLockGroup == null) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
+            uiLockPrevBlocks = uiLockGroup.blocksRaycasts;
+            uiLockGroup.blocksRaycasts = false;
+            uiLocked = true;
+        }
+        else
+        {
+            if (uiLockGroup != null) uiLockGroup.blocksRaycasts = uiLockPrevBlocks;
+            uiLockGroup = null;
+            uiLocked = false;
+        }
+    }
+
     public void ShowMessage(string message)
     {
         if (messageText != null) messageText.text = message;

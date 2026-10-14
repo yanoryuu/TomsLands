@@ -178,6 +178,21 @@ public sealed class TitlePresenter : IStartable, IDisposable
         _startModeData.SetNewGame();
         // 難易度は出店準備シーンで選ぶ（ここでは仮の既定値だけ入れておく）
         _startModeData.SetFlowSelection(GameModeId.Medium, _view.UseAutoGeneration);
+
+        // 初回プレイ（チュートリアル未完了のスロット）は村・準備シーンを経由せず、そのまま店で開店する。
+        // 難易度は上の既定値（ふつう）、スターターレリック等の準備設定は無し（RunSetupData 未設定）で
+        // GameLifecycleHandler.InitializeNewGame が初期化する。
+        // メタ進行はスロットごとのファイルなので、CurrentSlot を決めた後に読み込んで判定する
+        if (TutorialSteps.ShouldStartDirectlyInShop(new MetaProgressModel()))
+        {
+            // 準備シーンを通らないので、前回の準備設定が残っていても使わないよう消しておく
+            var runSetup = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData") ?? RunSetupData.GetOrCreateFallback();
+            runSetup.Clear();
+            Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → チュートリアル未完了のため店（{GameSceneName}）で直接開店");
+            SceneManager.LoadScene(GameSceneName);
+            return;
+        }
+
         Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → 村シーンへ（難易度は準備シーンで選択）");
         // 新規ランは 村（メタ層・投資）→ 準備シーン（借入・難易度・スターターレリック）を経由する
         SceneManager.LoadScene("VillageScene");
