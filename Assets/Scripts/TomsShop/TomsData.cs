@@ -29,9 +29,12 @@ public class TomsData
     public int borrowedPrincipal;
     public float firstDebtDiscountRate;
 
+    // --- ランの開始会話（TutorialPresenter）。旧セーブは欠損時 false = 再生済み扱い（途中復帰で流さない） ---
+    public bool runOpeningPending;
+
     public TomsData(int shopMoney, int blacksmithLevel, int currentTurn, int gameFlowIndex = 0, int infoBrokerLevel = 1, int debtCycle = 0,
         int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false, int toolShopLevel = 1, float trust = 1f, int shopLevel = 1,
-        int borrowedPrincipal = 0, float firstDebtDiscountRate = 0f)
+        int borrowedPrincipal = 0, float firstDebtDiscountRate = 0f, bool runOpeningPending = false)
     {
         this.shopMoney = shopMoney;
         this.blacksmithLevel = blacksmithLevel;
@@ -47,5 +50,6 @@ public class TomsData
         this.shopLevel = shopLevel;
         this.borrowedPrincipal = borrowedPrincipal;
         this.firstDebtDiscountRate = firstDebtDiscountRate;
+        this.runOpeningPending = runOpeningPending;
     }
 }

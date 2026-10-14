@@ -1221,9 +1221,315 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
+    - rowIndex: 67
+      debugIndex: 101
+      strings:
+      - '*Run_Opening_Second'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 68
+      debugIndex: 102
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "08_\u9A5A\u304D"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u2026\u2026\u3042\u308C\uFF1F\u3000\u3053\u3053\u3001\u304A\u5E97\u3092\u7D99\u3044\u3060\u521D\u65E5\u2026\u2026\uFF01\uFF1F"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 69
+      debugIndex: 103
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "04_\u56F0\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u68DA\u306B\u306F\u6642\u4EE3\u9045\u308C\u306E\u5546\u54C1\u3001\u7D0D\u4ED8\u306E\u65E5\u3082\u307E\u305F\u4E00\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3067\u3082\u3001\u524D\u306B\u898B\u3066\u304D\u305F\u6D41\u884C\u306E\u6CE2\u306F\u3061\u3083\u3093\u3068\u899A\u3048\u3066\u308B\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 70
+      debugIndex: 104
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "12_\u30C9\u30E4\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u4E8C\u5EA6\u76EE\u306E\u4E00\u65E5\u76EE\u3001\u4ECA\u5EA6\u3053\u305D\u3046\u307E\u304F\u3084\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 71
+      debugIndex: 105
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 72
+      debugIndex: 108
+      strings:
+      - '*Run_Opening_Again_1'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 73
+      debugIndex: 109
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "11_\u30B8\u30C8\u76EE"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u307E\u305F\u521D\u65E5\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3053\u306E\u68DA\u306E\u6642\u4EE3\u9045\u308C\u3063\u3077\u308A\u3082\u3001\u3082\u3046\u3059\u3063\u304B\u308A\u898B\u6163\u308C\u3061\u3083\u3063\u305F\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 74
+      debugIndex: 110
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "02_\u7B11\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3067\u3082\u3001\u6D41\u884C\u306E\u8AAD\u307F\u65B9\u306A\u3089\u524D\u3088\u308A\u305A\u3063\u3068\u5206\u304B\u3063\u3066\u308B\u3002\\n\u30B5\u30AF\u30C3\u3068\u7ACB\u3066\u76F4\u3057\u3061\u3083\u304A\u3046\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 75
+      debugIndex: 111
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 76
+      debugIndex: 113
+      strings:
+      - '*Run_Opening_Again_2'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 77
+      debugIndex: 114
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "03_\u5927\u7B11\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u304A\u306F\u3088\u3046\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\uFF01\\n\u30C8\u30B3\u306E\u304A\u5E97\u3001\u672C\u65E5\u3082\u4E00\u65E5\u76EE\u304B\u3089\u5143\u6C17\u306B\u958B\u5E97\u3060\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 78
+      debugIndex: 115
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u524D\u306E\u5931\u6557\u3082\u6210\u529F\u3082\u3001\u305C\u3093\u3076\u6B21\u306E\u4ED5\u5165\u308C\u306B\u6D3B\u304B\u3059\u3002\\n\u305D\u308C\u304C\u4E00\u6D41\u306E\u5546\u4EBA\u3060\u3082\u3093\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 79
+      debugIndex: 116
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 80
+      debugIndex: 118
+      strings:
+      - '*Run_Opening_Again_3'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 81
+      debugIndex: 119
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "01_\u901A\u5E38"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u7236\u3055\u3093\u3001\u6BCD\u3055\u3093\u3002\u4ECA\u56DE\u3082\u304A\u5E97\u3001\u9810\u304B\u308B\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 82
+      debugIndex: 120
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "12_\u30C9\u30E4\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u6D41\u884C\u306E\u6CE2\u306F\u3082\u3046\u8AAD\u3081\u3066\u308B\u3002\\n\u4ECA\u5EA6\u3053\u305D\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\u3044\u3061\u306E\u5546\u4EBA\u306B\u306A\u3063\u3066\u307F\u305B\u308B\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 83
+      debugIndex: 121
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
     name: Assets/TomsScenario/Scenarios/TokoTalk.csv
     type: 0
-    textLength: 2412
+    textLength: 3033
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: b361cdbd4b66b6142a70620ad4d402e9, type: 3}
     entityIndexTbl: 
@@ -2976,8 +3282,458 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
+    - rowIndex: 97
+      debugIndex: 97
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 98
+      debugIndex: 98
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 99
+      debugIndex: 99
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 100
+      debugIndex: 100
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 101
+      debugIndex: 101
+      strings:
+      - '*Run_Opening_Second'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 102
+      debugIndex: 102
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "08_\u9A5A\u304D"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u2026\u2026\u3042\u308C\uFF1F\u3000\u3053\u3053\u3001\u304A\u5E97\u3092\u7D99\u3044\u3060\u521D\u65E5\u2026\u2026\uFF01\uFF1F"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 103
+      debugIndex: 103
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "04_\u56F0\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u68DA\u306B\u306F\u6642\u4EE3\u9045\u308C\u306E\u5546\u54C1\u3001\u7D0D\u4ED8\u306E\u65E5\u3082\u307E\u305F\u4E00\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3067\u3082\u3001\u524D\u306B\u898B\u3066\u304D\u305F\u6D41\u884C\u306E\u6CE2\u306F\u3061\u3083\u3093\u3068\u899A\u3048\u3066\u308B\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 104
+      debugIndex: 104
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "12_\u30C9\u30E4\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u4E8C\u5EA6\u76EE\u306E\u4E00\u65E5\u76EE\u3001\u4ECA\u5EA6\u3053\u305D\u3046\u307E\u304F\u3084\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 105
+      debugIndex: 105
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 106
+      debugIndex: 106
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 107
+      debugIndex: 107
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 108
+      debugIndex: 108
+      strings:
+      - '*Run_Opening_Again_1'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 109
+      debugIndex: 109
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "11_\u30B8\u30C8\u76EE"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u307E\u305F\u521D\u65E5\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3053\u306E\u68DA\u306E\u6642\u4EE3\u9045\u308C\u3063\u3077\u308A\u3082\u3001\u3082\u3046\u3059\u3063\u304B\u308A\u898B\u6163\u308C\u3061\u3083\u3063\u305F\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 110
+      debugIndex: 110
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "02_\u7B11\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3067\u3082\u3001\u6D41\u884C\u306E\u8AAD\u307F\u65B9\u306A\u3089\u524D\u3088\u308A\u305A\u3063\u3068\u5206\u304B\u3063\u3066\u308B\u3002\\n\u30B5\u30AF\u30C3\u3068\u7ACB\u3066\u76F4\u3057\u3061\u3083\u304A\u3046\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 111
+      debugIndex: 111
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 112
+      debugIndex: 112
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 113
+      debugIndex: 113
+      strings:
+      - '*Run_Opening_Again_2'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 114
+      debugIndex: 114
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "03_\u5927\u7B11\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u304A\u306F\u3088\u3046\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\uFF01\\n\u30C8\u30B3\u306E\u304A\u5E97\u3001\u672C\u65E5\u3082\u4E00\u65E5\u76EE\u304B\u3089\u5143\u6C17\u306B\u958B\u5E97\u3060\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 115
+      debugIndex: 115
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u524D\u306E\u5931\u6557\u3082\u6210\u529F\u3082\u3001\u305C\u3093\u3076\u6B21\u306E\u4ED5\u5165\u308C\u306B\u6D3B\u304B\u3059\u3002\\n\u305D\u308C\u304C\u4E00\u6D41\u306E\u5546\u4EBA\u3060\u3082\u3093\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 116
+      debugIndex: 116
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 117
+      debugIndex: 117
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 118
+      debugIndex: 118
+      strings:
+      - '*Run_Opening_Again_3'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 119
+      debugIndex: 119
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "01_\u901A\u5E38"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u7236\u3055\u3093\u3001\u6BCD\u3055\u3093\u3002\u4ECA\u56DE\u3082\u304A\u5E97\u3001\u9810\u304B\u308B\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 120
+      debugIndex: 120
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "12_\u30C9\u30E4\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u6D41\u884C\u306E\u6CE2\u306F\u3082\u3046\u8AAD\u3081\u3066\u308B\u3002\\n\u4ECA\u5EA6\u3053\u305D\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\u3044\u3061\u306E\u5546\u4EBA\u306B\u306A\u3063\u3066\u307F\u305B\u308B\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 121
+      debugIndex: 121
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
     name: Assets/TomsScenario/Scenarios/TokoTalk.csv
     type: 0
-    textLength: 2732
+    textLength: 3504
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: b361cdbd4b66b6142a70620ad4d402e9, type: 3}
