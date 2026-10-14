@@ -48,6 +48,13 @@ public class TomsModel
     /// <summary>スタートダッシュ「返済猶予証」による初回返済額の割引率（0=なし）。</summary>
     public float FirstDebtDiscountRate { get; set; }
 
+    /// <summary>
+    /// ランの開始会話（プロローグ／周回の開始演出）がまだ再生されていないか。
+    /// 新規ランで true になり、TutorialPresenter が再生し終えたら false にして保存する。
+    /// 会話の途中で中断した場合は true のまま残るので、続きからで再生し直す。
+    /// </summary>
+    public bool RunOpeningPending { get; set; }
+
     public TomsModel()
     {
         // ReactivePropertyの初回作成（一度だけ）
@@ -84,6 +91,7 @@ public class TomsModel
         DebtCycle.Value = 0;
         BorrowedPrincipal = 0;
         FirstDebtDiscountRate = 0f;
+        RunOpeningPending = true;
     }
 
     /// <summary>
@@ -98,7 +106,7 @@ public class TomsModel
     {
         var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value,
             FlowSeed, (int)GameMode, UseAutoFlow, ToolShopLevel.Value, Trust.Value, ShopLevel.Value,
-            BorrowedPrincipal, FirstDebtDiscountRate);
+            BorrowedPrincipal, FirstDebtDiscountRate, RunOpeningPending);
         string json = JsonUtility.ToJson(data, true);
         File.WriteAllText(SaveSlotManager.GetPath("tomsData.json"), json);
     }
@@ -125,6 +133,7 @@ public class TomsModel
             ShopLevel.Value = Mathf.Max(1, data.shopLevel);
             BorrowedPrincipal = Mathf.Max(0, data.borrowedPrincipal);
             FirstDebtDiscountRate = Mathf.Clamp01(data.firstDebtDiscountRate);
+            RunOpeningPending = data.runOpeningPending;
         }
         else
         {
@@ -137,6 +146,7 @@ public class TomsModel
             FlowSeed = 0;
             GameMode = GameModeId.Short;
             UseAutoFlow = false;
+            RunOpeningPending = false;
         }
     }
 
