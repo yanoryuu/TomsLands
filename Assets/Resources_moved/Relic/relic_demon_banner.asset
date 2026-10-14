@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_demon_banner
   relicName: "\u9B54\u738B\u8ECD\u306E\u8ECD\u65D7"
   description: "\u5E97\u5148\u306B\u63B2\u3052\u308B\u3068\u52C7\u8005\u306E\u58EB\u6C17\u304C\u4E0B\u304C\u308B\u3002\u9632\u885B\u5831\u916C+30%\u3001\u52C7\u8005\u306E\u5F37\u3055-15%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: d8016cb60ccc4331b4b0878c69195a01, type: 3}
   rarity: 2
   category: 0
   isCurse: 0

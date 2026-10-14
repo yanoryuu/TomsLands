@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_wholesaler_pass
   relicName: "\u554F\u5C4B\u306E\u9854\u30D1\u30B9"
   description: "\u9854\u306A\u3058\u307F\u306E\u554F\u5C4B\u5272\u5F15\u3002\u4ED5\u5165\u308C\u4FA1\u683C-5%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 0d41a9c494c444eaa26ff4ecc4b8550a, type: 3}
   rarity: 0
   category: 0
   isCurse: 0

@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_trader_creed
   relicName: "\u76F8\u5834\u5E2B\u306E\u5FC3\u5F97"
   description: "\u7D04\u5B9A\u5024\u5E45\u304C\xB115%\u5E83\u304C\u308B\u3002\u4E0A\u632F\u308C\u3082\u4E0B\u632F\u308C\u3082\u5927\u304D\u304F\u306A\u308B\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: ae1e4bdab47948d1b5390dca02da6dd4, type: 3}
   rarity: 1
   category: 0
   isCurse: 0
