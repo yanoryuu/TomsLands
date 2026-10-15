@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_guild_license
   relicName: "\u5546\u4EBA\u30AE\u30EB\u30C9\u306E\u8A3C"
   description: "\u6B63\u4F1A\u54E1\u3060\u3051\u306E\u5378\u5024\u3002\u4ED5\u5165\u308C\u4FA1\u683C-15%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 308eaa42486c46709cbdf043f82d27bf, type: 3}
   rarity: 2
   category: 0
   isCurse: 0

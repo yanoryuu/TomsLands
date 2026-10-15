@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_charisma
   relicName: "\u751F\u307E\u308C\u3064\u304D\u306E\u83EF"
   description: "\u4F55\u3092\u3057\u3066\u3082\u7D75\u306B\u306A\u308B\u3002\u30D0\u30BA\u767A\u751F\u7387+12%\u3001\u55B6\u696D\u58F2\u4E0A+5%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4460e2b683aa4c24af4f7e4598412c6a, type: 3}
   rarity: 2
   category: 0
   isCurse: 0

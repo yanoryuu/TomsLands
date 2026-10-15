@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_gossip_notes
   relicName: "\u8A71\u984C\u306E\u30CD\u30BF\u5E33"
   description: "\u914D\u4FE1\u30CD\u30BF\u304C\u5C3D\u304D\u306A\u3044\u3002\u30D0\u30BA\u767A\u751F\u7387+5%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 3e9eacf560434686a0ef65c936b5b676, type: 3}
   rarity: 0
   category: 0
   isCurse: 0

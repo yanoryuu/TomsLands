@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_dept_creed
   relicName: "\u767E\u8CA8\u5E97\u306E\u7406\u5FF5"
   description: "\u300C\u4E26\u3079\u305F\u3082\u306E\u306F\u58F2\u308C\u308B\u300D\u3002\u540C\u6642\u9673\u5217+3\u3001\u55B6\u696D\u58F2\u4E0A+5%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: b0182a2a3208447997b9f8fea5793ba5, type: 3}
   rarity: 2
   category: 0
   isCurse: 0
