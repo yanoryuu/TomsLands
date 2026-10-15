@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,6 +11,7 @@ using VContainer.Unity;
 /// - 帰還時: VillageArrivalReport（消費型）を読んで収支ポップを表示
 /// - 区画（FacilityPlot）の調べる→投資パネル→投資
 /// - 出店 → PreparationScene / タイトルへ → TitleScene
+/// - 初回入場時: 村チュートリアル会話（VillageTutorialDirector）→ その後に帰還演出
 /// 村と店の経営（ラン）は別フロー: ここでの操作はラン外のメタ層のみに影響する。
 /// View未配線（IsInteractiveReady=false）の場合は PreparationScene へ素通りする。
 /// </summary>
@@ -17,16 +20,26 @@ public class VillagePresenter : IStartable, IDisposable
     private readonly VillageView view;
     private readonly VillageModel model;
     private readonly MetaProgressModel metaProgress;
+    private readonly VillageTutorialDirector tutorial;
     private readonly CompositeDisposable disposables = new();
+    private readonly CancellationTokenSource cts = new();
 
     private string selectedFacilityId;
     private bool arrivalPlaying; // 帰還到着演出の再生中
+    private bool tutorialPlaying; // 村チュートリアル会話の再生中
 
-    public VillagePresenter(VillageView view, VillageModel model, MetaProgressModel metaProgress)
+    /// <summary>演出・会話中で村の操作を受け付けない状態か。</summary>
+    private bool IsBusy => arrivalPlaying || tutorialPlaying;
+
+    private const string DefaultMessage = "稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。";
+
+    public VillagePresenter(VillageView view, VillageModel model, MetaProgressModel metaProgress,
+        TutorialScenarioService tutorialScenario)
     {
         this.view = view;
         this.model = model;
         this.metaProgress = metaProgress;
+        tutorial = tutorialScenario != null ? new VillageTutorialDirector(tutorialScenario) : null;
     }
 
     public void Start()
@@ -43,29 +56,64 @@ public class VillagePresenter : IStartable, IDisposable
         Bind();
         RefreshAll();
 
-        // ラン終了からの帰還なら収支報告を表示
-        if (VillageArrivalReport.TryConsume(out bool cleared, out int earned, out int converted))
+        // ラン終了からの帰還なら収支報告を表示（初回は村チュートリアル会話のあと）
+        bool hasArrival = VillageArrivalReport.TryConsume(out bool cleared, out int earned, out int converted);
+        if (tutorial != null && tutorial.ShouldPlay)
+        {
+            PlayTutorialThenArrivalAsync(hasArrival, cleared, earned, converted, cts.Token).Forget();
+        }
+        else if (hasArrival)
         {
             PlayArrival(cleared, earned, converted);
         }
         else
         {
-            view.ShowMessage("稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。");
+            view.ShowMessage(DefaultMessage);
         }
+    }
+
+    /// <summary>
+    /// 村チュートリアル（未読時のみ）。会話中は移動・区画の調べる・村UIを止め、終わったら操作可能に戻す。
+    /// 帰還報告がある場合は会話のあとに到着演出を出す。
+    /// </summary>
+    private async UniTaskVoid PlayTutorialThenArrivalAsync(bool hasArrival, bool cleared, int earned, int converted,
+        CancellationToken ct)
+    {
+        tutorialPlaying = true;
+        view.HideInvestPanel();
+        try
+        {
+            await tutorial.PlayAsync(view.UiCamera, view.SetUiInputLocked, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            return; // シーン遷移などで破棄された
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+        finally
+        {
+            tutorialPlaying = false;
+        }
+
+        if (hasArrival) PlayArrival(cleared, earned, converted);
+        else view.ShowMessage("まずは立て看板を調べて、最初の施設を建ててみよう。");
     }
 
     private void Bind()
     {
         view.OnDepart.Subscribe(_ =>
         {
-            if (arrivalPlaying) return;
+            if (IsBusy) return;
             Debug.Log("[VillagePresenter] 出店準備へ");
             SceneManager.LoadScene("PreparationScene");
         }).AddTo(disposables);
 
         view.OnGoTitle.Subscribe(_ =>
         {
-            if (arrivalPlaying) return;
+            if (IsBusy) return;
             SceneManager.LoadScene("TitleScene");
         }).AddTo(disposables);
 
@@ -78,9 +126,13 @@ public class VillagePresenter : IStartable, IDisposable
                 .AddTo(disposables);
         }
 
-        view.OnInvest.Subscribe(_ => HandleInvest()).AddTo(disposables);
+        view.OnInvest.Subscribe(_ =>
+        {
+            if (IsBusy) return;
+            HandleInvest();
+        }).AddTo(disposables);
         view.OnConversionClosed
-            .Subscribe(_ => view.ShowMessage("稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。"))
+            .Subscribe(_ => view.ShowMessage(DefaultMessage))
             .AddTo(disposables);
     }
 
@@ -102,13 +154,13 @@ public class VillagePresenter : IStartable, IDisposable
         {
             arrivalPlaying = false;
             RefreshAll();
-            view.ShowMessage("稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。");
+            view.ShowMessage(DefaultMessage);
         });
     }
 
     private void SelectFacility(string facilityId)
     {
-        if (arrivalPlaying) return;
+        if (IsBusy) return;
         var facility = model.GetFacility(facilityId);
         if (facility == null)
         {
@@ -184,6 +236,8 @@ public class VillagePresenter : IStartable, IDisposable
 
     public void Dispose()
     {
+        cts.Cancel();
+        cts.Dispose();
         disposables.Dispose();
     }
 }

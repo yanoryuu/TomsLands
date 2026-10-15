@@ -24,6 +24,9 @@ public class VillageLifetimeScope : LifetimeScope
         builder.Register<MetaProgressModel>(Lifetime.Singleton);
         builder.Register<VillageModel>(Lifetime.Singleton);
 
+        // 会話チュートリアルの再生＋既読管理（ScenarioPlayer は ScenarioSystemLoader が常駐させている）
+        builder.Register<TutorialScenarioService>(Lifetime.Singleton);
+
         // View / Presenter（View未配線なら Start() で素通りする）
         if (villageView != null)
         {

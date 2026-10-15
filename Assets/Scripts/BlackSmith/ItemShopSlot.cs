@@ -3,6 +3,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
 using R3;
+using DG.Tweening;
 
 public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
@@ -284,6 +285,46 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             plusButton.interactable = displayQuantity < maxQuantity;
         if (minusButton)
             minusButton.interactable = displayQuantity > 0;
+    }
+
+    // ========================================
+    // 会話チュートリアル：「需要が高く価格が安い」おすすめ行の強調
+    // ========================================
+
+    [Header("チュートリアル強調（任意）")]
+    [Tooltip("おすすめ行の強調枠（任意）。未配線なら行の拡縮と背景色の明滅だけで強調する")]
+    [SerializeField] private GameObject tutorialHighlight;
+    [SerializeField] private Color tutorialHighlightColor = new(1f, 0.85f, 0.3f, 1f);
+
+    private Sequence tutorialPulse;
+    private Color? rowBaseColor;
+
+    /// <summary>おすすめ行の強調（脈動＋背景明滅）を切り替える。</summary>
+    public void SetTutorialHighlight(bool on)
+    {
+        if (tutorialHighlight) tutorialHighlight.SetActive(on);
+
+        if (tutorialPulse != null)
+        {
+            // 脈動中だけ元へ戻す（強調していない行は登場演出をそのまま流す）
+            tutorialPulse.Kill();
+            tutorialPulse = null;
+            transform.localScale = Vector3.one;
+            if (rowBackground != null && rowBaseColor.HasValue) rowBackground.color = rowBaseColor.Value;
+        }
+        if (!on) return;
+
+        // 登場演出（拡縮）と競合しないよう止めてから脈動させる
+        transform.DOKill();
+        transform.localScale = Vector3.one;
+        if (rowBackground != null && !rowBaseColor.HasValue) rowBaseColor = rowBackground.color;
+
+        var seq = DOTween.Sequence();
+        seq.Append(transform.DOScale(1.04f, 0.5f).SetEase(Ease.InOutSine));
+        if (rowBackground != null)
+            seq.Join(rowBackground.DOColor(tutorialHighlightColor, 0.5f));
+        seq.SetLoops(-1, LoopType.Yoyo).SetLink(gameObject);
+        tutorialPulse = seq;
     }
 
     public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter.OnNext(itemId);

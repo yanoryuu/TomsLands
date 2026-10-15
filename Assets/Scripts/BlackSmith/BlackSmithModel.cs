@@ -10,6 +10,21 @@ public class BlackSmithModel
 
     public Dictionary<string, BlackSmithItemData> itemCount { get; private set; }
 
+    // ========================================
+    // 会話チュートリアルからの指示（TutorialPresenter → BlackSmithPresenter の受け渡し）
+    // ========================================
+
+    /// <summary>
+    /// 鍛冶屋の説明会話が終わった。初回オート購入待ちなら、調整不可の予算ポップアップを開かせる。
+    /// </summary>
+    public Subject<Unit> TutorialAutoBuyRequested { get; } = new();
+
+    /// <summary>
+    /// 「需要が高く価格が安い」商品を一覧で強調表示するか。
+    /// 立て替え後の会話が終わったら true、鍛冶屋を閉じたら false に戻す。
+    /// </summary>
+    public ReactiveProperty<bool> TutorialBargainHighlight { get; } = new(false);
+
     public BlackSmithModel()
     {
         armorRuntimeItems  = new List<RuntimeItemData>();

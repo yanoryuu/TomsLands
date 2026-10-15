@@ -71,6 +71,37 @@ public class PreparationView : MonoBehaviour
     /// <summary>UIが最低限配線されているか（未配線なら Presenter が旧挙動にフォールバック）。</summary>
     public bool IsInteractiveReady => departButton != null;
 
+    private CanvasGroup uiLockGroup;
+    private bool uiLockPrevBlocks = true;
+    private bool uiLocked;
+
+    /// <summary>
+    /// 準備画面のクリックを止める/戻す（会話チュートリアル中に使う）。
+    /// 出店ボタンが載っているルートキャンバスの CanvasGroup.blocksRaycasts を切り替える（見た目は変えない）。
+    /// </summary>
+    public void SetUiInputLocked(bool locked)
+    {
+        if (locked == uiLocked) return;
+        if (locked)
+        {
+            var anchor = departButton != null ? departButton.transform : transform;
+            var canvas = anchor.GetComponentInParent<Canvas>(true);
+            if (canvas == null) return;
+            canvas = canvas.rootCanvas;
+            uiLockGroup = canvas.GetComponent<CanvasGroup>();
+            if (uiLockGroup == null) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
+            uiLockPrevBlocks = uiLockGroup.blocksRaycasts;
+            uiLockGroup.blocksRaycasts = false;
+            uiLocked = true;
+        }
+        else
+        {
+            if (uiLockGroup != null) uiLockGroup.blocksRaycasts = uiLockPrevBlocks;
+            uiLockGroup = null;
+            uiLocked = false;
+        }
+    }
+
     private void Awake()
     {
         if (borrowPlusButton != null) borrowPlusButton.onClick.AddListener(() => OnBorrowPlus.OnNext(Unit.Default));

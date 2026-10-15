@@ -37,6 +37,9 @@ public class PreparationLifetimeScope : LifetimeScope
         builder.Register<MetaProgressModel>(Lifetime.Singleton);
         builder.Register<PreparationModel>(Lifetime.Singleton);
 
+        // 会話チュートリアルの再生＋既読管理（ScenarioPlayer は ScenarioSystemLoader が常駐させている）
+        builder.Register<TutorialScenarioService>(Lifetime.Singleton);
+
         // View
         if (preparationView != null)
         {
