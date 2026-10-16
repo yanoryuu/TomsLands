@@ -1,7 +1,7 @@
 {
-  "version": 3,
+  "version": 4,
   "schemaVersion": 1,
-  "updatedAt": "2026-08-31T00:30:38.334Z",
+  "updatedAt": "2026-10-16T02:44:18.000Z",
   "items": [
     {
       "itemId": "AR1",
@@ -66,7 +66,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "炎をまとったたすき。風属性の攻撃を熱で焼き払う、軽量ながら侮れない一品。"
+      "description": "炎をまとったたすき。木属性（森の魔物）の攻撃を熱で焼き払う、軽量ながら侮れない一品。"
     },
     {
       "itemId": "AR6",
@@ -79,7 +79,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "炎の力が宿るシンプルなベルト。風属性への耐性が地味に助かる場面がある。"
+      "description": "炎の力が宿るシンプルなベルト。木属性（森の魔物）への耐性が地味に助かる場面がある。"
     },
     {
       "itemId": "AR7",
@@ -170,7 +170,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 2,
       "salesRate": 1,
-      "description": "風属性の攻撃を受け止める兜。装備すると炎のような闘志が湧いてくると評判。"
+      "description": "木属性（森の魔物）の攻撃を受け止める兜。装備すると炎のような闘志が湧いてくると評判。"
     },
     {
       "itemId": "HE3",
@@ -196,7 +196,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "高火力の風属性攻撃に耐える強化素材。風が吹き荒れる地帯での生存率が段違い。"
+      "description": "高火力の木属性攻撃に耐える強化素材。森の魔物がひしめく地帯での生存率が段違い。"
     },
     {
       "itemId": "HE5",
