@@ -22,6 +22,10 @@ public class PortfolioModel
 
     public List<FinancePosition> Positions { get; } = new();
 
+    /// <summary>廃止した土属性ファンド（旧セーブ互換用）。</summary>
+    private const string LegacyEarthFundId = "fund_earth";
+    private const string DarkFundId = "fund_dark";
+
     /// <summary>ファンド基準価額の履歴（チャート用・セーブ対象）。</summary>
     private readonly Dictionary<string, List<int>> navHistories = new();
 
@@ -61,7 +65,7 @@ public class PortfolioModel
         foreach (var r in itemModel.RuntimeItems)
         {
             if (r.RequiredLevel.Value > blacksmithLevel) continue; // 未解放銘柄は価格凍結のため除外
-            if (product.useAttributeFilter && r.ItemAttribute != product.attribute) continue;
+            if (product.useAttributeFilter && r.ItemAttribute != ItemTypeData.NormalizeAttribute(product.attribute)) continue; // 旧 Wind(3) 配信値は Wood 扱い
 
             var master = itemModel.GetMasterItem(r.ItemId);
             if (master == null || master.basePrice <= 0) continue;
@@ -334,6 +338,8 @@ public class PortfolioModel
                 foreach (var plain in data.positions)
                 {
                     if (string.IsNullOrEmpty(plain.productId) || plain.units <= 0) continue;
+                    // 属性統一（土→闇）で土属性ファンドを廃止。保有分は闇属性ファンドへ移す
+                    if (plain.productId == LegacyEarthFundId) plain.productId = DarkFundId;
                     Positions.Add(FinancePosition.FromPlain(plain));
                 }
             }
@@ -341,7 +347,7 @@ public class PortfolioModel
             {
                 foreach (var nav in data.navHistories)
                 {
-                    if (string.IsNullOrEmpty(nav.productId)) continue;
+                    if (string.IsNullOrEmpty(nav.productId) || nav.productId == LegacyEarthFundId) continue;
                     navHistories[nav.productId] = new List<int>(nav.navHistory ?? new List<int>());
                 }
             }

@@ -44,7 +44,7 @@
   - **重要：enemies と dungeons で属性 enum の整数が異なる**（下の §2.1 対応表を必ず参照）。文字列で送ると無視され既定値のままになるので必ず int。
 
 ### 2.1 enum 整数対応表（厳守）
-**`enemies[].elementType` → enum `ElementType`**（Earth/Wind は無く Wood がある点に注意）
+**`enemies[].elementType` → enum `ElementType`**（2026-10 からアイテム属性も同じ5属性。ただし int 値の並びは別）
 | 名前 | int |
 |---|---|
 | None | 0 |
@@ -59,8 +59,8 @@
 |---|---|
 | Fire | 0 |
 | Water | 1 |
-| Earth | 2 |
-| Wind | 3 |
+| Wood | 2 |
+| （欠番: 旧 Wind。新クライアントは Wood として読む） | 3 |
 | Light | 4 |
 | Dark | 5 |
 
@@ -138,7 +138,7 @@
 変更可: `productName, description, kind(int), unlockInfoBrokerLevel(int), bondUnitPrice(int), bondInterestRate(float),
 bondMaturityTurns(int), fundBaseUnitPrice(int), useAttributeFilter(bool), attribute(int)`。icon は載せない（SO保持）。
 - **enum int**: `kind` → FinancialProductKind: Bond=0 / IndexFund=1。`attribute` → `ItemTypeData.ItemAttribute`
-  （dungeons と同じ表: Fire=0/Water=1/Earth=2/Wind=3/Light=4/Dark=5）。
+  （dungeons と同じ表: Fire=0/Water=1/Wood=2/Light=4/Dark=5。3 は欠番）。
 - `description` セル内の `\n` はそのまま文字列として渡る（改行変換なし。1行で書くこと）。
 
 ### relics — 配信しない（2026-08-31決定）

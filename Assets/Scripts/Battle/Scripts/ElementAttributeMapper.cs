@@ -1,6 +1,8 @@
 ﻿/// <summary>
 /// EnemyData の ElementType と RuntimeItemData の ItemAttribute を相互変換するユーティリティ。
 /// また、属性間の有利/不利判定を提供する。
+/// アイテム属性は敵と同じ5属性（水・火・木・光・闇）で 1:1 に対応する。
+/// 相性: 水>火、火>木、木>水（3すくみ）、光⇄闇（相互に有利）。
 /// </summary>
 public static class ElementAttributeMapper
 {
@@ -13,7 +15,7 @@ public static class ElementAttributeMapper
         {
             ElementType.Fire  => ItemTypeData.ItemAttribute.Fire,
             ElementType.Water => ItemTypeData.ItemAttribute.Water,
-            ElementType.Wood  => ItemTypeData.ItemAttribute.Earth,   // Wood → Earth にマッピング
+            ElementType.Wood  => ItemTypeData.ItemAttribute.Wood,
             ElementType.Light => ItemTypeData.ItemAttribute.Light,
             ElementType.Dark  => ItemTypeData.ItemAttribute.Dark,
             ElementType.None  => null,                                // None は属性なし
@@ -26,16 +28,14 @@ public static class ElementAttributeMapper
     /// </summary>
     public static bool IsEffective(ItemTypeData.ItemAttribute itemAttr, ElementType enemyElement)
     {
-        return (itemAttr, enemyElement) switch
+        return (ItemTypeData.NormalizeAttribute(itemAttr), enemyElement) switch
         {
-            // 火 → 木（Earth/Wood）に有利
-            (ItemTypeData.ItemAttribute.Fire, ElementType.Wood)   => true,
             // 水 → 火に有利
             (ItemTypeData.ItemAttribute.Water, ElementType.Fire)  => true,
-            // 土/木 → 水に有利
-            (ItemTypeData.ItemAttribute.Earth, ElementType.Water) => true,
-            // 風 → 土/木に有利
-            (ItemTypeData.ItemAttribute.Wind, ElementType.Wood)   => true,
+            // 火 → 木に有利
+            (ItemTypeData.ItemAttribute.Fire, ElementType.Wood)   => true,
+            // 木 → 水に有利
+            (ItemTypeData.ItemAttribute.Wood, ElementType.Water)  => true,
             // 光 → 闇に有利
             (ItemTypeData.ItemAttribute.Light, ElementType.Dark)  => true,
             // 闇 → 光に有利
@@ -45,26 +45,20 @@ public static class ElementAttributeMapper
     }
 
     /// <summary>
-    /// アイテム属性が敵属性に対して不利かどうかを判定する。
+    /// アイテム属性が敵属性に対して不利かどうかを判定する（3すくみの逆向き）。
+    /// 光・闇は互いに有利なだけで不利はない。
     /// </summary>
     public static bool IsWeak(ItemTypeData.ItemAttribute itemAttr, ElementType enemyElement)
     {
-        return (itemAttr, enemyElement) switch
+        return (ItemTypeData.NormalizeAttribute(itemAttr), enemyElement) switch
         {
             // 火 → 水に不利
             (ItemTypeData.ItemAttribute.Fire, ElementType.Water)  => true,
+            // 木 → 火に不利
+            (ItemTypeData.ItemAttribute.Wood, ElementType.Fire)   => true,
             // 水 → 木に不利
             (ItemTypeData.ItemAttribute.Water, ElementType.Wood)  => true,
-            // 土 → 火に不利
-            (ItemTypeData.ItemAttribute.Earth, ElementType.Fire)  => true,
-            // 風 → 火に不利
-            (ItemTypeData.ItemAttribute.Wind, ElementType.Fire)   => true,
-            // 光 → 光に不利（同属性不利）ではなく、闇の敵に不利ではない
-            (ItemTypeData.ItemAttribute.Light, ElementType.Light) => false,
-            // 闇 → 闇に不利ではない
-            (ItemTypeData.ItemAttribute.Dark, ElementType.Dark)   => false,
             _ => false
         };
     }
 }
-

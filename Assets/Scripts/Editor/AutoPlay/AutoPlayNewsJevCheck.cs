@@ -26,17 +26,17 @@ public static class AutoPlayNewsJevCheck
     public static long InputTokens { get; private set; }
     public static int Requests { get; private set; }
 
-    private static readonly string[] Attributes = { "Fire", "Water", "Earth", "Wind", "Light", "Dark" };
+    private static readonly string[] Attributes = { "Fire", "Water", "Wood", "Light", "Dark" };
     private static readonly string[] Types = { "Weapon", "Armor" };
 
     // プレイヤーが店（品物の説明文）から知りうる相性。Docs/News_Content_Review.md §2 の表からダンジョン名を抜いたもの
     private const string Context =
-        "You read the morning newspaper in a fantasy shop game. Shop goods have an attribute (Fire, Water, Earth, Wind, Light, Dark) " +
+        "You read the morning newspaper in a fantasy shop game. Shop goods have an attribute (Fire, Water, Wood, Light, Dark) " +
         "and a type (Weapon or Armor). From the shop's item descriptions everyone knows: against FIRE monsters/heat, Water weapons " +
-        "are effective and Water armor blocks the damage; against WATER/ICE monsters, Earth weapons (heavy crushing blows) are effective " +
-        "and Earth armor blocks water attacks; against WIND monsters (beasts, plants of the forest), Fire weapons are effective and Fire " +
-        "armor resists wind; against EARTH monsters (rock), Wind weapons are effective and Wind armor deflects earth; against DARK " +
-        "monsters (undead, demons), Light weapons are effective and Light armor resists darkness; against LIGHT monsters (holy machines), " +
+        "are effective and Water armor blocks the damage; against WATER/ICE monsters, Wood weapons (forest, trees, leaves) are effective " +
+        "and Wood armor blocks water attacks; against WOOD monsters (beasts, plants of the forest), Fire weapons are effective and Fire " +
+        "armor resists them; against DARK monsters (undead, demons), Light " +
+        "weapons are effective and Light armor resists darkness; against LIGHT monsters (holy machines), " +
         "Dark weapons are effective and Dark armor resists light. Weapons sell when monsters must be killed; armor sells when people must " +
         "protect themselves. Rich adventurers buy expensive high-tier goods of any attribute. Articles describe only causes, never the goods.";
 
@@ -336,12 +336,12 @@ public static class AutoPlayNewsJevCheck
         var set = new HashSet<string>();
         if (ev == null || !ev.HasTarget) { set.Add("none"); return set; }
         if (ev.minRequiredLevel > 0 && string.IsNullOrEmpty(ev.targetAttribute) && string.IsNullOrEmpty(ev.targetType)) { set.Add("high_end"); return set; }
-        string attr = ev.targetAttribute, type = ev.targetType;
+        string attr = ItemTypeData.TryParseAttribute(ev.targetAttribute, out var parsedAttr) ? parsedAttr.ToString() : ev.targetAttribute, type = ev.targetType;
         if (!string.IsNullOrEmpty(ev.targetItemId))
         {
             var item = AssetDatabase.FindAssets("t:ItemData").Select(g => AssetDatabase.LoadAssetAtPath<ItemData>(AssetDatabase.GUIDToAssetPath(g)))
                 .FirstOrDefault(i => i != null && i.itemId == ev.targetItemId);
-            if (item != null) { attr = item.itemAttribute.ToString(); type = item.itemType.ToString(); }
+            if (item != null) { attr = ItemTypeData.NormalizeAttribute(item.itemAttribute).ToString(); type = item.itemType.ToString(); }
         }
         foreach (var at in Attributes)
             foreach (var ty in Types)

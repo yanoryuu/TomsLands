@@ -82,7 +82,7 @@ public sealed class ItemMasterService
             if (ov.salesRate < 0.1f || ov.salesRate > 5.0f) { reason = $"{ov.itemId}: salesRate 範囲外"; return false; }
             if (!Enum.TryParse<ItemTypeData.ItemType>(ov.itemType, true, out _))
             { reason = $"{ov.itemId}: itemType 不正 '{ov.itemType}'"; return false; }
-            if (!Enum.TryParse<ItemTypeData.ItemAttribute>(ov.itemAttribute, true, out _))
+            if (!ItemTypeData.TryParseAttribute(ov.itemAttribute, out _))
             { reason = $"{ov.itemId}: itemAttribute 不正 '{ov.itemAttribute}'"; return false; }
         }
         return true;

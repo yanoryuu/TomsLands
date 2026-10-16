@@ -1,20 +1,20 @@
 {
-  "version": 4,
+  "version": 5,
   "schemaVersion": 1,
-  "updatedAt": "2026-10-16T02:44:18.000Z",
+  "updatedAt": "2026-10-16T03:19:14.000Z",
   "items": [
     {
       "itemId": "AR1",
-      "itemName": "岩石の鎧",
+      "itemName": "宵闇の鎧",
       "basePrice": 700,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Armor",
-      "itemAttribute": "Earth",
+      "itemAttribute": "Dark",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "岩のような硬度を持つ鎧。水属性の攻撃を弾き返す密度が冒険者に支持されている。"
+      "description": "宵闇を織り込んだような漆黒の鎧。光属性の攻撃を吸い込む深い闇色が冒険者に支持されている。"
     },
     {
       "itemId": "AR2",
@@ -31,29 +31,29 @@
     },
     {
       "itemId": "AR3",
-      "itemName": "疾風の鎧",
+      "itemName": "新緑の鎧",
       "basePrice": 1500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Armor",
-      "itemAttribute": "Wind",
+      "itemAttribute": "Wood",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "気流を操る構造の流線型アーマー。土属性の攻撃を風で受け流す、動きを妨げない一着。"
+      "description": "若葉の繊維を編み込んだしなやかなアーマー。水属性の攻撃を葉が吸い上げて受け流す、動きを妨げない一着。"
     },
     {
       "itemId": "AR4",
-      "itemName": "大地の重鎧",
+      "itemName": "冥府の重鎧",
       "basePrice": 2000,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Armor",
-      "itemAttribute": "Earth",
+      "itemAttribute": "Dark",
       "requiredLevel": 4,
       "salesRate": 1,
-      "description": "大地の力を凝縮した超重量級の鎧。水属性の強攻撃すら完全に封じ込める究極の防御。"
+      "description": "冥府の闇を凝縮した超重量級の鎧。光属性の強攻撃すら完全に呑み込む究極の防御。"
     },
     {
       "itemId": "AR5",
@@ -109,55 +109,55 @@
     },
     {
       "itemId": "AX1",
-      "itemName": "岩砕きの斧",
+      "itemName": "影纏いの斧",
       "basePrice": 500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Weapon",
-      "itemAttribute": "Earth",
+      "itemAttribute": "Dark",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "地面を割るほどの重い一撃。岩肌のような無骨なデザインは「漢（おとこ）の武器」としてコアな層に人気。"
+      "description": "影を纏った重い一撃。闇色の無骨なデザインは「漢（おとこ）の武器」としてコアな層に人気。光属性の敵にもよく効く。"
     },
     {
       "itemId": "BO1",
-      "itemName": "疾風の弓",
+      "itemName": "若木の弓",
       "basePrice": 500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Weapon",
-      "itemAttribute": "Wind",
+      "itemAttribute": "Wood",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "風の力で矢速を加速させる。エイムが甘くても風が補正してくれるため、初心者に最適。"
+      "description": "しなやかな若木から削り出した弓。木のしなりが矢筋を補正してくれるため、エイムが甘くても当たる初心者の味方。"
     },
     {
       "itemId": "HA1",
-      "itemName": "大地のハンマー",
+      "itemName": "奈落のハンマー",
       "basePrice": 500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Weapon",
-      "itemAttribute": "Earth",
+      "itemAttribute": "Dark",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "叩いた衝撃で地面が揺れる。派手な土煙が舞い上がり、その爽快感がクセになると評判。"
+      "description": "叩いた衝撃で足元の影が波打つ。派手な黒い靄が舞い上がり、その爽快感がクセになると評判。"
     },
     {
       "itemId": "HE1",
-      "itemName": "岩石の兜",
+      "itemName": "宵闇の兜",
       "basePrice": 500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Armor",
-      "itemAttribute": "Earth",
+      "itemAttribute": "Dark",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "岩石を削り出した基本ヘルメット。水属性ダメージをがっちりガードする頑丈さで初心者から支持を集める。"
+      "description": "宵闇色に染め上げた基本ヘルメット。光属性ダメージをがっちりガードする頑丈さで初心者から支持を集める。"
     },
     {
       "itemId": "HE2",
@@ -239,16 +239,16 @@
     },
     {
       "itemId": "HE8",
-      "itemName": "疾風の兜",
+      "itemName": "新緑の兜",
       "basePrice": 1800,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Armor",
-      "itemAttribute": "Wind",
+      "itemAttribute": "Wood",
       "requiredLevel": 4,
       "salesRate": 1,
-      "description": "土属性攻撃を受け流す空力設計の兜。土属性への耐性がありながら動きを妨げない。"
+      "description": "水属性攻撃を受け流す若葉仕立ての兜。水属性への耐性がありながら軽く、動きを妨げない。"
     },
     {
       "itemId": "HE9",
@@ -278,29 +278,29 @@
     },
     {
       "itemId": "SP1",
-      "itemName": "疾風の槍",
+      "itemName": "大樹の槍",
       "basePrice": 500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Weapon",
-      "itemAttribute": "Wind",
+      "itemAttribute": "Wood",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "突風を巻き起こす槍。敵を吹き飛ばせるので、ソーシャルディスタンスを保ちたい慎重派勇者に売れる。"
+      "description": "大樹の枝をそのまま削り出した長槍。間合いが長く敵を近寄らせないので、ソーシャルディスタンスを保ちたい慎重派勇者に売れる。"
     },
     {
       "itemId": "SW1",
-      "itemName": "風切りの剣",
+      "itemName": "木の葉の剣",
       "basePrice": 500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Weapon",
-      "itemAttribute": "Wind",
+      "itemAttribute": "Wood",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "振るたびに風切り音が鳴る剣。爽快な斬撃音が戦闘のテンションを上げてくれる"
+      "description": "振るたびに木の葉が舞う剣。水属性の敵に強く、サワサワと鳴る葉擦れの音が戦闘のテンションを上げてくれる。"
     },
     {
       "itemId": "SW2",
@@ -356,16 +356,16 @@
     },
     {
       "itemId": "SW6",
-      "itemName": "真空の剣",
+      "itemName": "森羅の剣",
       "basePrice": 800,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Weapon",
-      "itemAttribute": "Wind",
+      "itemAttribute": "Wood",
       "requiredLevel": 4,
       "salesRate": 1,
-      "description": "真空の刃を飛ばす剣。遠距離攻撃も近距離攻撃もできるため、玄人冒険者の心を掴んでいる。"
+      "description": "森の力を宿し、蔦の刃を伸ばす剣。遠距離攻撃も近距離攻撃もできるため、玄人冒険者の心を掴んでいる。"
     },
     {
       "itemId": "WA1",
