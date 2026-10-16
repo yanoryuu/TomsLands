@@ -33,7 +33,7 @@ const OUTPUT_FILENAME = 'gameconst.json';
 
 // items 許可セット
 const ITEM_TYPES = ['Weapon', 'Armor', 'Tool'];
-const ITEM_ATTRS = ['Fire', 'Water', 'Earth', 'Wind', 'Light', 'Dark'];
+const ITEM_ATTRS = ['Fire', 'Water', 'Wood', 'Light', 'Dark']; // 2026-10 属性統一（旧 Earth→Dark, Wind→Wood）
 
 // balance シート
 const BALANCE_META_SHEET = 'balance_meta';

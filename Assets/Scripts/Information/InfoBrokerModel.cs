@@ -361,11 +361,11 @@ public class InfoBrokerModel
         // ?e?_???W???????_??????`
         var effectiveAttributes = dungeon.key switch
         {
-            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Earth }, // ?X?????L??
+            DungeonName.IceMistCave => new[] { ItemTypeData.ItemAttribute.Wood }, // 水の敵には木が有利
             DungeonName.DeepGreenBeastForest => new[] { ItemTypeData.ItemAttribute.Fire, ItemTypeData.ItemAttribute.Light }, // ????A????
             DungeonName.ScorchingVolcanoPrison => new[] { ItemTypeData.ItemAttribute.Water }, // ???????L??
             DungeonName.MausoleumOblivion => new[] { ItemTypeData.ItemAttribute.Light }, // ???????L??
-             // => new[] { ItemTypeData.ItemAttribute.Water, ItemTypeData.ItemAttribute.Earth }, // ?@?B????E?y???L??
+             // => new[] { ItemTypeData.ItemAttribute.Water, ItemTypeData.ItemAttribute.Wood },
             _ => new ItemTypeData.ItemAttribute[] { }
         };
 

@@ -671,7 +671,12 @@ public class ItemModel
                 {
                     item.maxStock = master.maxStock;
                     if (item.requiredLevel <= 0) item.requiredLevel = master.requiredLevel;
-                    if (string.IsNullOrEmpty(item.itemName)) item.itemName = master.itemName;
+                    // 名前・説明・種別・属性はマスター（SO + Remote Config）が真実の源。
+                    // 属性統一（風→木・土→闇）で名前と属性が変わったため、旧セーブの値は常にマスターで上書きする。
+                    item.itemName = master.itemName;
+                    item.description = master.description;
+                    item.itemType = master.itemType;
+                    item.itemAttribute = master.itemAttribute;
                 }
                 return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId), SearchBackgroundSpriteFromMaster(item.requiredLevel),
                     master != null ? master.dividendPerTurn : 0);

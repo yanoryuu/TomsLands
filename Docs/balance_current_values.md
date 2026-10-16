@@ -145,5 +145,5 @@ Lv,MaxHp,Attack,Defense
 
 ## notes
 - enums are int. (buzzEffects.id and dungeons.id are name strings)
-- dungeons.requiredAttribute = ItemAttribute(Fire=0,Water=1,Earth=2,Wind=3,Light=4,Dark=5)
+- dungeons.requiredAttribute = ItemAttribute(Fire=0,Water=1,Wood=2,Light=4,Dark=5; 3 unused)
 - enemies excluded (dungeon-embedded enemies are not covered by current override path)
