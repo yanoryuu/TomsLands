@@ -142,7 +142,7 @@ public class NewsEventInstance
     {
         if (item == null || !HasTarget) return false;
         if (!string.IsNullOrEmpty(targetItemId)) return item.ItemId == targetItemId;
-        if (!string.IsNullOrEmpty(targetAttribute) && item.ItemAttribute.ToString() != targetAttribute) return false;
+        if (!string.IsNullOrEmpty(targetAttribute) && !ItemTypeData.AttributeMatches(item.ItemAttribute, targetAttribute)) return false;
         if (!string.IsNullOrEmpty(targetType) && item.ItemType.ToString() != targetType) return false;
         if (minRequiredLevel > 0 && (item.RequiredLevel == null || item.RequiredLevel.Value < minRequiredLevel)) return false;
         return true;

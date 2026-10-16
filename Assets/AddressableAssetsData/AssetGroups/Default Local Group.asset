@@ -867,12 +867,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d7afab08b53a2dc448171fdc0e74ee6b
-    m_Address: Finance/fund_earth
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - FinancialProductData
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d8b9262fc2362aa4c850b59fd1cbccf5
     m_Address: ItemData/HE4
     m_ReadOnly: 0

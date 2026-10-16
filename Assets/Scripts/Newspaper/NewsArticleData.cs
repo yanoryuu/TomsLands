@@ -24,7 +24,7 @@ public class NewsArticleData
     public string truth;          // true / exaggerated / false
 
     // --- 効果の対象。空欄は「絞り込まない」。すべての条件を満たす銘柄に効く ---
-    public string targetAttribute;  // Fire / Water / Earth / Wind / Light / Dark
+    public string targetAttribute;  // Fire / Water / Wood / Light / Dark（旧 Earth→Dark, Wind→Wood として扱う）
     public string targetType;       // Weapon / Armor / Tool
     public string targetItemId;
 
@@ -79,7 +79,7 @@ public class NewsArticleData
             return item.ItemId == targetItemId;
 
         if (!string.IsNullOrEmpty(targetAttribute)
-            && item.ItemAttribute.ToString() != targetAttribute) return false;
+            && !ItemTypeData.AttributeMatches(item.ItemAttribute, targetAttribute)) return false;
 
         if (!string.IsNullOrEmpty(targetType)
             && item.ItemType.ToString() != targetType) return false;

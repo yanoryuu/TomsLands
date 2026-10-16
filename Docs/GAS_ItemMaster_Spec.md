@@ -40,7 +40,7 @@
 | E | maxStock | int | ✅ | 最大在庫（1以上） |
 | F | initialDisplayStock | int | ✅ | 初期陳列数（0以上） |
 | G | itemType | string | ✅ | `Weapon` / `Armor` / `Tool` のいずれか |
-| H | itemAttribute | string | ✅ | `Fire` / `Water` / `Earth` / `Wind` / `Light` / `Dark` のいずれか |
+| H | itemAttribute | string | ✅ | `Fire` / `Water` / `Wood` / `Light` / `Dark` のいずれか（2026-10 に敵側5属性へ統一。旧 `Earth`/`Wind` は新クライアントでは Dark/Wood として読むが、シートには書かない） |
 | I | requiredLevel | int | ✅ | 必要鍛冶レベル（0以上） |
 | J | salesRate | float | ✅ | 売れやすさ倍率（0.1〜5.0） |
 | K | description | string |  | 空ならデフォルト説明を維持 |
@@ -109,7 +109,7 @@
 - `basePrice >= 0`、`maxStock >= 1`、`initialStock >= 0`、`initialDisplayStock >= 0`、`requiredLevel >= 0`
 - `0.1 <= salesRate <= 5.0`
 - `itemType ∈ {Weapon, Armor, Tool}`
-- `itemAttribute ∈ {Fire, Water, Earth, Wind, Light, Dark}`
+- `itemAttribute ∈ {Fire, Water, Wood, Light, Dark}`
 - `schemaVersion === 1`
 
 エラー時は `Browser.msgBox` / `SpreadsheetApp.getUi().alert` で「どの行の何が不正か」を表示する。
@@ -151,7 +151,7 @@ function buildItemsEnvelope() {
   const rows = last >= 2 ? sheet.getRange(2, 1, last - 1, 11).getValues() : [];
 
   const TYPES = ['Weapon', 'Armor', 'Tool'];
-  const ATTRS = ['Fire', 'Water', 'Earth', 'Wind', 'Light', 'Dark'];
+  const ATTRS = ['Fire', 'Water', 'Wood', 'Light', 'Dark'];
   const items = [];
 
   rows.forEach(function (r, i) {

@@ -15,7 +15,7 @@ public class ItemOverride
     public int maxStock;
     public int initialDisplayStock;
     public string itemType;        // "Weapon" / "Armor" / "Tool"
-    public string itemAttribute;   // "Fire" / "Water" / "Earth" / "Wind" / "Light" / "Dark"
+    public string itemAttribute;   // "Fire" / "Water" / "Wood" / "Light" / "Dark"（旧 "Earth"→Dark, "Wind"→Wood として読む）
     public int requiredLevel;
     public float salesRate;
     public string description;      // 空なら master 維持
@@ -32,7 +32,8 @@ public class ItemOverride
         target.maxStock = maxStock;
         target.initialDisplayStock = initialDisplayStock;
         if (Enum.TryParse<ItemTypeData.ItemType>(itemType, true, out var t)) target.itemType = t;
-        if (Enum.TryParse<ItemTypeData.ItemAttribute>(itemAttribute, true, out var a)) target.itemAttribute = a;
+        // 旧名 Earth/Wind も受け付ける（Earth→Dark, Wind→Wood）
+        if (ItemTypeData.TryParseAttribute(itemAttribute, out var a)) target.itemAttribute = a;
         target.requiredLevel = requiredLevel;
         target.salesRate = salesRate;
         target.dividendPerTurn = dividendPerTurn;
