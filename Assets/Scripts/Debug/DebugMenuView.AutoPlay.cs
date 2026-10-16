@@ -29,8 +29,99 @@ public partial class DebugMenuView
         _autoPlayer.Initialize(resolver);
     }
 
+    private static readonly float[] ApFullSpeeds = { 1f, 2f, 4f };
+    private static readonly string[] ApFullScenarioLabels = { "読める速さ", "早送り", "送らない" };
+    private static readonly string[] ApFullRunEndLabels = { "ラン終了で停止", "次のランへ" };
+
+    /// <summary>
+    /// 全シーン対応のオートプレイ（Debug/AutoPlay の AutoPlay 静的API）。タイトル〜村〜準備〜店〜配信〜リザルトを通しで進める。
+    /// 店・配信の中身は下の DebugAutoPlayer をエンジンとして使う。仕様: Docs/AutoPlay_Usage.md
+    /// </summary>
+    private void DrawFullAutoPlaySection()
+    {
+        GUILayout.Label("■ オートプレイ（全シーン通し・録画用）", _headerStyle);
+
+        bool running = AutoPlay.IsRunning;
+        bool next = GUILayout.Toggle(running, running ? " ON（クリックで停止）" : " OFF（クリックで開始）");
+        if (next != running)
+        {
+            if (next) AutoPlay.Start();
+            else AutoPlay.Stop("デバッグメニューから停止");
+        }
+
+        if (AutoPlay.IsRunning)
+        {
+            GUILayout.BeginHorizontal();
+            if (AutoPlay.IsPaused) { if (GUILayout.Button("再開")) AutoPlay.Resume(); }
+            else if (GUILayout.Button("一時停止")) AutoPlay.Pause();
+            GUILayout.EndHorizontal();
+        }
+
+        GUILayout.Label($"いま: {AutoPlay.Status}");
+        GUILayout.Label($"フェーズ: {AutoPlay.CurrentPhaseLabel}  ターン: {AutoPlay.CurrentTurn}（経過 {AutoPlay.TurnsElapsed}）");
+        if (!AutoPlay.IsRunning && !string.IsNullOrEmpty(AutoPlay.LastStopReason))
+            GUILayout.Label($"最後の停止理由: {AutoPlay.LastStopReason}");
+
+        var s = AutoPlay.Settings;
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label($"速度 x{s.TimeScale:0.#}", GUILayout.Width(110));
+        foreach (var speed in ApFullSpeeds)
+        {
+            if (GUILayout.Button($"x{speed:0}")) AutoPlay.SetSpeed(speed);
+        }
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label($"行動間ウェイト {s.ActionWait:0.00}秒", GUILayout.Width(170));
+        float wait = GUILayout.HorizontalSlider(s.ActionWait, 0.1f, 2f);
+        if (!Mathf.Approximately(wait, s.ActionWait)) AutoPlay.SetActionWait(wait);
+        GUILayout.EndHorizontal();
+
+        GUILayout.Label($"戦略: {AutoPlay.Strategy.Name}");
+        GUILayout.BeginHorizontal();
+        foreach (var strategy in AutoPlay.AvailableStrategies)
+        {
+            if (strategy == null) continue;
+            GUI.enabled = strategy != AutoPlay.Strategy;
+            if (GUILayout.Button(strategy.Name)) AutoPlay.Strategy = strategy;
+        }
+        GUI.enabled = true;
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("会話", GUILayout.Width(110));
+        s.ScenarioMode = (AutoPlayScenarioMode)GUILayout.SelectionGrid((int)s.ScenarioMode, ApFullScenarioLabels, ApFullScenarioLabels.Length);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("ラン終了時", GUILayout.Width(110));
+        s.RunEndAction = (AutoPlayRunEndAction)GUILayout.SelectionGrid((int)s.RunEndAction, ApFullRunEndLabels, ApFullRunEndLabels.Length);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("進めるターン数", GUILayout.Width(110));
+        GUI.enabled = !AutoPlay.IsRunning;
+        int turnIndex = System.Array.IndexOf(ApTurnOptions, s.TurnLimit);
+        if (turnIndex < 0) turnIndex = ApTurnOptions.Length - 1;
+        turnIndex = GUILayout.SelectionGrid(turnIndex, ApTurnLabels, ApTurnLabels.Length);
+        s.TurnLimit = ApTurnOptions[turnIndex];
+        GUI.enabled = true;
+        GUILayout.EndHorizontal();
+
+        if (AutoPlay.LogLines.Count > 0)
+        {
+            int from = Mathf.Max(0, AutoPlay.LogLines.Count - 5);
+            for (int i = AutoPlay.LogLines.Count - 1; i >= from; i--)
+                GUILayout.Label(AutoPlay.LogLines[i]);
+        }
+        GUILayout.Space(8);
+    }
+
     private void DrawAutoPlaySection()
     {
+        DrawFullAutoPlaySection();
+
         GUILayout.Label("■ オートプレイ（実ゲーム画面を自動進行）", _headerStyle);
 
         if (_autoPlayer == null)
