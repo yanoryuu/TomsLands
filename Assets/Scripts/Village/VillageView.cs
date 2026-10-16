@@ -45,6 +45,9 @@ public class VillageView : MonoBehaviour
     [Header("帰還到着演出（任意。未設定なら子→シーンから自動検索。無ければ上の収支ポップ）")]
     [SerializeField] private VillageArrivalFx arrivalFx;
 
+    [Header("町人（任意。未設定ならシーンから自動検索。総合Lvに応じて増える）")]
+    [SerializeField] private VillagePopulationView population;
+
     public Subject<Unit> OnDepart { get; } = new();
     public Subject<Unit> OnGoTitle { get; } = new();
     public Subject<Unit> OnInvest { get; } = new();
@@ -106,6 +109,16 @@ public class VillageView : MonoBehaviour
             if (arrivalFx == null) arrivalFx = GetComponentInChildren<VillageArrivalFx>(true);
             if (arrivalFx == null) arrivalFx = FindFirstObjectByType<VillageArrivalFx>(FindObjectsInactive.Include);
             return arrivalFx;
+        }
+    }
+
+    /// <summary>総合Lvに応じて増える町人（未配線ならシーンから探す。無ければnull）。</summary>
+    public VillagePopulationView Population
+    {
+        get
+        {
+            if (population == null) population = FindFirstObjectByType<VillagePopulationView>(FindObjectsInactive.Include);
+            return population;
         }
     }
 
