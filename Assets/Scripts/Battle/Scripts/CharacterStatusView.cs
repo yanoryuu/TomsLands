@@ -10,6 +10,10 @@ public class CharacterStatusView : MonoBehaviour
     [Header("UI参照")]
     [SerializeField] private TMP_Text hpText;
     [SerializeField] private TMP_Text mpText;
+    [Tooltip("数値の前に付けるラベル（例: HP）。空なら数値のみ")]
+    [SerializeField] private string hpLabel = "";
+    [Tooltip("数値の前に付けるラベル（例: MP）。空なら数値のみ")]
+    [SerializeField] private string mpLabel = "";
 
     [Header("ポップアップ設定")]
     [SerializeField] private DamagePopup damagePopupPrefab;
@@ -126,13 +130,17 @@ public class CharacterStatusView : MonoBehaviour
     private void UpdateHpText(int current)
     {
         if (hpText != null)
-            hpText.text = $"{current}";
+            hpText.text = FormatStat(hpLabel, current);
     }
 
     // MPテキストを更新する処理
     private void UpdateMpText(int current)
     {
         if (mpText != null)
-            mpText.text = $"{current}";
+            mpText.text = FormatStat(mpLabel, current);
     }
+
+    // ラベルは数値より一回り小さく表示する
+    private static string FormatStat(string label, int value)
+        => string.IsNullOrEmpty(label) ? $"{value}" : $"<size=70%>{label}</size> {value}";
 }

@@ -122,14 +122,8 @@ public class BattleSceneStarter : IAsyncStartable
         Debug.Log("[BattleSceneStarter] Phase 2: Battle");
         _panelManager?.ShowPanel(StreamingGamePhase.Streaming);
 
-        // 配信開始前の3秒カウントダウン（戦闘・販売ループはこの後に始まる）
-        if (_controlView != null)
-            await _controlView.PlayCountdownAsync(3, cancellation);
-
-        // 初回だけ、配信画面の見かたを説明する（戦闘が始まる前に挟む）
-        if (_tutorialScenario != null)
-            await _tutorialScenario.PlayOnceAsync(TutorialStreamingStart, cancellation);
-
+        // カウントダウン前にダンジョン（背景）と品出しアイテムを反映しておく。
+        // 後回しにするとカウントダウン中にシーン既定の背景・空の在庫が映ってしまう
         var targetDungeon = ResolveTargetDungeon();
         if (targetDungeon == null)
         {
@@ -149,12 +143,25 @@ public class BattleSceneStarter : IAsyncStartable
         _salesController?.SetPauseController(_pauseController);
         _salesController?.SetHeroTactics(heroModel.heroData?.tactics.Value ?? HeroTactics.Balanced);
 
+        // 販売ループは Setup で動き出すので、カウントダウン・チュートリアルの間はポーズしておく
+        _pauseController.Pause();
+
         // StreamingSalesController に選択アイテムを渡して初期化
         if (_salesController != null)
         {
             _salesController.Setup(_itemModel, _inputData.SelectedItems);
             Debug.Log($"[BattleSceneStarter] StreamingSalesController initialized with {_inputData.SelectedItems.Count} items.");
         }
+
+        // 配信開始前の3秒カウントダウン（戦闘・販売ループはこの後に始まる）
+        if (_controlView != null)
+            await _controlView.PlayCountdownAsync(3, cancellation);
+
+        // 初回だけ、配信画面の見かたを説明する（戦闘が始まる前に挟む）
+        if (_tutorialScenario != null)
+            await _tutorialScenario.PlayOnceAsync(TutorialStreamingStart, cancellation);
+
+        _pauseController.Resume();
 
         // バトル終了を待つための UniTaskCompletionSource
         _battleTcs = new UniTaskCompletionSource<(BattleResult result, string weaponId, string armorId)>();
