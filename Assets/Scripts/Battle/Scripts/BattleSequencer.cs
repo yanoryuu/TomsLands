@@ -33,6 +33,10 @@ public class BattleSequencer : MonoBehaviour
     {
         currentDungeon = dungeon;
         currentDungeonLevel = Mathf.Clamp(dungeonLevel, 1, 5);
+
+        // 配信開始カウントダウン中から正しい背景が見えるよう、戦闘開始を待たずに差し替える
+        if (battleUIView != null && dungeon != null)
+            battleUIView.SetBackground(dungeon.dungeonImage);
     }
 
     private BattleContext battleContext;

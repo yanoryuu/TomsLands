@@ -520,6 +520,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   hpText: {fileID: 7871833520486647180}
   mpText: {fileID: 6978955051127091562}
+  hpLabel: HP
+  mpLabel: MP
   damagePopupPrefab: {fileID: 3954445575370586647, guid: 4d04b91912b2d1e459636a34f0756120, type: 3}
   popupContainer: {fileID: 8285600653207287391}
 --- !u!61 &2307530934152490065
@@ -599,7 +601,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4526679868307431093
 RectTransform:
   m_ObjectHideFlags: 0
@@ -674,7 +676,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &4692096641628175287
 RectTransform:
   m_ObjectHideFlags: 0
