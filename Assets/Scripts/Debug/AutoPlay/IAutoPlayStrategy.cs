@@ -451,7 +451,7 @@ public class DefaultAutoPlayStrategy : IAutoPlayStrategy
         return plan;
     }
 
-    /// <summary>「深緑の獣林（木）: 有利=火,風 / 不利=水」の形。</summary>
+    /// <summary>「深緑の獣林（木）: 有利=火 / 不利=水」の形。</summary>
     protected static string DescribeAffinity(AutoPlayStreamPrepContext ctx)
     {
         var enemies = new List<string>();
