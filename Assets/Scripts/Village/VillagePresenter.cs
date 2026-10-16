@@ -10,6 +10,7 @@ using VContainer.Unity;
 /// 村シーン（歩ける村）のPresenter。
 /// - 帰還時: VillageArrivalReport（消費型）を読んで収支ポップを表示
 /// - 区画（FacilityPlot）の調べる→投資パネル→投資
+/// - 総合Lvに応じて町人が増える（VillagePopulationView。投資で増えた分はその場でポップして現れる）
 /// - 出店 → PreparationScene / タイトルへ → TitleScene
 /// - 初回入場時: 村チュートリアル会話（VillageTutorialDirector）→ その後に帰還演出
 /// 村と店の経営（ラン）は別フロー: ここでの操作はラン外のメタ層のみに影響する。
@@ -204,7 +205,7 @@ public class VillagePresenter : IStartable, IDisposable
                     break;
                 }
             }
-            RefreshAll();
+            RefreshAll(animatePopulation: true); // 総合Lvが上がったら町人が引っ越してくる
             RefreshInvestPanel(); // 連続投資できるよう次Lv表示に更新
         }
         else
@@ -214,10 +215,14 @@ public class VillagePresenter : IStartable, IDisposable
         }
     }
 
-    /// <summary>HUDと全区画の見た目を最新化する。</summary>
-    private void RefreshAll()
+    /// <summary>HUD・全区画・町人の人数を最新化する。animatePopulation=true なら増えた町人をポップで出す。</summary>
+    private void RefreshAll(bool animatePopulation = false)
     {
-        view.UpdateHud(model.VillageFunds, model.VillageLevel);
+        int villageLevel = model.VillageLevel;
+        view.UpdateHud(model.VillageFunds, villageLevel);
+
+        var population = view.Population;
+        if (population != null) population.Apply(villageLevel, animatePopulation);
 
         foreach (var plot in view.Plots)
         {

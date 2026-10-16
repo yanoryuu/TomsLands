@@ -1290,6 +1290,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 785442350}
+  appearanceSource: {fileID: 774785216528851641, guid: dc81817251fd084418f13f8d5ee1f3d8, type: 3}
   itemIconRenderer: {fileID: 994840920}
   itemDisplayRoot: {fileID: 171635736}
   walkSpeed: 3
@@ -10848,6 +10849,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 1925587404}
+  appearanceSource: {fileID: 2769342450205788506, guid: 090c263c82021404489d529a0139c30f, type: 3}
   itemIconRenderer: {fileID: 423190856}
   itemDisplayRoot: {fileID: 2081289029}
   walkSpeed: 3
@@ -13415,6 +13417,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 1364114382}
+  appearanceSource: {fileID: 1179082127590522616, guid: 1cc2b054d842d5f4fb0dba1f5df14bcc, type: 3}
   itemIconRenderer: {fileID: 1215247620}
   itemDisplayRoot: {fileID: 964072670}
   walkSpeed: 3
@@ -14070,6 +14073,7 @@ MonoBehaviour:
   - {fileID: 1480924935}
   - {fileID: 1561845670}
   - {fileID: 2139966474}
+  appearanceCatalog: {fileID: 11400000, guid: f9a29be40ac5fec49b98934c3ea37bf5, type: 2}
   spawnPointLeft: {fileID: 2083728480}
   spawnPointRight: {fileID: 1710712851}
   destinationPoints:
@@ -14304,6 +14308,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 1494378204}
+  appearanceSource: {fileID: 4298885648293428839, guid: 4098b908940909242a20ba235c9a833c, type: 3}
   itemIconRenderer: {fileID: 933812227}
   itemDisplayRoot: {fileID: 2044925499}
   walkSpeed: 3
@@ -17511,6 +17516,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 1312230710}
+  appearanceSource: {fileID: 7333893258303054419, guid: 9c74bd118df54734ea3ad7502020eaf9, type: 3}
   itemIconRenderer: {fileID: 2007681837}
   itemDisplayRoot: {fileID: 741843497}
   walkSpeed: 3
@@ -18433,6 +18439,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 1017893826}
+  appearanceSource: {fileID: 7225661301139507499, guid: 0d0d7e23743e3445bb516e2adfbef9c9, type: 3}
   itemIconRenderer: {fileID: 290503660}
   itemDisplayRoot: {fileID: 1413091634}
   walkSpeed: 3
@@ -19206,6 +19213,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 72980128}
+  appearanceSource: {fileID: 989751463642006182, guid: c5fe0ecb49ce9a34b9f1ec55ae5affad, type: 3}
   itemIconRenderer: {fileID: 1277498915}
   itemDisplayRoot: {fileID: 1844932381}
   walkSpeed: 3
@@ -19685,6 +19693,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 286138685}
+  appearanceSource: {fileID: 4239497189449419980, guid: 0e86bed010662d648b9361036576cd49, type: 3}
   itemIconRenderer: {fileID: 552459524}
   itemDisplayRoot: {fileID: 153468597}
   walkSpeed: 3
@@ -19721,6 +19730,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spumCharacter: {fileID: 574677570}
+  appearanceSource: {fileID: 8070960577869086911, guid: 6646aaa0302f0412b8483a6da4dd3d1f, type: 3}
   itemIconRenderer: {fileID: 1941022700}
   itemDisplayRoot: {fileID: 1524091568}
   walkSpeed: 3

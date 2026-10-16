@@ -15,6 +15,10 @@ public class CustomerManager : MonoBehaviour
     [Tooltip("シーン上に配置・非表示にしておく CustomerCharacter GameObjects。ランダムに選ばれる。")]
     [SerializeField] private List<CustomerCharacter> customerCharacters;
 
+    [Header("見た目のバリエーション")]
+    [Tooltip("設定時は客が登場するたびにここから見た目をランダムに選んで差し替える（画面上の客と同じ見た目は避ける）")]
+    [SerializeField] private MobAppearanceCatalog appearanceCatalog;
+
     [Header("スポーン位置")]
     [Tooltip("左側の画面外スポーン位置")]
     [SerializeField] private Transform spawnPointLeft;
@@ -100,8 +104,27 @@ public class CustomerManager : MonoBehaviour
             : (spawnPointRight != null ? spawnPointRight.position : new Vector3( 12f, 0f, 0f));
 
         customer.gameObject.SetActive(true);
+        ApplyRandomAppearance(customer);
         customer.Play(item.ItemIcon, spawnPos, dest.position);
         return true;
+    }
+
+    /// <summary>画面上にいる他の客と被らない見た目をカタログから選んで適用する。</summary>
+    private void ApplyRandomAppearance(CustomerCharacter customer)
+    {
+        if (appearanceCatalog == null) return;
+
+        var inUse = new HashSet<SPUM_Prefabs>();
+        foreach (var c in customerCharacters)
+        {
+            if (c == null || c == customer || !c.gameObject.activeSelf) continue;
+            if (c.CurrentAppearance != null) inUse.Add(c.CurrentAppearance);
+        }
+        // 直前と同じ見た目で続けて出てこないようにする
+        if (customer.CurrentAppearance != null) inUse.Add(customer.CurrentAppearance);
+
+        var picked = appearanceCatalog.PickRandom(inUse);
+        if (picked != null) customer.SetAppearance(picked);
     }
 
     private void EnsureCustomerPool()

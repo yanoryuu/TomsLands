@@ -15,6 +15,8 @@ public class CustomerCharacter : MonoBehaviour
     [Header("SPUMキャラクター")]
     [Tooltip("SPUM_Prefabs コンポーネントがアタッチされた GameObject")]
     [SerializeField] private SPUM_Prefabs spumCharacter;
+    [Tooltip("spumCharacter の元になっている SPUM ユニットプレハブ（見た目の重複回避用。SpumMobGenerator が設定）")]
+    [SerializeField] private SPUM_Prefabs appearanceSource;
 
     [Header("アイテム表示")]
     [Tooltip("購入アイテムアイコンを表示する SpriteRenderer（itemDisplayRoot の子）")]
@@ -51,6 +53,22 @@ public class CustomerCharacter : MonoBehaviour
         _cts?.Cancel();
         _cts?.Dispose();
         if (itemDisplayRoot != null) itemDisplayRoot.transform.DOKill();
+    }
+
+    /// <summary>現在の見た目の元プレハブ（未設定なら null）。</summary>
+    public SPUM_Prefabs CurrentAppearance => appearanceSource;
+
+    /// <summary>
+    /// 見た目を別の SPUM ユニットプレハブに差し替える（CustomerManager が登場前に呼ぶ）。
+    /// 同じプレハブなら何もしない。
+    /// </summary>
+    public void SetAppearance(SPUM_Prefabs prefab)
+    {
+        if (prefab == null || spumCharacter == null || prefab == appearanceSource) return;
+        spumCharacter = SpumAppearanceUtility.Replace(spumCharacter, prefab, _spumStartScale);
+        if (spumCharacter == null) return;
+        spumCharacter.OverrideControllerInit();
+        appearanceSource = prefab;
     }
 
     public void Play(Sprite itemSprite, Vector3 spawnPos, Vector3 destPos)
