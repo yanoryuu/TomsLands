@@ -165,6 +165,14 @@ public static class RemoteBalance
                 var clone = UnityEngine.Object.Instantiate(item);
                 clone.name = item.name;
                 JsonUtility.FromJsonOverwrite(raw, clone);
+                // 突合キー（ダンジョンの key など）まで書き換わると、ゲーム側の検索で見つからなくなる。
+                // その要素は配信値を諦めてベイク済みを使う
+                if (idSelector(clone) != id)
+                {
+                    Debug.LogWarning($"[RemoteBalance] '{section}' の '{id}' が配信で識別キーを '{idSelector(clone)}' に変えようとしたため、この要素の配信値は使いません。");
+                    result.Add(item);
+                    continue;
+                }
                 result.Add(clone);
             }
             else
