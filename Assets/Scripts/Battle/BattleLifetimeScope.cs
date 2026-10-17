@@ -42,17 +42,25 @@ public class BattleLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
-        // SO を共有データとして登録
+        // SO を共有データとして登録。
+        // 他シーン（GameLifetimeScope 等）と同じ Addressables のインスタンスを必ず使う。
+        // ビルドではシーンに直接参照した SO は Addressables 側とは別の複製になるため、
+        // Inspector の参照を優先すると GameFlowManager が書いた行き先・品出しが届かない
+        // （エディタでは同一アセットなので再現しない）
+        var sharedInput = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData");
+        if (sharedInput != null) battleInputData = sharedInput;
         if (battleInputData == null)
         {
-            battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData") ?? ScriptableObject.CreateInstance<BattleInputData>();
-            Debug.LogWarning("[BattleLifetimeScope] BattleInputData が未設定だったため、Resourcesまたは実行時インスタンスを使用します。");
+            battleInputData = ScriptableObject.CreateInstance<BattleInputData>();
+            Debug.LogWarning("[BattleLifetimeScope] BattleInputData が見つからなかったため、実行時インスタンスを使用します。");
         }
 
+        var sharedOutput = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData");
+        if (sharedOutput != null) battleOutputData = sharedOutput;
         if (battleOutputData == null)
         {
-            battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData") ?? ScriptableObject.CreateInstance<BattleOutputData>();
-            Debug.LogWarning("[BattleLifetimeScope] BattleOutputData が未設定だったため、Resourcesまたは実行時インスタンスを使用します。");
+            battleOutputData = ScriptableObject.CreateInstance<BattleOutputData>();
+            Debug.LogWarning("[BattleLifetimeScope] BattleOutputData が見つからなかったため、実行時インスタンスを使用します。");
         }
 
         builder.RegisterInstance(battleInputData);

@@ -143,25 +143,32 @@ public class BattleSceneStarter : IAsyncStartable
         _salesController?.SetPauseController(_pauseController);
         _salesController?.SetHeroTactics(heroModel.heroData?.tactics.Value ?? HeroTactics.Balanced);
 
-        // 販売ループは Setup で動き出すので、カウントダウン・チュートリアルの間はポーズしておく
+        // 販売ループは Setup で動き出すので、カウントダウン・チュートリアルの間はポーズしておく。
+        // 途中で例外が出てもポーズが残らないよう finally で必ず解除する
+        // （残ると販売ループ・戦闘が WaitIfPausedAsync で止まったまま進行不能になる）
         _pauseController.Pause();
-
-        // StreamingSalesController に選択アイテムを渡して初期化
-        if (_salesController != null)
+        try
         {
-            _salesController.Setup(_itemModel, _inputData.SelectedItems);
-            Debug.Log($"[BattleSceneStarter] StreamingSalesController initialized with {_inputData.SelectedItems.Count} items.");
+            // StreamingSalesController に選択アイテムを渡して初期化
+            if (_salesController != null)
+            {
+                _salesController.Setup(_itemModel, _inputData.SelectedItems);
+                Debug.Log($"[BattleSceneStarter] StreamingSalesController initialized with {_inputData.SelectedItems.Count} items.");
+            }
+
+            // 配信開始前の3秒カウントダウン（戦闘・販売ループはこの後に始まる）
+            if (_controlView != null)
+                await RunPreludeSafelyAsync(() => _controlView.PlayCountdownAsync(3, cancellation), "カウントダウン");
+
+            // 初回だけ、配信画面の見かたを説明する（戦闘が始まる前に挟む）
+            if (_tutorialScenario != null)
+                await RunPreludeSafelyAsync(() => _tutorialScenario.PlayOnceAsync(TutorialStreamingStart, cancellation), "配信チュートリアル");
         }
-
-        // 配信開始前の3秒カウントダウン（戦闘・販売ループはこの後に始まる）
-        if (_controlView != null)
-            await _controlView.PlayCountdownAsync(3, cancellation);
-
-        // 初回だけ、配信画面の見かたを説明する（戦闘が始まる前に挟む）
-        if (_tutorialScenario != null)
-            await _tutorialScenario.PlayOnceAsync(TutorialStreamingStart, cancellation);
-
-        _pauseController.Resume();
+        finally
+        {
+            _pauseController.Resume();
+            _controlView?.UpdatePauseButtonText(false);
+        }
 
         // バトル終了を待つための UniTaskCompletionSource
         _battleTcs = new UniTaskCompletionSource<(BattleResult result, string weaponId, string armorId)>();
@@ -290,6 +297,26 @@ public class BattleSceneStarter : IAsyncStartable
         _pauseController.Toggle();
         _controlView?.UpdatePauseButtonText(_pauseController.IsPaused);
         Debug.Log($"[BattleSceneStarter] {(_pauseController.IsPaused ? "一時停止" : "再開")}");
+    }
+
+    /// <summary>
+    /// 配信開始前の演出（カウントダウン・会話）を実行する。演出の失敗で配信が始まらなくならないよう、
+    /// キャンセル以外の例外はログに出して握りつぶす。
+    /// </summary>
+    private static async UniTask RunPreludeSafelyAsync(Func<UniTask> prelude, string label)
+    {
+        try
+        {
+            await prelude();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[BattleSceneStarter] 配信開始前の{label}で例外が発生したため、スキップして配信を始めます: {ex}");
+        }
     }
 
     // =====================================================
