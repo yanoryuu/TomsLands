@@ -47,6 +47,21 @@ public class PreparationModel
     public void SubtractCarry() =>
         CarryAmount = Mathf.Max(0, CarryAmount - CarryStep);
 
+    /// <summary>
+    /// 持ち込み額を直接指定する（スライダー用）。1,000G 刻みに丸め、0〜carryMax にクランプする。
+    /// 上限が 1,000 の倍数でなくても、上限以上を指定したら上限ちょうどにする。
+    /// </summary>
+    public void SetCarry(int amount, int carryMax)
+    {
+        carryMax = Mathf.Max(0, carryMax);
+        if (amount >= carryMax) { CarryAmount = carryMax; return; }
+        int stepped = Mathf.RoundToInt(amount / (float)CarryStep) * CarryStep;
+        CarryAmount = Mathf.Clamp(stepped, 0, carryMax);
+    }
+
+    /// <summary>スライダーの刻み幅（G）。</summary>
+    public static int CarryStepAmount => CarryStep;
+
     public void ClampCarry(int carryMax) =>
         CarryAmount = Mathf.Clamp(CarryAmount, 0, carryMax);
 

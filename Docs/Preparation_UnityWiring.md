@@ -25,8 +25,9 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
     借入額は初期資金に加算され、**初回返済に利息+50%付きで上乗せ**される（借入レバレッジ）
   - 難易度: このランの難易度をここで選ぶ（タイトルでは選ばない）
   - スターターレリック: 呪い以外の Common レリックから1個（無料）
-  - スタートダッシュ（メタ通貨消費）: 宣伝ビラ（注目+20/フォロワー+100）・
-    目利きの手引き（全需要+15%）・返済猶予証（初回返済-30%）
+  - スタートダッシュ（村資金で購入）: 宣伝ビラ（注目+20/フォロワー+100）・
+    目利きの手引き（全需要+15%）・返済猶予証（初回返済-30%）。
+    価格は 100,000 / 150,000 / 200,000G で、序盤は買えない前提（村資金が貯まってからの選択肢）
 - 数値は全て `GameConstData.preparation`（リモート配信対象）。
 - 受け渡しは新規SO `RunSetupData`（SceneData規約）。アセット未作成でも static フォールバックで動作する。
 
@@ -52,6 +53,32 @@ feature/meta-preparation ブランチで実装した「メタ進行（スロッ�
    - スタートダッシュ: ボタン×3 + ラベルText×3 + チェックマークGameObject×3
    - **出撃ボタン（必須。これが未配線の間はシーンが素通りになる）** / 戻るボタン
 3. `PreparationLifetimeScope` の Inspector → **Preparation View** が割り当て済みか確認。
+
+## 2-1. レイアウトC（2026-10 作り直し）で追加した任意参照
+
+PreparationScene はモックアップC（`Docs/mockups/prep_C_summary.png`、実装キャプチャ `prep_C_impl.png`）の
+配置で組み直し済み（左: 難易度・スターターレリック・スタートダッシュ / 右: 持ち込み資金・メッセージ・出店/戻る）。
+以下の `PreparationView` フィールドは**すべて任意**で、未配線なら従来の表示・挙動のまま動く。シーンでは全部配線済み。
+
+| フィールド | 配線するもの | 配線時の挙動（未配線時） |
+|---|---|---|
+| `villageFundsLabelText` | 「村資金」の固定ラベル（金額の上に置く） | `metaCurrencyText` に金額だけ `N,NNNG` を出す（「村資金 N G」の1行） |
+| `carryLabelText` | 「持ち込み」の固定ラベル（金額の横に置く） | `borrowAmountText` に金額だけを出す（「持ち込み N G」の1行） |
+| `carrySlider` | 持ち込み額の Slider（±ボタンの下） | 0〜持ち込み可能額を 1,000G 刻みで操作。±ボタン・再描画時は `SetValueWithoutNotify` で同期、上限0なら操作不可（±ボタンのみ） |
+| `difficultySelectedSprite` / `difficultyUnselectedSprite` | `新聞/4−0購読する`（金）/ `新聞/4−1購読する`（茶） | 選択に応じて難易度ボタンの画像を切り替える。**両方**配線時のみ有効（画像は変えない） |
+| `relicScroll` / `relicPrevButton` / `relicNextButton` | レリック一覧の ScrollRect と ◀ ▶ ボタン | ◀ ▶ で横スクロール（スクロールのみ） |
+| `flyerPriceText` / `appraisalPriceText` / `gracePriceText` | スタートダッシュ各カードの価格札 TMP | 名前と価格 `N,NNNG` を分けて表示（名前ラベルに「名前（N,NNNG）」の1行） |
+
+- 持ち込みの丸め・クランプは `PreparationModel.SetCarry(amount, carryMax)`（上限が1,000の倍数でなくても上限ちょうどまで可）。
+  Presenter が `OnCarrySliderChanged` を購読して `RefreshAll` する。
+- スタートダッシュの価格は `GameConstSettings.asset` の `preparation.flyerCost / appraisalCost / graceCost`
+  （現在 100,000 / 150,000 / 200,000G）。Presenter が名前と価格を分けて `UpdateStartDash` に渡す。
+- 画面を開くときに `UIFx.PanelOpen`、レリック・難易度などの選択時に `Pop` を入れている。
+- 使っている素材: 背景・スタートダッシュのアイコン・チェックバッジ・金の選択枠は `Assets/UI/Preparation/`。
+  ボタン・枠は既存素材（追加/文字なし0−0、新聞/4−0・4−1購読する・8紙面ベース・9題字枠、鍛冶屋・道具屋/6枠・7・10・11、
+  基本/3ゴールド）、スライダーは鍛冶屋と同じスプライト。
+- `PreparationChoiceSlot.prefab` は 196x274 の縦長カードに変更済み（このシーンでのみ使用）。
+- PreparationScene を直接 Play すると BootScene に戻される。見た目の確認は Boot 後に準備シーンへ遷移させて行う。
 
 ## 3. タイトルのスロット表示（任意）
 

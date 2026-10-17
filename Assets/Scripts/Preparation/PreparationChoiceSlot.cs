@@ -29,7 +29,9 @@ public class PreparationChoiceSlot : MonoBehaviour
         if (selectButton != null)
             selectButton.onClick.AddListener(() =>
             {
-                if (!string.IsNullOrEmpty(Id)) OnSelected.OnNext(Id);
+                if (string.IsNullOrEmpty(Id)) return;
+                UIFx.Pop(transform);
+                OnSelected.OnNext(Id);
             });
         if (minusButton != null)
             minusButton.onClick.AddListener(() =>

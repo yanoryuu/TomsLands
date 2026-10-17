@@ -117,6 +117,11 @@ public class PreparationPresenter : IStartable, IDisposable
     {
         view.OnBorrowPlus.Subscribe(_ => { model.AddCarry(model.GetCarryMax(metaProgress)); RefreshAll(); }).AddTo(disposables);
         view.OnBorrowMinus.Subscribe(_ => { model.SubtractCarry(); RefreshAll(); }).AddTo(disposables);
+        view.OnCarrySliderChanged.Subscribe(amount =>
+        {
+            model.SetCarry(amount, model.GetCarryMax(metaProgress));
+            RefreshAll();
+        }).AddTo(disposables);
 
         view.OnDifficultySelected.Subscribe(difficulty =>
         {
@@ -181,11 +186,12 @@ public class PreparationPresenter : IStartable, IDisposable
         bool isLimitMax = settings.bankCarryLimits != null &&
                           bankLevel >= settings.bankCarryLimits.Length - 1;
         view.UpdateCarry(model.CarryAmount, carryLimit, bankLevel, isLimitMax);
+        view.UpdateCarrySlider(model.CarryAmount, carryMax, PreparationModel.CarryStepAmount);
 
         view.UpdateStartDash(
-            $"宣伝ビラ（{settings.flyerCost:N0}G）", model.UseFlyer,
-            $"目利きの手引き（{settings.appraisalCost:N0}G）", model.UseAppraisal,
-            $"返済猶予証（{settings.graceCost:N0}G）", model.UseGrace);
+            "宣伝ビラ", settings.flyerCost, model.UseFlyer,
+            "目利きの手引き", settings.appraisalCost, model.UseAppraisal,
+            "返済猶予証", settings.graceCost, model.UseGrace);
 
         // レリック選択のハイライトを反映
         foreach (var slot in relicSlots)
