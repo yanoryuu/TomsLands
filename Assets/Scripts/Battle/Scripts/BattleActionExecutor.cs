@@ -63,6 +63,8 @@ public class BattleActionExecutor
             var modifier = interventions != null
                 ? interventions.ResolveAttack(context, presenter.GetModel(), targetPresenter.GetModel())
                 : InterventionAttackModifier.None;
+            // 攻撃ヒット音（勇者と敵で別の音）
+            SoundManager.Instance?.PlaySE(presenter.GetModel().Type == CharacterType.Hero ? "勇者攻撃" : "敵攻撃");
             int damageDealt = presenter.PerformAttack(targetPresenter, modifier.Multiplier, modifier.BonusDamage);
             string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
             await uiView.AddLogAsync(logMessage, token);
@@ -101,10 +103,17 @@ public class BattleActionExecutor
 
             if (!hasNext) return; // 全フェーズクリア → IsBattleEnded() が勝利を返す
 
+            // ウェーブクリア → 次ウェーブの演出（配信画面内）。インターミッションと並行して流し、両方終わるまで待つ
+            var fx = sequencer.WaveFx;
+            var fxTask = fx != null
+                ? fx.PlayWaveTransitionAsync(context.CurrentPhaseIndex + 1, context.PhaseCount, FxSpeed(uiView), pauseController, token)
+                : UniTask.CompletedTask;
+
             await uiView.AddLogAsync($"--- フェーズ {context.CurrentPhaseIndex + 1} / {context.PhaseCount} ---", token);
 
             // ウェーブ間インターミッション（ゲージが進む演出を見せる「間」。販売ループはこの間も動く）
             await uiView.WaitScaledAsync(uiView.Tempo.waveIntermissionSeconds, token, pauseController);
+            await fxTask;
         }
 
         // 補充（最大同時数まで現在フェーズのキューから出現）
@@ -133,7 +142,13 @@ public class BattleActionExecutor
             if (enemyData.isBoss)
             {
                 context.IsBossPhase = true;
+                // ボス到達の警告演出（赤い明滅＋「！」＋警告音）を見せてから出現させる
+                var fx = sequencer.WaveFx;
+                var fxTask = fx != null
+                    ? fx.PlayBossWarningAsync(FxSpeed(uiView), pauseController, token)
+                    : UniTask.CompletedTask;
                 await uiView.AddLogAsync("！！！不気味な気配がする！！！", token);
+                await fxTask;
             }
 
             var enemyPresenter = factory.CreateEnemy(enemyData, spawnIndex.Value, sequencer);
@@ -153,6 +168,10 @@ public class BattleActionExecutor
             }
         }
     }
+
+    /// <summary>演出の再生速度（戦闘スピード倍率。ScaleSeconds(1) の逆数）。</summary>
+    private static float FxSpeed(BattleUIView uiView)
+        => 1f / Mathf.Max(0.01f, uiView.ScaleSeconds(1f));
 
     private void ProcessDeadEnemies()
     {

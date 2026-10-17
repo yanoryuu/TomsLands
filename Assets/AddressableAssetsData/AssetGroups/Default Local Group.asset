@@ -464,6 +464,21 @@ MonoBehaviour:
     m_SerializedLabels:
     - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 73ab81786dc5a7b49bcda97fc313c602
+    m_Address: "\u6226\u95D8/SE_\u30DC\u30B9\u8B66\u544A"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34753211a6da4c4eb3f6b1d1b43b3a36
+    m_Address: "\u6226\u95D8/SE_\u52C7\u8005\u653B\u6483"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e67a1b3124aa4dfe84ca36fc44b89191
+    m_Address: "\u6226\u95D8/SE_\u6575\u653B\u6483"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 770826da944cbe64e9184eb124e48090
     m_Address: "\u55B6\u696D/SE_\u6570\u306E\u5897\u6E1B"
     m_ReadOnly: 0

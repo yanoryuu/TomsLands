@@ -91,3 +91,24 @@ MonoBehaviour:
       m_SubObjectGUID: 
       m_SubObjectType: 
       m_EditorAssetChanged: 0
+  - key: "\u30DC\u30B9\u8B66\u544A"
+    clipRef:
+      m_AssetGUID: 73ab81786dc5a7b49bcda97fc313c602
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u52C7\u8005\u653B\u6483"
+    clipRef:
+      m_AssetGUID: 34753211a6da4c4eb3f6b1d1b43b3a36
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
+  - key: "\u6575\u653B\u6483"
+    clipRef:
+      m_AssetGUID: e67a1b3124aa4dfe84ca36fc44b89191
+      m_SubObjectName: 
+      m_SubObjectGUID: 
+      m_SubObjectType: 
+      m_EditorAssetChanged: 0
