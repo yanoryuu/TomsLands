@@ -3,7 +3,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 /// <summary>
-/// 地図上の勇者ドットキャラ。次の行き先のアイコンのそばに立ち、SPUM の移動モーションでその場で足踏みし続ける。
+/// 地図上の勇者ドットキャラ。次の行き先のアイコンのそばに立ち、SPUM の待機モーションを再生し続ける。
 /// 見た目は SPUM の勇者（Hero_SPUM.prefab）。地図の Canvas は Screen Space - Overlay で SpriteRenderer を直接置けないため、
 /// 画面外の撮影台（専用カメラ＋RenderTexture）で SPUM を写し、その絵を RawImage で地図に出す。
 /// </summary>
@@ -16,7 +16,7 @@ public class MapHeroMarker : MonoBehaviour
     [Header("SPUM")]
     [Tooltip("地図に立たせる SPUM ユニット（Hero_SPUM.prefab）")]
     [SerializeField] private SPUM_Prefabs heroPrefab;
-    [SerializeField] private PlayerState pose = PlayerState.MOVE;
+    [SerializeField] private PlayerState pose = PlayerState.IDLE;
     [Tooltip("撮影範囲の高さ（ワールド単位）。小さいほど大きく写る")]
     [SerializeField] private float viewHeight = 1f;
     [Tooltip("足元より下に空ける余白（ワールド単位。SPUM の影が切れない程度）")]

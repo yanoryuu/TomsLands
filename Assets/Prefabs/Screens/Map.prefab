@@ -805,7 +805,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   view: {fileID: 7046123364080317807}
   heroPrefab: {fileID: 1027667834400947128, guid: 7d6ab4a4e80931f4ab6004e9aed3fd59, type: 3}
-  pose: 1
+  pose: 0
   viewHeight: 1
   footMargin: 0.08
   maxTextureHeight: 512
