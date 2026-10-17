@@ -201,12 +201,12 @@ public class PreparationSettingsData
     public int metaCurrencyPerTurn = 2;
 
     // --- スタートダッシュ（村資金で購入するコストと効果量） ---
-    public int flyerCost = 1000;
+    public int flyerCost = 100000;
     public int flyerAttention = 20;
     public int flyerFollowers = 100;
-    public int appraisalCost = 1500;
+    public int appraisalCost = 150000;
     public float appraisalDemandBoost = 0.15f;
-    public int graceCost = 2000;
+    public int graceCost = 200000;
     /// <summary>返済猶予証: 初回返済額の割引率。</summary>
     public float graceDiscountRate = 0.3f;
 

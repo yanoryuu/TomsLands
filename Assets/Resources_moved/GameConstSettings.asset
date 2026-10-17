@@ -79,12 +79,12 @@ MonoBehaviour:
       metaCurrencyDivisor: 5000
       rankBonuses: c800000078000000460000002800000014000000
       metaCurrencyPerTurn: 2
-      flyerCost: 20
+      flyerCost: 100000
       flyerAttention: 20
       flyerFollowers: 100
-      appraisalCost: 25
+      appraisalCost: 150000
       appraisalDemandBoost: 0.15
-      graceCost: 30
+      graceCost: 200000
       graceDiscountRate: 0.3
     village:
       conversionRate: 0.5

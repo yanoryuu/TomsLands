@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using DG.Tweening;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -15,13 +16,19 @@ public class PreparationView : MonoBehaviour
     [Header("ヘッダー")]
     [Tooltip("村資金の残高表示（旧: メタ通貨）")]
     [SerializeField] private TextMeshProUGUI metaCurrencyText;
+    [Tooltip("任意: 「村資金」の固定ラベル。配線時は metaCurrencyText に金額だけを出す")]
+    [SerializeField] private TextMeshProUGUI villageFundsLabelText;
     [SerializeField] private TextMeshProUGUI difficultyText;
     [SerializeField] private TextMeshProUGUI messageText;
 
     [Header("持ち込み資金（村資金から持っていく）")]
     [SerializeField] private TextMeshProUGUI borrowAmountText;
+    [Tooltip("任意: 「持ち込み」の固定ラベル。配線時は borrowAmountText に金額だけを出す")]
+    [SerializeField] private TextMeshProUGUI carryLabelText;
     [SerializeField] private Button borrowPlusButton;
     [SerializeField] private Button borrowMinusButton;
+    [Tooltip("任意: 持ち込み額のスライダー（1,000G 刻み）。未配線なら±ボタンのみ")]
+    [SerializeField] private Slider carrySlider;
     [Tooltip("持ち込み上限（銀行レベル依存）の表示")]
     [SerializeField] private TextMeshProUGUI creditLineText;
     [Tooltip("旧・枠拡張ボタン。銀行レベル制に移行したため Awake で非表示にする")]
@@ -36,12 +43,19 @@ public class PreparationView : MonoBehaviour
     [SerializeField] private GameObject normalCheck;
     [SerializeField] private Button hardButton;
     [SerializeField] private GameObject hardCheck;
+    [Tooltip("任意: 難易度ボタンの選択中/未選択の見た目。両方配線時のみボタン画像を切り替える")]
+    [SerializeField] private Sprite difficultySelectedSprite;
+    [SerializeField] private Sprite difficultyUnselectedSprite;
 
     [Header("カタログ共通")]
     [SerializeField] private GameObject choiceSlotPrefab;
 
     [Header("スターターレリック")]
     [SerializeField] private Transform relicCatalogParent;
+    [Tooltip("任意: 左右ボタンでレリック一覧を送る場合の ScrollRect とボタン")]
+    [SerializeField] private ScrollRect relicScroll;
+    [SerializeField] private Button relicPrevButton;
+    [SerializeField] private Button relicNextButton;
 
     [Header("スタートダッシュ")]
     [SerializeField] private Button flyerButton;
@@ -53,6 +67,10 @@ public class PreparationView : MonoBehaviour
     [SerializeField] private Button graceButton;
     [SerializeField] private TextMeshProUGUI graceLabelText;
     [SerializeField] private GameObject graceCheck;
+    [Tooltip("任意: 価格を名前と分けて表示する場合の TMP。未配線なら名前ラベルに「名前（価格）」の1行で出す")]
+    [SerializeField] private TextMeshProUGUI flyerPriceText;
+    [SerializeField] private TextMeshProUGUI appraisalPriceText;
+    [SerializeField] private TextMeshProUGUI gracePriceText;
 
     [Header("出店 / 戻る")]
     [SerializeField] private Button departButton;
@@ -60,6 +78,8 @@ public class PreparationView : MonoBehaviour
 
     public Subject<Unit> OnBorrowPlus { get; } = new();
     public Subject<Unit> OnBorrowMinus { get; } = new();
+    /// <summary>スライダー操作で指定された持ち込み額（G、刻み丸め前の目安値）。</summary>
+    public Subject<int> OnCarrySliderChanged { get; } = new();
     public Subject<GameModeId> OnDifficultySelected { get; } = new();
     public Subject<Unit> OnCreditUpgrade { get; } = new();
     public Subject<Unit> OnFlyerToggled { get; } = new();
@@ -70,6 +90,9 @@ public class PreparationView : MonoBehaviour
 
     /// <summary>UIが最低限配線されているか（未配線なら Presenter が旧挙動にフォールバック）。</summary>
     public bool IsInteractiveReady => departButton != null;
+
+    private int carrySliderStep = 1000;
+    private int carrySliderMax;
 
     private CanvasGroup uiLockGroup;
     private bool uiLockPrevBlocks = true;
@@ -106,14 +129,26 @@ public class PreparationView : MonoBehaviour
     {
         if (borrowPlusButton != null) borrowPlusButton.onClick.AddListener(() => OnBorrowPlus.OnNext(Unit.Default));
         if (borrowMinusButton != null) borrowMinusButton.onClick.AddListener(() => OnBorrowMinus.OnNext(Unit.Default));
-        if (easyButton != null) easyButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Short));
-        if (normalButton != null) normalButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Medium));
-        if (hardButton != null) hardButton.onClick.AddListener(() => OnDifficultySelected.OnNext(GameModeId.Long));
+        if (carrySlider != null)
+        {
+            carrySlider.wholeNumbers = true;
+            carrySlider.minValue = 0;
+            carrySlider.onValueChanged.AddListener(v =>
+            {
+                int amount = Mathf.Min(Mathf.RoundToInt(v) * carrySliderStep, carrySliderMax);
+                OnCarrySliderChanged.OnNext(amount);
+            });
+        }
+        if (easyButton != null) easyButton.onClick.AddListener(() => { UIFx.Pop(easyButton.transform); OnDifficultySelected.OnNext(GameModeId.Short); });
+        if (normalButton != null) normalButton.onClick.AddListener(() => { UIFx.Pop(normalButton.transform); OnDifficultySelected.OnNext(GameModeId.Medium); });
+        if (hardButton != null) hardButton.onClick.AddListener(() => { UIFx.Pop(hardButton.transform); OnDifficultySelected.OnNext(GameModeId.Long); });
         // 枠拡張（旧・のれん消費）は廃止。持ち込み上限は村の銀行レベルで決まる
         if (creditUpgradeButton != null) creditUpgradeButton.gameObject.SetActive(false);
-        if (flyerButton != null) flyerButton.onClick.AddListener(() => OnFlyerToggled.OnNext(Unit.Default));
-        if (appraisalButton != null) appraisalButton.onClick.AddListener(() => OnAppraisalToggled.OnNext(Unit.Default));
-        if (graceButton != null) graceButton.onClick.AddListener(() => OnGraceToggled.OnNext(Unit.Default));
+        if (flyerButton != null) flyerButton.onClick.AddListener(() => { UIFx.Pop(flyerButton.transform); OnFlyerToggled.OnNext(Unit.Default); });
+        if (appraisalButton != null) appraisalButton.onClick.AddListener(() => { UIFx.Pop(appraisalButton.transform); OnAppraisalToggled.OnNext(Unit.Default); });
+        if (graceButton != null) graceButton.onClick.AddListener(() => { UIFx.Pop(graceButton.transform); OnGraceToggled.OnNext(Unit.Default); });
+        if (relicPrevButton != null) relicPrevButton.onClick.AddListener(() => ScrollRelics(-1));
+        if (relicNextButton != null) relicNextButton.onClick.AddListener(() => ScrollRelics(1));
         if (departButton != null) departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
         if (backButton != null) backButton.onClick.AddListener(() => OnBack.OnNext(Unit.Default));
 
@@ -128,6 +163,29 @@ public class PreparationView : MonoBehaviour
         FitText(flyerLabelText);
         FitText(appraisalLabelText);
         FitText(graceLabelText);
+        FitText(flyerPriceText);
+        FitText(appraisalPriceText);
+        FitText(gracePriceText);
+    }
+
+    private void Start()
+    {
+        UIFx.PanelOpen(gameObject);
+    }
+
+    /// <summary>レリック一覧を左右に1画面弱ぶん送る（ScrollRect 未配線・はみ出し無しなら何もしない）。</summary>
+    private void ScrollRelics(int dir)
+    {
+        if (relicScroll == null || relicScroll.content == null) return;
+        var viewport = relicScroll.viewport != null ? relicScroll.viewport : (RectTransform)relicScroll.transform;
+        float overflow = relicScroll.content.rect.width - viewport.rect.width;
+        if (overflow <= 0f) return;
+        float step = viewport.rect.width * 0.8f / overflow;
+        float target = Mathf.Clamp01(relicScroll.horizontalNormalizedPosition + dir * step);
+        relicScroll.StopMovement();
+        DOTween.To(() => relicScroll.horizontalNormalizedPosition,
+                v => relicScroll.horizontalNormalizedPosition = v, target, 0.25f)
+            .SetEase(Ease.OutCubic).SetLink(gameObject);
     }
 
     /// <summary>
@@ -156,7 +214,8 @@ public class PreparationView : MonoBehaviour
     /// <summary>村資金の残高表示を更新する。</summary>
     public void UpdateVillageFunds(int amount)
     {
-        if (metaCurrencyText != null) metaCurrencyText.text = $"村資金 {amount:N0}G";
+        if (metaCurrencyText != null)
+            metaCurrencyText.text = villageFundsLabelText != null ? $"{amount:N0}G" : $"村資金 {amount:N0}G";
     }
 
     public void UpdateDifficulty(string label)
@@ -172,7 +231,8 @@ public class PreparationView : MonoBehaviour
     /// <summary>持ち込み資金の表示を更新する。</summary>
     public void UpdateCarry(int amount, int carryLimit, int bankLevel, bool isLimitMax)
     {
-        if (borrowAmountText != null) borrowAmountText.text = $"持ち込み {amount:N0}G";
+        if (borrowAmountText != null)
+            borrowAmountText.text = carryLabelText != null ? $"{amount:N0}G" : $"持ち込み {amount:N0}G";
         if (creditLineText != null)
             creditLineText.text = $"上限 {carryLimit:N0}G（銀行Lv{bankLevel}）";
         if (creditUpgradeCostText != null)
@@ -181,25 +241,66 @@ public class PreparationView : MonoBehaviour
                 : "村の銀行を増築すると上限が上がる";
     }
 
+    /// <summary>
+    /// 持ち込みスライダーの範囲と位置を同期する（onValueChanged は発火させない）。
+    /// 目盛り数 = ceil(上限/刻み)。最後の目盛りは上限ちょうどに対応する。上限0なら操作不可。
+    /// </summary>
+    public void UpdateCarrySlider(int amount, int carryMax, int step)
+    {
+        if (carrySlider == null) return;
+        carrySliderStep = Mathf.Max(1, step);
+        carrySliderMax = Mathf.Max(0, carryMax);
+        int steps = (carrySliderMax + carrySliderStep - 1) / carrySliderStep;
+        carrySlider.maxValue = Mathf.Max(1, steps);
+        int pos = amount >= carrySliderMax ? steps : Mathf.RoundToInt(amount / (float)carrySliderStep);
+        carrySlider.SetValueWithoutNotify(pos);
+        carrySlider.interactable = carrySliderMax > 0;
+    }
+
     /// <summary>難易度の選択ハイライトを更新する。</summary>
     public void UpdateDifficultySelection(GameModeId selected)
     {
         if (easyCheck != null) easyCheck.SetActive(selected == GameModeId.Short);
         if (normalCheck != null) normalCheck.SetActive(selected == GameModeId.Medium);
         if (hardCheck != null) hardCheck.SetActive(selected == GameModeId.Long);
+        SetDifficultySprite(easyButton, selected == GameModeId.Short);
+        SetDifficultySprite(normalButton, selected == GameModeId.Medium);
+        SetDifficultySprite(hardButton, selected == GameModeId.Long);
     }
 
-    public void UpdateStartDash(
-        string flyerLabel, bool flyerOn,
-        string appraisalLabel, bool appraisalOn,
-        string graceLabel, bool graceOn)
+    private void SetDifficultySprite(Button button, bool selected)
     {
-        if (flyerLabelText != null) flyerLabelText.text = flyerLabel;
-        if (flyerCheck != null) flyerCheck.SetActive(flyerOn);
-        if (appraisalLabelText != null) appraisalLabelText.text = appraisalLabel;
-        if (appraisalCheck != null) appraisalCheck.SetActive(appraisalOn);
-        if (graceLabelText != null) graceLabelText.text = graceLabel;
-        if (graceCheck != null) graceCheck.SetActive(graceOn);
+        if (button == null || difficultySelectedSprite == null || difficultyUnselectedSprite == null) return;
+        if (button.targetGraphic is Image img) img.sprite = selected ? difficultySelectedSprite : difficultyUnselectedSprite;
+    }
+
+    /// <summary>
+    /// スタートダッシュ3種の表示を更新する。価格TMPが配線されていれば名前と価格を分けて表示し、
+    /// 未配線なら名前ラベルに「名前（価格G）」の1行で表示する。
+    /// </summary>
+    public void UpdateStartDash(
+        string flyerName, int flyerCost, bool flyerOn,
+        string appraisalName, int appraisalCost, bool appraisalOn,
+        string graceName, int graceCost, bool graceOn)
+    {
+        SetStartDashEntry(flyerLabelText, flyerPriceText, flyerCheck, flyerName, flyerCost, flyerOn);
+        SetStartDashEntry(appraisalLabelText, appraisalPriceText, appraisalCheck, appraisalName, appraisalCost, appraisalOn);
+        SetStartDashEntry(graceLabelText, gracePriceText, graceCheck, graceName, graceCost, graceOn);
+    }
+
+    private static void SetStartDashEntry(
+        TextMeshProUGUI label, TextMeshProUGUI price, GameObject check, string name, int cost, bool on)
+    {
+        if (price != null)
+        {
+            price.text = $"{cost:N0}G";
+            if (label != null) label.text = name;
+        }
+        else if (label != null)
+        {
+            label.text = $"{name}（{cost:N0}G）";
+        }
+        if (check != null) check.SetActive(on);
     }
 
     /// <summary>カタログ（スターターレリック）を再構築する。Setup と購読は Presenter 側。</summary>
