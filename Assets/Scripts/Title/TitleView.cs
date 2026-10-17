@@ -54,6 +54,11 @@ public sealed class TitleView : MonoBehaviour
     private Tween _titleTween;
     private TitleType _currentScreen = TitleType.Start;
 
+    // パッド/キー操作用のフォーカス単位（画面グループごと）
+    private UIFocusScope _methodScope;
+    private UIFocusScope _saveScope;
+    private int _focusSlotIndex = -1; // 直前に操作したスロット（再構築後もそこへフォーカスを戻す）
+
     private readonly List<SaveSlotView> _slotViews = new();
     private readonly CompositeDisposable _slotDisposables = new();
 
@@ -67,6 +72,7 @@ public sealed class TitleView : MonoBehaviour
         AddClickListener(startMethodBackButton, NotifyBackRequested);
         AddClickListener(saveDataBackButton, NotifyBackRequested);
 
+        SetupFocusScopes();
         DisplayScreen(TitleType.Start);
 
         if (titleIcon != null)
@@ -78,10 +84,28 @@ public sealed class TitleView : MonoBehaviour
         }
     }
 
+    private void SetupFocusScopes()
+    {
+        // スタート画面は「何かボタンを押す」だけなので何も選ばない
+        if (startScreenGroup != null)
+            UIFocusScope.GetOrAdd(startScreenGroup).AutoSelect = false;
+
+        if (startMethodScreenGroup != null)
+        {
+            _methodScope = UIFocusScope.GetOrAdd(startMethodScreenGroup);
+            _methodScope.SetCancelButton(startMethodBackButton);
+        }
+        if (saveDataScreenGroup != null)
+        {
+            _saveScope = UIFocusScope.GetOrAdd(saveDataScreenGroup);
+            _saveScope.SetCancelButton(saveDataBackButton);
+        }
+    }
+
     private void Update()
     {
-        // スタート画面では任意のキー入力・クリックで開始方法選択へ進む
-        if (_currentScreen == TitleType.Start && Input.anyKeyDown)
+        // スタート画面では任意のキー入力・クリック・パッドのボタンで開始方法選択へ進む（新 Input System で判定）
+        if (_currentScreen == TitleType.Start && ControllerInput.AnyPressedThisFrame())
             OnStartRequested.OnNext(Unit.Default);
     }
 
@@ -133,8 +157,8 @@ public sealed class TitleView : MonoBehaviour
             // ロードモードでは空きスロットを選択不可にする。ニューゲームでは全て選択可。
             slot.SetSelectable(loadMode ? info.Exists : true);
 
-            slot.OnSelect.Subscribe(OnSaveSlotSelected.OnNext).AddTo(_slotDisposables);
-            slot.OnDelete.Subscribe(OnSaveSlotDeleteRequested.OnNext).AddTo(_slotDisposables);
+            slot.OnSelect.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotSelected.OnNext(i); }).AddTo(_slotDisposables);
+            slot.OnDelete.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotDeleteRequested.OnNext(i); }).AddTo(_slotDisposables);
 
             _slotViews.Add(slot);
 
@@ -148,6 +172,39 @@ public sealed class TitleView : MonoBehaviour
             slot.transform.DOScale(1f, 0.28f).SetDelay(delay).SetEase(Ease.OutBack).SetLink(slot.gameObject);
             index++;
         }
+
+        // パッド/キー: 直前に操作したスロット（無ければ最初に選べるスロット）へフォーカス
+        if (_saveScope != null)
+        {
+            // 左下の「戻る」から上は一番下の選べるスロットへ（Automatic だと斜め上の先頭スロットへ飛ぶ）
+            if (saveDataBackButton != null)
+                saveDataBackButton.navigation = new Navigation { mode = Navigation.Mode.Explicit, selectOnUp = LastUsableSlotButton() };
+            _saveScope.FirstSelected = PickFocusSlotButton();
+            _saveScope.Refocus(true);
+        }
+    }
+
+    private Selectable LastUsableSlotButton()
+    {
+        for (int i = _slotViews.Count - 1; i >= 0; i--)
+        {
+            var b = _slotViews[i] != null ? _slotViews[i].SelectButton : null;
+            if (b != null && b.interactable) return b;
+        }
+        return null;
+    }
+
+    private Selectable PickFocusSlotButton()
+    {
+        Selectable firstUsable = null;
+        for (int i = 0; i < _slotViews.Count; i++)
+        {
+            var b = _slotViews[i] != null ? _slotViews[i].SelectButton : null;
+            if (b == null || !b.interactable) continue;
+            if (i == _focusSlotIndex) return b;
+            if (firstUsable == null) firstUsable = b;
+        }
+        return firstUsable != null ? firstUsable : saveDataBackButton;
     }
 
     private void ClearSaveSlots()
@@ -164,6 +221,10 @@ public sealed class TitleView : MonoBehaviour
     public void DisplayScreen(TitleType screen)
     {
         _currentScreen = screen;
+        if (screen != TitleType.SaveData) _focusSlotIndex = -1;
+        // 開始方法の最初のフォーカス: 続きがあれば「続きから」、無ければ「ニューゲーム」
+        if (_methodScope != null)
+            _methodScope.FirstSelected = continueButton != null && continueButton.interactable ? continueButton : newGameButton;
         SetGroupActive(startScreenGroup, screen == TitleType.Start);
         SetGroupActive(startMethodScreenGroup, screen == TitleType.ContinueOrNewGame);
         SetGroupActive(saveDataScreenGroup, screen == TitleType.SaveData);

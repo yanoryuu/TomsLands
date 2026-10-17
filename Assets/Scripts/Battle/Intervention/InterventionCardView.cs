@@ -65,6 +65,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
 
     private readonly Subject<HeroInterventionType> _onHero = new();
     private readonly Subject<DungeonInterventionType> _onDungeon = new();
+    private readonly Subject<HeroInterventionType> _onHeroAccepted = new();
 
     private readonly InterventionButtonState[] _heroStates = new InterventionButtonState[3];
     private readonly InterventionButtonState[] _dungeonStates = new InterventionButtonState[4];
@@ -88,6 +89,15 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
     public Observable<HeroInterventionType> OnHeroRequested => _onHero;
     public Observable<DungeonInterventionType> OnDungeonRequested => _onDungeon;
     public InterventionFace CurrentFace { get; private set; } = InterventionFace.Hero;
+
+    /// <summary>勇者側の指示が受け付けられた（支払い済み・実行待ちになった）。パッドの対象選択に使う。</summary>
+    public Observable<HeroInterventionType> OnHeroRequestAccepted => _onHeroAccepted;
+    /// <summary>めくりアニメ中か。</summary>
+    public bool IsFlipping => _flipping;
+    /// <summary>配信中で操作を受け付けているか（SetInteractable）。</summary>
+    public bool IsInteractable => _interactable;
+    /// <summary>めくりタブ（パッドの既定フォーカス先）。</summary>
+    public Selectable TabSelectable => tabButton;
 
     private void Awake()
     {
@@ -119,6 +129,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
     {
         _onHero.Dispose();
         _onDungeon.Dispose();
+        _onHeroAccepted.Dispose();
     }
 
     private static void Hook(InterventionButtonWidget w, UnityEngine.Events.UnityAction a)
@@ -423,6 +434,8 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         _lastPressed = w;
         w?.PlayPressed();
         _onHero.OnNext(type);
+        // 受け付けられると Presenter が同期で SetPending(true) を呼ぶ
+        if (_pending && _lastPressed == w) _onHeroAccepted.OnNext(type);
     }
 
     private void RequestDungeon(DungeonInterventionType type, InterventionButtonWidget w)
@@ -433,6 +446,27 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         _lastPressed = w;
         w?.PlayPressed();
         _onDungeon.OnNext(type);
+    }
+
+    /// <summary>
+    /// パッド/キー操作でフォーカスを置く要素: 今の面の押せるボタン（左から）→ タブ。
+    /// </summary>
+    public Selectable GetPadFocusTarget()
+    {
+        var face = CurrentFace == InterventionFace.Hero
+            ? new[] { healButton, skillButton, specialButton }
+            : new[] { trapButton, curseButton, reinforceButton, bossBuffButton };
+        Selectable best = null;
+        float bestX = float.MaxValue;
+        foreach (var w in face)
+        {
+            var b = w != null ? w.Button : null;
+            if (b == null || !b.isActiveAndEnabled || !b.IsInteractable()) continue;
+            float x = b.transform.position.x;
+            if (x < bestX) { bestX = x; best = b; }
+        }
+        if (best != null) return best;
+        return tabButton != null && tabButton.isActiveAndEnabled ? tabButton : null;
     }
 
     private bool CanPress() => _interactable && !_pending && !_flipping && _cooldown <= 0f;

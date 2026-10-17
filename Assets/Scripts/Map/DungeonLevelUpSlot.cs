@@ -24,7 +24,21 @@ public class DungeonLevelUpSlot : MonoBehaviour
         levelUpButton.onClick.AddListener(() => OnLevelUpClicked.OnNext(DungeonKey));
         if (selectButton != null)
             selectButton.onClick.AddListener(() => OnSlotSelected.OnNext(DungeonKey));
+
+        // パッド/キー: 行（アイコン or レベルアップ）にフォーカスが来たら詳細を表示（クリック選択と同じ）
+        if (selectButton != null)
+            ControllerSelectRelay.GetOrAdd(selectButton).Selected += NotifySelectedByNav;
+        if (levelUpButton != null)
+            ControllerSelectRelay.GetOrAdd(levelUpButton).Selected += NotifySelectedByNav;
     }
+
+    private void NotifySelectedByNav() => OnSlotSelected.OnNext(DungeonKey);
+
+    /// <summary>パッド/キー用のフォーカス先（行の選択ボタン）。</summary>
+    public Selectable SelectButton => selectButton;
+
+    /// <summary>パッド/キー用のフォーカス先（レベルアップボタン）。</summary>
+    public Selectable LevelUpButton => levelUpButton;
 
     public void SetSlot(DungeonLevelUpSlotData data)
     {

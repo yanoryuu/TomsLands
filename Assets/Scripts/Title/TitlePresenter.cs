@@ -86,7 +86,18 @@ public sealed class TitlePresenter : IStartable, IDisposable
 
         _isOptionTransitioning = true;
         var op = SceneManager.LoadSceneAsync(settingSceneName, LoadSceneMode.Additive);
-        op.completed += _ => _isOptionTransitioning = false;
+        op.completed += _ =>
+        {
+            _isOptionTransitioning = false;
+            // パッド/キー: 設定画面をモーダルにし、B/Esc で閉じる（閉じるボタンと同じ＝アンロード）
+            bool closing = false;
+            UIFocusManager.AttachSceneScope(settingSceneName, () =>
+            {
+                if (closing) return;
+                closing = true;
+                SceneManager.UnloadSceneAsync(settingSceneName);
+            });
+        };
     }
 
     private void GoBack()

@@ -47,6 +47,10 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             parentCanvas = GetComponentInParent<Canvas>();
         }
 
+        // パッド/キー: 選択でホバー表示（矢印・価格）、A でクリック（価格グラフ・補充）を転送する。
+        // マウス操作中は何もしない（PointerEventBridge 側で判定）
+        if (GetComponent<PointerEventBridge>() == null) gameObject.AddComponent<PointerEventBridge>();
+
         if (arrowImage != null)
         {
             arrowImage.gameObject.SetActive(false);
@@ -258,10 +262,136 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        // パッドで「持ち上げ」中なら、ここを置き先にする（ドラッグ＆ドロップと同じ通知）
+        if (padHeld != null)
+        {
+            var from = padHeld;
+            CancelPadHold();
+            if (from != this) OnItemDropped?.Invoke(from, this);
+            return;
+        }
+
         // ドラッグ操作中や空スロットはスキップ
         if (draggedItem != null) return;
         if (CurrentItem == null) return;
         OnItemClicked?.Invoke(this);
+    }
+
+    // ─────────────────────────────────────────
+    //  パッド操作: X で持ち上げ → 置き先を選んで A（ドラッグ＆ドロップの代替）
+    // ─────────────────────────────────────────
+
+    private static ItemSlotView padHeld;
+    private const float PadGhostLift = 0.35f;   // 置き先スロットの高さに対する浮かせ量
+    private const float PadGhostBob = 6f;       // 上下のゆれ幅（px）
+
+    /// <summary>パッドでアイテムを持ち上げ中か。</summary>
+    public static bool IsPadHolding => padHeld != null;
+
+    /// <summary>
+    /// このスロットのアイテムを持ち上げる（ドラッグ開始と同じ見た目: 元を半透明・ゴーストを表示）。
+    /// 空スロットなら何もしない。
+    /// </summary>
+    public bool PadPickUp()
+    {
+        if (CurrentItem == null || itemIcon == null || !itemIcon.enabled) return false;
+        if (draggedItem != null) return false;
+        if (padHeld != null) CancelPadHold();
+        if (parentCanvas == null) parentCanvas = GetComponentInParent<Canvas>();
+        if (parentCanvas == null) return false;
+
+        if (ghostIcon == null)
+        {
+            var ghostObj = new GameObject("GhostIcon");
+            ghostObj.transform.SetParent(parentCanvas.transform, false);
+            ghostIcon = ghostObj.AddComponent<Image>();
+            ghostIcon.raycastTarget = false;
+            ghostIcon.preserveAspect = true;
+            if (ghostObj.GetComponent<CanvasGroup>() == null) ghostObj.AddComponent<CanvasGroup>();
+        }
+        ghostIcon.transform.SetAsLastSibling();
+        ghostIcon.sprite = itemIcon.sprite;
+        ghostIcon.rectTransform.sizeDelta = GetComponent<RectTransform>().sizeDelta;
+        ghostIcon.gameObject.SetActive(true);
+        SetHeldLook(true);
+
+        padHeld = this;
+        UpdatePadGhost();
+        UIFx.Pop(ghostIcon.transform, 0.8f, 0.18f);
+        return true;
+    }
+
+    /// <summary>
+    /// このスロットのアイテムを target に置く（パッドの「X で並べる」）。
+    /// ドラッグ＆ドロップ（OnDrop）と同じ通知を出すので、入替・在庫数・売り場の扱いは D&amp;D と同一。
+    /// </summary>
+    public bool PadPlaceOnto(ItemSlotView target)
+    {
+        if (target == null || target == this || CurrentItem == null) return false;
+        if (draggedItem != null) return false;
+        if (padHeld != null) CancelPadHold();
+        OnItemDropped?.Invoke(this, target);
+        return true;
+    }
+
+    /// <summary>持ち上げを取り消す（B・マウスへの切替・パネル非表示など）。</summary>
+    public static void CancelPadHold()
+    {
+        var held = padHeld;
+        padHeld = null;
+        if (ghostIcon != null) ghostIcon.gameObject.SetActive(false);
+        if (held != null) held.SetHeldLook(false);
+    }
+
+    private void SetHeldLook(bool held)
+    {
+        float a = held ? 0.5f : 1f;
+        if (canvasGroup != null) canvasGroup.alpha = a;
+        else if (itemIcon != null)
+        {
+            var c = itemIcon.color;
+            c.a = a;
+            itemIcon.color = c;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (padHeld == this) UpdatePadGhost();
+    }
+
+    /// <summary>ゴーストを「いま選んでいるスロット」の少し上に浮かせる。</summary>
+    private void UpdatePadGhost()
+    {
+        if (ghostIcon == null || parentCanvas == null) return;
+        var es = EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        var target = sel != null ? sel.GetComponent<ItemSlotView>() : null;
+        var rt = (target != null ? target.transform : transform) as RectTransform;
+        if (rt == null) return;
+
+        var srcCanvas = rt.GetComponentInParent<Canvas>();
+        var srcCam = CanvasCamera(srcCanvas);
+        var dstCam = CanvasCamera(parentCanvas);
+        var top = rt.TransformPoint(new Vector3(rt.rect.center.x, rt.rect.yMax, 0f));
+        var screen = RectTransformUtility.WorldToScreenPoint(srcCam, top);
+        float scale = parentCanvas.rootCanvas.scaleFactor;
+        screen.y += (rt.rect.height * PadGhostLift + Mathf.Sin(Time.unscaledTime * 5f) * PadGhostBob) * scale;
+        if (RectTransformUtility.ScreenPointToWorldPointInRectangle(parentCanvas.transform as RectTransform, screen, dstCam, out var world))
+            ghostIcon.transform.position = world;
+    }
+
+    private static Camera CanvasCamera(Canvas canvas)
+    {
+        if (canvas == null) return null;
+        var root = canvas.rootCanvas;
+        if (root.renderMode == RenderMode.ScreenSpaceOverlay) return null;
+        return root.worldCamera != null ? root.worldCamera : Camera.main;
+    }
+
+    private void OnDisable()
+    {
+        if (padHeld == this) CancelPadHold();
     }
 
     public void OnPointerExit(PointerEventData eventData)

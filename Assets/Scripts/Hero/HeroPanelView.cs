@@ -55,7 +55,10 @@ public class HeroPanelView : MonoBehaviour
             closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
 
         if (characterButton != null)
+        {
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+            characterButton.navigation = new Navigation { mode = Navigation.Mode.None }; // 立ち絵はパッドで選ばない（画面より大きい枠が出るため）
+        }
 
         if (weaponDropdown != null)
         {
@@ -88,6 +91,24 @@ public class HeroPanelView : MonoBehaviour
         RegisterInfoButton(armorInfoButton);
         RegisterInfoButton(tacticsInfoButton);
         RegisterInfoButton(clearProbabilityInfoButton);
+
+        // パッド/キー: ドロップダウン（とクリア確率欄）を選んだら、対応する説明をホバー時と同じく表示する
+        RegisterNavDescription(weaponDropdown, weaponInfoButton);
+        RegisterNavDescription(armorDropdown, armorInfoButton);
+        RegisterNavDescription(tacticsDropdown, tacticsInfoButton);
+        RegisterNavDescription(clearProbabilityInfoButton, clearProbabilityInfoButton);
+    }
+
+    private void RegisterNavDescription(Selectable selectable, Button descriptionSource)
+    {
+        if (selectable == null || descriptionSource == null) return;
+        var relay = ControllerSelectRelay.GetOrAdd(selectable);
+        relay.Selected += () =>
+        {
+            if (buttonDescriptions.TryGetValue(descriptionSource, out var desc))
+                OnHoverEnter.OnNext(desc);
+        };
+        relay.Deselected += () => OnHoverExit.OnNext(Unit.Default);
     }
 
     private void RegisterInfoButton(Button button)

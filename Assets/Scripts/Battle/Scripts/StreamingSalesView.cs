@@ -42,6 +42,9 @@ public class StreamingSalesView : MonoBehaviour
         itemSlots[slotIndex].UpdateStock(newStock);
     }
 
+    /// <summary>売り場スロット（左から順）。パッドの「X で並べる」の置き先探しに使う。</summary>
+    public IReadOnlyList<ItemSlotView> ItemSlots => itemSlots;
+
     public int GetSlotIndex(ItemSlotView slot)
     {
         return itemSlots.IndexOf(slot);

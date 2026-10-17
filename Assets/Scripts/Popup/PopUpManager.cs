@@ -83,6 +83,14 @@ public class PopUpManager
                 parentScopeRegistration?.Dispose();
                 parentScopeRegistration = null;
                 isLoading = false;
+
+                // パッド/キー対応: ポップアップをモーダルなフォーカス単位にし、B/Esc でキャンセル（閉じるのみなら閉じる）
+                var closeOnly = data.IsCloseOnly;
+                UIFocusManager.AttachSceneScope(PopUpSceneName, () =>
+                {
+                    if (CurrentData != data) return;
+                    (closeOnly ? data.OnConfirm : data.OnCancel)?.Invoke();
+                });
             };
         }
         else

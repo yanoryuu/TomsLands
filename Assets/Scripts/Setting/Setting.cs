@@ -50,6 +50,56 @@ public class Setting : MonoBehaviour
     // 解像度ドロップダウンの選択肢（重複除去済み）
     private readonly List<Vector2Int> resolutionOptions = new();
 
+    // ---- パッド/キー ----
+    // 加算シーンのため、シーンファイルではなくここでフォーカス範囲を構成する。
+    // モーダル（設定を閉じるまで下の画面へフォーカスが出ない）・B/Esc で閉じる・LB/RB でタブ切替。
+    private UIFocusScope focusScope;
+    private int currentTab;
+
+    private void Awake()
+    {
+        var canvas = GetComponentInParent<Canvas>();
+        var host = canvas != null ? canvas.rootCanvas.gameObject : gameObject;
+        focusScope = UIFocusScope.GetOrAdd(host);
+        if (focusScope == null) return;
+        focusScope.Modal = true;
+        focusScope.Priority = Mathf.Max(focusScope.Priority, 100);
+        if (closeBtn != null) focusScope.SetCancelButton(closeBtn);
+        if (bgmSlider != null) focusScope.FirstSelected = bgmSlider;
+        focusScope.OnButton
+            .Subscribe(b =>
+            {
+                if (b == ControllerButton.LB) ShowTabByNav(currentTab - 1);
+                else if (b == ControllerButton.RB) ShowTabByNav(currentTab + 1);
+            })
+            .AddTo(this);
+    }
+
+    private void ShowTabByNav(int index)
+    {
+        const int tabCount = 4;
+        index = (index % tabCount + tabCount) % tabCount;
+        ShowTab(index);
+        var target = TabFocusTarget(index);
+        if (target != null && focusScope != null) focusScope.Select(target);
+    }
+
+    /// <summary>タブを開いたとき最初に選ぶ要素（中身が無い「情報」タブは隣のタブボタン）。</summary>
+    private Selectable TabFocusTarget(int index)
+    {
+        Selectable first = index switch
+        {
+            0 => bgmSlider,
+            1 => fullscreenToggle,
+            2 => fastEffectsToggle,
+            _ => null,
+        };
+        if (first != null && first.isActiveAndEnabled && first.IsInteractable()) return first;
+        foreach (var tab in new[] { soundTabButton, displayTabButton, effectTabButton, infoTabButton })
+            if (tab != null && tab.isActiveAndEnabled && tab.IsInteractable()) return tab;
+        return closeBtn;
+    }
+
     private void Start()
     {
         InitSound();
@@ -125,6 +175,7 @@ public class Setting : MonoBehaviour
 
     private void ShowTab(int index)
     {
+        currentTab = index;
         if (soundGroup) soundGroup.SetActive(index == 0);
         if (displayGroup) displayGroup.SetActive(index == 1);
         if (effectGroup) effectGroup.SetActive(index == 2);
@@ -135,6 +186,13 @@ public class Setting : MonoBehaviour
         if (displayTabButton) displayTabButton.interactable = index != 1;
         if (effectTabButton) effectTabButton.interactable = index != 2;
         if (infoTabButton) infoTabButton.interactable = index != 3;
+
+        // タブボタンを A で押すとそのボタンは押せなくなる（選択中表示）ので、戻り先をタブの中身にしておく
+        if (focusScope != null)
+        {
+            var target = TabFocusTarget(index);
+            if (target != null) focusScope.FirstSelected = target;
+        }
     }
 
     // ---- 変更の反映 ----

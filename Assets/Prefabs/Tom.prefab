@@ -7021,6 +7021,8 @@ MonoBehaviour:
   rb: {fileID: 1114321894659687860}
   playerInput: {fileID: 4848368050064746584}
   animator: {fileID: 6576133530161645048}
+  ignoreArrowKeysAndDpad: 1
+  walkOnlyWhileParentScopeTop: 1
 --- !u!114 &4848368050064746584
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -34,6 +34,18 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         confirmButton.onClick.AddListener(HandleConfirm);
         cancelButton.onClick.AddListener(Hide);
 
+        // パッド操作: モーダル。B=キャンセル、初期フォーカスは「全額」（購入確定は誤爆防止のため避ける）
+        var scope = UIFocusScope.GetOrAdd(gameObject);
+        if (scope != null)
+        {
+            scope.Modal = true;
+            scope.Priority = Mathf.Max(scope.Priority, 10);
+            scope.FirstSelected = fullAmountButton;
+            scope.RememberLastSelected = false; // 開くたびに「全額」から
+            if (!scope.HasCancel) scope.SetCancelButton(cancelButton);
+        }
+        SetupPadNavigation();
+
         // 選択肢はコードで確定させる（シーン側は空のTMP_Dropdownを置くだけでよい）
         if (strategyDropdown != null)
         {
@@ -51,6 +63,38 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         // シーン上で非アクティブ始まりのため Awake は初回 Show() 中に走り、
         // 最後に消すと「1回目のオート購入でポップアップが出ない」バグになる
         // （初期非表示はシーン側の初期状態で担保する）。
+    }
+
+    /// <summary>
+    /// パッド操作のナビゲーションを明示する（自動だと「キャンセル」に到達できず、背後の画面へ抜けようとするため）。
+    /// 入力欄 [全額]
+    ///        [半額]
+    ///        [方針]
+    /// [キャンセル] [購入]
+    /// </summary>
+    private void SetupPadNavigation()
+    {
+        Selectable strategy = strategyDropdown != null && strategyDropdown.gameObject.activeSelf ? strategyDropdown : null;
+        SetNav(budgetInputField, up: null, down: cancelButton, left: null, right: fullAmountButton);
+        SetNav(fullAmountButton, up: null, down: halfAmountButton, left: budgetInputField, right: null);
+        SetNav(halfAmountButton, up: fullAmountButton, down: strategy != null ? strategy : confirmButton, left: budgetInputField, right: null);
+        if (strategy != null)
+            SetNav(strategy, up: halfAmountButton, down: null, left: confirmButton, right: null);
+        SetNav(confirmButton, up: budgetInputField, down: null, left: cancelButton, right: strategy);
+        SetNav(cancelButton, up: budgetInputField, down: null, left: null, right: confirmButton);
+    }
+
+    private static void SetNav(Selectable s, Selectable up, Selectable down, Selectable left, Selectable right)
+    {
+        if (s == null) return;
+        s.navigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = up,
+            selectOnDown = down,
+            selectOnLeft = left,
+            selectOnRight = right,
+        };
     }
 
     /// <summary>

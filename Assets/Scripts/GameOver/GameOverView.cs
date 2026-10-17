@@ -18,6 +18,10 @@ public class GameOverView : MonoBehaviour
     {
         retryButton.onClick.AddListener(() => OnRetryClicked.OnNext(Unit.Default));
         goToTitleButton.onClick.AddListener(() => OnGoToTitleClicked.OnNext(Unit.Default));
+
+        // パッド/キー: 最初は「リトライ」。戻る操作は無い（Cancel なし）
+        var scope = UIFocusScope.GetOrAdd(gameObject);
+        scope.FirstSelected = retryButton;
     }
 
     public void Setup(int turn)

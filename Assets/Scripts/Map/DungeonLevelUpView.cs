@@ -39,7 +39,10 @@ public class DungeonLevelUpView : MonoBehaviour
     {
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         if (characterButton != null)
+        {
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+            characterButton.navigation = new Navigation { mode = Navigation.Mode.None }; // 立ち絵はパッドで選ばない（画面より大きい枠が出るため）
+        }
         EnsureSingleColumnLayout();
     }
 
@@ -70,8 +73,55 @@ public class DungeonLevelUpView : MonoBehaviour
         ClearMonsterObjects(nextMonsterObjects);
     }
 
+    // ---------------- パッド/キー ----------------
+
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+    private DungeonName? focusKey;
+    private bool focusOnLevelUp;
+
+    private void OnEnable() => pendingFocus.Request(true);
+
+    private void LateUpdate()
+    {
+        if (focusScope == null) focusScope = GetComponentInParent<UIFocusScope>();
+        pendingFocus.Tick(focusScope, SlotFocusTarget);
+    }
+
+    /// <summary>作り直し前に選んでいた行（レベルアップ直後など）→ 無ければ先頭行。</summary>
+    private Selectable SlotFocusTarget()
+    {
+        DungeonLevelUpSlot first = null;
+        foreach (var slot in activeSlots)
+        {
+            if (slot == null || slot.SelectButton == null) continue;
+            if (!UIFocusManager.IsUsable(slot.SelectButton.gameObject)) continue;
+            if (first == null) first = slot;
+            if (focusKey.HasValue && slot.DungeonKey == focusKey.Value)
+            {
+                if (focusOnLevelUp && slot.LevelUpButton != null && UIFocusManager.IsUsable(slot.LevelUpButton.gameObject))
+                    return slot.LevelUpButton;
+                return slot.SelectButton;
+            }
+        }
+        return first != null ? first.SelectButton : null;
+    }
+
     public List<DungeonLevelUpSlot> PopulateDungeonList(List<DungeonLevelUpSlotData> dungeons)
     {
+        // 選択中の行を覚えておき、作り直した後も同じ行へ戻す
+        bool focusInList = false;
+        focusKey = null;
+        focusOnLevelUp = false;
+        foreach (var slot in activeSlots)
+        {
+            if (slot == null || !ControllerFocusUtil.IsSelectionInside(slot.transform)) continue;
+            focusInList = true;
+            focusKey = slot.DungeonKey;
+            focusOnLevelUp = slot.LevelUpButton != null && ControllerFocusUtil.IsSelectionInside(slot.LevelUpButton.transform);
+        }
+        pendingFocus.Request(focusInList);
+
         foreach (var slot in activeSlots)
             if (slot != null) Destroy(slot.gameObject);
         activeSlots.Clear();

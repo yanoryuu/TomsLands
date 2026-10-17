@@ -55,6 +55,13 @@ public class ItemPopUpManager
                 parentScopeRegistration?.Dispose();
                 parentScopeRegistration = null;
                 isLoading = false;
+
+                // パッド/キー対応: モーダルなフォーカス単位にし、B/Esc で閉じる
+                UIFocusManager.AttachSceneScope(SceneName, () =>
+                {
+                    if (CurrentData != data) return;
+                    data.OnConfirm?.Invoke();
+                });
             };
         }
         else

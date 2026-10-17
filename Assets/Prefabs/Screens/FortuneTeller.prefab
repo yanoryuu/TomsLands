@@ -524,6 +524,7 @@ GameObject:
   - component: {fileID: 4022888179666873789}
   - component: {fileID: 3743871123073800178}
   - component: {fileID: 4697634499612545198}
+  - component: {fileID: 8127275757819676294}
   m_Layer: 5
   m_Name: FortuneTeller
   m_TagString: Untagged
@@ -590,6 +591,43 @@ MonoBehaviour:
   characterExpression: {fileID: 5292017145917131605}
   closeButton: {fileID: 1166709587243511004}
   characterButton: {fileID: 8965917264644667730}
+--- !u!114 &8127275757819676294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1856136783151062816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f63e027f8ec1bc346b2371ebfdeb2679, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 0}
+  autoSelect: 1
+  rememberLastSelected: 1
+  modal: 0
+  priority: 1
+  cancelMode: 1
+  cancelButton: {fileID: 1166709587243511004}
+  onCancel:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabRight:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonX:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonY:
+    m_PersistentCalls:
+      m_Calls: []
+  onMenu:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1919400455996164435
 GameObject:
   m_ObjectHideFlags: 0
@@ -2574,7 +2612,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -2877,7 +2915,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -3087,7 +3125,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -3207,7 +3245,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}
@@ -3327,7 +3365,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Navigation:
-    m_Mode: 3
+    m_Mode: 0
     m_WrapAround: 0
     m_SelectOnUp: {fileID: 0}
     m_SelectOnDown: {fileID: 0}

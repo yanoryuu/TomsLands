@@ -18,6 +18,13 @@ public class ProphetRankingRowUI : MonoBehaviour, IPointerEnterHandler, IPointer
     public event Action<string> OnHoverEnter;
     public event Action OnHoverExit;
 
+    private void Awake()
+    {
+        // パッド/キーの選択枠を行の背景に合わせる（行の RectTransform はアイコン幅しかない）
+        if (rowBackground != null && GetComponent<UIFocusHighlightOverride>() == null)
+            gameObject.AddComponent<UIFocusHighlightOverride>().target = rowBackground.rectTransform;
+    }
+
     public void SetData(int rank, Sprite icon, string itemName, int price, string dialogueId = "")
     {
         rankText.text = rank.ToString();

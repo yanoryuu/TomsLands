@@ -72,6 +72,7 @@ public class InfoBrokerView : MonoBehaviour
         if (characterButton != null)
         {
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+            characterButton.navigation = new Navigation { mode = Navigation.Mode.None }; // 立ち絵はパッドで選ばない（画面より大きい枠が出るため）
         }
 
         if (mapButton != null)
@@ -109,10 +110,75 @@ public class InfoBrokerView : MonoBehaviour
 
         ShowPanel(InfoBrokerTab.Map);
         SortItemTab(InfoBrokerTab.Map);
+
+        // パッド/キー: LB/RB でタブ切替（地図 → 取引所 → 開発。画面上の並び順）
+        focusScope = GetComponentInParent<UIFocusScope>();
+        if (focusScope != null)
+        {
+            focusScope.OnButton
+                .Subscribe(b =>
+                {
+                    if (b == ControllerButton.LB) StepTab(-1);
+                    else if (b == ControllerButton.RB) StepTab(1);
+                })
+                .AddTo(this);
+        }
+    }
+
+    // ---------------- パッド/キー ----------------
+
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+    private InfoBrokerTab currentTab = InfoBrokerTab.Map;
+    private Transform tabButtonsRoot => mapButton != null ? mapButton.transform.parent : null;
+
+    private void OnEnable() => pendingFocus.Request(true);
+
+    private void LateUpdate() => pendingFocus.Tick(focusScope, PanelFocusTarget);
+
+    /// <summary>表示中タブで最初に選ばせる要素。開発タブは誤爆防止でレベルアップではなくタブ自身。</summary>
+    private Selectable PanelFocusTarget()
+    {
+        switch (currentTab)
+        {
+            case InfoBrokerTab.Map:
+                var mapInfo = mapPanel != null ? mapPanel.GetComponentInChildren<MapInfoView>() : null;
+                var row = mapInfo != null ? (mapInfo.SelectedRowTarget() ?? mapInfo.FirstRowTarget()) : null;
+                return row != null ? row : (mapPanel != null ? ControllerFocusUtil.FirstUsable(mapPanel.transform) : null);
+            case InfoBrokerTab.Exchange:
+                var list = exchangeListParent != null ? ControllerFocusUtil.FirstUsable(exchangeListParent) : null;
+                return list != null ? list : (exchangePanel != null ? ControllerFocusUtil.FirstUsable(exchangePanel.transform) : null);
+            case InfoBrokerTab.Development:
+                return developmentButton;
+        }
+        return null;
+    }
+
+    private void StepTab(int dir)
+    {
+        var tabs = new List<(InfoBrokerTab tab, Button button)>();
+        void Add(InfoBrokerTab t, Button b)
+        {
+            if (b != null && b.gameObject.activeInHierarchy && b.IsInteractable()) tabs.Add((t, b));
+        }
+        Add(InfoBrokerTab.Map, mapButton);
+        Add(InfoBrokerTab.Exchange, exchangeButton);
+        Add(InfoBrokerTab.Development, developmentButton);
+        if (tabs.Count < 2) return;
+        tabs.Sort((a, b) => a.button.transform.position.x.CompareTo(b.button.transform.position.x));
+
+        int index = tabs.FindIndex(t => t.tab == currentTab);
+        int next = index < 0 ? 0 : (index + dir + tabs.Count) % tabs.Count;
+        tabs[next].button.onClick.Invoke();
     }
 
     public void ShowPanel(InfoBrokerTab tab)
     {
+        bool changed = tab != currentTab;
+        currentTab = tab;
+        // タブを替えたら、選択が隠れたパネルに残らないよう新しいパネルの先頭へ
+        if (changed) pendingFocus.Request(!ControllerFocusUtil.IsSelectionInside(tabButtonsRoot));
+
         if (mapPanel != null)
         {
             mapPanel.SetActive(tab == InfoBrokerTab.Map);

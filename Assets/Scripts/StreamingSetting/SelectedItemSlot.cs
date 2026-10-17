@@ -91,6 +91,36 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
             OnItemDeselected?.Invoke(_itemId);
     }
 
+    // ─── パッド/キー: スロット内（数量スライダー・±ボタン）を選んでいる間に X で解除（右クリックの代替） ───
+    private IDisposable _padSub;
+
+    private void OnEnable()
+    {
+        _padSub = ControllerInput.OnButtonPressed
+            .Where(b => b == ControllerButton.X)
+            .Subscribe(_ => TryPadDeselect());
+    }
+
+    private void OnDisable()
+    {
+        _padSub?.Dispose();
+        _padSub = null;
+    }
+
+    private void TryPadDeselect()
+    {
+        if (string.IsNullOrEmpty(_itemId) || !ControllerInput.IsNavigating.CurrentValue) return;
+        if (UIFocusManager.IsScopeInputBlocked) return;
+        var es = EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        if (sel == null || !sel.transform.IsChildOf(transform)) return;
+        OnPadDeselectRequested?.Invoke(this);
+        OnItemDeselected?.Invoke(_itemId);
+    }
+
+    /// <summary>パッドの X で解除されようとしている（View がフォーカスの戻し先を覚えるため）。</summary>
+    public event Action<SelectedItemSlot> OnPadDeselectRequested;
+
     private void OnDestroy()
     {
         qtySlider?.onValueChanged.RemoveAllListeners();

@@ -30,12 +30,21 @@ public class TurnPhaseView : MonoBehaviour
     [SerializeField] private Color stepperActiveColor = new(1f, 0.82f, 0.3f, 1f);
     [SerializeField] private Color stepperInactiveColor = new(1f, 1f, 1f, 0.45f);
 
+    [Header("パッド操作の初期フォーカス（フェーズ切替時に選ぶボタン）")]
+    [Tooltip("仕入れフェーズ（例: 鍛冶屋）")]
+    [SerializeField] private Selectable procurementFocus;
+    [Tooltip("陳列フェーズ（例: 商品陳列）")]
+    [SerializeField] private Selectable displayFocus;
+    [Tooltip("営業フェーズ。誤爆防止のため営業開始ボタンは指定しない。未指定なら戻るボタン")]
+    [SerializeField] private Selectable salesFocus;
+
     public Subject<Unit> OnAdvanceClicked { get; } = new();
     public Subject<Unit> OnBackClicked { get; } = new();
 
     private TurnPhase? _lastShownPhase;
     private Vector2 _backButtonBasePos;
     private readonly Dictionary<GameObject, Vector2> _groupBasePos = new();
+    private UIFocusScope _focusScope;
 
     private void Awake()
     {
@@ -47,6 +56,11 @@ public class TurnPhaseView : MonoBehaviour
             if (backButton.transform is RectTransform backRt)
                 _backButtonBasePos = backRt.anchoredPosition;
         }
+
+        // パッド操作: 店ホームのフォーカス単位（プレハブルートの UIFocusScope）。B/Esc は「戻る」ボタン
+        _focusScope = GetComponentInParent<UIFocusScope>(true);
+        if (_focusScope != null && backButton != null)
+            _focusScope.SetCancelButton(backButton);
 
         // グループ入場演出のために初期位置を記録しておく（Tween中断後の位置ずれ防止）
         foreach (var g in new[] { procurementGroup, displayGroup, salesGroup })
@@ -104,6 +118,27 @@ public class TurnPhaseView : MonoBehaviour
         }
 
         UpdateStepper(phase, phaseChanged);
+        ApplyPadFocus(phase, phaseChanged);
+    }
+
+    /// <summary>
+    /// パッド操作時の初期フォーカスをフェーズに合わせる。
+    /// フェーズが変わったときだけ移す（ホーム復帰時は最後に選んでいたボタンを復元させる）。
+    /// </summary>
+    private void ApplyPadFocus(TurnPhase phase, bool phaseChanged)
+    {
+        if (_focusScope == null) return;
+        Selectable first = phase switch
+        {
+            TurnPhase.Procurement => procurementFocus,
+            TurnPhase.Display => displayFocus,
+            TurnPhase.Sales => salesFocus != null ? salesFocus : backButton,
+            _ => null,
+        };
+        if (first == null) return;
+        _focusScope.FirstSelected = first;
+        if (phaseChanged && first.gameObject.activeInHierarchy)
+            _focusScope.Select(first);
     }
 
     /// <summary>

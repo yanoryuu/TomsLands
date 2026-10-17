@@ -3,6 +3,7 @@ using DG.Tweening;
 using R3;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 /// <summary>
@@ -59,8 +60,27 @@ public class VillageView : MonoBehaviour
     /// <summary>出店ボタンが配線済みか（falseならPresenterが準備シーンへ素通りする）。</summary>
     public bool IsInteractiveReady => departButton != null;
 
+    // ───────── ゲームパッド/キー操作（フォーカス） ─────────
+    private static VillageView instance;
+    private UIFocusScope fieldScope;
+    private UIFocusScope investScope;
+    private UIFocusScope conversionScope;
+    private bool hudMode;               // 「歩く」から「HUDボタンを選ぶ」へ切り替え中
+    private bool fieldFreeLastFrame;    // 直前フレームの終わりに、画面が歩ける状態だったか
+    private readonly List<PlayerInput> lockedInputs = new();
+
+    /// <summary>
+    /// 区画の「調べる」を決定キー/ボタンで受け付けてよいか。UI操作中（パネルを開いている・HUD選択中）と、
+    /// UIを閉じた同じフレームは false（閉じる決定が区画の調べるにも届いて再度開くのを防ぐ）。
+    /// </summary>
+    public static bool FieldInputAllowed => instance == null || (instance.IsFieldFreeNow && instance.fieldFreeLastFrame);
+
+    private bool IsFieldFreeNow => !hudMode && (fieldScope == null || UIFocusManager.Top == fieldScope);
+
     private void Awake()
     {
+        instance = this;
+        SetupFocusScopes();
         if (departButton != null)
             departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
         if (titleButton != null)
@@ -82,6 +102,98 @@ public class VillageView : MonoBehaviour
 
         if (investPanel != null) investPanel.SetActive(false);
         if (conversionPopup != null) conversionPopup.SetActive(false);
+    }
+
+    private void SetupFocusScopes()
+    {
+        // 村はフォールバック自動選択が無効（歩く画面）。何も選ばない親スコープを置き、Start/Esc で HUD ボタン選択に入る
+        fieldScope = UIFocusScope.GetOrAdd(gameObject);
+        fieldScope.AutoSelect = false;
+        fieldScope.RememberLastSelected = false;
+        fieldScope.SetCancelAction(ToggleHudMode);
+        fieldScope.OnMenuEvent.AddListener(ToggleHudMode);
+
+        if (investPanel != null)
+        {
+            investScope = UIFocusScope.GetOrAdd(investPanel);
+            investScope.Modal = true;
+            investScope.Priority = 10;
+            investScope.SetCancelButton(investCloseButton);
+            investScope.FirstSelected = investCloseButton; // 投資の決定は誤爆しにくいよう、最初は閉じるに置く
+        }
+        if (conversionPopup != null)
+        {
+            conversionScope = UIFocusScope.GetOrAdd(conversionPopup);
+            conversionScope.Modal = true;
+            conversionScope.Priority = 10;
+            conversionScope.SetCancelButton(conversionCloseButton);
+            conversionScope.FirstSelected = conversionCloseButton;
+        }
+    }
+
+    private bool ArrivalPlaying => ArrivalFx != null && ArrivalFx.IsPlaying;
+
+    private void ToggleHudMode()
+    {
+        if (hudMode) { ExitHudMode(); return; }
+        if (ArrivalPlaying) return;
+        var first = departButton != null && departButton.IsInteractable() ? departButton : titleButton;
+        if (first == null || !ControllerInput.IsNavigating.CurrentValue) return;
+        hudMode = true;
+        fieldScope.Select(first);
+    }
+
+    private void ExitHudMode()
+    {
+        hudMode = false;
+        UIFocusManager.Select(null);
+    }
+
+    private void Update()
+    {
+        if (ArrivalPlaying) return; // 到着演出は自前で入力をロックする
+
+        bool navigating = ControllerInput.IsNavigating.CurrentValue;
+        if (hudMode && !navigating) hudMode = false; // マウスに切り替えたら歩く操作へ戻す
+
+        // パッド/キー操作でUIを触っている間は、スティックで村の主人公が歩かないようにする
+        bool uiFocused = navigating && (hudMode || (UIFocusManager.Top != null && UIFocusManager.Top != fieldScope));
+        if (uiFocused) LockPlayerInput(); else UnlockPlayerInput();
+    }
+
+    private void LateUpdate()
+    {
+        fieldFreeLastFrame = IsFieldFreeNow;
+    }
+
+    private void LockPlayerInput()
+    {
+        if (lockedInputs.Count > 0) return;
+        foreach (var pi in PlayerInput.all)
+        {
+            if (pi == null || !pi.inputIsActive) continue;
+            pi.DeactivateInput(); // 進行中の移動はキャンセルされゼロに戻る
+            lockedInputs.Add(pi);
+        }
+    }
+
+    private void UnlockPlayerInput()
+    {
+        if (lockedInputs.Count == 0) return;
+        foreach (var pi in lockedInputs)
+            if (pi != null) pi.ActivateInput();
+        lockedInputs.Clear();
+    }
+
+    private void OnDestroy()
+    {
+        UnlockPlayerInput();
+        if (instance == this) instance = null;
+        OnDepart.Dispose();
+        OnGoTitle.Dispose();
+        OnInvest.Dispose();
+        OnPanelClosed.Dispose();
+        OnConversionClosed.Dispose();
     }
 
     public void UpdateHud(int villageFunds, int villageLevel)

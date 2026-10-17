@@ -86,6 +86,13 @@ public class MapView : MonoBehaviour
             }
         }
 
+        // パッド/キー: 開いたときは次に挑むダンジョンを選ばせる
+        if (next != null && icons.TryGetValue(next.Key, out var nextButton))
+        {
+            var scope = GetComponentInParent<UIFocusScope>();
+            if (scope != null) scope.FirstSelected = nextButton;
+        }
+
         // 勇者キャラは次の1ダンジョンにだけ立たせる
         if (heroMarker == null) return;
         if (next != null && icons.TryGetValue(next.Key, out var target))

@@ -33,12 +33,17 @@ public sealed class SaveSlotView : MonoBehaviour
 
     private int _slotIndex;
 
+    /// <summary>スロット本体の選択ボタン（パッド/キーのフォーカス先）。</summary>
+    public Button SelectButton => selectButton;
+
     private void Awake()
     {
         if (selectButton != null)
             selectButton.onClick.AddListener(() => OnSelect.OnNext(_slotIndex));
         if (deleteButton != null)
             deleteButton.onClick.AddListener(() => OnDelete.OnNext(_slotIndex));
+        // パッド/キー: スロットの内側にある「削除」へ右で移れるようにする
+        if (selectButton != null && deleteButton != null) InnerSelectableNavigation.Attach(selectButton, deleteButton);
     }
 
     private void OnDestroy()

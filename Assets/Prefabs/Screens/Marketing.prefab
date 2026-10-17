@@ -456,6 +456,7 @@ GameObject:
   - component: {fileID: 364427230495683822}
   - component: {fileID: 1701166600775416509}
   - component: {fileID: 7935666230137681034}
+  - component: {fileID: 8113042606528227313}
   m_Layer: 5
   m_Name: ItemListScrollView
   m_TagString: Untagged
@@ -521,6 +522,20 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8113042606528227313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1437807232404873822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9d2f24e32aeb9144bca4b9c3dd12270, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  margin: 16
+  duration: 0.15
 --- !u!1 &1532462399012457332
 GameObject:
   m_ObjectHideFlags: 0
@@ -840,6 +855,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3327563760822134107}
   - component: {fileID: 2075129122302992804}
+  - component: {fileID: 8508806336139524730}
   m_Layer: 5
   m_Name: Marketing
   m_TagString: Untagged
@@ -911,6 +927,43 @@ MonoBehaviour:
   followerInfoButton: {fileID: 7980138671299308199}
   selectionBackgroundImage: {fileID: 279699026546060233}
   defaultBackgroundSprite: {fileID: -1843028302627794106, guid: 2f0b892e10da27e43847221aca56d1e3, type: 3}
+--- !u!114 &8508806336139524730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2249287540904823213}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f63e027f8ec1bc346b2371ebfdeb2679, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  firstSelected: {fileID: 0}
+  autoSelect: 1
+  rememberLastSelected: 1
+  modal: 0
+  priority: 1
+  cancelMode: 1
+  cancelButton: {fileID: 54246625195619615}
+  onCancel:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  onTabRight:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonX:
+    m_PersistentCalls:
+      m_Calls: []
+  onButtonY:
+    m_PersistentCalls:
+      m_Calls: []
+  onMenu:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &2436663214880619245
 GameObject:
   m_ObjectHideFlags: 0
@@ -4058,6 +4111,16 @@ MonoBehaviour:
   scrollRect: {fileID: 7935666230137681034}
   mapInfoContent: {fileID: 7700223423880168060}
   mapPurchaseSlotPrefab: {fileID: 7753781545435805142, guid: 2991942e4d27fc74aac6bd9d1d42b0fc, type: 3}
+  detailPanel: {fileID: 0}
+  detailIcon: {fileID: 0}
+  detailNameText: {fileID: 0}
+  detailStatusText: {fileID: 0}
+  detailDescriptionText: {fileID: 0}
+  weaknessText: {fileID: 0}
+  recommendText: {fileID: 0}
+  difficultyText: {fileID: 0}
+  costText: {fileID: 0}
+  purchaseButton: {fileID: 0}
 --- !u!1 &8924233034730094085
 GameObject:
   m_ObjectHideFlags: 0

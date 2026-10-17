@@ -55,6 +55,57 @@ public class ShopMachineView : MonoBehaviour
             closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         if (producedItemDropdown != null)
             producedItemDropdown.onValueChanged.AddListener(i => OnProducedItemChanged.OnNext(i));
+
+        EnsureFocusScope();
+    }
+
+    private UIFocusScope _focusScope;
+
+    /// <summary>
+    /// パッド操作: この画面をフォーカス単位にする（B=閉じる）。一覧はパッドの選択に自動スクロール。
+    /// パネルが非アクティブのまま一覧が作られる場合に備え、遅延初期化にする。
+    /// </summary>
+    private UIFocusScope EnsureFocusScope()
+    {
+        if (_focusScope != null) return _focusScope;
+        _focusScope = UIFocusScope.GetOrAdd(gameObject);
+        if (_focusScope != null && !_focusScope.HasCancel && closeButton != null)
+            _focusScope.SetCancelButton(closeButton);
+        AddAutoFollow(catalogParent);
+        AddAutoFollow(placementListParent);
+        return _focusScope;
+    }
+
+    private UIFocusScope focusScope => EnsureFocusScope();
+
+    private static void AddAutoFollow(Transform listParent)
+    {
+        if (listParent == null) return;
+        var scroll = listParent.GetComponentInParent<ScrollRect>(true);
+        if (scroll != null && scroll.GetComponent<ScrollRectAutoFollow>() == null)
+            scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
+    }
+
+    /// <summary>選択中の要素が listParent の何番目の行に属するか（属さなければ -1）。再構築前に呼ぶ。</summary>
+    private static int SelectedRowIndex(Transform listParent)
+    {
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        if (sel == null || listParent == null) return -1;
+        for (int i = 0; i < listParent.childCount; i++)
+            if (sel.transform.IsChildOf(listParent.GetChild(i))) return i;
+        return -1;
+    }
+
+    /// <summary>
+    /// 一覧の再構築後のパッドフォーカス。旧一覧の行を選んでいた場合は同じ位置の新しい行へ移す
+    /// （購入ボタン等を操作中なら動かさない）。
+    /// </summary>
+    private void RefocusList(List<ShopMachineSlotUI> slots, int prevIndex)
+    {
+        if (focusScope == null || slots.Count == 0 || prevIndex < 0) return;
+        var target = slots[Mathf.Clamp(prevIndex, 0, slots.Count - 1)].GetComponent<Selectable>();
+        if (target != null) focusScope.Select(target);
     }
 
     /// <summary>
@@ -81,6 +132,7 @@ public class ShopMachineView : MonoBehaviour
         var slots = new List<ShopMachineSlotUI>();
         if (catalogParent == null || machineSlotPrefab == null) return slots;
 
+        int prevIndex = SelectedRowIndex(catalogParent);
         for (int i = catalogParent.childCount - 1; i >= 0; i--)
         {
             Destroy(catalogParent.GetChild(i).gameObject);
@@ -92,6 +144,11 @@ public class ShopMachineView : MonoBehaviour
             var slot = obj.GetComponent<ShopMachineSlotUI>();
             if (slot != null) slots.Add(slot);
         }
+
+        // パッド操作: カタログ先頭を初期フォーカスに（購入ボタンは誤爆防止のため避ける）
+        if (focusScope != null && slots.Count > 0)
+            focusScope.FirstSelected = slots[0].GetComponent<Selectable>();
+        RefocusList(slots, prevIndex);
         return slots;
     }
 
@@ -142,6 +199,7 @@ public class ShopMachineView : MonoBehaviour
             return slots;
         }
 
+        int prevIndex = SelectedRowIndex(placementListParent);
         for (int i = placementListParent.childCount - 1; i >= 0; i--)
         {
             Destroy(placementListParent.GetChild(i).gameObject);
@@ -155,6 +213,7 @@ public class ShopMachineView : MonoBehaviour
             var slot = obj.GetComponent<ShopMachineSlotUI>();
             if (slot != null) slots.Add(slot);
         }
+        RefocusList(slots, prevIndex);
         return slots;
     }
 

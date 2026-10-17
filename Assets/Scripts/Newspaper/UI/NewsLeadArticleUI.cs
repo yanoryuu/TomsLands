@@ -31,6 +31,8 @@ public class NewsLeadArticleUI : MonoBehaviour
     {
         if (rootButton != null) rootButton.onClick.AddListener(() => OnClicked?.Invoke(EntryKey));
         if (scrapButton != null) scrapButton.onClick.AddListener(() => OnScrapClicked?.Invoke(EntryKey));
+        // パッド/キー: 記事の内側にある「スクラップする」へ右で移れるようにする
+        if (rootButton != null && scrapButton != null) InnerSelectableNavigation.Attach(rootButton, scrapButton);
     }
 
     public void SetData(NewspaperView.ArticleData a)

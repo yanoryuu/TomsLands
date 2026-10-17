@@ -122,7 +122,10 @@ public class BlackSmithView : MonoBehaviour
                 OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)));
 
         if (characterButton != null)
+        {
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
+            characterButton.navigation = new Navigation { mode = Navigation.Mode.None }; // 立ち絵はパッドで選ばない（画面より大きい枠が出るため）
+        }
 
         if (sortDropdown != null)
             sortDropdown.onValueChanged.AddListener(v => OnSortChanged.OnNext((BlackSmithSortMode)v));
@@ -131,10 +134,153 @@ public class BlackSmithView : MonoBehaviour
         if (developmentPanel)
             developmentPanel.SetActive(false);
 
+        SetupPadFocus();
+
         initTabPos[BlackSmithTab.Weapon] = weaponTab.transform.localPosition;
         initTabPos[BlackSmithTab.Armor] = armorTab.transform.localPosition;
         initTabPos[BlackSmithTab.Development] = developmentTab.transform.localPosition;
         initTabPos[BlackSmithTab.Special] = specialTab.transform.localPosition;
+    }
+
+    // ------------------------------------------------------------------ パッド操作
+
+    private UIFocusScope focusScope;
+
+    /// <summary>
+    /// 鍛冶屋画面をフォーカス単位にする。B=もどる、LB/RB=タブ切替。
+    /// 初期フォーカスは一覧の先頭行（PopulateItemList で更新）。
+    /// </summary>
+    private void SetupPadFocus()
+    {
+        focusScope = UIFocusScope.GetOrAdd(gameObject);
+        if (focusScope == null) return;
+        // B: 個数設定にフォーカスがあれば一覧の同じ行へ戻る。それ以外は従来どおり「もどる」
+        if (!focusScope.HasCancel)
+        {
+            focusScope.SetCancelAction(() =>
+            {
+                if (TryReturnToRow()) return;
+                var es = UnityEngine.EventSystems.EventSystem.current;
+                if (es != null && closeButton != null && closeButton.IsInteractable())
+                    UnityEngine.EventSystems.ExecuteEvents.Execute(closeButton.gameObject,
+                        new UnityEngine.EventSystems.BaseEventData(es), UnityEngine.EventSystems.ExecuteEvents.submitHandler);
+                else
+                    closeButton?.onClick.Invoke();
+            });
+        }
+        focusScope.OnButton
+            .Where(b => b == ControllerButton.LB || b == ControllerButton.RB)
+            .Subscribe(b => CycleTab(b == ControllerButton.RB ? 1 : -1))
+            .AddTo(this);
+        focusScope.OnButton
+            .Where(b => b == ControllerButton.X)
+            .Subscribe(_ => FocusQuantityFromRow())
+            .AddTo(this);
+
+        // 一覧はパッドの選択に自動スクロール
+        if (scrollRect != null && scrollRect.GetComponent<ScrollRectAutoFollow>() == null)
+            scrollRect.gameObject.AddComponent<ScrollRectAutoFollow>();
+    }
+
+    /// <summary>表示中のタブボタンを左右に巡回して押す（LB/RB）。</summary>
+    private void CycleTab(int dir)
+    {
+        var tabs = new List<(Button button, BlackSmithTab tab)>();
+        void Add(Button b, BlackSmithTab t) { if (b != null && b.gameObject.activeInHierarchy && b.IsInteractable()) tabs.Add((b, t)); }
+        Add(weaponButton, BlackSmithTab.Weapon);
+        Add(armorButton, BlackSmithTab.Armor);
+        Add(developButton, BlackSmithTab.Development);
+        Add(specialWeaponButton, BlackSmithTab.Special);
+        if (tabs.Count < 2) return;
+        int index = Mathf.Max(0, tabs.FindIndex(t => t.tab == _currentTab));
+        int next = (index + dir + tabs.Count) % tabs.Count;
+        tabs[next].button.onClick.Invoke();
+        StartCoroutine(FocusAfterTabChange());
+    }
+
+    /// <summary>
+    /// タブ切替後、新しいタブの先頭（一覧の先頭行 / 開発タブはタブ自身）へフォーカスを移す。
+    /// 一覧の再構築・旧行の破棄が1フレーム遅れても確実に移るよう、即時＋次フレームで行う。
+    /// マウス操作中は UIFocusScope.Select が記憶だけにする。
+    /// </summary>
+    private IEnumerator FocusAfterTabChange()
+    {
+        FocusTabContent();
+        yield return null;
+        FocusTabContent();
+    }
+
+    private void FocusTabContent()
+    {
+        if (focusScope == null) return;
+        var first = focusScope.FirstSelected;
+        if (first == null || !UIFocusManager.IsUsable(first.gameObject)) return;
+        padReturnSlot = null;
+        focusScope.Select(first);
+    }
+
+    // ------------------------------------------------------------------ X: 個数設定へ / B: 一覧へ戻る
+
+    private ItemShopSlot padReturnSlot;
+
+    /// <summary>一覧の行にフォーカスがある状態で X → その行を選択（A と同じ）し、個数設定へフォーカスを移す。</summary>
+    private void FocusQuantityFromRow()
+    {
+        if (focusScope == null || itemDetailPanel == null) return;
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        if (sel == null) return;
+
+        ItemShopSlot row = null;
+        foreach (var s in activeSlots)
+        {
+            if (s != null && sel.transform.IsChildOf(s.transform)) { row = s; break; }
+        }
+        if (row == null) return;
+
+        // A（Submit）と同じ: 行クリック → Presenter が銘柄選択・詳細パネルを結線
+        row.OnPointerClick(new UnityEngine.EventSystems.PointerEventData(es));
+
+        var target = itemDetailPanel.QuantityFocusTarget;
+        if (target == null) return;
+        padReturnSlot = row;
+        focusScope.Select(target);
+    }
+
+    /// <summary>個数設定（詳細パネル）にフォーカスがあれば、記憶した一覧の行へ戻る。戻したら true。</summary>
+    private bool TryReturnToRow()
+    {
+        if (itemDetailPanel == null) return false;
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        if (!itemDetailPanel.Contains(sel)) return false;
+
+        var row = padReturnSlot;
+        if (row == null) row = activeSlots.Find(s => s != null && s.IsSelected);
+        padReturnSlot = null;
+        var selectable = row != null ? row.GetComponent<Selectable>() : null;
+        if (selectable == null || !UIFocusManager.IsUsable(selectable.gameObject)) return false;
+        focusScope.Select(selectable);
+        return true;
+    }
+
+    /// <summary>
+    /// 初期フォーカスを更新し、必要ならそこへ選択を移す。
+    /// タブ・並べ替えを操作中（選択がそれらのボタン）なら選択は動かさない。
+    /// </summary>
+    private void UpdatePadFocus(Selectable first)
+    {
+        if (focusScope == null) return;
+        focusScope.FirstSelected = first;
+        if (first == null) return;
+
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        bool keep = sel != null && UIFocusManager.IsUsable(sel)
+            && (sel == weaponButton?.gameObject || sel == armorButton?.gameObject
+                || sel == developButton?.gameObject || sel == specialWeaponButton?.gameObject
+                || (sortDropdown != null && sel.transform.IsChildOf(sortDropdown.transform)));
+        if (!keep) focusScope.Select(first);
     }
 
     /// <summary>
@@ -165,6 +311,7 @@ public class BlackSmithView : MonoBehaviour
         }
 
         ResetScroll();
+        UpdatePadFocus(slots.Count > 0 ? slots[0].GetComponent<Selectable>() : weaponButton);
         return slots;
     }
 
@@ -381,6 +528,8 @@ public class BlackSmithView : MonoBehaviour
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
         // 並べ替えUIは武具の指標（収益/需要/価格）専用なので武具タブ以外では隠す
         if (sortDropdown)      sortDropdown.gameObject.SetActive(tab == BlackSmithTab.Weapon || tab == BlackSmithTab.Armor);
+        // 開発タブ: レベルアップ（支払い）は初期フォーカスにしない。タブボタン自体に置く
+        if (isDevelopment) UpdatePadFocus(developButton);
     }
 
     private readonly List<GameObject> unlockEntries = new();
@@ -431,6 +580,9 @@ public class BlackSmithView : MonoBehaviour
             {
                 var captured = item;
                 button.onClick.AddListener(() => ShowUnlockDetail(captured));
+                // パッド操作: 選択しただけで詳細を出す（マウスのタップと同じ表示）
+                var relay = PadSelectRelay.GetOrAdd(entry);
+                if (relay != null) relay.Selected += () => ShowUnlockDetail(captured);
             }
 
             unlockEntries.Add(entry);

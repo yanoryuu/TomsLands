@@ -205,8 +205,11 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     }
 
     /// <summary>この行の選択ハイライトを切り替える。</summary>
+    public bool IsSelected { get; private set; }
+
     public void SetSelected(bool selected)
     {
+        IsSelected = selected;
         if (selectedHighlight) selectedHighlight.SetActive(selected);
     }
 

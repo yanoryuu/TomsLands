@@ -18,6 +18,13 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public event Action<string> OnHoverEnter;
     public event Action OnHoverExit;
 
+    private void Awake()
+    {
+        // パッド/キーの選択枠を行の背景に合わせる（行の RectTransform はアイコン幅しかない）
+        if (rowBackground != null && GetComponent<UIFocusHighlightOverride>() == null)
+            gameObject.AddComponent<UIFocusHighlightOverride>().target = rowBackground.rectTransform;
+    }
+
     /// <summary>
     /// 1行分を描画する。
     /// 第3引数は以前 Trend（流行度＝需要が向かう均衡値）だったが、これは「この先どう動くか」

@@ -39,6 +39,39 @@ public class StreamingSettingView : MonoBehaviour
 
         if (autoSelectButton != null)
             autoSelectButton.onClick.AddListener(() => OnAutoSelectClicked.OnNext(Unit.Default));
+
+        SetupGamepad();
+    }
+
+    // ─── パッド/キー操作 ───
+    // 十字で移動・A で追加（左の一覧）／数量の ± ・X で解除（右の一覧）・確定ボタンで配信開始。
+    private UIFocusScope _scope;
+    private int _padRefocusIndex = -1;
+
+    private void SetupGamepad()
+    {
+        _scope = UIFocusScope.GetOrAdd(gameObject);
+        AddAutoFollow(availablePanel);
+        AddAutoFollow(selectedPanel);
+    }
+
+    private static void AddAutoFollow(Transform content)
+    {
+        var scroll = content != null ? content.GetComponentInParent<ScrollRect>(true) : null;
+        if (scroll == null) return;
+        if (scroll.GetComponent<ScrollRectAutoFollow>() == null)
+            scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
+        // 一覧の間を十字で移るときにスクロールバーで止まらないよう、ナビ対象から外す（自動スクロールで追従する）
+        foreach (var bar in new[] { scroll.verticalScrollbar, scroll.horizontalScrollbar })
+            if (bar != null) bar.navigation = new Navigation { mode = Navigation.Mode.None };
+    }
+
+    private static Selectable FirstSelectable(GameObject go)
+    {
+        if (go == null) return null;
+        foreach (var s in go.GetComponentsInChildren<Selectable>(true))
+            if (s.navigation.mode != Navigation.Mode.None) return s;
+        return null;
     }
 
     /// <summary>
@@ -55,6 +88,7 @@ public class StreamingSettingView : MonoBehaviour
     public void PopulateAvailable(IEnumerable<RuntimeItemData> items)
     {
         foreach (Transform t in availablePanel) Destroy(t.gameObject);
+        Selectable firstAvailable = null;
         foreach (var item in items)
         {
             // 所持数が0以下のアイテムは表示しない
@@ -64,12 +98,22 @@ public class StreamingSettingView : MonoBehaviour
             var slot = go.GetComponent<AvailableItemSlot>();
             slot.Initialize(item.ItemId, item.ItemIcon, item.ItemName, item.Stock.Value, item.ItemAttribute);
             slot.OnItemSelected += id => OnItemSelected.OnNext(id);
+            if (firstAvailable == null) firstAvailable = FirstSelectable(go);
+        }
+
+        // 最初のフォーカスは左の一覧の先頭（確定ボタンは誤爆しやすいので既定にしない）
+        if (_scope != null)
+        {
+            // 並べる物が無いときは「配信開始」ではなく「オート選択」へ
+            _scope.FirstSelected = firstAvailable != null ? firstAvailable : autoSelectButton;
+            _scope.Refocus(resetToFirst: true);
         }
     }
 
     public void PopulateSelected(IEnumerable<KeyValuePair<string, int>> selected, ItemModel model)
     {
         foreach (Transform t in selectedPanel) Destroy(t.gameObject);
+        var created = new List<SelectedItemSlot>();
 
         foreach (var kv in selected)
         {
@@ -95,8 +139,25 @@ public class StreamingSettingView : MonoBehaviour
             );
             slot.OnQuantityChanged += (itemId, newQty) => 
                 OnQuantityChanged.OnNext((itemId, newQty));
-            slot.OnItemDeselected += itemId => 
+            slot.OnItemDeselected += itemId =>
                 OnItemDeselected.OnNext(itemId);
+            slot.OnPadDeselectRequested += s => _padRefocusIndex = created.IndexOf(s);
+            created.Add(slot);
+        }
+
+        // パッドの X で解除した直後: 同じ位置（末尾なら1つ上）のスロットへフォーカスを戻す
+        if (_padRefocusIndex >= 0)
+        {
+            int idx = _padRefocusIndex;
+            _padRefocusIndex = -1;
+            Selectable target = created.Count > 0
+                ? FirstSelectable(created[Mathf.Clamp(idx, 0, created.Count - 1)].gameObject)
+                : null;
+            if (_scope != null)
+            {
+                if (target != null) _scope.Select(target);
+                else _scope.Refocus(resetToFirst: true);
+            }
         }
     }
 

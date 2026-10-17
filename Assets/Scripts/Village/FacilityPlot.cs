@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 /// 村マップ上の施設区画（歩ける村の1建物）。
 /// 見た目: 空き地（立て札）→ 建設済み（レベルに応じた段階スプライト）+ 施設アイコンの看板。
 /// プレイヤー（PlayerMove）が Trigger に入ると吹き出しを出し、
-/// 決定キー（E/Enter/Space）またはクリックで OnInteract を発火する。
+/// 決定キー（E/Enter/Space/パッドA）またはクリックで OnInteract を発火する。
 /// 参照は未配線（null）でも動作する。
 /// </summary>
 [RequireComponent(typeof(BoxCollider2D))]
@@ -103,8 +103,12 @@ public class FacilityPlot : MonoBehaviour
         if (!playerInside) return;
 
         var kb = Keyboard.current;
-        bool pressed = kb != null &&
-            (kb.eKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame);
+        var pad = Gamepad.current;
+        bool pressed = (kb != null &&
+            (kb.eKey.wasPressedThisFrame || kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame))
+            || (pad != null && pad.buttonSouth.wasPressedThisFrame); // パッドは A（South）
+        // UI操作中・UIを閉じた同フレームの決定は受け付けない
+        if (pressed && !VillageView.FieldInputAllowed) pressed = false;
         if (pressed && !string.IsNullOrEmpty(facilityId))
             OnInteract.OnNext(facilityId);
     }
