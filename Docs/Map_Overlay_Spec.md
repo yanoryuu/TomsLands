@@ -49,7 +49,7 @@
   - `gameFlowManager.IsAwaitingStream` が true → `PendingBattleDungeon`（今日配信）
   - それ以外 → `GetNextBattleDungeon()`、残りターンは `GetTurnsUntilNextBattle()`
 - 表示:
-  - 対象アイコンのそばに**勇者のドットキャラ**を立たせる（その場で足踏み・小さく跳ねるループ演出）
+  - 対象アイコンのそばに**勇者のドットキャラ**を立たせる（その場で足踏みするループ演出。アイコンの方を向く）
   - 名札の上にリボン「NEXT あとNターン」。配信待ちのときは「本日配信」
 - 次の戦闘がない場合（null）は勇者キャラもリボンも出さない。
 
@@ -76,7 +76,7 @@
 ## 6. 決定事項（2026-10-14）
 | # | 内容 | 決定 |
 |---|---|---|
-| D1 | 勇者のドットキャラの素材 | ひとまず村シーンの Cainos `TX Player.png` / `AC Player.controller` を流用する（後で専用素材に差し替えられるようにしておく） |
+| D1 | 勇者のドットキャラの素材 | SPUM の勇者（`Assets/Prefabs/Hero_SPUM.prefab`、配信戦闘と同じ見た目）を使う。地図の Canvas は Screen Space - Overlay のため、画面外の撮影台（専用カメラ＋RenderTexture）で写して RawImage で表示する（`MapHeroMarker`）。足踏みは SPUM の移動モーション |
 | D2 | 名札の背景素材 | 既存素材を流用する（新聞・鍛冶屋の枠や説明ボックスなど） |
 | D3 | 白い縁の作り方 | uGUI の Outline 系で、アイコンの輪郭に沿って縁を付ける |
 | D4 | 名札の情報量 | 2行（1行目: 名前と Lv、2行目: 弱点と確率）。収まらなければクリア確率はポップアップだけに出す |
