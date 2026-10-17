@@ -1,3 +1,4 @@
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -50,3 +51,4 @@ public class DebugResetManager : MonoBehaviour
         SceneManager.LoadScene(TitleSceneName);
     }
 }
+#endif
