@@ -1,8 +1,8 @@
+using System;
 using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using UnityEngine.UI;
-using DG.Tweening;
 
 public class MapView : MonoBehaviour
 {
@@ -13,87 +13,109 @@ public class MapView : MonoBehaviour
     [SerializeField] private Button deepGreenBeastForest;
     [SerializeField] private Button ancientMechanicalCastle;
     [SerializeField] private Button demonKingsCastle;
-    
+
+    /// <summary>ダンジョンごとの名札と勇者キャラの立ち位置（アイコン中心からのずれ）。</summary>
+    [Serializable]
+    private class DungeonLabelSlot
+    {
+        public DungeonName key;
+        public MapDungeonLabel label;
+        public Vector2 heroOffset = new(-150f, -20f);
+    }
+
+    [Header("名札・次の行き先")]
+    [SerializeField] private List<DungeonLabelSlot> labelSlots = new();
+    [SerializeField] private MapHeroMarker heroMarker;
+    [SerializeField] private Color clearedIconColor = new(0.55f, 0.55f, 0.55f, 1f);
+
     [Header("UI")]
     [SerializeField] private Button backButton;
     public Subject<DungeonName> OnMapIcon { get; private set;} = new();
     public Subject<Unit> OnBackRequested { get; private set;} = new();
 
+    // DungeonName → アイコンのボタン
+    private readonly Dictionary<DungeonName, Button> icons = new();
+
     private void Awake()
     {
+        BuildIconTable();
         Bind();
+    }
+
+    private void BuildIconTable()
+    {
+        icons.Clear();
+        AddIcon(DungeonName.MausoleumOblivion, mausoleumOblivion);
+        AddIcon(DungeonName.ScorchingVolcanoPrison, scorchingVolcanoPrison);
+        AddIcon(DungeonName.IceMistCave, iceMistCave);
+        AddIcon(DungeonName.DeepGreenBeastForest, deepGreenBeastForest);
+        AddIcon(DungeonName.AncientMechanicalCastle, ancientMechanicalCastle);
+        AddIcon(DungeonName.DemonKingCastle, demonKingsCastle);
+    }
+
+    private void AddIcon(DungeonName key, Button button)
+    {
+        if (button != null) icons[key] = button;
     }
 
     private void Bind()
     {
-        mausoleumOblivion.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.MausoleumOblivion));
-        scorchingVolcanoPrison.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.ScorchingVolcanoPrison));
-        iceMistCave.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.IceMistCave));
-        deepGreenBeastForest.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.DeepGreenBeastForest));
-        ancientMechanicalCastle.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.AncientMechanicalCastle));
-        demonKingsCastle.onClick.AddListener(() => OnMapIcon.OnNext(DungeonName.DemonKingCastle));
-        backButton.onClick.AddListener(() => OnBackRequested.OnNext(Unit.Default));
+        foreach (var pair in icons)
+        {
+            var key = pair.Key;
+            pair.Value.onClick.AddListener(() => OnMapIcon.OnNext(key));
+        }
+        if (backButton) backButton.onClick.AddListener(() => OnBackRequested.OnNext(Unit.Default));
     }
 
-    public void SetDungeonStatus(List<DungeonData> dungeonDates)
+    /// <summary>
+    /// 全ダンジョンの名札・状態・次の行き先を描き直す（地図に入るたびに呼ぶ）。
+    /// </summary>
+    public void SetDungeons(IReadOnlyList<MapDungeonDisplay> displays)
     {
-        foreach (var data in dungeonDates)
+        MapDungeonDisplay next = null;
+
+        if (displays != null)
         {
-            switch (data.key) // data.key が DungeonName
+            foreach (var d in displays)
             {
-
-                case DungeonName.MausoleumOblivion:
-                    SetDungeonIcon(mausoleumOblivion.gameObject, data.dungeonStatus);
-                    break;
-
-                case DungeonName.ScorchingVolcanoPrison:
-                    SetDungeonIcon(scorchingVolcanoPrison.gameObject, data.dungeonStatus);
-                    break;
-
-                case DungeonName.IceMistCave:
-                    SetDungeonIcon(iceMistCave.gameObject, data.dungeonStatus);
-                    break;
-
-                case DungeonName.DeepGreenBeastForest:
-                    SetDungeonIcon(deepGreenBeastForest.gameObject, data.dungeonStatus);   ;
-                    break;
-
-                case DungeonName.AncientMechanicalCastle:
-                    SetDungeonIcon(ancientMechanicalCastle.gameObject, data.dungeonStatus); 
-                    break;
-
-                case DungeonName.DemonKingCastle:
-                    SetDungeonIcon(demonKingsCastle.gameObject, data.dungeonStatus);
-                    break;
-
-                default:
-                    // フォールバック（想定外の値）
-                    // TODO: ログやデフォルト表示など
-                    break;
+                if (d == null) continue;
+                if (icons.TryGetValue(d.Key, out var button)) SetDungeonIcon(button, d.Status);
+                FindSlot(d.Key)?.label?.Set(d);
+                if (d.IsNext) next = d;
             }
+        }
 
+        // 勇者キャラは次の1ダンジョンにだけ立たせる
+        if (heroMarker == null) return;
+        if (next != null && icons.TryGetValue(next.Key, out var target))
+        {
+            var slot = FindSlot(next.Key);
+            heroMarker.Show(target.transform as RectTransform, slot != null ? slot.heroOffset : new Vector2(-150f, -20f));
+        }
+        else
+        {
+            heroMarker.Hide();
         }
     }
-    
-    private void SetDungeonIcon(GameObject dungeonIcon, DungeonStatus status)
+
+    private DungeonLabelSlot FindSlot(DungeonName key)
     {
-        switch (status)
+        foreach (var s in labelSlots)
         {
-            case DungeonStatus.Clear:
-                // クリア済みの見た目に設定
-                break;
-            case DungeonStatus.Fail:
-                // 失敗の見た目に設定
-                break;
-            case DungeonStatus.Still:
-                // 進行中の見た目に設定
-                dungeonIcon.transform.DOLocalMoveY(dungeonIcon.transform.localPosition.y + 40, 1f)
-                    .SetEase(Ease.OutBack)
-                    .SetLoops(-1, LoopType.Yoyo);
-                break;
-            default:
-                // フォールバック（想定外の値）
-                break;
+            if (s != null && s.key == key) return s;
         }
+        return null;
+    }
+
+    private void SetDungeonIcon(Button icon, DungeonStatus status)
+    {
+        // アイコン自体は動かさない（揺れ演出は廃止。動きは勇者キャラだけ）
+        bool cleared = status == DungeonStatus.Clear;
+        var color = cleared ? clearedIconColor : Color.white;
+
+        if (icon.targetGraphic) icon.targetGraphic.color = color;
+        var outline = icon.GetComponent<MapIconOutline>();
+        if (outline) outline.EffectColor = cleared ? new Color(color.r, color.g, color.b, 1f) : Color.white;
     }
 }
