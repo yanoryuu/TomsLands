@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_furnace_core
   relicName: "\u9B54\u5C0E\u7089\u5FC3"
   description: "\u7089\u304C\u7720\u3089\u306A\u3044\u3002\u88FD\u9020\u6A5F\u306E\u6BCE\u671D\u306E\u88FD\u9020\u4E88\u7B97+1,200G\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 52fff929f04c494b8f86cb4139c6b9a5, type: 3}
   rarity: 2
   category: 0
   isCurse: 0

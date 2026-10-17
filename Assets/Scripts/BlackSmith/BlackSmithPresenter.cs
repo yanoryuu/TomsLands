@@ -38,6 +38,13 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     // 次の戦闘ダンジョンの弱点属性（おすすめスコアの属性ボーナス・自動仕入れに使う）
     private ItemTypeData.ItemAttribute? nextDungeonAttr;
     private readonly DungeonIntelModel dungeonIntel;
+    private readonly MetaProgressModel metaProgress;
+
+    /// <summary>
+    /// 初回チュートリアルの「オート購入（全額・調整不可）だけ」状態。
+    /// この間は閉じる・タブ・並べ替え・個別仕入れ・開発の入力を無視する（View でも押せなくしている）。
+    /// </summary>
+    private bool tutorialAutoBuyOnly;
 
     public BlackSmithPresenter(
         TomsModel tomsModel,
@@ -50,7 +57,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         DungeonRepository dungeonRepository,
         HeroModel heroModel,
         RelicEffectResolver relicResolver,
-        DungeonIntelModel dungeonIntel)
+        DungeonIntelModel dungeonIntel,
+        MetaProgressModel metaProgress)
     {
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
@@ -63,6 +71,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.heroModel = heroModel;
         this.relicResolver = relicResolver;
         this.dungeonIntel = dungeonIntel;
+        this.metaProgress = metaProgress;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
@@ -82,6 +91,79 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
         );
         ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, BlackSmithTab.Weapon);
+
+        ApplyTutorialAutoBuyState();
+    }
+
+    // ========================================
+    // 会話チュートリアル
+    // ========================================
+
+    /// <summary>
+    /// 初回オート購入待ちなら「オート購入だけ」状態にする。
+    /// 説明会話（Tutorial_Blacksmith）を見終わっていれば（中断→再開など）すぐ予算ポップアップを出す。
+    /// まだなら会話終了時に TutorialPresenter から TutorialAutoBuyRequested が来る。
+    /// </summary>
+    private void ApplyTutorialAutoBuyState()
+    {
+        tutorialAutoBuyOnly = TutorialSteps.IsFirstAutoBuyPending(metaProgress);
+        blackSmithView.SetTutorialAutoBuyOnly(tutorialAutoBuyOnly);
+
+        if (tutorialAutoBuyOnly && metaProgress != null && metaProgress.HasSeenTutorial(TutorialSteps.Blacksmith))
+            ShowTutorialAutoBuyPopup();
+    }
+
+    /// <summary>予算=所持金全額で固定し、「購入」だけ押せる予算ポップアップを開く。</summary>
+    private void ShowTutorialAutoBuyPopup()
+    {
+        if (!tutorialAutoBuyOnly) return;
+        blackSmithView.ShowBudgetPopup(tomsModel.PlayerMoney.Value, locked: true);
+    }
+
+    /// <summary>初回オート購入を済ませた → 段階フラグを立てて操作制限を解除する（店へ戻れるようになる）。</summary>
+    private void CompleteTutorialAutoBuy()
+    {
+        tutorialAutoBuyOnly = false;
+        metaProgress?.MarkTutorialSeen(TutorialSteps.StepFirstAutoBuy);
+        blackSmithView.SetTutorialAutoBuyOnly(false);
+    }
+
+    /// <summary>
+    /// 「需要度が高くて、かつ価格が安い」商品を選ぶ（チュートリアルの強調表示用）。
+    /// スコア = 需要 ÷ (現在価格 / 基準価格)。最高スコアの 85% 以上を上から最大3件。
+    /// </summary>
+    private List<string> PickBargainItemIds()
+    {
+        var candidates = new List<(string id, float score)>();
+        foreach (var r in blackSmithModel.weaponRuntimeItems.Concat(blackSmithModel.armorRuntimeItems))
+        {
+            if (r == null || r.CurrentPrice.Value <= 0 || r.RemainToMax() <= 0) continue;
+            var master = itemModel.GetMasterItem(r.ItemId);
+            float basePrice = master != null && master.basePrice > 0 ? master.basePrice : r.CurrentPrice.Value;
+            float priceRatio = r.CurrentPrice.Value / basePrice;
+            candidates.Add((r.ItemId, r.Demand.Value / Mathf.Max(0.05f, priceRatio)));
+        }
+        if (candidates.Count == 0) return new List<string>();
+
+        candidates.Sort((a, b) => b.score.CompareTo(a.score));
+        float threshold = candidates[0].score * 0.85f;
+        return candidates
+            .Where(c => c.score >= threshold)
+            .Take(3)
+            .Select(c => c.id)
+            .ToList();
+    }
+
+    /// <summary>強調表示が始まったら、一番の候補があるタブを開いてその商品を選択する（チャートを見せる）。</summary>
+    private void FocusBestBargain()
+    {
+        var ids = PickBargainItemIds();
+        if (ids.Count == 0) return;
+        string best = ids[0];
+        bool inArmor = blackSmithModel.armorRuntimeItems.Any(r => r.ItemId == best);
+        selectedItemId = best;
+        var tab = inArmor ? BlackSmithTab.Armor : BlackSmithTab.Weapon;
+        ChangePurchasePanel(GetTabItems(tab), tab);
     }
 
     /// <summary>
@@ -130,8 +212,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         ItemTypeData.ItemAttribute.Fire  => "火",
         ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Earth => "土",
-        ItemTypeData.ItemAttribute.Wind  => "風",
+        ItemTypeData.ItemAttribute.Wood  => "木",
         ItemTypeData.ItemAttribute.Light => "光",
         ItemTypeData.ItemAttribute.Dark  => "闇",
         _ => attr.ToString()
@@ -146,6 +227,11 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         blackSmithView.OnCloseRequested.Subscribe(_ =>
         {
+            // 初回チュートリアルのオート購入が済むまでは閉じさせない
+            if (tutorialAutoBuyOnly) return;
+            // おすすめ商品の強調は鍛冶屋を出たら終わり
+            blackSmithModel.TutorialBargainHighlight.Value = false;
+
             // 配信前の寄り道中: 店へは戻さず（戻ると新しい営業日が始まってしまう）、配信へ進むか尋ねる
             if (gameFlowManager.IsAwaitingStream.Value)
             {
@@ -163,14 +249,41 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .AddTo(disposables);
 
         blackSmithView.OnAutoBuyRequested
-            .Subscribe(_ => blackSmithView.ShowBudgetPopup(tomsModel.PlayerMoney.Value))
+            .Subscribe(_ => blackSmithView.ShowBudgetPopup(tomsModel.PlayerMoney.Value, tutorialAutoBuyOnly))
             .AddTo(disposables);
 
         blackSmithView.OnAutoBuyBudgetConfirmed
             .Subscribe(x =>
             {
                 blackSmithView.HideBudgetPopup();
+                if (tutorialAutoBuyOnly)
+                {
+                    // 初回チュートリアル: 予算は所持金全額・方針はおすすめ順で固定
+                    HandleAutoBuy(tomsModel.PlayerMoney.Value, AutoBuyStrategy.Recommend);
+                    CompleteTutorialAutoBuy();
+                    return;
+                }
                 HandleAutoBuy(x.budget, x.strategy);
+            })
+            .AddTo(disposables);
+
+        // 鍛冶屋の説明会話が終わった → 初回オート購入の予算ポップアップを出す
+        blackSmithModel.TutorialAutoBuyRequested
+            .Subscribe(_ =>
+            {
+                if (stateManager.CurrentTomsShopPhase.Value != TomsShopGamePhase.BlackSmith) return;
+                ShowTutorialAutoBuyPopup();
+            })
+            .AddTo(disposables);
+
+        // 立て替え後の会話が終わった → 「需要が高く価格が安い」商品を強調し、一番の候補を選択する
+        blackSmithModel.TutorialBargainHighlight
+            .Subscribe(on =>
+            {
+                if (stateManager.CurrentTomsShopPhase.Value != TomsShopGamePhase.BlackSmith) return;
+                if (on) FocusBestBargain();
+                else if (currentTab == BlackSmithTab.Weapon || currentTab == BlackSmithTab.Armor)
+                    ChangePurchasePanel(GetTabItems(currentTab), currentTab);
             })
             .AddTo(disposables);
 
@@ -181,6 +294,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         blackSmithView.OnChangePanel
             .Subscribe(type =>
             {
+                if (tutorialAutoBuyOnly) return;
                 switch (type)
                 {
                     case BlackSmithTab.Weapon:
@@ -203,13 +317,14 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         // 鍛冶屋レベルアップボタン
         blackSmithView.OnLevelUpRequested
-            .Subscribe(_ => HandleBlackSmithLevelUp())
+            .Subscribe(_ => { if (!tutorialAutoBuyOnly) HandleBlackSmithLevelUp(); })
             .AddTo(disposables);
 
         // 並べ替え変更 → 現在のタブを並べ替えて再描画
         blackSmithView.OnSortChanged
             .Subscribe(mode =>
             {
+                if (tutorialAutoBuyOnly) return;
                 currentSort = mode;
                 if (currentTab == BlackSmithTab.Weapon || currentTab == BlackSmithTab.Armor)
                     ChangePurchasePanel(GetTabItems(currentTab), currentTab);
@@ -370,6 +485,14 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         blackSmithView.SortItemTab(itemType);
 
+        // チュートリアル: 「需要が高く価格が安い」商品を強調
+        if (blackSmithModel.TutorialBargainHighlight.Value)
+        {
+            var bargainIds = PickBargainItemIds();
+            foreach (var slot in itemSlots)
+                slot.SetTutorialHighlight(bargainIds.Contains(slot.itemId));
+        }
+
         // 先頭銘柄を自動選択（直前の選択が残っていればそれを優先）
         if (sortedItems.Count > 0)
         {
@@ -485,6 +608,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         panel.OnPurchaseClicked
             .Subscribe(_ =>
             {
+                if (tutorialAutoBuyOnly) return;
                 int reserved = blackSmithModel.itemCount[itemId].count.Value;
                 int afterRemain = Mathf.Max(0, runtime.MaxStock.Value - (runtime.Stock.Value + reserved));
                 int quantity = blackSmithModel.PurchaseItem(itemId, afterRemain);

@@ -86,6 +86,18 @@ public class DebugAutoPlayer : MonoBehaviour
     /// <summary>LogError / 例外を検出したら一時停止する。</summary>
     public static bool PauseOnErrorLog = true;
 
+    /// <summary>
+    /// 判断の差し替え（Debug/AutoPlay の AutoPlay.Start() 中だけ設定される）。null なら従来どおり Strategy / BudgetPercent で判断する。
+    /// </summary>
+    public static IAutoPlayStrategy ExternalStrategy;
+
+    /// <summary>鍛冶屋でのお任せ購入を Debug/AutoPlay に任せる口（key, 予算, 方針 → 進行状況）。null なら従来どおり。</summary>
+    public static Func<string, int, AutoBuyStrategy, AutoPlayExternalStep> ExternalBlacksmithBuyer;
+    /// <summary>仕入れフェーズで鍛冶屋を開く前の追加操作（true を返す間は待つ）。null なら従来どおり。</summary>
+    public static Func<string, bool> ExternalBeforeProcurement;
+    /// <summary>true の間は Debug/AutoPlay が UI を操作中なので何もしない。</summary>
+    public static bool ExternalBusy;
+
     public static readonly List<string> LogLines = new();
     public static readonly List<(int turn, int money)> MoneyHistory = new();
 
@@ -110,6 +122,10 @@ public class DebugAutoPlayer : MonoBehaviour
         _boughtKey = null;
         _displayedKey = null;
         _activeDriver = null;
+        ExternalStrategy = null;
+        ExternalBlacksmithBuyer = null;
+        ExternalBeforeProcurement = null;
+        ExternalBusy = false;
     }
 
     // =====================================================
@@ -375,6 +391,13 @@ public class DebugAutoPlayer : MonoBehaviour
 
     private void Step()
     {
+        // Debug/AutoPlay が UI を操作している間（情報屋・鍛冶屋の購入手順）は手を出さない
+        if (ExternalBusy)
+        {
+            SetStatus("AutoPlay が操作中");
+            _stallExempt = true;
+            return;
+        }
         if (HandleScenario()) return;
         if (HandlePopup()) return;
 
@@ -417,8 +440,11 @@ public class DebugAutoPlayer : MonoBehaviour
         var selection = engine.SelectionManager;
         if (selection != null && selection.IsWaitInput && selection.TotalCount > 0)
         {
-            selection.SelectWithTotalIndex(0);
-            AddLog("会話の選択肢: 先頭を選択");
+            int choice = ExternalStrategy != null
+                ? Mathf.Clamp(ExternalStrategy.ChooseScenarioSelection(BuildStrategyContext(0), selection.TotalCount), 0, selection.TotalCount - 1)
+                : 0;
+            selection.SelectWithTotalIndex(choice);
+            AddLog(choice == 0 ? "会話の選択肢: 先頭を選択" : $"会話の選択肢: {choice + 1}番目を選択");
             SetStatus("会話: 選択肢を選択");
             return true;
         }
@@ -449,7 +475,7 @@ public class DebugAutoPlayer : MonoBehaviour
         if (awaitingStream && data.ConfirmButtonText == "鍛冶屋へ寄る")
         {
             // 配信日の朝: 標準戦略なら鍛冶屋で仕入れてから配信、それ以外はそのまま配信へ
-            bool visit = Strategy == DebugAutoPlayStrategy.Standard && _boughtKey != ActionKey();
+            bool visit = WantsVisitBlacksmithBeforeStream() && _boughtKey != ActionKey();
             AddLog(visit ? "配信日: 鍛冶屋へ寄る" : "配信日: このまま配信へ");
             SetStatus(visit ? "配信日: 鍛冶屋へ寄る" : "配信日: このまま配信へ");
             if (visit) data.OnConfirm?.Invoke(); else data.OnCancel?.Invoke();
@@ -588,8 +614,14 @@ public class DebugAutoPlayer : MonoBehaviour
                 break;
 
             case TurnPhase.Procurement:
-                if (Strategy == DebugAutoPlayStrategy.Standard && _boughtKey != key)
+                if (WantsProcure() && _boughtKey != key)
                 {
+                    // Debug/AutoPlay の事前操作（配信先の情報を情報屋で買う等）が動いていればそちらを待つ
+                    if (ExternalBeforeProcurement != null && ExternalBeforeProcurement(key))
+                    {
+                        _stallExempt = true;
+                        break;
+                    }
                     OpenBlackSmithOrBuyDirect(key);
                 }
                 else
@@ -600,7 +632,7 @@ public class DebugAutoPlayer : MonoBehaviour
                 break;
 
             case TurnPhase.Display:
-                if (Strategy != DebugAutoPlayStrategy.Skip && _displayedKey != key)
+                if (WantsDisplay() && _displayedKey != key)
                 {
                     DoAutoDisplay(key);
                 }
@@ -653,7 +685,7 @@ public class DebugAutoPlayer : MonoBehaviour
         }
         int before = _tomsModel.PlayerMoney.Value;
         int budget = ComputeBudget();
-        var results = _itemModel.AutoPurchase(budget, _tomsModel.BlacksmithLevel.Value, _tomsModel, null, _relicResolver, AutoBuyStrategy.Recommend);
+        var results = _itemModel.AutoPurchase(budget, _tomsModel.BlacksmithLevel.Value, _tomsModel, null, _relicResolver, ChooseAutoBuyStrategy());
         _boughtKey = key;
         AddLog($"T{_gameFlow.CurrentTurn.Value} お任せ仕入れ（直接）: {results.Count}件 {before - _tomsModel.PlayerMoney.Value:N0}G");
         SetStatus("仕入れ完了");
@@ -688,7 +720,7 @@ public class DebugAutoPlayer : MonoBehaviour
     private void StepBlackSmith()
     {
         string key = ActionKey();
-        bool wantBuy = (Scope == DebugAutoPlayScope.ProcurementOnly || Strategy == DebugAutoPlayStrategy.Standard)
+        bool wantBuy = (Scope == DebugAutoPlayScope.ProcurementOnly || WantsProcure())
                        && Scope != DebugAutoPlayScope.DisplayOnly;
 
         if (_blackSmithView == null)
@@ -701,7 +733,25 @@ public class DebugAutoPlayer : MonoBehaviour
         {
             int before = _tomsModel != null ? _tomsModel.PlayerMoney.Value : 0;
             int budget = ComputeBudget();
-            _blackSmithView.OnAutoBuyBudgetConfirmed.OnNext((budget, AutoBuyStrategy.Recommend));
+            var buyStrategy = ChooseAutoBuyStrategy();
+            // Debug/AutoPlay から動かしているときは、予算ポップアップを実際に操作して買う（配信前はダンジョン特化を混ぜる）
+            if (ExternalBlacksmithBuyer != null)
+            {
+                var step = ExternalBlacksmithBuyer(key, budget, buyStrategy);
+                if (step == AutoPlayExternalStep.Busy)
+                {
+                    SetStatus($"T{CurrentTurnOrMinus()} 仕入れ: AutoPlay が購入中");
+                    _stallExempt = true;
+                    return;
+                }
+                if (step == AutoPlayExternalStep.Done)
+                {
+                    _boughtKey = key;
+                    SetStatus($"T{CurrentTurnOrMinus()} 仕入れ: お任せ購入（AutoPlay）");
+                    return;
+                }
+            }
+            _blackSmithView.OnAutoBuyBudgetConfirmed.OnNext((budget, buyStrategy));
             _boughtKey = key;
             int spent = _tomsModel != null ? before - _tomsModel.PlayerMoney.Value : 0;
             AddLog($"T{CurrentTurnOrMinus()} お任せ仕入れ: 予算{budget:N0}G → 支出{spent:N0}G");
@@ -818,9 +868,18 @@ public class DebugAutoPlayer : MonoBehaviour
         var panel = GetField<GameObject>(_tomsShopView, "relicChoicePanel");
         if (panel == null || !panel.activeInHierarchy) return false;
 
-        AddLog("レリック3択: 先頭を獲得");
-        SetStatus("レリック3択: 先頭を選ぶ");
-        _tomsShopView.OnRelicChoiceSelected.OnNext(0);
+        int relicIndex = 0;
+        if (ExternalStrategy != null)
+        {
+            var buttons = GetField<Button[]>(_tomsShopView, "relicChoiceButtons");
+            int count = 0;
+            if (buttons != null)
+                foreach (var b in buttons) if (b != null && b.gameObject.activeSelf) count++;
+            if (count > 0) relicIndex = Mathf.Clamp(ExternalStrategy.ChooseRelic(BuildStrategyContext(0), count), 0, count - 1);
+        }
+        AddLog(relicIndex == 0 ? "レリック3択: 先頭を獲得" : $"レリック3択: {relicIndex + 1}番目を獲得");
+        SetStatus("レリック3択を選ぶ");
+        _tomsShopView.OnRelicChoiceSelected.OnNext(relicIndex);
         return true;
     }
 
@@ -872,6 +931,14 @@ public class DebugAutoPlayer : MonoBehaviour
 
         if (streaming)
         {
+            // Debug/AutoPlay から動かしているときは、配信中の操作（介入・補充・棚の入れ替え）を AutoPlayController が行う
+            if (ExternalStrategy != null)
+            {
+                SetStatus("配信中（AutoPlay が操作）");
+                _stallExempt = true;
+                return;
+            }
+
             // 在庫切れの補充ポップアップは「補充しない」で閉じる（配信中の追加支出をしない）
             var restock = _battleControlView != null ? GetField<RestockQuantityPopup>(_battleControlView, "restockQuantityPopup") : null;
             var restockPanel = restock != null ? GetField<GameObject>(restock, "panel") : null;
@@ -946,6 +1013,18 @@ public class DebugAutoPlayer : MonoBehaviour
     {
         if (_tomsModel == null) return 0;
         int money = _tomsModel.PlayerMoney.Value;
+        int reserve = ComputeTaxReserve();
+        if (ExternalStrategy != null)
+            return Mathf.Clamp(ExternalStrategy.ChooseProcurementBudget(BuildStrategyContext(reserve)), 0, money);
+
+        long budget = (long)Mathf.Max(0, money - reserve) * Mathf.Clamp(BudgetPercent, 0, 100) / 100;
+        return (int)budget;
+    }
+
+    /// <summary>直近（2ターン以内）に迫った納税額。無ければ 0。</summary>
+    private int ComputeTaxReserve()
+    {
+        if (_tomsModel == null) return 0;
         int reserve = 0;
         try
         {
@@ -959,9 +1038,38 @@ public class DebugAutoPlayer : MonoBehaviour
         {
             Debug.LogWarning($"{LogPrefix} 納税額の計算に失敗したため準備金なしで仕入れます: {e.Message}");
         }
-        long budget = (long)Mathf.Max(0, money - reserve) * Mathf.Clamp(BudgetPercent, 0, 100) / 100;
-        return (int)budget;
+        return reserve;
     }
+
+    // ---- 判断（ExternalStrategy があればそちらに委ねる。無ければ従来どおり） ----
+
+    private AutoPlayContext BuildStrategyContext(int taxReserve) =>
+        AutoPlay.CreateContext(
+            CurrentTurnOrMinus(),
+            Money(),
+            taxReserve,
+            _tomsModel != null ? _tomsModel.BlacksmithLevel.Value : 0,
+            _tomsModel != null ? _tomsModel.ShopLevel.Value : 0,
+            _gameFlow != null && _gameFlow.IsAwaitingStream.Value);
+
+    private bool WantsProcure() => ExternalStrategy != null
+        ? ExternalStrategy.ShouldProcure(BuildStrategyContext(ComputeTaxReserve()))
+        : Strategy == DebugAutoPlayStrategy.Standard;
+
+    private bool WantsDisplay() => ExternalStrategy != null
+        ? ExternalStrategy.ShouldDisplay(BuildStrategyContext(0))
+        : Strategy != DebugAutoPlayStrategy.Skip;
+
+    private bool WantsVisitBlacksmithBeforeStream()
+    {
+        if (ExternalStrategy == null) return Strategy == DebugAutoPlayStrategy.Standard;
+        var ctx = BuildStrategyContext(ComputeTaxReserve());
+        return ExternalStrategy.ShouldProcure(ctx) && ExternalStrategy.ShouldVisitBlacksmithBeforeStream(ctx);
+    }
+
+    private AutoBuyStrategy ChooseAutoBuyStrategy() => ExternalStrategy != null
+        ? ExternalStrategy.ChooseAutoBuyStrategy(BuildStrategyContext(ComputeTaxReserve()))
+        : AutoBuyStrategy.Recommend;
 
     private int ComputeMaxDisplayKinds()
     {

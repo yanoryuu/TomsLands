@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_display_manual
   relicName: "\u5927\u9673\u5217\u30DE\u30CB\u30E5\u30A2\u30EB"
   description: "\u4EC0\u5668\u306E\u9B54\u8853\u3002\u540C\u6642\u9673\u5217\u3067\u304D\u308B\u9298\u67C4+2\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 83a5dbac84734c39901b7150699ff505, type: 3}
   rarity: 1
   category: 0
   isCurse: 0

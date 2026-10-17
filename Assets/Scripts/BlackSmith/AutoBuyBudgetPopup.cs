@@ -56,12 +56,31 @@ public class AutoBuyBudgetPopup : MonoBehaviour
     /// <summary>
     /// ポップアップを開く。playerMoney を渡すと初期値・上限に使われる。
     /// </summary>
-    public void Show(int currentPlayerMoney)
+    public void Show(int currentPlayerMoney) => Show(currentPlayerMoney, false);
+
+    /// <summary>
+    /// ポップアップを開く。locked=true のとき（初回チュートリアル）は予算=所持金全額で固定し、
+    /// 予算入力・全額/半分・方針・キャンセルを押せなくして「購入」だけを押せる状態にする。
+    /// </summary>
+    public void Show(int currentPlayerMoney, bool locked)
     {
         playerMoney = currentPlayerMoney;
         budgetInputField.text = currentPlayerMoney.ToString();
         if (playerMoneyText != null)
             playerMoneyText.text = $"所持金: {currentPlayerMoney:N0}G";
+
+        bool editable = !locked;
+        budgetInputField.interactable = editable;
+        if (fullAmountButton != null) fullAmountButton.interactable = editable;
+        if (halfAmountButton != null) halfAmountButton.interactable = editable;
+        if (cancelButton != null) cancelButton.interactable = editable;
+        if (strategyDropdown != null)
+        {
+            strategyDropdown.interactable = editable;
+            if (locked) strategyDropdown.SetValueWithoutNotify((int)AutoBuyStrategy.Recommend);
+        }
+        if (confirmButton != null) confirmButton.interactable = true;
+
         gameObject.SetActive(true);
     }
 

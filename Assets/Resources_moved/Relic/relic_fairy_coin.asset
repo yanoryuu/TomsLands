@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_fairy_coin
   relicName: "\u5996\u7CBE\u306E\u30B3\u30A4\u30F3"
   description: "\u826F\u3044\u3053\u3068\u304C\u8D77\u304D\u3084\u3059\u3044\u6C17\u304C\u3059\u308B\u3002\u30A4\u30D9\u30F3\u30C8\u3067\u5F97\u308B\u91D1\u984D+50%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 2e68800780e143ada16507c6d0a0d309, type: 3}
   rarity: 0
   category: 0
   isCurse: 0

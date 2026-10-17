@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_compound_tome
   relicName: "\u8907\u5229\u306E\u6559\u672C"
   description: "\u5229\u606F\u306F\u96EA\u3060\u308B\u307E\u5F0F\u306B\u3002\u50B5\u5238\u5229\u606F+50%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8f86f58df1494752b6ddacedb0028525, type: 3}
   rarity: 1
   category: 0
   isCurse: 0

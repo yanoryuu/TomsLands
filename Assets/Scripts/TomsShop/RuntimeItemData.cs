@@ -181,7 +181,7 @@ public class RuntimeItemData
         ItemIcon       = icon;
         ItemBackground = backgroundSprite;
         ItemType       = plainData.itemType;
-        ItemAttribute  = plainData.itemAttribute;
+        ItemAttribute  = ItemTypeData.NormalizeAttribute(plainData.itemAttribute); // 旧 Wind(3) 互換
         RequiredLevel  = new ReactiveProperty<int>(Mathf.Max(0, plainData.requiredLevel));
         IsDisplay      = new ReactiveProperty<bool>(plainData.isDisplay);
         ItemDescription = plainData.description;
@@ -300,13 +300,64 @@ public class ItemTypeData
         Tool
     }
     
+    /// <summary>
+    /// アイテム属性。敵側の ElementType（水・火・木・光・闇）と同じ5属性。
+    /// 相性: 水>火、火>木、木>水、光⇄闇（ElementAttributeMapper 参照）。
+    /// int 値は SO・セーブ・Remote Config の dungeons.requiredAttribute で int のまま保存されるため明示する。
+    /// 旧体系の Earth(2) の値は Wood が引き継ぐ（旧ダンジョン弱点「土」= 氷霧の洞窟は新体系の木と一致するため）。
+    /// 旧 Wind(3) は欠番。読み込み時は NormalizeAttribute / TryParseAttribute で Wood に寄せる。
+    /// </summary>
     public enum ItemAttribute
     {
-        Fire,
-        Water,
-        Earth,
-        Wind,
-        Light,
-        Dark,
+        Fire = 0,
+        Water = 1,
+        Wood = 2,
+        // 3 は旧 Wind（欠番。読み込み時に Wood へ変換）
+        Light = 4,
+        Dark = 5,
     }
+
+    /// <summary>旧 Wind(3) など未定義の int 値を新体系へ寄せる。</summary>
+    public static ItemAttribute NormalizeAttribute(ItemAttribute attr)
+    {
+        if (System.Enum.IsDefined(typeof(ItemAttribute), attr)) return attr;
+        return (int)attr == 3 ? ItemAttribute.Wood : ItemAttribute.Fire;
+    }
+
+    /// <summary>
+    /// 文字列（Remote Config / 新聞 CSV など）から属性を読む。大文字小文字は無視。
+    /// 旧名の互換: "Earth"(土) → Dark、"Wind"(風) → Wood（旧土アイテムは闇、旧風アイテムは木に移行したため）。
+    /// 数値文字列は定義済みの値のみ受け付ける（"3" は旧 Wind として Wood）。
+    /// </summary>
+    public static bool TryParseAttribute(string value, out ItemAttribute attr)
+    {
+        attr = ItemAttribute.Fire;
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        var s = value.Trim();
+        if (string.Equals(s, "Earth", System.StringComparison.OrdinalIgnoreCase)) { attr = ItemAttribute.Dark; return true; }
+        if (string.Equals(s, "Wind", System.StringComparison.OrdinalIgnoreCase)) { attr = ItemAttribute.Wood; return true; }
+        if (int.TryParse(s, out var n))
+        {
+            if (n == 3) { attr = ItemAttribute.Wood; return true; }
+            if (!System.Enum.IsDefined(typeof(ItemAttribute), n)) return false;
+            attr = (ItemAttribute)n;
+            return true;
+        }
+        return System.Enum.TryParse(s, true, out attr) && System.Enum.IsDefined(typeof(ItemAttribute), attr);
+    }
+
+    /// <summary>アイテムの属性が文字列指定（旧名可）と一致するか。新聞の対象判定用。</summary>
+    public static bool AttributeMatches(ItemAttribute itemAttr, string target)
+        => TryParseAttribute(target, out var t) && NormalizeAttribute(itemAttr) == t;
+
+    /// <summary>表示用の日本語ラベル（火・水・木・光・闇）。</summary>
+    public static string AttributeLabel(ItemAttribute attr) => NormalizeAttribute(attr) switch
+    {
+        ItemAttribute.Fire  => "火",
+        ItemAttribute.Water => "水",
+        ItemAttribute.Wood  => "木",
+        ItemAttribute.Light => "光",
+        ItemAttribute.Dark  => "闇",
+        _ => "？"
+    };
 }

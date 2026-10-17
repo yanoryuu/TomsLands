@@ -134,8 +134,7 @@ public class FinanceDetailPanel : MonoBehaviour
     {
         ItemTypeData.ItemAttribute.Fire => "火",
         ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Earth => "土",
-        ItemTypeData.ItemAttribute.Wind => "風",
+        ItemTypeData.ItemAttribute.Wood  => "木",
         ItemTypeData.ItemAttribute.Light => "光",
         ItemTypeData.ItemAttribute.Dark => "闇",
         _ => attr.ToString()

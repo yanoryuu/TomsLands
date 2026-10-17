@@ -10,7 +10,7 @@ using UnityEngine.UI;
 public class StreamingHeatView : MonoBehaviour
 {
     [Header("UI 参照")]
-    [Tooltip("熱量バー本体（Image.Type = Filled / Fill Method = Horizontal）")]
+    [Tooltip("熱量バー本体。Sliced なら下端 pivot で高さを伸縮（端の角丸が潰れない）、Filled なら fillAmount で塗る")]
     [SerializeField] private Image heatBarFill;
     [Tooltip("ティア名テキスト（例: 盛り上がり中！）")]
     [SerializeField] private TMP_Text tierLabelText;
@@ -26,9 +26,13 @@ public class StreamingHeatView : MonoBehaviour
     [SerializeField] private float pulseThreshold = 15f;
 
     private float _prevHeat = 30f;
+    private float _fillMaxHeight;
+    private Tween _fillTween;
 
     private void Awake()
     {
+        if (heatBarFill != null) _fillMaxHeight = heatBarFill.rectTransform.sizeDelta.y;
+
         // 初回 UpdateHeat が来るまでプレースホルダー（New Text）が見えないように空にしておく
         if (tierLabelText != null) tierLabelText.text = string.Empty;
         if (heatValueText != null) heatValueText.text = string.Empty;
@@ -51,8 +55,20 @@ public class StreamingHeatView : MonoBehaviour
         if (heatBarFill != null)
         {
             heatBarFill.DOKill();
-            heatBarFill.DOFillAmount(normalized, fillDuration).SetEase(Ease.OutQuad);
-            heatBarFill.DOColor(tierColor, fillDuration);
+            if (heatBarFill.type == Image.Type.Filled)
+            {
+                heatBarFill.DOFillAmount(normalized, fillDuration).SetEase(Ease.OutQuad).SetLink(heatBarFill.gameObject);
+            }
+            else
+            {
+                var rt = heatBarFill.rectTransform;
+                _fillTween?.Kill();
+                _fillTween = rt.DOSizeDelta(new Vector2(rt.sizeDelta.x, _fillMaxHeight * Mathf.Clamp01(normalized)), fillDuration)
+                    .SetEase(Ease.OutQuad)
+                    .OnUpdate(() => heatBarFill.enabled = rt.sizeDelta.y > 1f)
+                    .SetLink(heatBarFill.gameObject);
+            }
+            heatBarFill.DOColor(tierColor, fillDuration).SetLink(heatBarFill.gameObject);
         }
 
         // ティアラベル

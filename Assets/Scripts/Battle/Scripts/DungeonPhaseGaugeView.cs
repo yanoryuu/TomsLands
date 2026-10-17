@@ -12,7 +12,7 @@ public class DungeonPhaseGaugeView : MonoBehaviour
 {
     [Tooltip("ゲージ全体のルート（戦闘中のみ表示）")]
     [SerializeField] private GameObject root;
-    [Tooltip("進捗の塗り（Image.type=Filled / Horizontal）")]
+    [Tooltip("進捗の塗り。Sliced なら anchorMax.x で幅を伸縮（端の角丸が潰れない）、Filled なら fillAmount で塗る")]
     [SerializeField] private Image fillImage;
     [Tooltip("丸い点を並べる親（バーと同じ幅の RectTransform）")]
     [SerializeField] private RectTransform dotsContainer;
@@ -28,6 +28,7 @@ public class DungeonPhaseGaugeView : MonoBehaviour
 
     private readonly List<Image> _dots = new();
     private int _phaseCount;
+    private Tween _fillTween;
 
     /// <summary>フェーズ数に合わせてゲージを初期化する（点を生成、塗りを0に）。</summary>
     public void Setup(int phaseCount)
@@ -43,7 +44,8 @@ public class DungeonPhaseGaugeView : MonoBehaviour
         if (fillImage)
         {
             fillImage.DOKill();
-            fillImage.fillAmount = 0f;
+            _fillTween?.Kill();
+            ApplyFill(0f);
         }
 
         if (dotsContainer == null || dotTemplate == null) return;
@@ -77,7 +79,17 @@ public class DungeonPhaseGaugeView : MonoBehaviour
         if (fillImage)
         {
             fillImage.DOKill();
-            fillImage.DOFillAmount(target, fillDuration).SetEase(Ease.OutCubic).SetLink(fillImage.gameObject);
+            _fillTween?.Kill();
+            if (fillImage.type == Image.Type.Filled)
+            {
+                fillImage.DOFillAmount(target, fillDuration).SetEase(Ease.OutCubic).SetLink(fillImage.gameObject);
+            }
+            else
+            {
+                float from = fillImage.rectTransform.anchorMax.x;
+                _fillTween = DOTween.To(() => from, x => { from = x; ApplyFill(x); }, target, fillDuration)
+                    .SetEase(Ease.OutCubic).SetLink(fillImage.gameObject);
+            }
         }
 
         for (int i = 0; i < _dots.Count; i++)
@@ -98,6 +110,20 @@ public class DungeonPhaseGaugeView : MonoBehaviour
                 dot.color = dotInactiveColor;
             }
         }
+    }
+
+    /// <summary>塗りを割合 t で即時反映する。Sliced は幅を伸縮し、角丸より短い間は非表示にする。</summary>
+    private void ApplyFill(float t)
+    {
+        if (fillImage.type == Image.Type.Filled)
+        {
+            fillImage.fillAmount = t;
+            return;
+        }
+
+        var rt = fillImage.rectTransform;
+        rt.anchorMax = new Vector2(t, rt.anchorMax.y);
+        fillImage.enabled = rt.rect.width >= rt.rect.height;
     }
 
     public void Hide()

@@ -15,7 +15,7 @@ MonoBehaviour:
   relicId: relic_dividend_book
   relicName: "\u914D\u5F53\u738B\u306E\u624B\u5E33"
   description: "\u914D\u5F53\u9298\u67C4\u306E\u76EE\u5229\u304D\u3002\u914D\u5F53\u53CE\u5165+50%\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 065592525d634d2eaa254a13501a2c79, type: 3}
   rarity: 1
   category: 0
   isCurse: 0

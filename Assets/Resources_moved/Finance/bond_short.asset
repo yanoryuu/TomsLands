@@ -15,7 +15,7 @@ MonoBehaviour:
   productId: bond_short
   productName: "\u30AE\u30EB\u30C9\u77ED\u671F\u50B5"
   description: "\u30AE\u30EB\u30C9\u3078\u306E\u77ED\u671F\u51FA\u8CC7\u30025\u65E5\u5F8C\u306B\u5143\u672C+10%\u3067\u511F\u9084\u3055\u308C\u308B\u3002\u6E80\u671F\u307E\u3067\u8CC7\u91D1\u306F\u30ED\u30C3\u30AF\u3055\u308C\u308B\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 79e98249daa7424f8ec1df767c010bc4, type: 3}
   kind: 0
   unlockInfoBrokerLevel: 1
   bondUnitPrice: 2000

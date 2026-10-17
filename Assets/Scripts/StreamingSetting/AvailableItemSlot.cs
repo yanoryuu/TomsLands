@@ -33,10 +33,9 @@ public class AvailableItemSlot : MonoBehaviour, IPointerClickHandler
 
     private static string AttributeToJapanese(ItemTypeData.ItemAttribute attribute) => attribute switch
     {
-        ItemTypeData.ItemAttribute.Fire  => "炎",
+        ItemTypeData.ItemAttribute.Fire  => "火",
         ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Earth => "土",
-        ItemTypeData.ItemAttribute.Wind  => "風",
+        ItemTypeData.ItemAttribute.Wood  => "木",
         ItemTypeData.ItemAttribute.Light => "光",
         ItemTypeData.ItemAttribute.Dark  => "闇",
         _ => "—"

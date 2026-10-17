@@ -45,6 +45,9 @@ public class VillageView : MonoBehaviour
     [Header("帰還到着演出（任意。未設定なら子→シーンから自動検索。無ければ上の収支ポップ）")]
     [SerializeField] private VillageArrivalFx arrivalFx;
 
+    [Header("町人（任意。未設定ならシーンから自動検索。総合Lvに応じて増える）")]
+    [SerializeField] private VillagePopulationView population;
+
     public Subject<Unit> OnDepart { get; } = new();
     public Subject<Unit> OnGoTitle { get; } = new();
     public Subject<Unit> OnInvest { get; } = new();
@@ -106,6 +109,70 @@ public class VillageView : MonoBehaviour
             if (arrivalFx == null) arrivalFx = GetComponentInChildren<VillageArrivalFx>(true);
             if (arrivalFx == null) arrivalFx = FindFirstObjectByType<VillageArrivalFx>(FindObjectsInactive.Include);
             return arrivalFx;
+        }
+    }
+
+    /// <summary>総合Lvに応じて増える町人（未配線ならシーンから探す。無ければnull）。</summary>
+    public VillagePopulationView Population
+    {
+        get
+        {
+            if (population == null) population = FindFirstObjectByType<VillagePopulationView>(FindObjectsInactive.Include);
+            return population;
+        }
+    }
+
+    /// <summary>
+    /// 村HUDのキャンバスを描いているカメラ（Screen Space - Camera の場合）。
+    /// チュートリアルの暗幕を宴の立ち絵より下に描くために使う。取れなければ null。
+    /// </summary>
+    public Camera UiCamera
+    {
+        get
+        {
+            var canvas = RootCanvas;
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay && canvas.worldCamera != null)
+                return canvas.worldCamera;
+            return Camera.main;
+        }
+    }
+
+    private Canvas RootCanvas
+    {
+        get
+        {
+            var anchor = departButton != null ? departButton.transform : transform;
+            var canvas = anchor.GetComponentInParent<Canvas>(true);
+            return canvas != null ? canvas.rootCanvas : null;
+        }
+    }
+
+    private CanvasGroup uiLockGroup;
+    private bool uiLockPrevBlocks = true;
+    private bool uiLocked;
+
+    /// <summary>
+    /// 村HUD（出店・タイトル・投資パネル等）のクリックを止める/戻す。会話チュートリアル中に使う。
+    /// 見た目を変えないよう interactable ではなく blocksRaycasts を切り替える。
+    /// </summary>
+    public void SetUiInputLocked(bool locked)
+    {
+        if (locked == uiLocked) return;
+        if (locked)
+        {
+            var canvas = RootCanvas;
+            if (canvas == null) return;
+            uiLockGroup = canvas.GetComponent<CanvasGroup>();
+            if (uiLockGroup == null) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
+            uiLockPrevBlocks = uiLockGroup.blocksRaycasts;
+            uiLockGroup.blocksRaycasts = false;
+            uiLocked = true;
+        }
+        else
+        {
+            if (uiLockGroup != null) uiLockGroup.blocksRaycasts = uiLockPrevBlocks;
+            uiLockGroup = null;
+            uiLocked = false;
         }
     }
 

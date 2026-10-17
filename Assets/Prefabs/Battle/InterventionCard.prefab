@@ -4387,6 +4387,8 @@ MonoBehaviour:
   maxSuperChats: 4
   enemyRow: {fileID: 337846354606735558}
   enemyBadgeTemplate: {fileID: 6906129980552472053}
+  heroTooltipBackground: {fileID: 21300000, guid: ea02603e74ecc894095b586930bfb792, type: 3}
+  dungeonTooltipBackground: {fileID: 21300000, guid: 7b5378e400d1d644ebd7ca292dda44b0, type: 3}
 --- !u!1 &5356457550054638825
 GameObject:
   m_ObjectHideFlags: 0

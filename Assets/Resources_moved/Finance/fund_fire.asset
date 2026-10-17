@@ -15,7 +15,7 @@ MonoBehaviour:
   productId: fund_fire
   productName: "\u706B\u5C5E\u6027\u30D5\u30A1\u30F3\u30C9"
   description: "\u706B\u5C5E\u6027\u9298\u67C4\u306E\u5E02\u5834\u4FA1\u683C\u306B\u9023\u52D5\u3059\u308B\u30D5\u30A1\u30F3\u30C9\u3002\u6B21\u306E\u30C0\u30F3\u30B8\u30E7\u30F3\u306E\u5F31\u70B9\u306B\u8CED\u3051\u308D\u3002\u3044\u3064\u3067\u3082\u89E3\u7D04\u53EF\u80FD\u3002"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 1f257d24db91400e8294bf7ad2093691, type: 3}
   kind: 1
   unlockInfoBrokerLevel: 2
   bondUnitPrice: 2000

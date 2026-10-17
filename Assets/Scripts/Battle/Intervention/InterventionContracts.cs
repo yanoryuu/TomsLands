@@ -106,6 +106,9 @@ public interface IInterventionCardView
     void SetHeroButton(HeroInterventionType type, InterventionButtonState state);
     void SetDungeonButton(DungeonInterventionType type, InterventionButtonState state);
 
+    /// <summary>ボタンのホバー説明を設定値（効果量）から組み立て直す。</summary>
+    void SetTooltipSettings(StreamingInteractionSettings settings);
+
     /// <summary>指示が実行待ちの間は全ボタンを押せなくする（同時に有効な指示は1件）。</summary>
     void SetPending(bool pending);
 

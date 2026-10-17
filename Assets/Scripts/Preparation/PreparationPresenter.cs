@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,6 +17,7 @@ using VContainer.Unity;
 /// - スタートダッシュ: 村資金を払ってこのランに適用する消費効果3種
 /// 出店時に RunSetupData（+難易度は StartModeData）へ書き出し、GameLifecycleHandler.InitializeNewGame が消費する。
 /// UI未配線の間は旧挙動（即 TomsShop へ遷移）にフォールバックする。
+/// 初めてこの画面に来たときは出店準備チュートリアル会話（Tutorial_Preparation）を流し、会話中は操作を止める。
 /// </summary>
 public class PreparationPresenter : IStartable, IDisposable
 {
@@ -24,8 +27,14 @@ public class PreparationPresenter : IStartable, IDisposable
     private readonly StartModeData startModeData;
     private readonly RunSetupData runSetupData;
     private readonly List<RelicDefinition> relicDefinitions;
+    private readonly TutorialScenarioService tutorialScenario;
     private readonly CompositeDisposable disposables = new();
+    private readonly CancellationTokenSource cts = new();
     private CompositeDisposable catalogDisposables = new();
+    private bool tutorialPlaying; // 会話チュートリアル再生中は出店/戻るを受け付けない
+
+    /// <summary>出店準備チュートリアルのラベル（Assets/TomsScenario/Scenarios/VillageTutorial.csv）。</summary>
+    private const string PreparationTutorialLabel = "Tutorial_Preparation";
 
     private List<PreparationChoiceSlot> relicSlots = new();
 
@@ -35,8 +44,10 @@ public class PreparationPresenter : IStartable, IDisposable
         MetaProgressModel metaProgress,
         StartModeData startModeData,
         RunSetupData runSetupData,
-        List<RelicDefinition> relicDefinitions)
+        List<RelicDefinition> relicDefinitions,
+        TutorialScenarioService tutorialScenario)
     {
+        this.tutorialScenario = tutorialScenario;
         this.view = view;
         this.model = model;
         this.metaProgress = metaProgress;
@@ -68,6 +79,38 @@ public class PreparationPresenter : IStartable, IDisposable
         BuildCatalogs();
         RefreshAll();
         view.ShowMessage("出店の準備をしよう。持ち帰ったお金は村資金になっていて、上限まで持ち込める。スタートダッシュも村資金から買える。");
+
+        // 初回のみ: 出店準備の説明会話
+        if (tutorialScenario != null && !tutorialScenario.HasSeen(PreparationTutorialLabel))
+        {
+            PlayTutorialAsync(cts.Token).Forget();
+        }
+    }
+
+    /// <summary>出店準備チュートリアル。会話中は準備画面の操作を止め、終わったら操作可能に戻す。</summary>
+    private async UniTaskVoid PlayTutorialAsync(CancellationToken ct)
+    {
+        tutorialPlaying = true;
+        view.SetUiInputLocked(true);
+        try
+        {
+            await tutorialScenario.PlayOnceAsync(PreparationTutorialLabel, ct);
+            // 会話を閉じたクリックがそのままボタンに届かないよう少し待つ
+            await UniTask.DelayFrame(2, cancellationToken: ct);
+        }
+        catch (OperationCanceledException)
+        {
+            // シーン遷移などで破棄された
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+        finally
+        {
+            tutorialPlaying = false;
+            if (view != null) view.SetUiInputLocked(false);
+        }
     }
 
     private void Bind()
@@ -86,8 +129,16 @@ public class PreparationPresenter : IStartable, IDisposable
         view.OnAppraisalToggled.Subscribe(_ => { model.ToggleAppraisal(); RefreshAll(); }).AddTo(disposables);
         view.OnGraceToggled.Subscribe(_ => { model.ToggleGrace(); RefreshAll(); }).AddTo(disposables);
 
-        view.OnDepart.Subscribe(_ => Depart()).AddTo(disposables);
-        view.OnBack.Subscribe(_ => SceneManager.LoadScene("VillageScene")).AddTo(disposables);
+        view.OnDepart.Subscribe(_ =>
+        {
+            if (tutorialPlaying) return;
+            Depart();
+        }).AddTo(disposables);
+        view.OnBack.Subscribe(_ =>
+        {
+            if (tutorialPlaying) return;
+            SceneManager.LoadScene("VillageScene");
+        }).AddTo(disposables);
     }
 
     private void BuildCatalogs()
@@ -186,6 +237,8 @@ public class PreparationPresenter : IStartable, IDisposable
 
     public void Dispose()
     {
+        cts.Cancel();
+        cts.Dispose();
         catalogDisposables.Dispose();
         disposables.Dispose();
     }
