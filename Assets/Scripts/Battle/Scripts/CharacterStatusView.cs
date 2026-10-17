@@ -15,19 +15,33 @@ public class CharacterStatusView : MonoBehaviour
     [SerializeField] private DamagePopup damagePopupPrefab;
     [SerializeField] private Transform popupContainer;
 
-    private SpriteRenderer characterSpriteRenderer;
-    private Color originalSpriteColor = Color.white;
+    // 赤フラッシュさせるレンダラー。CharacterView があればそこから（SPUM なら子レンダラー全部）、無ければ親の SpriteRenderer 1枚
+    private SpriteRenderer[] flashRenderers = new SpriteRenderer[0];
+    private Color[] originalSpriteColors = new Color[0];
     private CancellationTokenSource damageFlashCts;
     private int damageFlashVersion;
     private CompositeDisposable subscriptions = new CompositeDisposable(); // 複数の購読をまとめる用
 
     private void Awake()
     {
-        // 親オブジェクトからSpriteRendererを探してキャッシュ
-        characterSpriteRenderer = GetComponentInParent<SpriteRenderer>();
-        if (characterSpriteRenderer != null)
+        var view = GetComponentInParent<CharacterView>();
+        if (view != null) flashRenderers = view.FlashRenderers;
+        if (flashRenderers.Length == 0)
         {
-            originalSpriteColor = characterSpriteRenderer.color;
+            var sr = GetComponentInParent<SpriteRenderer>();
+            if (sr != null) flashRenderers = new[] { sr };
+        }
+        originalSpriteColors = System.Array.ConvertAll(flashRenderers, r => r != null ? r.color : Color.white);
+    }
+
+    private void SetFlash(bool on)
+    {
+        for (int i = 0; i < flashRenderers.Length; i++)
+        {
+            var r = flashRenderers[i];
+            if (r == null) continue;
+            // 赤にする（元の透明度は保つ。1枚絵の白スプライトなら従来どおり Color.red と同じ）
+            r.color = on ? new Color(1f, 0f, 0f, originalSpriteColors[i].a) : originalSpriteColors[i];
         }
     }
 
@@ -92,19 +106,19 @@ public class CharacterStatusView : MonoBehaviour
     // キャラクターが赤く光るフラッシュ効果
     private async UniTaskVoid PlayDamageFlash(CancellationToken token, int version)
     {
-        if (characterSpriteRenderer == null) return;
+        if (flashRenderers.Length == 0) return;
 
         try
         {
-            characterSpriteRenderer.color = Color.red;
+            SetFlash(true);
             await UniTask.Delay(TimeSpan.FromMilliseconds(150), cancellationToken: token);
         }
         catch (OperationCanceledException) { }
         finally
         {
-            if (characterSpriteRenderer != null && version == damageFlashVersion)
+            if (version == damageFlashVersion)
             {
-                characterSpriteRenderer.color = originalSpriteColor;
+                SetFlash(false);
             }
         }
     }
@@ -116,10 +130,7 @@ public class CharacterStatusView : MonoBehaviour
         damageFlashCts = null;
         damageFlashVersion++;
 
-        if (characterSpriteRenderer != null)
-        {
-            characterSpriteRenderer.color = originalSpriteColor;
-        }
+        SetFlash(false);
     }
 
     // HPテキストを更新する処理
