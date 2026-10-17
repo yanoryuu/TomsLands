@@ -270,6 +270,8 @@ public static class InterventionPrefabBuilder
         Set(view, "superChatTemplate", scTemplate);
         Set(view, "enemyRow", row);
         Set(view, "enemyBadgeTemplate", badgeTemplate);
+        Set(view, "heroTooltipBackground", S("Card_Front"));
+        Set(view, "dungeonTooltipBackground", S("Card_Back"));
 
         PrefabUtility.SaveAsPrefabAsset(root, PrefabDir + "InterventionCard.prefab");
         Object.DestroyImmediate(root);

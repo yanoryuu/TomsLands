@@ -57,6 +57,12 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
     [SerializeField] private RectTransform enemyRow;
     [SerializeField] private EnemyBadgeWidget enemyBadgeTemplate;
 
+    [Header("ホバー説明（HoverTooltipView に出す）")]
+    [Tooltip("勇者側ボタンの説明の背景（空なら HoverTooltipView の既定）")]
+    [SerializeField] private Sprite heroTooltipBackground;
+    [Tooltip("ダンジョン側ボタンの説明の背景")]
+    [SerializeField] private Sprite dungeonTooltipBackground;
+
     private readonly Subject<HeroInterventionType> _onHero = new();
     private readonly Subject<DungeonInterventionType> _onDungeon = new();
 
@@ -77,6 +83,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
     private InterventionButtonWidget _lastPressed;
     private Sequence _flipSeq;
     private Tween _tabBounce;
+    private HoverTooltipTrigger _tabTooltip;
 
     public Observable<HeroInterventionType> OnHeroRequested => _onHero;
     public Observable<DungeonInterventionType> OnDungeonRequested => _onDungeon;
@@ -96,6 +103,11 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         Hook(bossBuffButton, () => RequestDungeon(DungeonInterventionType.BossBuff, bossBuffButton));
 
         if (tabButton != null) tabButton.onClick.AddListener(Flip);
+
+        // ロジック側から設定値が届くまでは既定値で説明を出しておく
+        var defaults = ScriptableObject.CreateInstance<StreamingInteractionSettings>();
+        SetTooltipSettings(defaults);
+        Destroy(defaults);
 
         ShowFaceImmediate(InterventionFace.Hero);
         if (tabNotifyDot != null) tabNotifyDot.SetActive(false);
@@ -144,6 +156,44 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
             w.SetUsesLeft(state.UsesLeft);
         }
         RefreshButtons();
+    }
+
+    public void SetTooltipSettings(StreamingInteractionSettings settings)
+    {
+        if (settings == null) return;
+        for (int i = 0; i < 3; i++)
+        {
+            var t = (HeroInterventionType)i;
+            ApplyTooltip(HeroWidget(t), InterventionTooltipTexts.Hero(t, settings), heroTooltipBackground);
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            var t = (DungeonInterventionType)i;
+            ApplyTooltip(DungeonWidget(t), InterventionTooltipTexts.Dungeon(t, settings), dungeonTooltipBackground);
+        }
+        if (_tabTooltip == null && tabButton != null) _tabTooltip = GetOrAddTooltip(tabButton.gameObject);
+        RefreshTabTooltip();
+    }
+
+    private static void ApplyTooltip(InterventionButtonWidget w, InterventionTooltipTexts.Entry e, Sprite bg)
+    {
+        if (w == null) return;
+        GetOrAddTooltip(w.gameObject).SetContent(e.Title, e.Body, bg, e.TitleColor);
+    }
+
+    private static HoverTooltipTrigger GetOrAddTooltip(GameObject go)
+    {
+        var t = go.GetComponent<HoverTooltipTrigger>();
+        return t != null ? t : go.AddComponent<HoverTooltipTrigger>();
+    }
+
+    /// <summary>タブの説明は「めくった先の面」なので、面が変わるたびに差し替える。</summary>
+    private void RefreshTabTooltip()
+    {
+        if (_tabTooltip == null) return;
+        var e = InterventionTooltipTexts.Tab(CurrentFace);
+        _tabTooltip.SetContent(e.Title, e.Body,
+            CurrentFace == InterventionFace.Hero ? dungeonTooltipBackground : heroTooltipBackground, e.TitleColor);
     }
 
     public void SetPending(bool pending)
@@ -305,6 +355,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
             if (s != null) tabIcon.sprite = s;
         }
         if (face == InterventionFace.Hero && tabNotifyDot != null) tabNotifyDot.SetActive(false);
+        RefreshTabTooltip();
         if (!keepRotation && flipRoot != null)
         {
             flipRoot.localRotation = Quaternion.identity;

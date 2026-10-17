@@ -20,6 +20,7 @@ using Random = System.Random;
 /// - Tools > TomsLands > SPUM > 町人だけ村に配線              : VillageScene の町人枠だけ作り直す（カタログはそのまま）
 /// - Tools > TomsLands > SPUM > 追加モブ（23〜42）だけ生成     : 2回目のまとめだけ（再）生成（01..22 は触らない）
 /// - Tools > TomsLands > SPUM > カタログにモブを反映            : カタログだけ更新（シーンは触らない）
+/// - Tools > TomsLands > SPUM > 勇者ユニットを生成             : Tom.prefab を元に Prefabs/Hero_SPUM.prefab を（再）生成
 ///
 /// 村の町人は TownsfolkSlotCount 人ぶんの枠を「引っ越してくる順」に作り、見た目・家・セリフを枠ごとに固定する。
 /// 何人出すかは実行時に VillagePopulationView が村の総合Lvから決める。
@@ -774,6 +775,87 @@ public static class SpumMobGenerator
     private static string[] PickLines(Random rng, int count)
     {
         return TownsfolkLines.OrderBy(_ => rng.Next()).Take(count).ToArray();
+    }
+
+    // ───────────────────────── 勇者（トコと同じ作り） ─────────────────────────
+
+    private const string HeroPrefabPath = "Assets/Prefabs/Hero_SPUM.prefab";
+    private const string SpriteRoot = "Addons/Legacy/0_Unit/0_Sprite/";
+    private const string TomHairPath = SpriteRoot + "0_Hair/Tom_Hair";
+    private const string TomBodyPath = SpriteRoot + "2_Cloth/Tom_Body";
+    private const string HeroHairPath = SpriteRoot + "0_Hair/Hero_Hair";
+    private const string HeroBodyPath = SpriteRoot + "2_Cloth/Hero_Body";
+    private const string HeroLegPath = SpriteRoot + "3_Pant/Hero_Leg";
+
+    /// <summary>
+    /// Tom.prefab を元に勇者の SPUM ユニット（Hero_SPUM.prefab）を作る。Tom.prefab 自体は変更しない。
+    /// 髪＝Hero_Hair（頭全体）、服＝Hero_Body（Body/Left/Right）、足＝Hero_Leg（L_Foot/R_Foot、素足の代わり）。
+    /// 足は脚全体の絵なので、トコが使っているズボン（Orc_Pant_02）は外す。顔・目・素体・アニメーションはトコのまま。
+    /// プレイヤー操作用の部品（PlayerMove 等）は外す（戦闘の勇者表示 Battle/Prefabs/Hero.prefab の子として使う）。
+    /// 何度実行しても同じ結果（既存ファイルは GUID を維持して上書き）。
+    /// </summary>
+    [MenuItem(MenuRoot + "勇者ユニットを生成（Tom.prefab から）")]
+    public static void GenerateHero()
+    {
+        Sprite Load(string path, string name) =>
+            Resources.LoadAll<Sprite>(path).FirstOrDefault(s => s.name == name)
+            ?? throw new Exception($"スプライトが見つかりません: {path} ({name})");
+
+        var tomHair = Resources.LoadAll<Sprite>(TomHairPath);
+        var tomBody = Resources.LoadAll<Sprite>(TomBodyPath);
+        var heroLegL = Load(HeroLegPath, "L_Foot");
+        var heroLegR = Load(HeroLegPath, "R_Foot");
+
+        var root = PrefabUtility.LoadPrefabContents(TomPrefabPath);
+        try
+        {
+            root.name = "Hero";
+            var log = new StringBuilder();
+            foreach (var sr in root.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (sr.sprite == null) continue;
+                Sprite before = sr.sprite;
+                if (tomHair.Contains(sr.sprite)) { sr.sprite = Load(HeroHairPath, sr.sprite.name); sr.color = Color.white; }
+                else if (tomBody.Contains(sr.sprite)) sr.sprite = Load(HeroBodyPath, sr.sprite.name);
+                else if (sr.name == "_3L_Foot") sr.sprite = heroLegL;   // 画像の左側の足（トコも同じ並び）
+                else if (sr.name == "_12R_Foot") sr.sprite = heroLegR;
+                else if (sr.name == "_2L_Cloth" || sr.name == "_11R_Cloth") sr.sprite = null; // ズボンは脚の絵に含まれる
+                else continue;
+                log.AppendLine($"  {sr.name}: {before.name} -> {(sr.sprite != null ? sr.sprite.name : "(なし)")}");
+            }
+
+            foreach (var me in root.GetComponentsInChildren<SPUM_MatchingList>(true).SelectMany(m => m.matchingTables))
+            {
+                if (me.PartType == "Pant") { me.ItemPath = ""; continue; }
+                if (me.ItemPath == TomHairPath) { me.ItemPath = HeroHairPath; me.Color = Color.white; }
+                else if (me.ItemPath == TomBodyPath) me.ItemPath = HeroBodyPath;
+            }
+
+            var unit = root.GetComponent<SPUM_Prefabs>();
+            unit.ImageElement = unit.ImageElement.Where(e => e.PartType != "Pant").ToList();
+            foreach (var e in unit.ImageElement)
+            {
+                if (e.ItemPath == TomHairPath) { e.ItemPath = HeroHairPath; e.Color = Color.white; }
+                else if (e.ItemPath == TomBodyPath) e.ItemPath = HeroBodyPath;
+            }
+            unit._code = "SPUM_Hero";
+
+            // Tom.prefab はプレイヤー操作用の部品（移動・入力・物理）と村での配置位置を持っているので外す。見た目とアニメーションだけのユニットにする
+            foreach (var c in root.GetComponents<PlayerMove>()) Object.DestroyImmediate(c);
+            foreach (var c in root.GetComponents<UnityEngine.InputSystem.PlayerInput>()) Object.DestroyImmediate(c);
+            foreach (var c in root.GetComponents<Rigidbody2D>()) Object.DestroyImmediate(c);
+            foreach (var c in root.GetComponents<BoxCollider2D>()) Object.DestroyImmediate(c);
+            root.transform.localPosition = Vector3.zero;
+            if (root.transform is RectTransform rt) rt.anchoredPosition = Vector2.zero;
+
+            PrefabUtility.SaveAsPrefabAsset(root, HeroPrefabPath, out bool ok);
+            if (!ok) throw new Exception("プレハブの保存に失敗: " + HeroPrefabPath);
+            Debug.Log($"[SpumMobGenerator] 勇者ユニットを生成しました: {HeroPrefabPath}\n{log}");
+        }
+        finally
+        {
+            PrefabUtility.UnloadPrefabContents(root);
+        }
     }
 
     // ───────────────────────── 確認用 ─────────────────────────

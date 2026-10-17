@@ -106,6 +106,7 @@ public sealed class InterventionPresenter : IDisposable
         {
             View.OnHeroRequested.Subscribe(OnHeroRequested).AddTo(_disposables);
             View.OnDungeonRequested.Subscribe(OnDungeonRequested).AddTo(_disposables);
+            View.SetTooltipSettings(_settings);
             View.ShowFaceImmediate(InterventionFace.Hero); // 配信開始は表（面は配信中だけ保持）
             View.SetPending(false);
             View.SetCooldown(0f);
