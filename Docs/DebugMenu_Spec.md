@@ -121,3 +121,10 @@ ReactiveProperty 経由の変更なので購読中のUIには即反映される�
 - 表示: FPS表示（DebugUtilityOverlay。メニューを閉じても右上に表示）、警告/エラー数と直近8件（Application.logMessageReceived。Boot時から収集）、一時停止(timeScale=0)トグル
 - 勇者: Lv/EXP/HP/ATK/DEF/戦術/装備の表示、HP全回復（HeroStatusData の現Lv最大HP、SaveHeroData）
 - 依存Modelは ConstructUtility で任意解決。無いシーンでは該当セクションは非表示/メッセージ表示
+
+### ログ（DebugMenuView.Console.cs）
+- ビルド上で Unity コンソール相当のログを見る。収集は DebugConsoleLog（SubsystemRegistration で logMessageReceivedThreaded を購読、直近1000件、別スレッドのログも lock で保護）
+- Log / Warning / Error の表示切替（件数は起動またはクリア以降の累計）、文字列で絞り込み、最新へ自動スクロール
+- 一覧は新しい300件まで描画（IMGUI の負荷対策）。行クリックで全文とスタックトレースを下に表示
+- クリア、絞り込み結果をクリップボードへコピー（Warning/Error はスタックトレース付き）、Player.log のパス表示
+- Log のスタックトレースは Player Settings の Stack Trace 設定に従う（None だと空）
