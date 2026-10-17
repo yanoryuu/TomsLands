@@ -55,6 +55,8 @@ public class ItemDetailPanel : MonoBehaviour
         if (quantitySlider)
         {
             quantitySlider.wholeNumbers = true;
+            if (quantitySlider.navigation.mode == Navigation.Mode.None)
+                quantitySlider.navigation = new Navigation { mode = Navigation.Mode.Automatic };
             quantitySlider.onValueChanged.AddListener(OnSliderValueChanged);
         }
         if (plusButton)  plusButton.onClick.AddListener(() => OnStepClicked.OnNext(+1));
@@ -64,11 +66,44 @@ public class ItemDetailPanel : MonoBehaviour
 
     private GameObject Root => root != null ? root : gameObject;
 
+    /// <summary>パッドで個数設定へ移るときのフォーカス先（スライダー → ＋ボタン → 購入ボタンの順）。</summary>
+    public Selectable QuantityFocusTarget
+    {
+        get
+        {
+            if (quantitySlider != null && UIFocusManager.IsUsable(quantitySlider.gameObject)) return quantitySlider;
+            if (plusButton != null && UIFocusManager.IsUsable(plusButton.gameObject)) return plusButton;
+            if (purchaseButton != null && UIFocusManager.IsUsable(purchaseButton.gameObject)) return purchaseButton;
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// スライダーから下で購入ボタンへ移れるようにする（Automatic だと真下寄りのキャンセル等を拾い、購入ボタンに届かない）。
+    /// 左右は数量の増減に使うので、上は Automatic の結果をそのまま引き継ぐ。
+    /// </summary>
+    private void ApplyPadNavigation()
+    {
+        if (quantitySlider == null || purchaseButton == null) return;
+        quantitySlider.navigation = new Navigation { mode = Navigation.Mode.Automatic };
+        var up = quantitySlider.FindSelectableOnUp();
+        quantitySlider.navigation = new Navigation
+        {
+            mode = Navigation.Mode.Explicit,
+            selectOnUp = up,
+            selectOnDown = purchaseButton,
+        };
+    }
+
+    /// <summary>選択 GameObject がこのパネル内か。</summary>
+    public bool Contains(GameObject go) => go != null && go.transform.IsChildOf(transform);
+
     /// <summary>選択された銘柄の情報をパネルに表示する（チャート・市場分析を更新）。</summary>
     /// <param name="useBattleHistory">true=配信中の価格履歴（BattlePriceHistory）をチャートに表示する。バトル中の補充ポップアップ用</param>
     public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore, bool useBattleHistory = false)
     {
         Root.SetActive(true);
+        ApplyPadNavigation();
 
         // 銘柄切替のフィードバック（短いポップ）
         UIFx.Pop(Root.transform, 0.98f, 0.15f);

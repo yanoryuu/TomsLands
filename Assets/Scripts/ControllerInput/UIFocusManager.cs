@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 /// <summary>
@@ -29,6 +30,9 @@ public static class UIFocusManager
     private static GameObject panelHint;
     private static float nextFallbackTime;
     private static int inputBlockCount;
+    // 十字キー限定ナビ（UIFocusScope.dpadOnlyNavigation）で無効化中の Navigate アクション
+    private static InputAction dpadOnlyAction;
+    private static readonly List<int> dpadOnlyDisabledBindings = new();
 
     /// <summary>スコープが無い画面でも適当な要素を自動選択するか。</summary>
     public static bool FallbackSelectionEnabled { get; set; } = true;
@@ -61,6 +65,8 @@ public static class UIFocusManager
         panelHint = null;
         inputBlockCount = 0;
         FallbackSelectionEnabled = true;
+        dpadOnlyAction = null;
+        dpadOnlyDisabledBindings.Clear();
     }
 
     // ------------------------------------------------------------------ 公開 API
@@ -214,6 +220,7 @@ public static class UIFocusManager
             lastTop = top;
             focusDirty = true;
         }
+        UpdateDpadOnlyNavigation(es, top);
 
         var sel = es.currentSelectedGameObject;
         if (top != null && sel != null && top.RememberLastSelected && top.Contains(sel) && IsUsable(sel))
@@ -279,6 +286,59 @@ public static class UIFocusManager
         {
             nextFallbackTime = now + RetryInterval;
         }
+    }
+
+    /// <summary>
+    /// 最前面スコープが dpadOnlyNavigation の間、EventSystem の Navigate からスティックと WASD のバインドを外す
+    /// （空パスのオーバーライド＝無効）。十字キー・矢印キーだけが UI の選択移動に効き、スティック/WASD はキャラ移動に回せる。
+    /// スコープが最前面でなくなったら元に戻す。
+    /// </summary>
+    private static void UpdateDpadOnlyNavigation(EventSystem es, UIFocusScope top)
+    {
+        bool want = top != null && top.DpadOnlyNavigation;
+        InputAction action = null;
+        if (want)
+        {
+            var module = es.currentInputModule as InputSystemUIInputModule;
+            if (module == null) module = es.GetComponent<InputSystemUIInputModule>();
+            action = module != null && module.move != null ? module.move.action : null;
+        }
+        if (action == dpadOnlyAction) return;
+
+        RestoreDpadOnlyNavigation();
+        if (action == null) return;
+
+        var bindings = action.bindings;
+        for (int i = 0; i < bindings.Count; i++)
+        {
+            var b = bindings[i];
+            if (b.isComposite) continue;
+            if (!IsStickOrWasd(b.path)) continue;
+            action.ApplyBindingOverride(i, string.Empty);
+            dpadOnlyDisabledBindings.Add(i);
+        }
+        dpadOnlyAction = action;
+        Application.quitting -= RestoreDpadOnlyNavigation;
+        Application.quitting += RestoreDpadOnlyNavigation;
+    }
+
+    private static void RestoreDpadOnlyNavigation()
+    {
+        if (dpadOnlyAction != null)
+        {
+            foreach (var i in dpadOnlyDisabledBindings)
+                if (i < dpadOnlyAction.bindings.Count)
+                    dpadOnlyAction.RemoveBindingOverride(i);
+        }
+        dpadOnlyAction = null;
+        dpadOnlyDisabledBindings.Clear();
+    }
+
+    private static bool IsStickOrWasd(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        if (path.IndexOf("stick", StringComparison.OrdinalIgnoreCase) >= 0) return true; // 左右スティック・Joystick のスティック
+        return path == "<Keyboard>/w" || path == "<Keyboard>/a" || path == "<Keyboard>/s" || path == "<Keyboard>/d";
     }
 
     private static bool IsDropdownExpanded()

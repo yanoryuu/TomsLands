@@ -321,6 +321,19 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         return true;
     }
 
+    /// <summary>
+    /// このスロットのアイテムを target に置く（パッドの「X で並べる」）。
+    /// ドラッグ＆ドロップ（OnDrop）と同じ通知を出すので、入替・在庫数・売り場の扱いは D&amp;D と同一。
+    /// </summary>
+    public bool PadPlaceOnto(ItemSlotView target)
+    {
+        if (target == null || target == this || CurrentItem == null) return false;
+        if (draggedItem != null) return false;
+        if (padHeld != null) CancelPadHold();
+        OnItemDropped?.Invoke(this, target);
+        return true;
+    }
+
     /// <summary>持ち上げを取り消す（B・マウスへの切替・パネル非表示など）。</summary>
     public static void CancelPadHold()
     {

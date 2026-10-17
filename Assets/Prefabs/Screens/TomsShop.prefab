@@ -11009,6 +11009,7 @@ MonoBehaviour:
   rememberLastSelected: 1
   modal: 0
   priority: 0
+  dpadOnlyNavigation: 1
   cancelMode: 0
   cancelButton: {fileID: 0}
   onCancel:

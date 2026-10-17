@@ -40,6 +40,8 @@ public class UIFocusScope : MonoBehaviour
     [SerializeField] private bool modal;
     [Tooltip("大きいほど前面扱い。ポップアップ=100 など。")]
     [SerializeField] private int priority;
+    [Tooltip("ON: このスコープが最前面の間、UI の選択移動を十字キー/矢印キーのみにする（左スティック・WASD はキャラ移動用に空ける）。")]
+    [SerializeField] private bool dpadOnlyNavigation;
 
     [Header("Cancel (B / Esc)")]
     [SerializeField] private CancelMode cancelMode = CancelMode.None;
@@ -66,6 +68,7 @@ public class UIFocusScope : MonoBehaviour
     public bool AutoSelect { get => autoSelect; set => autoSelect = value; }
     public bool RememberLastSelected { get => rememberLastSelected; set => rememberLastSelected = value; }
     public Selectable FirstSelected { get => firstSelected; set => firstSelected = value; }
+    public bool DpadOnlyNavigation { get => dpadOnlyNavigation; set => dpadOnlyNavigation = value; }
     public UnityEvent OnCancelEvent => onCancel;
     public UnityEvent OnTabLeftEvent => onTabLeft;
     public UnityEvent OnTabRightEvent => onTabRight;

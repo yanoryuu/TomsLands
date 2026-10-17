@@ -1,6 +1,7 @@
 using R3;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -11,8 +12,9 @@ using UnityEngine.UI;
 ///   A              : 決定（介入ボタン・タブでめくる・スロットは価格グラフ/在庫切れなら補充）
 ///   LB / RB        : 介入カードをめくる（スワイプの代替）
 ///   Y              : 狙う敵を選ぶ（敵タップの代替。十字で切替 → A 決定 / B やめる）
-///   X              : 選択中のスロットのアイテムを持ち上げる → 置き先で A（ドラッグ＆ドロップの代替）/ B 取消
-///   Start          : 一時停止/再開
+///   X              : 在庫のアイテム → 売り場の先頭の空き枠へ並べる（空き無しなら持ち上げて売り場へ → A で入替 / B 取消）
+///                    売り場のアイテム → 持ち上げる → 置き先で A（ドラッグ＆ドロップの代替）/ B 取消
+///   Start          : 一時停止して設定画面（加算シーン Setting）を開く。閉じたら再開する
 ///   青スパ・赤スパを A で出した直後は、敵が 2 体以上いれば自動で狙う敵の選択を開く
 /// </summary>
 [DefaultExecutionOrder(-600)] // LateUpdate を UIFocusManager.Tick（-500）より先に回す
@@ -72,6 +74,7 @@ public sealed class BattleGamepadController : MonoBehaviour
 
     private void OnDestroy()
     {
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
         _disposables.Dispose();
         ItemSlotView.CancelPadHold();
     }
@@ -95,15 +98,56 @@ public sealed class BattleGamepadController : MonoBehaviour
                 TogglePickUp();
                 break;
             case ControllerButton.Start:
-                PressButton(_control != null ? _control.PauseButton : null);
+                OpenSettingsPaused();
                 break;
         }
+    }
+
+    // ---------------------------------------------------------------- 設定画面
+
+    private const string SettingSceneName = "Setting";
+    private bool _settingLoading;
+    private bool _resumeOnSettingClosed; // 設定を開くために一時停止した（閉じたら再開する）
+
+    private BattlePauseController PauseController => _sequencer != null ? _sequencer.PauseController : null;
+
+    /// <summary>Start: 一時停止してから設定画面を開く（既に一時停止中ならそのまま開き、閉じても停止を保つ）。</summary>
+    private void OpenSettingsPaused()
+    {
+        if (_settingLoading || SceneManager.GetSceneByName(SettingSceneName).isLoaded) return;
+        ItemSlotView.CancelPadHold();
+
+        var pause = PauseController;
+        _resumeOnSettingClosed = false;
+        if (pause != null && !pause.IsPaused)
+        {
+            PressButton(_control != null ? _control.PauseButton : null);
+            _resumeOnSettingClosed = pause.IsPaused;
+        }
+
+        _settingLoading = true;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        SceneManager.sceneUnloaded += OnSceneUnloaded;
+        var op = SceneManager.LoadSceneAsync(SettingSceneName, LoadSceneMode.Additive);
+        if (op == null) { _settingLoading = false; return; }
+        op.completed += _ => _settingLoading = false;
+    }
+
+    private void OnSceneUnloaded(Scene scene)
+    {
+        if (scene.name != SettingSceneName) return;
+        SceneManager.sceneUnloaded -= OnSceneUnloaded;
+        if (!_resumeOnSettingClosed) return;
+        _resumeOnSettingClosed = false;
+        var pause = PauseController;
+        if (this != null && pause != null && pause.IsPaused)
+            PressButton(_control != null ? _control.PauseButton : null);
     }
 
     /// <summary>B: 持ち上げ中なら取り消す（それ以外の戻る先は無い）。</summary>
     private void OnCancel()
     {
-        if (ItemSlotView.IsPadHolding) ItemSlotView.CancelPadHold();
+        if (ItemSlotView.IsPadHolding) CancelHold();
     }
 
     private void FlipCard()
@@ -112,17 +156,131 @@ public sealed class BattleGamepadController : MonoBehaviour
         _card.Flip();
     }
 
+    /// <summary>
+    /// X:
+    ///  - 持ち上げ中 → 取り消す
+    ///  - 在庫（手持ち）のアイテム → 売り場の先頭の空き枠へ並べる（D&amp;D で空き枠に置くのと同じ処理）。
+    ///    フォーカスは在庫側に残し、そのスロットが空になったら近くの在庫アイテムへ移して連続で並べられるようにする。
+    ///    売り場に空きが無ければ持ち上げて売り場の先頭へフォーカスを移す（A で置いた先と入替 / B・X で取消）
+    ///  - 売り場のアイテム → 従来どおり持ち上げ（売り場内の並べ替え・在庫へ戻す）
+    /// </summary>
     private void TogglePickUp()
     {
         if (ItemSlotView.IsPadHolding)
         {
-            ItemSlotView.CancelPadHold();
+            CancelHold();
             return;
         }
+        _returnOnCancel = null;
         var es = EventSystem.current;
         var sel = es != null ? es.currentSelectedGameObject : null;
         var slot = sel != null ? sel.GetComponent<ItemSlotView>() : null;
-        if (slot != null) slot.PadPickUp();
+        if (slot == null) return;
+
+        var sales = SalesView;
+        bool isInventory = sales != null && sales.GetSlotIndex(slot) < 0;
+        if (!isInventory || slot.CurrentItem == null)
+        {
+            slot.PadPickUp();
+            return;
+        }
+
+        var empty = FindFirstEmptySellSlot(sales);
+        if (empty != null)
+        {
+            if (!slot.PadPlaceOnto(empty)) return;
+            FocusAfterPlace(slot, sales);
+            return;
+        }
+
+        // 空きが無い: 持ち上げて置き先（入替相手）を選ばせる
+        var first = FindFirstSellSlot(sales);
+        if (slot.PadPickUp() && first != null)
+        {
+            var s = first.GetComponent<Selectable>();
+            if (s != null)
+            {
+                _returnOnCancel = slot.GetComponent<Selectable>();
+                _scope.Select(s);
+            }
+        }
+    }
+
+    // 空き無しで売り場へフォーカスを移した持ち上げを取り消したとき、元の在庫スロットへ戻すための記憶
+    private Selectable _returnOnCancel;
+
+    /// <summary>持ち上げを取り消す。売り場へ自動でフォーカスを移していたなら元の在庫スロットへ戻す。</summary>
+    private void CancelHold()
+    {
+        bool wasHolding = ItemSlotView.IsPadHolding;
+        ItemSlotView.CancelPadHold();
+        var back = _returnOnCancel;
+        _returnOnCancel = null;
+        if (wasHolding && back != null && back.isActiveAndEnabled) _scope.Select(back);
+    }
+
+    private StreamingSalesView _salesView;
+    private StreamingSalesView SalesView
+    {
+        get
+        {
+            if (_salesView == null)
+                _salesView = FindFirstObjectByType<StreamingSalesView>(FindObjectsInactive.Include);
+            return _salesView;
+        }
+    }
+
+    private static ItemSlotView FindFirstEmptySellSlot(StreamingSalesView sales)
+    {
+        var slots = sales.ItemSlots;
+        if (slots == null) return null;
+        foreach (var s in slots)
+            if (s != null && s.isActiveAndEnabled && s.CurrentItem == null) return s;
+        return null;
+    }
+
+    private static ItemSlotView FindFirstSellSlot(StreamingSalesView sales)
+    {
+        var slots = sales.ItemSlots;
+        if (slots == null) return null;
+        foreach (var s in slots)
+            if (s != null && s.isActiveAndEnabled) return s;
+        return null;
+    }
+
+    /// <summary>
+    /// 並べた後のフォーカス: 元の在庫スロットにまだアイテムがあればそのまま（入替で別アイテムが来た場合など）。
+    /// 空になったら、同じ在庫欄で最も近いアイテム入りスロットへ移す。無ければその場に残す（ホバー表示だけ更新）。
+    /// </summary>
+    private void FocusAfterPlace(ItemSlotView from, StreamingSalesView sales)
+    {
+        if (from.CurrentItem == null)
+        {
+            var root = from.GetComponentInParent<Canvas>()?.rootCanvas;
+            ItemSlotView best = null;
+            float bestDist = float.MaxValue;
+            foreach (var s in FindObjectsByType<ItemSlotView>(FindObjectsSortMode.None))
+            {
+                if (s == from || !s.isActiveAndEnabled || s.CurrentItem == null) continue;
+                if (sales.GetSlotIndex(s) >= 0) continue;
+                if (root != null && s.GetComponentInParent<Canvas>()?.rootCanvas != root) continue;
+                float d = (s.transform.position - from.transform.position).sqrMagnitude;
+                if (d < bestDist) { bestDist = d; best = s; }
+            }
+            var target = best != null ? best.GetComponent<Selectable>() : null;
+            if (target != null)
+            {
+                _scope.Select(target);
+                return;
+            }
+        }
+
+        // 同じスロットに留まる: 置いたアイテムの価格表示が残らないようホバー表示を出し直す
+        var es = EventSystem.current;
+        if (es == null) return;
+        var ev = new PointerEventData(es);
+        ExecuteEvents.Execute(from.gameObject, ev, ExecuteEvents.pointerExitHandler);
+        ExecuteEvents.Execute(from.gameObject, ev, ExecuteEvents.pointerEnterHandler);
     }
 
     private static void PressButton(Button button)

@@ -95,6 +95,7 @@ var block = UIFocusManager.BlockScopeInput();  // 終わったら block.Dispose(
 | rememberLastSelected | 戻ってきたとき最後の選択を復元 |
 | modal | ON の間、スコープ外へフォーカスが出ない |
 | priority | 大きいほど前面。同値なら後から有効化された方が前面 |
+| dpadOnlyNavigation | ON のスコープが最前面の間、UI/Navigate のスティック・WASD バインドを無効化（空パスのオーバーライド）し、選択移動を十字キー・矢印キーだけにする。最前面でなくなると元に戻す（`UIFocusManager.Tick`）|
 | cancelMode / cancelButton / onCancel | None / ClickButton（押下アニメ付きで Submit を送る）/ InvokeEvent |
 | onTabLeft/onTabRight/onButtonX/onButtonY/onMenu | 最前面のときだけ呼ばれる |
 
@@ -132,21 +133,22 @@ Overlay Canvas（sortingOrder 32000、GraphicRaycaster なし＝クリックを�
 - PopupScene / ItemPopupScene / Setting は EventSystem を持たない（親シーンのものを使う）ので変更なし
 
 ## 6. 実装済みの画面
-- 店ホーム `TomsShop.prefab`: ルートスコープの first をフェーズで切替（`TurnPhaseView`: 仕入れ=鍛冶屋 / 陳列=商品陳列 / 営業=戻る。営業開始は first にしない・演出中は自動選択停止）。Cancel=戻る（陳列・営業）。施設から B で戻ると入った施設ボタンへ復帰
+- 店ホーム `TomsShop.prefab`: ルートスコープの first をフェーズで切替（**ルートスコープ dpadOnlyNavigation=ON**: 左スティック・WASD=トム移動のみ、十字・矢印=UI 選択のみ。トムの `PlayerMove` は ignoreArrowKeysAndDpad=ON＝矢印・十字を無視、walkOnlyWhileParentScopeTop=ON＝施設/陳列/ポップアップ等の別スコープが最前面の間は歩かない。別スコープが前面ならスティックでも UI 選択できる）（`TurnPhaseView`: 仕入れ=鍛冶屋 / 陳列=商品陳列 / 営業=戻る。営業開始は first にしない・演出中は自動選択停止）。Cancel=戻る（陳列・営業）。施設から B で戻ると入った施設ボタンへ復帰
   - 陳列 `ItemSelectionView`: modal(10), first=先頭行の「並べる」, LB/RB=武器/防具, 行内フォーカスで説明表示（`PadSelectRelay`）。税金(Debt)=modal(20) first=×、破産=modal(30)。朝レポート/レリック3択=コードで modal(20)（レリックは B 無し）
-- 鍛冶屋 `BlackSmithView`（コード）: first=一覧先頭行（`ItemShopSlot` に `PointerEventBridge`＝選択で説明・A で銘柄選択）, B=もどる, LB/RB=武器/防具/開発（開発タブは first=タブ自身）。数量はスライダーで左右。オート購入=modal(10) first=全額・明示ナビ
+- 鍛冶屋 `BlackSmithView`（コード）: first=一覧先頭行（`ItemShopSlot` に `PointerEventBridge`＝選択で説明・A で銘柄選択）, B=もどる, LB/RB=武器/防具/開発（切替後は新タブの先頭行へフォーカス移動。開発タブは first=タブ自身）, X=行を選択して個数設定（詳細パネルのスライダー）へ移動、個数設定で B=一覧の同じ行へ戻る（一覧上の B は従来どおりもどる）。数量はスライダーで左右。オート購入=modal(10) first=全額・明示ナビ
 - マシンショップ/店の改装（コード）: B=閉じる, first=カタログ先頭 / 閉じる（支払いボタンは first にしない）。ターン終了サマリー: first=次のターンへ。イベント: modal(20) first=はい
 - 汎用ポップアップ（`Popup.cs`）: 確認系は「キャンセル」側を初期選択（閉じるのみは閉じる）
 - 配信（FightScene）・リザルト（ResultScene）— シーン/プレハブは無変更、すべてコードで実行時に付与
   - 配信設定 `StreamingSettingView`: スコープ（firstSelected = 左一覧の先頭）＋両一覧に `ScrollRectAutoFollow`。`AvailableItemSlot` に `PointerEventBridge`
   - 配信中 `Fight`: `BattlePanelManager` が `BattleGamepadController` を付与（スコープ firstSelected = カードのタブ）。`ItemSlotView` に `PointerEventBridge`。狙う敵は `BattlePadTargetSelector`（敵スプライト上の透明プロキシ＋既存の選択枠, modal priority 40）
-  - 補充ポップアップ `RestockQuantityPopup`: modal priority 50, Cancel=やめる, 最初は数量スライダー／配信結果 `BattleResultView`: firstSelected = 確認
+  - 補充ポップアップ `RestockQuantityPopup`: modal priority 50, Cancel=やめる, 最初は数量スライダー。スライダーから下で購入ボタン（`ItemDetailPanel.ApplyPadNavigation` で Explicit。Automatic だと下のキャンセルを拾って購入に届かなかった）／配信結果 `BattleResultView`: firstSelected = 確認
   - `BattlePanelManager.ShowPanel` で `NotifyPanelShown`
 - 配信のパッド操作
   - 配信設定: 十字で移動、A=左一覧のアイテムを追加／±ボタン、X=右一覧（選択中スロット内）の解除（右クリック代替）
-  - 配信中: A=介入ボタン・タブ・スロット（価格グラフ／在庫切れなら補充）、LB/RB=カードをめくる（スワイプ代替）、Start=一時停止/再開
+  - 配信中: A=介入ボタン・タブ・スロット（価格グラフ／在庫切れなら補充）、LB/RB=カードをめくる（スワイプ代替）、Start=一時停止して設定画面（加算シーン Setting）を開く。閉じたら再開（開く前から一時停止中なら停止のまま）
   - Y=狙う敵を選ぶ（敵タップ代替）: 十字で敵を切替（選択枠が敵に重なる）→ A 決定 / B やめる。青スパ・赤スパを A で出した直後は敵 2 体以上なら自動で開く
-  - X=選択中スロットのアイテムを持ち上げ（半透明＋ゴーストが選択先の上に浮く）→ 置き先で A（D&D と同じ入替）/ B か X で取消
+  - X（在庫側）=そのアイテムを売り場の先頭の空き枠へ並べる（D&D で空き枠へ置くのと同じ `OnItemDropped` 経由）。フォーカスは在庫側に残り、元スロットが空になったら最寄りの在庫アイテムへ移る（連打で順に並べられる）。売り場に空きが無ければ持ち上げて売り場の先頭へフォーカス → A で置いた先と入替 / B か X で取消（元の在庫スロットへ戻る）
+  - X（売り場側）=従来どおり持ち上げ（半透明＋ゴーストが選択先の上に浮く）→ 置き先で A（D&D と同じ: 売り場内の並べ替え・在庫へ戻す）/ B か X で取消
   - リザルト演出中: A/B でスキップ（`ResultSkipCatcher`）
 - コード（View.Awake）で `UIFocusScope.GetOrAdd` する方式（シーン無編集）
   - タイトル: スタート画面=autoSelect OFF（anyKey）/ 開始方法=first「続きから」(無ければニューゲーム)・Cancel=戻る / セーブスロット=first 直前操作スロット(無ければ最初の選べるスロット)・Cancel=戻る・再構築後も同スロットへ。オプション(Setting)は `AttachSceneScope` で B=閉じる
@@ -162,11 +164,14 @@ Overlay Canvas（sortingOrder 32000、GraphicRaycaster なし＝クリックを�
 - `DebugResetManager` は Esc を 2 秒以内に 10 連打するとセーブ削除＋タイトルへ戻る（展示用）。Esc を Cancel に使うので、キーボードで戻るを連打すると誤爆し得る
 - Utage 会話中も最前面スコープに Cancel が届く。会話担当は `UIFocusManager.BlockScopeInput()` で止めること
 - 村（PlayerInput 有効）ではフォールバック自動選択をしない。UI を出す場合はその UI にスコープを付ける
-- エディタでパッドを試すとき、実パッドが接続されていると PassThrough の Navigate が実機の 0 入力で上書きされることがある（実機では問題なし）
+- UI/Navigate は **Value** 型（PassThrough だとスティックが送り続ける 0 入力で十字キーが打ち消され、十字キーの反応が鈍くなるため変更）
+- `dpadOnlyNavigation` はアセット（InputSystem_Actions）の UI/Navigate に実行時のバインドオーバーライドを掛ける（保存されない・終了時にも解除）。パスに "stick" を含むバインドと `<Keyboard>/w,a,s,d` が対象。村のルートスコープは OFF のままなので村の挙動は不変
+- 確認ポップアップ（Popup.cs）の確認/キャンセルは左右 Explicit ナビ（Automatic だと背面画面のボタンを拾ってモーダルに戻され、切り替えられない）
 - 枠の内側に別ボタンがある部品（セーブスロットの削除・記事のスクラップ・新聞社カードの購読・スクラップカードの確認）は `InnerSelectableNavigation`（枠が選ばれた時に「右=内側ボタン、他=Automatic と同じ」を Explicit で組む）で到達させる
 
 ## 8. 検証結果・既知の制限（2026-10-11 仮想パッドで Play 検証）
 - OK: タイトル（開始/続きから/スロット/削除確認B/設定 LB・RB・BGM 左右・B）、準備、村（歩行・A で投資・閉じて再オープンなし・Start/B で HUD）、Utage（A 送り・B 隠す→A 復帰・LB ログ→B・RB 長押しスキップ・背面へ Cancel 漏れなし）、情報屋/占い師/勇者/新聞/地図/宣伝/ダンジョン支援、配信設定→配信中（LB/RB・Y 敵選択・X 持ち上げ→A/B・補充ポップ B・Start）→リザルト→店、ゲームオーバー、確認ポップ（キャンセル初期）、マウス復帰で枠消去
 - 検証で直した点: Utage の入力戦略が Utage 側（InputSystemStrategy）に上書きされパッドが効かなかった → 会話開始ごとに再登録・基底を InputSystemStrategy に／B で隠したウィンドウを A で戻せなかった／介入カードのボタンが Navigation=None で十字移動できなかった／各施設の立ち絵ボタン（画面より大きい枠）を選ばない／占い師の行・配信設定カードの枠を見た目に合わせた／配信設定の一覧スクロールバーで十字が止まる／所持品ゼロ時の初期フォーカスが「配信開始」だった／タイトルの「戻る」から上が先頭スロットへ飛ぶ
+- 店ホームのスティック/十字分離（2026-10-11 仮想パッド）: 店ホームで 十字・矢印=選択移動のみ（トム不動）、スティック・WASD=トム移動のみ（選択不変）。鍛冶屋内ではスティックでも選択移動、B で戻ると再び分離。別スコープ前面中はトム停止
 - 未確認: Utage の選択肢（現シナリオに選択肢が無い）、青/赤スパ直後の自動敵選択（敵 2 体以上の場面を作れず）、EventScene（ビルド未登録で到達不可。コードのみ確認）
 - 既知: 敵選択枠はスプライトの透明余白込みのためやや上に大きい。配信中の補充ポップアップの上に HP 表示・進行バーが重なる（描画順。パッド対応とは別件）。村の吹き出しは「[E] しらべる」表記のまま

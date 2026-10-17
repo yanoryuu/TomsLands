@@ -154,10 +154,27 @@ public class BlackSmithView : MonoBehaviour
     {
         focusScope = UIFocusScope.GetOrAdd(gameObject);
         if (focusScope == null) return;
-        if (!focusScope.HasCancel) focusScope.SetCancelButton(closeButton);
+        // B: 個数設定にフォーカスがあれば一覧の同じ行へ戻る。それ以外は従来どおり「もどる」
+        if (!focusScope.HasCancel)
+        {
+            focusScope.SetCancelAction(() =>
+            {
+                if (TryReturnToRow()) return;
+                var es = UnityEngine.EventSystems.EventSystem.current;
+                if (es != null && closeButton != null && closeButton.IsInteractable())
+                    UnityEngine.EventSystems.ExecuteEvents.Execute(closeButton.gameObject,
+                        new UnityEngine.EventSystems.BaseEventData(es), UnityEngine.EventSystems.ExecuteEvents.submitHandler);
+                else
+                    closeButton?.onClick.Invoke();
+            });
+        }
         focusScope.OnButton
             .Where(b => b == ControllerButton.LB || b == ControllerButton.RB)
             .Subscribe(b => CycleTab(b == ControllerButton.RB ? 1 : -1))
+            .AddTo(this);
+        focusScope.OnButton
+            .Where(b => b == ControllerButton.X)
+            .Subscribe(_ => FocusQuantityFromRow())
             .AddTo(this);
 
         // 一覧はパッドの選択に自動スクロール
@@ -178,6 +195,73 @@ public class BlackSmithView : MonoBehaviour
         int index = Mathf.Max(0, tabs.FindIndex(t => t.tab == _currentTab));
         int next = (index + dir + tabs.Count) % tabs.Count;
         tabs[next].button.onClick.Invoke();
+        StartCoroutine(FocusAfterTabChange());
+    }
+
+    /// <summary>
+    /// タブ切替後、新しいタブの先頭（一覧の先頭行 / 開発タブはタブ自身）へフォーカスを移す。
+    /// 一覧の再構築・旧行の破棄が1フレーム遅れても確実に移るよう、即時＋次フレームで行う。
+    /// マウス操作中は UIFocusScope.Select が記憶だけにする。
+    /// </summary>
+    private IEnumerator FocusAfterTabChange()
+    {
+        FocusTabContent();
+        yield return null;
+        FocusTabContent();
+    }
+
+    private void FocusTabContent()
+    {
+        if (focusScope == null) return;
+        var first = focusScope.FirstSelected;
+        if (first == null || !UIFocusManager.IsUsable(first.gameObject)) return;
+        padReturnSlot = null;
+        focusScope.Select(first);
+    }
+
+    // ------------------------------------------------------------------ X: 個数設定へ / B: 一覧へ戻る
+
+    private ItemShopSlot padReturnSlot;
+
+    /// <summary>一覧の行にフォーカスがある状態で X → その行を選択（A と同じ）し、個数設定へフォーカスを移す。</summary>
+    private void FocusQuantityFromRow()
+    {
+        if (focusScope == null || itemDetailPanel == null) return;
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        if (sel == null) return;
+
+        ItemShopSlot row = null;
+        foreach (var s in activeSlots)
+        {
+            if (s != null && sel.transform.IsChildOf(s.transform)) { row = s; break; }
+        }
+        if (row == null) return;
+
+        // A（Submit）と同じ: 行クリック → Presenter が銘柄選択・詳細パネルを結線
+        row.OnPointerClick(new UnityEngine.EventSystems.PointerEventData(es));
+
+        var target = itemDetailPanel.QuantityFocusTarget;
+        if (target == null) return;
+        padReturnSlot = row;
+        focusScope.Select(target);
+    }
+
+    /// <summary>個数設定（詳細パネル）にフォーカスがあれば、記憶した一覧の行へ戻る。戻したら true。</summary>
+    private bool TryReturnToRow()
+    {
+        if (itemDetailPanel == null) return false;
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        var sel = es != null ? es.currentSelectedGameObject : null;
+        if (!itemDetailPanel.Contains(sel)) return false;
+
+        var row = padReturnSlot;
+        if (row == null) row = activeSlots.Find(s => s != null && s.IsSelected);
+        padReturnSlot = null;
+        var selectable = row != null ? row.GetComponent<Selectable>() : null;
+        if (selectable == null || !UIFocusManager.IsUsable(selectable.gameObject)) return false;
+        focusScope.Select(selectable);
+        return true;
     }
 
     /// <summary>
