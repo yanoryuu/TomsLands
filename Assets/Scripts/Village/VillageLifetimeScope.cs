@@ -51,7 +51,7 @@ public class VillageLifetimeScope : LifetimeScope
         // View未配線時のフォールバック: 旧フロー同様に準備シーンへ直行
         if (villageView == null)
         {
-            UnityEngine.SceneManagement.SceneManager.LoadScene("PreparationScene");
+            SceneLoader.Load("PreparationScene");
         }
     }
 }

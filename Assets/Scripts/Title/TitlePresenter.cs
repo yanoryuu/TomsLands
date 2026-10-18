@@ -202,13 +202,13 @@ public sealed class TitlePresenter : IStartable, IDisposable
                 runSetup = RunSetupData.GetOrCreateFallback();
             runSetup.Clear();
             Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → チュートリアル未完了のため店（{GameSceneName}）で直接開店");
-            SceneManager.LoadScene(GameSceneName);
+            SceneLoader.Load(GameSceneName);
             return;
         }
 
         Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → 村シーンへ（難易度は準備シーンで選択）");
         // 新規ランは 村（メタ層・投資）→ 準備シーン（借入・難易度・スターターレリック）を経由する
-        SceneManager.LoadScene("VillageScene");
+        SceneLoader.Load("VillageScene");
     }
 
     private void ContinueGame(int slot)
@@ -224,7 +224,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
         SaveSlotManager.CurrentSlot = slot;
         _startModeData.SetContinue();
         Debug.Log($"[TitlePresenter] Continue save slot {slot + 1}");
-        SceneManager.LoadScene(GameSceneName);
+        SceneLoader.Load(GameSceneName);
     }
 
     private void TransitionTo(TitleType screen)

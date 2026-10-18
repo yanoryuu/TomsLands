@@ -202,6 +202,8 @@ public sealed partial class AutoPlayController : MonoBehaviour
         Observe();
         if (!AutoPlay.IsRunning) return; // ターン上限などで停止した
         if (AutoPlay.IsPaused) return;
+        // ローディング画面での遷移中は旧シーンを操作しない（新シーン有効化後も、フェードアウトが済むまで待つ）
+        if (SceneLoader.IsLoading) return;
 
         if (!Mathf.Approximately(Time.timeScale, AutoPlay.Settings.TimeScale))
             Time.timeScale = AutoPlay.Settings.TimeScale;

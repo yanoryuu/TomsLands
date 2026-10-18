@@ -5,7 +5,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
 /// <summary>
@@ -65,7 +64,7 @@ public class PreparationPresenter : IStartable, IDisposable
             runSetupData.Clear();
             // 準備シーンは新規ランの入口。前のランの TomsShop 入場で Continue になったままなので戻す
             startModeData.SetNewGame();
-            SceneManager.LoadScene("TomsShop");
+            SceneLoader.Load("TomsShop");
             return;
         }
 
@@ -143,7 +142,7 @@ public class PreparationPresenter : IStartable, IDisposable
         view.OnBack.Subscribe(_ =>
         {
             if (tutorialPlaying) return;
-            SceneManager.LoadScene("VillageScene");
+            SceneLoader.Load("VillageScene");
         }).AddTo(disposables);
     }
 
@@ -231,7 +230,7 @@ public class PreparationPresenter : IStartable, IDisposable
         runSetupData.UseGrace = model.UseGrace;
 
         Debug.Log($"[Preparation] 出店: 難易度={model.Difficulty}, 持ち込み={model.CarryAmount}G, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace}), 村資金残高={metaProgress.VillageFunds}G");
-        SceneManager.LoadScene("TomsShop");
+        SceneLoader.Load("TomsShop");
     }
 
     private static string DifficultyLabel(GameModeId mode) => mode switch

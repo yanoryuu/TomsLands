@@ -3,7 +3,6 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
 /// <summary>
@@ -48,7 +47,7 @@ public class VillagePresenter : IStartable, IDisposable
         if (view == null || !view.IsInteractiveReady)
         {
             Debug.Log("[VillagePresenter] 村UIが未配線のため素通り → PreparationScene（Docs/Village_UnityWiring.md 参照）");
-            SceneManager.LoadScene("PreparationScene");
+            SceneLoader.Load("PreparationScene");
             return;
         }
 
@@ -110,13 +109,13 @@ public class VillagePresenter : IStartable, IDisposable
         {
             if (IsBusy) return;
             Debug.Log("[VillagePresenter] 出店準備へ");
-            SceneManager.LoadScene("PreparationScene");
+            SceneLoader.Load("PreparationScene");
         }).AddTo(disposables);
 
         view.OnGoTitle.Subscribe(_ =>
         {
             if (IsBusy) return;
-            SceneManager.LoadScene("TitleScene");
+            SceneLoader.Load("TitleScene");
         }).AddTo(disposables);
 
         // 区画の「調べる」→投資パネル

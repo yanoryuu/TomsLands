@@ -296,7 +296,8 @@ public class DebugAutoPlayer : MonoBehaviour
         {
             if (Running && _activeDriver == null) _activeDriver = this;
 
-            if (Running && _activeDriver == this && _initialized)
+            // ローディング画面での遷移中は旧シーンを操作しない（SceneLoader の二重遷移ガードに弾かれるだけなので）
+            if (Running && _activeDriver == this && _initialized && !SceneLoader.IsLoading)
             {
                 if (Paused)
                 {
