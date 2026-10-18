@@ -42,15 +42,34 @@ public class EventLifetimeScope : LifetimeScope
         builder.RegisterInstance(eventOutputData);
 
         // BattleInputData / BattleOutputData（SceneTransitionService の依存）
-        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData")
-                              ?? ScriptableObject.CreateInstance<BattleInputData>();
-        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData")
-                               ?? ScriptableObject.CreateInstance<BattleOutputData>();
+        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData");
+        if (battleInputData == null) battleInputData = ScriptableObject.CreateInstance<BattleInputData>();
+        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData");
+        if (battleOutputData == null) battleOutputData = ScriptableObject.CreateInstance<BattleOutputData>();
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
 
         // TomsModel（イベントコマンドの ChangeMoney / ChangeTrust 実行用）
         builder.Register<TomsModel>(Lifetime.Singleton);
+
+        // ShopStatusModel（ChangeTrust 用。インライン経路 TomsEventExecutor と同じく店ステータスの信頼度を変更する）
+        // GameLifetimeScope と同じロード手順。このシーンは親スコープを持たないため自前で登録する
+        var gameBalanceData = AddressableLoader.Load<GameBalanceData>("Marketing/GameBalanceData");
+        if (gameBalanceData == null)
+        {
+            gameBalanceData = ScriptableObject.CreateInstance<GameBalanceData>();
+            Debug.LogWarning("[EventLifetimeScope] GameBalanceData が見つかりません。デフォルト値を使用します。");
+        }
+        gameBalanceData = RemoteBalance.ApplyOverwrite("gameBalance", gameBalanceData);
+        builder.RegisterInstance(gameBalanceData);
+        builder.Register<ShopStatusModel>(Lifetime.Singleton);
+
+        // レリック補正（ChangeMoney の EventRewardMul 用。GameLifetimeScope と同じロード手順）
+        var relicDefinitions = AddressableLoader.LoadAll<RelicDefinition>("RelicData");
+        relicDefinitions = RemoteBalance.ApplyList("relics", relicDefinitions, r => r.relicId);
+        builder.RegisterInstance(relicDefinitions);
+        builder.Register<RelicInventoryModel>(Lifetime.Singleton);
+        builder.Register<RelicEffectResolver>(Lifetime.Singleton);
 
         // SceneTransitionService
         builder.Register<SceneTransitionService>(Lifetime.Singleton);

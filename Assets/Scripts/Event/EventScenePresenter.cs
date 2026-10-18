@@ -1,6 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
 using R3;
-using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -19,19 +18,25 @@ public class EventScenePresenter : IAsyncStartable
     private readonly EventSceneView _view;
     private readonly SceneTransitionService _sceneTransition;
     private readonly TomsModel _tomsModel;
+    private readonly ShopStatusModel _shopStatusModel;
+    private readonly RelicEffectResolver _relicResolver;
 
     public EventScenePresenter(
         EventInputData inputData,
         EventOutputData outputData,
         EventSceneView view,
         SceneTransitionService sceneTransition,
-        TomsModel tomsModel)
+        TomsModel tomsModel,
+        ShopStatusModel shopStatusModel,
+        RelicEffectResolver relicResolver)
     {
         _inputData = inputData;
         _outputData = outputData;
         _view = view;
         _sceneTransition = sceneTransition;
         _tomsModel = tomsModel;
+        _shopStatusModel = shopStatusModel;
+        _relicResolver = relicResolver;
     }
 
     public async UniTask StartAsync(CancellationToken cancellation)
@@ -65,7 +70,7 @@ public class EventScenePresenter : IAsyncStartable
 
         Debug.Log($"[EventScenePresenter] Event confirmed: {tomsEvent.title}");
 
-        // コマンドを実行（TomsModel に直接適用）
+        // コマンドを実行（インライン経路の TomsEventExecutor と同じ結果になるように適用する）
         ExecuteCommands(tomsEvent);
 
         // 結果を書き込み
@@ -88,16 +93,19 @@ public class EventScenePresenter : IAsyncStartable
                     // 不正なマスターデータ（数値でないamount）でも落とさない
                     if (cmd.parameters.TryGetValue("amount", out var moneyStr) && int.TryParse(moneyStr, out var amount))
                     {
-                        _tomsModel.PlayerMoney.Value += amount;
-                        _tomsModel.SavePlayerMoney();
+                        // レリック補正・0 下限クランプ・保存は TomsEventExecutor（インライン経路）と共通
+                        TomsEventExecutor.ApplyChangeMoney(_tomsModel, _relicResolver, e.id, amount);
                         Debug.Log($"[EventScenePresenter] ChangeMoney: {amount}");
                     }
                     break;
 
                 case "ChangeTrust":
-                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
+                    // 店ステータス（ShopStatusModel）の信頼度を変更する。Executor と同じく整数で扱う
+                    // （旧実装は廃止済みの TomsModel.Trust を変更しており、保存もされていなかった）
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && int.TryParse(trustStr, out var trustAmount))
                     {
-                        _tomsModel.Trust.Value += trustAmount;
+                        _shopStatusModel.ChangeTrust(trustAmount);
+                        _shopStatusModel.SaveData();
                         Debug.Log($"[EventScenePresenter] ChangeTrust: {trustAmount}");
                     }
                     break;
@@ -135,7 +143,7 @@ public class EventScenePresenter : IAsyncStartable
                     break;
 
                 case "ChangeTrust":
-                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
+                    if (cmd.parameters.TryGetValue("amount", out var trustStr) && int.TryParse(trustStr, out var trustAmount))
                     {
                         if (trustAmount >= 0)
                             sb.AppendLine($"信頼度 +{trustAmount}");
