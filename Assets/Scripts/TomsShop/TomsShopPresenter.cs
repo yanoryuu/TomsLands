@@ -366,12 +366,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     {
         if (relicRewardService == null || relicRewardService.PendingChoices.Count == 0) return;
 
-        var choices = relicRewardService.PendingChoices
-            .Select(c => (c.relicName, c.description))
-            .ToList();
-
         string skipLabel = $"辞退して {relicRewardService.GetDeclineGold():N0}G もらう";
-        if (!tomsShopView.ShowRelicChoices(choices, skipLabel))
+        if (!tomsShopView.ShowRelicChoices(relicRewardService.PendingChoices, skipLabel))
         {
             string autoName = relicRewardService.PendingChoices[0].relicName;
             relicRewardService.ChoosePending(0, gameFlowManager.CurrentTurn.Value);
