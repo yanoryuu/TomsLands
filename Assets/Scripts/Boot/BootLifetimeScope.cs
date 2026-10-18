@@ -6,12 +6,10 @@ using VContainer.Unity;
 /// ブート(ローディング)シーン用の LifetimeScope。
 /// リモートコンフィグ（GameConst調整値・アイテムマスター上書き）を取得して適用し、
 /// 完了後に TitleScene へ遷移する。このシーンを Build Settings の先頭（index 0）に置くこと。
+/// ローディング画面は SceneLoader の常駐オーバーレイ（Resources/LoadingOverlay.prefab）を使うので、シーン側の配線は不要。
 /// </summary>
 public class BootLifetimeScope : LifetimeScope
 {
-    [Header("Views")]
-    [SerializeField] private LoadingView loadingView;
-
     [Header("リモートコンフィグ")]
     [Tooltip("OFFにするとサーバー取得をスキップし、キャッシュ/ベイク済みデフォルトで起動する")]
     [SerializeField] private bool enableRemoteConfig = true;
@@ -65,12 +63,7 @@ public class BootLifetimeScope : LifetimeScope
             return new RemoteBalanceService(src, new RemoteConfigCache("balance"));
         }, Lifetime.Singleton);
 
-        // LoadingView は任意。未設定(null)でも遷移できるよう WithParameter で渡す（RegisterComponentはnull不可のため）。
-        if (loadingView == null)
-            Debug.LogWarning("[BootLifetimeScope] loadingView 未設定。演出なしで TitleScene へ遷移します。");
-
-        builder.RegisterEntryPoint<LoadingPresenter>()
-            .WithParameter(typeof(LoadingView), loadingView);
+        builder.RegisterEntryPoint<LoadingPresenter>();
 
         Debug.Log("[BootLifetimeScope] Configured.");
     }

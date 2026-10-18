@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// シーン遷移を一元管理するサービス。
@@ -30,7 +29,8 @@ public class SceneTransitionService
 #if UNITY_EDITOR
         if (DevSceneLoadInterceptor != null && DevSceneLoadInterceptor(sceneName)) return;
 #endif
-        SceneManager.LoadScene(sceneName);
+        // ローディング画面つきの非同期遷移。旧シーンはフェードイン〜読み込みの間（約0.3〜1秒）生き続ける点に注意
+        SceneLoader.Load(sceneName);
     }
 
     /// <summary>

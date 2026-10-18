@@ -258,7 +258,7 @@ public class Setting : MonoBehaviour
                 isClosing = true;
                 // Single ロードで Setting（加算シーン）ごと破棄される。
                 // ゲーム側の保存は GameLifecycleHandler.Dispose（スコープ破棄時）が行う。
-                SceneManager.LoadScene("TitleScene");
+                SceneLoader.Load("TitleScene");
             });
         }
     }

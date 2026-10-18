@@ -2,12 +2,11 @@ using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
 /// <summary>
-/// ブートシーンの駆動役。ローディング画面を出しつつリモートコンフィグの取得を待ち、
-/// 完了後にタイトルシーンへ遷移する。GameConst はこの遷移後に初めて参照される。
+/// ブートシーンの駆動役。ローディング画面（SceneLoader の常駐オーバーレイ。勇者が歩く）を出しつつ
+/// リモートコンフィグの取得を待ち、完了後にタイトルシーンへ遷移する。GameConst はこの遷移後に初めて参照される。
 /// </summary>
 public sealed class LoadingPresenter : IAsyncStartable
 {
@@ -18,21 +17,19 @@ public sealed class LoadingPresenter : IAsyncStartable
     private readonly RemoteConfigService _service;
     private readonly ItemMasterService _itemMasterService;
     private readonly RemoteBalanceService _balanceService;
-    private readonly LoadingView _view;
 
     public LoadingPresenter(RemoteConfigService service, ItemMasterService itemMasterService,
-        RemoteBalanceService balanceService, LoadingView view)
+        RemoteBalanceService balanceService)
     {
         _service = service;
         _itemMasterService = itemMasterService;
         _balanceService = balanceService;
-        _view = view;
     }
 
     public async UniTask StartAsync(CancellationToken ct)
     {
-        if (_view != null)
-            _view.SetStatus("設定を確認中...");
+        // 起動直後は裏に何も無いのでフェード無しで出す。以降の TitleScene への遷移はこのまま画面を引き継ぐ
+        SceneLoader.ShowImmediate("設定を確認中...");
         float startTime = Time.realtimeSinceStartup;
 
         try
@@ -55,12 +52,7 @@ public sealed class LoadingPresenter : IAsyncStartable
         if (remain > 0f)
             await UniTask.Delay(TimeSpan.FromSeconds(remain), ignoreTimeScale: true, cancellationToken: ct);
 
-        if (_view != null)
-        {
-            _view.SetStatus("読み込み完了");
-            await _view.FadeOutAsync(ct);
-        }
-
-        SceneManager.LoadScene(NextSceneName);
+        // ローディング画面を出したまま TitleScene を読み込み、読み込み後にフェードアウトする
+        SceneLoader.Load(NextSceneName);
     }
 }
