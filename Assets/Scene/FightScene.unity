@@ -15227,7 +15227,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1611617694}
   - component: {fileID: 1611617693}
-  - component: {fileID: 1611617692}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -15235,18 +15234,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1611617692
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1611617691}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4c7c68c1b98444848bc0c8ec16f67b6f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1611617693
 MonoBehaviour:
   m_ObjectHideFlags: 0
