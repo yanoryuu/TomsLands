@@ -25,7 +25,7 @@ public class TurnActionHintView : MonoBehaviour
             var item = go.GetComponent<TurnActionHintItemUI>();
             if (item == null) continue;
             item.Setup(hint);
-            item.OnTapped.Subscribe(t => OnHintTapped.OnNext(t));
+            item.OnTapped.Subscribe(t => OnHintTapped.OnNext(t)).AddTo(item);
         }
     }
 

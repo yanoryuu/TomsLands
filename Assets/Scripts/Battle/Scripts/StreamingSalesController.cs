@@ -1,5 +1,4 @@
 ﻿using Cysharp.Threading.Tasks;
-using System.Linq;
 using UnityEngine;
 using System.Collections.Generic;
 using R3;
@@ -9,7 +8,6 @@ public class StreamingSalesController : MonoBehaviour
     [Header("設定")]
     [SerializeField] private float baseSalesInterval = 15f;
     [SerializeField] private float intervalRandomness = 3f;
-    [SerializeField] private int maxItemsToSell = 5;
 
     [Header("価格設定")]
     [SerializeField] private BattlePriceSettings battlePriceSettings;
@@ -20,7 +18,7 @@ public class StreamingSalesController : MonoBehaviour
 
     [Header("Inventory (UI)")]
     [SerializeField] private List<ItemSlotView> inventorySlotViews; // 在庫側のスロット（シーン上の 10 インスタンス）
-    private List<RuntimeItemData> inventorySlotItemRefs = new List<RuntimeItemData>(); // 在庫スロットが参照している RuntimeItemData
+    private List<RuntimeItemData> inventorySlotItemRefs = new(); // 在庫スロットが参照している RuntimeItemData
 
     [Header("価格グラフ")]
     [SerializeField] private ItemPriceGraphView priceGraphView;
@@ -101,7 +99,7 @@ public class StreamingSalesController : MonoBehaviour
     private StreamingSalesPresenter _presenter;
     private StreamingSalesModel _model;
     private BattleDemandTracker _demandTracker;
-    private readonly CompositeDisposable _battleDisposables = new CompositeDisposable();
+    private readonly CompositeDisposable _battleDisposables = new();
     private StreamingHeatModel _heatModel;
     private BattlePauseController _pauseController;
     private bool _priceSettingsLoadAttempted;
@@ -118,14 +116,10 @@ public class StreamingSalesController : MonoBehaviour
                 battlePriceSettings = RemoteBalance.ApplyOverwrite("battlePrice", AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings"));
             }
             if (battlePriceSettings != null)
-            {
                 return battlePriceSettings;
-            }
 
             if (_runtimeDefaultPriceSettings == null)
-            {
                 _runtimeDefaultPriceSettings = ScriptableObject.CreateInstance<BattlePriceSettings>();
-            }
             return _runtimeDefaultPriceSettings;
         }
     }
@@ -175,11 +169,7 @@ public class StreamingSalesController : MonoBehaviour
     public void StartStreamingPhase(ItemModel itemModel, List<RuntimeItemData> itemsForSale = null, List<RuntimeItemData> inventoryItems = null)
     {
         _mainItemModel = itemModel;
-    
-        if (itemsForSale == null)
-        {
-            itemsForSale = new List<RuntimeItemData>();
-        }
+        itemsForSale ??= new List<RuntimeItemData>();
 
         // 時間経過販売の間隔は GameConst.battleTempo を優先（0 以下ならシーンの値）。
         // 戦闘テンポを落とした分だけ伸ばし、1配信あたりの時間販売回数を据え置く。
@@ -203,8 +193,7 @@ public class StreamingSalesController : MonoBehaviour
         );
 
         // 売り場と在庫の全アイテムを BattleDemandTracker に登録
-        var allItems = new List<RuntimeItemData>();
-        if (itemsForSale != null) allItems.AddRange(itemsForSale);
+        var allItems = new List<RuntimeItemData>(itemsForSale);
         if (inventoryItems != null) allItems.AddRange(inventoryItems);
         _demandTracker.Initialize(allItems);
 
@@ -220,11 +209,8 @@ public class StreamingSalesController : MonoBehaviour
         // Inventoryスロットに選択アイテムを配置
         InitializeInventorySlots(itemModel, itemsForSale, inventoryItems);
 
-        // バトル開始時の初期価格を履歴に記録
-        var allItemsList = new List<RuntimeItemData>();
-        if (itemsForSale != null) allItemsList.AddRange(itemsForSale);
-        if (inventoryItems != null) allItemsList.AddRange(inventoryItems);
-        foreach (var item in allItemsList)
+        // バトル開始時の初期価格を履歴に記録（allItems は上で作った売り場＋在庫の一覧）
+        foreach (var item in allItems)
         {
             if (item == null) continue;
             item.ClearBattlePriceHistory();
@@ -245,7 +231,7 @@ public class StreamingSalesController : MonoBehaviour
                 if (slotIndex < 0 || slotIndex >= _model.ItemsForSale.Count) return;
                 var soldItem = _model.ItemsForSale[slotIndex];
                 if (soldItem == null) return;
-                customerManager?.RequestCustomer(soldItem);
+                if (customerManager != null) customerManager.RequestCustomer(soldItem);
                 OnSaleOccurred?.Invoke(soldItem);
             })
             .AddTo(_battleDisposables);
@@ -262,9 +248,13 @@ public class StreamingSalesController : MonoBehaviour
         _heatModel = new StreamingHeatModel(PriceSettings);
         SubscribeToHeatEvents();
         _heatModel.Heat
-            .Subscribe(h => heatView?.UpdateHeat(h, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier()))
+            .Subscribe(h =>
+            {
+                if (heatView != null) heatView.UpdateHeat(h, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier());
+            })
             .AddTo(_battleDisposables);
-        heatView?.UpdateHeat(_heatModel.Heat.Value, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier());
+        if (heatView != null)
+            heatView.UpdateHeat(_heatModel.Heat.Value, _heatModel.GetTierLabel(), _heatModel.GetTierColor(), _heatModel.GetPriceMultiplier());
 
         Debug.Log($"営業開始！ 売り場: {itemsForSale.Count}種, Inventory: {inventoryItems?.Count ?? 0}種");
     }
@@ -314,8 +304,6 @@ public class StreamingSalesController : MonoBehaviour
                     // ApplyDamage の戻り値が1以上（最低保証ダメージ）なので、
                     // 防御力がattackPower以上なら実質「防いだ」と判定
                     int rawDamage = attacker.AttackPower;
-                    int effectiveDamage = Mathf.Max(1, rawDamage - target.DefensePower);
-                    
                     if (rawDamage <= target.DefensePower)
                     {
                         // 攻撃力 ≤ 防御力 → 防御成功 → 防具価格UP
@@ -487,7 +475,7 @@ public class StreamingSalesController : MonoBehaviour
     {
         if (slot == null || slot.CurrentItem == null) return;
         if (slot.CurrentItem.Stock.Value == 0) return; // 在庫切れはBattleSceneStarterの補充ポップアップで処理
-        priceGraphView?.Show(slot.CurrentItem);
+        if (priceGraphView != null) priceGraphView.Show(slot.CurrentItem);
     }
 
     /// <summary>
@@ -502,12 +490,9 @@ public class StreamingSalesController : MonoBehaviour
         for (int i = 0; i < inventorySlotViews.Count; i++)
         {
             if (i < inventorySlotItemRefs.Count)
-            {
                 inventorySlotViews[i].SetItem(inventorySlotItemRefs[i]);
-            }
         }
     }
-
 
     /// <summary>
     /// Inventoryスロットを初期化する。
@@ -523,140 +508,136 @@ public class StreamingSalesController : MonoBehaviour
         for (int i = 0; i < inventorySlotViews.Count; i++)
         {
             RuntimeItemData assign = i < itemsToPlace.Count ? itemsToPlace[i] : null;
-            
             inventorySlotItemRefs[i] = assign;
             inventorySlotViews[i].SetItem(assign);
         }
     }
 
     private void HandleItemSwap(ItemSlotView fromSlot, ItemSlotView toSlot)
-{
-    if (fromSlot == null || toSlot == null) return;
-
-    int fromSellIndex = view.GetSlotIndex(fromSlot);
-    int toSellIndex = view.GetSlotIndex(toSlot);
-
-    int fromInvIndex = inventorySlotViews != null ? inventorySlotViews.IndexOf(fromSlot) : -1;
-    int toInvIndex = inventorySlotViews != null ? inventorySlotViews.IndexOf(toSlot) : -1;
-
-    // 1) 売り場内の入れ替え
-    if (fromSellIndex != -1 && toSellIndex != -1)
     {
-        Debug.Log($"売り場内スワップ: {fromSellIndex} <-> {toSellIndex}");
-        SwapSellSlots(fromSellIndex, toSellIndex);
-        return;
+        if (fromSlot == null || toSlot == null) return;
+
+        int fromSellIndex = view.GetSlotIndex(fromSlot);
+        int toSellIndex = view.GetSlotIndex(toSlot);
+
+        int fromInvIndex = inventorySlotViews != null ? inventorySlotViews.IndexOf(fromSlot) : -1;
+        int toInvIndex = inventorySlotViews != null ? inventorySlotViews.IndexOf(toSlot) : -1;
+
+        // 1) 売り場内の入れ替え
+        if (fromSellIndex != -1 && toSellIndex != -1)
+        {
+            Debug.Log($"売り場内スワップ: {fromSellIndex} <-> {toSellIndex}");
+            SwapSellSlots(fromSellIndex, toSellIndex);
+            return;
+        }
+
+        // 2) 在庫内の入れ替え
+        if (fromInvIndex != -1 && toInvIndex != -1)
+        {
+            Debug.Log($"在庫内スワップ: {fromInvIndex} <-> {toInvIndex}");
+            var tmp = inventorySlotItemRefs[toInvIndex];
+            inventorySlotItemRefs[toInvIndex] = inventorySlotItemRefs[fromInvIndex];
+            inventorySlotItemRefs[fromInvIndex] = tmp;
+
+            inventorySlotViews[toInvIndex].SetItem(inventorySlotItemRefs[toInvIndex]);
+            inventorySlotViews[fromInvIndex].SetItem(inventorySlotItemRefs[fromInvIndex]);
+            return;
+        }
+
+        // 3) 在庫 → 売り場（toSlot が売り場）
+        if (fromInvIndex != -1 && toSellIndex != -1)
+        {
+            Debug.Log($"在庫 → 売り場: invIndex={fromInvIndex}, sellIndex={toSellIndex}");
+            MoveInventoryToSell(fromInvIndex, toSellIndex);
+            return;
+        }
+
+        // 4) 売り場 → 在庫（fromSlot が売り場）
+        if (fromSellIndex != -1 && toInvIndex != -1)
+        {
+            Debug.Log($"売り場 → 在庫: sellIndex={fromSellIndex}, invIndex={toInvIndex}");
+            MoveSellToInventory(fromSellIndex, toInvIndex);
+            return;
+        }
+
+        Debug.LogWarning("HandleItemSwap: どの領域でもないスワップが発生しました（無視）");
     }
 
-    // 2) 在庫内の入れ替え
-    if (fromInvIndex != -1 && toInvIndex != -1)
+    /// <summary>
+    /// 売り場内のスロット入れ替え（null も含む）
+    /// </summary>
+    private void SwapSellSlots(int indexA, int indexB)
     {
-        Debug.Log($"在庫内スワップ: {fromInvIndex} <-> {toInvIndex}");
-        var tmp = inventorySlotItemRefs[toInvIndex];
-        inventorySlotItemRefs[toInvIndex] = inventorySlotItemRefs[fromInvIndex];
-        inventorySlotItemRefs[fromInvIndex] = tmp;
+        // リストを必要なサイズまで拡張
+        EnsureSellListSize(Mathf.Max(indexA, indexB) + 1);
 
-        inventorySlotViews[toInvIndex].SetItem(inventorySlotItemRefs[toInvIndex]);
-        inventorySlotViews[fromInvIndex].SetItem(inventorySlotItemRefs[fromInvIndex]);
-        return;
+        var tmp = _model.ItemsForSale[indexB];
+        _model.ItemsForSale[indexB] = _model.ItemsForSale[indexA];
+        _model.ItemsForSale[indexA] = tmp;
+
+        RefreshSellDisplay();
     }
 
-    // 3) 在庫 → 売り場（toSlot が売り場）
-    if (fromInvIndex != -1 && toSellIndex != -1)
+    /// <summary>
+    /// 在庫から売り場へ移動（交換）
+    /// </summary>
+    private void MoveInventoryToSell(int invIndex, int sellIndex)
     {
-        Debug.Log($"在庫 → 売り場: invIndex={fromInvIndex}, sellIndex={toSellIndex}");
-        MoveInventoryToSell(fromInvIndex, toSellIndex);
-        return;
+        var invItem = inventorySlotItemRefs[invIndex];
+        if (invItem == null) return; // 空スロットからはドラッグできない
+
+        // 売り場リストを必要なサイズまで拡張
+        EnsureSellListSize(sellIndex + 1);
+
+        // 売り場の現在のアイテム（null の可能性あり）
+        var sellItem = _model.ItemsForSale[sellIndex];
+
+        // 入れ替え
+        _model.ItemsForSale[sellIndex] = invItem;
+        inventorySlotItemRefs[invIndex] = sellItem;
+
+        RefreshSellDisplay();
+        inventorySlotViews[invIndex].SetItem(sellItem);
     }
 
-    // 4) 売り場 → 在庫（fromSlot が売り場）
-    if (fromSellIndex != -1 && toInvIndex != -1)
+    /// <summary>
+    /// 売り場から在庫へ移動（交換）
+    /// </summary>
+    private void MoveSellToInventory(int sellIndex, int invIndex)
     {
-        Debug.Log($"売り場 → 在庫: sellIndex={fromSellIndex}, invIndex={toInvIndex}");
-        MoveSellToInventory(fromSellIndex, toInvIndex);
-        return;
+        // 売り場のアイテムが存在するか確認
+        if (sellIndex >= _model.ItemsForSale.Count) return;
+
+        var sellItem = _model.ItemsForSale[sellIndex];
+        if (sellItem == null) return; // 空スロットからはドラッグできない
+
+        var invItem = inventorySlotItemRefs[invIndex];
+
+        // 入れ替え
+        _model.ItemsForSale[sellIndex] = invItem;
+        inventorySlotItemRefs[invIndex] = sellItem;
+
+        RefreshSellDisplay();
+        inventorySlotViews[invIndex].SetItem(sellItem);
     }
 
-    Debug.LogWarning("HandleItemSwap: どの領域でもないスワップが発生しました（無視）");
-}
-
-/// <summary>
-/// 売り場内のスロット入れ替え（null も含む）
-/// </summary>
-private void SwapSellSlots(int indexA, int indexB)
-{
-    // リストを必要なサイズまで拡張
-    EnsureSellListSize(Mathf.Max(indexA, indexB) + 1);
-
-    var tmp = _model.ItemsForSale[indexB];
-    _model.ItemsForSale[indexB] = _model.ItemsForSale[indexA];
-    _model.ItemsForSale[indexA] = tmp;
-
-    RefreshSellDisplay();
-}
-
-/// <summary>
-/// 在庫から売り場へ移動（交換）
-/// </summary>
-private void MoveInventoryToSell(int invIndex, int sellIndex)
-{
-    var invItem = inventorySlotItemRefs[invIndex];
-    if (invItem == null) return; // 空スロットからはドラッグできない
-
-    // 売り場リストを必要なサイズまで拡張
-    EnsureSellListSize(sellIndex + 1);
-
-    // 売り場の現在のアイテム（null の可能性あり）
-    var sellItem = _model.ItemsForSale[sellIndex];
-
-    // 入れ替え
-    _model.ItemsForSale[sellIndex] = invItem;
-    inventorySlotItemRefs[invIndex] = sellItem;
-
-    RefreshSellDisplay();
-    inventorySlotViews[invIndex].SetItem(sellItem);
-}
-
-/// <summary>
-/// 売り場から在庫へ移動（交換）
-/// </summary>
-private void MoveSellToInventory(int sellIndex, int invIndex)
-{
-    // 売り場のアイテムが存在するか確認
-    if (sellIndex >= _model.ItemsForSale.Count) return;
-
-    var sellItem = _model.ItemsForSale[sellIndex];
-    if (sellItem == null) return; // 空スロットからはドラッグできない
-
-    var invItem = inventorySlotItemRefs[invIndex];
-
-    // 入れ替え
-    _model.ItemsForSale[sellIndex] = invItem;
-    inventorySlotItemRefs[invIndex] = sellItem;
-
-    RefreshSellDisplay();
-    inventorySlotViews[invIndex].SetItem(sellItem);
-}
-
-/// <summary>
-/// 売り場リストを指定サイズまで null で拡張
-/// </summary>
-private void EnsureSellListSize(int requiredSize)
-{
-    while (_model.ItemsForSale.Count < requiredSize)
+    /// <summary>
+    /// 売り場リストを指定サイズまで null で拡張
+    /// </summary>
+    private void EnsureSellListSize(int requiredSize)
     {
-        _model.ItemsForSale.Add(null);
+        while (_model.ItemsForSale.Count < requiredSize)
+            _model.ItemsForSale.Add(null);
     }
-}
 
-/// <summary>
-/// 売り場の表示を更新
-/// </summary>
-private void RefreshSellDisplay()
-{
-    view.DisplayItems(_model.ItemsForSale);
-    _model.OnItemsReordered.OnNext(Unit.Default);
-}
-
+    /// <summary>
+    /// 売り場の表示を更新
+    /// </summary>
+    private void RefreshSellDisplay()
+    {
+        view.DisplayItems(_model.ItemsForSale);
+        _model.OnItemsReordered.OnNext(Unit.Default);
+    }
 
     private void OnDestroy()
     {
@@ -670,9 +651,7 @@ private void RefreshSellDisplay()
     }
 
     private void AddTacticsAdjustedHeat(float baseDelta)
-    {
-        _heatModel?.AddHeat(baseDelta * HeroBattleInfluence.GetHeatMultiplier(_heroTactics));
-    }
+        => _heatModel?.AddHeat(baseDelta * HeroBattleInfluence.GetHeatMultiplier(_heroTactics));
 
     private float GetWeaponPriceUpOnHit() => HeroBattleInfluence.GetWeaponPriceUpOnKill(PriceSettings, _heroTactics);
     private float GetWeaponPriceDownOnNonKill() => HeroBattleInfluence.GetWeaponPriceDownOnNonKill(PriceSettings, _heroTactics);

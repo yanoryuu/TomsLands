@@ -155,7 +155,7 @@ public sealed class TitleView : MonoBehaviour
             var slot = Instantiate(saveSlotPrefab, saveSlotContainer);
             slot.Bind(info);
             // ロードモードでは空きスロットを選択不可にする。ニューゲームでは全て選択可。
-            slot.SetSelectable(loadMode ? info.Exists : true);
+            slot.SetSelectable(!loadMode || info.Exists);
 
             slot.OnSelect.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotSelected.OnNext(i); }).AddTo(_slotDisposables);
             slot.OnDelete.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotDeleteRequested.OnNext(i); }).AddTo(_slotDisposables);
@@ -163,8 +163,8 @@ public sealed class TitleView : MonoBehaviour
             _slotViews.Add(slot);
 
             // 上から順にポップイン
-            var cg = slot.GetComponent<CanvasGroup>();
-            if (cg == null) cg = slot.gameObject.AddComponent<CanvasGroup>();
+            if (!slot.TryGetComponent<CanvasGroup>(out var cg))
+                cg = slot.gameObject.AddComponent<CanvasGroup>();
             float delay = index * 0.07f;
             cg.alpha = 0f;
             cg.DOFade(1f, 0.2f).SetDelay(delay).SetLink(slot.gameObject);
@@ -230,10 +230,7 @@ public sealed class TitleView : MonoBehaviour
         SetGroupActive(saveDataScreenGroup, screen == TitleType.SaveData);
     }
 
-    private void NotifyBackRequested()
-    {
-        OnBackRequested.OnNext(Unit.Default);
-    }
+    private void NotifyBackRequested() => OnBackRequested.OnNext(Unit.Default);
 
     private static void AddClickListener(Button button, UnityEngine.Events.UnityAction action)
     {

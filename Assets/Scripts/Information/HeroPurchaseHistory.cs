@@ -1,7 +1,6 @@
-
 using System;
 
-[System.Serializable]
+[Serializable]
 public class HeroPurchaseHistory
 {
     public string itemId;

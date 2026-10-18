@@ -449,7 +449,7 @@ public class DebugAutoPlayer : MonoBehaviour
             return true;
         }
 
-        engine.Page?.InputSendMessage();
+        if (engine.Page != null) engine.Page.InputSendMessage();
         SetStatus("会話を自動送り中");
         return true;
     }
@@ -703,7 +703,7 @@ public class DebugAutoPlayer : MonoBehaviour
         else if (_itemModel != null && _tomsModel != null)
         {
             _itemModel.AutoSetDisplay(_tomsModel.BlacksmithLevel.Value, ComputeMaxDisplayKinds());
-            _tomsShopView?.RefreshDeskDisplay(_itemModel.RuntimeItems);
+            if (_tomsShopView != null) _tomsShopView.RefreshDeskDisplay(_itemModel.RuntimeItems);
             if (Scope == DebugAutoPlayScope.DisplayOnly) Stop("陳列だけ自動: 完了");
         }
         else

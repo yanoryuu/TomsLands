@@ -1,5 +1,4 @@
 ﻿﻿﻿using Cysharp.Threading.Tasks;
-using System.Linq;
 using System.Threading;
 using UnityEngine;
 
@@ -75,9 +74,7 @@ public class BattleFlowManager
 
             // 毎ターン売買を実行（売り場に出ているアイテムのみ対象）
             if (salesController != null)
-            {
                 salesController.ExecuteTurnSales();
-            }
 
             turnCount++;
         }

@@ -47,18 +47,12 @@ public class AdvertisementSystem
     /// バズ中の広告費割引率を設定する（BuzzSystem から呼ばれる）。
     /// </summary>
     /// <param name="rate">割引率（0〜1、例: 0.3 = 30%OFF）</param>
-    public void SetBuzzDiscount(float rate)
-    {
-        _buzzAdDiscountRate = Mathf.Clamp01(rate);
-    }
+    public void SetBuzzDiscount(float rate) => _buzzAdDiscountRate = Mathf.Clamp01(rate);
 
     /// <summary>
     /// バズ中の広告費割引率をクリアする。
     /// </summary>
-    public void ClearBuzzDiscount()
-    {
-        _buzzAdDiscountRate = 0f;
-    }
+    public void ClearBuzzDiscount() => _buzzAdDiscountRate = 0f;
 
     /// <summary>
     /// 広告の実際のコストを計算する（割引適用後）。
@@ -72,9 +66,7 @@ public class AdvertisementSystem
 
         // 複数の割引を乗算で適用（加算だと割引率が高くなりすぎるため）
         float finalRate = (1f - followerDiscount) * (1f - _buzzAdDiscountRate);
-        int discountedCost = Mathf.Max(0, Mathf.RoundToInt(ad.cost * finalRate));
-
-        return discountedCost;
+        return Mathf.Max(0, Mathf.RoundToInt(ad.cost * finalRate));
     }
 
     /// <summary>
@@ -152,6 +144,7 @@ public class AdvertisementSystem
 
         // コスト消費
         _tomsModel.PlayerMoney.Value -= cost;
+        _tomsModel.SavePlayerMoney();
 
         // ステータス上昇・フォロワー獲得（広告ごとの statMax で上昇量を制限）
         var effect = GetEffectiveGains(ad);
@@ -186,10 +179,7 @@ public class AdvertisementSystem
     /// <summary>
     /// 利用可能な全広告データのリストを取得する（UI表示用）。
     /// </summary>
-    public IReadOnlyList<AdvertisementData> GetAllAdvertisements()
-    {
-        return _advertisements;
-    }
+    public IReadOnlyList<AdvertisementData> GetAllAdvertisements() => _advertisements;
 }
 
 /// <summary>

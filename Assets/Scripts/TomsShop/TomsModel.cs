@@ -4,6 +4,8 @@ using R3;
 
 public class TomsModel
 {
+    private const string SaveFileName = "tomsData.json";
+
     public ReactiveProperty<int> PlayerMoney { get; private set; }
     
     public ReactiveProperty<int> BlacksmithLevel { get; private set; }
@@ -97,10 +99,7 @@ public class TomsModel
     /// <summary>
     /// 次回返済額を返す（DebtCycle + 1 のサイクル分）。
     /// </summary>
-    public int GetNextDebtAmount()
-    {
-        return GameConst.GetDebtAmount(DebtCycle.Value + 1);
-    }
+    public int GetNextDebtAmount() => GameConst.GetDebtAmount(DebtCycle.Value + 1);
 
     public void SavePlayerMoney()
     {
@@ -108,12 +107,12 @@ public class TomsModel
             FlowSeed, (int)GameMode, UseAutoFlow, ToolShopLevel.Value, Trust.Value, ShopLevel.Value,
             BorrowedPrincipal, FirstDebtDiscountRate, RunOpeningPending);
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SaveSlotManager.GetPath("tomsData.json"), json);
+        File.WriteAllText(SaveSlotManager.GetPath(SaveFileName), json);
     }
 
     public void LoadPlayerMoney()
     {
-        string path = SaveSlotManager.GetPath("tomsData.json");
+        string path = SaveSlotManager.GetPath(SaveFileName);
         if (File.Exists(path))
         {
             string json = File.ReadAllText(path);
@@ -137,10 +136,17 @@ public class TomsModel
         }
         else
         {
+            // セーブが無い＝新規ゲーム。ファイルあり分岐で読む全フィールドをコンストラクタの初期値に戻す
+            // （同一インスタンスで別スロットを読み直したとき前スロットの値が残らないように）
             PlayerMoney.Value = GameConst.InitMoney;
             BlacksmithLevel.Value = 1;
             ToolShopLevel.Value = 1;
             InfoBrokerLevel.Value = 1;
+            CurrentTurn.Value = 1;
+            ShopLevel.Value = 1;
+            Trust.Value = 1f;
+            BorrowedPrincipal = 0;
+            FirstDebtDiscountRate = 0f;
             GameFlowIndex = 0;
             DebtCycle.Value = 0;
             FlowSeed = 0;
@@ -153,17 +159,9 @@ public class TomsModel
     /// <summary>
     /// 収入を所持金に加算する（旧名: Settlement。売り注文の「約定」と紛らわしいためリネーム）。
     /// </summary>
-    public void AddRevenue(int price)
-    {
-        PlayerMoney.Value += price;
-    }
+    public void AddRevenue(int price) => PlayerMoney.Value += price;
 
-    public void PurchaseItem(int price)
-    {
-        //購入処理
-        PlayerMoney.Value -= price;
-        Debug.Log(PlayerMoney.Value);
-    }
+    public void PurchaseItem(int price) => PlayerMoney.Value -= price;
 
     // ========================================
     // 当日の仕入れ支出トラッカー（ターン評価の「資金効率」用）
@@ -180,10 +178,7 @@ public class TomsModel
     }
 
     /// <summary>日送り時に GameFlowManager から呼ばれるリセット。</summary>
-    public void ResetTurnProcurementSpend()
-    {
-        TurnProcurementSpend = 0;
-    }
+    public void ResetTurnProcurementSpend() => TurnProcurementSpend = 0;
 
     /// <summary>
     /// 鍛冶屋レベルを1上げる。成功なら true を返す。

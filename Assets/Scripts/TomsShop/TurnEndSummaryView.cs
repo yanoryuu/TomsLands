@@ -27,7 +27,7 @@ public class TurnEndSummaryView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI pendingIncomeText;
 
     [Header("ターン評価")]
-    [SerializeField] private UnityEngine.UI.Image gradeImage;
+    [SerializeField] private Image gradeImage;
     [SerializeField] private TextMeshProUGUI gradeCommentText;
     [SerializeField] private Sprite gradeS;
     [SerializeField] private Sprite gradeA;
@@ -53,7 +53,7 @@ public class TurnEndSummaryView : MonoBehaviour
     }
 
     /// <summary>
-    /// サマリーの内容を更新する
+    /// ターン評価（ランク画像とコメント）を表示する
     /// </summary>
     public void ShowGrade(TurnGrade grade, string comment)
     {
@@ -74,12 +74,13 @@ public class TurnEndSummaryView : MonoBehaviour
             gradeCommentText.text = comment;
     }
 
+    /// <summary>
+    /// サマリーの内容を更新する
+    /// </summary>
     public void UpdateContent(List<TurnEndSummaryItemData> items, int totalRevenue, int totalSoldCount, int daysUntilBattle)
     {
-        // 既存の行をクリア
         ClearRows();
 
-        // 各アイテム行を生成
         foreach (var item in items)
         {
             var row = Instantiate(rowPrefab, contentParent);
@@ -100,12 +101,7 @@ public class TurnEndSummaryView : MonoBehaviour
             totalSoldCountText.text = $"{totalSoldCount}個";
 
         if (daysUntilBattleText != null)
-        {
-            if (daysUntilBattle >= 0)
-                daysUntilBattleText.text = $"あと{daysUntilBattle}ターン";
-            else
-                daysUntilBattleText.text = "予定なし";
-        }
+            daysUntilBattleText.text = daysUntilBattle >= 0 ? $"あと{daysUntilBattle}ターン" : "予定なし";
     }
 
     /// <summary>

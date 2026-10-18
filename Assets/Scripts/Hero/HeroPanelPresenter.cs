@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using R3;
-using UnityEngine;
 using VContainer.Unity;
 
 public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
@@ -43,10 +42,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         stateManager.RegisterOnEnter(TomsShopGamePhase.Hero, Entry);
     }
 
-    public void Start()
-    {
-        Bind();
-    }
+    public void Start() => Bind();
 
     public void Entry()
     {
@@ -147,14 +143,10 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
 
         var hero = heroModel.heroData;
         if (!string.IsNullOrEmpty(hero.weaponId.Value))
-        {
             heroModel.EquipItem(hero.weaponId.Value);
-        }
 
         if (!string.IsNullOrEmpty(hero.armorId.Value))
-        {
             heroModel.EquipItem(hero.armorId.Value);
-        }
 
         battleInputData.EquippedItemIds = new List<string>(heroModel.EquippedItemIds);
         heroModel.SaveHeroData();
@@ -259,9 +251,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         {
             var selected = itemModel.GetRuntimeItem(selectedItemId);
             if (selected != null && selected.ItemType == type)
-            {
                 options.Insert(0, new HeroEquipmentOption(selected.ItemId, $"{selected.ItemName}（未所持）"));
-            }
         }
 
         return options;
@@ -278,8 +268,5 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         _                        => HeroDialogueLoader.Get("hover_tactics_balanced"),
     };
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

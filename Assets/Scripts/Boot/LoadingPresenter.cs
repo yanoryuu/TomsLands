@@ -31,7 +31,8 @@ public sealed class LoadingPresenter : IAsyncStartable
 
     public async UniTask StartAsync(CancellationToken ct)
     {
-        _view?.SetStatus("設定を確認中...");
+        if (_view != null)
+            _view.SetStatus("設定を確認中...");
         float startTime = Time.realtimeSinceStartup;
 
         try
@@ -54,9 +55,11 @@ public sealed class LoadingPresenter : IAsyncStartable
         if (remain > 0f)
             await UniTask.Delay(TimeSpan.FromSeconds(remain), ignoreTimeScale: true, cancellationToken: ct);
 
-        _view?.SetStatus("読み込み完了");
         if (_view != null)
+        {
+            _view.SetStatus("読み込み完了");
             await _view.FadeOutAsync(ct);
+        }
 
         SceneManager.LoadScene(NextSceneName);
     }

@@ -28,8 +28,6 @@ public class InterventionButtonWidget : MonoBehaviour
     [SerializeField] private Color dotOffColor = new(0.16f, 0.1f, 0.08f, 0.85f);
 
     private int _price = -1;
-    private int _usesLeft = -1;
-    private bool _visualEnabled = true;
     private Tween _pulse;
     private bool _pulsing;
 
@@ -44,7 +42,6 @@ public class InterventionButtonWidget : MonoBehaviour
 
     public void SetUsesLeft(int usesLeft)
     {
-        _usesLeft = usesLeft;
         if (usesDots == null) return;
         bool show = usesLeft >= 0;
         for (int i = 0; i < usesDots.Length; i++)
@@ -59,7 +56,6 @@ public class InterventionButtonWidget : MonoBehaviour
     /// <summary>見た目の有効/グレー。</summary>
     public void SetVisualEnabled(bool on)
     {
-        _visualEnabled = on;
         if (background != null)
         {
             var s = on ? normalSprite : disabledSprite;
@@ -99,10 +95,7 @@ public class InterventionButtonWidget : MonoBehaviour
         }
     }
 
-    public void PlayPressed()
-    {
-        UIFx.Pop(transform, 0.9f, 0.18f);
-    }
+    public void PlayPressed() => UIFx.Pop(transform, 0.9f, 0.18f);
 
     [Tooltip("自動発動時に光らせる白いオーバーレイ（任意）")]
     [SerializeField] private Image flashOverlay;

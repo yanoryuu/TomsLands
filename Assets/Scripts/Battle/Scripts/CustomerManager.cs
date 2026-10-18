@@ -35,7 +35,7 @@ public class CustomerManager : MonoBehaviour
     [Tooltip("同時に画面上に存在できる客の最大数（0 = 無制限）")]
     [SerializeField] private int maxConcurrentCustomers = 5;
 
-    private readonly Queue<RuntimeItemData> _purchaseQueue = new Queue<RuntimeItemData>();
+    private readonly Queue<RuntimeItemData> _purchaseQueue = new();
     private bool _isProcessing;
     private int _destIndex;
 
@@ -63,7 +63,6 @@ public class CustomerManager : MonoBehaviour
         _purchaseQueue.Enqueue(item);
         if (!_isProcessing) ProcessQueueAsync().Forget();
     }
-
 
     private async UniTaskVoid ProcessQueueAsync()
     {
@@ -129,19 +128,14 @@ public class CustomerManager : MonoBehaviour
 
     private void EnsureCustomerPool()
     {
-        if (customerCharacters == null)
-        {
-            customerCharacters = new List<CustomerCharacter>();
-        }
+        customerCharacters ??= new List<CustomerCharacter>();
 
         Transform searchRoot = transform.parent != null ? transform.parent : transform;
         var childCustomers = searchRoot.GetComponentsInChildren<CustomerCharacter>(true);
         foreach (var customer in childCustomers)
         {
             if (customer != null && !customerCharacters.Contains(customer))
-            {
                 customerCharacters.Add(customer);
-            }
         }
 
         customerCharacters = customerCharacters

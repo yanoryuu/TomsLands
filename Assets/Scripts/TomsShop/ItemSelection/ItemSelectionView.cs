@@ -30,9 +30,9 @@ public class ItemSelectionView : MonoBehaviour
     [SerializeField] private GameObject toolTab;
     public Subject<Unit> OnCloseRequested { get; } = new();
     private readonly List<GameObject> activeSlots = new();
-    public Subject<Unit> OnArmorPanelRequested { get; private set; } = new();
-    public Subject<Unit> OnWeaponPanelRequested { get; private set; } = new();
-    public Subject<Unit> OnAutoDisplayRequested { get; private set; } = new();
+    public Subject<Unit> OnArmorPanelRequested { get; } = new();
+    public Subject<Unit> OnWeaponPanelRequested { get; } = new();
+    public Subject<Unit> OnAutoDisplayRequested { get; } = new();
 
     private readonly Dictionary<string, ItemDisplaySlot> displaySlots = new();
 
@@ -88,30 +88,23 @@ public class ItemSelectionView : MonoBehaviour
         var es = UnityEngine.EventSystems.EventSystem.current;
         var sel = es != null ? es.currentSelectedGameObject : null;
         bool keep = sel != null && UIFocusManager.IsUsable(sel)
-            && (sel == weaponPanelButton?.gameObject || sel == armorPanelButton?.gameObject || sel == autoDisplayButton?.gameObject);
+            && (IsButtonObject(weaponPanelButton, sel) || IsButtonObject(armorPanelButton, sel) || IsButtonObject(autoDisplayButton, sel));
         if (!keep && focusScope.FirstSelected != null) focusScope.Select(focusScope.FirstSelected);
     }
+
+    private static bool IsButtonObject(Button button, GameObject go) => button != null && go == button.gameObject;
 
     public void SetDescription(string description, Sprite icon)
     {
         itemDescriptionText.text = description;
         itemIcon.sprite = icon;
     }
-    
-    public void Initialize()
-    {
-        Hide();
-    }
 
-    public void Show()
-    {
-        itemSelectionPanel.SetActive(true);
-    }
+    public void Initialize() => Hide();
 
-    public void Hide()
-    {
-        itemSelectionPanel.SetActive(false);
-    }
+    public void Show() => itemSelectionPanel.SetActive(true);
+
+    public void Hide() => itemSelectionPanel.SetActive(false);
 
     /// <summary>
     /// 商品リストを表示
@@ -125,8 +118,8 @@ public class ItemSelectionView : MonoBehaviour
         }
         activeSlots.Clear();
 
-        List<ItemSelectionSlot> slots = new();        
-        
+        List<ItemSelectionSlot> slots = new();
+
         foreach (var item in runtimeItems)
         {
             var slotObj = Instantiate(itemSelectionSlotPrefab, itemListParent);

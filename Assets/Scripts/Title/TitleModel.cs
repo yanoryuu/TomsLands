@@ -8,15 +8,9 @@ public sealed class TitleModel
     /// <summary>セーブデータ画面の用途（続きから / ニューゲームの保存先選択）。</summary>
     public SaveDataPanelMode PanelMode { get; private set; } = SaveDataPanelMode.Load;
 
-    public void ChangeScreen(TitleType screen)
-    {
-        CurrentScreen = screen;
-    }
+    public void ChangeScreen(TitleType screen) => CurrentScreen = screen;
 
-    public void SetPanelMode(SaveDataPanelMode mode)
-    {
-        PanelMode = mode;
-    }
+    public void SetPanelMode(SaveDataPanelMode mode) => PanelMode = mode;
 }
 
 // 難易度選択はタイトルから撤去済み（出店準備シーンで選ぶ）

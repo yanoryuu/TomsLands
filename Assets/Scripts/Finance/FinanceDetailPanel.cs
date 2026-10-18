@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -62,7 +63,7 @@ public class FinanceDetailPanel : MonoBehaviour
     }
 
     public void Show(FinancialProductData product, int currentUnitPrice, int heldUnits,
-        System.Collections.Generic.IReadOnlyList<int> navHistory, float fundBuyFeeRate, bool canAffordOne,
+        IReadOnlyList<int> navHistory, float fundBuyFeeRate, bool canAffordOne,
         int maxOrderQuantity = 99)
     {
         gameObject.SetActive(true);
@@ -117,10 +118,7 @@ public class FinanceDetailPanel : MonoBehaviour
         RefreshQuantity();
     }
 
-    public void Hide()
-    {
-        gameObject.SetActive(false);
-    }
+    public void Hide() => gameObject.SetActive(false);
 
     public void UpdateInteractable(int heldUnits, bool canAffordQuantity)
     {

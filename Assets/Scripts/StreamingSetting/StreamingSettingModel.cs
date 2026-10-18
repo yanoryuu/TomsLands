@@ -13,7 +13,7 @@ public class StreamingSettingModel
 {
     private const int MaxSelection = 8;
     private const string FileName = "streamingSelection.json";
-    private readonly Dictionary<string, int> _selected = new Dictionary<string, int>(MaxSelection);
+    private readonly Dictionary<string, int> _selected = new(MaxSelection);
 
     public IReadOnlyDictionary<string, int> Selected => _selected;
 
@@ -83,9 +83,7 @@ public class StreamingSettingModel
         {
             var runtime = itemModel.GetRuntimeItem(kv.Key);
             if (runtime == null || runtime.Stock.Value <= 0)
-            {
                 toRemove.Add(kv.Key);
-            }
         }
         foreach (var id in toRemove)
         {

@@ -10,17 +10,16 @@ using UnityEngine;
 public class StateManager : IDisposable
 {
     /// <summary>現在のフェーズ</summary>
-    public ReactiveProperty<GamePhase> CurrentPhase { get; private set; }
+    public ReactiveProperty<GamePhase> CurrentPhase { get; }
 
     /// <summary>トムの店フェーズ内の現在のサブフェーズ</summary>
-    public ReactiveProperty<TomsShopGamePhase> CurrentTomsShopPhase { get; private set; }
+    public ReactiveProperty<TomsShopGamePhase> CurrentTomsShopPhase { get; }
 
     /// <summary>フェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<GamePhase, Action> onEnter = new();
 
     /// <summary>トムの店サブフェーズ遷移時に実行する処理を登録するディクショナリ</summary>
     private readonly Dictionary<TomsShopGamePhase, Action> onEnterTomsShop = new();
-
 
     private readonly CompositeDisposable disposables = new();
 
@@ -148,7 +147,6 @@ public class StateManager : IDisposable
     public bool HasHandler(TomsShopGamePhase subPhase) =>
         onEnterTomsShop.TryGetValue(subPhase, out var h) && h != null;
 
-
     /// <summary>
     /// 現在のフェーズを変更。購読側で自動的に切替・処理が実行される。
     /// </summary>
@@ -179,9 +177,5 @@ public class StateManager : IDisposable
         CurrentTomsShopPhase.Value = nextSubPhase;
     }
 
-
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

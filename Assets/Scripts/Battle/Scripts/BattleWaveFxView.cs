@@ -82,10 +82,7 @@ public class BattleWaveFxView : MonoBehaviour
         HideAll();
     }
 
-    private void OnDestroy()
-    {
-        _current?.Kill();
-    }
+    private void OnDestroy() => _current?.Kill();
 
     // ================= 公開 API =================
 
@@ -108,7 +105,11 @@ public class BattleWaveFxView : MonoBehaviour
     {
         if (!Prepare()) return;
         if (!string.IsNullOrEmpty(bossWarningSeKey))
-            SoundManager.Instance?.PlaySE(bossWarningSeKey);
+        {
+            // Instance は見つからないと LogError を出すので、鳴らすときだけ取得する
+            var sound = SoundManager.Instance;
+            if (sound != null) sound.PlaySE(bossWarningSeKey);
+        }
         await RunAsync(BuildBossSequence(), speed, pause, token);
     }
 
@@ -356,7 +357,7 @@ public class BattleWaveFxView : MonoBehaviour
         _area = transform as RectTransform;
         if (_area == null) return false;
 
-        if (GetComponent<RectMask2D>() == null) gameObject.AddComponent<RectMask2D>();
+        if (!TryGetComponent<RectMask2D>(out _)) gameObject.AddComponent<RectMask2D>();
 
         var white = MakeSprite(Texture2D.whiteTexture);
         var hGrad = MakeSprite(MakeBandTexture());

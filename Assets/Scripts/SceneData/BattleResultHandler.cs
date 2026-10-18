@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -18,7 +20,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly HeroModel _heroModel;
     private readonly RelicRewardService _relicRewardService;
     private readonly MetaProgressModel _metaProgress;
-    private readonly System.Threading.CancellationTokenSource _talkCts = new();
+    private readonly CancellationTokenSource _talkCts = new();
 
     public BattleResultHandler(
         BattleOutputData outputData,
@@ -130,7 +132,7 @@ public class BattleResultHandler : IStartable, IDisposable
 
         // --- 案D1: 戦闘結果の属性波及 ---
         // 使用装備と同属性の全アイテムに需要を緩やかに波及させる
-        var usedItemIds = new System.Collections.Generic.List<string>();
+        var usedItemIds = new List<string>();
         if (!string.IsNullOrEmpty(_outputData.WeaponId)) usedItemIds.Add(_outputData.WeaponId);
         if (!string.IsNullOrEmpty(_outputData.ArmorId)) usedItemIds.Add(_outputData.ArmorId);
         if (usedItemIds.Count > 0)

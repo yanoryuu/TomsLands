@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -29,7 +30,11 @@ public sealed class HttpRemoteConfigSource : IRemoteConfigSource
             var env = JsonUtility.FromJson<GameConstEnvelope>(json);
             return env?.version ?? -1;
         }
-        catch { return -1; }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[RemoteConfig] version 解析失敗: {e.Message}");
+            return -1;
+        }
     }
 
     public async UniTask<string> FetchEnvelopeJsonAsync(CancellationToken ct)
@@ -40,7 +45,7 @@ public sealed class HttpRemoteConfigSource : IRemoteConfigSource
         {
             await req.SendWebRequest().WithCancellation(ct);
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogWarning($"[RemoteConfig] 取得失敗: {e.Message}");
             return null;

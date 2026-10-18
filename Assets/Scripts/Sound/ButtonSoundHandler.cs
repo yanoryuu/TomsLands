@@ -24,6 +24,7 @@ public class ButtonSoundHandler : MonoBehaviour
 
     private void PlaySE()
     {
-        SoundManager.Instance?.PlaySE(seKey);
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlaySE(seKey);
     }
 }

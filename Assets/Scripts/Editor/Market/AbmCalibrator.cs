@@ -507,9 +507,8 @@ public static class AbmCalibrator
     {
         if (_sharedShopSettings == null)
         {
-            _sharedShopSettings =
-                AssetDatabase.LoadAssetAtPath<ShopEconomySettings>("Assets/Resources_moved/ShopEconomySettings.asset")
-                ?? ScriptableObject.CreateInstance<ShopEconomySettings>();
+            var loaded = AssetDatabase.LoadAssetAtPath<ShopEconomySettings>("Assets/Resources_moved/ShopEconomySettings.asset");
+            _sharedShopSettings = loaded != null ? loaded : ScriptableObject.CreateInstance<ShopEconomySettings>();
         }
         return _sharedShopSettings;
     }

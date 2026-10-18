@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class ItemModel
 {
+    private const string SaveFileName = "itemData.json";
+
     public readonly List<ItemData> masterItems;
     private readonly ItemVisualSettings visualSettings;
 
@@ -53,7 +55,7 @@ public class ItemModel
         if (item != null && item.Stock.Value >= quantity)
             item.Stock.Value -= quantity;
     }
-    
+
     /// <summary>
     /// 在庫を確定消費する（旧名: Settlement。売り注文の「約定」と紛らわしいためリネーム）。
     /// 在庫が尽きたら陳列状態も解除する。
@@ -89,19 +91,17 @@ public class ItemModel
             var master = GetMasterItem(runtime.ItemId);
             if (master == null) continue;
 
-            float baseMultiplier = phase switch
-            {
-                _ => Random.Range(0.95f, 1.05f)
-            };
+            // phase による分岐は現状なし（全フェーズ共通の揺らぎ）
+            float baseMultiplier = Random.Range(0.95f, 1.05f);
 
             float demandBonus = 1.0f + (runtime.Demand.Value * 0.2f);
-            
+
             runtime.UpdatePrice(Mathf.RoundToInt(master.basePrice * baseMultiplier * demandBonus));
 
             runtime.UpdatePopularity();
         }
     }
-    
+
     public void BattleWinBonus(string itemId, int bonusAmountDivision = 1)
     {
         var runtime = GetRuntimeItem(itemId);
@@ -111,16 +111,23 @@ public class ItemModel
             // 需要率は掛け算後に 0～1 の範囲へクランプ
             float newDemand = Mathf.Clamp01(runtime.Demand.Value * bonusAmountDivision);
             runtime.Demand.Value = newDemand;
-            Debug.Log($"Battle win bonus applied to {itemId}: +{bonusAmountDivision} stock.");
+            Debug.Log($"Battle win bonus applied to {itemId}: price/demand x{bonusAmountDivision}.");
         }
         else
         {
             Debug.LogWarning($"Item not found for battle win bonus: {itemId}");
         }
     }
-    
+
     public void BattleDefeatPenalty(string itemId, int penaltyAmountMultiplier)
     {
+        // 0 以下で割るとゼロ除算（価格は例外、需要は Infinity）になるため、ペナルティなしとして扱う
+        if (penaltyAmountMultiplier <= 0)
+        {
+            Debug.LogWarning($"Battle defeat penalty skipped for {itemId}: invalid divisor {penaltyAmountMultiplier}.");
+            return;
+        }
+
         var runtime = GetRuntimeItem(itemId);
         if (runtime != null)
         {
@@ -287,13 +294,6 @@ public class ItemModel
     // ターン毎の経済更新（S1 + S3 + D2）
     // ========================================
 
-    /// <summary>
-    /// TomsShop のターン切り替え時に呼ばれる経済更新。
-    /// S1: 需要連動型じわじわ価格変動
-    /// D2: 品出し陳列効果（需要変動）
-    /// A1〜A5: 広告ステータス（Trust/Attention/Spread/Retention/Followers）連動
-    /// status が null または各係数が 0 のとき、従来挙動と完全一致する。
-    /// </summary>
     // 価格変動エンジンは設定が変わるまで使い回す。
     // ABM はトレーダー群を生成時に確定させるため、毎ターン作り直すと相場の連続性が失われる。
     private IShopPriceEngine _priceEngine;
@@ -346,6 +346,13 @@ public class ItemModel
         return _priceEngine;
     }
 
+    /// <summary>
+    /// TomsShop のターン切り替え時に呼ばれる経済更新。
+    /// S1: 需要連動型じわじわ価格変動
+    /// D2: 品出し陳列効果（需要変動）
+    /// A1〜A5: 広告ステータス（Trust/Attention/Spread/Retention/Followers）連動
+    /// status が null または各係数が 0 のとき、従来挙動と完全一致する。
+    /// </summary>
     /// <param name="turnIndex">現在のターン番号。ABM がターン専用の乱数を作るのに使う（セーブ/ロード後も同じ系列になる）。</param>
     /// <param name="flowSeed">ランのシード。ABM のトレーダー編成に使う。0 なら設定または乱数にフォールバック。</param>
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
@@ -630,29 +637,25 @@ public class ItemModel
     /// <summary>
     /// 全アイテムを期待収益（需要×価格×SalesRate）の降順で返す。
     /// </summary>
-    public List<RuntimeItemData> GetItemsByExpectedRevenue(int blacksmithLevel)
-    {
-        return RuntimeItems
+    public List<RuntimeItemData> GetItemsByExpectedRevenue(int blacksmithLevel) =>
+        RuntimeItems
             .Where(r => r.RequiredLevel.Value <= blacksmithLevel)
             .OrderByDescending(ExpectedRevenueOf)
             .ToList();
-    }
 
-    //セーブ
     public void SaveData()
     {
         var dataList = new RuntimeItemDataList(
             RuntimeItems.Select(r => r.ToPlainData()).ToList()
         );
         string json = JsonUtility.ToJson(dataList, true);
-        File.WriteAllText(SaveSlotManager.GetPath("itemData.json"), json);
+        File.WriteAllText(SaveSlotManager.GetPath(SaveFileName), json);
         Debug.Log("Item data saved.");
     }
 
-    //ここでロード
     public void LoadData()
     {
-        string path = SaveSlotManager.GetPath("itemData.json");
+        string path = SaveSlotManager.GetPath(SaveFileName);
         if (!File.Exists(path))
         {
             InitializeRuntimeItemsFromMaster();
@@ -661,7 +664,7 @@ public class ItemModel
 
         string json = File.ReadAllText(path);
         var dataList = JsonUtility.FromJson<RuntimeItemDataList>(json);
-        
+
         RuntimeItems = dataList.items
             .Select(item =>
             {
@@ -686,7 +689,7 @@ public class ItemModel
         Debug.Log("Item data loaded.");
     }
 
-    //初期データ
+    /// <summary>マスターデータから初期状態のランタイムアイテムを作る（セーブが無いとき）。</summary>
     public void InitializeRuntimeItemsFromMaster()
     {
         RuntimeItems = masterItems
@@ -709,15 +712,9 @@ public class ItemModel
             ))
             .ToList();
 
-        foreach (var runtimeItem in RuntimeItems)
-        {
-            Debug.Log(runtimeItem.ItemId);   
-        }
         Debug.Log("Runtime items initialized from master.");
-
     }
-    
-    //マスターからスプライトデータを収集
+
     private Sprite SearchSpriteFromMaster(string itemId)
     {
         var master = GetMasterItem(itemId);
@@ -727,40 +724,37 @@ public class ItemModel
         return null;
     }
 
-    //レベルに応じた背景スプライトを取得
+    /// <summary>レベルに応じた背景スプライトを取得する。</summary>
     private Sprite SearchBackgroundSpriteFromMaster(int requiredLevel)
     {
         if (visualSettings == null) return null;
         return visualSettings.GetBackground(requiredLevel);
     }
 
-    //ランタイムを作成(タイプごとに選出してくれます)
-    public List<RuntimeItemData> PickItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype ,int currentLevel)
+    /// <summary>指定タイプかつ鍛冶屋レベルで解放済みのアイテムを抽出する。</summary>
+    public List<RuntimeItemData> PickItemRuntimeList(List<RuntimeItemData> runtimeItems, ItemTypeData.ItemType itemtype, int currentLevel)
     {
-        Debug.Log($"Itemのストック{runtimeItems}");
-        List<RuntimeItemData> list = new List<RuntimeItemData>();
+        var list = new List<RuntimeItemData>();
         foreach (var runtimeItem in runtimeItems)
         {
-            if (runtimeItem.ItemType == itemtype && 
+            if (runtimeItem.ItemType == itemtype &&
                 runtimeItem.RequiredLevel.Value <= currentLevel)
             {
                 list.Add(runtimeItem);
-                Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
             }
         }
         return list;
     }
-    
-    //所持数のアイテムの数で選出
-    public List<RuntimeItemData> PickItemRuntimeListForStock(List<RuntimeItemData> runtimeItems　,int minStock=0 ,int maxStock=int.MaxValue)
+
+    /// <summary>在庫数が [minStock, maxStock] の範囲にあるアイテムを抽出する。</summary>
+    public List<RuntimeItemData> PickItemRuntimeListForStock(List<RuntimeItemData> runtimeItems, int minStock = 0, int maxStock = int.MaxValue)
     {
-        List<RuntimeItemData> list = new List<RuntimeItemData>();
+        var list = new List<RuntimeItemData>();
         foreach (var runtimeItem in runtimeItems)
         {
             if (runtimeItem.Stock.Value >= minStock && runtimeItem.Stock.Value <= maxStock)
             {
                 list.Add(runtimeItem);
-                Debug.Log($"Item: {runtimeItem.ItemId}, Type: {runtimeItem.ItemType}");
             }
         }
         return list;

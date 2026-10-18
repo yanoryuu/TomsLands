@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using R3;
@@ -55,6 +56,13 @@ public class InfoBrokerView : MonoBehaviour
     public FinanceDetailPanel FinanceDetail => financeDetailPanel;
 
     private readonly Dictionary<InfoBrokerTab, Vector3> initTabPos = new();
+
+    // パッド/キー
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+    private Func<Selectable> panelFocusTarget;
+    private InfoBrokerTab currentTab = InfoBrokerTab.Map;
+    private Transform TabButtonsRoot => mapButton != null ? mapButton.transform.parent : null;
 
     [VContainer.Inject]
     public void Construct(BuzzSystem buzzSystem)
@@ -127,14 +135,10 @@ public class InfoBrokerView : MonoBehaviour
 
     // ---------------- パッド/キー ----------------
 
-    private UIFocusScope focusScope;
-    private readonly PendingFocus pendingFocus = new();
-    private InfoBrokerTab currentTab = InfoBrokerTab.Map;
-    private Transform tabButtonsRoot => mapButton != null ? mapButton.transform.parent : null;
-
     private void OnEnable() => pendingFocus.Request(true);
 
-    private void LateUpdate() => pendingFocus.Tick(focusScope, PanelFocusTarget);
+    // メソッドグループを毎フレーム渡すとデリゲートが作られるので、1つを使い回す
+    private void LateUpdate() => pendingFocus.Tick(focusScope, panelFocusTarget ??= PanelFocusTarget);
 
     /// <summary>表示中タブで最初に選ばせる要素。開発タブは誤爆防止でレベルアップではなくタブ自身。</summary>
     private Selectable PanelFocusTarget()
@@ -143,7 +147,7 @@ public class InfoBrokerView : MonoBehaviour
         {
             case InfoBrokerTab.Map:
                 var mapInfo = mapPanel != null ? mapPanel.GetComponentInChildren<MapInfoView>() : null;
-                var row = mapInfo != null ? (mapInfo.SelectedRowTarget() ?? mapInfo.FirstRowTarget()) : null;
+                var row = mapInfo != null ? mapInfo.SelectedOrFirstRowTarget() : null;
                 return row != null ? row : (mapPanel != null ? ControllerFocusUtil.FirstUsable(mapPanel.transform) : null);
             case InfoBrokerTab.Exchange:
                 var list = exchangeListParent != null ? ControllerFocusUtil.FirstUsable(exchangeListParent) : null;
@@ -177,7 +181,7 @@ public class InfoBrokerView : MonoBehaviour
         bool changed = tab != currentTab;
         currentTab = tab;
         // タブを替えたら、選択が隠れたパネルに残らないよう新しいパネルの先頭へ
-        if (changed) pendingFocus.Request(!ControllerFocusUtil.IsSelectionInside(tabButtonsRoot));
+        if (changed) pendingFocus.Request(!ControllerFocusUtil.IsSelectionInside(TabButtonsRoot));
 
         if (mapPanel != null)
         {
@@ -239,7 +243,7 @@ public class InfoBrokerView : MonoBehaviour
         tab.transform.DOKill();
         float baseY = initTabPos[tabType].y;
         bool isSelected = tabType == selected;
-        tab.transform.DOLocalMoveY(isSelected ? baseY + 10 : baseY, isSelected ? 0.2f : 0.1f);
+        tab.transform.DOLocalMoveY(isSelected ? baseY + 10 : baseY, isSelected ? 0.2f : 0.1f).SetLink(tab);
     }
 
     /// <summary>
@@ -263,8 +267,7 @@ public class InfoBrokerView : MonoBehaviour
             if (slot == null) continue;
             slots.Add(slot);
 
-            var cg = obj.GetComponent<CanvasGroup>();
-            if (cg == null) cg = obj.AddComponent<CanvasGroup>();
+            if (!obj.TryGetComponent<CanvasGroup>(out var cg)) cg = obj.AddComponent<CanvasGroup>();
             float delay = Mathf.Min(i * 0.035f, 0.35f);
             cg.alpha = 0f;
             cg.DOFade(1f, 0.18f).SetDelay(delay).SetLink(obj);

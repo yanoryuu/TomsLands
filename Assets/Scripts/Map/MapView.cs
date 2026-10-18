@@ -30,8 +30,8 @@ public class MapView : MonoBehaviour
 
     [Header("UI")]
     [SerializeField] private Button backButton;
-    public Subject<DungeonName> OnMapIcon { get; private set;} = new();
-    public Subject<Unit> OnBackRequested { get; private set;} = new();
+    public Subject<DungeonName> OnMapIcon { get; } = new();
+    public Subject<Unit> OnBackRequested { get; } = new();
 
     // DungeonName → アイコンのボタン
     private readonly Dictionary<DungeonName, Button> icons = new();
@@ -81,7 +81,8 @@ public class MapView : MonoBehaviour
             {
                 if (d == null) continue;
                 if (icons.TryGetValue(d.Key, out var button)) SetDungeonIcon(button, d.Status);
-                FindSlot(d.Key)?.label?.Set(d);
+                var labelSlot = FindSlot(d.Key);
+                if (labelSlot != null && labelSlot.label != null) labelSlot.label.Set(d);
                 if (d.IsNext) next = d;
             }
         }
@@ -122,7 +123,6 @@ public class MapView : MonoBehaviour
         var color = cleared ? clearedIconColor : Color.white;
 
         if (icon.targetGraphic) icon.targetGraphic.color = color;
-        var outline = icon.GetComponent<MapIconOutline>();
-        if (outline) outline.EffectColor = cleared ? new Color(color.r, color.g, color.b, 1f) : Color.white;
+        if (icon.TryGetComponent<MapIconOutline>(out var outline)) outline.EffectColor = cleared ? new Color(color.r, color.g, color.b, 1f) : Color.white;
     }
 }

@@ -7,16 +7,16 @@ using UnityEngine;
 public class StealthMarketingModel : IDisposable
 {
     // 初期コスト
-    public ReactiveProperty<int> Cost               { get; private set; }
+    public ReactiveProperty<int> Cost               { get; }
     // 全体ステマ効果（例：20% → 0.2f）
-    public ReactiveProperty<float> PriceImpactAll   { get; private set; }
+    public ReactiveProperty<float> PriceImpactAll   { get; }
     // 集中ステマ効果（例：50% → 0.5f）
-    public ReactiveProperty<float> PriceImpactFocused { get; private set; }
+    public ReactiveProperty<float> PriceImpactFocused { get; }
     // クールダウン設定（秒）
-    public float CooldownDuration                   { get; private set; }
-    public ReactiveProperty<float> CooldownRemaining{ get; private set; }
+    public float CooldownDuration                   { get; }
+    public ReactiveProperty<float> CooldownRemaining{ get; }
 
-    readonly CompositeDisposable disposables = new();
+    private readonly CompositeDisposable disposables = new();
 
     public StealthMarketingModel(int initCost, float impactAllPercent, float impactFocusedPercent, float cooldownSec)
     {
@@ -60,7 +60,7 @@ public class StealthMarketingModel : IDisposable
         return true;
     }
 
-    void StartCooldown()
+    private void StartCooldown()
     {
         CooldownRemaining.Value = CooldownDuration;
         Observable

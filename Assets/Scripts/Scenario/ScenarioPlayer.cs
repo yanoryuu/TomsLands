@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -115,10 +116,6 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
                 Debug.LogError($"[ScenarioPlayer] ラベル '{label}' の会話が終了しませんでした。EndScenario の記述漏れの可能性があります。");
             }
         }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
         finally
         {
             // 破棄後（Play終了時）に書き込むと ObjectDisposedException になる
@@ -161,6 +158,7 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
     }
 
     private bool selectionWasActive;
+    private readonly List<AdvUguiSelection> selectionBuffer = new();
 
     private void Update()
     {
@@ -172,11 +170,13 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
         Button first = null;
         if (selecting)
         {
-            foreach (var item in GetComponentsInChildren<AdvUguiSelection>(false))
+            // 毎フレーム呼ばれるので配列を作らないバッファ版で取る
+            GetComponentsInChildren(false, selectionBuffer);
+            foreach (var item in selectionBuffer)
             {
-                var b = item.GetComponent<Button>();
-                if (b != null && b.isActiveAndEnabled && b.IsInteractable()) { first = b; break; }
+                if (item.TryGetComponent<Button>(out var b) && b.isActiveAndEnabled && b.IsInteractable()) { first = b; break; }
             }
+            selectionBuffer.Clear();
         }
 
         if (first != null)

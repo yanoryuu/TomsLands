@@ -19,7 +19,7 @@ public class BattlePanelManager : MonoBehaviour
     private void Awake()
     {
         // 配信中パネルのパッド/キー操作（介入カード・狙う敵・スロット持ち上げ）。シーン配置不要
-        if (streamingPanel != null && GetComponent<BattleGamepadController>() == null)
+        if (streamingPanel != null && !TryGetComponent<BattleGamepadController>(out _))
             gameObject.AddComponent<BattleGamepadController>().Initialize(streamingPanel);
     }
 

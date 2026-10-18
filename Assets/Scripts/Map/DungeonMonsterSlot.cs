@@ -6,7 +6,6 @@ public class DungeonMonsterSlot : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI monsterNameText;
     [SerializeField] private TextMeshProUGUI monsterElementText;
-    // [SerializeField] private TextMeshProUGUI monsterDescriptionText;
     [SerializeField] private Image monsterIconImage;
     [SerializeField] private Image isBossImage;
     private bool isBoss;
@@ -15,11 +14,10 @@ public class DungeonMonsterSlot : MonoBehaviour
     {
         monsterNameText.text = $"{enemyData.enemyName}";
         monsterElementText.text = $"属性: {ElementTypeToJapanese(enemyData.elementType)}";
-        // monsterDescriptionText.text = enemyData.description;
         monsterIconImage.sprite = enemyData.enemySprite;
         isBoss = enemyData.isBoss;
-        
-        if(isBoss)isBossImage.gameObject.SetActive(true);
+
+        if (isBoss) isBossImage.gameObject.SetActive(true);
     }
 
     private static string ElementTypeToJapanese(ElementType elementType) => elementType switch

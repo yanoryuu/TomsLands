@@ -20,11 +20,11 @@ public class BattleSequencer : MonoBehaviour
     /// <summary>ウェーブクリア／次ウェーブ／ボス到達の演出（未設定なら null）。</summary>
     public BattleWaveFxView WaveFx => waveFx;
 
-    [Header("戦闘ルール設定")]
-    [Tooltip("この戦闘で倒すべき通常モンスターの総数")]
-    [SerializeField] private const int totalNormalEnemies = 10;
-    [Tooltip("フィールドに同時に出現できる敵の最大数")]
-    [SerializeField] private const int maxConcurrentEnemies = 3;
+    // 戦闘ルール（const なので Inspector には出ない）
+    /// <summary>この戦闘で倒すべき通常モンスターの総数</summary>
+    private const int totalNormalEnemies = 10;
+    /// <summary>フィールドに同時に出現できる敵の最大数</summary>
+    private const int maxConcurrentEnemies = 3;
 
     [Header("ステージデータ")]
     [SerializeField] private DungeonInfoScriptableObj currentDungeon;
@@ -81,7 +81,6 @@ public class BattleSequencer : MonoBehaviour
     /// </summary>
     public Subject<Unit> OnBossAppeared { get; } = new();
 
-
     /// <summary>フェーズ進行ゲージを初期化する（BattleFlowManager から呼ばれる）。</summary>
     public void SetupPhaseGauge(int phaseCount) => phaseGauge?.Setup(phaseCount);
 
@@ -98,7 +97,6 @@ public class BattleSequencer : MonoBehaviour
     {
         try
         {
-            // ★ ここで戦闘ルールをContextに渡す
             battleContext = new BattleContext(currentDungeon, currentDungeonLevel, totalNormalEnemies, maxConcurrentEnemies);
             var flowManager = new BattleFlowManager(battleContext, characterFactory, battleUIView, this, streamingSalesController, _pauseController, _interventions);
 

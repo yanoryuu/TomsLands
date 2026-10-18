@@ -7,7 +7,6 @@ using UnityEngine.UI;
 
 public class TomsShopView : MonoBehaviour
 {
-
     [SerializeField] private Button BlaskSmithButton;
     [SerializeField] private Button HeroButton;
     [SerializeField] private Button SetItemButton;
@@ -55,7 +54,6 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private Transform relicBarParent;
     [Tooltip("アイコン1個のサイズ(px)")]
     [SerializeField] private float relicIconSize = 56f;
-
 
     //鍛冶屋を開く
     public Subject<Unit> OnBlacksmithClicked { get; } = new();
@@ -288,11 +286,6 @@ public class TomsShopView : MonoBehaviour
         }
     }
 
-    public void Initialize()
-    {
-
-    }
-
     // ========================================
     // 会話チュートリアル：鍛冶屋だけ押せる状態
     // ========================================
@@ -358,17 +351,14 @@ public class TomsShopView : MonoBehaviour
 
     public void RefreshDeskDisplay(List<RuntimeItemData> runtimeItems)
     {
-        shopDeskDisplay?.RefreshDisplay(runtimeItems);
+        if (shopDeskDisplay != null)
+            shopDeskDisplay.RefreshDisplay(runtimeItems);
     }
-
 
     /// <summary>
     /// ターン切り替え演出を再生する（左→右にスライド）
     /// </summary>
-    public void ShowTurnAnnounce(int turn)
-    {
-        turnAnnounceView.Show(turn);
-    }
+    public void ShowTurnAnnounce(int turn) => turnAnnounceView.Show(turn);
 
     /// <summary>
     /// 次回税金の納付額と残りターン数をショップ画面内に表示する
@@ -420,6 +410,7 @@ public class TomsShopView : MonoBehaviour
     /// </summary>
     public void UpdateBuzzRemainingTurns(int remainingTurns)
     {
-        buzzModeOverlayView?.UpdateRemainingTurns(remainingTurns);
+        if (buzzModeOverlayView != null)
+            buzzModeOverlayView.UpdateRemainingTurns(remainingTurns);
     }
 }

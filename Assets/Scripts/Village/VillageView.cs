@@ -274,8 +274,7 @@ public class VillageView : MonoBehaviour
         {
             var canvas = RootCanvas;
             if (canvas == null) return;
-            uiLockGroup = canvas.GetComponent<CanvasGroup>();
-            if (uiLockGroup == null) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
+            if (!canvas.TryGetComponent(out uiLockGroup)) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
             uiLockPrevBlocks = uiLockGroup.blocksRaycasts;
             uiLockGroup.blocksRaycasts = false;
             uiLocked = true;
@@ -318,16 +317,14 @@ public class VillageView : MonoBehaviour
             nextEffectText.text = string.IsNullOrEmpty(nextEffect) ? "これ以上の拡張はない" : nextEffect;
 
         if (detailCostText != null)
-        {
-            if (cost < 0) detailCostText.text = "-";
-            else detailCostText.text = $"{cost:N0}G";
-        }
+            detailCostText.text = cost < 0 ? "-" : $"{cost:N0}G";
 
         if (investButton != null) investButton.interactable = canInvest;
         if (investButtonLabel != null)
         {
-            if (cost < 0) investButtonLabel.text = "最大レベル";
-            else investButtonLabel.text = canInvest ? (level == 0 ? "建設する" : "拡張する") : blockedReason;
+            investButtonLabel.text = cost < 0
+                ? "最大レベル"
+                : canInvest ? (level == 0 ? "建設する" : "拡張する") : blockedReason;
         }
     }
 

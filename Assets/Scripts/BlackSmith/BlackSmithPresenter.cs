@@ -12,7 +12,6 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private readonly BlackSmithView blackSmithView;
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
-    private readonly ItemPopUpManager itemPopUpManager;
     private readonly GameFlowManager gameFlowManager;
     private readonly DungeonRepository dungeonRepository;
     private readonly HeroModel heroModel;
@@ -65,7 +64,6 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         this.itemModel = itemModel;
         this.blackSmithView = blackSmithView;
         this.stateManager = stateManager;
-        this.itemPopUpManager = itemPopUpManager;
         this.gameFlowManager = gameFlowManager;
         this.dungeonRepository = dungeonRepository;
         this.heroModel = heroModel;
@@ -76,20 +74,14 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith, Entry);
     }
     
-    public void Start()
-    {
-        Bind();
-    }
+    public void Start() => Bind();
 
     public void Entry()
     {
         characterTalkIndex = 0;
         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("open"));
         UpdateNextDungeonBanner();
-        blackSmithModel.SetRuntimeItems(
-            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
-            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
-        );
+        RefreshLineup();
         ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, BlackSmithTab.Weapon);
 
         ApplyTutorialAutoBuyState();
@@ -184,7 +176,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         if (dungeon == null)
         {
             nextDungeonAttr = null;
-            header?.ShowNoBattle(heroLevel, weaponName, armorName);
+            if (header != null) header.ShowNoBattle(heroLevel, weaponName, armorName);
             return;
         }
 
@@ -194,7 +186,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         nextDungeonAttr = known ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
         int turnsUntil = awaitingStream ? 0 : gameFlowManager.GetTurnsUntilNextBattle();
         string weakness = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
-        header?.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
+        if (header != null) header.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
     }
 
     private static bool IsReturnablePhase(TomsShopGamePhase p) =>
@@ -306,7 +298,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                         ChangePurchasePanel(blackSmithModel.armorRuntimeItems, type);
                         break;
                     case BlackSmithTab.Development:
-                        SoundManager.Instance?.PlaySE("営業/SE_開発開始");
+                        PlaySE("営業/SE_開発開始");
                         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("development"));
                         ShowDevelopmentPanel();
                         break;
@@ -358,14 +350,11 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         var results = itemModel.AutoPurchase(budget, tomsModel.BlacksmithLevel.Value, tomsModel, nextDungeonAttr, relicResolver, strategy);
         if (results.Count > 0)
-            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+            PlaySE("営業/SE_仕入れ完了");
         blackSmithView.ShowAutoBuyResult(results, tomsModel.PlayerMoney.Value);
 
         // 購入後にスロット表示を更新
-        blackSmithModel.SetRuntimeItems(
-            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
-            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
-        );
+        RefreshLineup();
         ChangePurchasePanel(
             blackSmithModel.weaponRuntimeItems.Count > 0 ? blackSmithModel.weaponRuntimeItems : blackSmithModel.armorRuntimeItems,
             blackSmithModel.weaponRuntimeItems.Count > 0 ? BlackSmithTab.Weapon : BlackSmithTab.Armor
@@ -383,7 +372,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             itemModel.PurchaseItem(itemId, quantity);
             tomsModel.PurchaseItem(totalPrice);
             tomsModel.RecordProcurementSpend(totalPrice);
-            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+            PlaySE("営業/SE_仕入れ完了");
 
             // 購入結果を即座に永続化
             itemModel.SaveData();
@@ -395,7 +384,6 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         }
     }
 
-    // ========================================
     private void ChangePurchasePanel(List<RuntimeItemData> items, BlackSmithTab itemType)
     {
         panelDisposables.Dispose();
@@ -502,14 +490,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         else
         {
             selectedItemId = null;
-            blackSmithView.DetailPanel?.Hide();
+            HideDetailPanel();
         }
     }
 
-    /// <summary>
-    /// 在庫の空きと所持金の両方でクランプした最大購入可能数。
-    /// スライダー／＋ボタンはこの範囲までしか動かせない。
-    /// </summary>
     /// <summary>
     /// 仕入れの実効単価（レリックの仕入れ割引 ProcurementCostMul 適用後）。
     /// 注文ウィジェットの表示・購入上限・決済は必ずこれを使う（表示と請求のズレ防止）。
@@ -517,6 +501,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private int BuyUnitPrice(RuntimeItemData runtime) =>
         RelicPricing.GetBuyUnitPrice(runtime.CurrentPrice.Value, relicResolver);
 
+    /// <summary>
+    /// 在庫の空きと所持金の両方でクランプした最大購入可能数。
+    /// スライダー／＋ボタンはこの範囲までしか動かせない。
+    /// </summary>
     private int MaxPurchasableQuantity(RuntimeItemData runtime)
     {
         int remainMax = runtime.RemainToMax();
@@ -583,7 +571,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .Subscribe(step =>
             {
                 blackSmithModel.AddToCount(itemId, step);
-                SoundManager.Instance?.PlaySE("営業/SE_数の増減");
+                PlaySE("営業/SE_数の増減");
             })
             .AddTo(selectionDisposables);
 
@@ -617,52 +605,6 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             .AddTo(selectionDisposables);
     }
 
-    /// <summary>
-    /// アイテムの市場分析ポップアップを表示する
-    /// </summary>
-    private void ShowMarketAnalysisPopup(string itemId)
-    {
-        var runtime = itemModel.GetRuntimeItem(itemId);
-        if (runtime == null) return;
-
-        var master = itemModel.GetMasterItem(itemId);
-        if (master == null) return;
-
-        var data = new ItemPopUpData
-        {
-            // 基本情報
-            ItemName        = runtime.ItemName,
-            Description     = runtime.ItemDescription,
-            Icon            = runtime.ItemIcon,
-            ItemType        = runtime.ItemType,
-            ItemAttribute   = runtime.ItemAttribute,
-
-            // 需要
-            Demand          = runtime.Demand.Value,
-            PreviousDemand  = runtime.PreviousDemand,
-
-            // 価格
-            CurrentPrice    = runtime.CurrentPrice.Value,
-            BasePrice       = master.basePrice,
-            PreviousPrice   = runtime.PreviousPrice,
-
-            // 在庫
-            Stock           = runtime.Stock.Value,
-            MaxStock        = runtime.MaxStock.Value,
-
-            // 売れやすさ・販売実績
-            SalesRate       = runtime.SalesRate,
-            WasSoldLastTurn = runtime.WasSoldLastTurn,
-            IsPopular       = runtime.IsPopular.Value,
-
-            // ボタン
-            ConfirmButtonText = "閉じる",
-            OnConfirm       = null
-        };
-
-        itemPopUpManager.Show(data);
-    }
-
     private void ShowDevelopmentPanel()
     {
         panelDisposables.Dispose();
@@ -674,7 +616,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         // 開発パネルを表示、購入パネル・詳細パネルを非表示
         blackSmithView.SwitchPanel(BlackSmithTab.Development);
-        blackSmithView.DetailPanel?.Hide();
+        HideDetailPanel();
         blackSmithView.SortItemTab(BlackSmithTab.Development);
 
         // 所持金の変化はボタン有効/無効の再評価のみ（解放プレビューはレベル依存なので再構築しない）
@@ -758,17 +700,36 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             return;
         }
 
-        SoundManager.Instance?.PlaySE("営業/SE_開発完了");
+        PlaySE("営業/SE_開発完了");
         Debug.Log($"[BlackSmith] 鍛冶屋 Lv.{prevLevel} → Lv.{tomsModel.BlacksmithLevel.Value}");
 
         // レベルが上がったので商品ラインナップを更新
-        blackSmithModel.SetRuntimeItems(
-            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, tomsModel.BlacksmithLevel.Value),
-            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, tomsModel.BlacksmithLevel.Value)
-        );
+        RefreshLineup();
 
         // パネル表示を再更新（ReactivePropertyの購読でも更新されるが念のため）
         RefreshDevelopmentPanel();
+    }
+
+    /// <summary>鍛冶屋レベルに応じた武器・防具のラインナップを Model へ入れ直す。</summary>
+    private void RefreshLineup()
+    {
+        int level = tomsModel.BlacksmithLevel.Value;
+        blackSmithModel.SetRuntimeItems(
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Weapon, level),
+            itemModel.PickItemRuntimeList(itemModel.RuntimeItems, ItemTypeData.ItemType.Armor, level)
+        );
+    }
+
+    private void HideDetailPanel()
+    {
+        var panel = blackSmithView.DetailPanel;
+        if (panel != null) panel.Hide();
+    }
+
+    private static void PlaySE(string key)
+    {
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE(key);
     }
 
     public void Dispose()

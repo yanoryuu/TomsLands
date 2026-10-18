@@ -160,8 +160,5 @@ public class ProphetPresenter : IDisposable, IStartable
         _ => attr.ToString()
     };
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

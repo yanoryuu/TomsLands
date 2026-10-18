@@ -8,7 +8,7 @@ using UnityEngine;
 /// <summary>
 /// マシンの設置状態と効果集計を担当するモデル。
 /// - 設置枠数は店レベル（ShopLevelSettings.machineSlots）が規定
-/// - 同一マシンは各1台まで
+/// - 同一マシンでも設置枠が空いていれば複数台設置できる（設置エントリ＝PlacedMachine 単位で管理）
 /// - 撤去は購入額の50%返金
 /// - 毎日発動型の効果は翌朝（GameFlowManager.NextTurn）に発動し、朝レポートで通知される
 /// - 常時バフ型は集計プロパティ（TotalRevenueMultiplier 等）を消費側が参照する

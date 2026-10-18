@@ -1,6 +1,4 @@
-using UnityEngine;
-
-public enum HeroTactics 
+public enum HeroTactics
 {
     Aggressive,
     Defensive,

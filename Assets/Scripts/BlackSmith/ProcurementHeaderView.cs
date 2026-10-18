@@ -32,12 +32,7 @@ public class ProcurementHeaderView : MonoBehaviour
         if (turnsUntilText)
             turnsUntilText.text = turnsUntil >= 0 ? $"あと{turnsUntil}ターン" : "—";
 
-        if (heroEquipText)
-        {
-            string w = string.IsNullOrEmpty(weaponName) ? "なし" : weaponName;
-            string a = string.IsNullOrEmpty(armorName) ? "なし" : armorName;
-            heroEquipText.text = $"勇者Lv.{heroLevel}　武器:{w} / 防具:{a}";
-        }
+        ShowHeroEquip(heroLevel, weaponName, armorName);
     }
 
     /// <summary>次の戦闘が存在しない場合の表示。</summary>
@@ -47,11 +42,14 @@ public class ProcurementHeaderView : MonoBehaviour
         if (dungeonNameText) dungeonNameText.text = "次の戦闘なし";
         if (weaknessText) weaknessText.text = "—";
         if (turnsUntilText) turnsUntilText.text = "—";
-        if (heroEquipText)
-        {
-            string w = string.IsNullOrEmpty(weaponName) ? "なし" : weaponName;
-            string a = string.IsNullOrEmpty(armorName) ? "なし" : armorName;
-            heroEquipText.text = $"勇者Lv.{heroLevel}　武器:{w} / 防具:{a}";
-        }
+        ShowHeroEquip(heroLevel, weaponName, armorName);
+    }
+
+    private void ShowHeroEquip(int heroLevel, string weaponName, string armorName)
+    {
+        if (!heroEquipText) return;
+        string w = string.IsNullOrEmpty(weaponName) ? "なし" : weaponName;
+        string a = string.IsNullOrEmpty(armorName) ? "なし" : armorName;
+        heroEquipText.text = $"勇者Lv.{heroLevel}　武器:{w} / 防具:{a}";
     }
 }

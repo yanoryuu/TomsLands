@@ -26,15 +26,14 @@ public class ItemUI : MonoBehaviour
         itemIconImage.sprite = icon;
     }
 
-
     public void BindPrice(ReactiveProperty<int> price)
     {
-        price.Subscribe(p => UpdatePrice(p)).AddTo(this);
+        price.Subscribe(UpdatePrice).AddTo(this);
     }
 
     public void BindStock(ReactiveProperty<int> stock)
     {
-        stock.Subscribe(s => UpdateStock(s)).AddTo(this);
+        stock.Subscribe(UpdateStock).AddTo(this);
     }
 
     public void BindPopularity(ReactiveProperty<bool> isPopular)
@@ -48,13 +47,7 @@ public class ItemUI : MonoBehaviour
         sellButton.onClick.AddListener(() => OnSellClicked.OnNext(Unit.Default));
     }
 
-    public void UpdatePrice(int price)
-    {
-        priceText.text = $"{price:N0}G";
-    }
+    public void UpdatePrice(int price) => priceText.text = $"{price:N0}G";
 
-    public void UpdateStock(int stock)
-    {
-        stockText.text = $"Stock: {stock}";
-    }
+    public void UpdateStock(int stock) => stockText.text = $"Stock: {stock}";
 }

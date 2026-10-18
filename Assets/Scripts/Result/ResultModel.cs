@@ -152,16 +152,13 @@ public class ResultModel
     /// <summary>
     /// ランクに応じたコメントを返す。
     /// </summary>
-    public static string GetRankComment(string rank)
+    public static string GetRankComment(string rank) => rank switch
     {
-        return rank switch
-        {
-            "S" => "伝説の商人！ トムの名は大陸中に轟いた！",
-            "A" => "素晴らしい経営手腕！ 街一番の店になった！",
-            "B" => "堅実な商売で利益を出せた。立派な商人だ。",
-            "C" => "なんとか黒字で終了。まだまだ伸びしろがある。",
-            "D" => "赤字経営…。次はもっと上手くやれるはず！",
-            _ => ""
-        };
-    }
+        "S" => "伝説の商人！ トムの名は大陸中に轟いた！",
+        "A" => "素晴らしい経営手腕！ 街一番の店になった！",
+        "B" => "堅実な商売で利益を出せた。立派な商人だ。",
+        "C" => "なんとか黒字で終了。まだまだ伸びしろがある。",
+        "D" => "赤字経営…。次はもっと上手くやれるはず！",
+        _ => ""
+    };
 }

@@ -102,7 +102,7 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
     /// <summary>BGM を再生する（キー名で指定）</summary>
     public void PlayBGM(string key, float fadeInTime = 0f)
     {
-        var clip = FindClip(library?.FindBGM(key), key, isBGM: true);
+        var clip = FindClip(library != null ? library.FindBGM(key) : null, key, isBGM: true);
         if (clip == null) return;
 
         if (bgmSource.clip == clip && bgmSource.isPlaying) return;
@@ -110,8 +110,7 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
         bgmSource.clip = clip;
         bgmSource.volume = fadeInTime > 0f ? 0f : bgmVolume;
         bgmSource.Play();
-        
-        
+
         Debug.Log($"[SoundManager] BGM 再生: {key} (fadeIn: {fadeInTime}s)");
 
         if (fadeInTime > 0f)
@@ -136,7 +135,7 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
     /// <summary>SE を再生する（キー名で指定）</summary>
     public void PlaySE(string key)
     {
-        var clip = FindClip(library?.FindSE(key), key, isBGM: false);
+        var clip = FindClip(library != null ? library.FindSE(key) : null, key, isBGM: false);
         if (clip == null) return;
 
         var src = GetAvailableSESource();
@@ -145,7 +144,7 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
         src.clip = clip;
         src.volume = seVolume;
         src.Play();
-        
+
         Debug.Log($"[SoundManager] SE 再生: {key}");
     }
 
@@ -178,7 +177,7 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
     {
         if (entry == null)
         {
-            var list = isBGM ? library?.bgmList : library?.seList;
+            var list = library == null ? null : isBGM ? library.bgmList : library.seList;
             var registered = list != null && list.Count > 0
                 ? string.Join(", ", list.ConvertAll(e => $"'{e.key}'"))
                 : "（未登録）";

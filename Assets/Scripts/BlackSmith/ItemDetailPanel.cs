@@ -161,7 +161,7 @@ public class ItemDetailPanel : MonoBehaviour
         suppress = true;
         displayQuantity = Mathf.Clamp(q, 0, maxQuantity);
         if (quantitySlider) quantitySlider.value = displayQuantity;
-        quantityText?.SetText($"{displayQuantity}");
+        if (quantityText != null) quantityText.SetText($"{displayQuantity}");
         UpdateTotalText();
         suppress = false;
         UpdateButtons();
@@ -183,7 +183,7 @@ public class ItemDetailPanel : MonoBehaviour
         int next = Mathf.RoundToInt(value);
         if (next == displayQuantity) return;
         displayQuantity = next;
-        quantityText?.SetText($"{displayQuantity}");
+        if (quantityText != null) quantityText.SetText($"{displayQuantity}");
         UpdateTotalText();
         OnDisplayQuantityChanged.OnNext(displayQuantity);
         UpdateButtons();
@@ -192,7 +192,7 @@ public class ItemDetailPanel : MonoBehaviour
     private void UpdateTotalText()
     {
         int total = unitPrice * Mathf.Max(displayQuantity, 1);
-        totalCostText?.SetText($"{total:N0}G");
+        if (totalCostText != null) totalCostText.SetText($"{total:N0}G");
     }
 
     private void UpdateButtons()
@@ -204,9 +204,9 @@ public class ItemDetailPanel : MonoBehaviour
 
     private void OnDestroy()
     {
-        quantitySlider?.onValueChanged.RemoveListener(OnSliderValueChanged);
-        plusButton?.onClick.RemoveAllListeners();
-        minusButton?.onClick.RemoveAllListeners();
-        purchaseButton?.onClick.RemoveAllListeners();
+        if (quantitySlider != null) quantitySlider.onValueChanged.RemoveListener(OnSliderValueChanged);
+        if (plusButton != null) plusButton.onClick.RemoveAllListeners();
+        if (minusButton != null) minusButton.onClick.RemoveAllListeners();
+        if (purchaseButton != null) purchaseButton.onClick.RemoveAllListeners();
     }
 }

@@ -20,11 +20,11 @@ public class CharacterStatusView : MonoBehaviour
     [SerializeField] private Transform popupContainer;
 
     // 赤フラッシュさせるレンダラー。CharacterView があればそこから（SPUM なら子レンダラー全部）、無ければ親の SpriteRenderer 1枚
-    private SpriteRenderer[] flashRenderers = new SpriteRenderer[0];
-    private Color[] originalSpriteColors = new Color[0];
+    private SpriteRenderer[] flashRenderers = Array.Empty<SpriteRenderer>();
+    private Color[] originalSpriteColors = Array.Empty<Color>();
     private CancellationTokenSource damageFlashCts;
     private int damageFlashVersion;
-    private CompositeDisposable subscriptions = new CompositeDisposable(); // 複数の購読をまとめる用
+    private readonly CompositeDisposable subscriptions = new();
 
     private void Awake()
     {
@@ -35,7 +35,7 @@ public class CharacterStatusView : MonoBehaviour
             var sr = GetComponentInParent<SpriteRenderer>();
             if (sr != null) flashRenderers = new[] { sr };
         }
-        originalSpriteColors = System.Array.ConvertAll(flashRenderers, r => r != null ? r.color : Color.white);
+        originalSpriteColors = Array.ConvertAll(flashRenderers, r => r != null ? r.color : Color.white);
     }
 
     private void SetFlash(bool on)
@@ -51,7 +51,6 @@ public class CharacterStatusView : MonoBehaviour
 
     private void OnDestroy()
     {
-        // このオブジェクトが破棄される時に、全ての購読をまとめて停止
         subscriptions.Dispose();
         damageFlashCts?.Cancel();
         damageFlashCts?.Dispose();
@@ -65,7 +64,6 @@ public class CharacterStatusView : MonoBehaviour
         subscriptions.Clear();
         ResetDamageFlash();
 
-        // viewModelが誰であろうと、契約通りにHPとMPのデータをもらうだけです
         viewModel.CurrentHp.Pairwise()
             .Subscribe(pair => HandleHpChanged(pair.Current, pair.Previous))
             .AddTo(subscriptions);
@@ -78,21 +76,16 @@ public class CharacterStatusView : MonoBehaviour
         UpdateMpText(viewModel.CurrentMp.CurrentValue);
     }
 
-    // HPが変更された時に呼ばれる処理
     private void HandleHpChanged(int current, int previous)
     {
         int damage = previous - current;
         if (damage > 0)
-        {
-            // ダメージポップアップとフラッシュ効果を再生
             PlayDamageEffects(damage);
-        }
 
-        // HPテキストを更新
         UpdateHpText(current);
     }
 
-    // ダメージ演出（ポップアップとフラッシュ）
+    /// <summary>ダメージ演出（ポップアップと赤フラッシュ）。</summary>
     public void PlayDamageEffects(int damageAmount)
     {
         if (damagePopupPrefab != null && popupContainer != null)
@@ -107,7 +100,6 @@ public class CharacterStatusView : MonoBehaviour
         PlayDamageFlash(damageFlashCts.Token, version).Forget();
     }
 
-    // キャラクターが赤く光るフラッシュ効果
     private async UniTaskVoid PlayDamageFlash(CancellationToken token, int version)
     {
         if (flashRenderers.Length == 0) return;
@@ -120,10 +112,9 @@ public class CharacterStatusView : MonoBehaviour
         catch (OperationCanceledException) { }
         finally
         {
+            // 後から始まったフラッシュがあればそちらに戻しを任せる
             if (version == damageFlashVersion)
-            {
                 SetFlash(false);
-            }
         }
     }
 
@@ -137,14 +128,12 @@ public class CharacterStatusView : MonoBehaviour
         SetFlash(false);
     }
 
-    // HPテキストを更新する処理
     private void UpdateHpText(int current)
     {
         if (hpText != null)
             hpText.text = FormatStat(hpLabel, current);
     }
 
-    // MPテキストを更新する処理
     private void UpdateMpText(int current)
     {
         if (mpText != null)

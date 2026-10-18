@@ -48,7 +48,6 @@ public class AdvertisementSlotUI : MonoBehaviour
         if (adIcon != null && adData.icon != null)
             adIcon.sprite = adData.icon;
 
-
         // コスト表示（割引がある場合は取り消し線風に元値も表示）
         UpdateCost(discountedCost);
 
@@ -56,8 +55,6 @@ public class AdvertisementSlotUI : MonoBehaviour
         if (slotSelectButton != null)
             slotSelectButton.onClick.AddListener(() => OnSlotSelected.OnNext(adData));
     }
-    
-
 
     /// <summary>
     /// 選択状態を切り替える。選択中は少し拡大して目立たせる。
@@ -72,10 +69,7 @@ public class AdvertisementSlotUI : MonoBehaviour
             .SetLink(gameObject);
     }
 
-    private void OnDestroy()
-    {
-        _scaleTween?.Kill();
-    }
+    private void OnDestroy() => _scaleTween?.Kill();
 
     /// <summary>
     /// コスト表示を更新する（割引率変更時）

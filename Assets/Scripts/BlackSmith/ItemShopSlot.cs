@@ -65,8 +65,8 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             quantitySlider.onValueChanged.AddListener(OnSliderValueChanged);
         }
 
-        infoButton?.onClick.AddListener(() => OnInfoRequested.OnNext(itemId));
-        purchaseButton?.onClick.AddListener(() => OnPurchaseClicked.OnNext(Unit.Default));
+        if (infoButton != null) infoButton.onClick.AddListener(() => OnInfoRequested.OnNext(itemId));
+        if (purchaseButton != null) purchaseButton.onClick.AddListener(() => OnPurchaseClicked.OnNext(Unit.Default));
 
         // ＋／－ボタン
         if (plusButton) plusButton.onClick.AddListener(() => OnStepClicked.OnNext(+1));
@@ -121,18 +121,8 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         SetPriceTrend(unitPrice, previousPrice);
 
         // 行内の固定キャプション（プレハブの静的Text）を金融向けの文言に差し替える
-        var demandLabel = transform.Find("DemandLabel");
-        if (demandLabel != null)
-        {
-            var label = demandLabel.GetComponent<TextMeshProUGUI>();
-            if (label != null) label.text = "市況";
-        }
-        var stockLabel = transform.Find("StockLabel");
-        if (stockLabel != null)
-        {
-            var label = stockLabel.GetComponent<TextMeshProUGUI>();
-            if (label != null) label.text = "保有";
-        }
+        SetChildLabel("DemandLabel", "市況");
+        SetChildLabel("StockLabel", "保有");
 
         if (stockText) stockText.text = heldUnits > 0 ? $"{heldUnits}口" : "-";
         if (demandText)
@@ -155,11 +145,16 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         // 登場フェード（CanvasGroupをDOFadeで1へ）と競合するため、未解禁時はTweenを止めてから設定する
         if (!unlocked)
         {
-            var cg = GetComponent<CanvasGroup>();
-            if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
-            DG.Tweening.DOTween.Kill(cg);
+            if (!TryGetComponent<CanvasGroup>(out var cg)) cg = gameObject.AddComponent<CanvasGroup>();
+            DOTween.Kill(cg);
             cg.alpha = 0.55f;
         }
+    }
+
+    private void SetChildLabel(string childName, string text)
+    {
+        var child = transform.Find(childName);
+        if (child != null && child.TryGetComponent<TextMeshProUGUI>(out var label)) label.text = text;
     }
 
     /// <summary>需要(0〜1)を温度色付きの%表示と人気バッジに反映する。</summary>
@@ -222,7 +217,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     private void UpdatePriceText()
     {
         int total = unitPrice * Mathf.Max(displayQuantity, 1);
-        priceText?.SetText($"{total:N0}G");
+        if (priceText != null) priceText.SetText($"{total:N0}G");
     }
 
     // === 表示だけ更新（通知しない） ===
@@ -235,7 +230,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         {
             quantitySlider.value = displayQuantity;
         }
-        quantityText?.SetText($"{displayQuantity}");
+        if (quantityText != null) quantityText.SetText($"{displayQuantity}");
         UpdatePriceText();
 
         suppress = false;
@@ -244,7 +239,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     public void SetCurrentStock(int currentStock)
     {
-        stockText?.SetText($"{currentStock}");
+        if (stockText != null) stockText.SetText($"{currentStock}");
         if (lowStockBadge) lowStockBadge.SetActive(currentStock > 0 && currentStock <= 2);
     }
 
@@ -271,7 +266,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         if (next == displayQuantity) return;
 
         displayQuantity = next;
-        quantityText?.SetText($"{displayQuantity}");
+        if (quantityText != null) quantityText.SetText($"{displayQuantity}");
         UpdatePriceText();
         OnDisplayQuantityChanged.OnNext(displayQuantity);
         UpdateButtonsInteractable();
@@ -336,11 +331,11 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     private void OnDestroy()
     {
-        quantitySlider?.onValueChanged.RemoveListener(OnSliderValueChanged);
-        infoButton?.onClick.RemoveAllListeners();
-        purchaseButton?.onClick.RemoveAllListeners();
-        plusButton?.onClick.RemoveAllListeners();
-        minusButton?.onClick.RemoveAllListeners();
-        iconButton?.onClick.RemoveAllListeners();
+        if (quantitySlider != null) quantitySlider.onValueChanged.RemoveListener(OnSliderValueChanged);
+        if (infoButton != null) infoButton.onClick.RemoveAllListeners();
+        if (purchaseButton != null) purchaseButton.onClick.RemoveAllListeners();
+        if (plusButton != null) plusButton.onClick.RemoveAllListeners();
+        if (minusButton != null) minusButton.onClick.RemoveAllListeners();
+        if (iconButton != null) iconButton.onClick.RemoveAllListeners();
     }
 }

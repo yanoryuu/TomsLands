@@ -19,8 +19,8 @@ public static class UIFx
         var canvas = panelRoot.GetComponentInChildren<Canvas>();
         var target = canvas != null ? canvas.gameObject : panelRoot;
 
-        var cg = target.GetComponent<CanvasGroup>();
-        if (cg == null) cg = target.AddComponent<CanvasGroup>();
+        if (!target.TryGetComponent<CanvasGroup>(out var cg))
+            cg = target.AddComponent<CanvasGroup>();
 
         cg.DOKill();
         cg.alpha = 0f;

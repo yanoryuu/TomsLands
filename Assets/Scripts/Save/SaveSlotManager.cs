@@ -5,8 +5,7 @@ using UnityEngine;
 /// <summary>
 /// セーブデータのスロット（最大3つ）を管理する。
 ///
-/// 全セーブファイル（save.json / tomsData.json / itemData.json / heroData.json /
-/// shopStatusData.json / streamingSelection.json）は
+/// 全セーブファイル（save.json / tomsData.json / metaData.json など。ラン内ファイルの一覧は RunSaveCleaner）は
 /// <c>persistentDataPath/slot_N/</c> 配下に保存され、本クラスがスロット別のパスを一元解決する。
 ///
 /// 選択中スロットは PlayerPrefs に永続化されるため、タイトル→ゲームのシーン遷移をまたいで保持される。

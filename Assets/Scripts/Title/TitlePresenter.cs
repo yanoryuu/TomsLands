@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -31,16 +32,15 @@ public sealed class TitlePresenter : IStartable, IDisposable
 
     public void Start()
     {
-        SoundManager.Instance?.PlayBGM("OP");
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null)
+            soundManager.PlayBGM("OP");
         _view.SetSaveDataAvailable(SaveSlotManager.AnyExists());
         TransitionTo(TitleType.Start);
         Bind();
     }
 
-    public void Dispose()
-    {
-        _disposables.Dispose();
-    }
+    public void Dispose() => _disposables.Dispose();
 
     private void Bind()
     {
@@ -124,7 +124,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
     /// <summary>現在のスロット状態を読み直してビューに反映する。</summary>
     private void RefreshSaveSlots()
     {
-        var infos = new System.Collections.Generic.List<SaveSlotInfo>(SaveSlotManager.MaxSlots);
+        var infos = new List<SaveSlotInfo>(SaveSlotManager.MaxSlots);
         for (int i = 0; i < SaveSlotManager.MaxSlots; i++)
             infos.Add(SaveSlotManager.GetSlotInfo(i));
 
@@ -197,7 +197,9 @@ public sealed class TitlePresenter : IStartable, IDisposable
         if (TutorialSteps.ShouldStartDirectlyInShop(new MetaProgressModel()))
         {
             // 準備シーンを通らないので、前回の準備設定が残っていても使わないよう消しておく
-            var runSetup = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData") ?? RunSetupData.GetOrCreateFallback();
+            var runSetup = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData");
+            if (runSetup == null)
+                runSetup = RunSetupData.GetOrCreateFallback();
             runSetup.Clear();
             Debug.Log($"[TitlePresenter] NewGame (slot={slot + 1}) → チュートリアル未完了のため店（{GameSceneName}）で直接開店");
             SceneManager.LoadScene(GameSceneName);

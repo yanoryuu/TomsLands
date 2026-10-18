@@ -115,7 +115,7 @@ public static class AutoPlayReport
         public double NetWorthMedian;
         public double NetWorthP10;
         /// <summary>合格ラインの判定（項目 → "OK/NG 実測値"）。</summary>
-        public Dictionary<string, string> Verdicts = new Dictionary<string, string>();
+        public Dictionary<string, string> Verdicts = new();
         public bool Passed;
 
         // --- 配信中の介入 ---
@@ -124,7 +124,7 @@ public static class AutoPlayReport
         public double InterventionRefundMean;
         public double HeroSideSpentMean;
         public double DungeonSideSpentMean;
-        public Dictionary<string, int> InterventionKinds = new Dictionary<string, int>();
+        public Dictionary<string, int> InterventionKinds = new();
         public int StreamsWithIntervention;
         public int StreamsWithoutIntervention;
         public double HeroWinRateWithIntervention;
@@ -159,11 +159,11 @@ public static class AutoPlayReport
         public int JevRequests;
         public long InputTokens;
         public double CostUsd;
-        public Dictionary<string, int> AnomalyKinds = new Dictionary<string, int>();
+        public Dictionary<string, int> AnomalyKinds = new();
         /// <summary>質問 → 選ばれた値の頻度（上位）。</summary>
-        public Dictionary<string, Dictionary<string, int>> DecisionCounts = new Dictionary<string, Dictionary<string, int>>();
+        public Dictionary<string, Dictionary<string, int>> DecisionCounts = new();
         /// <summary>質問 → score の平均（score 型の質問のみ）。</summary>
-        public Dictionary<string, double> DecisionScoreMean = new Dictionary<string, double>();
+        public Dictionary<string, double> DecisionScoreMean = new();
         /// <summary>ターン → 所持金の平均（営業日の行）。</summary>
         public SortedDictionary<int, double> MoneyByTurn = new SortedDictionary<int, double>();
     }
@@ -177,7 +177,7 @@ public static class AutoPlayReport
         public long TotalInputTokens;
         public double TotalCostUsd;
         public double TotalCostJpyApprox;
-        public List<BotSummary> Bots = new List<BotSummary>();
+        public List<BotSummary> Bots = new();
     }
 
     private static BatchSummary BuildSummary(AutoPlayBatchConfig config, IReadOnlyList<AutoPlayRunResult> runs)

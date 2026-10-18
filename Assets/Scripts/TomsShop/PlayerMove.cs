@@ -1,6 +1,4 @@
-using System;
 using R3;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Controls;
@@ -22,7 +20,7 @@ public class PlayerMove : MonoBehaviour
     [SerializeField] private bool walkOnlyWhileParentScopeTop;
 
     private CompositeDisposable moveDisposables;
-    
+
     private Vector3 playerStartScale;
     private Vector2 callbackInput;
     private UIFocusScope parentScope;
@@ -34,17 +32,7 @@ public class PlayerMove : MonoBehaviour
             parentScope = GetComponentInParent<UIFocusScope>(true);
         moveDisposables = new CompositeDisposable();
         moveInput
-            .Subscribe(x =>
-            {
-                if (x != Vector2.zero)
-                {
-                    animator.SetBool("1_Move", true);
-                }
-                else
-                {
-                    animator.SetBool("1_Move", false);
-                }
-            })
+            .Subscribe(x => animator.SetBool("1_Move", x != Vector2.zero))
             .AddTo(moveDisposables);
     }
 
@@ -141,8 +129,5 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
-    {
-        moveDisposables?.Dispose();
-    }
+    private void OnDestroy() => moveDisposables?.Dispose();
 }

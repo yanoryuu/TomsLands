@@ -120,13 +120,17 @@ public class ExchangePanelController : IDisposable
                 if (row != null) row.SetSelected(row.itemId == selectedProductId);
             ShowDetail();
         }
-        else
+        else if (detail != null)
         {
-            detail?.Hide();
+            detail.Hide();
         }
     }
 
-    public void HideDetail() => detailGetter()?.Hide();
+    public void HideDetail()
+    {
+        var detail = detailGetter();
+        if (detail != null) detail.Hide();
+    }
 
     private int GetUnitPrice(FinancialProductData product) =>
         product.kind == FinancialProductKind.Bond
@@ -188,7 +192,7 @@ public class ExchangePanelController : IDisposable
 
         if (success)
         {
-            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+            PlaySE("営業/SE_仕入れ完了");
             showMessage(product.kind == FinancialProductKind.Bond
                 ? $"{product.productName} を購入した。満期は {product.bondMaturityTurns} 日後だ。"
                 : $"{product.productName} を {quantity}口 購入した。");
@@ -209,7 +213,7 @@ public class ExchangePanelController : IDisposable
         int income = portfolioModel.SellFund(product.productId, quantity, tomsModel, itemModel, tomsModel.BlacksmithLevel.Value);
         if (income > 0)
         {
-            SoundManager.Instance?.PlaySE("営業/SE_売上音");
+            PlaySE("営業/SE_売上音");
             showMessage($"{product.productName} を解約して {income:N0}G を受け取った。");
             portfolioModel.RefreshEstimate(itemModel, tomsModel.BlacksmithLevel.Value);
             Refresh();
@@ -220,8 +224,11 @@ public class ExchangePanelController : IDisposable
         }
     }
 
-    public void Dispose()
+    private static void PlaySE(string key)
     {
-        disposables.Dispose();
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE(key);
     }
+
+    public void Dispose() => disposables.Dispose();
 }

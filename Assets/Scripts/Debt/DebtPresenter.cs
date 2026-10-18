@@ -44,10 +44,7 @@ public class DebtPresenter : IDisposable, IStartable
     /// </summary>
     private int GetDebtAmount(int cycle) => DebtCalculator.GetAmount(cycle, tomsModel, relicResolver);
 
-    public void Start()
-    {
-        Bind();
-    }
+    public void Start() => Bind();
 
     private void Bind()
     {
@@ -126,8 +123,5 @@ public class DebtPresenter : IDisposable, IStartable
         sceneTransitionService.GoToGameOver();
     }
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

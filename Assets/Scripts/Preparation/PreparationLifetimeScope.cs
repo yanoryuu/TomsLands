@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -29,8 +28,8 @@ public class PreparationLifetimeScope : LifetimeScope
         }
         builder.RegisterInstance(startModeData);
 
-        var runSetupData = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData")
-                           ?? RunSetupData.GetOrCreateFallback();
+        var runSetupData = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData");
+        if (runSetupData == null) runSetupData = RunSetupData.GetOrCreateFallback();
         builder.RegisterInstance(runSetupData);
 
         // Models

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -27,6 +28,12 @@ public class AdvertisementPresenter : IStartable, IDisposable
     private readonly PopUpManager popUpManager;
     private readonly CompositeDisposable disposables = new();
 
+    /// <summary>
+    /// 広告スロットのタップ購読。Entry のたびに一覧（スロット）が作り直されるため、
+    /// 古いスロットの購読を disposables に溜め続けないよう一覧単位で解放する。
+    /// </summary>
+    private CompositeDisposable slotDisposables = new();
+
     /// <summary>現在選択中のスロット（2タップ目判定用）</summary>
     private AdvertisementSlotUI _selectedSlot;
 
@@ -47,10 +54,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
         stateManager.RegisterOnEnter(TomsShopGamePhase.Advertisement, Entry);
     }
 
-    public void Start()
-    {
-        Bind();
-    }
+    public void Start() => Bind();
 
     /// <summary>
     /// イベント購読をバインドする
@@ -142,7 +146,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
     private void PopulateAdvertisements()
     {
         var allAds = marketingFacade.Ads.GetAllAdvertisements();
-        var adInfoList = new System.Collections.Generic.List<(AdvertisementData ad, int discountedCost, bool canPurchase)>();
+        var adInfoList = new List<(AdvertisementData ad, int discountedCost, bool canPurchase)>();
 
         foreach (var ad in allAds)
         {
@@ -154,14 +158,15 @@ public class AdvertisementPresenter : IStartable, IDisposable
 
         var slots = view.PopulateAdList(adInfoList);
 
+        slotDisposables.Dispose();
+        slotDisposables = new CompositeDisposable();
+
         // 各スロットのタップイベントを購読
         foreach (var slot in slots)
         {
-            var capturedSlot = slot;
-
             slot.OnSlotSelected
-                .Subscribe(adData => OnSlotTapped(capturedSlot, adData))
-                .AddTo(disposables);
+                .Subscribe(adData => OnSlotTapped(slot, adData))
+                .AddTo(slotDisposables);
         }
     }
 
@@ -231,7 +236,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
     /// </summary>
     private void ShowPurchaseResult(AdvertisementData adData, AdvertisementEffect effect)
     {
-        var lines = new System.Collections.Generic.List<string>();
+        var lines = new List<string>();
         if (effect.Trust != 0)     lines.Add($"信頼度　　 +{effect.Trust}");
         if (effect.Attention != 0) lines.Add($"注目度　　 +{effect.Attention}");
         if (effect.Spread != 0)    lines.Add($"拡散力　　 +{effect.Spread}");
@@ -257,10 +262,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
     /// <summary>
     /// 全スロットのコスト表示を更新する
     /// </summary>
-    private void RefreshSlotStates()
-    {
-        view.RefreshSlots(ad => marketingFacade.GetAdvertisementCost(ad));
-    }
+    private void RefreshSlotStates() => view.RefreshSlots(ad => marketingFacade.GetAdvertisementCost(ad));
 
     /// <summary>
     /// ステータス表示を一括更新する
@@ -278,6 +280,7 @@ public class AdvertisementPresenter : IStartable, IDisposable
 
     public void Dispose()
     {
+        slotDisposables.Dispose();
         disposables.Dispose();
     }
 }

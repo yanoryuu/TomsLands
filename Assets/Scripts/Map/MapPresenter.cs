@@ -4,19 +4,19 @@ using R3;
 using UnityEngine;
 using VContainer.Unity;
 
-public class MapPresenter : IPresenter, IStartable,IDisposable
+public class MapPresenter : IPresenter, IStartable, IDisposable
 {
-    private CompositeDisposable disposable;
-    private MapModel mapModel;
-    private MapView mapView;
-    private DungeonRepository dungeonRepository;
-    private DungeonInfoView dungeonInfoView;
-    private StateManager stateManager;
-    private HeroModel heroModel;
-    private ItemModel itemModel;
-    private RelicEffectResolver relicResolver;
-    private GameFlowManager gameFlowManager;
-    private DungeonIntelModel dungeonIntel;
+    private readonly CompositeDisposable disposable;
+    private readonly MapModel mapModel;
+    private readonly MapView mapView;
+    private readonly DungeonRepository dungeonRepository;
+    private readonly DungeonInfoView dungeonInfoView;
+    private readonly StateManager stateManager;
+    private readonly HeroModel heroModel;
+    private readonly ItemModel itemModel;
+    private readonly RelicEffectResolver relicResolver;
+    private readonly GameFlowManager gameFlowManager;
+    private readonly DungeonIntelModel dungeonIntel;
 
     public MapPresenter(MapModel mapModel, MapView mapView,DungeonRepository dungeonRepository,DungeonInfoView dungeonInfoView,StateManager stateManager, HeroModel heroModel, ItemModel itemModel, RelicEffectResolver relicResolver,
         GameFlowManager gameFlowManager, DungeonIntelModel dungeonIntel)
@@ -37,19 +37,11 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
         stateManager.RegisterOnEnter(TomsShopGamePhase.Map,Entry);
     }
 
-    public void Start()
-    {
-        Bind();
-    }
-    public void Dispose()
-    {
-        disposable.Dispose();
-    }
+    public void Start() => Bind();
 
-    public void Entry()
-    {
-        mapView.SetDungeons(BuildDisplays());
-    }
+    public void Dispose() => disposable.Dispose();
+
+    public void Entry() => mapView.SetDungeons(BuildDisplays());
 
     /// <summary>
     /// 名札の表示データを組み立てる（Docs/Map_Overlay_Spec.md R1〜R3）。
@@ -108,11 +100,9 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
 
     private void Bind()
     {
-        //閉じるボタンが押されたとき
-        dungeonInfoView.OnCloseRequested.Subscribe(_ =>
-        {
-            dungeonInfoView.HideDungeonInfo();
-        }).AddTo(disposable);
+        dungeonInfoView.OnCloseRequested
+            .Subscribe(_ => dungeonInfoView.HideDungeonInfo())
+            .AddTo(disposable);
 
         mapView.OnMapIcon.Subscribe(key =>
         {
@@ -126,10 +116,8 @@ public class MapPresenter : IPresenter, IStartable,IDisposable
             dungeonInfoView.ShowDungeonInfo(data, clearProbability);
         }).AddTo(disposable);
 
-        mapView.OnBackRequested.Subscribe(_ =>
-        {
-            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
-        }).AddTo(disposable);
-
+        mapView.OnBackRequested
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
+            .AddTo(disposable);
     }
 }

@@ -34,16 +34,13 @@ public class EventView : MonoBehaviour
             confirmButton.onClick.AddListener(OnClickConfirm);
         }
         // 自動取得を試みる
-        gamePanelManager = FindObjectOfType<GamePanelManager>();
+        gamePanelManager = FindFirstObjectByType<GamePanelManager>();
     }
 
     /// <summary>
     /// GamePanelManagerを注入する（VContainer経由）
     /// </summary>
-    public void Initialize(GamePanelManager panelManager)
-    {
-        gamePanelManager = panelManager;
-    }
+    public void Initialize(GamePanelManager panelManager) => gamePanelManager = panelManager;
 
     /// <summary>
     /// イベントポップアップを表示する。descriptionは「@」で分割して順次表示する。

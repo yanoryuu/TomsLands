@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System;
 using System.Collections.Generic;
 using R3;
 using TMPro;
@@ -17,17 +16,17 @@ public class StreamingSettingView : MonoBehaviour
 
     [Header("前回と同じで確定")]
     [SerializeField] private Button quickConfirmButton;
-    [SerializeField] private TMPro.TextMeshProUGUI quickConfirmLabel;
+    [SerializeField] private TextMeshProUGUI quickConfirmLabel;
 
     [Header("オート陳列")]
     [SerializeField] private Button autoSelectButton;
 
-    public Subject<string> OnItemSelected     { get; } = new Subject<string>();
-    public Subject<string> OnItemDeselected   { get; } = new Subject<string>();
-    public Subject<(string id, int qty)> OnQuantityChanged { get; } = new Subject<(string, int)>();
-    public Subject<Unit> OnConfirmClicked     { get; } = new Subject<Unit>();
-    public Subject<Unit> OnQuickConfirmClicked { get; } = new Subject<Unit>();
-    public Subject<Unit> OnAutoSelectClicked { get; } = new Subject<Unit>();
+    public Subject<string> OnItemSelected     { get; } = new();
+    public Subject<string> OnItemDeselected   { get; } = new();
+    public Subject<(string id, int qty)> OnQuantityChanged { get; } = new();
+    public Subject<Unit> OnConfirmClicked     { get; } = new();
+    public Subject<Unit> OnQuickConfirmClicked { get; } = new();
+    public Subject<Unit> OnAutoSelectClicked { get; } = new();
 
     private void Awake()
     {
@@ -59,7 +58,7 @@ public class StreamingSettingView : MonoBehaviour
     {
         var scroll = content != null ? content.GetComponentInParent<ScrollRect>(true) : null;
         if (scroll == null) return;
-        if (scroll.GetComponent<ScrollRectAutoFollow>() == null)
+        if (!scroll.TryGetComponent<ScrollRectAutoFollow>(out _))
             scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
         // 一覧の間を十字で移るときにスクロールバーで止まらないよう、ナビ対象から外す（自動スクロールで追従する）
         foreach (var bar in new[] { scroll.verticalScrollbar, scroll.horizontalScrollbar })
@@ -121,10 +120,9 @@ public class StreamingSettingView : MonoBehaviour
             var qty    = kv.Value;
             var master = model.GetMasterItem(id);
             var runtime= model.GetRuntimeItem(id);
-            if (master == null || runtime == null) 
+            if (master == null || runtime == null)
                 continue;
 
-            // ここで在庫上限を取得
             int maxQty = runtime.Stock.Value;
 
             var go   = Instantiate(selectedSlotPrefab, selectedPanel);

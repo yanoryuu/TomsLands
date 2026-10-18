@@ -178,6 +178,13 @@ public class NewspaperView : MonoBehaviour
 
     private readonly Dictionary<RectTransform, Vector2> homePositions = new();
     private int lastMoney = int.MinValue;
+    private Vector2 gridCellSize;
+
+    // パッド/キー
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+    private Func<Selectable> paperFocusTarget;
+    private string focusArticleKey;
 
     private void Awake()
     {
@@ -228,11 +235,8 @@ public class NewspaperView : MonoBehaviour
 
     // ---------------- パッド/キー ----------------
 
-    private UIFocusScope focusScope;
-    private readonly PendingFocus pendingFocus = new();
-    private string focusArticleKey;
-
-    private void LateUpdate() => pendingFocus.Tick(focusScope, PaperFocusTarget);
+    // メソッドグループを毎フレーム渡すとデリゲートが作られるので、1つを使い回す
+    private void LateUpdate() => pendingFocus.Tick(focusScope, paperFocusTarget ??= PaperFocusTarget);
 
     /// <summary>紙面で最初に選ばせる要素（一面トップ → 小記事 → 新聞社カード）。</summary>
     private Selectable PaperFocusTarget()
@@ -397,8 +401,6 @@ public class NewspaperView : MonoBehaviour
         grid.constraintCount = single ? 1 : 2;
         grid.cellSize = single ? new Vector2(full, gridCellSize.y) : gridCellSize;
     }
-
-    private Vector2 gridCellSize;
 
     private void AddCell(ArticleData a)
     {
@@ -570,7 +572,7 @@ public class NewspaperView : MonoBehaviour
         if (target == null) return;
         if (scrapCardParent is RectTransform parentRt) LayoutRebuilder.ForceRebuildLayoutImmediate(parentRt);
 
-        var layer = flyLayer != null ? flyLayer : GetComponentInParent<Canvas>()?.rootCanvas.transform as RectTransform;
+        var layer = flyLayer != null ? flyLayer : RootCanvasRect();
         var source = leadArticle != null ? leadArticle.ScrapSource : null;
         var targetRt = (RectTransform)target.transform;
         var targetGroup = EnsureGroup(target.gameObject);
@@ -617,6 +619,12 @@ public class NewspaperView : MonoBehaviour
             });
     }
 
+    private RectTransform RootCanvasRect()
+    {
+        var canvas = GetComponentInParent<Canvas>();
+        return canvas != null ? canvas.rootCanvas.transform as RectTransform : null;
+    }
+
     private void StaggerCells(float baseDelay)
     {
         for (int i = 0; i < currentCells.Count; i++)
@@ -650,8 +658,7 @@ public class NewspaperView : MonoBehaviour
 
     private static CanvasGroup EnsureGroup(GameObject go)
     {
-        var cg = go.GetComponent<CanvasGroup>();
-        return cg != null ? cg : go.AddComponent<CanvasGroup>();
+        return go.TryGetComponent<CanvasGroup>(out var cg) ? cg : go.AddComponent<CanvasGroup>();
     }
 
     private void OnDestroy()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using R3;
+using UnityEngine;
 using VContainer.Unity;
 
 public class ItemSelectionPresenter : IDisposable, IStartable
@@ -27,7 +28,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
             if (shopLevelSettings == null) return int.MaxValue;
             int baseKinds = shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).maxDisplayKinds;
             return relicResolver != null
-                ? UnityEngine.Mathf.Max(1, relicResolver.ModifyInt(RelicStatId.DisplayKindsAdd, baseKinds))
+                ? Mathf.Max(1, relicResolver.ModifyInt(RelicStatId.DisplayKindsAdd, baseKinds))
                 : baseKinds;
         }
     }
@@ -48,10 +49,7 @@ public class ItemSelectionPresenter : IDisposable, IStartable
         this.relicResolver = relicResolver;
     }
 
-    public void Start()
-    {
-        Bind();
-    }
+    public void Start() => Bind();
 
     public void OnOpenSelectionPanel()
     {
@@ -61,10 +59,8 @@ public class ItemSelectionPresenter : IDisposable, IStartable
     }
 
     /// <summary>「陳列 3/5」のような枠カウンタ表示を更新する。</summary>
-    private void UpdateSlotCounter()
-    {
+    private void UpdateSlotCounter() =>
         selectionView.UpdateSlotCounter(itemModel.CountDisplayedKinds(), MaxDisplayKinds);
-    }
 
     public void OnCloseSelectionPanel()
     {
@@ -72,8 +68,6 @@ public class ItemSelectionPresenter : IDisposable, IStartable
         itemModel.SaveData();
         OnClosed.OnNext(Unit.Default);
     }
-
-    public void Initialize() { }
 
     private void Bind()
     {

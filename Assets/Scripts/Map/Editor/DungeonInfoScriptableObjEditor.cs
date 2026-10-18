@@ -7,7 +7,7 @@ public class DungeonInfoScriptableObjEditor : Editor
 {
     // レベル選択用（エディタ上のみ、0-indexed）
     private int selectedLevelIndex = 0;
-    private static readonly string[] levelLabels = { "Lv.1", "Lv.2", "Lv.3", "Lv.4", "Lv.5" };
+    private static readonly string[] LevelLabels = { "Lv.1", "Lv.2", "Lv.3", "Lv.4", "Lv.5" };
 
     // シリアライズプロパティ
     private SerializedProperty keyProp;
@@ -24,17 +24,17 @@ public class DungeonInfoScriptableObjEditor : Editor
 
     private void OnEnable()
     {
-        keyProp = serializedObject.FindProperty("key");
-        dungeonNameProp = serializedObject.FindProperty("dungeonName");
-        dungeonDescriptionProp = serializedObject.FindProperty("dungeonDescription");
-        dungeonImageProp = serializedObject.FindProperty("dungeonImage");
-        dungeonIconProp = serializedObject.FindProperty("dungeonIcon");
-        dungeonNameImageProp = serializedObject.FindProperty("dungeonNameImage");
-        initDungeonLevelProp = serializedObject.FindProperty("initDungeonLevel");
-        recommendedLevelProp = serializedObject.FindProperty("recommendedLevel");
-        difficultyProp = serializedObject.FindProperty("difficulty");
-        requiredAttributeProp = serializedObject.FindProperty("requiredAttribute");
-        levelDataListProp = serializedObject.FindProperty("levelDataList");
+        keyProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.key));
+        dungeonNameProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.dungeonName));
+        dungeonDescriptionProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.dungeonDescription));
+        dungeonImageProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.dungeonImage));
+        dungeonIconProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.dungeonIcon));
+        dungeonNameImageProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.dungeonNameImage));
+        initDungeonLevelProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.initDungeonLevel));
+        recommendedLevelProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.recommendedLevel));
+        difficultyProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.difficulty));
+        requiredAttributeProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.requiredAttribute));
+        levelDataListProp = serializedObject.FindProperty(nameof(DungeonInfoScriptableObj.levelDataList));
     }
 
     public override void OnInspectorGUI()
@@ -75,7 +75,7 @@ public class DungeonInfoScriptableObjEditor : Editor
 
         // レベル選択タブ
         EditorGUILayout.BeginHorizontal();
-        selectedLevelIndex = GUILayout.Toolbar(selectedLevelIndex, levelLabels);
+        selectedLevelIndex = GUILayout.Toolbar(selectedLevelIndex, LevelLabels);
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space(4);
@@ -90,11 +90,11 @@ public class DungeonInfoScriptableObjEditor : Editor
             EditorGUILayout.LabelField($"レベル {selectedLevelIndex + 1} の敵データ", EditorStyles.boldLabel);
             EditorGUILayout.Space(2);
 
-            var phasesProp = levelDataProp.FindPropertyRelative("phases");
-            var monstersProp = levelDataProp.FindPropertyRelative("monsters");
-            var bossNameProp = levelDataProp.FindPropertyRelative("bossName");
-            var rewardGoldProp = levelDataProp.FindPropertyRelative("rewardGold");
-            var levelUpCostProp = levelDataProp.FindPropertyRelative("levelUpCost");
+            var phasesProp = levelDataProp.FindPropertyRelative(nameof(DungeonLevelData.phases));
+            var monstersProp = levelDataProp.FindPropertyRelative(nameof(DungeonLevelData.monsters));
+            var bossNameProp = levelDataProp.FindPropertyRelative(nameof(DungeonLevelData.bossName));
+            var rewardGoldProp = levelDataProp.FindPropertyRelative(nameof(DungeonLevelData.rewardGold));
+            var levelUpCostProp = levelDataProp.FindPropertyRelative(nameof(DungeonLevelData.levelUpCost));
 
             // ===== フェーズ構成（戦闘で実際に使われる） =====
             EditorGUILayout.LabelField("フェーズ構成（戦闘用）", EditorStyles.boldLabel);
@@ -107,7 +107,7 @@ public class DungeonInfoScriptableObjEditor : Editor
                 for (int p = 0; p < phasesProp.arraySize; p++)
                 {
                     var phaseProp = phasesProp.GetArrayElementAtIndex(p);
-                    var enemiesProp = phaseProp.FindPropertyRelative("enemies");
+                    var enemiesProp = phaseProp.FindPropertyRelative(nameof(DungeonPhaseData.enemies));
 
                     EditorGUILayout.BeginVertical(EditorStyles.helpBox);
                     EditorGUILayout.BeginHorizontal();
@@ -131,7 +131,7 @@ public class DungeonInfoScriptableObjEditor : Editor
                     phasesProp.arraySize++;
                     // 新規フェーズの敵リストを空にする（直前フェーズの内容が複製されるのを防ぐ）
                     var newPhase = phasesProp.GetArrayElementAtIndex(phasesProp.arraySize - 1);
-                    var newEnemies = newPhase.FindPropertyRelative("enemies");
+                    var newEnemies = newPhase.FindPropertyRelative(nameof(DungeonPhaseData.enemies));
                     newEnemies.ClearArray();
                 }
             }

@@ -95,7 +95,7 @@ public class StreamingCommentDirector : MonoBehaviour
     private void Update()
     {
         bool paused = sequencer != null && sequencer.PauseController != null && sequencer.PauseController.IsPaused;
-        layerView?.SetPaused(paused);
+        if (layerView != null) layerView.SetPaused(paused);
         if (paused) return;
 
         bool salesActive = salesController != null && salesController.IsSalesActive;
@@ -252,5 +252,8 @@ public class StreamingCommentDirector : MonoBehaviour
     public void Push(StreamingCommentTrigger trigger, Dictionary<string, string> vars = null) => _feed?.Push(trigger, vars);
 
     /// <summary>コメント量の設定（ON / 少なめ / OFF）。</summary>
-    public void SetDensity(NicoDensity density) => layerView?.SetDensity(density);
+    public void SetDensity(NicoDensity density)
+    {
+        if (layerView != null) layerView.SetDensity(density);
+    }
 }

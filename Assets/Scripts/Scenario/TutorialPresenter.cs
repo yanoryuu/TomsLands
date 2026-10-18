@@ -239,7 +239,8 @@ public class TutorialPresenter : IStartable, IDisposable
         _meta.MarkTutorialSeen(TutorialSteps.StepFundsAdvanceGranted);
         _tomsModel.AddRevenue(TutorialSteps.FundsAdvanceAmount);
         _tomsModel.SavePlayerMoney();
-        SoundManager.Instance?.PlaySE("営業/SE_売上音");
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlaySE("営業/SE_売上音");
         Debug.Log($"[TutorialPresenter] 鍛冶屋の立て替え資金 +{TutorialSteps.FundsAdvanceAmount}G → {_tomsModel.PlayerMoney.Value}G");
     }
 

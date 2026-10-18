@@ -107,7 +107,10 @@ public class InterventionCardDebugFeeder : MonoBehaviour
     }
 
     [ContextMenu("Flip")]
-    private void DoFlip() => card?.Flip();
+    private void DoFlip()
+    {
+        if (card != null) card.Flip();
+    }
 
     [ContextMenu("Toggle affordable (poor)")]
     private void Poor()

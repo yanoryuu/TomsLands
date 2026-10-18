@@ -69,7 +69,8 @@ public class PreparationPresenter : IStartable, IDisposable
             return;
         }
 
-        SoundManager.Instance?.PlayBGM("OP");
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlayBGM("OP");
         runSetupData.Clear();
 
         // 難易度の初期値はタイトルが入れた既定値（ふつう）を引き継ぐ

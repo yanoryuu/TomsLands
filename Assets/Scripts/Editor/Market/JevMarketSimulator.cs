@@ -64,7 +64,7 @@ public sealed class JevMarketSimulator : EditorWindow
     private bool _running;
     private string _status = "未実行";
     private CancellationTokenSource _cts;
-    private readonly List<RunResult> _results = new List<RunResult>();
+    private readonly List<RunResult> _results = new();
     private string[] _itemIds = Array.Empty<string>();
 
     /// <summary>1エンジン分の実行結果。</summary>
@@ -72,7 +72,7 @@ public sealed class JevMarketSimulator : EditorWindow
     {
         public string Label;
         public Color Color;
-        public Dictionary<string, List<int>> Series = new Dictionary<string, List<int>>();
+        public Dictionary<string, List<int>> Series = new();
         public MarketStats Stats;
         public long InputTokens;
         public int Requests;
@@ -89,7 +89,7 @@ public sealed class JevMarketSimulator : EditorWindow
         public float DemandValue, PrevDemandValue, Trend;
         public int StockValue;
         public bool Displayed;
-        public readonly List<int> History = new List<int>();
+        public readonly List<int> History = new();
         public float LastNet;
 
         /// <summary>層1の傾き。比較ツールなので既定値 0.5 に固定（本番は ShopEconomySettings 側）。</summary>

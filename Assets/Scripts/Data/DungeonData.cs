@@ -35,26 +35,12 @@ public class DungeonData
     /// <summary>
     /// 現在レベルのモンスター一覧（後方互換プロパティ）
     /// </summary>
-    public List<EnemyData> dungeonMonsters
-    {
-        get
-        {
-            var data = GetLevelData(currentDungeonLevel);
-            return data?.monsters ?? new List<EnemyData>();
-        }
-    }
+    public List<EnemyData> dungeonMonsters => GetLevelData(currentDungeonLevel)?.monsters ?? new List<EnemyData>();
 
     /// <summary>
     /// 現在レベルのボス名（後方互換プロパティ）
     /// </summary>
-    public string dungeonBoss
-    {
-        get
-        {
-            var data = GetLevelData(currentDungeonLevel);
-            return data?.bossName ?? "";
-        }
-    }
+    public string dungeonBoss => GetLevelData(currentDungeonLevel)?.bossName ?? "";
 
     /// <summary>
     /// 指定レベル（1～5）のデータを取得する。
@@ -77,26 +63,12 @@ public class DungeonData
     /// <summary>
     /// 現在レベルの報酬ゴールド（勇者敗北時にプレイヤーが受け取る）
     /// </summary>
-    public int rewardGold
-    {
-        get
-        {
-            var data = GetLevelData(currentDungeonLevel);
-            return data?.rewardGold ?? 0;
-        }
-    }
+    public int rewardGold => GetLevelData(currentDungeonLevel)?.rewardGold ?? 0;
 
     /// <summary>
     /// 現在レベルから次レベルへのレベルアップ費用。最大レベル時は 0。
     /// </summary>
-    public int levelUpCost
-    {
-        get
-        {
-            var data = GetLevelData(currentDungeonLevel);
-            return data?.levelUpCost ?? 0;
-        }
-    }
+    public int levelUpCost => GetLevelData(currentDungeonLevel)?.levelUpCost ?? 0;
 
     // ----------------------
     // ScriptableObject からの注入

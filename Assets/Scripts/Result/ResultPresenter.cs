@@ -74,7 +74,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
         catch (Exception e)
         {
             Debug.LogError($"[ResultPresenter] リザルト演出に失敗しました。\n{e}");
-            _resultView?.ShowAllImmediate(_lastStatistics);
+            if (_resultView != null) _resultView.ShowAllImmediate(_lastStatistics);
         }
 
         _sequenceDone = true;
@@ -89,8 +89,11 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     {
         _isTalking = true;
         // 会話中はクリックが会話送りに使われるので、演出のスキップ受付は止めて背景を暗くする
-        _resultView?.SetSkipEnabled(false);
-        _resultView?.SetTalkDim(true);
+        if (_resultView != null)
+        {
+            _resultView.SetSkipEnabled(false);
+            _resultView.SetTalkDim(true);
+        }
         try
         {
             await TokoTalk.PlayAsync(TokoTalk.SelectRunClearLabel(_lastStatistics), ct);
@@ -103,7 +106,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
         finally
         {
             _isTalking = false;
-            _resultView?.SetTalkDim(false);
+            if (_resultView != null) _resultView.SetTalkDim(false);
         }
     }
 
@@ -131,7 +134,8 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     {
         Debug.Log("[ResultPresenter] Entry: Building result statistics...");
 
-        SoundManager.Instance?.PlayBGM("リザルト画面");
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlayBGM("リザルト画面");
 
         var statistics = _resultModel.BuildStatistics();
 #if UNITY_EDITOR

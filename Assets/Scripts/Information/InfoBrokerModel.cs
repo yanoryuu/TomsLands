@@ -1,9 +1,8 @@
-
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-using UnityEngine;
 using R3;
+using UnityEngine;
 
 public class InfoBrokerModel
 {
@@ -162,10 +161,7 @@ public class InfoBrokerModel
     /// <summary>
     /// ?_???W???????R?X?g????????擾
     /// </summary>
-    public Dictionary<DungeonName, int[]> GetDungeonInfoCosts()
-    {
-        return dungeonInfoCosts;
-    }
+    public Dictionary<DungeonName, int[]> GetDungeonInfoCosts() => dungeonInfoCosts;
 
     /// <summary>
     /// ?E??f?[?^????V?????X?V
@@ -451,21 +447,7 @@ public class InfoBrokerModel
         var random = new System.Random();
         var template = equipmentMessageTemplates[random.Next(equipmentMessageTemplates.Count)];
         var mainMessage = string.Format(template, itemName);
-
-        if (confidence > 0.8f)
-        {
-            var highTemplate = highConfidenceTemplates[random.Next(highConfidenceTemplates.Count)];
-            return $"{mainMessage}?B{highTemplate}?I";
-        }
-        else if (confidence < 0.5f)
-        {
-            var lowTemplate = lowConfidenceTemplates[random.Next(lowConfidenceTemplates.Count)];
-            return $"{mainMessage}?B{lowTemplate}?B";
-        }
-        else
-        {
-            return $"{mainMessage}?B";
-        }
+        return WithConfidenceSuffix(random, mainMessage, confidence);
     }
 
     // ?_???W??????????b?Z?[?W
@@ -488,20 +470,23 @@ public class InfoBrokerModel
             mainMessage = string.Format(template, dungeonName);
         }
 
+        return WithConfidenceSuffix(random, mainMessage, confidence);
+    }
+
+    /// <summary>確信度に応じた結びの一言を付ける（高い/低いときだけテンプレートから1つ引く）。</summary>
+    private string WithConfidenceSuffix(System.Random random, string mainMessage, float confidence)
+    {
         if (confidence > 0.8f)
         {
             var highTemplate = highConfidenceTemplates[random.Next(highConfidenceTemplates.Count)];
             return $"{mainMessage}?B{highTemplate}?I";
         }
-        else if (confidence < 0.5f)
+        if (confidence < 0.5f)
         {
             var lowTemplate = lowConfidenceTemplates[random.Next(lowConfidenceTemplates.Count)];
             return $"{mainMessage}?B{lowTemplate}?B";
         }
-        else
-        {
-            return $"{mainMessage}?B";
-        }
+        return $"{mainMessage}?B";
     }
 
     // ダンジョンデータを DungeonRepository から取得

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,11 +18,12 @@ public class StreamingView : MonoBehaviour
     public List<string> sellingItemIds = new List<string>();
     private string selectedItemId;
 
-    public Subject<Unit>   OnBasicStealthRequested   { get; } = new Subject<Unit>();
-    public Subject<string> OnFocusedStealthRequested { get; } = new Subject<string>();
+    public Subject<Unit>   OnBasicStealthRequested   { get; } = new();
+    public Subject<string> OnFocusedStealthRequested { get; } = new();
 
-    public List<Subject<(string itemId,bool isSell)>> OnStreamingItemToggled { get; } = new List<Subject<(string itemId,bool isSell)>>();
-    void Awake()
+    public List<Subject<(string itemId,bool isSell)>> OnStreamingItemToggled { get; } = new();
+
+    private void Awake()
     {
         basicStealthButton.onClick.AddListener(() => OnBasicStealthRequested.OnNext(Unit.Default));
         focusedStealthButton.onClick.AddListener(() =>
@@ -34,20 +34,21 @@ public class StreamingView : MonoBehaviour
 
         for (int i = 0; i < sellingItemIcons.Count; i++)
         {
-            sellingItemToggles[i].onValueChanged.AddListener(isOn =>
+            // for のループ変数はラムダ間で共有されるため、スロットごとにコピーして捕まえる
+            int index = i;
+            sellingItemToggles[index].onValueChanged.AddListener(isOn =>
             {
-                string itemId = sellingItemIds[i];
-                OnStreamingItemToggled[i]?.OnNext((itemId, isOn));
+                if (index >= sellingItemIds.Count || index >= OnStreamingItemToggled.Count) return;
+                string itemId = sellingItemIds[index];
+                OnStreamingItemToggled[index]?.OnNext((itemId, isOn));
             });
         }
     }
     public void SetSellingItemIcons(List<StreamingItemPlain> itemDates)
     {
         foreach (var toggle in sellingItemToggles)
-        {
             toggle.gameObject.SetActive(false);
-        }
-        
+
         for (int i = 0; i < itemDates.Count; i++)
         {
             sellingItemIcons[i].sprite = itemDates[i].icon;

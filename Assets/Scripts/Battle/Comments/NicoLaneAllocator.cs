@@ -95,7 +95,7 @@ public sealed class NicoLaneAllocator
 /// <summary>上下固定コメント用。各レーンは表示時間だけ占有する。</summary>
 public sealed class NicoFixedLaneAllocator
 {
-    private float[] _busyUntil;
+    private readonly float[] _busyUntil;
     private readonly float _duration;
 
     public NicoFixedLaneAllocator(int laneCount, float duration)

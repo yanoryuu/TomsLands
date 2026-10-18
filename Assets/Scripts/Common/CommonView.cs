@@ -25,8 +25,8 @@ public class CommonView : MonoBehaviour
     private bool moneyInitialized;
     private Tween moneyTween;
 
-
-    private void Awake()    {
+    private void Awake()
+    {
         menuButton.onClick.AddListener(() => OnMenuButtonClicked.OnNext(Unit.Default));
     }
 
@@ -59,10 +59,7 @@ public class CommonView : MonoBehaviour
     }
 
     // 例: 1,234,567G
-    private void SetMoneyText(int money)
-    {
-        playerMoneyText.text = $"{money:N0}G";
-    }
+    private void SetMoneyText(int money) => playerMoneyText.text = $"{money:N0}G";
 
     /// <summary>
     /// ターン表示を更新する。バズ中は残りターン数を併記する

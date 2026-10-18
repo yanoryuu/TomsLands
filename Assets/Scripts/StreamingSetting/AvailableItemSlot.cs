@@ -18,7 +18,7 @@ public class AvailableItemSlot : MonoBehaviour, IPointerClickHandler
     private void Awake()
     {
         // パッド/キーで選べるようにする（A で左クリックと同じ OnPointerClick を転送。マウス時は何もしない）
-        if (GetComponent<PointerEventBridge>() == null) gameObject.AddComponent<PointerEventBridge>();
+        if (!TryGetComponent<PointerEventBridge>(out _)) gameObject.AddComponent<PointerEventBridge>();
         // 選択枠はカードの見た目（BackGround）に合わせる（ルートの矩形はレイアウト用で見た目とずれている）
         var background = transform.Find("BackGround") as RectTransform;
         if (background != null && GetComponent<UIFocusHighlightOverride>() == null)

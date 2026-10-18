@@ -5,7 +5,7 @@ public class StreamingSalesPresenter : IDisposable
 {
     private readonly StreamingSalesModel model;
     private readonly StreamingSalesView view;
-    private readonly CompositeDisposable disposables = new CompositeDisposable();
+    private readonly CompositeDisposable disposables = new();
 
     public StreamingSalesPresenter(StreamingSalesModel model, StreamingSalesView view)
     {
@@ -15,14 +15,13 @@ public class StreamingSalesPresenter : IDisposable
 
     public void Bind()
     {
-        SoundManager.Instance?.PlayBGM("配信フェーズ");
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlayBGM("配信フェーズ");
 
-        // Modelの総売上が変更されたら、自動的にViewの表示を更新するように購読
         model.TotalSales
             .Subscribe(amount => view.UpdateTotalSales(amount))
             .AddTo(disposables);
 
-        // 最初に売り場の商品を表示します
         view.DisplayItems(model.ItemsForSale);
 
         // 売れたスロットの通知を購読して、在庫表示更新と売れたアニメを実行する
@@ -37,25 +36,16 @@ public class StreamingSalesPresenter : IDisposable
                 // 在庫表示の更新（View 側の在庫購読もあるが、即時反映させたいので明示更新）
                 view.UpdateItemStock(slotIndex, item.Stock.Value);
 
-                // 売れたエフェクト再生
                 view.PlaySoldAnimation(slotIndex);
             })
             .AddTo(disposables);
 
         model.OnItemsReordered
-            .Subscribe(_ => {
-                view.DisplayItems(model.ItemsForSale);
-            })
+            .Subscribe(_ => view.DisplayItems(model.ItemsForSale))
             .AddTo(disposables);
 
-        // 商品リストが更新されたら、Viewの表示を更新
         view.DisplayItems(model.ItemsForSale);
     }
 
-
-
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

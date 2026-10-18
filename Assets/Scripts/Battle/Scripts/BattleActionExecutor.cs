@@ -64,7 +64,8 @@ public class BattleActionExecutor
                 ? interventions.ResolveAttack(context, presenter.GetModel(), targetPresenter.GetModel())
                 : InterventionAttackModifier.None;
             // 攻撃ヒット音（勇者と敵で別の音）
-            SoundManager.Instance?.PlaySE(presenter.GetModel().Type == CharacterType.Hero ? "勇者攻撃" : "敵攻撃");
+            var sound = SoundManager.Instance;
+            if (sound != null) sound.PlaySE(presenter.GetModel().Type == CharacterType.Hero ? "勇者攻撃" : "敵攻撃");
             int damageDealt = presenter.PerformAttack(targetPresenter, modifier.Multiplier, modifier.BonusDamage);
             string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
             await uiView.AddLogAsync(logMessage, token);
@@ -73,13 +74,11 @@ public class BattleActionExecutor
             if (targetPresenter.GetModel().IsDead)
             {
                 await uiView.AddLogAsync($"{targetPresenter.GetModel().Name} を倒した！", token);
-                
-                // 敵が倒された場合、撃破イベントを発火（属性相性による価格変動に使用）
+
+                // 撃破イベントは属性相性による価格変動に使う
                 if (targetPresenter.GetModel().Type == CharacterType.Enemy)
-                {
                     sequencer.OnEnemyDefeated.OnNext(targetPresenter.GetModel());
-                }
-                
+
                 await targetPresenter.GetView().PlayDeathEffectAsync(token, tempo.deathBlinkCount, uiView.ScaleSeconds(tempo.deathBlinkInterval));
             }
         }
@@ -178,7 +177,7 @@ public class BattleActionExecutor
         context.FreeUpSpawnPoints();
         var deadEnemies = context.EnemyPresenters.Where(p => p.GetModel().IsDead).ToList();
 
-        if (deadEnemies.Any())
+        if (deadEnemies.Count > 0)
         {
             foreach (var deadEnemy in deadEnemies)
             {
@@ -217,9 +216,6 @@ public class BattleActionExecutor
             if (picked != null) return picked;
             return context.EnemyPresenters.FirstOrDefault(p => !p.GetModel().IsDead);
         }
-        else
-        {
-            return context.HeroPresenter;
-        }
+        return context.HeroPresenter;
     }
 }

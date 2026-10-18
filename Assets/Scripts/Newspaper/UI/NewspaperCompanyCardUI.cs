@@ -79,9 +79,9 @@ public class NewspaperCompanyCardUI : MonoBehaviour
         if (nameText != null) nameText.text = d.companyName;
         if (priceText != null) priceText.text = $"{d.price:N0}G / {d.contractTurns}ターン";
 
-        trustBar?.SetValue(d.trust);
-        speedBar?.SetValue(d.speed);
-        coverageBar?.SetValue(d.coverage);
+        if (trustBar != null) trustBar.SetValue(d.trust);
+        if (speedBar != null) speedBar.SetValue(d.speed);
+        if (coverageBar != null) coverageBar.SetValue(d.coverage);
 
         if (measuredFill != null)
         {

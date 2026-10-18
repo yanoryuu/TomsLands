@@ -33,7 +33,7 @@ public static class AutoPlayBattleSurrogate
         public int BaselineTurns;
 
         // --- 配信販売 ---
-        public List<BattleOutputSoldItem> Sold = new List<BattleOutputSoldItem>();
+        public List<BattleOutputSoldItem> Sold = new();
         public int RawSales;
 
         // --- 介入 ---
@@ -45,9 +45,9 @@ public static class AutoPlayBattleSurrogate
         public int SpecialMoves;
         public int ViewerSpecials;
         /// <summary>実行された介入（種類@ターン）。</summary>
-        public List<string> Executed = new List<string>();
+        public List<string> Executed = new();
         /// <summary>出せなかった予定（理由つき）。</summary>
-        public List<string> Skipped = new List<string>();
+        public List<string> Skipped = new();
     }
 
     /// <summary>配信1回分の入力。</summary>

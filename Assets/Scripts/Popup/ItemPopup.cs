@@ -35,160 +35,31 @@ public class ItemPopup : MonoBehaviour
     [SerializeField] private Button confirmButton;
     [SerializeField] private TextMeshProUGUI confirmButtonText;
 
+    private static readonly Color32 Green = new(0, 204, 0, 255);
+    private static readonly Color32 Red = new(255, 68, 68, 255);
+    private static readonly Color32 Orange = new(255, 102, 0, 255);
+    private static readonly Color32 Yellow = new(255, 204, 0, 255);
+    private static readonly Color32 Gray = new(170, 170, 170, 255);
+    private static readonly Color32 Blue = new(102, 102, 255, 255);
+    private static readonly Color32 Cyan = new(0, 204, 255, 255);
+    private static readonly Color32 BrightGreen = new(0, 255, 0, 255);
+
     /// <summary>
     /// ItemPopUpData を受け取って全UIを更新する。
     /// </summary>
     public void SetData(ItemPopUpData data)
     {
-        // ---- ヘッダー ----
-        if (titleText) titleText.text = data.ItemName ?? "";
-        if (iconImage && data.Icon != null) iconImage.sprite = data.Icon;
-        if (descriptionText) descriptionText.text = data.Description ?? "";
+        ApplyHeader(data);
+        ApplyDemand(data);
 
-        // ---- 需要 ----
-        float demandPct = data.Demand * 100f;
-        float prevDemandPct = data.PreviousDemand * 100f;
-        float demandDelta = demandPct - prevDemandPct;
-
-        if (demandValueText) demandValueText.text = $"{demandPct:F0}%";
-        if (demandDeltaText)
-        {
-            if (demandDelta >= 0)
-            {
-                demandDeltaText.text = $"▲ +{demandDelta:F1}%";
-                demandDeltaText.color = new Color32(0, 204, 0, 255);   // 緑
-            }
-            else
-            {
-                demandDeltaText.text = $"▼ {demandDelta:F1}%";
-                demandDeltaText.color = new Color32(255, 68, 68, 255); // 赤
-            }
-        }
-
-        if (demandLevelText)
-        {
-            if (data.Demand >= 0.8f)
-            {
-                demandLevelText.text = "★★★ 大人気";
-                demandLevelText.color = new Color32(255, 102, 0, 255);
-            }
-            else if (data.Demand >= 0.5f)
-            {
-                demandLevelText.text = "★★ 好調";
-                demandLevelText.color = new Color32(255, 204, 0, 255);
-            }
-            else if (data.Demand >= 0.3f)
-            {
-                demandLevelText.text = "★ 普通";
-                demandLevelText.color = new Color32(170, 170, 170, 255);
-            }
-            else
-            {
-                demandLevelText.text = "☆ 低調";
-                demandLevelText.color = new Color32(102, 102, 255, 255);
-            }
-        }
-
-        // ---- 価格 ----
         float priceRatio = data.BasePrice > 0 ? (float)data.CurrentPrice / data.BasePrice * 100f : 100f;
-        int priceDelta = data.CurrentPrice - data.PreviousPrice;
-
-        if (priceValueText) priceValueText.text = $"{data.CurrentPrice:N0}G";
-        if (priceDeltaText)
-        {
-            if (priceDelta >= 0)
-            {
-                priceDeltaText.text = $"▲ +{priceDelta:N0}G";
-                priceDeltaText.color = new Color32(0, 204, 0, 255);
-            }
-            else
-            {
-                priceDeltaText.text = $"▼ {priceDelta:N0}G";
-                priceDeltaText.color = new Color32(255, 68, 68, 255);
-            }
-        }
-
-        if (priceLevelText)
-        {
-            if (priceRatio >= 150f)
-            {
-                priceLevelText.text = $"基準比 {priceRatio:F0}% — 高騰中";
-                priceLevelText.color = new Color32(255, 68, 68, 255);
-            }
-            else if (priceRatio >= 110f)
-            {
-                priceLevelText.text = $"基準比 {priceRatio:F0}% — やや高め";
-                priceLevelText.color = new Color32(255, 204, 0, 255);
-            }
-            else if (priceRatio >= 90f)
-            {
-                priceLevelText.text = $"基準比 {priceRatio:F0}% — 適正価格";
-                priceLevelText.color = Color.white;
-            }
-            else if (priceRatio >= 50f)
-            {
-                priceLevelText.text = $"基準比 {priceRatio:F0}% — お買い得";
-                priceLevelText.color = new Color32(0, 204, 0, 255);
-            }
-            else
-            {
-                priceLevelText.text = $"基準比 {priceRatio:F0}% — 底値付近";
-                priceLevelText.color = new Color32(0, 204, 255, 255);
-            }
-        }
+        ApplyPrice(data, priceRatio);
 
         // ---- 在庫 ----
         if (stockText) stockText.text = $"{data.Stock}";
 
-        // ---- 売れやすさ ----
-        if (salesRateText)
-        {
-            if (data.SalesRate >= 2.0f)
-            {
-                salesRateText.text = "非常に売れやすい";
-                salesRateText.color = new Color32(255, 102, 0, 255);
-            }
-            else if (data.SalesRate >= 1.2f)
-            {
-                salesRateText.text = "売れやすい";
-                salesRateText.color = new Color32(0, 204, 0, 255);
-            }
-            else if (data.SalesRate >= 0.8f)
-            {
-                salesRateText.text = "普通";
-                salesRateText.color = Color.white;
-            }
-            else
-            {
-                salesRateText.text = "売れにくい";
-                salesRateText.color = new Color32(255, 68, 68, 255);
-            }
-        }
-
-        // ---- 仕入れ判定 ----
-        if (recommendationText)
-        {
-            if (data.Demand >= 0.6f && priceRatio <= 110f)
-            {
-                recommendationText.text = "◎ 今が仕入れ時！";
-                recommendationText.color = new Color32(0, 255, 0, 255);
-            }
-            else if (data.Demand >= 0.5f && priceRatio <= 130f)
-            {
-                recommendationText.text = "○ 悪くない";
-                recommendationText.color = new Color32(255, 204, 0, 255);
-            }
-            else if (data.Demand < 0.3f || priceRatio >= 150f)
-            {
-                recommendationText.text = "△ 見送り推奨";
-                recommendationText.color = new Color32(255, 68, 68, 255);
-            }
-            else
-            {
-                recommendationText.text = "― 様子見";
-                recommendationText.color = new Color32(170, 170, 170, 255);
-            }
-        }
+        ApplySalesRate(data);
+        ApplyRecommendation(data, priceRatio);
 
         // ---- ボタン ----
         if (confirmButtonText) confirmButtonText.text = data.ConfirmButtonText ?? "閉じる";
@@ -200,5 +71,81 @@ public class ItemPopup : MonoBehaviour
             });
         }
     }
-}
 
+    private void ApplyHeader(ItemPopUpData data)
+    {
+        if (titleText) titleText.text = data.ItemName ?? "";
+        if (iconImage && data.Icon != null) iconImage.sprite = data.Icon;
+        if (descriptionText) descriptionText.text = data.Description ?? "";
+    }
+
+    private void ApplyDemand(ItemPopUpData data)
+    {
+        float demandPct = data.Demand * 100f;
+        float prevDemandPct = data.PreviousDemand * 100f;
+        float demandDelta = demandPct - prevDemandPct;
+
+        if (demandValueText) demandValueText.text = $"{demandPct:F0}%";
+        if (demandDeltaText)
+        {
+            if (demandDelta >= 0) SetLabel(demandDeltaText, $"▲ +{demandDelta:F1}%", Green);
+            else SetLabel(demandDeltaText, $"▼ {demandDelta:F1}%", Red);
+        }
+
+        if (demandLevelText)
+        {
+            if (data.Demand >= 0.8f) SetLabel(demandLevelText, "★★★ 大人気", Orange);
+            else if (data.Demand >= 0.5f) SetLabel(demandLevelText, "★★ 好調", Yellow);
+            else if (data.Demand >= 0.3f) SetLabel(demandLevelText, "★ 普通", Gray);
+            else SetLabel(demandLevelText, "☆ 低調", Blue);
+        }
+    }
+
+    private void ApplyPrice(ItemPopUpData data, float priceRatio)
+    {
+        int priceDelta = data.CurrentPrice - data.PreviousPrice;
+
+        if (priceValueText) priceValueText.text = $"{data.CurrentPrice:N0}G";
+        if (priceDeltaText)
+        {
+            if (priceDelta >= 0) SetLabel(priceDeltaText, $"▲ +{priceDelta:N0}G", Green);
+            else SetLabel(priceDeltaText, $"▼ {priceDelta:N0}G", Red);
+        }
+
+        if (priceLevelText)
+        {
+            if (priceRatio >= 150f) SetLabel(priceLevelText, $"基準比 {priceRatio:F0}% — 高騰中", Red);
+            else if (priceRatio >= 110f) SetLabel(priceLevelText, $"基準比 {priceRatio:F0}% — やや高め", Yellow);
+            else if (priceRatio >= 90f) SetLabel(priceLevelText, $"基準比 {priceRatio:F0}% — 適正価格", Color.white);
+            else if (priceRatio >= 50f) SetLabel(priceLevelText, $"基準比 {priceRatio:F0}% — お買い得", Green);
+            else SetLabel(priceLevelText, $"基準比 {priceRatio:F0}% — 底値付近", Cyan);
+        }
+    }
+
+    private void ApplySalesRate(ItemPopUpData data)
+    {
+        if (!salesRateText) return;
+
+        if (data.SalesRate >= 2.0f) SetLabel(salesRateText, "非常に売れやすい", Orange);
+        else if (data.SalesRate >= 1.2f) SetLabel(salesRateText, "売れやすい", Green);
+        else if (data.SalesRate >= 0.8f) SetLabel(salesRateText, "普通", Color.white);
+        else SetLabel(salesRateText, "売れにくい", Red);
+    }
+
+    /// <summary>仕入れ判定（需要と基準比価格から）。</summary>
+    private void ApplyRecommendation(ItemPopUpData data, float priceRatio)
+    {
+        if (!recommendationText) return;
+
+        if (data.Demand >= 0.6f && priceRatio <= 110f) SetLabel(recommendationText, "◎ 今が仕入れ時！", BrightGreen);
+        else if (data.Demand >= 0.5f && priceRatio <= 130f) SetLabel(recommendationText, "○ 悪くない", Yellow);
+        else if (data.Demand < 0.3f || priceRatio >= 150f) SetLabel(recommendationText, "△ 見送り推奨", Red);
+        else SetLabel(recommendationText, "― 様子見", Gray);
+    }
+
+    private static void SetLabel(TMP_Text label, string text, Color color)
+    {
+        label.text = text;
+        label.color = color;
+    }
+}

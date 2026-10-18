@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEngine;
 
@@ -22,13 +23,21 @@ public sealed class RemoteConfigCache
             if (!File.Exists(_versionPath)) return -1;
             return int.TryParse(File.ReadAllText(_versionPath), out var v) ? v : -1;
         }
-        catch { return -1; }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[RemoteConfig] キャッシュ version 読み込み失敗: {e.Message}");
+            return -1;
+        }
     }
 
     public string LoadJson()
     {
         try { return File.Exists(_jsonPath) ? File.ReadAllText(_jsonPath) : null; }
-        catch { return null; }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[RemoteConfig] キャッシュ読み込み失敗: {e.Message}");
+            return null;
+        }
     }
 
     public void Save(int version, string json)
@@ -38,7 +47,7 @@ public sealed class RemoteConfigCache
             File.WriteAllText(_jsonPath, json);
             File.WriteAllText(_versionPath, version.ToString());
         }
-        catch (System.Exception e)
+        catch (Exception e)
         {
             Debug.LogWarning($"[RemoteConfig] キャッシュ保存失敗: {e.Message}");
         }

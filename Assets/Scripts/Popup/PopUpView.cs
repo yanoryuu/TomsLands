@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using VContainer;
 
 /// <summary>
@@ -16,9 +14,8 @@ using VContainer;
 /// </summary>
 public class PopUpView : MonoBehaviour
 {
-    [SerializeField] private List<Popup> popups = new List<Popup>();
-    
-    
+    [SerializeField] private List<Popup> popups = new();
+
     private PopUpManager popUpManager;
 
     /// <summary>
@@ -28,7 +25,7 @@ public class PopUpView : MonoBehaviour
     [Inject]
     public void Construct(PopUpManager manager)
     {
-        this.popUpManager = manager;
+        popUpManager = manager;
     }
 
     private void Start()
@@ -51,8 +48,6 @@ public class PopUpView : MonoBehaviour
             Debug.LogError("[PopUpView] PopUpData が設定されていません。PopUpManager.Show() を経由せずにシーンが読み込まれた可能性があります。");
             return;
         }
-        
-        Debug.Log(data.Size);
 
         foreach (var popup in popups)
         {
@@ -62,8 +57,6 @@ public class PopUpView : MonoBehaviour
                 break;
             }
         }
-        
-        
     }
 }
 

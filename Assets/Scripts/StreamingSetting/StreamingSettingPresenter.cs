@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using VContainer.Unity;
 
 public class StreamingSettingPresenter : IDisposable
 {
@@ -14,7 +13,7 @@ public class StreamingSettingPresenter : IDisposable
     private readonly BattleInputData       _battleInputData;
     private readonly IDungeonCatalog       _dungeonCatalog;
     private readonly PopUpManager          _popUpManager;
-    private readonly CompositeDisposable   _d = new CompositeDisposable();
+    private readonly CompositeDisposable   _d = new();
 
     /// <summary>
     /// 確定ボタンが押された時に完了する UniTaskCompletionSource。
@@ -52,7 +51,6 @@ public class StreamingSettingPresenter : IDisposable
 
         // 確定ボタンが押されるまで待機
         await _confirmTcs.Task;
-
 
         return _model.Selected;
     }
@@ -145,7 +143,7 @@ public class StreamingSettingPresenter : IDisposable
         _itemModel.SaveData();
         _confirmTcs?.TrySetResult();
     }
-    
+
     private void HandleSelected(string id)
     {
         // 在庫が0のアイテムは選択不可

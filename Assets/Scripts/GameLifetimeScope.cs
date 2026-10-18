@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -77,8 +76,10 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterInstance(eventOutputData);
 
         // RunSetupData（準備シーン → 新規ラン初期化の受け渡し）のロードと登録
-        var runSetupData = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData")
-                           ?? RunSetupData.GetOrCreateFallback();
+        // UnityEngine.Object なので ?? ではなく == null で判定する（破棄済みの偽 null を取りこぼさない）
+        var runSetupData = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData");
+        if (runSetupData == null)
+            runSetupData = RunSetupData.GetOrCreateFallback();
         builder.RegisterInstance(runSetupData);
 
         // ShopEconomySettings のロードと登録
@@ -366,7 +367,7 @@ public class GameLifetimeScope : LifetimeScope
         // --- 5. System Logic (Save/Delete) ---
         // セーブ削除や保存ロジックを独立したクラスとして登録
         builder.RegisterEntryPoint<GameLifecycleHandler>();
-        
+
         // 戦闘結果の処理ハンドラ（BattleScene から帰還時に自動実行）
         builder.RegisterEntryPoint<BattleResultHandler>();
 
@@ -382,7 +383,7 @@ public class GameLifetimeScope : LifetimeScope
         builder.RegisterBuildCallback(container => container.Resolve<DebugMenuView>());
 #endif
 
-        Debug.Log($"GameLifetimeScope configured.");
+        Debug.Log("GameLifetimeScope configured.");
     }
 
     /// <summary>

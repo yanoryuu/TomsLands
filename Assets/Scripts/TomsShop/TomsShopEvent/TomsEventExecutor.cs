@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class TomsEventExecutor
 {
-    private TomsModel player;
-    private ItemModel itemModel;
-    private DarkShopManager darkShopManager;
-    private EventFragManager eventFragManager;
-    private ShopStatusModel shopStatusModel;
-    private RelicInventoryModel relicInventory;
-    private RelicRewardService relicRewardService;
-    private RelicEffectResolver relicResolver;
+    private readonly TomsModel player;
+    private readonly ItemModel itemModel;
+    private readonly DarkShopManager darkShopManager;
+    private readonly EventFragManager eventFragManager;
+    private readonly ShopStatusModel shopStatusModel;
+    private readonly RelicInventoryModel relicInventory;
+    private readonly RelicRewardService relicRewardService;
+    private readonly RelicEffectResolver relicResolver;
 
     public TomsEventExecutor(TomsModel player, ItemModel itemModel, DarkShopManager darkShopManager, EventFragManager eventFragManager, ShopStatusModel shopStatusModel,
         RelicInventoryModel relicInventory, RelicRewardService relicRewardService, RelicEffectResolver relicResolver)
@@ -33,20 +33,8 @@ public class TomsEventExecutor
             switch (cmd.command)
             {
                 case "ChangeMoney":
-                {
-                    int amount = ParseIntParam(e, cmd, "amount");
-                    // レリック補正（強運ビルド: EventRewardMul）。もらえる金額のみ増幅し、ペナルティ(負値)はそのまま
-                    if (amount > 0 && relicResolver != null)
-                        amount = relicResolver.ModifyInt(RelicStatId.EventRewardMul, amount);
-                    // ペナルティ（負値）は所持金を下回らない（所持金がマイナスになると購入上限の計算や
-                    // 表示が壊れるため。払いきれない分は取り立てない）。Jev AutoPlay で検出（2026-10-05）
-                    int before = player.PlayerMoney.Value;
-                    player.PlayerMoney.Value = amount < 0 ? Mathf.Max(0, before + amount) : before + amount;
-                    if (amount < 0 && before + amount < 0)
-                        Debug.Log($"[Event] {e.id}: 支払い {-amount}G のうち {-(before + amount)}G は所持金不足のため免除");
-                    player.SavePlayerMoney();
+                    ApplyChangeMoney(player, relicResolver, e.id, ParseIntParam(e, cmd, "amount"));
                     break;
-                }
 
                 case "ChangeTrust":
                     // バズ判定・炎上判定が参照する店ステータスの信頼度を変更する
@@ -104,6 +92,24 @@ public class TomsEventExecutor
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// ChangeMoney コマンドを適用して保存する。
+    /// インライン経路（Execute）と EventScene 経路（EventScenePresenter）で同じ結果にするための共通処理。
+    /// </summary>
+    public static void ApplyChangeMoney(TomsModel player, RelicEffectResolver relicResolver, string eventId, int amount)
+    {
+        // レリック補正（強運ビルド: EventRewardMul）。もらえる金額のみ増幅し、ペナルティ(負値)はそのまま
+        if (amount > 0 && relicResolver != null)
+            amount = relicResolver.ModifyInt(RelicStatId.EventRewardMul, amount);
+        // ペナルティ（負値）は所持金を下回らない（所持金がマイナスになると購入上限の計算や
+        // 表示が壊れるため。払いきれない分は取り立てない）。Jev AutoPlay で検出（2026-10-05）
+        int before = player.PlayerMoney.Value;
+        player.PlayerMoney.Value = amount < 0 ? Mathf.Max(0, before + amount) : before + amount;
+        if (amount < 0 && before + amount < 0)
+            Debug.Log($"[Event] {eventId}: 支払い {-amount}G のうち {-(before + amount)}G は所持金不足のため免除");
+        player.SavePlayerMoney();
     }
 
     /// <summary>

@@ -8,22 +8,21 @@ public class HeroInfoView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI heroLvText;
     [SerializeField] private TextMeshProUGUI heroExpText;
     [SerializeField] private TextMeshProUGUI heroHpText;
-    // [SerializeField] private TextMeshProUGUI heroAttackText;
     [SerializeField] private TextMeshProUGUI heroMpText;
     [SerializeField] private TextMeshProUGUI clearProbabilityText;
     [SerializeField] private TextMeshProUGUI weaponText;
-    // [SerializeField] private TextMeshProUGUI heroArmorText;
     [SerializeField] private TextMeshProUGUI nextBattleDayText;
     [SerializeField] private TextMeshProUGUI heroTacticsText;
     [SerializeField] private Button purchaseButton;
     [SerializeField] private TextMeshProUGUI flavorText;
     
-    public readonly Subject<Unit> OnPurchaseButtonClicked = new Subject<Unit>();
+    public readonly Subject<Unit> OnPurchaseButtonClicked = new();
+
     private void Awake()
     {
         purchaseButton.onClick.AddListener(() => OnPurchaseButtonClicked.OnNext(Unit.Default));
     }
-    
+
     public void UpdateHeroInfo(RuntimeHeroData heroInfo, bool isPurchased)
     {
         if (!isPurchased)
@@ -48,12 +47,10 @@ public class HeroInfoView : MonoBehaviour
                 : "Exp: MAX";
         }
         heroHpText.text = $"HP: {heroInfo.hp.Value}";
-        // heroAttackText.text = $"Attack: {heroInfo.Attack}";
         heroMpText.text = $"MP: {heroInfo.mp.Value}";
         string weaponName = string.IsNullOrEmpty(heroInfo.weaponName.Value) ? "None" : heroInfo.weaponName.Value;
         string armorName = string.IsNullOrEmpty(heroInfo.armorName.Value) ? "None" : heroInfo.armorName.Value;
         weaponText.text = $"Weapon: {weaponName}\nArmor: {armorName}";
-        // heroArmorText.text = $"Armor: {heroInfo.EquippedArmor}";
         heroTacticsText.text = HeroBattleInfluence.GetDisplayName(heroInfo.tactics.Value);
         if (flavorText != null)
         {

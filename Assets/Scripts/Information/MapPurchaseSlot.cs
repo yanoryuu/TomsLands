@@ -21,21 +21,21 @@ public class MapPurchaseSlot : MonoBehaviour
 
     private DungeonName dungeonKey;
     private Image rowBackground;
+    private Selectable focusTarget;
 
     public DungeonName DungeonKey => dungeonKey;
 
     private void Awake()
     {
         // 行のどこを押しても選択できるようにする（購入は右の詳細パネルから）
-        infoButton?.onClick.AddListener(Select);
-        purchaseButton?.onClick.AddListener(Select);
+        if (infoButton != null) infoButton.onClick.AddListener(Select);
+        if (purchaseButton != null) purchaseButton.onClick.AddListener(Select);
 
         var bg = transform.Find("BackGround");
         if (bg != null)
         {
             rowBackground = bg.GetComponent<Image>();
-            var btn = bg.GetComponent<Button>();
-            if (btn == null) btn = bg.gameObject.AddComponent<Button>();
+            if (!bg.TryGetComponent<Button>(out var btn)) btn = bg.gameObject.AddComponent<Button>();
             btn.transition = Selectable.Transition.None;
             btn.onClick.AddListener(Select);
             focusTarget = btn;
@@ -45,15 +45,10 @@ public class MapPurchaseSlot : MonoBehaviour
         }
     }
 
-    private Selectable focusTarget;
-
     /// <summary>パッド/キーでこの行を選ぶときのフォーカス先（行全体のボタン）。</summary>
     public Selectable FocusTarget => focusTarget;
 
-    private void Select()
-    {
-        OnSelected.OnNext(dungeonKey);
-    }
+    private void Select() => OnSelected.OnNext(dungeonKey);
 
     public void SetMapInfo(DungeonName key, string dungeonName, Sprite sprite, int price, bool purchased, bool sellable)
     {
@@ -92,8 +87,8 @@ public class MapPurchaseSlot : MonoBehaviour
 
     private void OnDestroy()
     {
-        infoButton?.onClick.RemoveAllListeners();
-        purchaseButton?.onClick.RemoveAllListeners();
+        if (infoButton != null) infoButton.onClick.RemoveAllListeners();
+        if (purchaseButton != null) purchaseButton.onClick.RemoveAllListeners();
         OnSelected.Dispose();
     }
 }

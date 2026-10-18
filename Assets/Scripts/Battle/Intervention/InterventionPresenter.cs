@@ -100,7 +100,7 @@ public sealed class InterventionPresenter : IDisposable
         _restockSpending = restockSpending;
 
         Queue.CutIn = _refs.CutIn;
-        _sequencer?.SetInterventionQueue(Queue);
+        if (_sequencer != null) _sequencer.SetInterventionQueue(Queue);
 
         if (View != null)
         {
@@ -360,23 +360,23 @@ public sealed class InterventionPresenter : IDisposable
                 switch (hero.Type)
                 {
                     case HeroInterventionType.Heal:
-                        _sales?.AddHeat(_settings.healHeat);
+                        if (_sales != null) _sales.AddHeat(_settings.healHeat);
                         Feed?.Push(StreamingCommentTrigger.InterventionHeal, Vars());
                         break;
                     case HeroInterventionType.Skill:
-                        _sales?.AddHeat(_settings.skillHeat);
-                        _sales?.BoostItemType(ItemTypeData.ItemType.Weapon, _settings.skillWeaponDemandUp, 1f);
+                        if (_sales != null) _sales.AddHeat(_settings.skillHeat);
+                        if (_sales != null) _sales.BoostItemType(ItemTypeData.ItemType.Weapon, _settings.skillWeaponDemandUp, 1f);
                         Feed?.Push(StreamingCommentTrigger.InterventionSkill, Vars());
                         break;
                     case HeroInterventionType.Special:
-                        _sales?.AddHeat(_settings.specialHeat);
-                        _sales?.BoostItemType(ItemTypeData.ItemType.Weapon, _settings.specialWeaponDemandUp, _settings.specialWeaponPriceMul);
+                        if (_sales != null) _sales.AddHeat(_settings.specialHeat);
+                        if (_sales != null) _sales.BoostItemType(ItemTypeData.ItemType.Weapon, _settings.specialWeaponDemandUp, _settings.specialWeaponPriceMul);
                         Feed?.Push(StreamingCommentTrigger.SpecialMove, Vars());
                         break;
                 }
                 break;
             case DungeonInterventionCommand dungeon:
-                _sales?.AddHeat(_settings.dungeonInterventionHeat);
+                if (_sales != null) _sales.AddHeat(_settings.dungeonInterventionHeat);
                 var trigger = dungeon.Type switch
                 {
                     DungeonInterventionType.Trap => StreamingCommentTrigger.DungeonTrap,
@@ -401,7 +401,7 @@ public sealed class InterventionPresenter : IDisposable
         PushSuperChatComment(info);
 
         int tier = (int)info.Color + 1; // 1〜7
-        _sales?.AddHeat(_settings.heatPerTier * tier);
+        if (_sales != null) _sales.AddHeat(_settings.heatPerTier * tier);
         Audience?.Spike(_settings.viewerSpikePerTier * tier);
 
         if (info.Color == SuperChatColor.Red)
@@ -414,7 +414,7 @@ public sealed class InterventionPresenter : IDisposable
                 View?.PlayAutoTrigger(HeroInterventionType.Special); // 赤ボタンを光らせて「視聴者の赤スパで必殺技が出る」を見せる
             }
             else
-                _sales?.AddHeat(_settings.redOverLimitHeat);
+                if (_sales != null) _sales.AddHeat(_settings.redOverLimitHeat);
             RefreshButtons();
         }
         else
