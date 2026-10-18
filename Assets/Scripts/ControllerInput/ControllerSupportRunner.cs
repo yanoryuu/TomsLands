@@ -22,6 +22,8 @@ public sealed class ControllerSupportRunner : MonoBehaviour
 
     private void Awake()
     {
+        // シーンの PlayerInput が有効になる前に、軸が張り付いた汎用ジョイスティックを止めておく
+        ControllerInput.InstallJoystickFilter();
         ControllerInput.Device
             .Skip(1)
             .Subscribe(UIFocusManager.OnDeviceChanged)
@@ -45,6 +47,10 @@ public sealed class ControllerSupportRunner : MonoBehaviour
     private void OnDestroy()
     {
         disposables.Dispose();
-        if (instance == this) instance = null;
+        if (instance == this)
+        {
+            instance = null;
+            ControllerInput.UninstallJoystickFilter();
+        }
     }
 }
