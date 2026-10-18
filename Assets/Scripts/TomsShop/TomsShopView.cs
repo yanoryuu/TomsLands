@@ -48,6 +48,10 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI[] relicChoiceNameTexts;
     [SerializeField] private TextMeshProUGUI[] relicChoiceDescTexts;
     [SerializeField] private Button relicChoiceSkipButton;
+    [Tooltip("カード本体（アイコン・レア度表示・ホバー枠）。未配線なら名前/説明テキストだけ更新する")]
+    [SerializeField] private RelicChoiceSlotView[] relicChoiceSlots;
+    [Tooltip("開いたときにポップさせる外枠（任意）")]
+    [SerializeField] private RectTransform relicChoiceWindow;
 
     [Header("所持レリックバー（アイコン列） ※未配線でも動作する")]
     [Tooltip("レリックアイコンの親（HorizontalLayoutGroup推奨）。クリックで説明ポップアップ")]
@@ -92,10 +96,11 @@ public class TomsShopView : MonoBehaviour
     /// レリック獲得3択を表示する。パネル未配線なら false を返す
     /// （呼び出し側が自動獲得にフォールバック）。
     /// </summary>
-    public bool ShowRelicChoices(List<(string name, string description)> choices, string skipLabel = null)
+    public bool ShowRelicChoices(IReadOnlyList<RelicDefinition> choices, string skipLabel = null)
     {
         if (relicChoicePanel == null || relicChoiceButtons == null || relicChoiceButtons.Length == 0)
             return false;
+        choices ??= System.Array.Empty<RelicDefinition>();
 
         // 辞退ボタンの文言（「辞退して◯◯Gもらう」等）を差し替える
         if (!string.IsNullOrEmpty(skipLabel) && relicChoiceSkipButton != null)
@@ -106,24 +111,39 @@ public class TomsShopView : MonoBehaviour
 
         for (int i = 0; i < relicChoiceButtons.Length; i++)
         {
-            bool hasChoice = i < choices.Count;
+            var relic = i < choices.Count ? choices[i] : null;
+            bool hasChoice = relic != null;
             if (relicChoiceButtons[i] != null)
                 relicChoiceButtons[i].gameObject.SetActive(hasChoice);
             if (!hasChoice) continue;
 
+            var slot = relicChoiceSlots != null && i < relicChoiceSlots.Length ? relicChoiceSlots[i] : null;
+            if (slot != null)
+            {
+                // コモンは色を乗せない（レア以上・呪いだけさりげなく色付け）
+                Color? rarityColor = relic.isCurse || relic.rarity != RelicRarity.Common
+                    ? RarityColor(relic.rarity, relic.isCurse)
+                    : null;
+                slot.Setup(relic.relicName, relic.description, relic.icon, rarityColor);
+                continue;
+            }
+
+            // カード未配線: 名前/説明テキストだけ更新する（旧仮UI互換）
             if (relicChoiceNameTexts != null && i < relicChoiceNameTexts.Length && relicChoiceNameTexts[i] != null)
-                relicChoiceNameTexts[i].text = choices[i].name;
+                relicChoiceNameTexts[i].text = relic.relicName;
             if (relicChoiceDescTexts != null && i < relicChoiceDescTexts.Length && relicChoiceDescTexts[i] != null)
             {
                 // 説明文の枠超え防止: シーン側の設定に依らず折り返し＋はみ出し分は省略にする
                 var desc = relicChoiceDescTexts[i];
                 desc.textWrappingMode = TextWrappingModes.Normal;
                 desc.overflowMode = TextOverflowModes.Ellipsis;
-                desc.text = choices[i].description;
+                desc.text = relic.description;
             }
         }
 
         relicChoicePanel.SetActive(true);
+        UIFx.PanelOpen(relicChoicePanel);
+        if (relicChoiceWindow != null) UIFx.Pop(relicChoiceWindow, 0.92f, 0.22f);
         return true;
     }
 

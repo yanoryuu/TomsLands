@@ -41,10 +41,16 @@ feature/relics ブランチで実装した「レリック（ローグライト�
 
 ## 3. 配信勝利の3択パネル（TomsShopシーン）
 
-1. パネル `RelicChoicePanel` を作成（初期非アクティブ）: 選択肢ボタン×3（各ボタン内に名前/説明テキスト）+ スキップボタン。
-2. `TomsShopView` の Inspector →「レリック獲得3択」:
-   **Relic Choice Panel / Relic Choice Buttons(3) / Relic Choice Name Texts(3) / Relic Choice Desc Texts(3) / Relic Choice Skip Button** を割り当て。
-   ※ 未配線の間は勝利報酬が先頭候補の自動獲得になる（Consoleに表示）。
+1. パネル `RelicChoicePanel`（初期非アクティブ、全画面の半透明黒）は配置済み。構成:
+   `Window`（7メッセージボックス）> `Title`「レリックを1つ選ぶ」/ `Cards` > `Choice0〜2`（`Assets/Prefabs/RelicChoiceSlot.prefab`）/ `SkipButton`（文字なし0−0 + TMPラベル）。
+   - カード（`RelicChoiceSlotView`）: 6枠の地 + アイコン枠（8−0/8−1）+ 名前 + 説明ボックス（10説明ボックス）。
+     アイコンは `RelicDefinition.icon`。レア/エピック/呪いは名前色とアイコン背景にレア度色をうっすら乗せる（コモンは無色）。
+     ホバー/パッド選択で金枠（Prep_GoldFrame）+ 少し拡大。説明文は折り返し＋自動縮小（16〜28pt）＋省略。
+   - 表示時は `UIFx.PanelOpen`（フェード）+ `Window` を `UIFx.Pop`。辞退ボタンの文言は Presenter が「辞退して ◯◯G もらう」を差し込む。
+2. `TomsShopView` の Inspector →「レリック獲得3択」（配線済み）:
+   **Relic Choice Panel / Relic Choice Buttons(3) / Relic Choice Name Texts(3) / Relic Choice Desc Texts(3) / Relic Choice Skip Button / Relic Choice Slots(3) / Relic Choice Window**。
+   ※ Slots 未配線なら名前/説明テキストだけ更新（アイコン無し）。パネル未配線の間は勝利報酬が先頭候補の自動獲得になる（Consoleに表示）。
+   ※ `relicChoicePanel` / `relicChoiceButtons` は DebugAutoPlayer がリフレクション名で参照しているのでリネーム不可。
 
 ## 4. 所持レリックバー（任意）
 
