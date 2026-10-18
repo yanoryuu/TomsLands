@@ -194,6 +194,8 @@ public sealed class BattlePadTargetSelector : MonoBehaviour
     }
 
     private static readonly List<CharacterPresenter> ListPool = new();
+    // Place は開いている間毎フレーム呼ばれるので、GetComponentsInChildren の配列を作らずに済ませる
+    private static readonly List<SpriteRenderer> RendererBuffer = new();
 
     private Proxy CreateProxy()
     {
@@ -222,12 +224,14 @@ public sealed class BattlePadTargetSelector : MonoBehaviour
 
         bool any = false;
         Bounds b = default;
-        foreach (var r in view.GetComponentsInChildren<SpriteRenderer>(false))
+        view.GetComponentsInChildren(false, RendererBuffer);
+        foreach (var r in RendererBuffer)
         {
             if (!r.enabled || r.sprite == null) continue;
             if (!any) { b = r.bounds; any = true; }
             else b.Encapsulate(r.bounds);
         }
+        RendererBuffer.Clear();
         if (!any)
         {
             var col = view.GetComponentInChildren<Collider2D>();

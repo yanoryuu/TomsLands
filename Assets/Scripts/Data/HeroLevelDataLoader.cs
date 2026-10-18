@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-    
+
 public class HeroLevelDataLoader
 {
     private Dictionary<int, HeroLevelData> _levelDataMap = new Dictionary<int, HeroLevelData>();
@@ -42,13 +42,8 @@ public class HeroLevelDataLoader
         _levelDataMap = effective.ToDictionary(d => d.Level, d => d);
     }
 
-    public HeroLevelData GetLevelData(int level)
-    {
-        return _levelDataMap.TryGetValue(level, out var data) ? data : null;
-    }
+    public HeroLevelData GetLevelData(int level) =>
+        _levelDataMap.TryGetValue(level, out var data) ? data : null;
 
-    public int GetMaxLevel()
-    {
-        return _levelDataMap.Count > 0 ? _levelDataMap.Keys.Max() : 1;
-    }
+    public int GetMaxLevel() => _levelDataMap.Count > 0 ? _levelDataMap.Keys.Max() : 1;
 }

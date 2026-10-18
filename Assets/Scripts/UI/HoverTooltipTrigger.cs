@@ -43,7 +43,9 @@ public class HoverTooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointer
     public void OnPointerMove(PointerEventData e)
     {
         _pointer = e.position;
-        if (_shown) HoverTooltipView.Instance?.Move(this, _pointer);
+        if (!_shown) return;
+        var view = HoverTooltipView.Instance;
+        if (view != null) view.Move(this, _pointer);
     }
 
     public void OnPointerExit(PointerEventData e)
@@ -80,7 +82,8 @@ public class HoverTooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointer
         _timer = 0f;
         if (!_shown) return;
         _shown = false;
-        HoverTooltipView.Instance?.Hide(this);
+        var view = HoverTooltipView.Instance;
+        if (view != null) view.Hide(this);
     }
 
     private void OnDisable()

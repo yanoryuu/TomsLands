@@ -256,8 +256,5 @@ public class BuzzModeOverlayView : MonoBehaviour
             rootRect.anchoredPosition = Vector2.zero;
     }
 
-    private void OnDestroy()
-    {
-        KillTweens();
-    }
+    private void OnDestroy() => KillTweens();
 }

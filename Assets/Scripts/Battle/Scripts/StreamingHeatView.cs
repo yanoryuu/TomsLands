@@ -122,14 +122,16 @@ public class StreamingHeatView : MonoBehaviour
             .DOScale(1.06f, 0.10f).SetEase(Ease.OutQuad)
             .OnComplete(() =>
                 heatBarFill.transform
-                    .DOScale(1f, 0.22f).SetEase(Ease.OutBounce));
+                    .DOScale(1f, 0.22f).SetEase(Ease.OutBounce).SetLink(heatBarFill.gameObject))
+            .SetLink(heatBarFill.gameObject);
 
         // ラベルもフラッシュ
         if (tierLabelText != null)
         {
             tierLabelText.DOKill();
             tierLabelText.DOColor(Color.white, 0.1f)
-                .OnComplete(() => tierLabelText.DOColor(color, 0.3f));
+                .OnComplete(() => tierLabelText.DOColor(color, 0.3f).SetLink(tierLabelText.gameObject))
+                .SetLink(tierLabelText.gameObject);
         }
     }
 }

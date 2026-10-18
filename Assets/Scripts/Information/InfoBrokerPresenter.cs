@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -48,10 +49,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         stateManager.RegisterOnEnter(TomsShopGamePhase.Broker, Entry);
     }
 
-    public void Start()
-    {
-        Bind();
-    }
+    public void Start() => Bind();
 
     public void Entry()
     {
@@ -137,14 +135,13 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
     private void PurchaseDungeonInfo(DungeonName dungeonName)
     {
         var costs = infoBrokerModel.GetDungeonInfoCosts();
-        if (!costs.ContainsKey(dungeonName))
+        if (!costs.TryGetValue(dungeonName, out var costArray))
         {
             Debug.LogWarning($"[InfoBrokerPresenter] 情報料が見つかりません: {dungeonName}");
             return;
         }
 
         int battleCount = gameFlowManager.BattleCount.Value;
-        int[] costArray = costs[dungeonName];
         int cost = costArray.Length > battleCount
             ? costArray[battleCount]
             : costArray[costArray.Length - 1];
@@ -162,7 +159,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         // 弱点属性を「確定した知識」として記録する。これを持って初めて
         // 仕入れ画面のバナーと預言者が弱点を開示する（Docs/News_Spec.md §2 C4）。
         dungeonIntel?.MarkWeaknessKnown(dungeonName);
-        SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+        PlaySE("営業/SE_仕入れ完了");
 
         // リストを購入済み表示に更新し、右の詳細に解放された情報をそのまま見せる
         ShowMapInfo();
@@ -197,7 +194,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         }
 
         int nextLevel = currentLevel + 1;
-        var unlocks = new System.Collections.Generic.List<string>();
+        var unlocks = new List<string>();
         foreach (var p in portfolioModel.AllProducts)
         {
             if (p == null || p.unlockInfoBrokerLevel != nextLevel) continue;
@@ -223,7 +220,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             return;
         }
 
-        SoundManager.Instance?.PlaySE("営業/SE_開発完了");
+        PlaySE("営業/SE_開発完了");
         infoBrokerView.ShowDialogue($"いい投資だ。情報網が広がった（Lv.{prevLevel} → Lv.{tomsModel.InfoBrokerLevel.Value}）。取引所を見てみな。");
         RefreshDevelopmentPanel();
     }
@@ -231,6 +228,12 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
     public void RecordHeroPurchase(string itemId, int quantity, int price)
     {
         infoBrokerModel.RecordHeroPurchase(itemId, quantity, price);
+    }
+
+    private static void PlaySE(string key)
+    {
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE(key);
     }
 
     public void Dispose()

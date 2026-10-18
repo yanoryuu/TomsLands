@@ -20,8 +20,9 @@ public sealed class ControllerSelectRelay : MonoBehaviour, ISelectHandler, IDese
     public static ControllerSelectRelay GetOrAdd(Component target)
     {
         if (target == null) return null;
-        var relay = target.GetComponent<ControllerSelectRelay>();
-        return relay != null ? relay : target.gameObject.AddComponent<ControllerSelectRelay>();
+        return target.TryGetComponent<ControllerSelectRelay>(out var relay)
+            ? relay
+            : target.gameObject.AddComponent<ControllerSelectRelay>();
     }
 
     public void OnSelect(BaseEventData eventData)

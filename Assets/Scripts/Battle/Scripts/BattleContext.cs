@@ -60,13 +60,11 @@ public class BattleContext
         }
     }
 
-    private readonly List<CharacterPresenter> _enemyPresenters = new List<CharacterPresenter>();
+    private readonly List<CharacterPresenter> _enemyPresenters = new();
 
-    // IReadOnlyListとして、安全に公開する
     public IReadOnlyList<CharacterPresenter> EnemyPresenters => _enemyPresenters;
     public ReactiveProperty<CharacterPresenter> SelectedTarget { get; } = new();
 
-    // ★ 戦闘ルールを保持する変数
     public int TotalNormalEnemies { get; }
     public int MaxConcurrentEnemies { get; }
 
@@ -91,7 +89,7 @@ public class BattleContext
     /// <summary>現在フェーズの未出現の敵が残っていないか</summary>
     public bool CurrentPhaseQueueEmpty => _phaseSpawnQueue.Count == 0;
 
-    private readonly Queue<EnemyData> _phaseSpawnQueue = new Queue<EnemyData>();
+    private readonly Queue<EnemyData> _phaseSpawnQueue = new();
 
     /// <summary>
     /// フェーズ構成を確定する。SOの phases が未設定なら旧方式（monsters/bossName）から自動変換、
@@ -163,14 +161,11 @@ public class BattleContext
         _phaseSpawnQueue.Clear();
         if (index < 0 || index >= Phases.Count) return;
         foreach (var e in Phases[index].enemies)
-        {
             if (e != null) _phaseSpawnQueue.Enqueue(e);
-        }
     }
 
-    private readonly Dictionary<int, CharacterPresenter> occupiedSpawnPoints = new Dictionary<int, CharacterPresenter>();
+    private readonly Dictionary<int, CharacterPresenter> occupiedSpawnPoints = new();
 
-    // コンストラクタで戦闘ルールを受け取る
     public BattleContext(DungeonInfoScriptableObj stageData, int dungeonLevel, int totalEnemies, int maxConcurrent)
     {
         CurrentStage = stageData;
@@ -179,17 +174,13 @@ public class BattleContext
         MaxConcurrentEnemies = maxConcurrent;
     }
 
-    public void AddEnemy(CharacterPresenter enemy)
-    {
-        _enemyPresenters.Add(enemy);
-    }
+    public void AddEnemy(CharacterPresenter enemy) => _enemyPresenters.Add(enemy);
 
     public void RemoveEnemies(IEnumerable<CharacterPresenter> enemiesToRemove)
     {
-        foreach (var enemy in enemiesToRemove.ToList()) // ToList()で安全にループ
-        {
+        // 呼び出し側が _enemyPresenters 由来の列挙を渡しても壊れないよう、先に確定させる
+        foreach (var enemy in enemiesToRemove.ToList())
             _enemyPresenters.Remove(enemy);
-        }
     }
 
     public List<CharacterPresenter> GetAllPresenters()
@@ -205,19 +196,12 @@ public class BattleContext
         if (isBoss) return 1;
 
         for (int i = 0; i < MaxConcurrentEnemies; i++)
-        {
             if (!occupiedSpawnPoints.ContainsKey(i))
-            {
                 return i;
-            }
-        }
         return null;
     }
 
-    public void OccupySpawnPoint(int index, CharacterPresenter presenter)
-    {
-        occupiedSpawnPoints[index] = presenter;
-    }
+    public void OccupySpawnPoint(int index, CharacterPresenter presenter) => occupiedSpawnPoints[index] = presenter;
 
     public void FreeUpSpawnPoints()
     {
@@ -227,8 +211,6 @@ public class BattleContext
             .ToList();
 
         foreach (var key in deadEntries)
-        {
             occupiedSpawnPoints.Remove(key);
-        }
     }
 }

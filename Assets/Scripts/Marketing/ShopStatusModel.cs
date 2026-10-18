@@ -41,19 +41,19 @@ public class ShopStatusModel
     // =====================================================
 
     /// <summary>信頼度（0〜100）：炎上を防ぎ、ポジティブバズになりやすくする</summary>
-    public ReactiveProperty<int> Trust { get; private set; }
+    public ReactiveProperty<int> Trust { get; }
 
     /// <summary>注目度（0〜100）：バズの発生確率に影響</summary>
-    public ReactiveProperty<int> Attention { get; private set; }
+    public ReactiveProperty<int> Attention { get; }
 
     /// <summary>拡散力（0〜100）：バズ発生時の効果の大きさに影響</summary>
-    public ReactiveProperty<int> Spread { get; private set; }
+    public ReactiveProperty<int> Spread { get; }
 
     /// <summary>顧客維持力（0〜100）：バズ効果の持続ターン数に影響</summary>
-    public ReactiveProperty<int> Retention { get; private set; }
+    public ReactiveProperty<int> Retention { get; }
 
     /// <summary>フォロワー数（0以上、上限なし）</summary>
-    public ReactiveProperty<int> Followers { get; private set; }
+    public ReactiveProperty<int> Followers { get; }
 
     /// <summary>ステータスの最大値（正規化に使用）</summary>
     public int StatMax => _balanceData != null ? _balanceData.statMax : 100;

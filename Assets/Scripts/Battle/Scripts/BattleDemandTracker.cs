@@ -98,17 +98,15 @@ public class BattleDemandTracker
     /// 指定アイテムの BattleDemand を取得する。
     /// </summary>
     public float GetDemand(string itemId)
-    {
-        return _battleDemands.TryGetValue(itemId, out float demand) ? demand : 0.3f;
-    }
+        => _battleDemands.TryGetValue(itemId, out float demand) ? demand : 0.3f;
 
     /// <summary>
     /// 指定アイテムの BattleDemand を直接変更する。
     /// </summary>
     public void AdjustDemand(string itemId, float delta)
     {
-        if (!_battleDemands.ContainsKey(itemId)) return;
-        _battleDemands[itemId] = Mathf.Clamp(_battleDemands[itemId] + delta, MinDemand, MaxDemand);
+        if (!_battleDemands.TryGetValue(itemId, out float current)) return;
+        _battleDemands[itemId] = Mathf.Clamp(current + delta, MinDemand, MaxDemand);
     }
 
     /// <summary>
@@ -133,10 +131,7 @@ public class BattleDemandTracker
     /// <summary>
     /// アイテムが売れたことを記録する（ターン中に呼ぶ）。
     /// </summary>
-    public void RecordSale(string itemId)
-    {
-        _soldThisTurn.Add(itemId);
-    }
+    public void RecordSale(string itemId) => _soldThisTurn.Add(itemId);
 
     /// <summary>
     /// ターン末に呼び出す。連続販売/未販売カウンタを更新し、案Cのトレンド効果を適用する。
@@ -224,13 +219,9 @@ public class BattleDemandTracker
             EnsureTracked(item);
 
             if (ElementAttributeMapper.IsEffective(item.ItemAttribute, enemyElement))
-            {
                 AdjustDemand(item.ItemId, effectiveDelta);
-            }
             else if (ElementAttributeMapper.IsWeak(item.ItemAttribute, enemyElement))
-            {
                 AdjustDemand(item.ItemId, weakDelta);
-            }
         }
     }
 

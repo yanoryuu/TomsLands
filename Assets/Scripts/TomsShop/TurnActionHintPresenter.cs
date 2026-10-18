@@ -14,7 +14,6 @@ public class TurnActionHintPresenter : IStartable, IDisposable
     private readonly ItemModel                _itemModel;
     private readonly TomsModel                _tomsModel;
     private readonly ShopStatusModel          _shopStatus;
-    private readonly GameFlowManager          _gameFlowManager;
     private readonly StateManager             _stateManager;
     private readonly ItemSelectionPresenter   _itemSelectionPresenter;
     private readonly TurnPhaseManager         _turnPhaseManager;
@@ -36,7 +35,6 @@ public class TurnActionHintPresenter : IStartable, IDisposable
         _itemModel              = itemModel;
         _tomsModel              = tomsModel;
         _shopStatus             = shopStatus;
-        _gameFlowManager        = gameFlowManager;
         _stateManager           = stateManager;
         _itemSelectionPresenter = itemSelectionPresenter;
         _turnPhaseManager       = turnPhaseManager;

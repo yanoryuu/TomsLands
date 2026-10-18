@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 using R3;
-using System;
 
 public class SpeechBubbleManager : MonoBehaviour
 {
@@ -11,9 +10,9 @@ public class SpeechBubbleManager : MonoBehaviour
     [Tooltip("シーンに配置した2つの吹き出しオブジェクトを設定してください")]
     private List<SpeechBubble> speechBubbles;
 
-    public Subject<(SpeechBubble bubble, string message)> OnBubbleShown { get; private set; } = new();
+    public Subject<(SpeechBubble bubble, string message)> OnBubbleShown { get; } = new();
 
-    private int nextBubbleIndex = 0; // 次に使う吹き出しの番号
+    private int nextBubbleIndex;
 
     private void Awake()
     {
@@ -32,13 +31,11 @@ public class SpeechBubbleManager : MonoBehaviour
     {
         if (speechBubbles.Count == 0) return;
 
-        // 次に使う吹き出しを取得
         SpeechBubble bubbleToUse = speechBubbles[nextBubbleIndex];
 
         // 実際に表示する直前に、イベントを発行して外部に通知する
         OnBubbleShown.OnNext((bubbleToUse, message));
 
-        // 吹き出しに表示を命令
         bubbleToUse.Show(message, duration);
 
         // 次に使う番号を更新（0 → 1 → 0 → 1...と循環させる）

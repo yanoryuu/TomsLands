@@ -116,9 +116,7 @@ public class SalesBreakdown
     /// <summary>最終売上</summary>
     public int FinalRevenue;
 
-    public override string ToString()
-    {
-        return $"基本: {BaseRevenue}G × バズ: {BuzzMultiplier:F2} × フォロワー: {(1f + FollowerBonusRate):F2} × マシン: {MachineMultiplier:F2} = {FinalRevenue}G";
-    }
+    public override string ToString() =>
+        $"基本: {BaseRevenue}G × バズ: {BuzzMultiplier:F2} × フォロワー: {(1f + FollowerBonusRate):F2} × マシン: {MachineMultiplier:F2} = {FinalRevenue}G";
 }
 

@@ -60,8 +60,5 @@ public class TurnAnnounceView : MonoBehaviour
         currentSequence.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
     }
 
-    private void OnDestroy()
-    {
-        currentSequence?.Kill();
-    }
+    private void OnDestroy() => currentSequence?.Kill();
 }

@@ -47,10 +47,7 @@ public class NewsModel
     /// ダンジョンの名前・弱点と戦闘の予定を渡す（GameFlowManager がフローを組んだ後に呼ぶ）。
     /// 渡し直すと、次の Build で組み直す。
     /// </summary>
-    public void SetWorld(NewsWorld w)
-    {
-        world = w;
-    }
+    public void SetWorld(NewsWorld w) => world = w;
 
     /// <summary>周のシードからカレンダーを組む。同じシード・同じ世界で組んであれば何もしない。</summary>
     public void Build(int seed)

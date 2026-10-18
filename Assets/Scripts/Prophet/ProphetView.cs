@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using R3;
 using TMPro;
@@ -40,6 +41,11 @@ public class ProphetView : MonoBehaviour
     public Subject<string> OnRowHoverEnter { get; } = new();
     public Subject<Unit> OnRowHoverExit { get; } = new();
 
+    // パッド/キー: 開いたときはトレンドの先頭行へ（行は PointerEventBridge で選択＝ホバー扱い）
+    private UIFocusScope focusScope;
+    private readonly PendingFocus pendingFocus = new();
+    private Func<Selectable> firstRow;
+
     [VContainer.Inject]
     public void Construct(BuzzSystem buzzSystem)
     {
@@ -57,25 +63,21 @@ public class ProphetView : MonoBehaviour
         focusScope = GetComponentInParent<UIFocusScope>();
     }
 
-    // パッド/キー: 開いたときはトレンドの先頭行へ（行は PointerEventBridge で選択＝ホバー扱い）
-    private UIFocusScope focusScope;
-    private readonly PendingFocus pendingFocus = new();
-
     private void OnEnable() => pendingFocus.Request(true);
 
-    private void LateUpdate() => pendingFocus.Tick(focusScope, FirstRow);
+    // メソッドグループを毎フレーム渡すとデリゲートが作られるので、1つを使い回す
+    private void LateUpdate() => pendingFocus.Tick(focusScope, firstRow ??= FirstRow);
 
     private Selectable FirstRow()
     {
-        return ControllerFocusUtil.FirstUsable(trendRowParent)
-            ?? ControllerFocusUtil.FirstUsable(rankingRowParent)
-            ?? ControllerFocusUtil.FirstUsable(recommendedRowParent);
+        var row = ControllerFocusUtil.FirstUsable(trendRowParent);
+        if (row == null) row = ControllerFocusUtil.FirstUsable(rankingRowParent);
+        if (row == null) row = ControllerFocusUtil.FirstUsable(recommendedRowParent);
+        return row;
     }
 
-    private void RequestRowFocus(Transform parent)
-    {
+    private void RequestRowFocus(Transform parent) =>
         pendingFocus.Request(ControllerFocusUtil.IsSelectionInside(parent));
-    }
 
     public void ShowTrendRows(List<(Sprite icon, string name, float trend, float demand)> items)
     {

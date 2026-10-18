@@ -613,6 +613,9 @@ public class VillageArrivalFx : MonoBehaviour
 
     private static string FormatG(int value) => $"{value:N0}G";
 
-
-    private static void PlaySE(string key) => SoundManager.Instance?.PlaySE(key);
+    private static void PlaySE(string key)
+    {
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlaySE(key);
+    }
 }

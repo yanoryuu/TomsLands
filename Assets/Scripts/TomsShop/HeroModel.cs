@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEngine;
 
 public class HeroModel
@@ -30,15 +29,9 @@ public class HeroModel
         }
     }
 
-    public void UnequipItem(string itemId)
-    {
-        EquippedItemIds.Remove(itemId);
-    }
+    public void UnequipItem(string itemId) => EquippedItemIds.Remove(itemId);
 
-    public void ClearEquippedItems()
-    {
-        EquippedItemIds.Clear();
-    }
+    public void ClearEquippedItems() => EquippedItemIds.Clear();
 
     public void SaveHeroData()
     {
@@ -169,10 +162,7 @@ public class HeroModel
         heroData.defensePower.Value = levelData.Defense;
     }
 
-    private string GetSavePath()
-    {
-        return SaveSlotManager.GetPath(HeroDataFileName);
-    }
+    private static string GetSavePath() => SaveSlotManager.GetPath(HeroDataFileName);
 
     private void SyncEquippedItemsFromHeroData()
     {

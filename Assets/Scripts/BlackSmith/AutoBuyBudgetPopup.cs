@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using R3;
 using UnityEngine;
@@ -50,7 +51,7 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         if (strategyDropdown != null)
         {
             strategyDropdown.ClearOptions();
-            strategyDropdown.AddOptions(new System.Collections.Generic.List<string>
+            strategyDropdown.AddOptions(new List<string>
             {
                 "おすすめ順",
                 "次ダンジョン特化",
@@ -128,21 +129,18 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         gameObject.SetActive(true);
     }
 
-    public void Hide()
-    {
-        gameObject.SetActive(false);
-    }
+    public void Hide() => gameObject.SetActive(false);
 
     private void SetFullAmount()
     {
         budgetInputField.text = playerMoney.ToString();
-        SoundManager.Instance?.PlaySE("営業/SE_数の増減");
+        PlaySE("営業/SE_数の増減");
     }
 
     private void SetHalfAmount()
     {
         budgetInputField.text = (playerMoney / 2).ToString();
-        SoundManager.Instance?.PlaySE("営業/SE_数の増減");
+        PlaySE("営業/SE_数の増減");
     }
 
     private void HandleConfirm()
@@ -151,5 +149,11 @@ public class AutoBuyBudgetPopup : MonoBehaviour
             budget = 0;
         budget = Mathf.Clamp(budget, 0, playerMoney);
         OnConfirmClicked.OnNext(budget);
+    }
+
+    private static void PlaySE(string key)
+    {
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE(key);
     }
 }

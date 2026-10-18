@@ -538,11 +538,7 @@ public class ResultView : MonoBehaviour
     }
 
     private static CanvasGroup Group(RectTransform rt)
-    {
-        var cg = rt.GetComponent<CanvasGroup>();
-        if (cg == null) cg = rt.gameObject.AddComponent<CanvasGroup>();
-        return cg;
-    }
+        => rt.TryGetComponent<CanvasGroup>(out var cg) ? cg : rt.gameObject.AddComponent<CanvasGroup>();
 
     private static void Hide(RectTransform rt)
     {
@@ -567,7 +563,8 @@ public class ResultView : MonoBehaviour
     private void PlaySe(string key)
     {
         if (_skipping || string.IsNullOrEmpty(key)) return;
-        SoundManager.Instance?.PlaySE(key);
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlaySE(key);
     }
 
     private static void SetText(TextMeshProUGUI t, string s)
@@ -586,16 +583,13 @@ public class ResultView : MonoBehaviour
         return idx >= 0 && idx < rankSprites.Length ? rankSprites[idx] : null;
     }
 
-    private static Color GetRankColor(string rank)
+    private static Color GetRankColor(string rank) => rank switch
     {
-        return rank switch
-        {
-            "S" => new Color(1f, 0.84f, 0f),
-            "A" => new Color(0.9f, 0.3f, 0.3f),
-            "B" => new Color(0.3f, 0.6f, 0.9f),
-            "C" => new Color(0.3f, 0.8f, 0.3f),
-            "D" => new Color(0.5f, 0.5f, 0.5f),
-            _ => Color.white
-        };
-    }
+        "S" => new Color(1f, 0.84f, 0f),
+        "A" => new Color(0.9f, 0.3f, 0.3f),
+        "B" => new Color(0.3f, 0.6f, 0.9f),
+        "C" => new Color(0.3f, 0.8f, 0.3f),
+        "D" => new Color(0.5f, 0.5f, 0.5f),
+        _ => Color.white
+    };
 }

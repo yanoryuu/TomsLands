@@ -130,34 +130,22 @@ public class MarketingFacade : IStartable, IDisposable
     /// 広告を実行する。
     /// </summary>
     /// <returns>実行に成功した場合 true</returns>
-    public bool ExecuteAdvertisement(AdvertisementData ad)
-    {
-        return _adSystem.Execute(ad);
-    }
+    public bool ExecuteAdvertisement(AdvertisementData ad) => _adSystem.Execute(ad);
 
     /// <summary>
     /// 広告の割引後コストを取得する。
     /// </summary>
-    public int GetAdvertisementCost(AdvertisementData ad)
-    {
-        return _adSystem.GetDiscountedCost(ad);
-    }
+    public int GetAdvertisementCost(AdvertisementData ad) => _adSystem.GetDiscountedCost(ad);
 
     /// <summary>
     /// 広告が購入可能かを判定する。
     /// </summary>
-    public bool CanExecuteAdvertisement(AdvertisementData ad)
-    {
-        return _adSystem.CanExecute(ad);
-    }
+    public bool CanExecuteAdvertisement(AdvertisementData ad) => _adSystem.CanExecute(ad);
 
     /// <summary>
     /// 広告の実効上昇量（広告ごとの statMax 適用後）を取得する。
     /// </summary>
-    public AdvertisementEffect GetAdvertisementEffect(AdvertisementData ad)
-    {
-        return _adSystem.GetEffectiveGains(ad);
-    }
+    public AdvertisementEffect GetAdvertisementEffect(AdvertisementData ad) => _adSystem.GetEffectiveGains(ad);
 
     // =====================================================
     // 売上計算
@@ -167,18 +155,12 @@ public class MarketingFacade : IStartable, IDisposable
     /// 基本売上にマーケティングボーナスを適用した最終売上を計算する。
     /// TurnEndSummaryPresenter で使用する。
     /// </summary>
-    public int CalculateFinalRevenue(int baseRevenue)
-    {
-        return _salesCalculator.CalculateFinalRevenue(baseRevenue);
-    }
+    public int CalculateFinalRevenue(int baseRevenue) => _salesCalculator.CalculateFinalRevenue(baseRevenue);
 
     /// <summary>
     /// 売上の内訳情報を取得する。
     /// </summary>
-    public SalesBreakdown GetSalesBreakdown(int baseRevenue)
-    {
-        return _salesCalculator.GetBreakdown(baseRevenue);
-    }
+    public SalesBreakdown GetSalesBreakdown(int baseRevenue) => _salesCalculator.GetBreakdown(baseRevenue);
 
     // =====================================================
     // バズ結果の参照・消費
@@ -210,9 +192,6 @@ public class MarketingFacade : IStartable, IDisposable
         Debug.Log("[MarketingFacade] マーケティングシステムをリセットしました");
     }
 
-    public void Dispose()
-    {
-        _disposables.Dispose();
-    }
+    public void Dispose() => _disposables.Dispose();
 }
 

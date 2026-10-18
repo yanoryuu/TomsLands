@@ -85,31 +85,21 @@ public class TurnPhaseManager : IDisposable
     /// 詳細画面(TomsShopGamePhase)がどのフェーズに属するかを返す。
     /// ヒント絞り込みやゲート判定に使う。Shop(ホーム)は現フェーズに依存するため null を返す。
     /// </summary>
-    public TurnPhase? GetPhaseForScreen(TomsShopGamePhase screen)
+    public TurnPhase? GetPhaseForScreen(TomsShopGamePhase screen) => screen switch
     {
-        switch (screen)
-        {
-            case TomsShopGamePhase.Broker:
-            case TomsShopGamePhase.BlackSmith:
-            case TomsShopGamePhase.ToolShop:
-            case TomsShopGamePhase.DungeonLevelUp:
-            case TomsShopGamePhase.Advertisement:
-            case TomsShopGamePhase.Hero:
-            case TomsShopGamePhase.Map:
-            case TomsShopGamePhase.ShopUpgrade:
-            case TomsShopGamePhase.MachineShop:
-                return TurnPhase.Procurement;
-            case TomsShopGamePhase.Prophet:
-                return TurnPhase.Display;
-            case TomsShopGamePhase.TurnEndSummary:
-                return TurnPhase.Sales;
-            default:
-                return null; // Shop（ホーム）
-        }
-    }
+        TomsShopGamePhase.Broker
+            or TomsShopGamePhase.BlackSmith
+            or TomsShopGamePhase.ToolShop
+            or TomsShopGamePhase.DungeonLevelUp
+            or TomsShopGamePhase.Advertisement
+            or TomsShopGamePhase.Hero
+            or TomsShopGamePhase.Map
+            or TomsShopGamePhase.ShopUpgrade
+            or TomsShopGamePhase.MachineShop => TurnPhase.Procurement,
+        TomsShopGamePhase.Prophet => TurnPhase.Display,
+        TomsShopGamePhase.TurnEndSummary => TurnPhase.Sales,
+        _ => null, // Shop（ホーム）
+    };
 
-    public void Dispose()
-    {
-        CurrentTurnPhase.Dispose();
-    }
+    public void Dispose() => CurrentTurnPhase.Dispose();
 }

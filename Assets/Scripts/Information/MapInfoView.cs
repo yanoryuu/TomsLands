@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using R3;
@@ -39,6 +40,10 @@ public class MapInfoView : MonoBehaviour
     private Dictionary<DungeonName, int[]> currentCosts = new();
     private int currentTurnForCost = 1;
     private DungeonName? selectedKey;
+
+    private readonly PendingFocus pendingFocus = new();
+    private UIFocusScope focusScope;
+    private Func<Selectable> rowFocusTarget;
 
     private void Awake()
     {
@@ -94,14 +99,18 @@ public class MapInfoView : MonoBehaviour
         if (refocusRow) pendingFocus.Request(true);
     }
 
-    private readonly PendingFocus pendingFocus = new();
-
-    private UIFocusScope focusScope;
-
     private void LateUpdate()
     {
         if (focusScope == null) focusScope = GetComponentInParent<UIFocusScope>();
-        pendingFocus.Tick(focusScope, () => SelectedRowTarget() ?? FirstRowTarget());
+        // ラムダを毎フレーム作らないよう、1つを使い回す
+        pendingFocus.Tick(focusScope, rowFocusTarget ??= SelectedOrFirstRowTarget);
+    }
+
+    /// <summary>選択中ダンジョンの行、無ければ先頭行のフォーカス先（パッド/キー用。無ければ null）。</summary>
+    public Selectable SelectedOrFirstRowTarget()
+    {
+        var row = SelectedRowTarget();
+        return row != null ? row : FirstRowTarget();
     }
 
     /// <summary>先頭行のフォーカス先（パッド/キー用。無ければ null）。</summary>

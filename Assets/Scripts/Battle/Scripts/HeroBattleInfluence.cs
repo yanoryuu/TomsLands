@@ -3,8 +3,7 @@ using UnityEngine;
 public static class HeroBattleInfluence
 {
     public static float GetWeaponPerformanceMultiplier(HeroTactics tactics)
-    {
-        return tactics switch
+        => tactics switch
         {
             HeroTactics.Aggressive => 1.20f,
             HeroTactics.Defensive => 0.90f,
@@ -12,11 +11,9 @@ public static class HeroBattleInfluence
             HeroTactics.MagicFocused => 0.95f,
             _ => 1.00f
         };
-    }
 
     public static float GetArmorPerformanceMultiplier(HeroTactics tactics)
-    {
-        return tactics switch
+        => tactics switch
         {
             HeroTactics.Defensive => 1.20f,
             HeroTactics.Aggressive => 0.90f,
@@ -24,22 +21,18 @@ public static class HeroBattleInfluence
             HeroTactics.MagicFocused => 0.95f,
             _ => 1.00f
         };
-    }
 
     public static float GetAttributeMultiplier(HeroTactics tactics)
-    {
-        return tactics switch
+        => tactics switch
         {
             HeroTactics.MagicFocused => 1.20f,
             HeroTactics.Aggressive => 1.05f,
             HeroTactics.Stealth => 0.90f,
             _ => 1.00f
         };
-    }
 
     public static float GetHeatMultiplier(HeroTactics tactics)
-    {
-        return tactics switch
+        => tactics switch
         {
             HeroTactics.Aggressive => 1.15f,
             HeroTactics.Defensive => 0.95f,
@@ -47,11 +40,9 @@ public static class HeroBattleInfluence
             HeroTactics.MagicFocused => 1.05f,
             _ => 1.00f
         };
-    }
 
     public static string GetDisplayName(HeroTactics tactics)
-    {
-        return tactics switch
+        => tactics switch
         {
             HeroTactics.Aggressive => "攻撃重視",
             HeroTactics.Defensive => "防御重視",
@@ -59,7 +50,6 @@ public static class HeroBattleInfluence
             HeroTactics.MagicFocused => "属性重視",
             _ => "バランス"
         };
-    }
 
     public static string BuildSummary(
         RuntimeHeroData hero,
@@ -90,44 +80,28 @@ public static class HeroBattleInfluence
     }
 
     public static float GetWeaponPriceUpOnKill(BattlePriceSettings settings, HeroTactics tactics)
-    {
-        return ApplyPositiveMultiplier(settings != null ? settings.weaponPriceUpOnHit : 1.10f, GetWeaponPerformanceMultiplier(tactics));
-    }
+        => ApplyPositiveMultiplier(settings != null ? settings.weaponPriceUpOnHit : 1.10f, GetWeaponPerformanceMultiplier(tactics));
 
     public static float GetWeaponPriceDownOnNonKill(BattlePriceSettings settings, HeroTactics tactics)
-    {
-        return ApplyNegativeMultiplier(settings != null ? settings.weaponPriceDownOnNonKill : 0.95f, GetWeaponPerformanceMultiplier(tactics));
-    }
+        => ApplyNegativeMultiplier(settings != null ? settings.weaponPriceDownOnNonKill : 0.95f, GetWeaponPerformanceMultiplier(tactics));
 
     public static float GetArmorPriceUpOnBlock(BattlePriceSettings settings, HeroTactics tactics)
-    {
-        return ApplyPositiveMultiplier(settings != null ? settings.armorPriceUpOnBlock : 1.10f, GetArmorPerformanceMultiplier(tactics));
-    }
+        => ApplyPositiveMultiplier(settings != null ? settings.armorPriceUpOnBlock : 1.10f, GetArmorPerformanceMultiplier(tactics));
 
     public static float GetArmorPriceDownOnHit(BattlePriceSettings settings, HeroTactics tactics)
-    {
-        return ApplyNegativeMultiplier(settings != null ? settings.armorPriceDownOnHit : 0.90f, GetArmorPerformanceMultiplier(tactics));
-    }
+        => ApplyNegativeMultiplier(settings != null ? settings.armorPriceDownOnHit : 0.90f, GetArmorPerformanceMultiplier(tactics));
 
     public static float GetEffectiveAttributeRate(BattlePriceSettings settings, HeroTactics tactics)
-    {
-        return ApplyPositiveMultiplier(settings != null ? settings.effectiveAttributeRate : 1.30f, GetAttributeMultiplier(tactics));
-    }
+        => ApplyPositiveMultiplier(settings != null ? settings.effectiveAttributeRate : 1.30f, GetAttributeMultiplier(tactics));
 
     public static float GetWeakAttributeRate(BattlePriceSettings settings, HeroTactics tactics)
-    {
-        return ApplyNegativeMultiplier(settings != null ? settings.weakAttributeRate : 0.85f, GetAttributeMultiplier(tactics));
-    }
+        => ApplyNegativeMultiplier(settings != null ? settings.weakAttributeRate : 0.85f, GetAttributeMultiplier(tactics));
 
     private static float ApplyPositiveMultiplier(float baseRate, float multiplier)
-    {
-        return 1f + ((baseRate - 1f) * multiplier);
-    }
+        => 1f + ((baseRate - 1f) * multiplier);
 
     private static float ApplyNegativeMultiplier(float baseRate, float multiplier)
-    {
-        return Mathf.Clamp(1f - ((1f - baseRate) * multiplier), 0f, 10f);
-    }
+        => Mathf.Clamp(1f - ((1f - baseRate) * multiplier), 0f, 10f);
 
     private static string FormatRate(float rate)
     {

@@ -114,13 +114,7 @@ public class RestockQuantityPopup : MonoBehaviour
         return result;
     }
 
-    private void Close(int result)
-    {
-        _tcs?.TrySetResult(result);
-    }
+    private void Close(int result) => _tcs?.TrySetResult(result);
 
-    private void OnDestroy()
-    {
-        _showDisposables?.Dispose();
-    }
+    private void OnDestroy() => _showDisposables?.Dispose();
 }

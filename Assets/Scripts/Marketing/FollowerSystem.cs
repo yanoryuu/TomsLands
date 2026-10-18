@@ -122,10 +122,7 @@ public class FollowerSystem
     /// <summary>
     /// 全マイルストーンのリストを取得する（UI表示用）。
     /// </summary>
-    public IReadOnlyList<FollowerMilestoneData> GetAllMilestones()
-    {
-        return _milestones;
-    }
+    public IReadOnlyList<FollowerMilestoneData> GetAllMilestones() => _milestones;
 
     /// <summary>
     /// 指定フォロワー数でのマイルストーン達成状況を確認する（デバッグ用）。

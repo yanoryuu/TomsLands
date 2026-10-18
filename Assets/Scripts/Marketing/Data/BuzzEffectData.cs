@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// バズの種類を定義する列挙型
@@ -104,10 +103,8 @@ public class BuzzEffectData : ScriptableObject
     /// 即時売上倍率を計算する
     /// 計算式: 基礎値 + (拡散力 × 拡散力係数)
     /// </summary>
-    public float CalculateRevenueMultiplier(int spreadPower)
-    {
-        return immediateRevenueMultiplierBase + spreadPower * immediateRevenueSpreadCoeff;
-    }
+    public float CalculateRevenueMultiplier(int spreadPower) =>
+        immediateRevenueMultiplierBase + spreadPower * immediateRevenueSpreadCoeff;
 
     /// <summary>
     /// 即時フォロワー変化量を計算する

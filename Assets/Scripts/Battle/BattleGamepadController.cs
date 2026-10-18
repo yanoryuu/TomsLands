@@ -256,14 +256,14 @@ public sealed class BattleGamepadController : MonoBehaviour
     {
         if (from.CurrentItem == null)
         {
-            var root = from.GetComponentInParent<Canvas>()?.rootCanvas;
+            var root = RootCanvasOf(from);
             ItemSlotView best = null;
             float bestDist = float.MaxValue;
             foreach (var s in FindObjectsByType<ItemSlotView>(FindObjectsSortMode.None))
             {
                 if (s == from || !s.isActiveAndEnabled || s.CurrentItem == null) continue;
                 if (sales.GetSlotIndex(s) >= 0) continue;
-                if (root != null && s.GetComponentInParent<Canvas>()?.rootCanvas != root) continue;
+                if (root != null && RootCanvasOf(s) != root) continue;
                 float d = (s.transform.position - from.transform.position).sqrMagnitude;
                 if (d < bestDist) { bestDist = d; best = s; }
             }
@@ -281,6 +281,13 @@ public sealed class BattleGamepadController : MonoBehaviour
         var ev = new PointerEventData(es);
         ExecuteEvents.Execute(from.gameObject, ev, ExecuteEvents.pointerExitHandler);
         ExecuteEvents.Execute(from.gameObject, ev, ExecuteEvents.pointerEnterHandler);
+    }
+
+    // UnityEngine.Object に ?. は使わない
+    private static Canvas RootCanvasOf(Component c)
+    {
+        var canvas = c.GetComponentInParent<Canvas>();
+        return canvas != null ? canvas.rootCanvas : null;
     }
 
     private static void PressButton(Button button)

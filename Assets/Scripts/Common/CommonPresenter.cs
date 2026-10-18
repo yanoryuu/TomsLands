@@ -1,10 +1,9 @@
 using System;
-using UnityEngine;
 using R3;
 using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
-public class CommonPresenter:IStartable,IDisposable
+public class CommonPresenter : IStartable, IDisposable
 {
     private const string SettingSceneName = "Setting";
 
@@ -12,7 +11,7 @@ public class CommonPresenter:IStartable,IDisposable
     private readonly TomsModel tomsModel;
     private readonly SellOrderModel sellOrderModel;
     private readonly MarketingFacade marketingFacade;
-    private CompositeDisposable disposables = new();
+    private readonly CompositeDisposable disposables = new();
 
     // メニュー（Setting）シーンのロード中フラグ。連打による多重加算ロードを防ぐ。
     private bool isMenuTransitioning;
@@ -24,36 +23,21 @@ public class CommonPresenter:IStartable,IDisposable
         this.sellOrderModel = sellOrderModel;
         this.marketingFacade = marketingFacade;
     }
-    
-    public void Start()
-    {
-        Bind();
-    }
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
-    
+
+    public void Start() => Bind();
+
+    public void Dispose() => disposables.Dispose();
+
     private void Bind()
     {
-        
-        Debug.Log("CommonPresenter.Bind");
         // 所持金更新（ModelのデータからViewへ）
         tomsModel.PlayerMoney
-            .Subscribe(money =>
-            {
-                Debug.Log($"PlayerMoney: {money}");
-                commonView.UpdatePlayerMoney(money);
-            })
+            .Subscribe(money => commonView.UpdatePlayerMoney(money))
             .AddTo(disposables);
-        
+
         // 現在のターン更新（ModelのデータからViewへ）。
         // バズ中は残りターン数も併記する（バズ演出側の表記が小さく初見で伝わりにくいため）
-        tomsModel.CurrentTurn.Subscribe(date =>
-            {
-                Debug.Log($"CurrentTurn: {date}");
-                RefreshTurnText();
-            })
+        tomsModel.CurrentTurn.Subscribe(_ => RefreshTurnText())
             .AddTo(disposables);
 
         var buzz = marketingFacade?.Buzz;

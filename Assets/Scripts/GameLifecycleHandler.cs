@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using VContainer;
 using VContainer.Unity;
 
 /// <summary>
@@ -151,7 +150,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         GameModeId mode = _startModeData.SelectedMode;
         int seed = GameConst.FlowGeneration.randomSeed != 0
             ? GameConst.FlowGeneration.randomSeed
-            : unchecked((int)System.DateTime.Now.Ticks);
+            : unchecked((int)DateTime.Now.Ticks);
 
         _tomsModel.UseAutoFlow = useAuto;
         _tomsModel.GameMode = mode;

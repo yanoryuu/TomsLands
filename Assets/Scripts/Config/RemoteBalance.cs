@@ -65,11 +65,11 @@ public static class RemoteBalance
         // リスト区画（全て "id" 項目で突合。id は実SOフィールドではないので FromJsonOverwrite では無視される）
         foreach (var section in ListSections)
         {
-            if (!(root[section] is JArray arr)) continue;
+            if (root[section] is not JArray arr) continue;
             var map = new Dictionary<string, string>();
             foreach (var el in arr)
             {
-                if (!(el is JObject eo)) continue;
+                if (el is not JObject eo) continue;
                 var idTok = eo["id"];
                 if (idTok == null) continue;
                 map[idTok.ToString()] = eo.ToString(Newtonsoft.Json.Formatting.None);
@@ -97,7 +97,7 @@ public static class RemoteBalance
             var list = new List<TomsEvent>();
             foreach (var el in ev)
             {
-                if (!(el is JObject eo)) continue;
+                if (el is not JObject eo) continue;
 
                 string id = eo.Value<string>("id");
                 string title = eo.Value<string>("title");

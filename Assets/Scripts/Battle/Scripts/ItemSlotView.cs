@@ -38,18 +38,16 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     private Tweener arrowTweener;
 
     // 元のローカル位置を保存（矢印の累積移動を防ぐ）
-    private Vector3? arrowOriginalLocalPos = null;
+    private Vector3? arrowOriginalLocalPos;
 
-    void Awake()
+    private void Awake()
     {
         if (parentCanvas == null)
-        {
             parentCanvas = GetComponentInParent<Canvas>();
-        }
 
         // パッド/キー: 選択でホバー表示（矢印・価格）、A でクリック（価格グラフ・補充）を転送する。
         // マウス操作中は何もしない（PointerEventBridge 側で判定）
-        if (GetComponent<PointerEventBridge>() == null) gameObject.AddComponent<PointerEventBridge>();
+        if (!TryGetComponent<PointerEventBridge>(out _)) gameObject.AddComponent<PointerEventBridge>();
 
         if (arrowImage != null)
         {
@@ -57,15 +55,12 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             arrowOriginalLocalPos = arrowImage.rectTransform.localPosition;
         }
         if (priceTargetText != null)
-        {
             priceTargetText.gameObject.SetActive(false);
-        }
     }
 
     public void SetItem(RuntimeItemData item)
     {
         CurrentItem = item;
-        
 
         if (item != null)
         {
@@ -103,13 +98,9 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             if (stockText != null) stockText.gameObject.SetActive(false);
         }
 
-        // canvasGroup の alpha もリセット
         if (canvasGroup != null)
-        {
             canvasGroup.alpha = 1.0f;
-        }
     }
-
 
     public void UpdateStock(int stock)
     {
@@ -151,6 +142,7 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (itemIcon != null)
             seq.Join(itemIcon.DOColor(Color.white, 0.25f));
         seq.Join(canvasGroup.DOFade(1f, 0.2f));
+        seq.SetLink(gameObject);
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -218,7 +210,9 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnDrop(PointerEventData eventData)
     {
-        var fromSlot = eventData.pointerDrag?.GetComponent<ItemSlotView>();
+        // UnityEngine.Object に ?. は使わない
+        var dragObj = eventData.pointerDrag;
+        var fromSlot = dragObj != null ? dragObj.GetComponent<ItemSlotView>() : null;
 
         if (fromSlot == null || fromSlot == this) return;
         OnItemDropped?.Invoke(fromSlot, this);
@@ -241,7 +235,7 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
             float offset = 8f;
             float targetY = (arrowOriginalLocalPos?.y ?? rt.localPosition.y) + offset;
-            arrowTweener = rt.DOLocalMoveY(targetY, 0.45f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+            arrowTweener = rt.DOLocalMoveY(targetY, 0.45f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine).SetLink(gameObject);
         }
 
         // CurrentItem が null なら価格表示をスキップ
@@ -253,12 +247,9 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         // priceTargetText が設定されていない場合もスキップ
         if (priceTargetText == null) return;
 
-        // 価格表示
-        string priceStr = $"{CurrentItem.CurrentPrice.Value} G";
-        priceTargetText.text = priceStr;
+        priceTargetText.text = $"{CurrentItem.CurrentPrice.Value} G";
         priceTargetText.gameObject.SetActive(true);
     }
-
 
     public void OnPointerClick(PointerEventData eventData)
     {

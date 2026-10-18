@@ -34,19 +34,16 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
         icon.sprite = sprite;
         if (nameText != null) nameText.text = displayName;
 
-        // スライダー設定
         qtySlider.wholeNumbers = true;
         qtySlider.minValue = 1;
         qtySlider.maxValue = maxQty;
         qtySlider.value = Mathf.Clamp(initialQty, 1, maxQty);
 
-        // 初期表示
         if (amountText != null)
             amountText.text = qtySlider.value.ToString();
         if (stockText != null)
             stockText.text = $"在庫: {maxQty}";
 
-        // スライダー値変更時のイベント登録
         qtySlider.onValueChanged.AddListener(v =>
         {
             if (_suppress) return;
@@ -57,7 +54,6 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
             UpdateButtonsInteractable();
         });
 
-        // +/-ボタン
         if (plusButton) plusButton.onClick.AddListener(() => Step(+1));
         if (minusButton) minusButton.onClick.AddListener(() => Step(-1));
 
@@ -123,8 +119,9 @@ public class SelectedItemSlot : MonoBehaviour, IPointerClickHandler
 
     private void OnDestroy()
     {
-        qtySlider?.onValueChanged.RemoveAllListeners();
-        plusButton?.onClick.RemoveAllListeners();
-        minusButton?.onClick.RemoveAllListeners();
+        // UnityEngine.Object に ?. は使わない（破棄済みの偽 null を見逃す）
+        if (qtySlider != null) qtySlider.onValueChanged.RemoveAllListeners();
+        if (plusButton != null) plusButton.onClick.RemoveAllListeners();
+        if (minusButton != null) minusButton.onClick.RemoveAllListeners();
     }
 }

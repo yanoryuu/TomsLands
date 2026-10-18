@@ -27,15 +27,9 @@ public class ButtonClicked : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
         isPressed = true;
     }
 
-    public void OnPointerUp(PointerEventData eventData)
-    {
-        Restore();
-    }
+    public void OnPointerUp(PointerEventData eventData) => Restore();
 
-    private void OnDisable()
-    {
-        Restore();
-    }
+    private void OnDisable() => Restore();
 
     private void Restore()
     {
@@ -46,8 +40,7 @@ public class ButtonClicked : MonoBehaviour, IPointerDownHandler, IPointerUpHandl
 
     private bool HasColorTint()
     {
-        var selectable = GetComponent<Selectable>();
-        return selectable != null
+        return TryGetComponent<Selectable>(out var selectable)
                && selectable.transition == Selectable.Transition.ColorTint
                && selectable.targetGraphic == buttonImage;
     }

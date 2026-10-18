@@ -21,15 +21,7 @@ public class StreamingSalesView : MonoBehaviour
         Debug.Log($"【StreamingSalesView】DisplayItemsが呼ばれました。現在商品数: {items.Count}");
         for (int i = 0; i < itemSlots.Count; i++)
         {
-            if (i < items.Count)
-            {
-                var item = items[i];
-                itemSlots[i].SetItem(item);
-            }
-            else
-            {
-                itemSlots[i].SetItem(null);
-            }
+            itemSlots[i].SetItem(i < items.Count ? items[i] : null);
         }
     }
 
@@ -45,10 +37,7 @@ public class StreamingSalesView : MonoBehaviour
     /// <summary>売り場スロット（左から順）。パッドの「X で並べる」の置き先探しに使う。</summary>
     public IReadOnlyList<ItemSlotView> ItemSlots => itemSlots;
 
-    public int GetSlotIndex(ItemSlotView slot)
-    {
-        return itemSlots.IndexOf(slot);
-    }
+    public int GetSlotIndex(ItemSlotView slot) => itemSlots.IndexOf(slot);
 
     /// <summary>
     /// 特定のスロットで、売れたアニメーションを再生

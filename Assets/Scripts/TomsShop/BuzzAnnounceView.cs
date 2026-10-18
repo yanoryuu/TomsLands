@@ -212,19 +212,13 @@ public class BuzzAnnounceView : MonoBehaviour
             buzzDescriptionText.alpha = 1f;
     }
 
-    private string GetBuzzTypeLabel(BuzzType buzzType)
+    private static string GetBuzzTypeLabel(BuzzType buzzType) => buzzType switch
     {
-        return buzzType switch
-        {
-            BuzzType.Flame => "炎上",
-            BuzzType.Normal => "バズ",
-            BuzzType.Big => "超バズ",
-            _ => "バズ"
-        };
-    }
+        BuzzType.Flame => "炎上",
+        BuzzType.Normal => "バズ",
+        BuzzType.Big => "超バズ",
+        _ => "バズ"
+    };
 
-    private void OnDestroy()
-    {
-        _currentSequence?.Kill();
-    }
+    private void OnDestroy() => _currentSequence?.Kill();
 }

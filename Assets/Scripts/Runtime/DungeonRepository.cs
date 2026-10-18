@@ -1,4 +1,3 @@
-// csharp
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -36,16 +35,9 @@ public class DungeonRepository : MonoBehaviour
         }
     }
 
-    public DungeonCatalog CreateCatalog()
-    {
-        var catalog = new DungeonCatalog(dungeonInfos);
-        return catalog;
-    }
+    public DungeonCatalog CreateCatalog() => new(dungeonInfos);
 
-    public void SetCatalog(IDungeonCatalog catalog)
-    {
-        this.catalog = catalog;
-    }
+    public void SetCatalog(IDungeonCatalog catalog) => this.catalog = catalog;
 
     public void InitializeFromScriptables(List<DungeonInfoScriptableObj> sources)
     {

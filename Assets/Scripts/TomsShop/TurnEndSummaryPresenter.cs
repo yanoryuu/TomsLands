@@ -57,7 +57,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
             .Subscribe(_ => gameFlowManager.NextTurn())
             .AddTo(disposables);
     }
-    
+
     /// <summary>
     /// TurnEndSummaryフェーズに入った時に呼ばれる。
     /// 【売り注文制】①昨日以前の売り注文を約定して入金 → ②今日の陳列分を全量「売り注文」化
@@ -152,20 +152,20 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         // 資金効率 (0~1): 今日仕入れに投じた額に対して、どれだけ売り注文（見込み額）に変えられたか
         int spend = tomsModel.TurnProcurementSpend;
         float capitalEfficiency = spend > 0
-            ? UnityEngine.Mathf.Clamp01((float)pendingEstimate / spend)
+            ? Mathf.Clamp01((float)pendingEstimate / spend)
             : (pendingEstimate > 0 ? 1f : 0f);
 
         // 需要対応力 (0~1): 需要が高いアイテム(Demand>=0.7)を何品品出しできていたか
         // 高需要品がないターンは満点扱い
         float demandResponse = trendUpTotal > 0
-            ? UnityEngine.Mathf.Clamp01((float)trendUpDisplayed / trendUpTotal)
+            ? Mathf.Clamp01((float)trendUpDisplayed / trendUpTotal)
             : 1f;
 
         // バズ活用度 (0~1): 本日の約定入金に適用されたマーケティング倍率（2倍で満点）
         float buzzMultiplier = settlement != null && settlement.BaseIncome > 0
             ? (float)settlement.TotalIncome / settlement.BaseIncome
             : (marketingFacade != null ? marketingFacade.CalculateFinalRevenue(1000) / 1000f : 1f);
-        float buzzScore = UnityEngine.Mathf.Clamp01((buzzMultiplier - 1f) / 1f);
+        float buzzScore = Mathf.Clamp01((buzzMultiplier - 1f) / 1f);
 
         float score = capitalEfficiency * 0.4f + demandResponse * 0.35f + buzzScore * 0.25f;
 
@@ -195,10 +195,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     /// サマリーパネルを表示する。
     /// TomsShopPresenter から営業フェーズの「営業開始」演出完了時に呼ばれる。
     /// </summary>
-    public void ShowSummary()
-    {
-        stateManager.ChangeTomsShopPhase(TomsShopGamePhase.TurnEndSummary);
-    }
+    public void ShowSummary() => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.TurnEndSummary);
 
     /// <summary>
     /// 品出し中のアイテムから売上データを集計する。
@@ -261,9 +258,6 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         return result;
     }
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }
 

@@ -23,10 +23,9 @@ public class DungeonInfoView : MonoBehaviour
     [SerializeField] private Transform dungeonMonsterBarTransform;
     
     //ダンジョンに出現するモンスター表示用パネルをまとめる
-    private List<GameObject> dungeonMonsterPanels = new List<GameObject>();
-    
-    
-    public Subject<Unit> OnCloseRequested { get; private set; } = new();
+    private readonly List<GameObject> dungeonMonsterPanels = new();
+
+    public Subject<Unit> OnCloseRequested { get; } = new();
     
     private void Awake()
     {
@@ -40,14 +39,11 @@ public class DungeonInfoView : MonoBehaviour
         dungeonInfoPanel.SetActive(true);
     }
 
-    public void HideDungeonInfo()
-    {
-        dungeonInfoPanel.SetActive(false);
-    }
+    public void HideDungeonInfo() => dungeonInfoPanel.SetActive(false);
 
-    private void SetDungeonInfo(DungeonData　d, float clearProbability)
+    private void SetDungeonInfo(DungeonData d, float clearProbability)
     {
-        if(d==null)return;
+        if (d == null) return;
 
         dungeonNameImage.sprite = d.dungeonNameImage;
         if (dungeonIconImage) dungeonIconImage.sprite = d.dungeonIcon;
@@ -67,14 +63,8 @@ public class DungeonInfoView : MonoBehaviour
         }
 
         //すでにある前のモンスターデータを削除
-        if (dungeonMonsterPanels.Count > 0)
-        {
-            foreach (var panel in dungeonMonsterPanels)
-            {
-                Destroy(panel);
-            }
-            dungeonMonsterPanels = new();
-        }
+        foreach (var panel in dungeonMonsterPanels) Destroy(panel);
+        dungeonMonsterPanels.Clear();
         
         // 情報購入済みの場合のみモンスター情報を表示
         if (d.isShowedInfo)

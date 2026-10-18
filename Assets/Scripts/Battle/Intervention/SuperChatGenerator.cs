@@ -107,8 +107,8 @@ public sealed class SuperChatGenerator : IDisposable
 
     public SuperChatColor PickColor(int viewers, bool superBuzz)
     {
+        const int n = 7; // SuperChatColor の色数
         var w = _settings.colorWeights;
-        int n = 7;
         float[] weights = new float[n];
         float viewerFactor = Mathf.Max(0, viewers) / Mathf.Max(1f, _settings.redViewerReference);
         for (int i = 0; i < n; i++)

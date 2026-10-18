@@ -8,14 +8,14 @@ public class CharacterView : MonoBehaviour
 {
     [Header("コンポーネント参照")]
     [SerializeField] private SpriteRenderer characterSpriteRenderer;
-    [SerializeField] private CharacterStatusView statusView; // ★ CharacterStatusViewへの参照を持つ
+    [SerializeField] private CharacterStatusView statusView;
     [Tooltip("SPUM のドットキャラで表示する場合に設定（勇者）。設定時は SPUM の子レンダラー全部を点滅・赤フラッシュさせ、待機/攻撃/被弾アニメを再生する")]
     [SerializeField] private SPUM_Prefabs spumCharacter;
 
     private SpriteRenderer[] bodyRenderers;
     private SpriteRenderer[] flashRenderers;
     private bool spumReady;
-    private readonly CompositeDisposable subscriptions = new CompositeDisposable();
+    private readonly CompositeDisposable subscriptions = new();
 
     /// <summary>キャラ本体の見た目を構成するレンダラー（死亡時の点滅で一緒に消す）。SPUM なら影も含む子レンダラー全部。</summary>
     public SpriteRenderer[] BodyRenderers
@@ -46,15 +46,12 @@ public class CharacterView : MonoBehaviour
         }
         else
         {
-            bodyRenderers = characterSpriteRenderer != null ? new[] { characterSpriteRenderer } : new SpriteRenderer[0];
+            bodyRenderers = characterSpriteRenderer != null ? new[] { characterSpriteRenderer } : System.Array.Empty<SpriteRenderer>();
             flashRenderers = bodyRenderers;
         }
     }
 
-    private void OnDestroy()
-    {
-        subscriptions.Dispose();
-    }
+    private void OnDestroy() => subscriptions.Dispose();
 
     private void PlaySpum(PlayerState state)
     {
@@ -62,8 +59,8 @@ public class CharacterView : MonoBehaviour
         spumCharacter.PlayAnimation(state, 0);
     }
 
-    // このViewがクリックされたことをPresenterに通知するための仕組み
-    public Subject<Unit> OnClicked { get; } = new Subject<Unit>();
+    /// <summary>このキャラがクリックされた（Presenter が購読する）。</summary>
+    public Subject<Unit> OnClicked { get; } = new();
 
     /// <summary>
     /// Presenterからの指示で初期設定を行う
@@ -88,19 +85,13 @@ public class CharacterView : MonoBehaviour
             characterSpriteRenderer.sprite = sprite;
         }
 
-        // ★ CharacterStatusViewにも初期化を指示
-        //    Presenterを渡して、UIのイベント購読などを設定させる
         statusView.Initialize(presenter);
     }
 
     /// <summary>
     /// Presenterからの指示でダメージエフェクトの再生を命令する
     /// </summary>
-    public void PlayDamageEffect(int damageAmount)
-    {
-        // ★ CharacterStatusViewが持つエフェクト再生処理を呼び出す
-        statusView.PlayDamageEffects(damageAmount);
-    }
+    public void PlayDamageEffect(int damageAmount) => statusView.PlayDamageEffects(damageAmount);
 
     /// <summary>
     /// 死亡時の点滅演出を再生し、最後に非表示にする。
@@ -168,9 +159,5 @@ public class CharacterView : MonoBehaviour
         await UniTask.Delay(System.TimeSpan.FromSeconds(forward), cancellationToken: token);
     }
 
-    // マウスクリックを検知してPresenterに通知する
-    private void OnMouseDown()
-    {
-        OnClicked.OnNext(Unit.Default);
-    }
+    private void OnMouseDown() => OnClicked.OnNext(Unit.Default);
 }

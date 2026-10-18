@@ -130,10 +130,9 @@ public static class ControllerInput
         var es = EventSystem.current;
         var go = es != null ? es.currentSelectedGameObject : null;
         if (go == null) return false;
-        var tmp = go.GetComponent<TMP_InputField>();
-        if (tmp != null && tmp.isFocused) return true;
-        var legacy = go.GetComponent<UnityEngine.UI.InputField>();
-        return legacy != null && legacy.isFocused;
+        // 毎フレーム呼ばれるので GetComponent ではなく TryGetComponent（Editor で null 用の割り当てが出ない）
+        if (go.TryGetComponent<TMP_InputField>(out var tmp) && tmp.isFocused) return true;
+        return go.TryGetComponent<UnityEngine.UI.InputField>(out var legacy) && legacy.isFocused;
     }
 
     /// <summary>

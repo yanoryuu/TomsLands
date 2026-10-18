@@ -55,7 +55,6 @@ public class UIFocusScope : MonoBehaviour
     [SerializeField] private UnityEvent onButtonY = new();
     [SerializeField] private UnityEvent onMenu = new();
 
-
     internal int order;
     internal GameObject lastSelected;
     internal float nextFocusRetryTime;
@@ -97,8 +96,7 @@ public class UIFocusScope : MonoBehaviour
     public static UIFocusScope GetOrAdd(GameObject root)
     {
         if (root == null) return null;
-        var scope = root.GetComponent<UIFocusScope>();
-        return scope != null ? scope : root.AddComponent<UIFocusScope>();
+        return root.TryGetComponent<UIFocusScope>(out var scope) ? scope : root.AddComponent<UIFocusScope>();
     }
 
     /// <summary>Cancel を cancelButton の押下にする。</summary>
@@ -206,5 +204,4 @@ public class UIFocusScope : MonoBehaviour
         }
         buttonSubject.OnNext(button);
     }
-
 }

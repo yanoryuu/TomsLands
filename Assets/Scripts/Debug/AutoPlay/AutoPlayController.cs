@@ -388,7 +388,7 @@ public sealed partial class AutoPlayController : MonoBehaviour
 
         if (fast || Now >= _nextScenarioSendAt)
         {
-            _advEngine.Page?.InputSendMessage();
+            if (_advEngine.Page != null) _advEngine.Page.InputSendMessage();
             _nextScenarioSendAt = Now + ScaledWait(s.ScenarioReadInterval);
         }
         AutoPlay.Status = fast ? "会話を早送り中" : "会話を自動送り中";

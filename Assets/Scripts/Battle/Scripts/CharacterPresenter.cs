@@ -8,14 +8,14 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel,IStarta
     private readonly CharacterModel model;
     private readonly CharacterView view;
     private readonly BattleSequencer sequencer;
-    private readonly CompositeDisposable disposables = new CompositeDisposable();
+    private readonly CompositeDisposable disposables = new();
 
     public ReadOnlyReactiveProperty<int> CurrentHp => model.CurrentHp;
     public ReadOnlyReactiveProperty<int> CurrentMp => model.CurrentMp;
     public int MaxHp => model.MaxHp;
     public int MaxMp => model.MaxMp;
 
-    public Subject<CharacterModel> OnTakeDamage { get; } = new Subject<CharacterModel>();
+    public Subject<CharacterModel> OnTakeDamage { get; } = new();
     public CharacterModel GetModel() => model;
     public CharacterView GetView() => view;
 
@@ -30,10 +30,7 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel,IStarta
     /// View の初期化と Model の監視を開始する。
     /// CharacterFactory から Instantiate 後に呼び出すこと。
     /// </summary>
-    public void Initialize()
-    {
-        Bind();
-    }
+    public void Initialize() => Bind();
 
     public void Start()
     {
@@ -71,8 +68,5 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel,IStarta
         return damageDealt;
     }
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

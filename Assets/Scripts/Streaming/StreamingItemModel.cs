@@ -8,8 +8,6 @@ public class StreamingItemModel
     public List<StreamingItemPlain> runtimeStreamingItems { get; private set; } = new();
     public ReactiveProperty<float>  trustPenalty           { get; private set; }
     public StealthMarketingModel    stealthMarketingModel { get; private set; }
-    
-    private CompositeDisposable disposables = new CompositeDisposable();
 
     public void Initialize()
     {
@@ -18,10 +16,7 @@ public class StreamingItemModel
         stealthMarketingModel = new StealthMarketingModel(200, 20f, 50f, 30f);
     }
 
-    public void LoadStreamingItems(List<StreamingItemPlain> itemDataList)
-    {
-        runtimeStreamingItems = itemDataList;
-    }
+    public void LoadStreamingItems(List<StreamingItemPlain> itemDataList) => runtimeStreamingItems = itemDataList;
 
     public void UpdateStreamingItems(string itemId, int newPrice)
     {
@@ -32,7 +27,6 @@ public class StreamingItemModel
             return;
         }
         itemData.price.Value    = newPrice;
-        // itemData.quantity = newQuantity;
     }
     
     public void SetIsSell(string itemId, bool isSell)
@@ -48,12 +42,6 @@ public class StreamingItemModel
 
     public void ApplyBasicStealth(TomsModel shop)
         => stealthMarketingModel.PerformBasic(runtimeStreamingItems, shop);
-
-    // public void ApplyFocusedStealth(string itemId, TomsShopModel shop)
-    // {
-    //     var item = runtimeStreamingItems.Find(i => i.itemId == itemId);
-    //     stealthMarketingModel.PerformFocused(item, shop);
-    // }
 }
 
 

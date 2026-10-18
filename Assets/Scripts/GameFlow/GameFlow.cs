@@ -13,10 +13,10 @@ public class GameFlowNode
 {
     public GameEvent EventType;
     
-    [ConditionalHide("EventType", (int)GameEvent.Event)]
+    [ConditionalHide(nameof(EventType), (int)GameEvent.Event)]
     public string EventData;
     
-    [ConditionalHide("EventType", (int)GameEvent.Battle)]
+    [ConditionalHide(nameof(EventType), (int)GameEvent.Battle)]
     public DungeonName BattleDungeon;
 }
 

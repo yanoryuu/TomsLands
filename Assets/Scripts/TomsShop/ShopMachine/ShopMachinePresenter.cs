@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -29,7 +30,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
     private string selectedPlacementId;
 
     /// <summary>生産アイテムドロップダウンの候補（表示順と同じ itemId 列）。</summary>
-    private readonly System.Collections.Generic.List<string> producedCandidates = new();
+    private readonly List<string> producedCandidates = new();
 
     private int MaxSlots => shopLevelSettings != null
         ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).machineSlots
@@ -71,7 +72,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
 
         // 選択式製造機の生産アイテム変更
         view.OnProducedItemChanged
-            .Subscribe(index => HandleProducedItemChanged(index))
+            .Subscribe(HandleProducedItemChanged)
             .AddTo(disposables);
     }
 
@@ -104,7 +105,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
             slot.Setup(machine, machineModel.CountOf(machine.machineId), levelLocked);
 
             slot.OnSelected
-                .Subscribe(id => SelectMachine(id))
+                .Subscribe(SelectMachine)
                 .AddTo(slotDisposables);
         }
 
@@ -158,7 +159,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
         for (int i = 0; i < rows.Count && i < placements.Count; i++)
         {
             var placement = placements[i];
-            string detail = "";
+            string detail;
             if (machine.dailyItemSelectable)
             {
                 var runtime = string.IsNullOrEmpty(placement.SelectedItemId) ? null : itemModel.GetRuntimeItem(placement.SelectedItemId);
@@ -217,7 +218,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
         if (string.IsNullOrEmpty(placement.SelectedItemId))
             machineModel.SetProducedItem(placement.PlacementId, candidates[0].runtime.ItemId);
 
-        var labels = new System.Collections.Generic.List<string>();
+        var labels = new List<string>();
         int selectedIndex = 0;
         for (int i = 0; i < candidates.Count; i++)
         {

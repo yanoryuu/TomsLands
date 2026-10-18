@@ -48,7 +48,7 @@ public sealed class ControllerHighlight : MonoBehaviour
 
         if (want)
         {
-            ov = sel.GetComponent<UIFocusHighlightOverride>();
+            sel.TryGetComponent(out ov);
             if (ov != null && ov.hide) want = false;
             else
             {
@@ -131,8 +131,7 @@ public sealed class ControllerHighlight : MonoBehaviour
         float a = 1f;
         for (var p = t; p != null; p = p.parent)
         {
-            var cg = p.GetComponent<CanvasGroup>();
-            if (cg != null)
+            if (p.TryGetComponent<CanvasGroup>(out var cg))
             {
                 a *= cg.alpha;
                 if (cg.ignoreParentGroups) break;

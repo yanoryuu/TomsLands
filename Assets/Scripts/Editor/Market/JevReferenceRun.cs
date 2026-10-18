@@ -42,7 +42,7 @@ public sealed class JevReferenceConfig
 public sealed class JevReferenceResult
 {
     /// <summary>銘柄ID → 価格系列（先頭が初期価格）。</summary>
-    public Dictionary<string, List<int>> Series = new Dictionary<string, List<int>>();
+    public Dictionary<string, List<int>> Series = new();
 
     /// <summary>全銘柄を束ねた統計量。</summary>
     public MarketStats Stats;
@@ -213,7 +213,7 @@ public static class JevReferenceRun
         public string Id, Name, Category, Element;
         public int BasePrice, Price, Stock;
         public float Demand, PrevDemand, Trend;
-        public readonly List<int> History = new List<int>();
+        public readonly List<int> History = new();
     }
 
     // AssetDatabase はメインスレッドからしか触れないため、銘柄テンプレートを事前に読んで保持する。

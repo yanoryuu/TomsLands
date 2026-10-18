@@ -128,7 +128,7 @@ public sealed class JevRequest
 
     /// <summary>質問ID → 質問定義。</summary>
     [JsonProperty("questions")]
-    public Dictionary<string, JevQuestion> Questions = new Dictionary<string, JevQuestion>();
+    public Dictionary<string, JevQuestion> Questions = new();
 }
 
 /// <summary>

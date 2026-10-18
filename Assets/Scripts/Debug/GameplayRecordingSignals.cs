@@ -53,9 +53,6 @@ public static class GameplayRecordingSignals
     private static GameplayRecordingSignalsDriver _driver;
 
     /// <summary>
-    /// Play 開始ごとに実行時状態だけ初期化する（イベントの購読者＝エディタ側は消さない）。
-    /// </summary>
-    /// <summary>
     /// 自動録画ツールが「隔離セーブで遊ぶ」を指定したとき、Play 開始前（ExitingEditMode）にこのキーで
     /// 保存先フォルダを SessionState に置く。シーンロード前に SaveSlotManager.DevRootOverride へ流し込み、
     /// ユーザーのセーブスロットを一切読まず・書かないようにする。
@@ -71,6 +68,9 @@ public static class GameplayRecordingSignals
         Debug.Log($"[AutoRecorder] 隔離セーブで Play: {root}");
     }
 
+    /// <summary>
+    /// Play 開始ごとに実行時状態だけ初期化する（イベントの購読者＝エディタ側は消さない）。
+    /// </summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetRuntimeState()
     {
@@ -133,7 +133,7 @@ public static class GameplayRecordingSignals
 
         // LifetimeScope は Awake でビルドされるが、親待ち等で遅れる場合に備え数フレーム再試行
         TryBindScopes(skipInitial: false);
-        _driver?.RequestBind(BindRetryFrames, skipInitial: false);
+        if (_driver != null) _driver.RequestBind(BindRetryFrames, skipInitial: false);
     }
 
     internal static void NotifyInput() => LastInputRealtime = Time.realtimeSinceStartup;

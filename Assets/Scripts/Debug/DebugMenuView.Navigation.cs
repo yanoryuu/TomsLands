@@ -169,13 +169,13 @@ public partial class DebugMenuView
         {
             NavSaveRunIfInShop();
             // タイトルの「はじめから」と同じく NewGame を立ててから村へ（村→準備→店で新規ランになる）
-            NavStartMode()?.SetNewGame();
+            NavSetNewGame();
             NavLoad("VillageScene", s => s.GoToVillage());
         }
         if (GUILayout.Button("準備（新規ラン扱い）"))
         {
             NavSaveRunIfInShop();
-            NavStartMode()?.SetNewGame();
+            NavSetNewGame();
             NavLoad("PreparationScene", null);
         }
         GUILayout.EndHorizontal();
@@ -185,13 +185,13 @@ public partial class DebugMenuView
         if (GUILayout.Button(hasRun || inShop ? "店（続きから）" : "店（続きから：ランなし）"))
         {
             NavSaveRunIfInShop();
-            NavStartMode()?.SetContinue();
+            NavSetContinue();
             NavLoad("TomsShop", s => s.ReturnToTomsShop());
         }
         GUI.enabled = true;
         if (GUILayout.Button("店（新規ラン・現スロット上書き）"))
         {
-            NavStartMode()?.SetNewGame();
+            NavSetNewGame();
             NavLoad("TomsShop", s => s.ReturnToTomsShop());
         }
         GUILayout.EndHorizontal();
@@ -231,6 +231,18 @@ public partial class DebugMenuView
         if (_navStartModeData == null)
             _navStartModeData = AddressableLoader.Load<StartModeData>("SceneData/StartModeData");
         return _navStartModeData;
+    }
+
+    private void NavSetNewGame()
+    {
+        var startMode = NavStartMode();
+        if (startMode != null) startMode.SetNewGame();
+    }
+
+    private void NavSetContinue()
+    {
+        var startMode = NavStartMode();
+        if (startMode != null) startMode.SetContinue();
     }
 
     /// <summary>遷移サービスがあれば経由し、無いシーンでは既存Presenterと同じく SceneManager で直接ロードする。</summary>

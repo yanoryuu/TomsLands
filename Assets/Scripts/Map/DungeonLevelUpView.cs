@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using R3;
 using TMPro;
@@ -79,13 +80,15 @@ public class DungeonLevelUpView : MonoBehaviour
     private readonly PendingFocus pendingFocus = new();
     private DungeonName? focusKey;
     private bool focusOnLevelUp;
+    private Func<Selectable> slotFocusTarget;
 
     private void OnEnable() => pendingFocus.Request(true);
 
     private void LateUpdate()
     {
         if (focusScope == null) focusScope = GetComponentInParent<UIFocusScope>();
-        pendingFocus.Tick(focusScope, SlotFocusTarget);
+        // メソッドグループを毎フレーム渡すとデリゲートが作られるので、1つを使い回す
+        pendingFocus.Tick(focusScope, slotFocusTarget ??= SlotFocusTarget);
     }
 
     /// <summary>作り直し前に選んでいた行（レベルアップ直後など）→ 無ければ先頭行。</summary>

@@ -187,10 +187,8 @@ public static class GameConst
         return Mathf.RoundToInt((float)amount);
     }
 
-    public static int GetHeroExpToNextLevel(int currentLevel)
-    {
-        return Mathf.Max(Data.heroBaseExpToNextLevel, currentLevel * Data.heroBaseExpToNextLevel);
-    }
+    public static int GetHeroExpToNextLevel(int currentLevel) =>
+        Mathf.Max(Data.heroBaseExpToNextLevel, currentLevel * Data.heroBaseExpToNextLevel);
 
     /// <summary>
     /// 鍛冶屋の現在レベルからレベルアップコストを取得。最大レベル／範囲外なら -1 を返す。

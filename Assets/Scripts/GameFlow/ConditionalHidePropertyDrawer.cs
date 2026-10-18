@@ -7,10 +7,8 @@ public class ConditionalHidePropertyDrawer : PropertyDrawer
 {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        ConditionalHideAttribute condHAtt = (ConditionalHideAttribute)attribute;
-        bool enabled = GetConditionalHideAttributeResult(condHAtt, property);
-
-        if (enabled)
+        var condHAtt = (ConditionalHideAttribute)attribute;
+        if (GetConditionalHideAttributeResult(condHAtt, property))
         {
             EditorGUI.PropertyField(position, property, label, true);
         }
@@ -18,25 +16,16 @@ public class ConditionalHidePropertyDrawer : PropertyDrawer
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        ConditionalHideAttribute condHAtt = (ConditionalHideAttribute)attribute;
-        bool enabled = GetConditionalHideAttributeResult(condHAtt, property);
-
-        if (enabled)
-        {
-            return EditorGUI.GetPropertyHeight(property, label);
-        }
-        return -EditorGUIUtility.standardVerticalSpacing;
+        var condHAtt = (ConditionalHideAttribute)attribute;
+        return GetConditionalHideAttributeResult(condHAtt, property)
+            ? EditorGUI.GetPropertyHeight(property, label)
+            : -EditorGUIUtility.standardVerticalSpacing;
     }
 
-    private bool GetConditionalHideAttributeResult(ConditionalHideAttribute condHAtt, SerializedProperty property)
+    private static bool GetConditionalHideAttributeResult(ConditionalHideAttribute condHAtt, SerializedProperty property)
     {
-        SerializedProperty sourcePropertyValue = property.serializedObject.FindProperty(property.propertyPath.Replace(property.name, condHAtt.ConditionalSourceField));
-        
-        if (sourcePropertyValue != null)
-        {
-            return sourcePropertyValue.enumValueIndex == condHAtt.EnumValue;
-        }
-        return true;
+        var sourcePropertyValue = property.serializedObject.FindProperty(property.propertyPath.Replace(property.name, condHAtt.ConditionalSourceField));
+        return sourcePropertyValue == null || sourcePropertyValue.enumValueIndex == condHAtt.EnumValue;
     }
 }
 #endif

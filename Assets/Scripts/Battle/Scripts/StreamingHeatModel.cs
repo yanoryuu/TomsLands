@@ -34,16 +34,10 @@ public class StreamingHeatModel
     // ─────────────────────────────────────────
 
     /// <summary>熱量を加算する（負値で減算）。自動的に [0, 100] にクランプ。</summary>
-    public void AddHeat(float delta)
-    {
-        Heat.Value = Mathf.Clamp(Heat.Value + delta, MinHeat, MaxHeat);
-    }
+    public void AddHeat(float delta) => Heat.Value = Mathf.Clamp(Heat.Value + delta, MinHeat, MaxHeat);
 
     /// <summary>ターン終了時の自然減衰。毎ターン呼ぶ。</summary>
-    public void ApplyTurnDecay()
-    {
-        AddHeat(-GetHeatTurnDecay());
-    }
+    public void ApplyTurnDecay() => AddHeat(-GetHeatTurnDecay());
 
     // ─────────────────────────────────────────
     //  価格倍率

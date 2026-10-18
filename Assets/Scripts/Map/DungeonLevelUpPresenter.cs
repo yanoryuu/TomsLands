@@ -236,16 +236,6 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         return $"クリア確率 {currentProb:F0}% → {nextProb:F0}%";
     }
 
-    private static string ToElementLabel(ElementType element) => element switch
-    {
-        ElementType.Fire  => "火",
-        ElementType.Water => "水",
-        ElementType.Wood  => "木",
-        ElementType.Light => "光",
-        ElementType.Dark  => "闇",
-        _                 => "無"
-    };
-
     public void Dispose()
     {
         slotDisposables.Dispose();

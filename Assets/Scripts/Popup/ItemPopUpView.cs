@@ -24,7 +24,7 @@ public class ItemPopUpView : MonoBehaviour
     [Inject]
     public void Construct(ItemPopUpManager manager)
     {
-        this.itemPopUpManager = manager;
+        itemPopUpManager = manager;
     }
 
     private void Start()

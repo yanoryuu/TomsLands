@@ -95,7 +95,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         // --- Phase 1: StreamingSetting（品出し設定） ---
         Debug.Log("[BattleSceneStarter] Phase 1: StreamingSetting");
-        _panelManager?.ShowPanel(StreamingGamePhase.StreamingSetting);
+        if (_panelManager != null) _panelManager.ShowPanel(StreamingGamePhase.StreamingSetting);
 
         // 初回だけ、占い師が品出しのやり方を説明する
         if (_tutorialScenario != null)
@@ -120,7 +120,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         // --- Phase 2: Battle（配信中・戦闘） ---
         Debug.Log("[BattleSceneStarter] Phase 2: Battle");
-        _panelManager?.ShowPanel(StreamingGamePhase.Streaming);
+        if (_panelManager != null) _panelManager.ShowPanel(StreamingGamePhase.Streaming);
 
         // カウントダウン前にダンジョン（背景）と品出しアイテムを反映しておく。
         // 後回しにするとカウントダウン中にシーン既定の背景・空の在庫が映ってしまう
@@ -140,8 +140,8 @@ public class BattleSceneStarter : IAsyncStartable
 
         // ポーズコントローラーを各コンポーネントへ配布
         _battleSequencer.SetPauseController(_pauseController);
-        _salesController?.SetPauseController(_pauseController);
-        _salesController?.SetHeroTactics(heroModel.heroData?.tactics.Value ?? HeroTactics.Balanced);
+        if (_salesController != null) _salesController.SetPauseController(_pauseController);
+        if (_salesController != null) _salesController.SetHeroTactics(heroModel.heroData?.tactics.Value ?? HeroTactics.Balanced);
 
         // 販売ループは Setup で動き出すので、カウントダウン・チュートリアルの間はポーズしておく。
         // 途中で例外が出てもポーズが残らないよう finally で必ず解除する
@@ -167,7 +167,7 @@ public class BattleSceneStarter : IAsyncStartable
         finally
         {
             _pauseController.Resume();
-            _controlView?.UpdatePauseButtonText(false);
+            if (_controlView != null) _controlView.UpdatePauseButtonText(false);
         }
 
         // バトル終了を待つための UniTaskCompletionSource
@@ -222,7 +222,7 @@ public class BattleSceneStarter : IAsyncStartable
         // 在庫切れスロットをクリックして補充ポップアップを再表示
         void OnDepletedItemClicked(ItemSlotView slot)
         {
-            if (slot?.CurrentItem == null || slot.CurrentItem.Stock.Value > 0) return;
+            if (slot == null || slot.CurrentItem == null || slot.CurrentItem.Stock.Value > 0) return;
             TryShowRestockAsync(slot.CurrentItem, battleCts.Token).Forget();
         }
         ItemSlotView.OnItemClicked += OnDepletedItemClicked;
@@ -252,7 +252,7 @@ public class BattleSceneStarter : IAsyncStartable
         // 販売ループを停止してから結果を集計する。
         // 停止しないとリザルト画面中も売れ続け、ここで取るスナップショットとの差分
         // （売上金・売却数）が精算されず消失する。
-        _salesController?.StopSales();
+        if (_salesController != null) _salesController.StopSales();
 
         // BattleOutputData に結果を書き込み
         var soldItems = BuildSoldItems();
@@ -273,7 +273,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
-        _panelManager?.ShowPanel(StreamingGamePhase.StreamingResult);
+        if (_panelManager != null) _panelManager.ShowPanel(StreamingGamePhase.StreamingResult);
         if (_resultView != null)
         {
             await _resultView.ShowResultAsync(battleResult.result, soldItems, totalEarnings, _outputData.InterventionNetSpending);
@@ -295,7 +295,7 @@ public class BattleSceneStarter : IAsyncStartable
     private void TogglePause()
     {
         _pauseController.Toggle();
-        _controlView?.UpdatePauseButtonText(_pauseController.IsPaused);
+        if (_controlView != null) _controlView.UpdatePauseButtonText(_pauseController.IsPaused);
         Debug.Log($"[BattleSceneStarter] {(_pauseController.IsPaused ? "一時停止" : "再開")}");
     }
 
@@ -427,7 +427,7 @@ public class BattleSceneStarter : IAsyncStartable
         if (result != BattleResult.Defeat) return 0;
 
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
-        int reward = dungeon?.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0;
+        int reward = dungeon != null ? dungeon.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0 : 0;
 
         // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
         reward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);

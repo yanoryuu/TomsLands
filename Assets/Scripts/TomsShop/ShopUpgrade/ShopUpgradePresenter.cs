@@ -1,6 +1,5 @@
 using System;
 using R3;
-using UnityEngine;
 using VContainer.Unity;
 
 /// <summary>
@@ -88,8 +87,5 @@ public class ShopUpgradePresenter : IStartable, IDisposable
         view.UpdateContent(level, settings.MaxLevel, current, next, cost, canAfford);
     }
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

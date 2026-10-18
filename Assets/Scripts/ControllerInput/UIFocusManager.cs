@@ -144,8 +144,7 @@ public static class UIFocusManager
     public static bool IsUsable(GameObject go)
     {
         if (go == null || !go.activeInHierarchy) return false;
-        var s = go.GetComponent<Selectable>();
-        if (s == null) return true;
+        if (!go.TryGetComponent<Selectable>(out var s)) return true;
         return s.isActiveAndEnabled && s.IsInteractable();
     }
 
@@ -402,8 +401,7 @@ public static class UIFocusManager
         float a = 1f;
         for (var p = t; p != null; p = p.parent)
         {
-            var cg = p.GetComponent<CanvasGroup>();
-            if (cg != null)
+            if (p.TryGetComponent<CanvasGroup>(out var cg))
             {
                 a *= cg.alpha;
                 if (cg.ignoreParentGroups) break;

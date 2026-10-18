@@ -24,10 +24,7 @@ public class BattleResultView : MonoBehaviour
     private ItemModel _itemModel;
 
     [Inject]
-    public void Construct(ItemModel itemModel)
-    {
-        _itemModel = itemModel;
-    }
+    public void Construct(ItemModel itemModel) => _itemModel = itemModel;
 
     private void Awake()
     {
@@ -40,7 +37,7 @@ public class BattleResultView : MonoBehaviour
         var scope = UIFocusScope.GetOrAdd(gameObject);
         if (confirmButton != null) scope.FirstSelected = confirmButton;
         foreach (var scroll in GetComponentsInChildren<ScrollRect>(true))
-            if (scroll.GetComponent<ScrollRectAutoFollow>() == null) scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
+            if (!scroll.TryGetComponent<ScrollRectAutoFollow>(out _)) scroll.gameObject.AddComponent<ScrollRectAutoFollow>();
         // パネルの表示/非表示は BattlePanelManager が管理するため、ここでは制御しない
     }
 
@@ -52,7 +49,6 @@ public class BattleResultView : MonoBehaviour
     {
         _confirmTcs = new UniTaskCompletionSource();
 
-        // 勝敗タイトル
         if (resultTitleText != null)
         {
             resultTitleText.text = result == BattleResult.Victory ? "勝利！" : "敗北...";
@@ -66,10 +62,8 @@ public class BattleResultView : MonoBehaviour
                 : $"売上: {totalEarnings} G";
         }
 
-        // 売れたアイテムスロット生成
         PopulateSoldItemSlots(soldItems);
 
-        // 確認ボタン待ち
         await _confirmTcs.Task;
     }
 
@@ -77,7 +71,6 @@ public class BattleResultView : MonoBehaviour
     {
         if (soldItemSlotPrefab == null || soldItemContainer == null) return;
 
-        // 既存スロットを削除
         foreach (Transform child in soldItemContainer)
             Destroy(child.gameObject);
 
@@ -95,9 +88,6 @@ public class BattleResultView : MonoBehaviour
         }
     }
 
-    private void OnConfirmClicked()
-    {
-        _confirmTcs?.TrySetResult();
-    }
+    private void OnConfirmClicked() => _confirmTcs?.TrySetResult();
 }
 

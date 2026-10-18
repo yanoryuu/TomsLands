@@ -447,9 +447,6 @@ public partial class DebugMenuView : MonoBehaviour
     }
 
     // =====================================================
-    // その他
-    // =====================================================
-    // =====================================================
     // 相場（価格変動エンジンの切り替えと観測）
     // =====================================================
     private void DrawMarketSection()
@@ -580,6 +577,9 @@ public partial class DebugMenuView : MonoBehaviour
         }
     }
 
+    // =====================================================
+    // その他
+    // =====================================================
     private void DrawMiscSection()
     {
         GUILayout.Label("■ 進行", _headerStyle);
@@ -632,14 +632,11 @@ public partial class DebugMenuView : MonoBehaviour
         GUILayout.Space(8);
     }
 
-    private static string GetBuzzLabel(BuzzType type)
+    private static string GetBuzzLabel(BuzzType type) => type switch
     {
-        switch (type)
-        {
-            case BuzzType.Flame: return "炎上";
-            case BuzzType.Big: return "超バズ";
-            default: return "バズ";
-        }
-    }
+        BuzzType.Flame => "炎上",
+        BuzzType.Big => "超バズ",
+        _ => "バズ",
+    };
 }
 #endif

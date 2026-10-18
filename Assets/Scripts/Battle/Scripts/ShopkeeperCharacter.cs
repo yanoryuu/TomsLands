@@ -77,7 +77,7 @@ public class ShopkeeperCharacter : MonoBehaviour
     // ─────────────────────────────────────────
     private Vector3 _baseLocalPos;
     private CancellationTokenSource _reactionCts;
-    private readonly CompositeDisposable _disposables = new CompositeDisposable();
+    private readonly CompositeDisposable _disposables = new();
 
     // ─────────────────────────────────────────
     //  Unity ライフサイクル
@@ -184,15 +184,15 @@ public class ShopkeeperCharacter : MonoBehaviour
 
         transform.DOKill();
         transform.DOLocalMoveY(_baseLocalPos.y + happyJumpHeight, happyJumpDuration)
-            .SetEase(Ease.OutQuad);
+            .SetEase(Ease.OutQuad).SetLink(gameObject);
         transform.DOScale(1.18f, happyJumpDuration * 0.6f)
-            .SetEase(Ease.OutBack);
+            .SetEase(Ease.OutBack).SetLink(gameObject);
         await UniTask.Delay(TimeSpan.FromSeconds(happyJumpDuration), cancellationToken: token);
 
         transform.DOLocalMoveY(_baseLocalPos.y, happyJumpDuration)
-            .SetEase(Ease.InQuad);
+            .SetEase(Ease.InQuad).SetLink(gameObject);
         transform.DOScale(1f, happyJumpDuration)
-            .SetEase(Ease.OutBounce);
+            .SetEase(Ease.OutBounce).SetLink(gameObject);
         await UniTask.Delay(
             TimeSpan.FromSeconds(happyJumpDuration + reactionHoldDuration),
             cancellationToken: token);
@@ -206,19 +206,19 @@ public class ShopkeeperCharacter : MonoBehaviour
 
         transform.DOKill();
         transform.DOLocalMoveY(_baseLocalPos.y + excitedJumpHeight, excitedJumpDuration)
-            .SetEase(Ease.OutQuad);
+            .SetEase(Ease.OutQuad).SetLink(gameObject);
         transform.DOLocalRotate(new Vector3(0f, 0f, excitedTiltAngle), excitedJumpDuration)
-            .SetEase(Ease.OutQuad);
+            .SetEase(Ease.OutQuad).SetLink(gameObject);
         transform.DOScale(1.25f, excitedJumpDuration)
-            .SetEase(Ease.OutBack);
+            .SetEase(Ease.OutBack).SetLink(gameObject);
         await UniTask.Delay(TimeSpan.FromSeconds(excitedJumpDuration), cancellationToken: token);
 
         transform.DOLocalMoveY(_baseLocalPos.y, excitedJumpDuration)
-            .SetEase(Ease.InQuad);
+            .SetEase(Ease.InQuad).SetLink(gameObject);
         transform.DOLocalRotate(Vector3.zero, excitedJumpDuration)
-            .SetEase(Ease.OutBounce);
+            .SetEase(Ease.OutBounce).SetLink(gameObject);
         transform.DOScale(1f, excitedJumpDuration)
-            .SetEase(Ease.OutBounce);
+            .SetEase(Ease.OutBounce).SetLink(gameObject);
         await UniTask.Delay(
             TimeSpan.FromSeconds(excitedJumpDuration + reactionHoldDuration),
             cancellationToken: token);
@@ -232,15 +232,15 @@ public class ShopkeeperCharacter : MonoBehaviour
 
         transform.DOKill();
         transform.DOScale(worriedShrinkScale, worriedDuration)
-            .SetEase(Ease.OutQuad);
+            .SetEase(Ease.OutQuad).SetLink(gameObject);
         transform.DOLocalMoveY(_baseLocalPos.y - 0.05f, worriedDuration)
-            .SetEase(Ease.OutQuad);
+            .SetEase(Ease.OutQuad).SetLink(gameObject);
         await UniTask.Delay(TimeSpan.FromSeconds(worriedDuration), cancellationToken: token);
 
         transform.DOScale(1f, worriedDuration * 1.5f)
-            .SetEase(Ease.OutBounce);
+            .SetEase(Ease.OutBounce).SetLink(gameObject);
         transform.DOLocalMoveY(_baseLocalPos.y, worriedDuration * 1.5f)
-            .SetEase(Ease.OutBounce);
+            .SetEase(Ease.OutBounce).SetLink(gameObject);
         await UniTask.Delay(
             TimeSpan.FromSeconds(worriedDuration * 1.5f + reactionHoldDuration),
             cancellationToken: token);

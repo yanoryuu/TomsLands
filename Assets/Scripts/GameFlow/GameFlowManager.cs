@@ -138,7 +138,7 @@ public class GameFlowManager : IDisposable, IStartable
         }
         return turn;
     }
-    
+
     public void Start()
     {
         // フローの構築は GameLifecycleHandler が seed / mode を確定した後に
@@ -177,10 +177,6 @@ public class GameFlowManager : IDisposable, IStartable
     }
 
     /// <summary>
-    /// 朝刊の発行カレンダー用に、ダンジョンの名前・弱点と戦闘の予定（ターン）を渡す。
-    /// 事象の差し込み枠（{dungeon}）と、因果の3法則（L1/L2）の対象決めに使う（Docs/News_Phase3_Spec.md §3）。
-    /// </summary>
-    /// <summary>
     /// 朝刊の連載（Docs/News_Phase3_Spec.md §17）の分岐を、この朝の状態で決める。
     /// 直近の配信の勝敗は RunHistory の累計から、在庫は ItemModel から見る。経済計算より前に呼ぶ。
     /// </summary>
@@ -193,6 +189,10 @@ public class GameFlowManager : IDisposable, IStartable
             _itemModel != null && _itemModel.RuntimeItems.Exists(i => i.Stock.Value > 0 && ev.Matches(i)));
     }
 
+    /// <summary>
+    /// 朝刊の発行カレンダー用に、ダンジョンの名前・弱点と戦闘の予定（ターン）を渡す。
+    /// 事象の差し込み枠（{dungeon}）と、因果の3法則（L1/L2）の対象決めに使う（Docs/News_Phase3_Spec.md §3）。
+    /// </summary>
     private NewsWorld BuildNewsWorld()
     {
         var world = new NewsWorld();
@@ -505,17 +505,14 @@ public class GameFlowManager : IDisposable, IStartable
     /// <summary>
     /// GameEventからGamePhaseへ変換する。
     /// </summary>
-    private GamePhase ConvertEventToPhase(GameEvent gameEvent)
+    private static GamePhase ConvertEventToPhase(GameEvent gameEvent) => gameEvent switch
     {
-        return gameEvent switch
-        {
-            GameEvent.Start => GamePhase.TomsShop,
-            GameEvent.Shop => GamePhase.TomsShop,
-            GameEvent.Event => GamePhase.TomsShop,
-            GameEvent.End => GamePhase.Result,
-            _ => throw new ArgumentOutOfRangeException(nameof(gameEvent), gameEvent, "Unknown GameEvent")
-        };
-    }
+        GameEvent.Start => GamePhase.TomsShop,
+        GameEvent.Shop => GamePhase.TomsShop,
+        GameEvent.Event => GamePhase.TomsShop,
+        GameEvent.End => GamePhase.Result,
+        _ => throw new ArgumentOutOfRangeException(nameof(gameEvent), gameEvent, "Unknown GameEvent")
+    };
 
     /// <summary>
     /// 現在のインデックスから次のBattleノードまでの非Eventターン数を返す。

@@ -129,7 +129,7 @@ public sealed class AutoPlayRunContext
     /// <summary>横取りしたシーン遷移（最新）。</summary>
     public string LastSceneRequest;
     /// <summary>Enter 中に出た警告・エラー（ランナーが回収してクリアする）。</summary>
-    public readonly List<(LogType type, string message)> CapturedLogs = new List<(LogType, string)>();
+    public readonly List<(LogType type, string message)> CapturedLogs = new();
 
     public AutoPlayRunContext(string runId, string saveRoot, int seed)
     {
@@ -221,7 +221,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public string BattleDungeon = "";
         public float BattleClearPct;
         public int RejectedActions;
-        public readonly List<string> Notes = new List<string>();
+        public readonly List<string> Notes = new();
     }
 
     public readonly Settings Config;
@@ -256,7 +256,6 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     private EventInputData _eventIn;
     private EventOutputData _eventOut;
     private StartModeData _startMode;
-    private GameObject _dungeonHost;
     private System.Random _rng;
 
     private bool _streamPending;

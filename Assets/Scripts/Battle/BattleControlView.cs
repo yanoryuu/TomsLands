@@ -33,10 +33,7 @@ public class BattleControlView : MonoBehaviour
     private PopUpManager popUpManager;
 
     [Inject]
-    public void Construct(PopUpManager popUpManager)
-    {
-        this.popUpManager = popUpManager;
-    }
+    public void Construct(PopUpManager popUpManager) => this.popUpManager = popUpManager;
 
     private void Awake()
     {
@@ -67,9 +64,7 @@ public class BattleControlView : MonoBehaviour
         RuntimeItemData runtime, int unitCost, int maxQuantity, float recommendScore, CancellationToken token)
     {
         if (restockQuantityPopup != null)
-        {
             return await restockQuantityPopup.ShowAsync(runtime, unitCost, maxQuantity, recommendScore, token);
-        }
 
         // フォールバック: 従来の10個固定確認
         bool canAfford = maxQuantity >= 10;

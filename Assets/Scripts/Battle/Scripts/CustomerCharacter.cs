@@ -153,7 +153,8 @@ public class CustomerCharacter : MonoBehaviour
         itemDisplayRoot.transform.DOKill();
         itemDisplayRoot.transform
             .DOScale(1f, 0.3f)
-            .SetEase(Ease.OutBack);
+            .SetEase(Ease.OutBack)
+            .SetLink(itemDisplayRoot);
     }
 
     private void HideItem()
@@ -166,7 +167,8 @@ public class CustomerCharacter : MonoBehaviour
             .OnComplete(() =>
             {
                 if (itemDisplayRoot != null) itemDisplayRoot.SetActive(false);
-            });
+            })
+            .SetLink(itemDisplayRoot);
     }
 
     private void PlayState(PlayerState state)

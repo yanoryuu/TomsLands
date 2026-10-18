@@ -115,7 +115,9 @@ public class HeroPanelView : MonoBehaviour
     {
         if (button == null) return;
 
-        var trigger = button.GetComponent<EventTrigger>() ?? button.gameObject.AddComponent<EventTrigger>();
+        // UnityEngine.Object に ?? は使わない（エディタの GetComponent は「偽 null」を返すことがある）
+        if (!button.TryGetComponent<EventTrigger>(out var trigger))
+            trigger = button.gameObject.AddComponent<EventTrigger>();
 
         var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
         enter.callback.AddListener(_ =>
@@ -185,14 +187,10 @@ public class HeroPanelView : MonoBehaviour
     }
 
     public void SetWeaponOptions(IReadOnlyList<HeroEquipmentOption> options, string selectedItemId)
-    {
-        SetEquipmentOptions(weaponDropdown, weaponIds, options, selectedItemId);
-    }
+        => SetEquipmentOptions(weaponDropdown, weaponIds, options, selectedItemId);
 
     public void SetArmorOptions(IReadOnlyList<HeroEquipmentOption> options, string selectedItemId)
-    {
-        SetEquipmentOptions(armorDropdown, armorIds, options, selectedItemId);
-    }
+        => SetEquipmentOptions(armorDropdown, armorIds, options, selectedItemId);
 
     public void SetTacticsOptions(HeroTactics selected)
     {
@@ -217,9 +215,7 @@ public class HeroPanelView : MonoBehaviour
     }
 
     public void SetTacticsHoverDescription(string description)
-    {
-        SetButtonDescription(tacticsInfoButton, description);
-    }
+        => SetButtonDescription(tacticsInfoButton, description);
 
     public void SetStaticHoverDescriptions(string weapon, string armor, string clearProbability)
     {
@@ -269,24 +265,21 @@ public class HeroPanelView : MonoBehaviour
         suppressEvents = false;
     }
 
-    private void SetIcon(Image image, Sprite sprite)
+    private static void SetIcon(Image image, Sprite sprite)
     {
         if (image == null) return;
         image.sprite  = sprite;
         image.enabled = sprite != null;
     }
 
-    private string GetTacticsName(HeroTactics tactics)
+    private static string GetTacticsName(HeroTactics tactics) => tactics switch
     {
-        return tactics switch
-        {
-            HeroTactics.Aggressive   => "攻撃重視",
-            HeroTactics.Defensive    => "防御重視",
-            HeroTactics.Stealth      => "慎重",
-            HeroTactics.MagicFocused => "属性重視",
-            _ => "バランス"
-        };
-    }
+        HeroTactics.Aggressive   => "攻撃重視",
+        HeroTactics.Defensive    => "防御重視",
+        HeroTactics.Stealth      => "慎重",
+        HeroTactics.MagicFocused => "属性重視",
+        _ => "バランス"
+    };
 }
 
 public readonly struct HeroEquipmentOption

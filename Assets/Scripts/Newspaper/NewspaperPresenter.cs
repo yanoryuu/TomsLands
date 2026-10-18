@@ -123,10 +123,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         loaded = true;
     }
 
-    private void Save()
-    {
-        NewspaperSaveStore.Save(tomsModel.FlowSeed, subscriptions, scrapbook, newsModel);
-    }
+    private void Save() => NewspaperSaveStore.Save(tomsModel.FlowSeed, subscriptions, scrapbook, newsModel);
 
     // =====================================================================
     // 描画
@@ -357,30 +354,20 @@ public class NewspaperPresenter : IStartable, IDisposable
     /// <summary>
     /// 紙面の並び。効果のある報道を上（規模の大きい順）、次に効果のない報道・結果記事、埋め草は下段。
     /// </summary>
-    private static List<NewsIssueEntry> SortForFront(List<NewsIssueEntry> entries)
+    private static List<NewsIssueEntry> SortForFront(List<NewsIssueEntry> entries) => StableSorted(entries, FrontRankOf);
+
+    private static int FrontRankOf(NewsIssueEntry e)
     {
-        var order = new Dictionary<NewsIssueEntry, int>();
-        for (int i = 0; i < entries.Count; i++) order[entries[i]] = i;
-        int Rank(NewsIssueEntry e)
+        switch (e.kind)
         {
-            switch (e.kind)
-            {
-                case NewsEntryKind.Report:
-                    var ev = e.eventInstance;
-                    bool effect = ev != null && ev.HasTarget && ev.trendDelta != 0f;
-                    return (effect ? 0 : 10) - (ev != null ? ev.scaleRank : 0);
-                case NewsEntryKind.Result: return 20;
-                case NewsEntryKind.Filler: return 30;
-                default: return 40;
-            }
+            case NewsEntryKind.Report:
+                var ev = e.eventInstance;
+                bool effect = ev != null && ev.HasTarget && ev.trendDelta != 0f;
+                return (effect ? 0 : 10) - (ev != null ? ev.scaleRank : 0);
+            case NewsEntryKind.Result: return 20;
+            case NewsEntryKind.Filler: return 30;
+            default: return 40;
         }
-        var sorted = new List<NewsIssueEntry>(entries);
-        sorted.Sort((x, y) =>
-        {
-            int c = Rank(x).CompareTo(Rank(y));
-            return c != 0 ? c : order[x].CompareTo(order[y]);
-        });
-        return sorted;
     }
 
     /// <summary>その社の面に載る位置。社が持たない面の記事（結果記事など）は一面へ寄せる。</summary>
@@ -428,16 +415,19 @@ public class NewspaperPresenter : IStartable, IDisposable
     /// 紙面の並び順。通常記事を面の順（一面→二面→市況→うわさ）に並べ、
     /// その後ろに結果記事、<b>訂正記事は最後（隅）</b>に置く（Docs/News_Spec.md §10.4）。
     /// </summary>
-    private static List<NewsIssueEntry> SortForPaper(List<NewsIssueEntry> entries)
+    private static List<NewsIssueEntry> SortForPaper(List<NewsIssueEntry> entries) => StableSorted(entries, RankOf);
+
+    /// <summary>rank の昇順に並べた新しいリスト。</summary>
+    private static List<NewsIssueEntry> StableSorted(List<NewsIssueEntry> entries, Func<NewsIssueEntry, int> rank)
     {
-        var sorted = new List<NewsIssueEntry>(entries);
         // List.Sort は安定でないので、元の並び（カレンダー順）を最後のキーにする
         var order = new Dictionary<NewsIssueEntry, int>();
         for (int i = 0; i < entries.Count; i++) order[entries[i]] = i;
 
+        var sorted = new List<NewsIssueEntry>(entries);
         sorted.Sort((x, y) =>
         {
-            int c = RankOf(x).CompareTo(RankOf(y));
+            int c = rank(x).CompareTo(rank(y));
             return c != 0 ? c : order[x].CompareTo(order[y]);
         });
         return sorted;

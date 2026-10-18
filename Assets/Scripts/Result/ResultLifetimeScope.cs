@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
@@ -30,16 +29,16 @@ public class ResultLifetimeScope : LifetimeScope
         builder.RegisterInstance(itemVisualSettings);
 
         // BattleInputData / BattleOutputData（SceneTransitionService の依存解決に必要）
-        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData")
-                              ?? ScriptableObject.CreateInstance<BattleInputData>();
-        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData")
-                               ?? ScriptableObject.CreateInstance<BattleOutputData>();
+        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData");
+        if (battleInputData == null) battleInputData = ScriptableObject.CreateInstance<BattleInputData>();
+        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData");
+        if (battleOutputData == null) battleOutputData = ScriptableObject.CreateInstance<BattleOutputData>();
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
 
         // 金融資産（債券・ファンド）を純資産に算入するための PortfolioModel 依存
-        var financeSettings = AddressableLoader.Load<FinanceSettings>("FinanceSettings")
-                              ?? ScriptableObject.CreateInstance<FinanceSettings>();
+        var financeSettings = AddressableLoader.Load<FinanceSettings>("FinanceSettings");
+        if (financeSettings == null) financeSettings = ScriptableObject.CreateInstance<FinanceSettings>();
         financeSettings = RemoteBalance.ApplyOverwrite("finance", financeSettings);
         builder.RegisterInstance(financeSettings);
 

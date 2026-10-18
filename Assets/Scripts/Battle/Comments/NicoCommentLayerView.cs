@@ -64,9 +64,8 @@ public class NicoCommentLayerView : MonoBehaviour
     private void Awake()
     {
         _area = (RectTransform)transform;
-        if (GetComponent<RectMask2D>() == null) gameObject.AddComponent<RectMask2D>();
-        var cg = GetComponent<CanvasGroup>();
-        if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
+        if (!TryGetComponent<RectMask2D>(out _)) gameObject.AddComponent<RectMask2D>();
+        if (!TryGetComponent<CanvasGroup>(out var cg)) cg = gameObject.AddComponent<CanvasGroup>();
         cg.blocksRaycasts = false;
         cg.interactable = false;
 

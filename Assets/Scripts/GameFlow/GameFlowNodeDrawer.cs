@@ -29,7 +29,7 @@ public class GameFlowNodeDrawer : PropertyDrawer
 
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
     {
-        var eventTypeProp = property.FindPropertyRelative("EventType");
+        var eventTypeProp = property.FindPropertyRelative(nameof(GameFlowNode.EventType));
         int idx = eventTypeProp.enumValueIndex;
 
         // 背景
@@ -60,12 +60,12 @@ public class GameFlowNodeDrawer : PropertyDrawer
         // 条件フィールド
         if (idx == (int)GameEvent.Battle)
         {
-            var prop = property.FindPropertyRelative("BattleDungeon");
+            var prop = property.FindPropertyRelative(nameof(GameFlowNode.BattleDungeon));
             EditorGUI.PropertyField(new Rect(x, y, w, lh), prop);
         }
         else if (idx == (int)GameEvent.Event)
         {
-            var prop = property.FindPropertyRelative("EventData");
+            var prop = property.FindPropertyRelative(nameof(GameFlowNode.EventData));
             EditorGUI.PropertyField(new Rect(x, y, w, lh), prop);
         }
 
@@ -74,7 +74,7 @@ public class GameFlowNodeDrawer : PropertyDrawer
 
     public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
     {
-        var eventTypeProp = property.FindPropertyRelative("EventType");
+        var eventTypeProp = property.FindPropertyRelative(nameof(GameFlowNode.EventType));
         int idx = eventTypeProp.enumValueIndex;
 
         float lh = EditorGUIUtility.singleLineHeight;
@@ -99,12 +99,12 @@ public class GameFlowNodeDrawer : PropertyDrawer
 
         if (idx == (int)GameEvent.Battle)
         {
-            var dungeon = property.FindPropertyRelative("BattleDungeon");
+            var dungeon = property.FindPropertyRelative(nameof(GameFlowNode.BattleDungeon));
             return $"Battle  ▶  {dungeon.enumNames[dungeon.enumValueIndex]}";
         }
         if (idx == (int)GameEvent.Event)
         {
-            var data = property.FindPropertyRelative("EventData");
+            var data = property.FindPropertyRelative(nameof(GameFlowNode.EventData));
             string d = string.IsNullOrEmpty(data.stringValue) ? "（未設定）" : data.stringValue;
             return $"Event  ▶  {d}";
         }

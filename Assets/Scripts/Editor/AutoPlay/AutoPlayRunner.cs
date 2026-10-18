@@ -93,13 +93,13 @@ public sealed class AutoPlayRunResult
     public int DungeonStreamRewards;
     /// <summary>勇者側の介入で負け→勝ちに変えた回数。</summary>
     public int HeroFlips;
-    public readonly Dictionary<string, int> InterventionKinds = new Dictionary<string, int>();
-    public readonly List<AutoPlayStreamRow> StreamRows = new List<AutoPlayStreamRow>();
+    public readonly Dictionary<string, int> InterventionKinds = new();
+    public readonly List<AutoPlayStreamRow> StreamRows = new();
 
-    public readonly List<AutoPlayTurnRow> TurnRows = new List<AutoPlayTurnRow>();
-    public readonly List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
-    public readonly List<AutoPlayAnomaly> Anomalies = new List<AutoPlayAnomaly>();
-    public readonly List<string> SampleLogs = new List<string>();
+    public readonly List<AutoPlayTurnRow> TurnRows = new();
+    public readonly List<AutoPlayDecision> Decisions = new();
+    public readonly List<AutoPlayAnomaly> Anomalies = new();
+    public readonly List<string> SampleLogs = new();
 }
 
 public sealed class AutoPlayRunner

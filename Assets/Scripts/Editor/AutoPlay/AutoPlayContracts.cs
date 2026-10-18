@@ -122,18 +122,18 @@ public sealed class AutoPlaySnapshot
     public bool BuzzActive;
     public string BuzzType;
 
-    public List<AutoPlayItemView> Items = new List<AutoPlayItemView>();
-    public List<AutoPlayDungeonView> Dungeons = new List<AutoPlayDungeonView>();
-    public List<AutoPlayNewsView> News = new List<AutoPlayNewsView>();
+    public List<AutoPlayItemView> Items = new();
+    public List<AutoPlayDungeonView> Dungeons = new();
+    public List<AutoPlayNewsView> News = new();
     /// <summary>新聞社（購読の判断材料）。</summary>
-    public List<AutoPlayCompanyView> Newspapers = new List<AutoPlayCompanyView>();
+    public List<AutoPlayCompanyView> Newspapers = new();
     public int SubscriptionSlots;
     public int SubscriptionUsed;
     /// <summary>true = 購読0件で壁新聞（全社の一面から2本）しか読めない。</summary>
     public bool WallPaperOnly;
-    public List<AutoPlayScrapView> Scraps = new List<AutoPlayScrapView>();
+    public List<AutoPlayScrapView> Scraps = new();
     public int ScrapCapacity;
-    public List<AutoPlayRelicChoiceView> PendingRelicChoices = new List<AutoPlayRelicChoiceView>();
+    public List<AutoPlayRelicChoiceView> PendingRelicChoices = new();
     public int RelicDeclineGold;
 
     // --- 配信日の介入（StreamDay のときだけ埋まる） ---
@@ -230,12 +230,12 @@ public sealed class AutoPlayDecision
 public sealed class AutoPlayDayPlan
 {
     /// <summary>手動の購入（銘柄・数量）。上から順に実行し、資金不足の分は買える数に切り詰める。</summary>
-    public List<AutoPlayStreamItem> Purchases = new List<AutoPlayStreamItem>();
+    public List<AutoPlayStreamItem> Purchases = new();
     /// <summary>おまかせ仕入れを使う場合の予算（0 = 使わない）。</summary>
     public int AutoBuyBudget;
     public AutoBuyStrategy AutoBuyStrategy = AutoBuyStrategy.Recommend;
     /// <summary>陳列の優先順（銘柄ID）。上から陳列枠まで詰める。</summary>
-    public List<string> DisplayPriority = new List<string>();
+    public List<string> DisplayPriority = new();
     /// <summary>陳列する量の割合（0〜1。1 = 上限いっぱい）。</summary>
     public float DisplayFraction = 1f;
     /// <summary>魔王軍支援するダンジョン（null = しない）。</summary>
@@ -248,28 +248,28 @@ public sealed class AutoPlayDayPlan
     public string HeroWeapon;
     public string HeroArmor;
     /// <summary>購読する社（枠が空いているときだけ有効）。</summary>
-    public List<string> SubscribeNewspapers = new List<string>();
+    public List<string> SubscribeNewspapers = new();
     /// <summary>スクラップに貼る掲載キー。</summary>
-    public List<string> PinScraps = new List<string>();
+    public List<string> PinScraps = new();
     /// <summary>none / one（未確認の先頭1件 1,500G）/ batch（3件 4,000G）。</summary>
     public string ConfirmScraps = "none";
 
-    public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
+    public List<AutoPlayDecision> Decisions = new();
 }
 
 public sealed class AutoPlayStreamPlan
 {
-    public List<AutoPlayStreamItem> Items = new List<AutoPlayStreamItem>();
+    public List<AutoPlayStreamItem> Items = new();
     /// <summary>配信中の介入の予定（上から順に、timing の位置で出せるようになったら出す）。</summary>
-    public List<AutoPlayInterventionOrder> Interventions = new List<AutoPlayInterventionOrder>();
-    public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
+    public List<AutoPlayInterventionOrder> Interventions = new();
+    public List<AutoPlayDecision> Decisions = new();
 }
 
 public sealed class AutoPlayRelicPlan
 {
     /// <summary>選ぶ候補の番号。-1 = 辞退してゴールド。</summary>
     public int ChoiceIndex = -1;
-    public List<AutoPlayDecision> Decisions = new List<AutoPlayDecision>();
+    public List<AutoPlayDecision> Decisions = new();
 }
 
 /// <summary>判断を下すボット。Jev / ランダム / 貪欲 を差し替える。</summary>
@@ -382,7 +382,7 @@ public sealed class AutoPlayStreamInfo
     public int HeroDefense;
     public bool InterventionsEnabled;
     public int CooldownTurns;
-    public List<AutoPlayInterventionOption> Options = new List<AutoPlayInterventionOption>();
+    public List<AutoPlayInterventionOption> Options = new();
     /// <summary>【オラクル】介入なしのサロゲート勝敗とターン数。</summary>
     public bool BaselineHeroWins;
     public int BaselineTurns;

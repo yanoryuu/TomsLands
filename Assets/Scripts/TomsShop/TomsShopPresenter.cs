@@ -37,8 +37,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     /// <summary>初回Entryでターンフェーズを一度だけ開始するためのフラグ。</summary>
     private bool _turnPhaseInitialized = false;
 
-    /// <summary>朝刊を開いたターン。1ターンに一度だけ自動で開くための記録。</summary>
-
     // 営業開始演出の再生中フラグ（ボタン連打防止。フェーズが変わったら解除）
     private bool _salesStarting = false;
 
@@ -90,10 +88,10 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         // EventViewにGamePanelManagerを注入
         eventView.Initialize(gamePanelManager);
-        
-        stateManager.RegisterOnEnter(TomsShopGamePhase.Shop,Entry);
+
+        stateManager.RegisterOnEnter(TomsShopGamePhase.Shop, Entry);
     }
-    
+
     public void Start()
     {
         SoundManager.Instance?.PlayBGM("通常営業");
@@ -186,7 +184,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         // レリックバーのアイコンクリック → 説明ポップアップ
         tomsShopView.OnRelicIconClicked
-            .Subscribe(relicId => ShowRelicDetailPopup(relicId))
+            .Subscribe(ShowRelicDetailPopup)
             .AddTo(disposables);
 
         tomsShopView.OnRelicChoiceSkipped
@@ -245,7 +243,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                 ShowPendingRelicChoicesIfAny();
             })
             .AddTo(disposables);
-        
+
         //　ターン表示の更新（CommonView）
         gameFlowManager.CurrentTurn
             .Subscribe(turn => commonView.UpdateCurrentTurn(turn))
@@ -279,7 +277,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => OnEventPopupConfirmed())
             .AddTo(disposables);
     }
-    
+
     private void RefreshNextDebtDisplay()
     {
         int cycle = tomsShopModel.DebtCycle.Value;
@@ -305,8 +303,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             return;
         }
 
-        Initialize();
-
         SoundManager.Instance?.PlayBGM("通常営業");
 
         tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
@@ -315,7 +311,6 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // ターン変化はフェーズ開始判定に使うため、_lastKnownTurn が他で書き換わる前に捕捉する
         int currentTurn = gameFlowManager.CurrentTurn.Value;
         bool turnChanged = _lastKnownTurn != -1 && _lastKnownTurn != currentTurn;
-        bool firstEntry = _lastKnownTurn == -1;
 
         // 朝刊はターン頭に自動では開かない（店画面のボタンから開く）
 
@@ -362,7 +357,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             turnPhaseManager.CurrentTurnPhase.ForceNotify();
         }
     }
-    
+
     /// <summary>
     /// 配信勝利報酬のレリック3択を表示する。
     /// パネル未配線の場合は最初の候補を自動獲得してログに残す（機能自体は成立させる）。
@@ -406,17 +401,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         });
     }
 
-    //初期化
-    private void Initialize()
-    {
-        // tomsShopView.Initialize();
-        // tomsShopModel.Initialize();
-        // itemSelectionPresenter.Initialize();
-    }
-
     /// <summary>
     /// ターン変更を検出し、バズ演出またはターン演出のどちらかを表示する。
-    /// 
+    ///
     /// 【排他制御】
     /// - バズ発生/終了時 → バズ演出のみ表示（ターン演出はスキップ）
     /// - バズなし → 通常のターン切り替え演出を表示
@@ -547,14 +534,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         return sb.ToString().TrimEnd();
     }
 
-    //陳列画面を表示
-    private void OpenSelectionPanel()
-    {
-        itemSelectionPresenter.OnOpenSelectionPanel();
-    }
+    private void OpenSelectionPanel() => itemSelectionPresenter.OnOpenSelectionPanel();
 
-    public void Dispose()
-    {
-        disposables.Dispose();
-    }
+    public void Dispose() => disposables.Dispose();
 }

@@ -13,8 +13,8 @@ public class StreamingSalesModel
     public int GetCurrentTotalSales() => _totalSales.Value;
     public List<RuntimeItemData> ItemsForSale { get; private set; }
 
-    public Subject<int> OnItemSold { get; } = new Subject<int>();
-    public Subject<RuntimeItemData> OnItemStockDepleted { get; } = new Subject<RuntimeItemData>();
+    public Subject<int> OnItemSold { get; } = new();
+    public Subject<RuntimeItemData> OnItemStockDepleted { get; } = new();
     public event Action<int> OnItemSoldEvent;
 
     private readonly float _baseSalesInterval;
@@ -30,19 +30,15 @@ public class StreamingSalesModel
     /// </summary>
     public BattlePauseController PauseController { get; set; }
 
+    public Subject<Unit> OnItemsReordered { get; } = new();
 
-    public Subject<Unit> OnItemsReordered { get; } = new Subject<Unit>();
-
-    // リストを入れ替える
+    /// <summary>売り場の2スロットを入れ替えて、並び替えを通知する。</summary>
     public void SwapItems(int fromIndex, int toIndex)
     {
         if (fromIndex < 0 || fromIndex >= ItemsForSale.Count || toIndex < 0 || toIndex >= ItemsForSale.Count)
-        {
             return;
-        }
         (ItemsForSale[toIndex], ItemsForSale[fromIndex]) = (ItemsForSale[fromIndex], ItemsForSale[toIndex]);
 
-        // 並び替わったことを通知
         OnItemsReordered.OnNext(Unit.Default);
     }
 
@@ -52,10 +48,7 @@ public class StreamingSalesModel
         _intervalRandomness = randomness;
     }
 
-    public void SetItemsForSale(List<RuntimeItemData> items)
-    {
-        ItemsForSale = items;
-    }
+    public void SetItemsForSale(List<RuntimeItemData> items) => ItemsForSale = items;
 
     /// <summary>
     /// 自動販売の非同期ループを開始
@@ -71,15 +64,11 @@ public class StreamingSalesModel
                 await PausableDelayAsync(Mathf.Max(0, delay), token);
 
                 if (ItemsForSale == null || ItemsForSale.Count == 0)
-                {
-                    continue; // 商品がなければ次のループへ
-                }
+                    continue;
 
-                // 2. 商品を一つずつ、販売処理の専門メソッドに渡す
+                // 2. 商品を一つずつ販売判定
                 for (int i = 0; i < ItemsForSale.Count; i++)
-                {
                     ProcessSingleItemSale(mainItemModel, i);
-                }
             }
             catch (OperationCanceledException)
             {
@@ -101,9 +90,7 @@ public class StreamingSalesModel
         if (ItemsForSale == null || ItemsForSale.Count == 0) return;
 
         for (int i = 0; i < ItemsForSale.Count; i++)
-        {
             ProcessSingleItemSale(mainItemModel, i);
-        }
     }
 
     /// <summary>
@@ -274,10 +261,8 @@ public class StreamingSalesModel
 
         int earnings = quantitySold * item.CurrentPrice.Value;
 
-        // 総売上を更新
         _totalSales.Value += earnings;
 
-        // 在庫を減らす
         int beforeStock = item.Stock.Value;
         mainItemModel.SellItem(item.ItemId, quantitySold);
 
@@ -295,17 +280,12 @@ public class StreamingSalesModel
             item.Stock.Value = Mathf.Max(0, beforeStock - quantitySold);
         }
 
-        // 売れたことを通知
         OnItemSold.OnNext(itemIndex);
         OnItemSoldEvent?.Invoke(itemIndex);
 
         // BattleDemandTracker に販売記録（案C: トレンド用）
-        if (DemandTracker != null)
-        {
-            DemandTracker.RecordSale(item.ItemId);
-        }
+        DemandTracker?.RecordSale(item.ItemId);
 
-        // 在庫がゼロになったら通知
         if (item.Stock.Value <= 0)
             OnItemStockDepleted.OnNext(item);
 

@@ -18,8 +18,7 @@ public static class ElementAttributeMapper
             ElementType.Wood  => ItemTypeData.ItemAttribute.Wood,
             ElementType.Light => ItemTypeData.ItemAttribute.Light,
             ElementType.Dark  => ItemTypeData.ItemAttribute.Dark,
-            ElementType.None  => null,                                // None は属性なし
-            _ => null
+            _ => null // None は属性なし
         };
     }
 

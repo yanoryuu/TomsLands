@@ -11,9 +11,9 @@ public class DamagePopup : MonoBehaviour
     [Header("UI参照")]
     [SerializeField] private TMP_Text damageText;
 
-    [Header("アニメーション設定")]
-    [SerializeField] private const float moveDistance = 50f;
-    [SerializeField] private const float duration = 0.5f;
+    // const はシリアライズされない（Inspector では変えられない）
+    private const float moveDistance = 50f;
+    private const float duration = 0.5f;
 
     private Vector3 startLocalPos;
     private CanvasGroup canvasGroup;
@@ -32,7 +32,6 @@ public class DamagePopup : MonoBehaviour
     {
         if (damageText == null || canvasGroup == null) return;
 
-        // アニメーションの初期設定
         gameObject.SetActive(true);
         transform.localPosition = startLocalPos;
         damageText.text = $"-{damage}";
@@ -44,14 +43,12 @@ public class DamagePopup : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
 
-            // 進捗率に応じて、位置と透明度を更新
             transform.localPosition = startLocalPos + Vector3.up * moveDistance * t;
             canvasGroup.alpha = 1f - t;
 
             await UniTask.Yield(this.GetCancellationTokenOnDestroy());
         }
-        
-        // アニメーションが完了したら、自分自身のゲームオブジェクトを破棄します
+
         Destroy(gameObject);
     }
 }

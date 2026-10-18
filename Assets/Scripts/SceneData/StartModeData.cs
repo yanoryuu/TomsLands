@@ -14,15 +14,9 @@ public class StartModeData : ScriptableObject
     public GameModeId SelectedMode = GameModeId.Short;
     public bool UseAutoGeneration = true;
 
-    public void SetNewGame()
-    {
-        Mode = StartMode.NewGame;
-    }
+    public void SetNewGame() => Mode = StartMode.NewGame;
 
-    public void SetContinue()
-    {
-        Mode = StartMode.Continue;
-    }
+    public void SetContinue() => Mode = StartMode.Continue;
 
     /// <summary>タイトルUIからの選択を反映する。</summary>
     public void SetFlowSelection(GameModeId mode, bool useAuto)

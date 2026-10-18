@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using R3;
 using UnityEngine;
@@ -29,10 +30,10 @@ public class MetaProgressModel
     public int VillageFunds { get; private set; }
 
     /// <summary>村施設のレベル（facilityIdキー。JsonUtility対応のためList保持）。</summary>
-    private readonly System.Collections.Generic.List<FacilityLevelPlain> facilityLevels = new();
+    private readonly List<FacilityLevelPlain> facilityLevels = new();
 
     /// <summary>会話チュートリアルの既読フラグ（tutorialIdキー。JsonUtility対応のためList保持）。</summary>
-    private readonly System.Collections.Generic.List<TutorialFlagPlain> tutorialFlags = new();
+    private readonly List<TutorialFlagPlain> tutorialFlags = new();
 
     /// <summary>初めて配信（Battle）から帰還したターン番号。未経験なら0。</summary>
     public int FirstBattleTurn { get; private set; }
@@ -56,10 +57,7 @@ public class MetaProgressModel
     }
 
     /// <summary>【旧・未使用】借入枠レベルを1上げる。</summary>
-    public void UpgradeCreditLine()
-    {
-        CreditLineLevel++;
-    }
+    public void UpgradeCreditLine() => CreditLineLevel++;
 
     // ========================================
     // 村（メタ層）
@@ -227,8 +225,8 @@ public class MetaProgressModel
             bestNetWorth = BestNetWorth,
             bestRank = BestRank,
             villageFunds = VillageFunds,
-            facilities = new System.Collections.Generic.List<FacilityLevelPlain>(facilityLevels),
-            tutorials = new System.Collections.Generic.List<TutorialFlagPlain>(tutorialFlags),
+            facilities = new List<FacilityLevelPlain>(facilityLevels),
+            tutorials = new List<TutorialFlagPlain>(tutorialFlags),
             firstBattleTurn = FirstBattleTurn,
         };
         File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
@@ -307,10 +305,10 @@ public class MetaProgressData
 
     // --- 村（メタ層）。旧セーブは欠損→0/空で正規化 ---
     public int villageFunds;
-    public System.Collections.Generic.List<FacilityLevelPlain> facilities = new();
+    public List<FacilityLevelPlain> facilities = new();
 
     // --- 会話チュートリアル。旧セーブは欠損→空/0で正規化 ---
-    public System.Collections.Generic.List<TutorialFlagPlain> tutorials = new();
+    public List<TutorialFlagPlain> tutorials = new();
     public int firstBattleTurn;
 }
 

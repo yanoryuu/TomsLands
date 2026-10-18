@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
@@ -42,7 +41,6 @@ public class PopUpManager
 
     private const string PopUpSceneName = "PopupScene";
     private bool isLoading;
-
 
     /// <summary>
     /// ポップアップを表示する。

@@ -17,20 +17,13 @@ public class BattleUIView : MonoBehaviour
 
     /// <summary>現在のテンポ設定（GameConst.battleTempo。取得できなければ既定値）。</summary>
     public BattleTempoData Tempo => GameConst.Data?.battleTempo ?? FallbackTempo;
-    private static readonly BattleTempoData FallbackTempo = new BattleTempoData();
+    private static readonly BattleTempoData FallbackTempo = new();
 
     private float SpeedMultiplier
         => Mathf.Max(0.1f, overrideTempoInInspector ? battleSpeedMultiplier : Tempo.speedMultiplier);
 
     private float LogSeconds
         => Mathf.Max(0f, overrideTempoInInspector ? logDisplayDuration : Tempo.logSeconds);
-
-    // ========== バトルの履歴表示機能（コメントアウト） ==========
-    // [Header("ログ表示関連")]
-    // [SerializeField] private TMP_Text logText;
-    // [SerializeField] private int maxLogLines = 8;
-    // private readonly List<string> logLines = new List<string>();
-    // ===========================================================
 
     [Header("背景")]
     [SerializeField] private SpriteRenderer backgroundRenderer;
@@ -87,20 +80,7 @@ public class BattleUIView : MonoBehaviour
             await pauseController.WaitIfPausedAsync(token);
     }
 
+    /// <summary>ログ1件ぶんの表示待機（履歴表示 UI は廃止済みで、message は表示しない）。</summary>
     public async UniTask AddLogAsync(string message, CancellationToken token)
-    {
-        // ========== バトルの履歴表示機能（コメントアウト） ==========
-        // logLines.Add(message);
-        // logText.text = string.Join("\n", logLines);
-        // logText.ForceMeshUpdate();
-        // while (logText.textInfo.lineCount > maxLogLines && logLines.Count > 0)
-        // {
-        //     logLines.RemoveAt(0);
-        //     logText.text = string.Join("\n", logLines);
-        //     logText.ForceMeshUpdate();
-        // }
-        // ===========================================================
-
-        await UniTask.Delay(System.TimeSpan.FromSeconds(LogSeconds / SpeedMultiplier), cancellationToken: token);
-    }
+        => await UniTask.Delay(System.TimeSpan.FromSeconds(LogSeconds / SpeedMultiplier), cancellationToken: token);
 }

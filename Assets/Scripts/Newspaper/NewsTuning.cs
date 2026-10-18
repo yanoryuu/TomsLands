@@ -135,9 +135,9 @@ public static class NewsTuning
     /// エディタと開発ビルドでは読む。製品は approved（と状態の空欄）だけ。
     /// </summary>
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-    public static bool IncludeDraftTemplates = true;
+    public static readonly bool IncludeDraftTemplates = true;
 #else
-    public static bool IncludeDraftTemplates = false;
+    public static readonly bool IncludeDraftTemplates = false;
 #endif
 
     /// <summary>1ターンに置く（発効させる）事象の数の確率。0件 / 1件 / 2件。</summary>

@@ -106,7 +106,11 @@ public static class SaveSystem
             {
                 File.Copy(path, backupPath, overwrite: true);
             }
-            catch { /* 失敗しても致命ではない */ }
+            catch (Exception e)
+            {
+                // 失敗しても致命ではない（置換は続行する）
+                Debug.LogWarning($"[SaveSystem] Backup copy failed: {e.Message}");
+            }
         }
 
         // 置換

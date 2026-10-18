@@ -9,12 +9,11 @@ public class EventDialogView : MonoBehaviour
     [SerializeField] private Button _confirmButton; // 「はい」ボタン
     [SerializeField] private Button _cancelButton;  // 「いいえ」ボタン
 
-    public Subject<Unit> OnConfirmClicked { get; private set; } = new();
-    public Subject<Unit> OnCancelClicked { get; private set; } = new();
+    public Subject<Unit> OnConfirmClicked { get; } = new();
+    public Subject<Unit> OnCancelClicked { get; } = new();
 
     private void Awake()
     {
-        // ButtonのクリックイベントとSubjectを結びつける
         _confirmButton.onClick.AddListener(() => OnConfirmClicked.OnNext(Unit.Default));
         _cancelButton.onClick.AddListener(() => OnCancelClicked.OnNext(Unit.Default));
     }
@@ -26,11 +25,7 @@ public class EventDialogView : MonoBehaviour
         OnCancelClicked.OnCompleted();
     }
 
-    // Presenterから呼ばれて表示を更新する
-    public void SetContent(string body)
-    {
-        _bodyText.text = body;
-    }
+    public void SetContent(string body) => _bodyText.text = body;
 
     public void Show() => gameObject.SetActive(true);
     public void Hide() => gameObject.SetActive(false);

@@ -23,6 +23,8 @@ public static class NewsMasterLoader
     private static List<NewsTemplateData> _templates;
     private static List<NewsFillerData> _fillers;
 
+    private static readonly char[] MapSeparators = { ':', '=' };
+
     // ---------------------------------------------------------------
     // 新聞社
     // ---------------------------------------------------------------
@@ -363,7 +365,7 @@ public static class NewsMasterLoader
         var map = new Dictionary<string, string>();
         foreach (var part in SplitList(s))
         {
-            int k = part.IndexOfAny(new[] { ':', '=' });
+            int k = part.IndexOfAny(MapSeparators);
             if (k <= 0) { map[part] = string.Empty; continue; }
             map[part.Substring(0, k).Trim()] = part.Substring(k + 1).Trim();
         }

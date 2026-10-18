@@ -28,7 +28,7 @@ public class BlackSmithView : MonoBehaviour
 
     [Header("オート購入")]
     [SerializeField] private Button autoBuyButton;
-    [SerializeField] private TMPro.TextMeshProUGUI autoBuyResultText;
+    [SerializeField] private TextMeshProUGUI autoBuyResultText;
     [SerializeField] private AutoBuyBudgetPopup autoBuyBudgetPopup;
 
     [Header("Dialogue")]
@@ -75,15 +75,15 @@ public class BlackSmithView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI unlockDetailInfo;
     [SerializeField] private TextMeshProUGUI unlockDetailDescription;
 
-    public Subject<Unit> OnCloseRequested { get; private set; } = new();
-    public Subject<BlackSmithTab> OnChangePanel { get; private set; } = new();
-    public Subject<Unit> OnLevelUpRequested { get; private set; } = new();
-    public Subject<Unit> OnAutoBuyRequested { get; private set; } = new();
-    public Subject<Unit> OnCharacterClicked { get; private set; } = new();
+    public Subject<Unit> OnCloseRequested { get; } = new();
+    public Subject<BlackSmithTab> OnChangePanel { get; } = new();
+    public Subject<Unit> OnLevelUpRequested { get; } = new();
+    public Subject<Unit> OnAutoBuyRequested { get; } = new();
+    public Subject<Unit> OnCharacterClicked { get; } = new();
     /// <summary>予算設定ポップアップで購入ボタンが押されたときに予算額と方針プリセットを通知する。</summary>
-    public Subject<(int budget, AutoBuyStrategy strategy)> OnAutoBuyBudgetConfirmed { get; private set; } = new();
+    public Subject<(int budget, AutoBuyStrategy strategy)> OnAutoBuyBudgetConfirmed { get; } = new();
     /// <summary>並べ替えモードが変更されたときに通知する。</summary>
-    public Subject<BlackSmithSortMode> OnSortChanged { get; private set; } = new();
+    public Subject<BlackSmithSortMode> OnSortChanged { get; } = new();
 
     /// <summary>選択銘柄の詳細パネル。Presenter が選択時に結線する。</summary>
     public ItemDetailPanel DetailPanel => itemDetailPanel;
@@ -118,8 +118,9 @@ public class BlackSmithView : MonoBehaviour
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
 
         if (autoBuyBudgetPopup != null)
-            autoBuyBudgetPopup.OnConfirmClicked.Subscribe(budget =>
-                OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)));
+            autoBuyBudgetPopup.OnConfirmClicked
+                .Subscribe(budget => OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)))
+                .AddTo(this);
 
         if (characterButton != null)
         {
@@ -164,8 +165,8 @@ public class BlackSmithView : MonoBehaviour
                 if (es != null && closeButton != null && closeButton.IsInteractable())
                     UnityEngine.EventSystems.ExecuteEvents.Execute(closeButton.gameObject,
                         new UnityEngine.EventSystems.BaseEventData(es), UnityEngine.EventSystems.ExecuteEvents.submitHandler);
-                else
-                    closeButton?.onClick.Invoke();
+                else if (closeButton != null)
+                    closeButton.onClick.Invoke();
             });
         }
         focusScope.OnButton
@@ -277,11 +278,14 @@ public class BlackSmithView : MonoBehaviour
         var es = UnityEngine.EventSystems.EventSystem.current;
         var sel = es != null ? es.currentSelectedGameObject : null;
         bool keep = sel != null && UIFocusManager.IsUsable(sel)
-            && (sel == weaponButton?.gameObject || sel == armorButton?.gameObject
-                || sel == developButton?.gameObject || sel == specialWeaponButton?.gameObject
+            && (IsObjectOf(sel, weaponButton) || IsObjectOf(sel, armorButton)
+                || IsObjectOf(sel, developButton) || IsObjectOf(sel, specialWeaponButton)
                 || (sortDropdown != null && sel.transform.IsChildOf(sortDropdown.transform)));
         if (!keep) focusScope.Select(first);
     }
+
+    private static bool IsObjectOf(GameObject go, Component component) =>
+        component != null && go == component.gameObject;
 
     /// <summary>
     /// 商品リストを表示
@@ -461,8 +465,7 @@ public class BlackSmithView : MonoBehaviour
 
     private static void SetCanvasGroupLock(GameObject target, bool locked)
     {
-        var cg = target.GetComponent<CanvasGroup>();
-        if (cg == null)
+        if (!target.TryGetComponent<CanvasGroup>(out var cg))
         {
             if (!locked) return; // 解除時にわざわざ足す必要はない
             cg = target.AddComponent<CanvasGroup>();
@@ -517,7 +520,7 @@ public class BlackSmithView : MonoBehaviour
         tab.transform.DOKill();
         float baseY = initTabPos[tabType].y;
         bool isSelected = tabType == selected;
-        tab.transform.DOLocalMoveY(isSelected ? baseY + 10 : baseY, isSelected ? 0.2f : 0.1f);
+        tab.transform.DOLocalMoveY(isSelected ? baseY + 10 : baseY, isSelected ? 0.2f : 0.1f).SetLink(tab);
     }
 
     public void SwitchPanel(BlackSmithTab tab)
@@ -562,9 +565,9 @@ public class BlackSmithView : MonoBehaviour
             var entry = Instantiate(unlockEntryTemplate, unlockListRoot);
             entry.SetActive(true);
 
-            var icon = entry.transform.Find("Icon")?.GetComponent<Image>();
-            var nameText = entry.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
-            var infoText = entry.transform.Find("Info")?.GetComponent<TextMeshProUGUI>();
+            var icon = FindChildComponent<Image>(entry.transform, "Icon");
+            var nameText = FindChildComponent<TextMeshProUGUI>(entry.transform, "Name");
+            var infoText = FindChildComponent<TextMeshProUGUI>(entry.transform, "Info");
 
             if (icon)
             {
@@ -587,6 +590,12 @@ public class BlackSmithView : MonoBehaviour
 
             unlockEntries.Add(entry);
         }
+    }
+
+    private static T FindChildComponent<T>(Transform parent, string childName) where T : Component
+    {
+        var child = parent.Find(childName);
+        return child != null ? child.GetComponent<T>() : null;
     }
 
     /// <summary>解放商品の詳細を表示する（レベルアップフレーム上部の詳細欄）。</summary>

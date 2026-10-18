@@ -52,7 +52,8 @@ public class VillagePresenter : IStartable, IDisposable
             return;
         }
 
-        SoundManager.Instance?.PlayBGM("OP");
+        var soundManager = SoundManager.Instance;
+        if (soundManager != null) soundManager.PlayBGM("OP");
 
         Bind();
         RefreshAll();
@@ -193,7 +194,8 @@ public class VillagePresenter : IStartable, IDisposable
 
         if (model.TryInvest(selectedFacilityId, out string message))
         {
-            SoundManager.Instance?.PlaySE("営業/SE_開発完了");
+            var soundManager = SoundManager.Instance;
+            if (soundManager != null) soundManager.PlaySE("営業/SE_開発完了");
             view.ShowMessage(message);
 
             // 建設演出（該当区画をポップ）

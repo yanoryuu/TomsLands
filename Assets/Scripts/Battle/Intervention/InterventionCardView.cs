@@ -121,7 +121,8 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
 
         ShowFaceImmediate(InterventionFace.Hero);
         if (tabNotifyDot != null) tabNotifyDot.SetActive(false);
-        foreach (var w in AllButtons()) w?.SetCooldown(0f);
+        foreach (var w in AllButtons())
+            if (w != null) w.SetCooldown(0f);
         RefreshButtons();
     }
 
@@ -194,8 +195,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
 
     private static HoverTooltipTrigger GetOrAddTooltip(GameObject go)
     {
-        var t = go.GetComponent<HoverTooltipTrigger>();
-        return t != null ? t : go.AddComponent<HoverTooltipTrigger>();
+        return go.TryGetComponent<HoverTooltipTrigger>(out var t) ? t : go.AddComponent<HoverTooltipTrigger>();
     }
 
     /// <summary>タブの説明は「めくった先の面」なので、面が変わるたびに差し替える。</summary>
@@ -220,7 +220,8 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         float r = Mathf.Clamp01(remaining01);
         bool changedGate = (r > 0f) != (_cooldown > 0f);
         _cooldown = r;
-        foreach (var w in AllButtons()) w?.SetCooldown(r);
+        foreach (var w in AllButtons())
+            if (w != null) w.SetCooldown(r);
         if (changedGate) RefreshButtons();
     }
 
@@ -432,7 +433,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         int i = (int)type;
         if (_heroKnown[i] && !_heroStates[i].Interactable) return;
         _lastPressed = w;
-        w?.PlayPressed();
+        if (w != null) w.PlayPressed();
         _onHero.OnNext(type);
         // 受け付けられると Presenter が同期で SetPending(true) を呼ぶ
         if (_pending && _lastPressed == w) _onHeroAccepted.OnNext(type);
@@ -444,7 +445,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         int i = (int)type;
         if (_dungeonKnown[i] && !_dungeonStates[i].Interactable) return;
         _lastPressed = w;
-        w?.PlayPressed();
+        if (w != null) w.PlayPressed();
         _onDungeon.OnNext(type);
     }
 
@@ -508,14 +509,12 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         _ => null,
     };
 
-    private IEnumerable<InterventionButtonWidget> AllButtons()
+    private InterventionButtonWidget[] _allButtons;
+
+    // SetCooldown から毎フレーム呼ばれるので、イテレーターを作らず配列を使い回す（参照は実行中に変わらない）
+    private InterventionButtonWidget[] AllButtons() => _allButtons ??= new[]
     {
-        yield return healButton;
-        yield return skillButton;
-        yield return specialButton;
-        yield return trapButton;
-        yield return curseButton;
-        yield return reinforceButton;
-        yield return bossBuffButton;
-    }
+        healButton, skillButton, specialButton,
+        trapButton, curseButton, reinforceButton, bossBuffButton,
+    };
 }

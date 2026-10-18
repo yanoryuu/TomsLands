@@ -9,10 +9,10 @@ public class GameOverLifetimeScope : LifetimeScope
     protected override void Configure(IContainerBuilder builder)
     {
         // SceneTransitionService の依存解決に必要
-        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData")
-                              ?? ScriptableObject.CreateInstance<BattleInputData>();
-        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData")
-                               ?? ScriptableObject.CreateInstance<BattleOutputData>();
+        var battleInputData = AddressableLoader.Load<BattleInputData>("SceneData/BattleInputData");
+        if (battleInputData == null) battleInputData = ScriptableObject.CreateInstance<BattleInputData>();
+        var battleOutputData = AddressableLoader.Load<BattleOutputData>("SceneData/BattleOutputData");
+        if (battleOutputData == null) battleOutputData = ScriptableObject.CreateInstance<BattleOutputData>();
         builder.RegisterInstance(battleInputData);
         builder.RegisterInstance(battleOutputData);
 

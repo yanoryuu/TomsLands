@@ -1,4 +1,3 @@
-using UnityEngine;
 using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
@@ -16,6 +15,7 @@ public class ItemPopUpManager
     {
         this.parentScope = parentScope;
     }
+
     /// <summary>
     /// ポップアップシーンに渡すデータを一時保持するプロパティ。
     /// シーンロード完了後に ItemPopUpView がここからデータを読み取る。

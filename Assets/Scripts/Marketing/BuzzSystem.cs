@@ -57,6 +57,8 @@ public class BuzzSystem
     /// <summary>バズの残りターン数（UI表示用のリアクティブプロパティ）</summary>
     public ReactiveProperty<int> RemainingTurns { get; } = new(0);
 
+    private readonly RelicEffectResolver _relicResolver;
+
     /// <summary>
     /// コンストラクタ。VContainer から注入する。
     /// </summary>
@@ -67,8 +69,6 @@ public class BuzzSystem
     /// <param name="flameData">炎上バズの効果データ</param>
     /// <param name="normalBuzzData">通常バズの効果データ</param>
     /// <param name="bigBuzzData">大バズの効果データ</param>
-    private readonly RelicEffectResolver _relicResolver;
-
     public BuzzSystem(
         ShopStatusModel statusModel,
         FollowerSystem followerSystem,
@@ -445,24 +445,18 @@ public class BuzzSystem
     /// <summary>
     /// 現在アクティブなバズ状態を取得する（デバッグ・UI表示用）。
     /// </summary>
-    public ActiveBuzzState GetActiveBuzz()
-    {
-        return _activeBuzz;
-    }
+    public ActiveBuzzState GetActiveBuzz() => _activeBuzz;
 
     /// <summary>
     /// バズタイプに対応する効果データを取得する。
     /// </summary>
-    private BuzzEffectData GetEffectData(BuzzType type)
+    private BuzzEffectData GetEffectData(BuzzType type) => type switch
     {
-        return type switch
-        {
-            BuzzType.Flame => _flameData,
-            BuzzType.Normal => _normalBuzzData,
-            BuzzType.Big => _bigBuzzData,
-            _ => null
-        };
-    }
+        BuzzType.Flame => _flameData,
+        BuzzType.Normal => _normalBuzzData,
+        BuzzType.Big => _bigBuzzData,
+        _ => null
+    };
 
     /// <summary>
     /// バズ状態を強制リセットする（デバッグ・ゲームリセット用）。

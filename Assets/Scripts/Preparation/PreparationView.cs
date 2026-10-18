@@ -81,7 +81,6 @@ public class PreparationView : MonoBehaviour
     /// <summary>スライダー操作で指定された持ち込み額（G、刻み丸め前の目安値）。</summary>
     public Subject<int> OnCarrySliderChanged { get; } = new();
     public Subject<GameModeId> OnDifficultySelected { get; } = new();
-    public Subject<Unit> OnCreditUpgrade { get; } = new();
     public Subject<Unit> OnFlyerToggled { get; } = new();
     public Subject<Unit> OnAppraisalToggled { get; } = new();
     public Subject<Unit> OnGraceToggled { get; } = new();
@@ -111,8 +110,7 @@ public class PreparationView : MonoBehaviour
             var canvas = anchor.GetComponentInParent<Canvas>(true);
             if (canvas == null) return;
             canvas = canvas.rootCanvas;
-            uiLockGroup = canvas.GetComponent<CanvasGroup>();
-            if (uiLockGroup == null) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
+            if (!canvas.TryGetComponent(out uiLockGroup)) uiLockGroup = canvas.gameObject.AddComponent<CanvasGroup>();
             uiLockPrevBlocks = uiLockGroup.blocksRaycasts;
             uiLockGroup.blocksRaycasts = false;
             uiLocked = true;
@@ -332,8 +330,7 @@ public class PreparationView : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             var obj = Instantiate(choiceSlotPrefab, parent);
-            var slot = obj.GetComponent<PreparationChoiceSlot>();
-            if (slot != null) slots.Add(slot);
+            if (obj.TryGetComponent<PreparationChoiceSlot>(out var slot)) slots.Add(slot);
         }
         return slots;
     }
