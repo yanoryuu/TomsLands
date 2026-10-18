@@ -15,7 +15,11 @@ using UnityEngine.UI;
 ///   X              : 在庫のアイテム → 売り場の先頭の空き枠へ並べる（空き無しなら持ち上げて売り場へ → A で入替 / B 取消）
 ///                    売り場のアイテム → 持ち上げる → 置き先で A（ドラッグ＆ドロップの代替）/ B 取消
 ///   Start          : 一時停止して設定画面（加算シーン Setting）を開く。閉じたら再開する
+///   Esc（キーボード）: 持ち上げ中でなければ Start と同じく設定画面を開く（UI/Menu はパッドの Start にしか割り当てが無いため）
 ///   青スパ・赤スパを A で出した直後は、敵が 2 体以上いれば自動で狙う敵の選択を開く
+///
+/// 例外として、配信中パネル右上の歯車（SettingButton）のクリックもここで設定画面へ繋ぐ。
+/// FightScene には CommonView（ショップのメニューボタン）が無く、この歯車は onClick 未配線だったため。
 /// </summary>
 [DefaultExecutionOrder(-600)] // LateUpdate を UIFocusManager.Tick（-500）より先に回す
 public sealed class BattleGamepadController : MonoBehaviour
@@ -55,6 +59,14 @@ public sealed class BattleGamepadController : MonoBehaviour
         _targets.Initialize(_sequencer, CanTarget);
 
         _scope.OnButton.Subscribe(OnScopeButton).AddTo(_disposables);
+
+        // 歯車ボタン（シーン上は onClick 未配線）→ Start と同じく一時停止して設定画面を開く
+        foreach (var b in streamingPanel.GetComponentsInChildren<Button>(true))
+        {
+            if (b.name != SettingButtonName) continue;
+            b.onClick.AddListener(OpenSettingsPaused);
+            break;
+        }
 
         if (_card != null)
         {
@@ -106,6 +118,7 @@ public sealed class BattleGamepadController : MonoBehaviour
     // ---------------------------------------------------------------- 設定画面
 
     private const string SettingSceneName = "Setting";
+    private const string SettingButtonName = "SettingButton"; // FightScene の配信中パネル右上の歯車
     private bool _settingLoading;
     private bool _resumeOnSettingClosed; // 設定を開くために一時停止した（閉じたら再開する）
 
@@ -144,10 +157,18 @@ public sealed class BattleGamepadController : MonoBehaviour
             PressButton(_control != null ? _control.PauseButton : null);
     }
 
-    /// <summary>B: 持ち上げ中なら取り消す（それ以外の戻る先は無い）。</summary>
+    /// <summary>
+    /// B / Esc: 持ち上げ中なら取り消す（それ以外の戻る先は無い）。
+    /// キーボードの Esc で取り消すものが無ければ設定画面を開く（パッドの B は誤操作で止まらないよう開かない）。
+    /// </summary>
     private void OnCancel()
     {
-        if (ItemSlotView.IsPadHolding) CancelHold();
+        if (ItemSlotView.IsPadHolding)
+        {
+            CancelHold();
+            return;
+        }
+        if (ControllerInput.Device.CurrentValue == InputDeviceKind.Keyboard) OpenSettingsPaused();
     }
 
     private void FlipCard()

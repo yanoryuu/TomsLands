@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -72,6 +73,7 @@ public static class ControllerInput
     private static readonly ReactiveProperty<bool> isGamepad = new(false);
     private static readonly ReactiveProperty<GamepadStyle> style = new(GamepadStyle.Xbox);
     private static readonly Subject<ControllerButton> buttonPressed = new();
+    private static readonly List<InputDevice> disabledJoysticks = new();
 
     private static InputAction submitAction, cancelAction, tabLeftAction, tabRightAction, buttonXAction, buttonYAction, menuAction;
     private static InputActionAsset resolvedAsset;
@@ -105,6 +107,7 @@ public static class ControllerInput
         resolvedAsset = null;
         submitAction = cancelAction = tabLeftAction = tabRightAction = buttonXAction = buttonYAction = menuAction = null;
         debugOverride = false;
+        disabledJoysticks.Clear();
     }
 
     /// <summary>
@@ -158,6 +161,43 @@ public static class ControllerInput
     {
         DetectDevice();
         DispatchButtons();
+    }
+
+    /// <summary>
+    /// Gamepad 以外のジョイスティック（汎用 HID ゲームコントローラー）を無効にし、以後つながったものも無効にする。
+    /// 左手デバイス（Razer Tartarus 等）や仮想コントローラーの中には、触っていなくても軸やハットが
+    /// 端に張り付いたままのものがあり、PlayerInput の自動切替や汎用バインドに拾われると「上を押しっぱなし」になる。
+    /// このゲームは Gamepad / キーボード / マウスで遊ぶ前提なので Joystick はまとめて止める。
+    /// </summary>
+    internal static void InstallJoystickFilter()
+    {
+        InputSystem.onDeviceChange -= OnDeviceChange;
+        InputSystem.onDeviceChange += OnDeviceChange;
+        var devices = InputSystem.devices;
+        for (int i = 0; i < devices.Count; i++)
+            DisableIfJoystick(devices[i]);
+    }
+
+    /// <summary>InstallJoystickFilter で止めたデバイスを元に戻す（Editor の再生終了時など）。</summary>
+    internal static void UninstallJoystickFilter()
+    {
+        InputSystem.onDeviceChange -= OnDeviceChange;
+        foreach (var d in disabledJoysticks)
+            if (d != null && d.added && !d.enabled) InputSystem.EnableDevice(d);
+        disabledJoysticks.Clear();
+    }
+
+    private static void OnDeviceChange(InputDevice device, InputDeviceChange change)
+    {
+        if (change == InputDeviceChange.Added || change == InputDeviceChange.Reconnected || change == InputDeviceChange.Enabled)
+            DisableIfJoystick(device);
+    }
+
+    private static void DisableIfJoystick(InputDevice device)
+    {
+        if (device is not Joystick || !device.enabled) return;
+        InputSystem.DisableDevice(device);
+        if (!disabledJoysticks.Contains(device)) disabledJoysticks.Add(device);
     }
 
     internal static bool CancelPressedThisFrame()
