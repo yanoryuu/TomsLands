@@ -23,6 +23,9 @@ public class BattleLifetimeScope : LifetimeScope
     [Header("BattleResult（配信リザルト）")]
     [SerializeField] private BattleResultView battleResultView;
 
+    [Header("配当通知書（勇者敗北時。未設定なら出さない）")]
+    [SerializeField] private DemonKingPayoutView demonKingPayoutView;
+
     [Header("バトル操作UI（一時停止・終了・在庫切れ）")]
     [SerializeField] private BattleControlView battleControlView;
 
@@ -140,6 +143,12 @@ public class BattleLifetimeScope : LifetimeScope
         else
         {
             Debug.LogWarning("[BattleLifetimeScope] BattleResultView が未設定です。FightScene に BattleResultView を配置して Inspector で設定してください。");
+        }
+
+        // 配当通知書（任意。BattleSceneStarter は TryResolve で取るので未設定でも動く）
+        if (demonKingPayoutView != null)
+        {
+            builder.RegisterComponent(demonKingPayoutView);
         }
 
         // BattleControlView（一時停止・配信終了・在庫切れポップアップ）
