@@ -155,6 +155,7 @@ public class DebugAutoPlayer : MonoBehaviour
     private StreamingSettingView _streamingSettingView;
     private BattleResultView _battleResultView;
     private BattleControlView _battleControlView;
+    private DemonKingPayoutView _payoutView;
 
     private ScenarioPlayer _scenarioPlayer;
 
@@ -194,6 +195,7 @@ public class DebugAutoPlayer : MonoBehaviour
         resolver.TryResolve(out _streamingSettingView);
         resolver.TryResolve(out _battleResultView);
         resolver.TryResolve(out _battleControlView);
+        resolver.TryResolve(out _payoutView);
         _initialized = true;
     }
 
@@ -910,6 +912,20 @@ public class DebugAutoPlayer : MonoBehaviour
         bool setting = PanelActive("streamingSettingPanel");
         bool streaming = PanelActive("streamingPanel");
         bool result = PanelActive("streamingResultPanel");
+
+        // 配当通知書はリザルトパネルの上に重なるので先に見る
+        if (_payoutView != null && _payoutView.IsShowing)
+        {
+            if (Time.unscaledTime - _battleResultFiredTime > RefireSeconds)
+            {
+                _battleResultFiredTime = Time.unscaledTime;
+                AddLog("配当通知書を受け取る");
+                _payoutView.ReceiveImmediately();
+            }
+            SetStatus("配当通知書: 受け取る");
+            _stallExempt = true;
+            return;
+        }
 
         if (result)
         {

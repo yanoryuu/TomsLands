@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
+using VContainer;
 using VContainer.Unity;
 
 /// <summary>
@@ -28,6 +29,7 @@ public class BattleSceneStarter : IAsyncStartable
     private readonly TutorialScenarioService _tutorialScenario;
     private readonly InterventionPresenter _interventions; // 介入（勇者側・ダンジョン側）
     private readonly SuperChatGenerator _superChats;       // 視聴者ランダムスパチャ（収入にしない）
+    private readonly DemonKingPayoutView _payoutView;      // 配当通知書（未配線なら null。勇者敗北時のみ表示）
 
     // 配信チュートリアルのシナリオラベル
     private const string TutorialStreamingPrepare = "Tutorial_StreamingPrepare";
@@ -58,8 +60,11 @@ public class BattleSceneStarter : IAsyncStartable
         BattleControlView controlView,
         TutorialScenarioService tutorialScenario,
         InterventionPresenter interventions,
-        SuperChatGenerator superChats)
+        SuperChatGenerator superChats,
+        IObjectResolver resolver)
     {
+        // 配当通知書は任意の画面なので、未登録でも解決エラーにしない
+        resolver.TryResolve(out _payoutView);
         _interventions = interventions;
         _superChats = superChats;
         _tutorialScenario = tutorialScenario;
@@ -258,7 +263,8 @@ public class BattleSceneStarter : IAsyncStartable
         var soldItems = BuildSoldItems();
         int rawSales = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
         int restockRefund = CalculateUnsoldRestockRefund(soldItems); // 補充分の売れ残りは返金
-        int defeatReward = CalculateDefeatReward(battleResult.result); // 勇者敗北時（ダンジョン防衛成功）の報酬
+        var defeatRewardBreakdown = CalculateDefeatReward(battleResult.result); // 勇者敗北時（ダンジョン防衛成功）の報酬
+        int defeatReward = defeatRewardBreakdown.Total;
         // 介入: 払った総額を引き、未実行分の返金を戻す（介入なしならどちらも 0 で従来と同じ式）
         int interventionSpent = _interventions != null ? _interventions.TotalSpent : 0;
         int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward - interventionSpent + interventionRefund;
@@ -281,6 +287,13 @@ public class BattleSceneStarter : IAsyncStartable
         else
         {
             Debug.LogWarning("[BattleSceneStarter] BattleResultView is null. Skipping result screen.");
+        }
+
+        // --- Phase 3.5: 配当通知書（勇者敗北＆防衛報酬あり）。防衛報酬は totalEarnings に入っているので表示だけ ---
+        if (battleResult.result == BattleResult.Defeat && defeatReward > 0 && _payoutView != null)
+        {
+            Debug.Log("[BattleSceneStarter] Phase 3.5: DemonKingPayout");
+            await _payoutView.ShowAsync(BuildPayoutData(defeatRewardBreakdown), cancellation);
         }
 
         // --- Phase 4: TomsShop に戻る ---
@@ -418,23 +431,64 @@ public class BattleSceneStarter : IAsyncStartable
         return null;
     }
 
+    /// <summary>防衛報酬の内訳（基本額 × レリック倍率 = 受取額）</summary>
+    private readonly struct DefeatRewardBreakdown
+    {
+        public readonly int BaseReward;
+        public readonly float Multiplier;
+        public readonly int Total;
+
+        public DefeatRewardBreakdown(int baseReward, float multiplier, int total)
+        {
+            BaseReward = baseReward;
+            Multiplier = multiplier;
+            Total = total;
+        }
+    }
+
     /// <summary>
     /// 勇者敗北時（＝ダンジョン防衛成功時）の報酬を計算する。
     /// 現在のダンジョンレベルの rewardGold（魔王軍側からの報酬）を受け取る。勝利時は 0。
+    /// 配当通知書に出すため、基本額と倍率も一緒に返す。
     /// </summary>
-    private int CalculateDefeatReward(BattleResult result)
+    private DefeatRewardBreakdown CalculateDefeatReward(BattleResult result)
     {
-        if (result != BattleResult.Defeat) return 0;
+        if (result != BattleResult.Defeat) return new DefeatRewardBreakdown(0, 1f, 0);
 
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
-        int reward = dungeon != null ? dungeon.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0 : 0;
+        int baseReward = dungeon != null ? dungeon.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0 : 0;
 
         // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
-        reward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
+        float mul = RelicBattleEffects.DefeatRewardMul;
+        int reward = Mathf.RoundToInt(baseReward * mul);
 
         if (reward > 0)
-            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={RelicBattleEffects.DefeatRewardMul:F2})");
-        return reward;
+            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={mul:F2})");
+        return new DefeatRewardBreakdown(baseReward, mul, reward);
+    }
+
+    /// <summary>配当通知書に渡す表示データを組み立てる。</summary>
+    private DemonKingPayoutData BuildPayoutData(DefeatRewardBreakdown reward)
+    {
+        var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
+        string dungeonName = dungeon != null ? dungeon.dungeonName : _inputData.DungeonKey.ToString();
+        int supportAmount = CalculateSupportAmount(dungeon, _inputData.DungeonLevel);
+        return new DemonKingPayoutData(dungeonName, _inputData.DungeonLevel, supportAmount,
+            reward.BaseReward, reward.Multiplier, reward.Total);
+    }
+
+    /// <summary>
+    /// 魔王軍支援でこのダンジョンに払った累計額。
+    /// 支払額はセーブしていないが、ダンジョンLvは魔王軍支援（DungeonLevelUpPresenter）でしか上がらないので、
+    /// 初期Lv→現在Lv のレベルアップ費用（levelUpCost は「そのLvから次のLvへ」の費用）の合計と一致する。
+    /// </summary>
+    private static int CalculateSupportAmount(DungeonInfoScriptableObj dungeon, int currentLevel)
+    {
+        if (dungeon == null) return 0;
+        int total = 0;
+        for (int lv = Mathf.Max(1, dungeon.initDungeonLevel); lv < currentLevel; lv++)
+            total += dungeon.GetLevelData(lv)?.levelUpCost ?? 0;
+        return total;
     }
 
     /// <summary>
