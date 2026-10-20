@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using R3;
 
 /// <summary>
 /// 新聞の購読契約と購読枠（Docs/News_Spec.md §8）。
@@ -21,6 +22,10 @@ public class NewspaperSubscriptionModel
     }
 
     private readonly List<Contract> contracts = new();
+
+    private readonly Subject<string> subscribed = new();
+    /// <summary>契約を結んだ（社ID。ロード時は出ない）。実績の判定用。</summary>
+    public Observable<string> OnSubscribed => subscribed;
 
     /// <summary>そのターンに有効な契約。</summary>
     public List<Contract> ActiveOn(int turn)
@@ -74,6 +79,7 @@ public class NewspaperSubscriptionModel
             startTurn = turn,
             endTurn = turn + Math.Max(1, company.contractTurns),
         });
+        subscribed.OnNext(company.companyId);
     }
 
     public void Clear() => contracts.Clear();

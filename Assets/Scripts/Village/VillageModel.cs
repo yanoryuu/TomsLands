@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using R3;
 using UnityEngine;
 
 /// <summary>
@@ -21,6 +22,14 @@ public class VillageModel
     }
 
     public IReadOnlyList<VillageFacilityData> Facilities => facilities;
+
+    private readonly Subject<string> invested = new();
+    /// <summary>施設に投資してレベルが上がった（施設ID）。実績の判定用。</summary>
+    public Observable<string> OnInvested => invested;
+
+    /// <summary>村のすべての施設が建っている（Lv1 以上）か。施設の数はデータ次第で決め打ちしない。施設データが無ければ false。</summary>
+    public bool AreAllFacilitiesBuilt() =>
+        facilities.Count > 0 && facilities.All(f => f != null && GetLevel(f.facilityId) >= 1);
 
     public int VillageFunds => metaProgress.VillageFunds;
 
@@ -96,6 +105,7 @@ public class VillageModel
         metaProgress.SetFacilityLevel(facilityId, next);
         metaProgress.SaveData();
         message = $"{facility.facilityName} が Lv{next} になった！";
+        invested.OnNext(facilityId);
         Debug.Log($"[Village] 投資: {facilityId} → Lv{next} ({cost}G, 残り村資金 {metaProgress.VillageFunds}G)");
         return true;
     }

@@ -25,6 +25,7 @@ public static class RunSaveCleaner
         NewspaperSaveStore.FileName, // 新聞の購読・スクラップ・既読
         NewsModel.ArcFileName,       // 新聞の連載で決まった分岐
         RunHistory.FileName, // リザルトの振り返り用（所持金推移・ハイライト）
+        AchievementStore.RunFileName, // 実績の1ラン内の途中経過（二枚舌・収集家など）
     };
 
     /// <summary>

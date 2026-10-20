@@ -21,6 +21,10 @@ public class SellOrderModel
     /// <summary>未約定注文の見込み入金額合計（注文時価格ベース）。UIバインド用。</summary>
     public ReactiveProperty<int> PendingTotalEstimate { get; } = new(0);
 
+    private readonly Subject<SellSettlementResult> settled = new();
+    /// <summary>注文が約定して入金額が決まった（通常・持ち越し・返済前倒しのどれでも。実績の「入金」判定用）。</summary>
+    public Observable<SellSettlementResult> OnSettled => settled;
+
     public SellOrderModel()
     {
         LoadData();
@@ -113,6 +117,7 @@ public class SellOrderModel
         RunHistory.RecordSettlement(result); // リザルトの「一番儲かった商品」用
 
         Debug.Log($"[SellOrder] 約定: {result.Settled.Count}件 → 入金 {result.TotalIncome}G（基本 {result.BaseIncome}G）");
+        settled.OnNext(result);
         return result;
     }
 

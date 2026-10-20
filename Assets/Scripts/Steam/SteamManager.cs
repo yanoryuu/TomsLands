@@ -31,6 +31,12 @@ public sealed class SteamManager : MonoBehaviour
     /// <summary>初期化できなかった理由（デバッグメニュー表示用）。成功時は空。</summary>
     public static string StatusMessage { get; private set; } = "未起動";
 
+    /// <summary>Steam が有効な間、毎フレーム RunCallbacks の後に呼ばれる（実績の StoreStats をまとめて送るのに使う）。</summary>
+    public static event Action Ticked;
+
+    /// <summary>SteamAPI.Shutdown の直前に呼ばれる（送り残しの StoreStats を送る）。</summary>
+    public static event Action ShuttingDown;
+
     // Domain Reload を切った Play でも前回の値を持ち越さない
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void ResetStatics()
@@ -38,6 +44,8 @@ public sealed class SteamManager : MonoBehaviour
         instance = null;
         Initialized = false;
         StatusMessage = "未起動";
+        Ticked = null;
+        ShuttingDown = null;
     }
 
     private void Awake()
@@ -103,7 +111,16 @@ public sealed class SteamManager : MonoBehaviour
     private void Update()
     {
 #if TOMS_STEAM
-        if (Initialized) SteamAPI.RunCallbacks();
+        if (!Initialized) return;
+        SteamAPI.RunCallbacks();
+        try
+        {
+            Ticked?.Invoke();
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
 #endif
     }
 
@@ -114,6 +131,14 @@ public sealed class SteamManager : MonoBehaviour
 #if TOMS_STEAM
         if (Initialized)
         {
+            try
+            {
+                ShuttingDown?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
             SteamAPI.Shutdown();
             Initialized = false;
             StatusMessage = "終了";
