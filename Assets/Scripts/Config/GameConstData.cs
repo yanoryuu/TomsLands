@@ -228,7 +228,7 @@ public class VillageSettingsData
     // --- ラン終了 → 村資金の変換（Docs/Village_Meta_Design.md §4） ---
     // 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え。クリア時は「持ち込み + 儲け × 率 × 難易度倍率」が村資金に入る
     /// <summary>ランクリア時: 儲け → 村資金への変換率。</summary>
-    public float conversionRate = 20f;
+    public float conversionRate = 25f;
     /// <summary>破産時: そのランの最高の儲け（所持金の最高値から求める）× 変換率 × この値。持ち込みは戻らない。</summary>
     public float bankruptcyConversionRate = 0.2f;
     /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>

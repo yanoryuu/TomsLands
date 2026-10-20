@@ -87,7 +87,7 @@ MonoBehaviour:
       graceCost: 700000
       graceDiscountRate: 0.3
     village:
-      conversionRate: 20
+      conversionRate: 25
       bankruptcyConversionRate: 0.2
       debtScalePerVillageLevel: 0
       difficultyConversionMultipliers:
