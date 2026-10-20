@@ -68,11 +68,27 @@ public class RelicChoiceSlotView : MonoBehaviour,
     public void OnSelect(BaseEventData eventData) => SetHovered(true);
     public void OnDeselect(BaseEventData eventData) => SetHovered(false);
 
+    /// <summary>
+    /// カードの基準の大きさ（1 = 元の大きさ）。選択肢が4つのとき TomsShopView が縮めて並べる。
+    /// ホバー時はこの大きさ × hoverScale になる。
+    /// </summary>
+    public float BaseScale
+    {
+        get => baseScale;
+        set
+        {
+            baseScale = Mathf.Max(0.01f, value);
+            transform.DOKill();
+            transform.localScale = Vector3.one * baseScale;
+        }
+    }
+    private float baseScale = 1f;
+
     private void OnDisable()
     {
         // 非表示の間にホバー状態が残らないよう戻す（次回表示時に枠が出っぱなしにならない）
         transform.DOKill();
-        transform.localScale = Vector3.one;
+        transform.localScale = Vector3.one * baseScale;
         if (highlight != null) highlight.SetActive(false);
     }
 
@@ -81,6 +97,6 @@ public class RelicChoiceSlotView : MonoBehaviour,
         if (highlight != null) highlight.SetActive(on);
         if (!gameObject.activeInHierarchy) return;
         transform.DOKill();
-        transform.DOScale(on ? hoverScale : 1f, 0.12f).SetEase(Ease.OutCubic).SetLink(gameObject);
+        transform.DOScale((on ? hoverScale : 1f) * baseScale, 0.12f).SetEase(Ease.OutCubic).SetLink(gameObject);
     }
 }

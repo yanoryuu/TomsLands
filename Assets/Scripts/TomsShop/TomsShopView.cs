@@ -193,7 +193,7 @@ public class TomsShopView : MonoBehaviour
             {
                 if (relicChoiceButtons[i] == null || !(relicChoiceButtons[i].transform is RectTransform rt)) continue;
                 rt.anchoredPosition = relicChoiceBasePositions[i];
-                rt.localScale = relicChoiceBaseScale;
+                SetRelicCardScale(i, 1f);
             }
             return;
         }
@@ -210,8 +210,25 @@ public class TomsShopView : MonoBehaviour
         {
             if (relicChoiceButtons[i] == null || !(relicChoiceButtons[i].transform is RectTransform rt)) continue;
             rt.anchoredPosition = new Vector2((i - (shown - 1) * 0.5f) * spacing, y);
-            rt.localScale = relicChoiceBaseScale * scale;
+            SetRelicCardScale(i, scale);
         }
+    }
+
+    /// <summary>
+    /// カードの大きさを変える。カード（RelicChoiceSlotView）はホバーのたびに自分の大きさを戻すので、
+    /// その基準の大きさ（BaseScale）として渡す。カード部品が無い旧UIはボタンの transform を直接縮める。
+    /// </summary>
+    private void SetRelicCardScale(int index, float scale)
+    {
+        var button = relicChoiceButtons[index];
+        var slot = relicChoiceSlots != null && index < relicChoiceSlots.Length ? relicChoiceSlots[index] : null;
+        if (slot != null && slot.transform == button.transform)
+        {
+            slot.BaseScale = relicChoiceBaseScale.x * scale;
+            return;
+        }
+        button.transform.localScale = relicChoiceBaseScale * scale;
+        if (slot != null) slot.BaseScale = 1f;
     }
 
     public void HideRelicChoices()
