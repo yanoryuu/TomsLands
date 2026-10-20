@@ -76,7 +76,32 @@ public static class HeroBattleInfluence
             $"戦闘中: 撃破 -> 武器 {FormatRate(weaponKill)} / 撃破できず -> 武器 {FormatRate(weaponNonKill)}\n" +
             $"戦闘中: 防御成功 -> 防具 {FormatRate(armorBlock)} / 被弾 -> 防具 {FormatRate(armorHit)}\n" +
             $"属性: 有利 {FormatRate(effective)} / 不利 {FormatRate(weak)}\n" +
-            $"作戦: {GetDisplayName(tactics)}（武器 x{GetWeaponPerformanceMultiplier(tactics):0.00}, 防具 x{GetArmorPerformanceMultiplier(tactics):0.00}, 属性 x{GetAttributeMultiplier(tactics):0.00}, 話題性 x{GetHeatMultiplier(tactics):0.00}）";
+            $"作戦: {GetDisplayName(tactics)}（{BuildTacticsMultiplierText(tactics)}）";
+    }
+
+    /// <summary>
+    /// 作戦の倍率の1行（「武器 x1.20, 防具 x0.90, 属性 x1.05, 話題性 x1.15」）。
+    /// 作戦は配信中の値動き（相場）だけに効き、勝ち負け（クリア見込み）には効かない。勇者画面と BuildSummary で共有する。
+    /// </summary>
+    public static string BuildTacticsMultiplierText(HeroTactics tactics)
+        => $"武器 x{GetWeaponPerformanceMultiplier(tactics):0.00}, 防具 x{GetArmorPerformanceMultiplier(tactics):0.00}, " +
+           $"属性 x{GetAttributeMultiplier(tactics):0.00}, 話題性 x{GetHeatMultiplier(tactics):0.00}";
+
+    /// <summary>
+    /// いちばん強く上がる値動き（作戦のプルダウンに添える一言）。例: 攻撃重視 → 「武器↑」。上がるものが無ければ空。
+    /// </summary>
+    public static string GetStrongestEffectTag(HeroTactics tactics)
+    {
+        float weapon = GetWeaponPerformanceMultiplier(tactics);
+        float armor = GetArmorPerformanceMultiplier(tactics);
+        float attribute = GetAttributeMultiplier(tactics);
+        float heat = GetHeatMultiplier(tactics);
+        float max = Mathf.Max(Mathf.Max(weapon, armor), Mathf.Max(attribute, heat));
+        if (max <= 1f) return "";
+        if (Mathf.Approximately(max, weapon)) return "武器↑";
+        if (Mathf.Approximately(max, armor)) return "防具↑";
+        if (Mathf.Approximately(max, attribute)) return "属性↑";
+        return "話題性↑";
     }
 
     public static float GetWeaponPriceUpOnKill(BattlePriceSettings settings, HeroTactics tactics)

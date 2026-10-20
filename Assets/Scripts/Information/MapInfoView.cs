@@ -40,6 +40,7 @@ public class MapInfoView : MonoBehaviour
     private Dictionary<DungeonName, int[]> currentCosts = new();
     private int currentTurnForCost = 1;
     private DungeonName? selectedKey;
+    private DungeonName? upcomingKey;
 
     private readonly PendingFocus pendingFocus = new();
     private UIFocusScope focusScope;
@@ -55,9 +56,11 @@ public class MapInfoView : MonoBehaviour
         if (detailPanel != null) detailPanel.SetActive(false);
     }
 
-    public void SetMapSlot(List<DungeonData> maps, Dictionary<DungeonName, int[]> mapCosts, int currentTurn)
+    /// <param name="upcoming">次の配信先（地図の NEXT と同じ）。その行を先頭に置いて NEXT の印を付け、最初に選ぶ</param>
+    public void SetMapSlot(List<DungeonData> maps, Dictionary<DungeonName, int[]> mapCosts, int currentTurn, DungeonName? upcoming = null)
     {
-        currentMaps = maps ?? new List<DungeonData>();
+        upcomingKey = upcoming;
+        currentMaps = OrderUpcomingFirst(maps, upcoming);
         currentCosts = mapCosts ?? new Dictionary<DungeonName, int[]>();
         currentTurnForCost = currentTurn;
 
@@ -76,6 +79,7 @@ public class MapInfoView : MonoBehaviour
             GameObject slotObj = Instantiate(mapPurchaseSlotPrefab, mapInfoContent.transform);
             MapPurchaseSlot slot = slotObj.GetComponent<MapPurchaseSlot>();
             slot.SetMapInfo(data.key, data.dungeonName, data.dungeonIcon, GetCost(data.key), data.isShowedInfo, IsSellable(data.key));
+            slot.SetUpcoming(upcomingKey.HasValue && upcomingKey.Value == data.key);
             activeSlots.Add(slot);
 
             slot.OnSelected
@@ -97,6 +101,21 @@ public class MapInfoView : MonoBehaviour
             detailPanel.SetActive(false);
 
         if (refocusRow) pendingFocus.Request(true);
+    }
+
+    /// <summary>次の配信先を先頭へ（残りはデータの順のまま）。元のリストは変えない。</summary>
+    private static List<DungeonData> OrderUpcomingFirst(List<DungeonData> maps, DungeonName? upcoming)
+    {
+        var list = maps != null ? new List<DungeonData>(maps) : new List<DungeonData>();
+        if (!upcoming.HasValue) return list;
+        int index = list.FindIndex(d => d != null && d.key == upcoming.Value);
+        if (index > 0)
+        {
+            var item = list[index];
+            list.RemoveAt(index);
+            list.Insert(0, item);
+        }
+        return list;
     }
 
     private void LateUpdate()
@@ -180,7 +199,7 @@ public class MapInfoView : MonoBehaviour
         }
 
         if (weaknessText != null)
-            weaknessText.text = purchased ? $"弱点: {AttributeLabel(data.requiredAttribute)}属性" : "弱点: ???";
+            weaknessText.text = purchased ? $"弱点: {ItemAttributeText.WithSuffix(data.requiredAttribute)}" : "弱点: ???";
         if (recommendText != null)
             recommendText.text = purchased ? $"推奨Lv: {data.recommendedLevel}" : "推奨Lv: ???";
         if (difficultyText != null)
@@ -207,16 +226,6 @@ public class MapInfoView : MonoBehaviour
             return costs[currentTurnForCost - 1];
         return costs[costs.Length - 1];
     }
-
-    private static string AttributeLabel(ItemTypeData.ItemAttribute attr) => attr switch
-    {
-        ItemTypeData.ItemAttribute.Fire => "火",
-        ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Wood  => "木",
-        ItemTypeData.ItemAttribute.Light => "光",
-        ItemTypeData.ItemAttribute.Dark => "闇",
-        _ => attr.ToString()
-    };
 
     private void OnDestroy()
     {

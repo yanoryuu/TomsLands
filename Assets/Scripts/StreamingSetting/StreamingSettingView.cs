@@ -97,7 +97,8 @@ public class StreamingSettingView : MonoBehaviour
         if (dungeonWeaknessText != null) dungeonWeaknessText.text = weakness;
     }
 
-    public void PopulateAvailable(IEnumerable<RuntimeItemData> items)
+    /// <param name="matchupOf">品ごとの行き先との相性（null なら出さない）。値段と一緒に各行へ出す</param>
+    public void PopulateAvailable(IEnumerable<RuntimeItemData> items, System.Func<RuntimeItemData, AttributeMatchup> matchupOf = null)
     {
         foreach (Transform t in availablePanel) Destroy(t.gameObject);
         Selectable firstAvailable = null;
@@ -109,6 +110,7 @@ public class StreamingSettingView : MonoBehaviour
             var go   = Instantiate(availableSlotPrefab, availablePanel);
             var slot = go.GetComponent<AvailableItemSlot>();
             slot.Initialize(item.ItemId, item.ItemIcon, item.ItemName, item.Stock.Value, item.ItemAttribute);
+            if (matchupOf != null) slot.SetReadInfo(item.CurrentPrice.Value, matchupOf(item));
             slot.OnItemSelected += id => OnItemSelected.OnNext(id);
             if (firstAvailable == null) firstAvailable = FirstSelectable(go);
         }

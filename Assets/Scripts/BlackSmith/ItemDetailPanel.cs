@@ -27,8 +27,10 @@ public class ItemDetailPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI demandText;       // 需要%
     [SerializeField] private TextMeshProUGUI basePriceText;    // 基準価
     [SerializeField] private TextMeshProUGUI currentPriceText; // 現在価格
-    [SerializeField] private TextMeshProUGUI salesRateText;    // 売れやすさ
-    [SerializeField] private TextMeshProUGUI wasSoldText;      // 前ターン販売
+    [Tooltip("保有数（旧: 売れやすさ。全銘柄 1.0 で意味が無かったので置き換えた）")]
+    [SerializeField] private TextMeshProUGUI salesRateText;
+    [Tooltip("旧: 前ターン販売。陳列すれば必ず✓になり判断に使えないので出さない")]
+    [SerializeField] private TextMeshProUGUI wasSoldText;
     [SerializeField] private TextMeshProUGUI recommendText;    // 現在の期待収益（未来は含まない）
     [SerializeField] private TextMeshProUGUI dividendText;     // 配当/日（配当付き武器のみ・未配線可）
 
@@ -45,6 +47,7 @@ public class ItemDetailPanel : MonoBehaviour
     public Subject<int> OnStepClicked { get; } = new();
     public Subject<Unit> OnPurchaseClicked { get; } = new();
 
+    private System.IDisposable stockSubscription;
     private int unitPrice;
     private int displayQuantity;
     private int maxQuantity;
@@ -115,7 +118,14 @@ public class ItemDetailPanel : MonoBehaviour
 
         if (icon) icon.sprite = runtime.ItemIcon;
         if (nameText) nameText.text = runtime.ItemName;
-        if (attributeText) attributeText.text = runtime.ItemAttribute.ToString();
+        if (attributeText) attributeText.text = ItemAttributeText.WithSuffix(runtime.ItemAttribute);
+
+        // 保有数は仕入れで増えるので、この銘柄を出している間は追従させる
+        stockSubscription?.Dispose();
+        stockSubscription = runtime.Stock.Subscribe(stock =>
+        {
+            if (salesRateText) salesRateText.text = $"保有 {stock:N0}個";
+        });
 
         if (priceChart)
         {
@@ -136,8 +146,8 @@ public class ItemDetailPanel : MonoBehaviour
         if (demandText)     demandText.text = $"需要 {runtime.Demand.Value:P0}";
         if (basePriceText)  basePriceText.text = $"基準価 {basePrice:N0}G";
         if (currentPriceText) currentPriceText.text = $"現在 {runtime.CurrentPrice.Value:N0}G";
-        if (salesRateText)  salesRateText.text = $"売率 ×{runtime.SalesRate:0.0}";
-        if (wasSoldText)    wasSoldText.text = runtime.WasSoldLastTurn ? "前ターン販売 ✓" : "前ターン販売 —";
+        if (salesRateText)  salesRateText.text = $"保有 {runtime.Stock.Value:N0}個";
+        if (wasSoldText)    wasSoldText.gameObject.SetActive(false);
         if (recommendText)  recommendText.text = $"現在の期待収益 {recommendScore:N0}";
         if (dividendText)
         {
@@ -189,9 +199,10 @@ public class ItemDetailPanel : MonoBehaviour
         UpdateButtons();
     }
 
+    /// <summary>注文の合計（単価 × 数量）。数量0なら 0G（単価と見間違えないよう、単価にはしない）。</summary>
     private void UpdateTotalText()
     {
-        int total = unitPrice * Mathf.Max(displayQuantity, 1);
+        int total = unitPrice * displayQuantity;
         if (totalCostText != null) totalCostText.SetText($"{total:N0}G");
     }
 
@@ -204,6 +215,7 @@ public class ItemDetailPanel : MonoBehaviour
 
     private void OnDestroy()
     {
+        stockSubscription?.Dispose();
         if (quantitySlider != null) quantitySlider.onValueChanged.RemoveListener(OnSliderValueChanged);
         if (plusButton != null) plusButton.onClick.RemoveAllListeners();
         if (minusButton != null) minusButton.onClick.RemoveAllListeners();
