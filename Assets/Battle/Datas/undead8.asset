@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: undead8
   m_EditorClassIdentifier: 
-  enemyId: 
-  enemyName: undead8
+  enemyId: undead8
+  enemyName: "\u30CA\u30B2\u30AD\u30EC\u30A4\u30B9"
   hp: 199
   attackPower: 51
   defensePower: 11

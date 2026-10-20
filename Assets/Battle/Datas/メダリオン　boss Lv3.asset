@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: "\u30E1\u30C0\u30EA\u30AA\u30F3\u3000boss Lv3"
   m_EditorClassIdentifier: 
-  enemyId: 
-  enemyName: "\u30E1\u30C0\u30EA\u30AA\u30F3\u3000boss Lv3"
+  enemyId: mech boss Lv3
+  enemyName: "\u30BB\u30F3\u30AC\u30F3\u30AD"
   hp: 882
   attackPower: 107
   defensePower: 24

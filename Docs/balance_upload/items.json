@@ -58,7 +58,7 @@
     {
       "itemId": "AR5",
       "itemName": "炎のたすき",
-      "basePrice": 500,
+      "basePrice": 1500,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
@@ -175,13 +175,13 @@
     {
       "itemId": "HE3",
       "itemName": "暗黒の兜",
-      "basePrice": 500,
+      "basePrice": 800,
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
       "itemType": "Armor",
       "itemAttribute": "Dark",
-      "requiredLevel": 1,
+      "requiredLevel": 2,
       "salesRate": 1,
       "description": "光属性ダメージを受け流すダークな兜。ミステリアスな外見が闇系冒険者に刺さる。"
     },
@@ -274,7 +274,7 @@
       "itemAttribute": "Light",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "闇属性の攻撃を弾き返す盾。防いだ時に放つ閃光の美しさが冒険者の間で話題になっている。"
+      "description": "聖なる光を宿した盾。構えて叩きつければ闇属性の敵によく効く、武器として扱う盾。放つ閃光の美しさが冒険者の間で話題になっている。"
     },
     {
       "itemId": "SP1",
@@ -324,9 +324,9 @@
       "initialDisplayStock": 0,
       "itemType": "Weapon",
       "itemAttribute": "Fire",
-      "requiredLevel": 3,
+      "requiredLevel": 1,
       "salesRate": 1,
-      "description": "刀身が激しく燃え盛る剣。振り下ろすたびに火花が散り、一撃の重さが伝わってくる。"
+      "description": "刀身が激しく燃え盛る剣。木属性（森の魔物）の敵によく効き、振り下ろすたびに火花が散って一撃の重さが伝わってくる。"
     },
     {
       "itemId": "SW4",

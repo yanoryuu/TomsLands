@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: sea boss Lv2
   m_EditorClassIdentifier: 
   enemyId: sea boss Lv2
-  enemyName: "\u30A6\u30AA\u30BF\u30A4\u30C1\u30E7\u30FC"
+  enemyName: "\u30B3\u30AA\u30EA\u30BF\u30A4\u30C1\u30E7\u30FC"
   hp: 324
   attackPower: 40
   defensePower: 9

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a79c4551460726340826fe314bbd00b1, type: 3}
   m_Name: undead1
   m_EditorClassIdentifier: 
-  enemyId: 
-  enemyName: "undead\uFF11"
+  enemyId: undead1
+  enemyName: "\u30D2\u30C8\u30C0\u30DE\u30F3"
   hp: 112
   attackPower: 30
   defensePower: 6
