@@ -58,6 +58,31 @@ public class ResultStatisticsData
     public string BestItemName;
     public int BestItemRevenue;
     public UnityEngine.Sprite BestItemIcon;
+
+    // ---- 儲けと記録（ランク・村資金の基準。Docs/Village_Meta_Design.md §4）----
+
+    /// <summary>このランの難易度。</summary>
+    public GameModeId Mode;
+    /// <summary>儲け = 純資産 − 初期資金 − 持ち込み − 立て替え。</summary>
+    public int Profit;
+    /// <summary>村資金から持ち込んだ額・チュートリアルの立て替え。</summary>
+    public int Carried;
+    public int Advance;
+
+    /// <summary>配信の収支の合計・一番稼いだ配信（記録が無ければ HasBestStream=false）。</summary>
+    public int StreamEarningsTotal;
+    public bool HasBestStream;
+    public int BestStreamEarnings;
+    public string BestStreamDungeon = "";
+
+    /// <summary>この難易度のこれまでの自己ベスト（儲け）。HasPreviousBest=false なら初クリア。</summary>
+    public bool HasPreviousBest;
+    public int PreviousBestProfit;
+    /// <summary>自己ベストを更新したか（この難易度で2回目以降のクリアのみ）。</summary>
+    public bool IsNewBest => HasPreviousBest && Profit > PreviousBestProfit;
+
+    /// <summary>何周目か（これまでのラン数 + 1）。</summary>
+    public int RunNumber;
 }
 
 /// <summary>

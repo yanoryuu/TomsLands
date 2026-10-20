@@ -10,14 +10,16 @@ public class ResultModel
     private readonly TomsModel _tomsModel;
     private readonly ItemModel _itemModel;
     private readonly PortfolioModel _portfolioModel;
+    private readonly MetaProgressModel _metaProgress;
 
     public ResultStatisticsData Statistics { get; private set; }
 
-    public ResultModel(TomsModel tomsModel, ItemModel itemModel, PortfolioModel portfolioModel)
+    public ResultModel(TomsModel tomsModel, ItemModel itemModel, PortfolioModel portfolioModel, MetaProgressModel metaProgress)
     {
         _tomsModel = tomsModel;
         _itemModel = itemModel;
         _portfolioModel = portfolioModel;
+        _metaProgress = metaProgress;
     }
 
     /// <summary>
@@ -70,7 +72,10 @@ public class ResultModel
         }
 
         int netWorth = finalMoney + totalStockValue + financeAssets;
-        string rank = EvaluateRank(netWorth);
+        var history = RunHistory.Load();
+        var mode = _tomsModel.GameMode;
+        var profit = RunProfit.Compute(netWorth, history, _metaProgress);
+        string rank = EvaluateRank(profit.Profit, mode);
         string comment = GetRankComment(rank);
 
         Statistics = new ResultStatisticsData
@@ -86,12 +91,23 @@ public class ResultModel
             NetWorth = netWorth,
             Rank = rank,
             Comment = comment,
-            ItemSummaries = itemSummaries
+            ItemSummaries = itemSummaries,
+            Mode = mode,
+            Profit = profit.Profit,
+            Carried = profit.Carried,
+            Advance = profit.Advance,
         };
 
-        FillRunReview(Statistics, finalMoney);
+        if (_metaProgress != null)
+        {
+            Statistics.HasPreviousBest = _metaProgress.TryGetBestProfit(mode, out int best);
+            Statistics.PreviousBestProfit = best;
+            Statistics.RunNumber = _metaProgress.TotalRuns + 1;
+        }
 
-        Debug.Log($"[ResultModel] Statistics built: NetWorth={netWorth}, Rank={rank}");
+        FillRunReview(Statistics, finalMoney, history);
+
+        Debug.Log($"[ResultModel] Statistics built: NetWorth={netWorth}, Profit={profit.Profit} (持ち込み {profit.Carried} / 立て替え {profit.Advance}), Mode={mode}, Rank={rank}");
         return Statistics;
     }
 
@@ -106,9 +122,9 @@ public class ResultModel
     /// <summary>
     /// ラン中の記録（RunHistory）から振り返り用の値を埋める。
     /// </summary>
-    private void FillRunReview(ResultStatisticsData stats, int finalMoney)
+    private void FillRunReview(ResultStatisticsData stats, int finalMoney, RunHistoryData history)
     {
-        var history = RunHistory.Load();
+        history ??= RunHistory.Load();
 
         stats.MoneyHistory = new List<int>(history.moneyValues);
         // 最後の記録と最終所持金がずれていれば（記録漏れ・旧セーブ）、終点を最終所持金に揃える
@@ -118,6 +134,10 @@ public class ResultModel
         stats.StreamWins = history.streamWins;
         stats.StreamLosses = history.streamLosses;
         stats.BuzzCount = history.buzzCount;
+        stats.StreamEarningsTotal = history.streamEarningsTotal;
+        stats.HasBestStream = history.hasBestStream;
+        stats.BestStreamEarnings = history.bestStreamEarnings;
+        stats.BestStreamDungeon = history.bestStreamDungeon ?? "";
 
         int best = -1;
         for (int i = 0; i < history.itemIds.Count && i < history.itemRevenues.Count; i++)
@@ -135,18 +155,27 @@ public class ResultModel
     }
 
     /// <summary>
-    /// 純資産に基づいて評価ランクを算出する。
+    /// 儲けを難易度ごとの基準（GameConst.Village.rankBaseProfits）で割って評価ランクを決める。
+    /// S = 基準×rankSRatio 以上 / A = 基準以上 / B = 基準×rankBRatio 以上 / C = 黒字 / D = 赤字。
     /// </summary>
-    public static string EvaluateRank(int netWorth)
+    public static string EvaluateRank(int profit, GameModeId mode)
     {
-        // 初期資金の倍率で評価
-        float ratio = (float)netWorth / GameConst.InitMoney;
+        if (profit < 0) return "D";
+        float ratio = profit / (float)RankBaseProfit(mode);
+        var settings = GameConst.Village;
+        if (ratio >= settings.rankSRatio) return "S";
+        if (ratio >= 1f) return "A";
+        if (ratio >= settings.rankBRatio) return "B";
+        return "C";
+    }
 
-        if (ratio >= 5.0f) return "S";
-        if (ratio >= 3.0f) return "A";
-        if (ratio >= 2.0f) return "B";
-        if (ratio >= 1.0f) return "C";
-        return "D";
+    /// <summary>難易度ごとのランク A の基準（儲け）。</summary>
+    public static int RankBaseProfit(GameModeId mode)
+    {
+        var table = GameConst.Village.rankBaseProfits;
+        int i = (int)mode;
+        int v = table != null && i >= 0 && i < table.Length ? table[i] : 0;
+        return Mathf.Max(1, v);
     }
 
     /// <summary>
@@ -154,7 +183,7 @@ public class ResultModel
     /// </summary>
     public static string GetRankComment(string rank) => rank switch
     {
-        "S" => "伝説の商人！ トムの名は大陸中に轟いた！",
+        "S" => "伝説の商人！ トコの名は大陸中に轟いた！",
         "A" => "素晴らしい経営手腕！ 街一番の店になった！",
         "B" => "堅実な商売で利益を出せた。立派な商人だ。",
         "C" => "なんとか黒字で終了。まだまだ伸びしろがある。",
