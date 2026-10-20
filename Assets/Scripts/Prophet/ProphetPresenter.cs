@@ -113,8 +113,9 @@ public class ProphetPresenter : IDisposable, IStartable
     // 次のダンジョン情報とおすすめ武器を表示
     private void ShowDungeonInfo()
     {
-        int turnsUntil = gameFlowManager.GetTurnsUntilNextBattle();
-        var nextKey = gameFlowManager.GetNextBattleDungeon();
+        // 表示用の日数（今日 0・明日 1）と行き先は、地図・鍛冶屋と同じ取り方
+        int turnsUntil = gameFlowManager.GetDaysUntilNextStream();
+        var nextKey = gameFlowManager.GetUpcomingStreamDungeon();
 
         if (nextKey == null)
         {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using VContainer;
 
 /// <summary>
 /// 「世界の事実」のうち、プレイヤーがまだ知らないものを管理する。
@@ -19,10 +20,29 @@ public class DungeonIntelModel
 {
     private readonly HashSet<DungeonName> knownWeakness = new();
 
+    // 「情報屋で買ったか」の正（セーブされる DungeonData.isShowedInfo）。null なら knownWeakness だけで判定する
+    private readonly DungeonRepository dungeonRepository;
+
+    public DungeonIntelModel() { }
+
+    /// <summary>
+    /// 弱点を知っているかは、情報屋で買ったか（isShowedInfo）から導く。
+    /// knownWeakness はこの店シーンの間だけのメモで保存されないため、
+    /// それだけで判定すると配信やイベントから戻るたび・続きからで弱点が「?」に戻っていた。
+    /// </summary>
+    [Inject]
+    public DungeonIntelModel(DungeonRepository dungeonRepository) => this.dungeonRepository = dungeonRepository;
+
     /// <summary>全ダンジョンの弱点を常に開示する（村メタ等での恒久解放用）。</summary>
     public bool RevealAll { get; set; }
 
-    public bool IsWeaknessKnown(DungeonName dungeon) => RevealAll || knownWeakness.Contains(dungeon);
+    public bool IsWeaknessKnown(DungeonName dungeon) =>
+        RevealAll || knownWeakness.Contains(dungeon) || IsInfoPurchased(dungeon);
+
+    private bool IsInfoPurchased(DungeonName dungeon) =>
+        dungeonRepository != null
+        && dungeonRepository.TryGetById(dungeon, out var data)
+        && data != null && data.isShowedInfo;
 
     public void MarkWeaknessKnown(DungeonName dungeon) => knownWeakness.Add(dungeon);
 

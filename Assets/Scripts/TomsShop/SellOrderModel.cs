@@ -87,7 +87,9 @@ public class SellOrderModel
             int ceiling = Mathf.RoundToInt(order.OrderedPrice * (1f + clampRate));
             int settledPrice = Mathf.Clamp(marketPrice, Mathf.Max(1, floor), Mathf.Max(1, ceiling));
 
-            int income = Mathf.RoundToInt(settledPrice * order.Quantity * (1f - feeRate));
+            // int のまま掛けると桁あふれで負になりうるので double で計算して頭打ちにする
+            double rawIncome = (double)settledPrice * order.Quantity * (1.0 - feeRate);
+            int income = rawIncome >= int.MaxValue ? int.MaxValue : (int)Math.Round(rawIncome);
 
             result.Settled.Add(new SettledOrderInfo
             {
@@ -98,7 +100,7 @@ public class SellOrderModel
                 SettledPrice = settledPrice,
                 Income = income,
             });
-            result.BaseIncome += income;
+            result.BaseIncome = TomsModel.SaturatingAdd(result.BaseIncome, income);
 
             PendingOrders.Remove(order);
         }

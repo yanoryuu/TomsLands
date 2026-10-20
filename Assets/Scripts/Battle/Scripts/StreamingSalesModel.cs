@@ -11,6 +11,14 @@ public class StreamingSalesModel
     private readonly ReactiveProperty<int> _totalSales = new();
 
     public int GetCurrentTotalSales() => _totalSales.Value;
+
+    // 商品ごとの売上合計（itemId → G）。売れたその時の価格で積むので、配信リザルト・ラン記録の商品別売上に使う
+    private readonly Dictionary<string, int> _revenueByItem = new();
+
+    /// <summary>この配信でその商品が売れた金額の合計（売れていなければ 0）。</summary>
+    public int GetRevenueOf(string itemId) =>
+        itemId != null && _revenueByItem.TryGetValue(itemId, out var v) ? v : 0;
+
     public List<RuntimeItemData> ItemsForSale { get; private set; }
 
     public Subject<int> OnItemSold { get; } = new();
@@ -262,6 +270,7 @@ public class StreamingSalesModel
         int earnings = quantitySold * item.CurrentPrice.Value;
 
         _totalSales.Value += earnings;
+        _revenueByItem[item.ItemId] = GetRevenueOf(item.ItemId) + earnings;
 
         int beforeStock = item.Stock.Value;
         mainItemModel.SellItem(item.ItemId, quantitySold);

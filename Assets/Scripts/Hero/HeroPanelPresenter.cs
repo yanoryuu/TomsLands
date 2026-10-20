@@ -14,6 +14,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
     private readonly StateManager stateManager;
     private readonly BattleInputData battleInputData;
     private readonly DungeonRepository dungeonRepository;
+    private readonly GameFlowManager gameFlowManager;
     private readonly CompositeDisposable disposables = new();
 
     /// <summary>現在表示中のセリフ。ホバー終了時に復元するために保持する。</summary>
@@ -28,8 +29,10 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         StateManager stateManager,
         BattleInputData battleInputData,
         DungeonRepository dungeonRepository,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        GameFlowManager gameFlowManager)
     {
+        this.gameFlowManager = gameFlowManager;
         this.relicResolver = relicResolver;
         this.view = view;
         this.heroModel = heroModel;
@@ -191,22 +194,26 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
             hero,
             itemModel,
             dungeon,
-            battleInputData.DungeonLevel,
+            dungeon.currentDungeonLevel,
             relicResolver);
 
         view.SetClearProbability(probability, true);
     }
 
     /// <summary>
-    /// 現在選択中のダンジョンの情報が購入済みであれば <paramref name="dungeonData"/> に返す。
-    /// 未購入または未選択の場合は false を返す。
+    /// 次に配信するダンジョンの情報が購入済みであれば <paramref name="dungeonData"/> に返す。
+    /// 未購入または次の配信が無い場合は false を返す。
+    /// 行き先は地図の名札と同じ取り方（BattleInputData は配信の日にしか書かれず、前回の配信先のまま残っている）。
     /// </summary>
     private bool TryGetPurchasedDungeon(out DungeonData dungeonData)
     {
         dungeonData = null;
-        if (dungeonRepository == null || battleInputData == null) return false;
+        if (dungeonRepository == null || gameFlowManager == null) return false;
 
-        dungeonData = dungeonRepository.GetById(battleInputData.DungeonKey);
+        var nextKey = gameFlowManager.GetUpcomingStreamDungeon();
+        if (!nextKey.HasValue) return false;
+
+        dungeonData = dungeonRepository.GetById(nextKey.Value);
         if (dungeonData == null) return false;
 
         return dungeonData.isShowedInfo;

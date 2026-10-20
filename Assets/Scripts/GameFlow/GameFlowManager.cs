@@ -559,6 +559,46 @@ public class GameFlowManager : IDisposable, IStartable
         return null;
     }
 
+    /// <summary>
+    /// 次に配信するダンジョン（配信前の寄り道中は今日これから配信するダンジョン）。無ければ null。
+    /// 勇者画面・地図・占い師・鍛冶屋のヘッダーで同じ行き先を出すための共通の取り方。
+    /// </summary>
+    public DungeonName? GetUpcomingStreamDungeon()
+        => IsAwaitingStream.Value ? PendingBattleDungeon : GetNextBattleDungeon();
+
+    /// <summary>
+    /// 表示用: 次の配信まであと何日か。今日が配信日（寄り道中）なら 0、明日なら 1。配信が無ければ -1。
+    /// GetTurnsUntilNextBattle は「次のノードから配信の手前まで」の日数で、前日に 0 になる
+    /// （AutoPlay がその意味を前提にしているので変えない）。画面に出すときはこちらを使う。
+    /// </summary>
+    public int GetDaysUntilNextStream()
+    {
+        if (IsAwaitingStream.Value) return 0;
+        int turns = GetTurnsUntilNextBattle();
+        return turns < 0 ? -1 : turns + 1;
+    }
+
+    /// <summary>
+    /// 返済日の朝、現金が返済額に足りないときに、今日入金予定の売り注文を前倒しで約定して入金する。
+    /// 入金は通常その日の夜（営業サマリー）だが、返済の判定は朝なので、
+    /// 「前日に並べて現金化した分」が数えられずに破産してしまうのを防ぐ。
+    /// 夜の精算は残りの注文だけで行われる（二重には入らない）。戻り値は入金額。
+    /// </summary>
+    public int SettleTodaySellOrdersForDebt()
+    {
+        if (_sellOrderModel == null || _tomsModel == null) return 0;
+
+        var settled = _sellOrderModel.SettleDue(CurrentTurn.Value, _itemModel, _economySettings, _marketingFacade, _relicResolver);
+        if (settled.Settled.Count == 0) return 0;
+
+        _tomsModel.AddRevenue(settled.TotalIncome);
+        _sellOrderModel.SaveData();
+        _tomsModel.SavePlayerMoney();
+        _morningReport?.Add($"返済のため本日分の売り注文を前倒しで入金: +{settled.TotalIncome:N0}G");
+        Debug.Log($"[GameFlowManager] 返済日のため本日約定分を前倒し精算: +{settled.TotalIncome}G ({settled.Settled.Count}件)");
+        return settled.TotalIncome;
+    }
+
     // ========================================
     // 配信前の寄り道（鍛冶屋で仕入れてから配信へ）
     // ========================================

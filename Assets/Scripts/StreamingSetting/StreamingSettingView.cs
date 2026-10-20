@@ -21,6 +21,11 @@ public class StreamingSettingView : MonoBehaviour
     [Header("オート陳列")]
     [SerializeField] private Button autoSelectButton;
 
+    [Header("行き先のダンジョン（未配線なら出さない）")]
+    [SerializeField] private TextMeshProUGUI dungeonNameText;
+    [SerializeField] private TextMeshProUGUI dungeonLevelText;
+    [SerializeField] private TextMeshProUGUI dungeonWeaknessText;
+
     public Subject<string> OnItemSelected     { get; } = new();
     public Subject<string> OnItemDeselected   { get; } = new();
     public Subject<(string id, int qty)> OnQuantityChanged { get; } = new();
@@ -82,6 +87,14 @@ public class StreamingSettingView : MonoBehaviour
             quickConfirmLabel.text = count > 0 ? $"前回と同じ ({count}種)" : "前回と同じ";
         if (quickConfirmButton != null)
             quickConfirmButton.gameObject.SetActive(count > 0);
+    }
+
+    /// <summary>行き先のダンジョン欄（名前・レベル・弱点）。情報未購入の項目は呼び出し側で「？」にして渡す。</summary>
+    public void ShowDungeonInfo(string dungeonName, string level, string weakness)
+    {
+        if (dungeonNameText != null) dungeonNameText.text = dungeonName;
+        if (dungeonLevelText != null) dungeonLevelText.text = level;
+        if (dungeonWeaknessText != null) dungeonWeaknessText.text = weakness;
     }
 
     public void PopulateAvailable(IEnumerable<RuntimeItemData> items)

@@ -4,6 +4,7 @@ using System;
 using System.Threading;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VContainer;
 
@@ -115,6 +116,7 @@ public class BattleControlView : MonoBehaviour
         };
 
         popUpManager.Show(data);
+        BringPopupToFrontAsync(token).Forget();
 
         try
         {
@@ -130,6 +132,82 @@ public class BattleControlView : MonoBehaviour
             {
                 popUpManager.Close();
             }
+        }
+    }
+
+    /// <summary>
+    /// 「配信終了」の確認ポップアップ。終了するなら true。
+    /// token がキャンセルされた（確認中に決着した）ときはポップアップを閉じて false を返す。
+    /// </summary>
+    public async UniTask<bool> ShowEndStreamingConfirmAsync(CancellationToken token)
+    {
+        if (popUpManager == null)
+        {
+            // 確認を出せないまま途中終了すると防衛報酬などを失うので、押し間違いとみなして終了しない
+            Debug.LogError("[BattleControlView] PopUpManager is not injected.");
+            return false;
+        }
+
+        var tcs = new UniTaskCompletionSource<bool>();
+        bool popupClosedByCallback = false;
+
+        popUpManager.Show(new PopUpData
+        {
+            Title = "配信を終了しますか？",
+            Message = "ここまでの売上は受け取れます。\n途中で終えると、防衛報酬・経験値・\nレベルアップ・レリックはもらえません。",
+            ConfirmButtonText = "終了する",
+            CancelButtonText = "続ける",
+            Size = PopupSizeEnum.Medium,
+            OnConfirm = () =>
+            {
+                popupClosedByCallback = true;
+                tcs.TrySetResult(true);
+            },
+            OnCancel = () =>
+            {
+                popupClosedByCallback = true;
+                tcs.TrySetResult(false);
+            }
+        });
+        BringPopupToFrontAsync(token).Forget();
+
+        try
+        {
+            return await tcs.Task.AttachExternalCancellation(token);
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        finally
+        {
+            if (!popupClosedByCallback)
+                popUpManager.Close();
+        }
+    }
+
+    private const string PopupSceneName = "PopupScene";
+    // 配信画面のキャンバス（UICanvas 10 / StatusCanvas 11）より前。ツールチップ（500）よりは後ろ
+    private const int PopupSortingOrderInBattle = 100;
+
+    /// <summary>
+    /// PopupScene のキャンバスは sortingOrder 3 で、配信画面の UI（10〜11）の後ろに隠れてボタンが押せない。
+    /// 読み込みを待って、この画面にいる間だけ前に出す（他の画面の並びは変えない）。
+    /// </summary>
+    private async UniTaskVoid BringPopupToFrontAsync(CancellationToken token)
+    {
+        try
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, destroyCancellationToken);
+            await UniTask.WaitUntil(() => SceneManager.GetSceneByName(PopupSceneName).isLoaded, cancellationToken: linked.Token);
+            foreach (var root in SceneManager.GetSceneByName(PopupSceneName).GetRootGameObjects())
+                foreach (var canvas in root.GetComponentsInChildren<Canvas>(true))
+                    if (canvas.isRootCanvas && canvas.sortingOrder < PopupSortingOrderInBattle)
+                        canvas.sortingOrder = PopupSortingOrderInBattle;
+        }
+        catch (OperationCanceledException)
+        {
+            // 決着・シーン破棄で閉じた
         }
     }
 }

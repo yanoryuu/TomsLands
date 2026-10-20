@@ -77,8 +77,16 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
+        // 途中終了（配信終了ボタン）は勝ちでも負けでもない。売上の精算だけして、
+        // 勝敗ボーナス/ペナルティ・経験値・最低保証レベルアップ・属性波及・レリック3択・戦績はすべて付けない
+        bool aborted = _outputData.Result == BattleResult.Abort;
+
         // --- 勝敗ボーナス/ペナルティ ---
-        if (_outputData.Result == BattleResult.Victory)
+        if (aborted)
+        {
+            Debug.Log("[BattleResultHandler] Streaming aborted: no win/lose effects.");
+        }
+        else if (_outputData.Result == BattleResult.Victory)
         {
             if (!string.IsNullOrEmpty(_outputData.WeaponId))
                 _itemModel.BattleWinBonus(_outputData.WeaponId, 5);
@@ -100,9 +108,11 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log("[BattleResultHandler] Defeat penalties applied.");
         }
 
-        int gainedExp = _outputData.DefeatedMobCount * GameConst.HeroExpPerMob
-                      + _outputData.DefeatedBossCount * GameConst.HeroExpPerBoss;
-        if (_outputData.Result != BattleResult.Victory)
+        int gainedExp = aborted
+            ? 0
+            : _outputData.DefeatedMobCount * GameConst.HeroExpPerMob
+              + _outputData.DefeatedBossCount * GameConst.HeroExpPerBoss;
+        if (_outputData.Result == BattleResult.Defeat)
         {
             // 敗北時の経験値上乗せ: 雑魚撃破分に倍率＋ボス経験値の一部（ボスまで届かなくても成長させる）
             int mobExp = _outputData.DefeatedMobCount * GameConst.HeroExpPerMob;
@@ -121,9 +131,12 @@ public class BattleResultHandler : IStartable, IDisposable
 
         // 勝敗に関係なく、配信（ダンジョン挑戦）後は最低保証ぶん必ずレベルアップする
         // （負けてレベルが上がらないまま難しいダンジョンへ進み、勝てなくなる詰みを防ぐ）
-        int guaranteedLevelUps = _outputData.Result == BattleResult.Victory
-            ? GameConst.HeroGuaranteedLevelUpsOnVictory
-            : GameConst.HeroGuaranteedLevelUpsOnDefeat;
+        int guaranteedLevelUps = _outputData.Result switch
+        {
+            BattleResult.Victory => GameConst.HeroGuaranteedLevelUpsOnVictory,
+            BattleResult.Defeat => GameConst.HeroGuaranteedLevelUpsOnDefeat,
+            _ => 0, // 途中終了は最低保証なし
+        };
         if (levelUps < guaranteedLevelUps)
         {
             int forced = _heroModel.ForceLevelUp(guaranteedLevelUps - levelUps);
@@ -135,7 +148,7 @@ public class BattleResultHandler : IStartable, IDisposable
         var usedItemIds = new List<string>();
         if (!string.IsNullOrEmpty(_outputData.WeaponId)) usedItemIds.Add(_outputData.WeaponId);
         if (!string.IsNullOrEmpty(_outputData.ArmorId)) usedItemIds.Add(_outputData.ArmorId);
-        if (usedItemIds.Count > 0)
+        if (usedItemIds.Count > 0 && !aborted)
         {
             _itemModel.ApplyBattleAttributeSpread(
                 _outputData.Result,
@@ -148,7 +161,7 @@ public class BattleResultHandler : IStartable, IDisposable
         // トコの一言用に、クリア前の勝敗・稼ぎを控えておく
         var talkResult = _outputData.Result;
         int talkEarnings = _outputData.TotalEarnings;
-        RunHistory.RecordStreaming(talkResult == BattleResult.Victory, _outputData.SoldItems); // リザルトの振り返り用
+        RunHistory.RecordStreaming(talkResult, _outputData.SoldItems); // リザルトの振り返り用（途中終了は勝敗に数えない）
 
         // 結果をクリア（次回の戦闘まで誤発火しないように）
         _outputData.Clear();
@@ -160,9 +173,11 @@ public class BattleResultHandler : IStartable, IDisposable
         _gameFlowManager.NextTurn();
 
         // 帰還したらトコの一言を流す。上の処理（精算→NextTurn）の順序には一切関与せず、
-        // 少し待ってから店に留まっている場合だけ再生する（NextTurn で次の配信・リザルトへ直行する場合は流さない）
-        TokoTalk.PlayStreamingReturnAsync(
-            talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token).Forget();
+        // 少し待ってから店に留まっている場合だけ再生する（NextTurn で次の配信・リザルトへ直行する場合は流さない）。
+        // 途中終了には勝ち/負けの台詞しか無いので流さない
+        if (!aborted)
+            TokoTalk.PlayStreamingReturnAsync(
+                talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token).Forget();
     }
 
     public void Dispose()

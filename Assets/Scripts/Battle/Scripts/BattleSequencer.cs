@@ -87,10 +87,25 @@ public class BattleSequencer : MonoBehaviour
     /// <summary>フェーズ進行ゲージを更新する（clearedPhases = クリア済みフェーズ数）。</summary>
     public void UpdatePhaseGauge(int clearedPhases) => phaseGauge?.SetProgress(clearedPhases);
 
+    // 戦闘ループ専用。シーン破棄に加えて StopBattle でも止められる
+    private CancellationTokenSource _battleCts;
+
     public void StartBattle(HeroModel heroModel)
     {
-        var token = this.GetCancellationTokenOnDestroy();
-        BattleStartAsync(heroModel, token).Forget();
+        _battleCts?.Cancel();
+        _battleCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        BattleStartAsync(heroModel, _battleCts.Token).Forget();
+    }
+
+    /// <summary>
+    /// 戦闘ループを止める。決着後（配信終了ボタンの途中終了を含む）に BattleSceneStarter から呼ぶ。
+    /// 止めないとリザルト・配当通知書の表示中も裏で攻撃（SE）や撃破による価格変動が続く。
+    /// </summary>
+    public void StopBattle()
+    {
+        // Dispose はしない（キャンセル直後に後片付け中の await がトークンを触ると ObjectDisposedException になりうる）。
+        // CTS はシーンと一緒に捨てられる
+        _battleCts?.Cancel();
     }
 
     private async UniTaskVoid BattleStartAsync(HeroModel heroModel, CancellationToken token)

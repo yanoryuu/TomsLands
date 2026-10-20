@@ -74,11 +74,24 @@ public class DebtPresenter : IDisposable, IStartable
     /// <summary>
     /// 10ターンごとの強制返済で開く。閉じるボタンなし。払えなければゲームオーバー。
     /// </summary>
-    public void ShowForced()
+    /// <param name="settleTodaySellOrders">
+    /// 現金が足りないときに、今日入金予定の売り注文を前倒しで約定して入金する処理（戻り値は入金額）。
+    /// 入金は通常その日の夜だが、返済の判定は朝なので、これが無いと「前日に並べた分」を数えずに破産する。
+    /// </param>
+    public void ShowForced(Func<int> settleTodaySellOrders = null)
     {
         int cycle = tomsModel.DebtCycle.Value + 1;
         int debtAmount = GetDebtAmount(cycle);
         int currentMoney = tomsModel.PlayerMoney.Value;
+
+        // まず今日入金予定の売り注文を前倒しで受け取る（金融資産の強制売却より先。こちらは損が出ない）
+        if (currentMoney < debtAmount && settleTodaySellOrders != null)
+        {
+            int income = settleTodaySellOrders();
+            currentMoney = tomsModel.PlayerMoney.Value;
+            if (income > 0)
+                UnityEngine.Debug.Log($"[Debt] 返済のため本日分の売り注文を前倒し約定: +{income}G → 所持金 {currentMoney}G");
+        }
 
         // 破産判定は現金のみ。ただし現金不足でも金融資産（ファンド・債券）の
         // 強制売却（割増手数料・債券は中途解約ペナルティ）で返済額に届くなら、

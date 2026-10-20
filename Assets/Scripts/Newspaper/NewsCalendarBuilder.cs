@@ -167,7 +167,7 @@ public static class NewsCalendarBuilder
             if (arcLength.Count > 0 && active < NewsTuning.ArcMaxConcurrent && share < NewsTuning.ArcShareTarget
                 && rng.NextDouble() < NewsTuning.ArcStartChance)
             {
-                var start = PickArcStart(rng, turn, events, idx, world, lastPlaced, arcBusyUntil);
+                var start = PickArcStart(rng, turn, events, idx, world, companies, lastPlaced, arcBusyUntil);
                 if (start != null)
                 {
                     lastPlaced[start.data.Family] = turn;
@@ -183,10 +183,10 @@ public static class NewsCalendarBuilder
 
             for (int k = 0; k < n; k++)
             {
-                var ev = PickAndInstantiate(rng, turn, events, idx, world, lastPlaced, lastBinding,
+                var ev = PickAndInstantiate(rng, turn, events, idx, world, companies, lastPlaced, lastBinding,
                     requireLarge: forceLarge && k == 0, rare: rareCredit);
                 if (ev == null && forceLarge && k == 0)
-                    ev = PickAndInstantiate(rng, turn, events, idx, world, lastPlaced, lastBinding, requireLarge: false, rare: rareCredit);
+                    ev = PickAndInstantiate(rng, turn, events, idx, world, companies, lastPlaced, lastBinding, requireLarge: false, rare: rareCredit);
                 if (ev == null) continue;
 
                 if (ev.scaleRank >= 3) largeSince = turn;
@@ -199,6 +199,7 @@ public static class NewsCalendarBuilder
 
     private static NewsEventInstance PickAndInstantiate(
         Random rng, int turn, IReadOnlyList<NewsEventData> events, TemplateIndex idx, NewsWorld world,
+        IReadOnlyList<NewspaperCompanyData> companies,
         Dictionary<string, int> lastPlaced, Dictionary<string, int> lastBinding, bool requireLarge, RareCredit rare)
     {
         var candidates = new List<NewsEventData>();
@@ -208,6 +209,7 @@ public static class NewsCalendarBuilder
             if (e.IsArc) continue;   // 連載は第1話も含めて通常の抽選に混ぜない（PickArcStart で置く）
             if (requireLarge && e.ScaleRank < 3) continue;
             if (!idx.HasReports(e.eventId)) continue;
+            if (!HasOnTimeReporter(e.eventId, turn, companies, idx)) continue;
             // cooldown は系統（family）単位。次ダンジョン別に分けた事象が続けて出ないように
             if (lastPlaced.TryGetValue(e.Family, out var last) && turn - last < Math.Max(1, e.cooldown)) continue;
             if (!ConditionOk(e.condition, turn, world)) continue;
@@ -594,6 +596,19 @@ public static class NewsCalendarBuilder
         public NewsEventInstance ev;
     }
 
+    /// <summary>
+    /// 発効日 effectTurn の事象を、周の中（1日目以降）に報じられる社があるか。
+    /// 報道日は「発効 − 社の lead」なので、序盤（ターン2〜3）は lead の長い社しかテンプレートを持たない事象が
+    /// 1本も報じられないまま値だけ動かしてしまう。そういう事象はその日の候補から外す
+    /// （効果を0にするやり方は連載の第1話の分岐を壊しうるので取らない）。
+    /// </summary>
+    private static bool HasOnTimeReporter(string eventId, int effectTurn, IReadOnlyList<NewspaperCompanyData> companies, TemplateIndex idx)
+    {
+        foreach (var c in companies)
+            if (effectTurn - Math.Max(0, c.leadTurns) >= 1 && idx.ReportsOf(eventId, c.companyId).Count > 0) return true;
+        return false;
+    }
+
     private static int MaxLead(IReadOnlyList<NewspaperCompanyData> companies)
     {
         int m = 0;
@@ -603,6 +618,7 @@ public static class NewsCalendarBuilder
 
     private static ArcStart PickArcStart(
         Random rng, int turn, IReadOnlyList<NewsEventData> events, TemplateIndex idx, NewsWorld world,
+        IReadOnlyList<NewspaperCompanyData> companies,
         Dictionary<string, int> lastPlaced, Dictionary<string, int> arcBusyUntil)
     {
         var cands = new List<NewsEventData>();
@@ -610,6 +626,7 @@ public static class NewsCalendarBuilder
         foreach (var e in events)
         {
             if (!e.IsArcStart || e.weight <= 0 || !idx.HasReports(e.eventId)) continue;
+            if (!HasOnTimeReporter(e.eventId, turn, companies, idx)) continue;
             if (arcBusyUntil.TryGetValue(e.arcId, out var busy) && busy >= turn) continue;
             if (lastPlaced.TryGetValue(e.Family, out var last) && turn - last < Math.Max(1, e.cooldown)) continue;
             if (!ConditionOk(e.condition, turn, world)) continue;

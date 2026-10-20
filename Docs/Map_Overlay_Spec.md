@@ -45,9 +45,10 @@
 
 ### R3 勇者の次の行き先
 - 対象は**次の1ダンジョンだけ**。それより先の順番は見せない（新聞などの情報の価値を保つため）。
-- 取得元は鍛冶屋ヘッダーと同じにする:
+- 取得元は鍛冶屋ヘッダー・勇者画面・占い師と同じ `gameFlowManager.GetUpcomingStreamDungeon()`:
   - `gameFlowManager.IsAwaitingStream` が true → `PendingBattleDungeon`（今日配信）
-  - それ以外 → `GetNextBattleDungeon()`、残りターンは `GetTurnsUntilNextBattle()`
+  - それ以外 → `GetNextBattleDungeon()`
+  - 残りは表示用の `GetDaysUntilNextStream()`（今日 0・明日 1）。`GetTurnsUntilNextBattle()` は前日に 0 になる（AutoPlay 用の意味）ので表示には使わない
 - 表示:
   - 対象アイコンのそばに**勇者のドットキャラ**を立たせる（待機モーションをループ再生。アイコンの方を向く）
   - 名札の上にリボン「NEXT あとNターン」。配信待ちのときは「本日配信」

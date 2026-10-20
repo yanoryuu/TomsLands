@@ -317,8 +317,9 @@ public class NewsModel
         return null;
     }
 
-    public bool IsRead(string articleId) => readArticleIds.Contains(articleId);
-    public void MarkRead(string articleId) => readArticleIds.Add(articleId);
+    /// <summary>既読か。キーは掲載ごとの NewsIssueEntry.Key（号:社:記事）。テンプレート ID ではない。</summary>
+    public bool IsRead(string entryKey) => readArticleIds.Contains(entryKey);
+    public void MarkRead(string entryKey) => readArticleIds.Add(entryKey);
 
     // --- セーブ/ロード ---
 

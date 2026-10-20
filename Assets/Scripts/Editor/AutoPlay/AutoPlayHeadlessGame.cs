@@ -618,6 +618,17 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             int cycle = TomsModel.DebtCycle.Value + 1;
             int amount = DebtCalculator.GetAmount(cycle, TomsModel, RelicResolver);
             int money = TomsModel.PlayerMoney.Value;
+            // 今日入金予定の売り注文を前倒しで受け取る（TomsShopPresenter → GameFlowManager.SettleTodaySellOrdersForDebt の写し）
+            if (money < amount)
+            {
+                int early = Flow.SettleTodaySellOrdersForDebt();
+                if (early > 0)
+                {
+                    _morning.Consume(); // 朝レポートに積まれた行は Notes に直接書く
+                    Today.Notes.Add($"返済のため本日分の売り注文を前倒しで入金: +{early}G");
+                }
+                money = TomsModel.PlayerMoney.Value;
+            }
             if (money < amount && Portfolio != null)
             {
                 int shortfall = amount - money;
