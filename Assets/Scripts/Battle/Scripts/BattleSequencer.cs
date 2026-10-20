@@ -67,6 +67,8 @@ public class BattleSequencer : MonoBehaviour
 
     public Subject<(string weaponId, string armorId)> OnBattleWin { get; } = new();
     public Subject<(string weaponId, string armorId)> OnBattleDefeat { get; } = new();
+    /// <summary>戦闘ループが例外で止まった。敗北ではなく途中終了（Abort）として扱う（防衛報酬なし・売上だけ精算）。</summary>
+    public Subject<(string weaponId, string armorId)> OnBattleError { get; } = new();
     public IReadOnlyList<CharacterPresenter> CharacterPresenters =>
         battleContext?.GetAllPresenters() ?? new List<CharacterPresenter>();
     public Subject<(CharacterModel attacker, CharacterModel target)> OnCharacterDamaged { get; } = new();
@@ -127,10 +129,10 @@ public class BattleSequencer : MonoBehaviour
         {
             Debug.LogError($"[BattleSequencer] 戦闘中に例外が発生しました: {ex}");
 
-            // 例外時でも結果を通知して、リザルト画面→シーン遷移が行われるようにする
+            // 例外時でも結果を通知して、リザルト画面→シーン遷移が行われるようにする（敗北ではなく途中終了扱い）
             var weaponId = heroModel.EquippedItemIds.Count > 0 ? heroModel.EquippedItemIds[0] : "";
             var armorId  = heroModel.EquippedItemIds.Count > 1 ? heroModel.EquippedItemIds[1] : "";
-            OnBattleDefeat.OnNext((weaponId, armorId));
+            OnBattleError.OnNext((weaponId, armorId));
         }
     }
 }

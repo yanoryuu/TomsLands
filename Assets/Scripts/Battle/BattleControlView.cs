@@ -4,7 +4,6 @@ using System;
 using System.Threading;
 using TMPro;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VContainer;
 
@@ -116,7 +115,6 @@ public class BattleControlView : MonoBehaviour
         };
 
         popUpManager.Show(data);
-        BringPopupToFrontAsync(token).Forget();
 
         try
         {
@@ -169,7 +167,6 @@ public class BattleControlView : MonoBehaviour
                 tcs.TrySetResult(false);
             }
         });
-        BringPopupToFrontAsync(token).Forget();
 
         try
         {
@@ -183,31 +180,6 @@ public class BattleControlView : MonoBehaviour
         {
             if (!popupClosedByCallback)
                 popUpManager.Close();
-        }
-    }
-
-    private const string PopupSceneName = "PopupScene";
-    // 配信画面のキャンバス（UICanvas 10 / StatusCanvas 11）より前。ツールチップ（500）よりは後ろ
-    private const int PopupSortingOrderInBattle = 100;
-
-    /// <summary>
-    /// PopupScene のキャンバスは sortingOrder 3 で、配信画面の UI（10〜11）の後ろに隠れてボタンが押せない。
-    /// 読み込みを待って、この画面にいる間だけ前に出す（他の画面の並びは変えない）。
-    /// </summary>
-    private async UniTaskVoid BringPopupToFrontAsync(CancellationToken token)
-    {
-        try
-        {
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, destroyCancellationToken);
-            await UniTask.WaitUntil(() => SceneManager.GetSceneByName(PopupSceneName).isLoaded, cancellationToken: linked.Token);
-            foreach (var root in SceneManager.GetSceneByName(PopupSceneName).GetRootGameObjects())
-                foreach (var canvas in root.GetComponentsInChildren<Canvas>(true))
-                    if (canvas.isRootCanvas && canvas.sortingOrder < PopupSortingOrderInBattle)
-                        canvas.sortingOrder = PopupSortingOrderInBattle;
-        }
-        catch (OperationCanceledException)
-        {
-            // 決着・シーン破棄で閉じた
         }
     }
 }

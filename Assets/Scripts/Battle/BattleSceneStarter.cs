@@ -198,6 +198,11 @@ public class BattleSceneStarter : IAsyncStartable
             .Subscribe(defeat => _battleTcs.TrySetResult((BattleResult.Defeat, defeat.weaponId, defeat.armorId)))
             .AddTo(disposables);
 
+        // 戦闘ループの例外は敗北（防衛報酬あり）にせず途中終了として扱う
+        _battleSequencer.OnBattleError
+            .Subscribe(err => _battleTcs.TrySetResult((BattleResult.Abort, err.weaponId, err.armorId)))
+            .AddTo(disposables);
+
         _battleSequencer.OnEnemyDefeated
             .Subscribe(enemy =>
             {
