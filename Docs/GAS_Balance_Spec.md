@@ -134,7 +134,7 @@
 フィールド: `fundBuyFeeRate(float), fundSellFeeRate(float), forcedSaleExtraFeeRate(float), bondEarlyRedemptionRate(float), navHistoryCapacity(int)`
 
 ### financialProducts[]（部分・`FinancialProductData`、2026-08追加）
-金融商品（債券・ファンド）のマスター。`id` = productId。シートは **`bal_financialProducts`・1行=1商品**
+金融商品（債券・ファンド）のマスター。`id` = productId。シートは **`bal_financeProducts`・1行=1商品**
 （汎用行リーダー対応・ヘッダに `:type` サフィックス必須。雛形 `Docs/balance_tsv/financialProducts.tsv`、現行9商品の実データ変換済み）。
 変更可: `productName, description, kind(int), unlockInfoBrokerLevel(int), bondUnitPrice(int), bondInterestRate(float),
 bondMaturityTurns(int), fundBaseUnitPrice(int), useAttributeFilter(bool), attribute(int)`。icon は載せない（SO保持）。

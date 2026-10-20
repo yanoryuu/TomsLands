@@ -50,7 +50,7 @@ const BALANCE_LISTS = {
   enemies: 'bal_enemies',
   dungeons: 'bal_dungeons',
   events: 'bal_events',
-  financialProducts: 'bal_financialProducts'
+  financialProducts: 'bal_financeProducts'
   // villageFacilities は入れ子構造のため専用リーダーで処理（下方の readVillageFacilities_）
 };
 const BALANCE_HEROLEVELS_SHEET = 'bal_heroLevels';
