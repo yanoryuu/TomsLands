@@ -98,6 +98,8 @@ public class ResultModel
             Advance = profit.Advance,
         };
 
+        Statistics.VillageFunds = MetaProgressModel.CalculateVillageFunds(true, profit.Profit, profit.Carried, mode);
+
         if (_metaProgress != null)
         {
             Statistics.HasPreviousBest = _metaProgress.TryGetBestProfit(mode, out int best);
