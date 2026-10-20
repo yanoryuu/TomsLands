@@ -22,6 +22,8 @@ public class CharacterModel
     public ItemData EquippedWeapon { get; }
     public ItemData EquippedArmor { get; }
     public ElementType Element { get; }
+    /// <summary>勇者の武器の属性（敵・未装備は null）。弱点を突くと攻撃が上がる（Q7。HeroEquipmentBonus.AttributeAttackMul）。</summary>
+    public ItemTypeData.ItemAttribute? WeaponAttribute { get; }
     public bool IsBoss { get; }
     public IReadOnlyList<SkillData> Skills { get; }
     public Observable<Unit> OnDied => CurrentHp.Where(hp => hp <= 0).AsUnitObservable();
@@ -65,6 +67,7 @@ public class CharacterModel
         {
             // 装備補正（武器→攻撃、防具→防御/HP）。ランクが高い装備ほど強くなる
             var equip = HeroEquipmentBonus.Get(runtime);
+            WeaponAttribute = HeroEquipmentBonus.GetWeaponAttribute(runtime);
             MaxHp = Scale(Mathf.RoundToInt(runtime.hp.Value * equip.Hp));
             CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = runtime.mp.Value;

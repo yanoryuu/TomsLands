@@ -61,7 +61,10 @@ flowchart TD
 
 ## 4. 広告ステータス × 作用フェーズ早見表
 
-| ステータス | 作用フェーズ | 数式 | 既定係数 | MAX(=100, F=1000) 時の効果 |
+> **尺度（2026-10 H-3）**: 4つのステータスは **0〜statMax（=1000）** の尺度にそろえた。下の式の「/100」は実装では「/statMax」で、
+> 広告の上昇量・バズの増減・炎上の閾値・初期値（信頼 500）もすべて 1000 の尺度で書く（§10.3）。
+
+| ステータス | 作用フェーズ | 数式 | 既定係数 | MAX(=statMax, F=1000) 時の効果 |
 |---|---|---|---|---|
 | **Trust** | Floor クランプ | `floor = basePrice × (shopPriceFloorRate + trustFloorBoost × Trust/100)` | `trustFloorBoost = 0.4` | Floor 30% → 70%(= basePrice × 0.7 で下げ止まり) |
 | **Attention** | S1 上限 | `s1Max ×= 1 + attentionPriceAmplify × Attention/100` | `attentionPriceAmplify = 0.5`<br/>`attentionAffectsLowDemand = false` | high/normal の s1Max が 1.5×。例: 1.03 → 1.545 |
@@ -193,3 +196,69 @@ flowchart TD
 | `Assets/Scripts/GameFlow/GameFlowManager.cs` | フィールド `_shopStatusModel` 追加、コンストラクタ引数追加、`NextTurn()` 呼び出し変更 |
 | `Assets/Scripts/Marketing/ShopStatusModel.cs` | 改修なし(参照のみ) |
 | `Assets/Scripts/GameLifetimeScope.cs` | 改修なし(`ShopStatusModel` は既に Singleton 登録済み) |
+
+
+---
+
+## 10. 売れる量・売り圧力・支配戦略の抑え（2026-10 グループ H）
+
+目的: 「読まなくても勝てる道」（全額仕入れ→全部陳列、フォロワー広告の買い込み、貯金ゴーレム、無リスクの債券）をふさぎ、
+儲けが「読み→賭け→的中→大儲け」から生まれるようにする。計測は `Docs/Level_Design_Log.md`「2026-10-21 経済バランス H」。
+
+### 10.1 1日に来る客の数（売れる量の上限）— Q3(a)
+陳列した品は、その日に来る客の数までしか売れない。売れ残りは在庫と棚に残り、翌日また売れる（`ItemModel.SimulateShopSales` / `GetDailyCustomers`）。
+
+```
+客の数 = customersAtNeutralDemand × (customerBaseShare + 需要 × customerDemandSlope) / (customerBaseShare + 0.5 × customerDemandSlope)
+        × (1 + customerFollowerWeight × Log10(1 + フォロワー / followerScale) + customerAttentionBoost × 注目/statMax)
+        × SalesRate
+```
+
+| 項目 | 既定 | 意味 |
+|---|---|---|
+| `useShopCustomerCap` | true | false で従来（陳列分が全部売れる） |
+| `customersAtNeutralDemand` | 32 | 需要 0.5 の品の1日の客の数 |
+| `customerBaseShare` / `customerDemandSlope` | 0.2 / 1.6 | 需要 0.05 → 約 0.3 倍、需要 1.0 → 約 1.8 倍 |
+| `customerFollowerWeight` | 0.25 | フォロワー 10,000 人で客 +26% |
+| `customerAttentionBoost` | 0.3 | 注目度 MAX で客 +30% |
+
+需要の読みが当たった品ほど客が多い＝たくさん売れる。需要の低い品を山ほど並べても売れ残る。
+
+### 10.2 売り圧力（一度に大量に売ると値が下がる）— Q3(b)
+店で売った個数は翌朝の値段を押し下げる（`ItemModel.SellPressureDrop`。`RuntimeItemData.LastShopSoldQuantity` はセーブ対象）。
+約定は翌日の値段で決まるので、1銘柄に大量に張るより分散したほうが得になる。
+
+```
+下落率 = min(sellPressureMaxDrop, sellPressureStrength × 売った数 ÷ (sellPressureDepth × lerp(0.5, 1.0, 需要)))
+```
+
+| 項目 | 既定 |
+|---|---|
+| `sellPressureStrength` | 0.04 |
+| `sellPressureDepth` | 40（個） |
+| `sellPressureMaxDrop` | 0.15 |
+
+需要が高い品は板が厚く、同じ量を売っても下がりにくい。下がった値は ABM の適正値への引き寄せ（anchorPull）で数日かけて戻る。
+
+### 10.3 広告ステータスの尺度と減衰（H-3・H-7）
+- 尺度は statMax=1000。バズの強化度は `注目×0.05 + 信頼×0.02 + フォロワー段`（÷50 で頭打ち）、炎上の閾値は信頼 500、初期の信頼は 500。
+- バズの売上倍率は `基本 + 拡散×0.001`、上限は通常 ×2.5 / 超バズ ×3.5（`BuzzEffectData.immediateRevenueMultiplierMax`）。持続は `3 + 維持÷250`。
+- 毎朝の減衰（`ShopStatusModel.ApplyDailyDecay`、`MarketingFacade.ProcessTurn` の頭）: 注目 −10% / 拡散 −10% / 維持 −5% / 信頼 0%。
+- バズの継続率 = 50% + 維持力/statMax × 35%（上限 85%）（`BuzzSystem.CalculateContinueChance`）。
+- 広告の上昇量（1000 の尺度）: 総合 各150 / フォロワー 注目100・+10,000人 / インフルエンサー 注目200・拡散400 / リピーター 信頼200・維持400 / SNS 注目400・維持200 / 口コミ 信頼400・拡散200。費用は配信値（10万〜30万G）。
+
+### 10.4 おすすめ＝割安度（G-11）
+「おまかせ仕入れ」の既定方針（おすすめ）は `ItemModel.RecommendScoreOf` = 1日の客の数 × (適正値 − 現在価格)。
+適正値は `ShopFairValue.Compute`（今の需要から決まる。未来の情報は含まない）。以前の「需要×価格×売率」は基準価格の高い品が上に来るだけだった。
+陳列のおすすめ（オート陳列）は売る側なので従来の期待収益順のまま。
+
+### 10.5 そのほか
+| 項目 | 変更 |
+|---|---|
+| 貯金ゴーレム（H-4） | 値段を 7日で元が取れる額に: 小 5,600 / 中 9,100 / 大 15,400G（毎朝 800 / 1,300 / 2,200G・台数・撤去返金50% は据え置き） |
+| 返済（H-6） | 初回 15,000G（元手の15%）× 1.5 倍ずつ（15,000 / 22,500 / 33,750 / 50,625G）。7日ごと |
+| 立て替え（H-6） | 1周目の鍛冶屋の立て替え 50,000G は次の納付に利息なしで上乗せ（`TomsModel.AdvancePrincipal`） |
+| 強制返済の投げ売り（H-8） | 現金＋金融資産で足りなければ在庫を相場の 60%（`debtFireSaleRate`）で高い品から売る（`DebtCalculator.LiquidateInventoryForDebt`） |
+| 債券（H-9） | 短期 5日 +6%・長期 12日 +18%。1銘柄の口数は 10 × 情報屋レベルまで（`FinanceSettings.bondUnitCapPerInfoLevel`） |
+| ファンド（H-10） | 基準価額は未解放の銘柄も含めた平均。鍛冶屋を上げても飛ばない |
+| 属性の戦闘効果（Q7） | 勇者の武器が敵の弱点属性なら、その敵への攻撃 +100%（`heroAttributeAttackBonus`。目安の +30% では計測で勝敗が変わらなかった）。クリア確率の表示には入れない |

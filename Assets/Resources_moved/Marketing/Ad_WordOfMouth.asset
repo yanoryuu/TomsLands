@@ -15,9 +15,9 @@ MonoBehaviour:
   advertisementName: "\u53E3\u30B3\u30DF\u30AD\u30E3\u30F3\u30DA\u30FC\u30F3"
   icon: {fileID: -7616789979377456895, guid: baa255d53fc9d6c47b34f257e091b384, type: 3}
   selectedBackground: {fileID: -1843028302627794106, guid: 2f0b892e10da27e43847221aca56d1e3, type: 3}
-  cost: 1500
-  trustGain: 40
+  cost: 150000
+  trustGain: 400
   attentionGain: 0
-  spreadGain: 20
+  spreadGain: 200
   retentionGain: 0
   followerGain: 0

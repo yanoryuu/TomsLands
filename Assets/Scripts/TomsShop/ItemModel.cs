@@ -43,6 +43,84 @@ public class ItemModel
     /// </summary>
     public static float ExpectedRevenueOf(RuntimeItemData r) => r.ExpectedRevenue;
 
+    // ========================================
+    // 1日に来る客の数・適正値・おすすめ（H-2 / G-11）
+    // ========================================
+
+    private ShopEconomySettings _salesSettings;
+    private ShopStatusModel _salesStatus;
+
+    /// <summary>
+    /// 営業（客の数）と おすすめ（適正値）の計算に使う設定を渡す。GameFlowManager の生成時に呼ばれる。
+    /// 渡されていない間は従来どおり（陳列分が全部売れる・おすすめは期待収益順）。
+    /// </summary>
+    public void ConfigureShopSales(ShopEconomySettings settings, ShopStatusModel status)
+    {
+        _salesSettings = settings;
+        _salesStatus = status;
+    }
+
+    /// <summary>
+    /// この品に今日来る客の数（＝店で1日に売れる個数の上限）。需要が高いほど多く、フォロワー・注目度で少し増える。
+    /// 上限なし（設定なし・無効）のときは int.MaxValue。
+    /// 読みが当たった（需要が上がる）品ほど、たくさん・高く売れるようにするための上限（Docs/ShopEconomy.md §10）。
+    /// </summary>
+    public int GetDailyCustomers(RuntimeItemData r)
+    {
+        var st = _salesSettings;
+        if (r == null || st == null || !st.useShopCustomerCap || st.customersAtNeutralDemand <= 0f) return int.MaxValue;
+
+        float demand = Mathf.Clamp01(r.Demand.Value);
+        float neutral = Mathf.Max(0.0001f, st.customerBaseShare + 0.5f * st.customerDemandSlope);
+        float demandFactor = Mathf.Max(0f, st.customerBaseShare + demand * st.customerDemandSlope) / neutral;
+
+        float boost = 1f;
+        if (_salesStatus != null)
+        {
+            int followers = Mathf.Max(0, _salesStatus.Followers.Value);
+            boost += st.customerFollowerWeight * Mathf.Log10(1f + followers / Mathf.Max(1f, st.followerScale));
+            float attentionN = Mathf.Clamp01(_salesStatus.Attention.Value / (float)Mathf.Max(1, _salesStatus.StatMax));
+            boost += st.customerAttentionBoost * attentionN;
+        }
+
+        float customers = st.customersAtNeutralDemand * demandFactor * boost * Mathf.Max(0.1f, r.SalesRate);
+        return Mathf.Max(1, Mathf.RoundToInt(customers));
+    }
+
+    /// <summary>今の需要から決まる適正値（ABM の層1 と同じ式。Docs/Market_Price_v2_Design.md §3）。設定が無ければ基準価格。</summary>
+    public float GetFairValue(RuntimeItemData r)
+    {
+        var master = r != null ? GetMasterItem(r.ItemId) : null;
+        if (master == null) return r != null ? r.CurrentPrice.Value : 0f;
+        var st = _salesSettings;
+        if (st == null) return master.basePrice;
+        int floor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * st.shopPriceFloorRate));
+        int ceiling = Mathf.Max(floor, Mathf.RoundToInt(master.basePrice * st.shopPriceCeilingRate));
+        return ShopFairValue.Compute(master.basePrice, r.Demand.Value, st.demandPricePremium, floor, ceiling);
+    }
+
+    /// <summary>
+    /// 割安度 = 適正値 ÷ 現在価格（1.08 = 適正値より 8% 安い）。仕入れの「おすすめ」の基準（G-11）。
+    /// 以前のおすすめ（需要×価格×売率）は基準価格の高い品が上に来るだけで、安く買う判断を教えていなかった。
+    /// </summary>
+    public float GetBargainRatio(RuntimeItemData r)
+    {
+        if (r == null || r.CurrentPrice.Value <= 0) return 0f;
+        return GetFairValue(r) / r.CurrentPrice.Value;
+    }
+
+    /// <summary>
+    /// おすすめのスコア（G-11）: 1日に売れる見込みの数 × (適正値 − 現在価格)。
+    /// 「今の需要から見て安く、しかも客が来る品」ほど高い。現在の情報だけで決まり、未来の情報は含めない（News_Spec §2）。
+    /// </summary>
+    public float RecommendScoreOf(RuntimeItemData r)
+    {
+        if (r == null) return float.MinValue;
+        int customers = GetDailyCustomers(r);
+        float qty = customers == int.MaxValue ? Mathf.Max(1, r.MaxStock.Value) : customers;
+        return qty * (GetFairValue(r) - r.CurrentPrice.Value);
+    }
+
     public void PurchaseItem(string itemId, int quantity)
     {
         var item = GetRuntimeItem(itemId);
@@ -161,8 +239,8 @@ public class ItemModel
 
     /// <summary>
     /// 通常営業ターン終了時の販売処理。
-    /// 【現行仕様（売り注文制）】品出し中のアイテムは陳列した数だけ必ず全部売れる
-    /// （販売数 = min(Stock, DisplayStock)）。入金は即時ではなく、呼び出し側が
+    /// 【現行仕様（売り注文制）】品出し中のアイテムは、その日に来る客の数まで売れる
+    /// （販売数 = min(Stock, DisplayStock, GetDailyCustomers)。売れ残りは在庫・棚に残る。H-2）。入金は即時ではなく、呼び出し側が
     /// 売り注文(SellOrder)として翌日の約定に回す。
     /// 【旧仕様】probabilistic=true で Demand × SalesRate × DisplayStock の確率販売に戻せる
     /// （ShopEconomySettings.useProbabilisticShopSales）。
@@ -176,6 +254,7 @@ public class ItemModel
         foreach (var runtime in RuntimeItems)
         {
             // 品出し中かつ在庫ありのアイテムのみ対象
+            runtime.LastShopSoldQuantity = 0;
             if (!runtime.IsDisplay.Value || runtime.DisplayStock.Value <= 0 || runtime.Stock.Value <= 0)
             {
                 runtime.WasSoldLastTurn = false;
@@ -192,8 +271,9 @@ public class ItemModel
             int quantitySold;
             if (!probabilistic)
             {
-                // 売り注文制: 陳列した分は必ず全部売れる
-                quantitySold = maxSellable;
+                // 売り注文制: 陳列した分が、その日に来る客の数まで売れる（売れ残りは在庫・棚に残る）。
+                // 客の数は需要で決まる（GetDailyCustomers）。上限なしの設定なら従来どおり全部売れる
+                quantitySold = Mathf.Min(maxSellable, GetDailyCustomers(runtime));
             }
             else
             {
@@ -235,6 +315,7 @@ public class ItemModel
                 runtime.DisplayStock.Value = 0;
             }
             runtime.WasSoldLastTurn = true;
+            runtime.LastShopSoldQuantity = quantitySold;
             salesResult[runtime.ItemId] = quantitySold;
 
             Debug.Log($"[ShopSales] {runtime.ItemId} × {quantitySold}個 " +
@@ -362,6 +443,14 @@ public class ItemModel
             h ^= h >> 16; h *= 0x85ebca6bu; h ^= h >> 13; h *= 0xc2b2ae35u; h ^= h >> 16;
             return (h & 0xFFFFFF) / (float)0x1000000;
         }
+    }
+
+    /// <summary>売り圧力による下落率（0〜sellPressureMaxDrop）。</summary>
+    public static float SellPressureDrop(ShopEconomySettings settings, int soldQuantity, float demand)
+    {
+        if (settings == null || soldQuantity <= 0 || settings.sellPressureStrength <= 0f || settings.sellPressureDepth <= 0f) return 0f;
+        float depth = settings.sellPressureDepth * Mathf.Lerp(0.5f, 1f, Mathf.Clamp01(demand));
+        return Mathf.Clamp(settings.sellPressureStrength * soldQuantity / depth, 0f, Mathf.Max(0f, settings.sellPressureMaxDrop));
     }
 
     /// <summary>
@@ -516,6 +605,12 @@ public class ItemModel
             float newsHype = news != null ? news.HypeRate(runtime, turnIndex) : 1f;
             if (newsHype != 1f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * newsHype));
 
+            // 売り圧力（Q3(b)）: 昨日店で売った量が多いほど今朝の値段が下がる。板の厚みは需要が高いほど厚い。
+            // 約定は今日の値段で決まるので、一度に大量に売ると自分の約定値も下がる（分散するほうが得）。
+            float sellPressure = SellPressureDrop(settings, runtime.LastShopSoldQuantity, runtime.Demand.Value);
+            if (sellPressure > 0f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * (1f - sellPressure)));
+            runtime.LastShopSoldQuantity = 0;
+
             // ストップ高/ストップ安（元値ベース、Trust で Floor を底上げ）
             int floor = Mathf.Max(1, Mathf.RoundToInt(master.basePrice * floorRate));
             int ceiling = Mathf.RoundToInt(master.basePrice * settings.shopPriceCeilingRate);
@@ -540,7 +635,7 @@ public class ItemModel
     // ========================================
 
     /// <summary>
-    /// 予算内で現在の期待収益（ExpectedRevenueOf）が高い順にアイテムを自動購入する。
+    /// 予算内で、方針の順（既定の「おすすめ」は割安度 RecommendScoreOf の高い順）にアイテムを自動購入する。
     /// </summary>
     public List<AutoPurchaseResult> AutoPurchase(int budget, int blacksmithLevel, TomsModel tomsModel,
         ItemTypeData.ItemAttribute? nextDungeonAttr = null, RelicEffectResolver relicResolver = null,
@@ -568,7 +663,8 @@ public class ItemModel
                     ? (float)r.DividendPerTurn / Mathf.Max(1, r.CurrentPrice.Value)
                     : 0f)
                 .ThenByDescending(r => ExpectedRevenueOf(r)),
-            _ => pool.OrderByDescending(r => ExpectedRevenueOf(r)),
+            // おすすめ（G-11）: 割安で客が来る品から。割高（スコア負）の品は後回しになるだけで買わないわけではない
+            _ => pool.OrderByDescending(RecommendScoreOf).ThenByDescending(r => ExpectedRevenueOf(r)),
         }).ToList();
 
         foreach (var item in candidates)

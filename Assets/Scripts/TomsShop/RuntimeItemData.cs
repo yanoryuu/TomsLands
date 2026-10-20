@@ -49,6 +49,12 @@ public class RuntimeItemData
     public bool WasSoldLastTurn { get; set; }
 
     /// <summary>
+    /// 直近の営業で店で売れた個数（売り圧力。翌朝の ApplyShopTurnEconomy が値段を押し下げて 0 に戻す）。
+    /// 営業から日送りの間に終了しても圧力が消えないようセーブする。
+    /// </summary>
+    public int LastShopSoldQuantity { get; set; }
+
+    /// <summary>
     /// 前ターンの需要値（需要変動幅の表示用）。
     /// ApplyShopTurnEconomy の冒頭でスナップショットされる。
     /// </summary>
@@ -190,6 +196,7 @@ public class RuntimeItemData
         PreviousDemand = plainData.previousDemand > 0f ? plainData.previousDemand : Demand.Value;
         PreviousPrice = plainData.previousPrice > 0 ? plainData.previousPrice : CurrentPrice.Value;
         Trend = plainData.trend;
+        LastShopSoldQuantity = Mathf.Max(0, plainData.lastShopSold);
 
         // ショップ価格・需要履歴の復元。旧セーブ（履歴なし）は現在値1点でシードする。
         ShopPriceHistory = (plainData.shopPriceHistory != null && plainData.shopPriceHistory.Count > 0)
@@ -261,6 +268,7 @@ public class RuntimeItemData
             previousDemand = PreviousDemand,
             previousPrice = PreviousPrice,
             trend = Trend,
+            lastShopSold = LastShopSoldQuantity,
             shopPriceHistory = new System.Collections.Generic.List<int>(ShopPriceHistory),
             shopDemandHistory = new System.Collections.Generic.List<float>(ShopDemandHistory)
         };
@@ -287,6 +295,7 @@ public class RuntimeItemDataPlain
     public float previousDemand;
     public int previousPrice;
     public float trend;
+    public int lastShopSold;   // 売り圧力（旧セーブは欠損時 0 = 圧力なし）
     public System.Collections.Generic.List<int> shopPriceHistory;
     public System.Collections.Generic.List<float> shopDemandHistory;
 }

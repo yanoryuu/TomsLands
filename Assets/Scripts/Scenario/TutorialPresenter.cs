@@ -230,15 +230,14 @@ public class TutorialPresenter : IStartable, IDisposable
     }
 
     /// <summary>
-    /// 鍛冶屋の立て替え資金を所持金に加える（返済不要）。段階フラグで一度きりにする。
+    /// 鍛冶屋の立て替え資金を所持金に加える。利息なしで次の納付に上乗せされる借り（H-6。TomsModel.GrantFundsAdvance）。段階フラグで一度きりにする。
     /// フラグを先に保存してから加算するので、途中で落ちても二重には入らない。
     /// </summary>
     private void GrantFundsAdvanceOnce()
     {
         if (_tomsModel == null || _meta.HasSeenTutorial(TutorialSteps.StepFundsAdvanceGranted)) return;
         _meta.MarkTutorialSeen(TutorialSteps.StepFundsAdvanceGranted);
-        _tomsModel.AddRevenue(TutorialSteps.FundsAdvanceAmount);
-        _tomsModel.SavePlayerMoney();
+        _tomsModel.GrantFundsAdvance(TutorialSteps.FundsAdvanceAmount);
         var soundManager = SoundManager.Instance;
         if (soundManager != null) soundManager.PlaySE("営業/SE_売上音");
         Debug.Log($"[TutorialPresenter] 鍛冶屋の立て替え資金 +{TutorialSteps.FundsAdvanceAmount}G → {_tomsModel.PlayerMoney.Value}G");

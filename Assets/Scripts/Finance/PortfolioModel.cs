@@ -6,8 +6,9 @@ using UnityEngine;
 
 /// <summary>
 /// 金融資産（債券・ファンド）の保有・売買・満期償還・永続化を担当するモデル。
-/// - ファンドの基準価額(NAV) = fundBaseUnitPrice × 解放済み構成銘柄の (現在価格/基準価格) の平均
-///   ※ 未解放銘柄（鍛冶屋レベル超）は価格が凍結されているため NAV 計算から除外する
+/// - ファンドの基準価額(NAV) = fundBaseUnitPrice × 構成銘柄の (現在価格/基準価格) の平均
+///   ※ 未解放銘柄（鍛冶屋レベル超）も含める。価格は凍結されているので、解放の瞬間に基準価額が飛ばない（H-10）
+/// - 債券は1銘柄あたり「bondUnitCapPerInfoLevel × 情報屋レベル」口まで（H-9）
 /// - 債券は購入時に資金ロック、満期ターンの朝（GameFlowManager.NextTurn）に元本+利息で償還
 /// - 破産判定は現金のみ。ただし強制返済時に不足があれば LiquidateForDebt で割増手数料付き強制売却できる
 /// お金(PlayerMoney)の増減は TomsModel 経由で行う。
@@ -63,7 +64,9 @@ public class PortfolioModel
         int count = 0;
         foreach (var r in itemModel.RuntimeItems)
         {
-            if (r.RequiredLevel.Value > blacksmithLevel) continue; // 未解放銘柄は価格凍結のため除外
+            // 未解放の銘柄も含める（H-10）。以前は解放済みだけの平均で、鍛冶屋を上げた瞬間に比率1.0の銘柄が
+            // 平均に入って基準価額が飛んでいた。未解放の銘柄は価格が止まっている（比率は解放まで一定）ので、
+            // 解放しても基準価額は動かず、値動きは相場だけを映す
             if (product.useAttributeFilter && r.ItemAttribute != ItemTypeData.NormalizeAttribute(product.attribute)) continue; // 旧 Wind(3) 配信値は Wood 扱い
 
             var master = itemModel.GetMasterItem(r.ItemId);
@@ -84,10 +87,31 @@ public class PortfolioModel
     // 売買
     // ========================================
 
+    /// <summary>
+    /// 指定の債券をあと何口買えるか（同時に持てる口数の上限 − 保有口数）。上限なしは int.MaxValue。
+    /// </summary>
+    public int GetRemainingBondUnits(FinancialProductData product, int infoBrokerLevel)
+    {
+        if (product == null || product.kind != FinancialProductKind.Bond) return 0;
+        int cap = GetBondUnitCap(product, infoBrokerLevel);
+        if (cap == int.MaxValue) return int.MaxValue;
+        return Mathf.Max(0, cap - GetHeldUnits(product.productId));
+    }
+
+    /// <summary>同時に持てる口数の上限（int.MaxValue = 上限なし）。</summary>
+    public int GetBondUnitCap(FinancialProductData product, int infoBrokerLevel)
+    {
+        int per = settings != null ? settings.bondUnitCapPerInfoLevel : 0;
+        return per <= 0 ? int.MaxValue : per * Mathf.Max(1, infoBrokerLevel);
+    }
+
     /// <summary>債券を購入する（資金ロック）。成功なら true。</summary>
     public bool BuyBond(FinancialProductData product, int units, TomsModel tomsModel, int currentTurn)
     {
         if (product == null || product.kind != FinancialProductKind.Bond || units <= 0) return false;
+
+        // 同時に持てる口数の上限（H-9。情報屋レベルで増える）
+        if (units > GetRemainingBondUnits(product, tomsModel.InfoBrokerLevel.Value)) return false;
 
         int cost = product.bondUnitPrice * units;
         if (tomsModel.PlayerMoney.Value < cost) return false;

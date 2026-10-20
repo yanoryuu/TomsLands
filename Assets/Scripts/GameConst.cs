@@ -156,6 +156,7 @@ public static class GameConst
     public static int DebtPaymentInterval => Data.debtPaymentInterval;
     public static int DebtBaseAmount => Data.debtBaseAmount;
     public static float DebtMultiplier => Data.debtMultiplier;
+    public static float DebtFireSaleRate => Data.debtFireSaleRate;
     public static int HeroExpPerMob => Data.heroExpPerMob;
     public static int HeroExpPerBoss => Data.heroExpPerBoss;
     public static int HeroBaseExpToNextLevel => Data.heroBaseExpToNextLevel;
@@ -169,6 +170,7 @@ public static class GameConst
     public static float HeroArmorDefenseBonusPerTier => Data.heroArmorDefenseBonusPerTier;
     public static float HeroArmorHpBonusBase => Data.heroArmorHpBonusBase;
     public static float HeroArmorHpBonusPerTier => Data.heroArmorHpBonusPerTier;
+    public static float HeroAttributeAttackBonus => Data.heroAttributeAttackBonus;
     public static int[] BlackSmithLevelUpCosts => Data.blackSmithLevelUpCosts;
 
     // --- ゲームフロー自動生成 ---

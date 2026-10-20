@@ -102,6 +102,20 @@ public static class AutoPlayBattleSurrogate
     /// <summary>
     /// 配信1回を解決する。介入なしのドライランも内部で回し、BaselineVictory に入れる。
     /// </summary>
+    /// <summary>勇者の武器がこの配信の敵のどれかの弱点属性か（Q7 の上振れがあり得るか）。</summary>
+    private static bool HasAttributeEdge(StreamInput input)
+    {
+        var attr = HeroEquipmentBonus.GetWeaponAttribute(input.Hero, input.ItemModel);
+        if (!attr.HasValue || input.Dungeon == null) return false;
+        var level = input.Dungeon.GetLevelData(input.Level);
+        if (level == null) return false;
+        var enemies = new List<EnemyData>();
+        if (level.phases != null) foreach (var p in level.phases) if (p?.enemies != null) enemies.AddRange(p.enemies.Where(e => e != null));
+        if (enemies.Count == 0)
+            foreach (var p in DungeonPhaseBuilder.BuildFromLegacy(level)) if (p?.enemies != null) enemies.AddRange(p.enemies.Where(e => e != null));
+        return enemies.Any(e => ElementAttributeMapper.IsEffective(attr.Value, e.elementType));
+    }
+
     public static Outcome Simulate(StreamInput input)
     {
         var outcome = new Outcome();
@@ -130,7 +144,10 @@ public static class AutoPlayBattleSurrogate
         baseline.Run(null);
         outcome.BaselineVictory = baseline.HeroWon;
         outcome.BaselineTurns = baseline.Turns;
-        outcome.ConsistentWithDisplay = baseline.HeroWon == (outcome.DisplayedClearPct >= 50f);
+        // 属性の戦闘効果（Q7）はクリア確率に入れない決定なので、「表示は負け見込みだが勝った」は属性の分の上振れとして許す。
+        // 表示が勝ち見込みなのに負けた（表示が楽観的）ときだけ食い違いとする
+        bool displayWin = outcome.DisplayedClearPct >= 50f;
+        outcome.ConsistentWithDisplay = baseline.HeroWon == displayWin || (baseline.HeroWon && !displayWin && HasAttributeEdge(input));
 
         // 本番（介入・視聴者赤スパ・配信販売つき）
         bool hasInterventions = input.Settings != null && input.Orders != null && input.Orders.Count > 0;
@@ -158,7 +175,7 @@ public static class AutoPlayBattleSurrogate
     /// </summary>
     private sealed class BattleRun
     {
-        private struct Foe { public int Hp, Atk, Def; public bool Boss; }
+        private struct Foe { public int Hp, Atk, Def; public bool Boss; public ElementType Element; }
 
         private readonly StreamInput _in;
         private readonly List<DungeonPhaseData> _phases;
@@ -190,6 +207,7 @@ public static class AutoPlayBattleSurrogate
             int heroHp = heroMaxHp;
             int heroAtk = Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack));
             int heroDef = Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense));
+            var weaponAttr = HeroEquipmentBonus.GetWeaponAttribute(hero, _in.ItemModel);
 
             int phaseIndex = 0;
             var queue = new Queue<EnemyData>(_phases[0].enemies.Where(e => e != null));
@@ -232,7 +250,7 @@ public static class AutoPlayBattleSurrogate
                 while (field.Count < MaxConcurrentEnemies && queue.Count > 0)
                 {
                     var e = queue.Dequeue();
-                    field.Add(new Foe { Hp = Mathf.Max(1, e.hp), Atk = Mathf.Max(0, e.attackPower), Def = Mathf.Max(0, e.defensePower), Boss = e.isBoss });
+                    field.Add(new Foe { Hp = Mathf.Max(1, e.hp), Atk = Mathf.Max(0, e.attackPower), Def = Mathf.Max(0, e.defensePower), Boss = e.isBoss, Element = e.elementType });
                 }
             }
 
@@ -368,7 +386,8 @@ public static class AutoPlayBattleSurrogate
                         if (armedStrike.HasValue) { mul *= armedStrike.Value; armedStrike = null; }
                         if (bossBuff && target.Boss) mul *= _s.bossBuffDamageTakenMul;
                     }
-                    // CharacterPresenter.PerformAttack → CharacterModel.ApplyDamage の写し
+                    // CharacterPresenter.PerformAttack → CharacterModel.ApplyDamage の写し（属性の戦闘効果 Q7 を含む）
+                    mul *= HeroEquipmentBonus.AttributeAttackMul(weaponAttr, target.Element);
                     int atk = mul == 1f ? heroAtk : Mathf.Max(1, Mathf.RoundToInt(heroAtk * mul));
                     target.Hp -= Mathf.Max(1, atk - target.Def);
                     field[0] = target;

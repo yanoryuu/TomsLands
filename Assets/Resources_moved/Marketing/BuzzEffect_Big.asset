@@ -14,20 +14,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buzzType: 2
   immediateRevenueMultiplierBase: 2.5
-  immediateRevenueSpreadCoeff: 0.01
-  immediateTrustChange: 15
-  immediateAttentionChange: 20
+  immediateRevenueSpreadCoeff: 0.001
+  immediateRevenueMultiplierMax: 3.5
+  immediateTrustChange: 150
+  immediateAttentionChange: 200
   immediateFollowerBase: 0
-  immediateFollowerSpreadCoeff: 30
+  immediateFollowerSpreadCoeff: 3
   immediateFollowerFixed: 0
   durationBase: 3
-  durationRetentionDivisor: 25
-  sustainedAllStatGain: 5
+  durationRetentionDivisor: 250
+  sustainedAllStatGain: 50
   sustainedFollowerGain: 300
   sustainedTrustChange: 0
   sustainedRevenueMultiplier: 0
   sustainedAdDiscountRate: 0.3
-  afterTrustChange: 20
+  afterTrustChange: 200
   afterAttentionChange: 0
   afterGrantFreeMarketing: 1
   afterFreeMarketingData: {fileID: 11400000, guid: 32f8c6c39672e844fbf58c042b40b593, type: 2}

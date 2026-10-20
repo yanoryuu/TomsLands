@@ -19,6 +19,8 @@ public class GameConstData
     public int debtPaymentInterval = 7;    // 何ターンごとに強制返済か
     public int debtBaseAmount = 5000;       // 1回目（cycle=1）の返済額
     public float debtMultiplier = 1.8f;     // 返済のたびに前回額へ掛ける倍率
+    // 強制返済で現金と金融資産を足しても届かないとき、在庫を相場のこの割合で投げ売りして充てる（H-8。0 = 投げ売りしない）
+    public float debtFireSaleRate = 0.6f;
 
     // --- ヒーロー経験値 ---
     public int heroExpPerMob = 10;
@@ -39,6 +41,10 @@ public class GameConstData
     public float heroArmorDefenseBonusPerTier = 0.10f;
     public float heroArmorHpBonusBase = 0.05f;
     public float heroArmorHpBonusPerTier = 0.05f;
+    // 武器の属性が敵の弱点（ElementAttributeMapper.IsEffective）なら、その敵への勇者の攻撃をこの割合だけ上げる（Q7）。
+    // 実戦闘だけに効き、クリア確率（ClearProbabilityCalculator）には入れない（2026-10 ユーザー決定）。
+    // 目安は +30% だったが、計測（Docs/Level_Design_Log.md 2026-10-21）で +30〜70% は勝敗が1つも変わらなかったため +100%（弱点で2倍）
+    public float heroAttributeAttackBonus = 1.0f;
 
     // --- 鍛冶屋レベルアップコスト（index = 現在レベル → 次レベルへの費用） ---
     public int[] blackSmithLevelUpCosts = { 0, 3000, 6000, 12000, 20000 };
