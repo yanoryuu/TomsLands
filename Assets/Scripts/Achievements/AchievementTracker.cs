@@ -33,6 +33,11 @@ public sealed class AchievementTracker : IStartable, IDisposable
         public HeroModel Hero;
         public DungeonRepository Dungeons;
         public VillageModel Village;
+        /// <summary>
+        /// 指定すると、この BattleOutputData から来た配信の精算だけを見る（自動テストで複数のランを交互に回すとき用）。
+        /// null なら全部見る（本番はシーンに1つなので null でよい）。
+        /// </summary>
+        public BattleOutputData BattleOutput;
     }
 
     private readonly Sources src;
@@ -216,6 +221,7 @@ public sealed class AchievementTracker : IStartable, IDisposable
     private void OnStreamSettled(StreamSettledInfo info)
     {
         if (info == null) return;
+        if (src.BattleOutput != null && !ReferenceEquals(info.Origin, src.BattleOutput)) return;
         try
         {
             HandleStreamSettled(info);

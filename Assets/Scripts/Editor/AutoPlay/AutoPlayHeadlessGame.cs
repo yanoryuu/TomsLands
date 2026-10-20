@@ -353,7 +353,20 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         NewsInfo = $"phase3={News.IsPhase3} events={News.Events.Count} calendar={News.Calendar.Count}";
 
         Stage = AutoPlayStage.ShopDay;
+
+        // Steam 実績の判定を本物と同じ Model の購読で走らせる（記録は隔離フォルダ、Steam には送らない）。
+        // ログの [Achievement] 解除 でボットがどの実績に届いたかが分かる
+        _achievements = new AchievementTracker(new AchievementTracker.Sources
+        {
+            Toms = TomsModel, Items = ItemModel, SellOrders = SellOrders, ShopStatus = ShopStatus,
+            Machines = Machines, Relics = RelicInventory, RelicResolver = RelicResolver,
+            Scrapbook = Scrapbook, Subscriptions = Subscriptions, Marketing = Marketing,
+            Flow = Flow, Hero = HeroModel, Dungeons = Dungeons, BattleOutput = _battleOut,
+        });
+        _achievements.Start();
     }
+
+    private AchievementTracker _achievements;
 
     private static DungeonRepository CreateDungeonRepository(List<DungeonInfoScriptableObj> infos)
     {
@@ -374,6 +387,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         if (Dungeons != null) UnityEngine.Object.DestroyImmediate(Dungeons.gameObject);
         foreach (var so in new ScriptableObject[] { _startMode, _battleIn, _battleOut, _eventIn, _eventOut })
             if (so != null) UnityEngine.Object.DestroyImmediate(so);
+        _achievements?.Dispose();
         Flow?.Dispose();
         _stateManager?.Dispose();
     }
@@ -412,7 +426,13 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     {
         var scene = Context.LastSceneRequest;
         Context.LastSceneRequest = null;
-        if (scene == "ResultScene") { Stage = AutoPlayStage.Completed; return; }
+        if (scene == "ResultScene")
+        {
+            Stage = AutoPlayStage.Completed;
+            // リザルト集計（ResultPresenter.Entry の写し）。実績のクリア・ランク S・皆済はここで判定される
+            new ResultModel(TomsModel, ItemModel, Portfolio).BuildStatistics();
+            return;
+        }
         if (scene == "GameOver") { Stage = AutoPlayStage.Bankrupt; return; }
         if (_streamPending || Flow.IsAwaitingStream.Value) { Stage = AutoPlayStage.StreamDay; return; }
         Stage = AutoPlayStage.ShopDay;

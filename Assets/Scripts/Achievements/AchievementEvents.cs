@@ -13,6 +13,8 @@ public sealed class StreamSettledInfo
     /// <summary>配信中に売れた額（介入・防衛報酬を含まない売上だけ）。</summary>
     public int GrossSales;
     public int TotalEarnings;
+    /// <summary>通知元の BattleOutputData（自動テストで複数ランを見分ける用）。</summary>
+    public BattleOutputData Origin;
 }
 
 /// <summary>出店をクリアしてリザルトを集計したときの情報（ResultModel.BuildStatistics から）。</summary>
@@ -55,6 +57,7 @@ public static class AchievementEvents
             ArmorId = output.ArmorId,
             GrossSales = gross,
             TotalEarnings = output.TotalEarnings,
+            Origin = output,
         });
     }
 
