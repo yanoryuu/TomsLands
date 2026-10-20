@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using R3;
 using UnityEngine;
 using VContainer.Unity;
@@ -20,10 +22,13 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     private readonly SellOrderModel sellOrderModel;
     private readonly ShopEconomySettings economySettings;
     private readonly RelicEffectResolver relicResolver;
+    private readonly MetaProgressModel meta;
     private readonly CompositeDisposable disposables = new();
 
-    // フェーズ再入（ForceNotify等）による販売処理の二重実行を防ぐガード
+    // フェーズ再入（ForceNotify等）・営業ダイジェストからの呼び出しによる販売処理の二重実行を防ぐガード
     private int lastProcessedTurn = -1;
+    /// <summary>lastProcessedTurn の日の精算結果（再入時はこれを表示し直す）。</summary>
+    private TurnEndDayResult lastResult;
 
     public TurnEndSummaryPresenter(
         TurnEndSummaryView view,
@@ -34,7 +39,8 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         MarketingFacade marketingFacade,
         SellOrderModel sellOrderModel,
         ShopEconomySettings economySettings,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        MetaProgressModel meta = null)
     {
         this.view = view;
         this.itemModel = itemModel;
@@ -45,6 +51,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         this.sellOrderModel = sellOrderModel;
         this.economySettings = economySettings;
         this.relicResolver = relicResolver;
+        this.meta = meta;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.TurnEndSummary, Entry);
     }
@@ -59,19 +66,28 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     }
 
     /// <summary>
-    /// TurnEndSummaryフェーズに入った時に呼ばれる。
-    /// 【売り注文制】①昨日以前の売り注文を約定して入金 → ②今日の陳列分を全量「売り注文」化
-    /// （入金は明日）→ ③サマリー表示。
+    /// TurnEndSummaryフェーズに入った時に呼ばれる。その日の精算がまだなら行い、結果を表示する。
     /// </summary>
     public void Entry()
     {
+        var day = ProcessTodayIfNeeded();
+        if (day != null) Display(day);
+    }
+
+    /// <summary>
+    /// その日の営業の精算を一度だけ行い、結果を返す（同じ日に何度呼んでも精算は1回）。
+    /// 【売り注文制】①昨日以前の売り注文を約定して入金 → ②今日の陳列分を全量「売り注文」化（入金は明日）。
+    /// 営業ダイジェスト（F-7）が演出の前に呼び、精算の結果（客が買っていく品・入金）を先に受け取る。
+    /// </summary>
+    public TurnEndDayResult ProcessTodayIfNeeded()
+    {
         int currentTurn = gameFlowManager.CurrentTurn.Value;
 
-        // フェーズ再入による販売処理・入金の二重実行を防ぐ
+        // フェーズ再入・演出からの呼び出しによる販売処理・入金の二重実行を防ぐ
         if (lastProcessedTurn == currentTurn)
         {
             Debug.Log($"[TurnEndSummary] Turn {currentTurn} は処理済みのためスキップ（再入）");
-            return;
+            return lastResult;
         }
         lastProcessedTurn = currentTurn;
 
@@ -80,6 +96,8 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
 
         // 1. 約定日を迎えた売り注文を精算して入金（昨日陳列した分が今日売れた）
         var settlement = sellOrderModel.SettleDue(currentTurn, itemModel, economySettings, marketingFacade, relicResolver);
+        // 倍率の内訳は約定と同じ状態で取る（表示と入金をそろえるため）
+        var breakdown = settlement.BaseIncome > 0 && marketingFacade != null ? marketingFacade.GetSalesBreakdown(settlement.BaseIncome) : null;
         if (settlement.TotalIncome > 0)
         {
             tomsModel.AddRevenue(settlement.TotalIncome);
@@ -112,11 +130,15 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
             totalSoldCount += item.SoldCount;
         }
 
+        var placed = new List<(RuntimeItemData, int)>();
         foreach (var kv in salesResult)
         {
             var runtime = itemModel.GetRuntimeItem(kv.Key);
             if (runtime != null && kv.Value > 0)
+            {
                 sellOrderModel.Place(runtime, kv.Value, currentTurn, delayTurns);
+                placed.Add((runtime, kv.Value));
+            }
         }
 
         // 5. 在庫・注文・所持金を同時に保存（引き当て済み在庫と注文の整合を保つ）
@@ -124,37 +146,128 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         sellOrderModel.SaveData();
         tomsModel.SavePlayerMoney();
 
-        if (totalSoldCount > 0 || settlement.TotalIncome > 0)
-            SoundManager.Instance?.PlaySE("営業/SE_売上音");
-
         // 表示用の日数（明日なら 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
         int daysUntilBattle = gameFlowManager.GetDaysUntilNextStream();
 
-        Debug.Log($"[TurnEndSummary] 本日の入金: {settlement.TotalIncome}G / 売り注文（明日入金見込み）: {pendingEstimate}G, 売れた数: {totalSoldCount}, 次の配信まで: {daysUntilBattle}ターン");
+        Debug.Log($"[TurnEndSummary] 本日の入金: {settlement.TotalIncome}G / 売り注文（明日入金見込み）: {pendingEstimate}G, 売れた数: {totalSoldCount}, 次の配信まで: {daysUntilBattle}日");
 
-        // 6. ターン評価を計算して表示
+        // 6. ターン評価
         var (grade, comment) = CalculateGrade(pendingEstimate, trendUpDisplayed, trendUpTotal, settlement);
-        view.ShowGrade(grade, comment);
 
-        view.UpdateContent(items, pendingEstimate, totalSoldCount, daysUntilBattle);
-        view.UpdateSettlementInfo(settlement.TotalIncome, pendingEstimate);
+        lastResult = new TurnEndDayResult
+        {
+            Turn = currentTurn,
+            Settlement = settlement,
+            Breakdown = breakdown,
+            Items = items,
+            PlacedItems = placed,
+            PendingEstimate = pendingEstimate,
+            SoldCount = totalSoldCount,
+            DaysUntilStream = daysUntilBattle,
+            Grade = grade,
+            Comment = comment,
+            RelicFactors = relicResolver != null ? relicResolver.GetContributors(RelicStatId.ShopRevenueMul) : new List<(RelicDefinition, float)>(),
+        };
+        return lastResult;
     }
+
+    /// <summary>精算の結果をサマリーに表示する。</summary>
+    private void Display(TurnEndDayResult day)
+    {
+        if (day.SoldCount > 0 || day.Settlement.TotalIncome > 0)
+            SoundManager.Instance?.PlaySE("営業/SE_売上音");
+
+        view.ShowGrade(day.Grade, day.Comment);
+        view.UpdateContent(day.Items, day.PendingEstimate, day.SoldCount, day.DaysUntilStream);
+        view.UpdateSettlementInfo(day.Settlement.TotalIncome, day.PendingEstimate);
+        view.UpdateSettlementDetail(BuildDetailText(day));
+
+        // 1周目で占い師に出会う（＝配信を知る）前は「次の配信まで」を出さない（K-6）
+        bool streamKnown = meta == null || meta.TotalRuns > 0 || meta.HasSeenTutorial(TutorialSteps.ProphetMeeting);
+        view.SetDaysUntilStreamVisible(streamKnown, streamKnown && day.DaysUntilStream > 0 && gameFlowManager.IsUpcomingStreamFinal());
+    }
+
+    /// <summary>
+    /// 本日の入金の明細（F-2）: 値動きの大きかった銘柄を3行まで、倍率の内訳、実現損益（F-1）。
+    /// 何も約定していない日は空文字（パネル側で欄を隠す）。
+    /// </summary>
+    private static string BuildDetailText(TurnEndDayResult day)
+    {
+        var s = day.Settlement;
+        if (s == null || s.Settled.Count == 0) return "";
+        var sb = new StringBuilder();
+
+        var rows = s.Settled
+            .OrderByDescending(o => (long)Mathf.Abs(o.SettledPrice - o.OrderedPrice) * o.Quantity)
+            .ThenByDescending(o => o.Income)
+            .Take(3);
+        foreach (var o in rows)
+        {
+            float change = o.OrderedPrice > 0 ? (float)(o.SettledPrice - o.OrderedPrice) / o.OrderedPrice : 0f;
+            bool moved = Mathf.Abs(change) >= 0.005f;
+            string line = $"{o.ItemName} ×{o.Quantity}  {o.OrderedPrice:N0}G→{o.SettledPrice:N0}G";
+            if (moved) line += $"（{FormatPercent(change)}）";
+            sb.AppendLine(moved ? $"<color={(change > 0 ? GoldHex : GrayHex)}>{line}</color>" : line);
+        }
+        if (s.Settled.Count > 3) sb.AppendLine($"ほか {s.Settled.Count - 3}品");
+
+        // 倍率の内訳（1 倍のものは出さない）
+        var factors = new List<string>();
+        var b = day.Breakdown;
+        if (b != null)
+        {
+            if (!Mathf.Approximately(b.BuzzMultiplier, 1f)) factors.Add($"バズ{b.BuzzMultiplier:0.##}");
+            if (!Mathf.Approximately(b.FollowerBonusRate, 0f)) factors.Add($"フォロワー{1f + b.FollowerBonusRate:0.##}");
+            if (!Mathf.Approximately(b.MachineMultiplier, 1f)) factors.Add($"設備{b.MachineMultiplier:0.##}");
+        }
+        if (day.RelicFactors != null)
+        {
+            foreach (var (relic, factor) in day.RelicFactors)
+                if (relic != null && !Mathf.Approximately(factor, 1f)) factors.Add($"{relic.relicName}{factor:0.##}");
+        }
+        if (factors.Count > 0)
+            sb.AppendLine($"基本 {s.BaseIncome:N0}G × {string.Join(" × ", factors)} = <color={GoldHex}>{s.TotalIncome:N0}G</color>");
+
+        // 実現損益（取得単価が分かる分だけ）
+        if (s.HasRealizedProfit)
+        {
+            int p = s.RealizedProfit;
+            string yield = s.RealizedYield.HasValue ? $"（利回り {FormatPercent(s.RealizedYield.Value)}）" : "";
+            sb.AppendLine($"実現損益 <color={(p >= 0 ? GoldHex : RedHex)}>{(p >= 0 ? "+" : "")}{p:N0}G</color>{yield}");
+        }
+        return sb.ToString().TrimEnd();
+    }
+
+    private const string GoldHex = "#C9821A";
+    private const string GrayHex = "#7A6A5A";
+    private const string RedHex = "#A8332B";
+
+    private static string FormatPercent(float rate) => $"{(rate >= 0 ? "+" : "")}{rate * 100f:0}%";
 
     /// <summary>
     /// 3軸（資金効率・需要対応力・バズ活用度）の加重平均でターン評価を算出する。
     /// 資金効率40% + 需要対応力35% + バズ活用度25%
-    /// （売り注文制では陳列分が必ず全量売れるため、旧「売り切れ率」は資金効率に差し替え）
+    /// 資金効率は、取得単価の分かる約定があれば実現損益の利回り（+10%で満点、0%で半分、赤字で0。F-3）、
+    /// 無ければ従来どおり「売り注文の見込み額 ÷ 今日の仕入れ額」で見る。
     /// </summary>
     private (TurnGrade grade, string comment) CalculateGrade(
         int pendingEstimate,
         int trendUpDisplayed, int trendUpTotal,
         SellSettlementResult settlement)
     {
-        // 資金効率 (0~1): 今日仕入れに投じた額に対して、どれだけ売り注文（見込み額）に変えられたか
-        int spend = tomsModel.TurnProcurementSpend;
-        float capitalEfficiency = spend > 0
-            ? Mathf.Clamp01((float)pendingEstimate / spend)
-            : (pendingEstimate > 0 ? 1f : 0f);
+        float capitalEfficiency;
+        float? realizedYield = settlement?.RealizedYield;
+        if (realizedYield.HasValue)
+        {
+            capitalEfficiency = Mathf.Clamp01(0.5f + realizedYield.Value * 5f);
+        }
+        else
+        {
+            int spend = tomsModel.TurnProcurementSpend;
+            capitalEfficiency = spend > 0
+                ? Mathf.Clamp01((float)pendingEstimate / spend)
+                : (pendingEstimate > 0 ? 1f : 0f);
+        }
 
         // 需要対応力 (0~1): 需要が高いアイテム(Demand>=0.7)を何品品出しできていたか
         // 高需要品がないターンは満点扱い
@@ -262,3 +375,22 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     public void Dispose() => disposables.Dispose();
 }
 
+/// <summary>1日の営業の精算結果（サマリーと営業ダイジェストで共有する）。</summary>
+public class TurnEndDayResult
+{
+    public int Turn;
+    /// <summary>今日約定した売り注文（昨日以前に並べた分）。</summary>
+    public SellSettlementResult Settlement;
+    /// <summary>約定時の倍率の内訳（約定が無ければ null）。</summary>
+    public SalesBreakdown Breakdown;
+    public List<TurnEndSummaryItemData> Items;
+    /// <summary>今日並べて売り注文になった品と数（入金は明日の夜）。</summary>
+    public List<(RuntimeItemData item, int quantity)> PlacedItems;
+    public int PendingEstimate;
+    public int SoldCount;
+    public int DaysUntilStream;
+    public TurnGrade Grade;
+    public string Comment;
+    /// <summary>営業売上に効いたレリックと倍率。</summary>
+    public List<(RelicDefinition relic, float factor)> RelicFactors;
+}
