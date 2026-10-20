@@ -14,7 +14,6 @@ using VContainer.Unity;
 /// </summary>
 public class ShopMachinePresenter : IStartable, IDisposable
 {
-    private const float RemoveRefundRate = 0.5f;
 
     private readonly ShopMachineView view;
     private readonly ShopMachineModel machineModel;
@@ -102,7 +101,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
             var machine = machines[i];
             var slot = slots[i];
             bool levelLocked = machine.requiredShopLevel > tomsModel.ShopLevel.Value;
-            slot.Setup(machine, machineModel.CountOf(machine.machineId), levelLocked);
+            slot.Setup(machine, machineModel.CountOf(machine.machineId), levelLocked, machineModel.GetPurchaseCost(machine));
 
             slot.OnSelected
                 .Subscribe(SelectMachine)
@@ -142,7 +141,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
             && tomsModel.PlayerMoney.Value >= machineModel.GetPurchaseCost(machine);
         int refund = machineModel.GetRemoveRefund(machine);
 
-        view.ShowDetail(machine, placedCount, canPurchase, refund);
+        view.ShowDetail(machine, placedCount, canPurchase, refund, machineModel.GetPurchaseCost(machine));
         RefreshPlacementList(machine);
         RefreshProducedItemSelector(machine);
     }

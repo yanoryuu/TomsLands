@@ -30,7 +30,8 @@ public class ShopMachineSlotUI : MonoBehaviour
             });
     }
 
-    public void Setup(ShopMachineData machine, int placedCount, bool levelLocked)
+    /// <param name="purchaseCost">実際に払う額（村の割引込み）。負なら定価 machine.cost を出す。</param>
+    public void Setup(ShopMachineData machine, int placedCount, bool levelLocked, int purchaseCost = -1)
     {
         MachineId = machine.machineId;
 
@@ -41,7 +42,7 @@ public class ShopMachineSlotUI : MonoBehaviour
         }
         if (nameText != null) nameText.text = machine.machineName;
         if (effectText != null) effectText.text = machine.EffectSummary;
-        if (costText != null) costText.text = $"{machine.cost:N0}G";
+        if (costText != null) costText.text = $"{(purchaseCost >= 0 ? purchaseCost : machine.cost):N0}G";
         if (stateText != null)
         {
             stateText.text = placedCount > 0 ? $"設置中×{placedCount}"
