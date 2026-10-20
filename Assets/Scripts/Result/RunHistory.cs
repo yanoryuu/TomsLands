@@ -149,7 +149,7 @@ public static class RunHistory
         {
             var data = Current;
             change(data);
-            File.WriteAllText(_cachePath, JsonUtility.ToJson(data));
+            SaveFile.WriteAtomic(_cachePath, JsonUtility.ToJson(data));
         }
         catch (Exception e)
         {
@@ -161,8 +161,7 @@ public static class RunHistory
     {
         try
         {
-            var data = JsonUtility.FromJson<RunHistoryData>(File.ReadAllText(path));
-            if (data == null) return null;
+            if (!SaveFile.TryReadJson<RunHistoryData>(path, out var data)) return null;
             data.moneyTurns ??= new List<int>();
             data.moneyValues ??= new List<int>();
             data.itemIds ??= new List<string>();

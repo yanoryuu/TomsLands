@@ -89,6 +89,12 @@ public class BuzzSystem
         _relicResolver = relicResolver;
 
         ValidateData();
+
+        // 配信から帰る・続きから再開するたびにシーンごと作り直されるので、保存しておいたバズを戻す
+        RestoreSavedBuzz();
+        // 新しいラン（ShopStatusModel.Reset）では前のランのバズを捨てる。
+        // 本クラスと ShopStatusModel はどちらもシーンの Singleton で寿命が同じなので購読は解除しない
+        _statusModel?.OnReset.Subscribe(_ => DiscardBuzzForNewRun());
     }
 
     /// <summary>
@@ -153,6 +159,7 @@ public class BuzzSystem
                 ApplySustainedEffect();
                 _activeBuzz.RemainingTurns--;
                 RemainingTurns.Value = _activeBuzz.RemainingTurns;
+                PersistBuzz();
 
                 // 最大持続ターン（BuzzEffectData 由来）に達したら終了
                 if (_activeBuzz.RemainingTurns <= 0)
@@ -313,6 +320,7 @@ public class BuzzSystem
         CurrentBuzzType.Value = type;
         IsBuzzActive.Value = true;
         RemainingTurns.Value = _activeBuzz.RemainingTurns;
+        PersistBuzz();
 
         // 即時効果を適用
         ApplyImmediateEffect(effectData, spread);
@@ -417,6 +425,60 @@ public class BuzzSystem
         IsBuzzActive.Value = false;
         RemainingTurns.Value = 0;
         _adSystem?.ClearBuzzDiscount();
+        PersistBuzz();
+    }
+
+    // =====================================================
+    // 保存と復元（shopStatusData.json に ShopStatusModel 経由で書く）
+    // =====================================================
+
+    /// <summary>今の進行中のバズを保存する（無ければ「バズなし」を保存）。</summary>
+    private void PersistBuzz()
+    {
+        if (_statusModel == null) return;
+        _statusModel.SaveBuzz(_activeBuzz == null
+            ? (ShopStatusModel.BuzzSnapshot?)null
+            : new ShopStatusModel.BuzzSnapshot(_activeBuzz.BuzzType, _activeBuzz.RemainingTurns, _activeBuzz.RevenueMultiplier));
+    }
+
+    /// <summary>
+    /// 保存しておいたバズを戻す。効果データ(SO)は BuzzType から引き直し、
+    /// 表示用の ReactiveProperty と広告割引も流し直す（即時効果は発生時に適用済みなので再適用しない）。
+    /// </summary>
+    private void RestoreSavedBuzz()
+    {
+        var saved = _statusModel?.SavedBuzz;
+        if (!saved.HasValue) return;
+
+        var effectData = GetEffectData(saved.Value.Type);
+        if (effectData == null || saved.Value.RemainingTurns <= 0)
+        {
+            Debug.LogWarning($"[BuzzSystem] 保存されたバズを戻せませんでした（種類={saved.Value.Type}, 残り={saved.Value.RemainingTurns}）。バズなしで続行します");
+            _statusModel.SaveBuzz(null);
+            return;
+        }
+
+        _activeBuzz = new ActiveBuzzState
+        {
+            BuzzType = saved.Value.Type,
+            EffectData = effectData,
+            RemainingTurns = saved.Value.RemainingTurns,
+            RevenueMultiplier = saved.Value.RevenueMultiplier,
+        };
+        CurrentBuzzType.Value = _activeBuzz.BuzzType;
+        IsBuzzActive.Value = true;
+        RemainingTurns.Value = _activeBuzz.RemainingTurns;
+        if (effectData.sustainedAdDiscountRate > 0f)
+            _adSystem?.SetBuzzDiscount(effectData.sustainedAdDiscountRate);
+
+        Debug.Log($"[BuzzSystem] 保存されたバズを再開: {_activeBuzz.BuzzType} 残り{_activeBuzz.RemainingTurns}ターン 売上倍率{_activeBuzz.RevenueMultiplier:F2}");
+    }
+
+    /// <summary>新しいランの開始時に、前のランのバズを終了後効果なしで捨てる。</summary>
+    private void DiscardBuzzForNewRun()
+    {
+        if (_activeBuzz == null) return;
+        EndBuzz();
     }
 
     // =====================================================

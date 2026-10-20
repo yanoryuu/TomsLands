@@ -60,19 +60,32 @@ public sealed class SaveSlotView : MonoBehaviour
         if (slotNumberText != null)
             slotNumberText.text = $"スロット {info.SlotIndex + 1}";
 
-        if (emptyLabel != null) emptyLabel.SetActive(!info.Exists);
-        if (filledGroup != null) filledGroup.SetActive(info.Exists);
+        // 表示は4通り: 進行中のラン / 村の進行だけ（ラン終了後）/ 壊れている / 空き。
+        // 「データあり」の判定は HasProfile（村の進行も含む）。SaveSlotInfo.Exists は「進行中のラン」の意味のまま
+        bool hasData = info.HasProfile || info.IsCorrupted;
+        if (emptyLabel != null) emptyLabel.SetActive(!hasData);
+        if (filledGroup != null) filledGroup.SetActive(hasData);
 
         if (summaryText != null)
-        {
-            summaryText.text = info.Exists
-                ? $"{GetModeLabel(info.Mode)}　Day {info.Day}　{info.Gold:N0} G"
-                : string.Empty;
-        }
+            summaryText.text = BuildSummary(info);
 
-        // 削除はデータがあるときだけ可能
+        // 削除はデータがあるとき（村の進行だけ・壊れている場合を含む）に可能
         if (deleteButton != null)
-            deleteButton.interactable = info.Exists;
+            deleteButton.interactable = hasData;
+    }
+
+    private static string BuildSummary(SaveSlotInfo info)
+    {
+        if (info.Exists)
+            return $"{GetModeLabel(info.Mode)}　Day {info.Day}　{info.Gold:N0} G";
+        if (info.HasProfile)
+        {
+            // 進行中のランの行（難易度・日数・所持金）と同じくらいの長さに収める
+            return $"村の進行あり　村資金 {info.VillageFunds:N0} G　{info.TotalRuns}周";
+        }
+        if (info.IsCorrupted)
+            return "データが壊れています（削除できます）";
+        return string.Empty;
     }
 
     /// <summary>
@@ -85,7 +98,7 @@ public sealed class SaveSlotView : MonoBehaviour
             selectButton.interactable = selectable;
     }
 
-    private static string GetModeLabel(GameModeId mode) => mode switch
+    public static string GetModeLabel(GameModeId mode) => mode switch
     {
         GameModeId.Short => "かんたん",
         GameModeId.Medium => "ふつう",

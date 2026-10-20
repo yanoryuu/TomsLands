@@ -40,7 +40,9 @@ TomsLands は市場シミュレーション（毎日変動する価格・需要�
 ```
 タイトル（スロット選択=プロフィール）
   ├─ ニューゲーム ──→ VillageScene ──[出撃]──→ PreparationScene ──→ TomsShop(ラン)
-  └─ 続きから ──────────────────────────────────────────→ TomsShop(直行・現行どおり)
+  └─ 続きから ─┬─ 進行中のランあり ───────────────────────→ TomsShop(直行)
+               │    （前回が配信中・配信前の寄り道中なら FightScene で配信をやり直す／リザルト前なら ResultScene）
+               └─ 村の進行だけ（ラン終了後）──→ VillageScene
 
 ラン終了: Result / GameOver → メタ精算 → RunSaveCleaner → VillageScene（現行はタイトル）
           村画面に[タイトルへ]ボタン

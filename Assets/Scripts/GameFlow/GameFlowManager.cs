@@ -369,20 +369,8 @@ public class GameFlowManager : IDisposable, IStartable
         // Battle時はBattleInputDataをセットアップしてFightSceneへ直接遷移
         if (node.EventType == GameEvent.Battle)
         {
-            // レリックの戦闘系効果（勇者弱体化・防衛報酬アップ）をスナップショット
-            RelicBattleEffects.SetFrom(_relicResolver);
-
-            var catalog = _dungeonRepository.CreateCatalog();
-            var dungeonInfo = catalog.GetDungeon(node.BattleDungeon);
-            if (dungeonInfo != null)
-            {
-                _battleInputData.DungeonKey = node.BattleDungeon;
-                Debug.Log($"[GameFlowManager] Battle dungeon set to: {node.BattleDungeon}");
-            }
-            else
-            {
-                Debug.LogWarning($"[GameFlowManager] Dungeon not found for key: {node.BattleDungeon}");
-            }
+            // レリックの戦闘系効果のスナップショットと BattleInputData の書き込み（続きからの配信やり直しと共用）
+            PrepareBattleInput(node);
 
             // ItemModel の在庫データ・売り注文・金融資産を保存してからシーン遷移
             _itemModel.SaveData();
@@ -392,17 +380,6 @@ public class GameFlowManager : IDisposable, IStartable
             // GameFlowIndexをTomsModelに反映して保存
             _tomsModel.GameFlowIndex = _currentIndex;
             _tomsModel.SavePlayerMoney();
-
-            // BattleInputData にフロー情報を書き込み
-            var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
-            int dungeonLevel = dungeonData?.currentDungeonLevel ?? 1;
-            _battleInputData.Setup(
-                node.BattleDungeon,
-                dungeonLevel,
-                new List<string>(_heroModel.EquippedItemIds),
-                new List<BattleInputItem>(),
-                _currentIndex
-            );
 
             // 配信前の寄り道（鍛冶屋での仕入れ）を受ける側がいれば、ここで一旦止めて判断を委ねる。
             // ここまでで日送り処理とセーブ（GameFlowIndex=配信ノード）は済んでいるので、
@@ -431,6 +408,11 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         Debug.Log($"[GameFlowManager] NextTurn: index={_currentIndex}, event={node.EventType} → phase={nextPhase}");
+
+        // 日送りの区切り: 新しい日の index と、この日送りで動いた全モデルをここでまとめて保存する。
+        // （途中の保存は index が前日のままなので、ここが無いと店の1日の間に落ちたとき
+        //   続きからで同じ日送り＝値動き・配当・入金が二重に走る。tomsData を最後に書いてその日の確定とする）
+        CommitDay();
 
         // TomsShop→TomsShop の場合、ChangePhase の同値ガードで Entry() が発火しないため
         // ChangeTomsShopPhase を使って ForceNotify で確実に Entry() を呼ぶ
@@ -473,6 +455,13 @@ public class GameFlowManager : IDisposable, IStartable
         {
             Debug.Log($"[GameFlowManager] Inline event popup: {eventId}. Storing as pending event.");
             _pendingEventData.Set(tomsEvent, _currentIndex);
+            // 確認ボタンを押すまで tomsData に残す（表示中に終了しても続きからで同じイベントを出し直す。
+            // 保存は直後の NextTurn の区切り/配信前の保存で行われ、確認後の消去は GameLifecycleHandler が保存する）
+            if (_tomsModel != null)
+            {
+                _tomsModel.PendingEventId = tomsEvent.id;
+                _tomsModel.PendingEventIndex = _currentIndex;
+            }
 
             // ターンを進めずに次のフローノードへ進む
             // 次がShopノードならTomsShopのEntryでポップアップが表示される
@@ -653,6 +642,82 @@ public class GameFlowManager : IDisposable, IStartable
 
         Debug.Log($"[GameFlowManager] ProceedToBattle: index={_currentIndex} → FightScene");
         _sceneTransition.GoToBattle();
+    }
+
+    /// <summary>
+    /// 配信ノードの BattleInputData（ダンジョン・レベル・装備・フロー位置）と、
+    /// レリックの戦闘系効果（勇者弱体化・防衛報酬アップ）のスナップショットを作る。
+    /// 日送りの配信分岐と、続きからの配信やり直し（TryResumeInterruptedScene）で共用する。
+    /// </summary>
+    private void PrepareBattleInput(GameFlowNode node)
+    {
+        RelicBattleEffects.SetFrom(_relicResolver);
+
+        var catalog = _dungeonRepository.CreateCatalog();
+        var dungeonInfo = catalog.GetDungeon(node.BattleDungeon);
+        if (dungeonInfo != null)
+        {
+            _battleInputData.DungeonKey = node.BattleDungeon;
+            Debug.Log($"[GameFlowManager] Battle dungeon set to: {node.BattleDungeon}");
+        }
+        else
+        {
+            Debug.LogWarning($"[GameFlowManager] Dungeon not found for key: {node.BattleDungeon}");
+        }
+
+        var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
+        int dungeonLevel = dungeonData?.currentDungeonLevel ?? 1;
+        _battleInputData.Setup(
+            node.BattleDungeon,
+            dungeonLevel,
+            new List<string>(_heroModel.EquippedItemIds),
+            new List<BattleInputItem>(),
+            _currentIndex
+        );
+    }
+
+    /// <summary>
+    /// 「続きから」で、前回の終了が配信中・配信前の寄り道中・リザルトの前だったら、その場面へ直接戻す。
+    /// GameLifecycleHandler が InitializeContinue（index 復元）の後、店の Entry を出す前に呼ぶ。
+    ///
+    /// - 配信ノード: その配信を最初からやり直す（FightScene へ直行）。日送り・経済更新は配信前に済んで
+    ///   保存済みなので NextTurn は呼ばない（呼ぶとその日の値動き・入金が二重になる）。
+    ///   寄り道（鍛冶屋での仕入れ）は保存しないので出し直さず、配信へ進む。
+    /// - 最終ノードの先 / End ノード: リザルトへ（店をもう1日遊べてしまうのを防ぐ）。
+    /// 戦闘結果を持って帰ってきた場合（BattleOutputData.HasResult）は呼ばないこと（BattleResultHandler が処理する）。
+    /// </summary>
+    /// <returns>シーン遷移したら true（呼び出し側は店の Entry を出さない）。</returns>
+    public bool TryResumeInterruptedScene()
+    {
+        if (_gameFlow == null || _currentIndex < 0) return false;
+
+        if (_currentIndex >= _gameFlow.GameFlowStack.Count
+            || (_currentIndex > 0 && _gameFlow.GameFlowStack[_currentIndex].EventType == GameEvent.End))
+        {
+            Debug.Log($"[GameFlowManager] 続きから: リザルトの前に終了していた (index={_currentIndex}) → ResultScene");
+            TransitionToResult();
+            return true;
+        }
+
+        var node = _gameFlow.GameFlowStack[_currentIndex];
+        if (node.EventType != GameEvent.Battle) return false;
+
+        PrepareBattleInput(node);
+        Debug.Log($"[GameFlowManager] 続きから: 配信中（または配信前の寄り道中）に終了していた (index={_currentIndex}) → 配信をやり直す");
+        _sceneTransition.GoToBattle();
+        return true;
+    }
+
+    /// <summary>店の日の日送りの確定。index を書き、各モデルを保存して、最後に tomsData を書く。</summary>
+    private void CommitDay()
+    {
+        if (_tomsModel == null) return;
+        _tomsModel.GameFlowIndex = _currentIndex;
+        _itemModel?.SaveData();
+        _sellOrderModel?.SaveData();
+        _portfolioModel?.SaveData();
+        _shopMachineModel?.SaveData();
+        _tomsModel.SavePlayerMoney();
     }
 
     /// <summary>

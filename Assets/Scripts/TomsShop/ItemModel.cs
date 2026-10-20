@@ -649,23 +649,21 @@ public class ItemModel
             RuntimeItems.Select(r => r.ToPlainData()).ToList()
         );
         string json = JsonUtility.ToJson(dataList, true);
-        File.WriteAllText(SaveSlotManager.GetPath(SaveFileName), json);
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(SaveFileName), json);
         Debug.Log("Item data saved.");
     }
 
     public void LoadData()
     {
         string path = SaveSlotManager.GetPath(SaveFileName);
-        if (!File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければセーブなしと同じくマスターから作る（SaveFile がログを出す）
+        if (!SaveFile.TryReadJson<RuntimeItemDataList>(path, out var dataList, d => d.items != null))
         {
             InitializeRuntimeItemsFromMaster();
             return;
         }
 
-        string json = File.ReadAllText(path);
-        var dataList = JsonUtility.FromJson<RuntimeItemDataList>(json);
-
-        RuntimeItems = dataList.items
+        var loadedItems = dataList.items
             .Select(item =>
             {
                 // 古いセーブデータとの互換: maxStock/requiredLevel/itemName がデフォルト値ならマスターから復元
@@ -685,6 +683,18 @@ public class ItemModel
                     master != null ? master.dividendPerTurn : 0);
             })
             .ToList();
+
+        // アプリの更新で銘柄（ItemData SO）を足したとき、既存のセーブには無いので初期状態で末尾に足す
+        // （マスターに無い銘柄は在庫が残っている可能性があるので消さない）
+        var loadedIds = new HashSet<string>(loadedItems.Select(r => r.ItemId));
+        if (masterItems.Any(m => m != null && !loadedIds.Contains(m.itemId)))
+        {
+            InitializeRuntimeItemsFromMaster();
+            var added = RuntimeItems.Where(r => !loadedIds.Contains(r.ItemId)).ToList();
+            loadedItems.AddRange(added);
+            Debug.Log($"[ItemModel] セーブに無い銘柄をマスターから追加: {string.Join(", ", added.Select(r => r.ItemId))}");
+        }
+        RuntimeItems = loadedItems;
 
         Debug.Log("Item data loaded.");
     }

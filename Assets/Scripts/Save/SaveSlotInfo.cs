@@ -24,8 +24,14 @@ public sealed class SaveSlotInfo
     /// <summary>プロフィール（メタ進行 or 進行中ラン）が存在するか。</summary>
     public bool HasProfile;
 
-    /// <summary>メタ通貨（のれん）の残高。</summary>
+    /// <summary>メタ通貨（のれん）の残高。【旧・未使用】表示には VillageFunds を使う。</summary>
     public int MetaCurrency;
+
+    /// <summary>村資金(G)。村の進行だけのスロットの表示に使う。</summary>
+    public int VillageFunds;
+
+    /// <summary>セーブファイルはあるが、本体も .bak も読めない（壊れている）。削除だけ受け付ける。</summary>
+    public bool IsCorrupted;
 
     /// <summary>総ラン数。</summary>
     public int TotalRuns;

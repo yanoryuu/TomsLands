@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using R3;
 using UnityEngine;
 
@@ -228,14 +227,18 @@ public class MetaProgressModel
             facilities = new List<FacilityLevelPlain>(facilityLevels),
             tutorials = new List<TutorialFlagPlain>(tutorialFlags),
             firstBattleTurn = FirstBattleTurn,
+            saveVersion = SaveVersion.Current,
         };
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
+        // 何周ぶんもの積み上げなので、一時ファイル→置き換え→.bak で書く（途中で落ちても前の版が残る）
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
     }
 
     public void LoadData()
     {
         string path = SaveSlotManager.GetPath(FileName);
-        if (!File.Exists(path))
+        // 本体が壊れていれば .bak から復旧する。どちらも読めなければ「メタ進行なし」と同じ既定値にする
+        // （壊れた本体は SaveFile が .corrupt に写して残す）
+        if (!SaveFile.TryReadJson<MetaProgressData>(path, out var data))
         {
             MetaCurrency.Value = 0;
             CreditLineLevel = 0;
@@ -250,8 +253,7 @@ public class MetaProgressModel
             return;
         }
 
-        var data = JsonUtility.FromJson<MetaProgressData>(File.ReadAllText(path));
-        if (data == null) return;
+        SaveVersion.Migrate(data.saveVersion, FileName);
         MetaCurrency.Value = Mathf.Max(0, data.metaCurrency);
         CreditLineLevel = Mathf.Max(0, data.creditLineLevel);
         TotalRuns = Mathf.Max(0, data.totalRuns);
@@ -310,6 +312,9 @@ public class MetaProgressData
     // --- 会話チュートリアル。旧セーブは欠損→空/0で正規化 ---
     public List<TutorialFlagPlain> tutorials = new();
     public int firstBattleTurn;
+
+    // --- セーブの版（SaveVersion.Current）。旧セーブは欠損→0 ---
+    public int saveVersion;
 }
 
 /// <summary>チュートリアル会話1本ぶんの既読フラグ（JsonUtilityはDictionary不可のためList要素）。</summary>

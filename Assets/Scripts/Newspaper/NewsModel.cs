@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 /// <summary>
@@ -214,9 +213,7 @@ public class NewsModel
         try
         {
             string path = SaveSlotManager.GetPath(ArcFileName);
-            if (!File.Exists(path)) return;
-            var d = JsonUtility.FromJson<ArcSave>(File.ReadAllText(path));
-            if (d == null || d.runSeed != seed) return;
+            if (!SaveFile.TryReadJson<ArcSave>(path, out var d) || d.runSeed != seed) return;
             for (int i = 0; i < d.keys.Count && i < d.values.Count; i++) arcResolutions[d.keys[i]] = d.values[i];
             LastStreamWon = d.hasLast ? d.lastWon : (bool?)null;
             seenStreamWins = d.wins;
@@ -241,7 +238,7 @@ public class NewsModel
                 losses = seenStreamLosses,
             };
             foreach (var kv in arcResolutions) { d.keys.Add(kv.Key); d.values.Add(kv.Value); }
-            File.WriteAllText(SaveSlotManager.GetPath(ArcFileName), JsonUtility.ToJson(d, true));
+            SaveFile.WriteAtomic(SaveSlotManager.GetPath(ArcFileName), JsonUtility.ToJson(d, true));
         }
         catch (Exception ex)
         {

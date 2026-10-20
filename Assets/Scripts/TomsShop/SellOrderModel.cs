@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -133,7 +132,7 @@ public class SellOrderModel
             orders = PendingOrders.Select(o => o.ToPlain()).ToList()
         };
         string json = JsonUtility.ToJson(list, true);
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), json);
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), json);
     }
 
     public void LoadData()
@@ -141,9 +140,9 @@ public class SellOrderModel
         PendingOrders.Clear();
 
         string path = SaveSlotManager.GetPath(FileName);
-        if (File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければ注文ゼロで続行（SaveFile がログを出す）
+        if (SaveFile.TryReadJson<SellOrderList>(path, out var list))
         {
-            var list = JsonUtility.FromJson<SellOrderList>(File.ReadAllText(path));
             if (list?.orders != null)
             {
                 foreach (var plain in list.orders)

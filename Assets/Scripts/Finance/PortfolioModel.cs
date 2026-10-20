@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -321,7 +320,7 @@ public class PortfolioModel
                 .Select(kv => new FundNavHistoryPlain { productId = kv.Key, navHistory = new List<int>(kv.Value) })
                 .ToList(),
         };
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
     }
 
     public void LoadData()
@@ -330,9 +329,9 @@ public class PortfolioModel
         navHistories.Clear();
 
         string path = SaveSlotManager.GetPath(FileName);
-        if (File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければポジションゼロで続行（SaveFile がログを出す）
+        if (SaveFile.TryReadJson<PortfolioSaveData>(path, out var data))
         {
-            var data = JsonUtility.FromJson<PortfolioSaveData>(File.ReadAllText(path));
             if (data?.positions != null)
             {
                 foreach (var plain in data.positions)
