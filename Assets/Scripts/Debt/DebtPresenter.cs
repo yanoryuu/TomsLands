@@ -19,6 +19,9 @@ public class DebtPresenter : IDisposable, IStartable
     /// </summary>
     public Subject<R3.Unit> OnDebtPaid { get; } = new();
 
+    /// <summary>返済パネル（強制・任意・破産）を開いているか。</summary>
+    public bool IsShowing => debtView != null && debtView.IsShowing;
+
     public DebtPresenter(
         DebtView debtView,
         TomsModel tomsModel,
