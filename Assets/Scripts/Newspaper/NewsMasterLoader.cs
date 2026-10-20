@@ -117,6 +117,7 @@ public static class NewsMasterLoader
             }
             _events.Add(e);
         }
+        if (!NewsTuning.IncludeDraftTemplates) DropEventsWithoutReports(_events, LoadTemplates());
         Debug.Log($"[NewsMasterLoader] 事象パターン {_events.Count} 件を読み込みました。");
         return _events;
     }
@@ -126,6 +127,7 @@ public static class NewsMasterLoader
         if (_templates != null) return _templates;
 
         _templates = new List<NewsTemplateData>();
+        var skipped = new List<NewsTemplateData>();
         foreach (var r in ReadTable("NewsTemplates", optional: true))
         {
             var t = new NewsTemplateData
@@ -143,9 +145,18 @@ public static class NewsMasterLoader
                 status = r.Get("status"),
                 summaryEn = r.Get("summaryEn"),
             };
-            if (string.IsNullOrEmpty(t.eventId) || !IsUsable(t.status)) continue;
+            if (string.IsNullOrEmpty(t.eventId)) continue;
+            if (!IsUsable(t.status)) { skipped.Add(t); continue; }
             if (string.IsNullOrEmpty(t.templateId)) t.templateId = $"{t.eventId}.{t.companyId}.{t.kind}.{_templates.Count}";
             _templates.Add(t);
+        }
+        if (FallbackToDrafts("テンプレート", _templates.Count, skipped.Count))
+        {
+            foreach (var t in skipped)
+            {
+                if (string.IsNullOrEmpty(t.templateId)) t.templateId = $"{t.eventId}.{t.companyId}.{t.kind}.{_templates.Count}";
+                _templates.Add(t);
+            }
         }
         Debug.Log($"[NewsMasterLoader] テンプレート {_templates.Count} 本を読み込みました。");
         return _templates;
@@ -156,6 +167,7 @@ public static class NewsMasterLoader
         if (_fillers != null) return _fillers;
 
         _fillers = new List<NewsFillerData>();
+        var skipped = new List<NewsFillerData>();
         foreach (var r in ReadTable("NewsFillers", optional: true))
         {
             var f = new NewsFillerData
@@ -172,9 +184,11 @@ public static class NewsMasterLoader
                 status = r.Get("status"),
                 summaryEn = r.Get("summaryEn"),
             };
-            if (string.IsNullOrEmpty(f.fillerId) || !IsUsable(f.status)) continue;
+            if (string.IsNullOrEmpty(f.fillerId)) continue;
+            if (!IsUsable(f.status)) { skipped.Add(f); continue; }
             _fillers.Add(f);
         }
+        if (FallbackToDrafts("埋め草", _fillers.Count, skipped.Count)) _fillers.AddRange(skipped);
         Debug.Log($"[NewsMasterLoader] 埋め草 {_fillers.Count} 本を読み込みました。");
         return _fillers;
     }
@@ -187,6 +201,36 @@ public static class NewsMasterLoader
     {
         if (string.IsNullOrEmpty(status) || status == "approved") return true;
         return NewsTuning.IncludeDraftTemplates;
+    }
+
+    /// <summary>
+    /// 読み込んだテンプレートに報道（report）が1本も無い事象を外す（製品ビルドだけ）。
+    /// 製品は approved のテンプレートしか読まないので、Jev に通らず draft のままの事象は記事が無い。
+    /// 外さないと、記事なしで相場だけ動く事象になる。連載の途中の話が外れると、その連載はそこで終わる（ApplyArcBranch が "-" にする）。
+    /// テンプレートが1本も読めないとき（旧形式に落ちるとき）は何もしない。
+    /// </summary>
+    public static int DropEventsWithoutReports(List<NewsEventData> events, IReadOnlyList<NewsTemplateData> templates)
+    {
+        if (events == null || templates == null || templates.Count == 0) return 0;
+        var reported = new HashSet<string>();
+        foreach (var t in templates)
+            if (t.kind == "report") reported.Add(t.eventId);
+        int removed = events.RemoveAll(e => !reported.Contains(e.eventId));
+        if (removed > 0)
+            Debug.Log($"[NewsMasterLoader] approved の報道が無い事象 {removed} 件を外しました（Jev 未合格で draft のまま）。");
+        return removed;
+    }
+
+    /// <summary>
+    /// 製品ビルドで approved が1本も無いときの保険。0本のままだとフェーズ3の紙面が組めず、旧形式（NewsArticles）に落ちる
+    /// （2026-10 まで全行 draft で、製品ビルドだけ旧形式になっていた。Docs/News_Spec.md）。
+    /// その場合は draft / reviewed も読み、エラーログで知らせる。ビルド前チェック（Tools/TomsLands/ビルド前チェック）でも数える。
+    /// </summary>
+    private static bool FallbackToDrafts(string label, int usableCount, int skippedCount)
+    {
+        if (usableCount > 0 || skippedCount == 0) return false;
+        Debug.LogError($"[NewsMasterLoader] approved の{label}が0本です（draft/reviewed {skippedCount} 本）。紙面が空にならないよう draft も読みます。CSV の status を approved にしてください。");
+        return true;
     }
 
     private static bool IsFalseText(string s) =>

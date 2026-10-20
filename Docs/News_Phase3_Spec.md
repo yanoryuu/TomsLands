@@ -303,6 +303,10 @@
 
 3. **Jev 検証**（§8）で不合格のものを `reviewed` に差し戻す
 4. ランタイムは `approved` だけを読む（開発ビルドでは `draft` も読めるフラグを付ける・§12 U6）
+   - 製品ビルドの保険（2026-10-20）: approved が1本も無いと紙面が旧形式に落ちるので、そのときは draft も読み、`Debug.LogError` を出す（`NewsMasterLoader.FallbackToDrafts`）。
+   - 製品ビルドでは、approved の報道（report）が1本も無い事象を事象パターンから外す（`NewsMasterLoader.DropEventsWithoutReports`）。外さないと記事なしで相場だけ動く。連載の途中の話が外れると、その連載はそこで終わる。
+   - ビルド前チェック（`Tools/TomsLands/ビルド前チェック`、ビルド時にも自動）が approved の本数と、製品ビルドで出る事象の数を出す。0本ならビルドを止める。
+   - 2026-10-20 の Jev 検証で合格した事象のテンプレートを approved にした（`Docs/News_Content_Review.md` §19）。
 
 配信は既存の「スプレッドシート → GAS → Firebase Storage」に乗せる（`Docs/GAS_ItemMaster_Spec.md` と同方式）。
 

@@ -420,7 +420,7 @@ Demand        += resolver.DemandKick(itemId)     // 発効ターンのみ、1回
 | 0 | `feature/jev-market-sim` を main へマージし、`feature/news` を切る | |
 | 1 | **第2章の未来情報遮断**＋`NewsModel` と朝刊UI最小版＋記事10本。効果は `trendDelta` のみ | **ここで「面白いか」を判定する。** 10本で快感が出なければ100本でも出ない |
 | 2 | 2段効果（hypeRate / demandKick）、結果記事・訂正記事 | **実装済み**（2026-10-05）。跳ねの剥がれ・誇張倍率・効果量の既定値（`NewsTuning`）・続報の差し込み・紙面の並び順 |
-| 3 | 5社・面・署名・`sourceClarity`・クロスリファレンス | **段階A 実装済み**（2026-10-08）。仕様は `Docs/News_Phase3_Spec.md`（本書 §4.2・§4.3・§6.1 を置き換え）。事象36・テンプレート190・埋め草64（すべて draft）。段階B〜D は未着手 |
+| 3 | 5社・面・署名・`sourceClarity`・クロスリファレンス | **段階A 実装済み**（2026-10-08）。仕様は `Docs/News_Phase3_Spec.md`（本書 §4.2・§4.3・§6.1 を置き換え）。事象36・テンプレート190・埋め草64（当時はすべて draft。2026-10-20 に Jev 合格分を approved に: テンプレート 498/577・埋め草 64/64、`News_Content_Review.md` §19）。段階B〜D は未着手 |
 | 4 | 購読と購読枠、`AutoBuyStrategy` に「既読の記事に従う」を追加 | **購読・枠・壁新聞はコード実装済み**（2026-10-08、`NewspaperSubscriptionModel`）。AutoBuyStrategy は未着手 |
 | 5 | スクラップ・確認・実測的中率・相性図鑑 | **スクラップ・確認・実測的中率はコード実装済み**（2026-10-08、`ScrapbookModel`）。名鑑UI・相性図鑑・仕入れ画面の付箋は未着手 |
 | 6 | 記事100本の執筆と条件チューニング、Jev 検証 | |
