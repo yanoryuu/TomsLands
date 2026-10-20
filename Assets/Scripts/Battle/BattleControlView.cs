@@ -132,4 +132,54 @@ public class BattleControlView : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 「配信終了」の確認ポップアップ。終了するなら true。
+    /// token がキャンセルされた（確認中に決着した）ときはポップアップを閉じて false を返す。
+    /// </summary>
+    public async UniTask<bool> ShowEndStreamingConfirmAsync(CancellationToken token)
+    {
+        if (popUpManager == null)
+        {
+            // 確認を出せないまま途中終了すると防衛報酬などを失うので、押し間違いとみなして終了しない
+            Debug.LogError("[BattleControlView] PopUpManager is not injected.");
+            return false;
+        }
+
+        var tcs = new UniTaskCompletionSource<bool>();
+        bool popupClosedByCallback = false;
+
+        popUpManager.Show(new PopUpData
+        {
+            Title = "配信を終了しますか？",
+            Message = "ここまでの売上は受け取れます。\n途中で終えると、防衛報酬・経験値・\nレベルアップ・レリックはもらえません。",
+            ConfirmButtonText = "終了する",
+            CancelButtonText = "続ける",
+            Size = PopupSizeEnum.Medium,
+            OnConfirm = () =>
+            {
+                popupClosedByCallback = true;
+                tcs.TrySetResult(true);
+            },
+            OnCancel = () =>
+            {
+                popupClosedByCallback = true;
+                tcs.TrySetResult(false);
+            }
+        });
+
+        try
+        {
+            return await tcs.Task.AttachExternalCancellation(token);
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+        finally
+        {
+            if (!popupClosedByCallback)
+                popUpManager.Close();
+        }
+    }
 }

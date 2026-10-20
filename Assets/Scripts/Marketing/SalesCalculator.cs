@@ -54,9 +54,10 @@ public class SalesCalculator
         float relicMultiplier = _relicResolver != null ? _relicResolver.Modify(RelicStatId.ShopRevenueMul, 1f) : 1f;
 
         // 最終売上 = 基本売上 × バズ倍率 × (1 + フォロワーボーナス率) × マシン倍率 × レリック倍率
-        float finalRevenue = baseRevenue * buzzMultiplier * (1f + followerBonusRate) * machineMultiplier * relicMultiplier;
+        // double で計算して int の上限で頭打ちにする（RoundToInt は約21億を超えると負になり、Max(0) で入金0になっていた）
+        double finalRevenue = (double)baseRevenue * buzzMultiplier * (1.0 + followerBonusRate) * machineMultiplier * relicMultiplier;
 
-        int result = Mathf.Max(0, Mathf.RoundToInt(finalRevenue));
+        int result = finalRevenue >= int.MaxValue ? int.MaxValue : Mathf.Max(0, (int)System.Math.Round(finalRevenue));
 
         Debug.Log($"[SalesCalculator] 売上計算: " +
                   $"基本={baseRevenue}G × バズ倍率={buzzMultiplier:F2} × フォロワーボーナス={(1f + followerBonusRate):F2} × マシン={machineMultiplier:F2} " +

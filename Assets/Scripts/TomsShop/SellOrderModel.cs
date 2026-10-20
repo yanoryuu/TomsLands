@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -87,7 +86,9 @@ public class SellOrderModel
             int ceiling = Mathf.RoundToInt(order.OrderedPrice * (1f + clampRate));
             int settledPrice = Mathf.Clamp(marketPrice, Mathf.Max(1, floor), Mathf.Max(1, ceiling));
 
-            int income = Mathf.RoundToInt(settledPrice * order.Quantity * (1f - feeRate));
+            // int のまま掛けると桁あふれで負になりうるので double で計算して頭打ちにする
+            double rawIncome = (double)settledPrice * order.Quantity * (1.0 - feeRate);
+            int income = rawIncome >= int.MaxValue ? int.MaxValue : (int)Math.Round(rawIncome);
 
             result.Settled.Add(new SettledOrderInfo
             {
@@ -98,7 +99,7 @@ public class SellOrderModel
                 SettledPrice = settledPrice,
                 Income = income,
             });
-            result.BaseIncome += income;
+            result.BaseIncome = TomsModel.SaturatingAdd(result.BaseIncome, income);
 
             PendingOrders.Remove(order);
         }
@@ -131,7 +132,7 @@ public class SellOrderModel
             orders = PendingOrders.Select(o => o.ToPlain()).ToList()
         };
         string json = JsonUtility.ToJson(list, true);
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), json);
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), json);
     }
 
     public void LoadData()
@@ -139,9 +140,9 @@ public class SellOrderModel
         PendingOrders.Clear();
 
         string path = SaveSlotManager.GetPath(FileName);
-        if (File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければ注文ゼロで続行（SaveFile がログを出す）
+        if (SaveFile.TryReadJson<SellOrderList>(path, out var list))
         {
-            var list = JsonUtility.FromJson<SellOrderList>(File.ReadAllText(path));
             if (list?.orders != null)
             {
                 foreach (var plain in list.orders)

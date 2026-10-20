@@ -140,7 +140,8 @@ public class NewspaperPresenter : IStartable, IDisposable
 
     private void RenderHeader()
     {
-        int untilBattle = gameFlowManager != null ? gameFlowManager.GetTurnsUntilNextBattle() : -1;
+        // 表示用の日数（今日 0・明日 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
+        int untilBattle = gameFlowManager != null ? gameFlowManager.GetDaysUntilNextStream() : -1;
         view.ShowHeader($"第{Turn}号", tomsModel.PlayerMoney.Value, untilBattle);
     }
 
@@ -249,7 +250,7 @@ public class NewspaperPresenter : IStartable, IDisposable
             lead = a?.lead ?? "",
             body = a?.body ?? "",
             byline = FormatByline(a?.byline, withCompany ? e.Company?.companyName : null),
-            isRead = a != null && newsModel.IsRead(a.id),
+            isRead = a != null && newsModel.IsRead(key),
             bodyOpen = openedBodies.Contains(key),
             canScrapKind = ScrapbookModel.CanPinKind(e),
             canScrap = scrapbook.CanPin(e),
@@ -464,9 +465,11 @@ public class NewspaperPresenter : IStartable, IDisposable
         bool changed = leadKey != entryKey;
         leadKey = entryKey;
 
-        if (!newsModel.IsRead(a.id))
+        // 既読は掲載ごとのキー（号:社:記事）で覚える。テンプレート ID だと、同じ系統の事象や埋め草が
+        // 後日また載ったとき（文面は別の新しい記事）に最初から既読になり NEW が付かない
+        if (!newsModel.IsRead(entryKey))
         {
-            newsModel.MarkRead(a.id);
+            newsModel.MarkRead(entryKey);
             Save();
             changed = true;
         }

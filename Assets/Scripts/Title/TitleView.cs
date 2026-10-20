@@ -154,8 +154,8 @@ public sealed class TitleView : MonoBehaviour
         {
             var slot = Instantiate(saveSlotPrefab, saveSlotContainer);
             slot.Bind(info);
-            // ロードモードでは空きスロットを選択不可にする。ニューゲームでは全て選択可。
-            slot.SetSelectable(!loadMode || info.Exists);
+            // ロードモードでは空きスロットを選択不可にする（村の進行だけのスロットは選べる＝村へ行く）。ニューゲームでは全て選択可。
+            slot.SetSelectable(!loadMode || info.HasProfile);
 
             slot.OnSelect.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotSelected.OnNext(i); }).AddTo(_slotDisposables);
             slot.OnDelete.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotDeleteRequested.OnNext(i); }).AddTo(_slotDisposables);

@@ -112,7 +112,7 @@ public class ProphetView : MonoBehaviour
         dungeonNameText.text = turnsUntil >= 0 ? dungeonName : "次のダンジョンなし";
         dungeonAttributeText.text = $"属性: {attribute}";
         dungeonDifficultyText.text = $"難易度: {difficulty}";
-        turnsUntilBattleText.text = turnsUntil >= 0 ? $"あと {turnsUntil} ターン" : "—";
+        turnsUntilBattleText.text = turnsUntil == 0 ? "本日配信" : turnsUntil > 0 ? $"あと {turnsUntil} ターン" : "—";
         if (dungeonIconImage != null) dungeonIconImage.sprite = icon;
     }
 

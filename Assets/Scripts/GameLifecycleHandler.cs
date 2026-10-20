@@ -1,4 +1,5 @@
 using System;
+using R3;
 using UnityEngine;
 using VContainer.Unity;
 
@@ -23,6 +24,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly ShopMachineModel _shopMachineModel;
     private readonly RelicInventoryModel _relicInventory;
     private readonly RunSetupData _runSetupData;
+    private readonly PendingEventData _pendingEventData;
+    private readonly CompositeDisposable _disposables = new();
 
     // コンストラクタ（依存関係はVContainerが注入）
     public GameLifecycleHandler(
@@ -40,7 +43,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         PortfolioModel portfolioModel,
         ShopMachineModel shopMachineModel,
         RelicInventoryModel relicInventory,
-        RunSetupData runSetupData)
+        RunSetupData runSetupData,
+        PendingEventData pendingEventData)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -57,6 +61,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _shopMachineModel = shopMachineModel;
         _relicInventory = relicInventory;
         _runSetupData = runSetupData;
+        _pendingEventData = pendingEventData;
     }
 
     public void Start()
@@ -100,6 +105,25 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // 以降のシーン再読み込み（FightScene→TomsShop等）で
         // NewGame 扱いにならないよう Continue に切り替える
         _startModeData.SetContinue();
+
+        // 表示待ちイベントが確認ボタンで消えたら、保存してある分（tomsData）も消して保存する
+        // （残すと続きからで同じイベントがもう一度起きる）
+        _pendingEventData.OnCleared
+            .Subscribe(_ =>
+            {
+                _tomsModel.PendingEventId = string.Empty;
+                _tomsModel.PendingEventIndex = 0;
+                _tomsModel.SavePlayerMoney();
+            })
+            .AddTo(_disposables);
+
+        // 「続きから」で前回が配信中・配信前の寄り道中・リザルトの前に終わっていたら、店を開かずにその場面へ戻す。
+        // 配信から結果を持って帰ってきたとき（isReturningFromScene）は BattleResultHandler が処理するので対象外
+        if (!isNewRun && !isReturningFromScene && _gameFlowManager.TryResumeInterruptedScene())
+        {
+            Debug.Log($"[GameLifecycleHandler] Initialized → 中断した場面へ復帰 (FlowIndex={_gameFlowManager.CurrentIndex})");
+            return;
+        }
 
         // --- Shopフェーズ進入を発火する ---
         // StateManager はコンストラクタで初期フェーズを ForceNotify するが、その時点では
@@ -238,23 +262,64 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _gameFlowManager.InitializeFlow(_tomsModel.UseAutoFlow, _tomsModel.GameMode, _tomsModel.FlowSeed);
         _gameFlowManager.RestoreIndex(_tomsModel.GameFlowIndex);
 
+        RestorePendingEvent();
+
         Debug.Log($"[GameLifecycleHandler] 続きから: 復帰 (FlowIndex={_tomsModel.GameFlowIndex}, useAuto={_tomsModel.UseAutoFlow}, mode={_tomsModel.GameMode}, seed={_tomsModel.FlowSeed})");
+    }
+
+    /// <summary>
+    /// 保存してある表示待ちイベントを PendingEventData に戻す（店の Entry がポップアップを出す）。
+    /// PendingEventData はシーンの Singleton なので、配信から帰る・続きから再開するたびに空から作り直される。
+    /// </summary>
+    private void RestorePendingEvent()
+    {
+        if (string.IsNullOrEmpty(_tomsModel.PendingEventId) || _pendingEventData.HasPendingEvent) return;
+
+        var tomsEvent = EventDataLoader.FindById(_tomsModel.PendingEventId);
+        if (tomsEvent == null)
+        {
+            Debug.LogWarning($"[GameLifecycleHandler] 保存されていた表示待ちイベントが見つからないので破棄: {_tomsModel.PendingEventId}");
+            _tomsModel.PendingEventId = string.Empty;
+            _tomsModel.PendingEventIndex = 0;
+            return;
+        }
+        _pendingEventData.Set(tomsEvent, _tomsModel.PendingEventIndex);
+        Debug.Log($"[GameLifecycleHandler] 表示待ちイベントを復元: {tomsEvent.id} {tomsEvent.title}");
     }
 
     public void Dispose()
     {
+        _disposables.Dispose();
+
         // GameFlowManagerの現在インデックスをTomsModelに反映してから保存
         _tomsModel.GameFlowIndex = _gameFlowManager.CurrentIndex;
+        // 表示待ちイベントも今の状態に合わせる（確認前に終了したら残し、確認済みなら消す）
+        _tomsModel.PendingEventId = _pendingEventData.HasPendingEvent ? _pendingEventData.PendingEvent.id : string.Empty;
+        _tomsModel.PendingEventIndex = _pendingEventData.HasPendingEvent ? _pendingEventData.GameFlowIndex : 0;
 
-        // アプリ終了時・シーン破棄時に呼ばれる保存処理
-        _itemModel.SaveData();
-        _tomsModel.SavePlayerMoney();
-        _heroModel.SaveHeroData();
-        _sellOrderModel.SaveData();
-        _portfolioModel.SaveData();
-        _shopMachineModel.SaveData();
-        _relicInventory.SaveData();
+        // アプリ終了時・シーン破棄時に呼ばれる保存処理。
+        // 1つが例外で失敗しても残りは必ず保存する（SaveFile は書き込み失敗を投げないが、直列化などの例外に備える）
+        TrySave(nameof(ItemModel), _itemModel.SaveData);
+        TrySave(nameof(TomsModel), _tomsModel.SavePlayerMoney);
+        TrySave(nameof(HeroModel), _heroModel.SaveHeroData);
+        TrySave(nameof(SellOrderModel), _sellOrderModel.SaveData);
+        TrySave(nameof(PortfolioModel), _portfolioModel.SaveData);
+        TrySave(nameof(ShopMachineModel), _shopMachineModel.SaveData);
+        TrySave(nameof(RelicInventoryModel), _relicInventory.SaveData);
 
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
+    }
+
+    private static void TrySave(string name, Action save)
+    {
+        try
+        {
+            save();
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[GameLifecycleHandler] {name} の保存に失敗しました（残りの保存は続けます）");
+            Debug.LogException(e);
+        }
     }
 }

@@ -33,9 +33,13 @@ public class ItemPopUpManager
         if (isLoading) return;
 
         // 確認ボタンのコールバックをラップし、実行後に自動で Close() を呼ぶ
+        // この表示で1回だけ通す（アンロード中の連打・B/Esc との同時押しで二重に走らないように。PopUpManager と同じ）
         var originalOnConfirm = data.OnConfirm;
+        bool handled = false;
         data.OnConfirm = () =>
         {
+            if (handled) return;
+            handled = true;
             originalOnConfirm?.Invoke();
             Close();
         };

@@ -50,18 +50,25 @@ public class PopUpManager
     {
         if (isLoading) return;
 
-        // 元のコールバックをラップし、実行後に自動で Close() を呼ぶ
+        // 元のコールバックをラップし、実行後に自動で Close() を呼ぶ。
+        // 確定/キャンセルはこの表示で1回だけ通す（アンロードは非同期なので、消えるまでの数フレームに
+        // 「確定」の連打や「確定→キャンセル」、B/Esc とボタンの同時押しが両方通ると、削除や購入が二重に走る）
         var originalOnConfirm = data.OnConfirm;
         var originalOnCancel  = data.OnCancel;
+        bool handled = false;
 
         data.OnConfirm = () =>
         {
+            if (handled) return;
+            handled = true;
             originalOnConfirm?.Invoke();
             Close();
         };
 
         data.OnCancel = () =>
         {
+            if (handled) return;
+            handled = true;
             originalOnCancel?.Invoke();
             Close();
         };

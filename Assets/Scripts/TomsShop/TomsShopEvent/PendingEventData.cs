@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using R3;
+
+/// <summary>
 /// TomsShop内でインライン表示する保留イベントデータ。
 /// シーン遷移を伴わないため、通常クラスとしてSingleton登録して使用する。
 /// 将来EventSceneへ切り替える場合は、UseInlineEventPopup=falseにして
@@ -35,8 +37,18 @@ public class PendingEventData
     /// </summary>
     public void Clear()
     {
+        bool had = PendingEvent != null;
         PendingEvent = null;
         GameFlowIndex = 0;
+        if (had) cleared.OnNext(Unit.Default);
     }
+
+    private readonly Subject<Unit> cleared = new();
+
+    /// <summary>
+    /// 保留イベントが消えたとき（確認ボタン・表示失敗）の通知。
+    /// GameLifecycleHandler が受けて、保存してある表示待ちイベント（tomsData）も消す。
+    /// </summary>
+    public Observable<Unit> OnCleared => cleared;
 }
 

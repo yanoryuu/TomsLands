@@ -1201,7 +1201,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ???
+  m_text: "\uFF1F"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 71cf4f424833867499966a85dfd73f06, type: 2}
   m_sharedMaterial: {fileID: -8986230773758216685, guid: 71cf4f424833867499966a85dfd73f06, type: 2}
@@ -4935,7 +4935,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: ?Level
+  m_text: "\uFF1F"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 71cf4f424833867499966a85dfd73f06, type: 2}
   m_sharedMaterial: {fileID: -8986230773758216685, guid: 71cf4f424833867499966a85dfd73f06, type: 2}
@@ -6529,7 +6529,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u5C5E\u6027\uFF1A"
+  m_text: "\u5F31\u70B9\uFF1A"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 71cf4f424833867499966a85dfd73f06, type: 2}
   m_sharedMaterial: {fileID: -8986230773758216685, guid: 71cf4f424833867499966a85dfd73f06, type: 2}
@@ -13077,6 +13077,9 @@ MonoBehaviour:
   quickConfirmButton: {fileID: 279477995}
   quickConfirmLabel: {fileID: 401694683}
   autoSelectButton: {fileID: 32124532}
+  dungeonNameText: {fileID: 895029163}
+  dungeonLevelText: {fileID: 505239674}
+  dungeonWeaknessText: {fileID: 107319443}
 --- !u!1 &1400705591
 GameObject:
   m_ObjectHideFlags: 0
@@ -15442,7 +15445,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1611617694}
-  - component: {fileID: 1611617693}
   m_Layer: 0
   m_Name: UIManager
   m_TagString: Untagged
@@ -15450,20 +15452,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1611617693
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1611617691}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 50e25a65906f05247be82ee4d0aeb2df, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _dialogPrefab: {fileID: 8637338896541858572, guid: de24388786f13ed4ea27260dc3d1b2bc, type: 3}
-  _canvasTransform: {fileID: 1572025365}
 --- !u!4 &1611617694
 Transform:
   m_ObjectHideFlags: 0

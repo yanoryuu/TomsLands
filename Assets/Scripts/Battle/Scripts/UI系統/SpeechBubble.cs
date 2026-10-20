@@ -14,7 +14,8 @@ public class SpeechBubble : MonoBehaviour
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
-        cts = new CancellationTokenSource();
+        // 破棄（配信の終わりのシーン遷移）でも止まるようにする。止めないと Fade が破棄済みの CanvasGroup を触って例外になる
+        cts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
         canvasGroup.alpha = 0f;
     }
 
@@ -23,7 +24,7 @@ public class SpeechBubble : MonoBehaviour
         // 既に実行中のアニメーションがあればキャンセルして、新しいものを開始
         cts.Cancel();
         cts.Dispose();
-        cts = new CancellationTokenSource();
+        cts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
         ShowSequenceAsync(message, duration, cts.Token).Forget();
     }
 
@@ -38,8 +39,8 @@ public class SpeechBubble : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            // キャンセルされた場合は即座に透明にする
-            canvasGroup.alpha = 0f;
+            // キャンセルされた場合は即座に透明にする（破棄によるキャンセルなら触らない）
+            if (canvasGroup != null) canvasGroup.alpha = 0f;
         }
     }
 

@@ -57,7 +57,7 @@ public class BattleFlowManager
         {
             // ターン間の「間」（2ターン目以降。テンポは GameConst.battleTempo）
             if (turnCount > 1)
-                await uiView.WaitScaledAsync(uiView.Tempo.turnIntervalSeconds, token);
+                await uiView.WaitScaledAsync(uiView.Tempo.turnIntervalSeconds, token, pauseController);
 
             // ターン開始前にポーズチェック（ポーズ中はここで待機）
             if (pauseController != null)

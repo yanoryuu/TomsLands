@@ -30,7 +30,7 @@ public class ProcurementHeaderView : MonoBehaviour
         if (dungeonNameText) dungeonNameText.text = dungeonName;
         if (weaknessText) weaknessText.text = weakness;
         if (turnsUntilText)
-            turnsUntilText.text = turnsUntil >= 0 ? $"あと{turnsUntil}ターン" : "—";
+            turnsUntilText.text = turnsUntil == 0 ? "本日配信" : turnsUntil > 0 ? $"あと{turnsUntil}ターン" : "—";
 
         ShowHeroEquip(heroLevel, weaponName, armorName);
     }

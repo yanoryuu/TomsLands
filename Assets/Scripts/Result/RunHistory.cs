@@ -89,19 +89,24 @@ public static class RunHistory
         });
     }
 
-    /// <summary>配信1回ぶんの勝敗と、配信中に売れた商品の売上を記録する。</summary>
-    public static void RecordStreaming(bool won, IEnumerable<BattleOutputSoldItem> soldItems)
+    /// <summary>
+    /// 配信1回ぶんの勝敗と、配信中に売れた商品の売上を記録する。
+    /// 途中終了（Abort）は勝ちにも負けにも数えない（売上だけ記録する）。
+    /// </summary>
+    public static void RecordStreaming(BattleResult result, IEnumerable<BattleOutputSoldItem> soldItems)
     {
         Modify(d =>
         {
-            if (won) d.streamWins++;
-            else d.streamLosses++;
+            if (result == BattleResult.Victory) d.streamWins++;
+            else if (result == BattleResult.Defeat) d.streamLosses++;
 
             if (soldItems == null) return;
             foreach (var s in soldItems)
             {
                 if (s == null) continue;
-                AddItemRevenue(d, s.ItemId, null, s.SoldQuantity * s.SoldPrice);
+                // Revenue は実際に売れたときの価格の合計。未設定（AutoPlay の代理戦闘など）なら品出し時価格×個数
+                int revenue = s.Revenue > 0 ? s.Revenue : s.SoldQuantity * s.SoldPrice;
+                AddItemRevenue(d, s.ItemId, null, revenue);
             }
         });
     }
@@ -144,7 +149,7 @@ public static class RunHistory
         {
             var data = Current;
             change(data);
-            File.WriteAllText(_cachePath, JsonUtility.ToJson(data));
+            SaveFile.WriteAtomic(_cachePath, JsonUtility.ToJson(data));
         }
         catch (Exception e)
         {
@@ -156,8 +161,7 @@ public static class RunHistory
     {
         try
         {
-            var data = JsonUtility.FromJson<RunHistoryData>(File.ReadAllText(path));
-            if (data == null) return null;
+            if (!SaveFile.TryReadJson<RunHistoryData>(path, out var data)) return null;
             data.moneyTurns ??= new List<int>();
             data.moneyValues ??= new List<int>();
             data.itemIds ??= new List<string>();

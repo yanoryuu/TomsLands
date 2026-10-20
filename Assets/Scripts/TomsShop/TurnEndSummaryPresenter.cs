@@ -127,7 +127,8 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         if (totalSoldCount > 0 || settlement.TotalIncome > 0)
             SoundManager.Instance?.PlaySE("営業/SE_売上音");
 
-        int daysUntilBattle = gameFlowManager.GetTurnsUntilNextBattle();
+        // 表示用の日数（明日なら 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
+        int daysUntilBattle = gameFlowManager.GetDaysUntilNextStream();
 
         Debug.Log($"[TurnEndSummary] 本日の入金: {settlement.TotalIncome}G / 売り注文（明日入金見込み）: {pendingEstimate}G, 売れた数: {totalSoldCount}, 次の配信まで: {daysUntilBattle}ターン");
 

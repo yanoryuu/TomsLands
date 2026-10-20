@@ -32,6 +32,13 @@ public class TomsData
     // --- ランの開始会話（TutorialPresenter）。旧セーブは欠損時 false = 再生済み扱い（途中復帰で流さない） ---
     public bool runOpeningPending;
 
+    // --- セーブの版（SaveVersion.Current）。旧セーブは欠損時 0 ＝版を入れる前のセーブとして読む ---
+    public int saveVersion;
+
+    // --- 表示待ちのイベント（店のイベントポップアップ）。確認ボタンを押すまで残す。旧セーブは欠損時 空 = 保留なし ---
+    public string pendingEventId;
+    public int pendingEventIndex;
+
     public TomsData(int shopMoney, int blacksmithLevel, int currentTurn, int gameFlowIndex = 0, int infoBrokerLevel = 1, int debtCycle = 0,
         int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false, int toolShopLevel = 1, float trust = 1f, int shopLevel = 1,
         int borrowedPrincipal = 0, float firstDebtDiscountRate = 0f, bool runOpeningPending = false)

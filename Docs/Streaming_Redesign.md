@@ -325,7 +325,7 @@ SpecialMoveCutInView (MB)           … 勇者立ち絵＋赤帯
 
 **停止とスナップショットの順序**（既存の「止めてから集計」の原則を守る）:
 
-1. 決着（または配信終了ボタン）→ `_pauseController.Resume()` → `battleCts.Cancel()`
+1. 決着（または配信終了ボタン）→ `_pauseController.Resume()` → `battleCts.Cancel()` → `BattleSequencer.StopBattle()`（戦闘ループも止める。止めないとリザルト中も裏で攻撃SE・価格変動が続く）
 2. **`InterventionPresenter.Stop()`**: 新しい支払いを受け付けない。キューに残った**未実行の指示は返金**（決着で効果が出なかったため）
 3. **`SuperChatGenerator.Stop()`**: 視聴者スパチャの演出発生を止める
 4. `_salesController.StopSales()`
@@ -335,6 +335,15 @@ SpecialMoveCutInView (MB)           … 勇者立ち絵＋赤帯
 - `BattleOutputData` に `InterventionSpending` / `PeakViewers` を追加（SceneData/ の担当と調整）
 - リザルト画面（`BattleResultView`）に「介入」の1行を追加
 - 介入で所持金がマイナスにならないこと（ボタンは残高不足でグレー）
+
+**配信終了ボタン（途中終了 = `BattleResult.Abort`。2026-10-20 決定）**:
+
+- ボタンを押すと一時停止して確認ポップアップ（PopUpManager）を出す。「続ける」なら元に戻る。確認中に決着したらポップアップは閉じる
+- 「終了する」と結果は `Abort`（`BattleResult` の末尾に追加）。勇者は勝っても負けてもいない扱い
+- 精算するのは**配信中の売上だけ**（上の式から敗北時報酬を除いたもの。補充・介入の精算はそのまま）
+- 付かないもの: 防衛報酬（配当通知書も出ない）・勝敗ボーナス/ペナルティ（装備の価格・需要）・属性波及・経験値・最低保証レベルアップ・レリック3択・トコの一言
+- ラン記録（`RunHistory`）の勝敗にも数えない（新聞の連載の勝敗分岐は直前の配信の結果のまま）
+- リザルトの見出しは「配信終了」
 
 ### 5-4. Marketing（バズ・フォロワー）との接続
 

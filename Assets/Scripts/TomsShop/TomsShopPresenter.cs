@@ -320,7 +320,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         if (currentTurn / GameConst.DebtPaymentInterval > tomsShopModel.DebtCycle.Value)
         {
             _lastKnownTurn = currentTurn;
-            debtPresenter.ShowForced();
+            // 現金が足りなければ、今日入金予定の売り注文を前倒しで入金してから判定する
+            debtPresenter.ShowForced(gameFlowManager.SettleTodaySellOrdersForDebt);
         }
 
         ShowTurnOrBuzzAnnounce();

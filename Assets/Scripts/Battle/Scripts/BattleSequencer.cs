@@ -67,6 +67,8 @@ public class BattleSequencer : MonoBehaviour
 
     public Subject<(string weaponId, string armorId)> OnBattleWin { get; } = new();
     public Subject<(string weaponId, string armorId)> OnBattleDefeat { get; } = new();
+    /// <summary>戦闘ループが例外で止まった。敗北ではなく途中終了（Abort）として扱う（防衛報酬なし・売上だけ精算）。</summary>
+    public Subject<(string weaponId, string armorId)> OnBattleError { get; } = new();
     public IReadOnlyList<CharacterPresenter> CharacterPresenters =>
         battleContext?.GetAllPresenters() ?? new List<CharacterPresenter>();
     public Subject<(CharacterModel attacker, CharacterModel target)> OnCharacterDamaged { get; } = new();
@@ -87,10 +89,25 @@ public class BattleSequencer : MonoBehaviour
     /// <summary>フェーズ進行ゲージを更新する（clearedPhases = クリア済みフェーズ数）。</summary>
     public void UpdatePhaseGauge(int clearedPhases) => phaseGauge?.SetProgress(clearedPhases);
 
+    // 戦闘ループ専用。シーン破棄に加えて StopBattle でも止められる
+    private CancellationTokenSource _battleCts;
+
     public void StartBattle(HeroModel heroModel)
     {
-        var token = this.GetCancellationTokenOnDestroy();
-        BattleStartAsync(heroModel, token).Forget();
+        _battleCts?.Cancel();
+        _battleCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        BattleStartAsync(heroModel, _battleCts.Token).Forget();
+    }
+
+    /// <summary>
+    /// 戦闘ループを止める。決着後（配信終了ボタンの途中終了を含む）に BattleSceneStarter から呼ぶ。
+    /// 止めないとリザルト・配当通知書の表示中も裏で攻撃（SE）や撃破による価格変動が続く。
+    /// </summary>
+    public void StopBattle()
+    {
+        // Dispose はしない（キャンセル直後に後片付け中の await がトークンを触ると ObjectDisposedException になりうる）。
+        // CTS はシーンと一緒に捨てられる
+        _battleCts?.Cancel();
     }
 
     private async UniTaskVoid BattleStartAsync(HeroModel heroModel, CancellationToken token)
@@ -112,10 +129,10 @@ public class BattleSequencer : MonoBehaviour
         {
             Debug.LogError($"[BattleSequencer] 戦闘中に例外が発生しました: {ex}");
 
-            // 例外時でも結果を通知して、リザルト画面→シーン遷移が行われるようにする
+            // 例外時でも結果を通知して、リザルト画面→シーン遷移が行われるようにする（敗北ではなく途中終了扱い）
             var weaponId = heroModel.EquippedItemIds.Count > 0 ? heroModel.EquippedItemIds[0] : "";
             var armorId  = heroModel.EquippedItemIds.Count > 1 ? heroModel.EquippedItemIds[1] : "";
-            OnBattleDefeat.OnNext((weaponId, armorId));
+            OnBattleError.OnNext((weaponId, armorId));
         }
     }
 }

@@ -28,7 +28,7 @@ public class Popup : MonoBehaviour
             if (closeButton != null)
             {
                 closeButton.gameObject.SetActive(true);
-                closeButton.onClick.AddListener(() => data.OnConfirm?.Invoke());
+                closeButton.onClick.AddListener(() => { LockButtons(); data.OnConfirm?.Invoke(); });
             }
         }
         else
@@ -38,11 +38,11 @@ public class Popup : MonoBehaviour
             if (cancelButtonText != null) cancelButtonText.text = data.CancelButtonText ?? "キャンセル";
             if (confirmButton != null)
             {
-                confirmButton.onClick.AddListener(() => data.OnConfirm?.Invoke());
+                confirmButton.onClick.AddListener(() => { LockButtons(); data.OnConfirm?.Invoke(); });
             }
             if (cancelButton != null)
             {
-                cancelButton.onClick.AddListener(() => data.OnCancel?.Invoke());
+                cancelButton.onClick.AddListener(() => { LockButtons(); data.OnCancel?.Invoke(); });
             }
         }
 
@@ -69,6 +69,14 @@ public class Popup : MonoBehaviour
             : (cancelButton != null && cancelButton.gameObject.activeInHierarchy ? cancelButton : confirmButton);
         if (focus != null && focus.gameObject.activeInHierarchy && ControllerInput.IsNavigating.CurrentValue)
             UIFocusManager.Select(focus.gameObject);
+    }
+
+    /// <summary>押した瞬間に全ボタンを押せなくする（閉じるまでの数フレームに2つ目の押下が通らないように）。</summary>
+    private void LockButtons()
+    {
+        if (confirmButton != null) confirmButton.interactable = false;
+        if (cancelButton != null) cancelButton.interactable = false;
+        if (closeButton != null) closeButton.interactable = false;
     }
 }
 

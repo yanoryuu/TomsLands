@@ -80,7 +80,14 @@ public class BattleUIView : MonoBehaviour
             await pauseController.WaitIfPausedAsync(token);
     }
 
-    /// <summary>ログ1件ぶんの表示待機（履歴表示 UI は廃止済みで、message は表示しない）。</summary>
-    public async UniTask AddLogAsync(string message, CancellationToken token)
-        => await UniTask.Delay(System.TimeSpan.FromSeconds(LogSeconds / SpeedMultiplier), cancellationToken: token);
+    /// <summary>
+    /// ログ1件ぶんの表示待機（履歴表示 UI は廃止済みで、message は表示しない）。
+    /// pauseController を渡すと、待機後にポーズ解除まで待つ。
+    /// </summary>
+    public async UniTask AddLogAsync(string message, CancellationToken token, BattlePauseController pauseController = null)
+    {
+        await UniTask.Delay(System.TimeSpan.FromSeconds(LogSeconds / SpeedMultiplier), cancellationToken: token);
+        if (pauseController != null)
+            await pauseController.WaitIfPausedAsync(token);
+    }
 }
