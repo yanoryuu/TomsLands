@@ -19,6 +19,8 @@ public sealed class TitleView : MonoBehaviour
     [SerializeField] private Button newGameButton;
     [SerializeField] private Button continueButton;
     [SerializeField] private Button optionButton;
+    [Tooltip("ゲームを終了する（確認のあと Application.Quit）。タイトルだけに置く（配信中などは途中経過が保存されないため）")]
+    [SerializeField] private Button quitButton;
     [SerializeField] private Button startMethodBackButton;
 
     [Header("セーブデータ選択画面")]
@@ -43,6 +45,7 @@ public sealed class TitleView : MonoBehaviour
     public Subject<Unit> OnNewGameSelected { get; } = new();
     public Subject<Unit> OnContinueSelected { get; } = new();
     public Subject<Unit> OnOptionSelected { get; } = new();
+    public Subject<Unit> OnQuitRequested { get; } = new();
     /// <summary>スロットが選択されたとき（引数=スロット番号）。ロード／上書き先指定の両方で発火。</summary>
     public Subject<int> OnSaveSlotSelected { get; } = new();
     /// <summary>スロットの削除が要求されたとき（引数=スロット番号）。</summary>
@@ -68,6 +71,7 @@ public sealed class TitleView : MonoBehaviour
         AddClickListener(newGameButton, () => OnNewGameSelected.OnNext(Unit.Default));
         AddClickListener(continueButton, () => OnContinueSelected.OnNext(Unit.Default));
         AddClickListener(optionButton, () => OnOptionSelected.OnNext(Unit.Default));
+        AddClickListener(quitButton, () => OnQuitRequested.OnNext(Unit.Default));
 
         AddClickListener(startMethodBackButton, NotifyBackRequested);
         AddClickListener(saveDataBackButton, NotifyBackRequested);
@@ -118,6 +122,7 @@ public sealed class TitleView : MonoBehaviour
         OnNewGameSelected.Dispose();
         OnContinueSelected.Dispose();
         OnOptionSelected.Dispose();
+        OnQuitRequested.Dispose();
         OnSaveSlotSelected.Dispose();
         OnSaveSlotDeleteRequested.Dispose();
         OnBackRequested.Dispose();
@@ -228,6 +233,23 @@ public sealed class TitleView : MonoBehaviour
         SetGroupActive(startScreenGroup, screen == TitleType.Start);
         SetGroupActive(startMethodScreenGroup, screen == TitleType.ContinueOrNewGame);
         SetGroupActive(saveDataScreenGroup, screen == TitleType.SaveData);
+
+        // 画面の切替もフェードで出す（瞬間表示にしない）
+        var shown = screen switch
+        {
+            TitleType.ContinueOrNewGame => startMethodScreenGroup,
+            TitleType.SaveData => saveDataScreenGroup,
+            _ => null,
+        };
+        if (shown != null) FadeIn(shown);
+    }
+
+    private static void FadeIn(GameObject group)
+    {
+        if (!group.TryGetComponent<CanvasGroup>(out var cg)) cg = group.AddComponent<CanvasGroup>();
+        cg.DOKill();
+        cg.alpha = 0f;
+        cg.DOFade(1f, 0.18f).SetLink(group);
     }
 
     private void NotifyBackRequested() => OnBackRequested.OnNext(Unit.Default);

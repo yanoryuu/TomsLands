@@ -62,6 +62,11 @@ public sealed class TitlePresenter : IStartable, IDisposable
             .Subscribe(_ => OpenOptionScene())
             .AddTo(_disposables);
 
+        // ゲーム終了（確認のあと Application.Quit）
+        _view.OnQuitRequested
+            .Subscribe(_ => RequestQuit())
+            .AddTo(_disposables);
+
         _view.OnSaveSlotSelected
             .Subscribe(OnSlotSelected)
             .AddTo(_disposables);
@@ -98,6 +103,38 @@ public sealed class TitlePresenter : IStartable, IDisposable
                 SceneManager.UnloadSceneAsync(settingSceneName);
             });
         };
+    }
+
+    /// <summary>
+    /// 「ゲーム終了」: 確認してから終了する（初期フォーカスは「やめる」側）。
+    /// タイトルではランの途中経過を持っていない（店・村から戻るときに保存済み）ので、そのまま終わってよい。
+    /// </summary>
+    private void RequestQuit()
+    {
+        if (_popUpManager == null)
+        {
+            QuitApplication();
+            return;
+        }
+        _popUpManager.Show(new PopUpData
+        {
+            Title = "ゲーム終了",
+            Message = "ゲームを終了しますか？",
+            ConfirmButtonText = "終了する",
+            CancelButtonText = "やめる",
+            Size = PopupSizeEnum.Small,
+            OnConfirm = QuitApplication,
+        });
+    }
+
+    private static void QuitApplication()
+    {
+        Debug.Log("[Title] ゲームを終了します");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     private void GoBack()

@@ -5,9 +5,13 @@ using UnityEngine.EventSystems;
 /// ホバーして一定時間（既定 0.5 秒）たつと、カーソル位置に HoverTooltipView で説明を出すトリガー。
 /// 待っている間にカーソルが外れたら出さない。外れたら・押したら・非表示になったら即消す。
 /// 押下・ドラッグは処理しない（Button やスワイプの操作を邪魔しない）。
+/// パッド/キーで選択されたときも同じ待ち時間で出す（位置は要素の右上。選択が外れたら消す）。
+/// ISubmitHandler は持たない（PointerEventBridge が「他に決定の処理がある」と見てクリックを送らなくなるため）。
+/// 同じ GameObject に PointerEventBridge がある場合は、そちらが選択を PointerEnter に変えて送るので二重に扱わない。
 /// 表示先の HoverTooltipView が無くてもエラーにならない。
 /// </summary>
-public class HoverTooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IPointerDownHandler
+public class HoverTooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IPointerDownHandler,
+    ISelectHandler, IDeselectHandler
 {
     [SerializeField] private string title;
     [SerializeField, TextArea(2, 4)] private string body;
@@ -59,6 +63,36 @@ public class HoverTooltipTrigger : MonoBehaviour, IPointerEnterHandler, IPointer
         // 押したら消して、いったん外れるまで出さない
         _suppressed = true;
         Hide();
+    }
+
+    public void OnSelect(BaseEventData e)
+    {
+        if (!ControllerInput.IsNavigating.CurrentValue || HasBridge()) return;
+        _hovering = true;
+        _suppressed = false;
+        _timer = 0f;
+        _pointer = SelectionAnchorScreenPoint();
+    }
+
+    public void OnDeselect(BaseEventData e)
+    {
+        if (HasBridge()) return;
+        _hovering = false;
+        Hide();
+    }
+
+    private bool HasBridge() => TryGetComponent<PointerEventBridge>(out _);
+
+    /// <summary>パッド選択時の表示位置: 要素の右上（スクリーン座標）。</summary>
+    private Vector2 SelectionAnchorScreenPoint()
+    {
+        if (transform is not RectTransform rt) return Vector2.zero;
+        var canvas = GetComponentInParent<Canvas>();
+        Camera cam = null;
+        if (canvas != null && canvas.rootCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+            cam = canvas.rootCanvas.worldCamera;
+        var r = rt.rect;
+        return RectTransformUtility.WorldToScreenPoint(cam, rt.TransformPoint(new Vector2(r.xMax, r.yMax)));
     }
 
     private void Update()

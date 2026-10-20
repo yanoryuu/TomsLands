@@ -104,6 +104,7 @@ AutoPlay.Stop("録画終了");
 | 店: 配信前の情報収集 | 次の配信先の弱点が不明なら 情報屋 → 地図 → ダンジョン →「情報を買う」→ 閉じる | AutoPlayController.Procurement（実ボタン押下） |
 | 店: 陳列 | 陳列パネルを開く → オート陳列 → 閉じる | DebugAutoPlayer（`ItemSelectionPresenter` + `ItemSelectionView.OnAutoDisplayRequested`） |
 | 店: 営業 | 営業開始 → 演出待ち | DebugAutoPlayer（`TomsShopView.OnStartShopClicked`） |
+| 店: 陳列の「営業開始 →」 | 陳列から直接営業へ（品出しゼロの確認「品出しゼロで営業します」は自動で承認） | `TurnPhasePresenter` / DebugAutoPlayer.HandlePopup |
 | 店: 精算（サマリー） | 確認 → 次のターンへ | DebugAutoPlayer（`TurnEndSummaryView.OnConfirmClicked`） |
 | 店: 割り込み | 納税パネル（払える→支払う / 任意→閉じる）、レリック3択（戦略）、朝レポートを閉じる、各種お知らせを閉じる | DebugAutoPlayer |
 | 店: 破産 | 「結果へ」を押してゲームオーバーへ | ボタン押下 |

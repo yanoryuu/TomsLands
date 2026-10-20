@@ -93,7 +93,7 @@ public static class ControllerInput
 
     /// <summary>
     /// 論理ボタンが押された（A=Submit, B=Cancel, X, Y, LB/RB=TabLeft/Right, Start=Menu）。
-    /// キーボード割当（Enter/Esc/Q/E）でも発火する。入力欄フォーカス中は発火しない。
+    /// キーボード割当（Enter/Esc/Q/E、X=F・Y=R）でも発火する。入力欄フォーカス中は発火しない。
     /// </summary>
     public static Observable<ControllerButton> OnButtonPressed => buttonPressed;
 
@@ -257,7 +257,9 @@ public static class ControllerInput
         return kb.upArrowKey.wasPressedThisFrame || kb.downArrowKey.wasPressedThisFrame
             || kb.leftArrowKey.wasPressedThisFrame || kb.rightArrowKey.wasPressedThisFrame
             || kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame
-            || kb.escapeKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame;
+            || kb.escapeKey.wasPressedThisFrame || kb.tabKey.wasPressedThisFrame
+            // X/Y の近道キー（F=X, R=Y）。押したら選択枠を出す（鍛冶屋の「X=個数設定へ」などが見えるように）
+            || kb.fKey.wasPressedThisFrame || kb.rKey.wasPressedThisFrame;
     }
 
     private static bool AnyPadButtonPressed(Gamepad pad)

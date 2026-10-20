@@ -11,8 +11,9 @@ public static class UIFx
     /// パネル表示時のフェードイン。
     /// ScreenSpaceのCanvas自体はトランスフォームを動かせないため、
     /// Canvas（無ければルート）にCanvasGroupを付与してalphaのみを短くフェードする。
+    /// fromAlpha を上げると、全画面の切替で背景（カメラの背景色）が一瞬抜けて見えるのを抑えられる。
     /// </summary>
-    public static void PanelOpen(GameObject panelRoot, float duration = 0.18f)
+    public static void PanelOpen(GameObject panelRoot, float duration = 0.18f, float fromAlpha = 0f)
     {
         if (panelRoot == null || !panelRoot.activeInHierarchy) return;
 
@@ -23,7 +24,7 @@ public static class UIFx
             cg = target.AddComponent<CanvasGroup>();
 
         cg.DOKill();
-        cg.alpha = 0f;
+        cg.alpha = Mathf.Clamp01(fromAlpha);
         cg.DOFade(1f, duration).SetLink(target);
     }
 

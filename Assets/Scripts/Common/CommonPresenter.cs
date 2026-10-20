@@ -1,20 +1,14 @@
 using System;
 using R3;
-using UnityEngine.SceneManagement;
 using VContainer.Unity;
 
 public class CommonPresenter : IStartable, IDisposable
 {
-    private const string SettingSceneName = "Setting";
-
     private readonly CommonView commonView;
     private readonly TomsModel tomsModel;
     private readonly SellOrderModel sellOrderModel;
     private readonly MarketingFacade marketingFacade;
     private readonly CompositeDisposable disposables = new();
-
-    // メニュー（Setting）シーンのロード中フラグ。連打による多重加算ロードを防ぐ。
-    private bool isMenuTransitioning;
 
     public CommonPresenter(CommonView commonView, TomsModel tomsModel, SellOrderModel sellOrderModel, MarketingFacade marketingFacade)
     {
@@ -79,17 +73,7 @@ public class CommonPresenter : IStartable, IDisposable
 
     /// <summary>
     /// 設定（Setting）シーンを加算ロードする。
-    /// 連打しても多重にロードされないよう、ロード中フラグと既ロード判定でガードする。
+    /// 連打や店ホームの Start / Esc と重なっても多重にロードされないよう、SettingSceneOpener のガードを通す。
     /// </summary>
-    private void OpenSettingScene()
-    {
-        // ロード処理中の連打を無視
-        if (isMenuTransitioning) return;
-        // すでに開いている場合は無視
-        if (SceneManager.GetSceneByName(SettingSceneName).isLoaded) return;
-
-        isMenuTransitioning = true;
-        var op = SceneManager.LoadSceneAsync(SettingSceneName, LoadSceneMode.Additive);
-        op.completed += _ => isMenuTransitioning = false;
-    }
+    private static void OpenSettingScene() => SettingSceneOpener.Open();
 }

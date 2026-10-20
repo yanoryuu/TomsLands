@@ -232,6 +232,7 @@ public class TomsShopView : MonoBehaviour
         if (morningReportPanel == null || morningReportText == null) return false;
         morningReportText.text = text;
         morningReportPanel.SetActive(true);
+        UIFx.PanelOpen(morningReportPanel); // 開く演出（瞬間表示にしない）
         return true;
     }
 

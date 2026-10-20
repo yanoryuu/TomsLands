@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using R3;
 using TMPro;
@@ -10,7 +11,9 @@ using VContainer.Unity;
 /// <summary>
 /// オプション画面（加算シーン「Setting」）。
 /// タイトル画面・プレイ中メニューのどちらからも additive ロードで開かれる。
-/// タブ構成: サウンド / 画面 / 演出 / 情報。設定値は GameSettings（PlayerPrefs）に永続化される。
+/// タブ構成: サウンド / 画面 / 演出 / 会話 / 情報。
+/// 音量・演出・会話の設定は GameSettings（PlayerPrefs）に保存し、閉じるときにディスクへ書き出す。
+/// 画面（表示モード・解像度）は Unity 自身が保存するので、ここでは Screen を直接読み書きするだけ（二重に管理しない）。
 /// </summary>
 public class Setting : MonoBehaviour
 {
@@ -19,12 +22,21 @@ public class Setting : MonoBehaviour
     [SerializeField] private Slider seSlider;
 
     [Header("画面設定")]
+    [Tooltip("旧: フルスクリーンのオン/オフ。表示モードのプルダウンがあれば隠す")]
     [SerializeField] private Toggle fullscreenToggle;
+    [Tooltip("表示モード（ボーダーレス / フルスクリーン / ウィンドウ）")]
+    [SerializeField] private TMP_Dropdown displayModeDropdown;
     [SerializeField] private TMP_Dropdown resolutionDropdown;
 
     [Header("演出・快適性")]
     [SerializeField] private Toggle fastEffectsToggle;
     [SerializeField] private Toggle reduceShakeToggle;
+
+    [Header("会話")]
+    [Tooltip("文字の速さ（左=遅い / 右端=瞬時）")]
+    [SerializeField] private Slider textSpeedSlider;
+    [SerializeField] private Toggle autoAdvanceToggle;
+    [SerializeField] private Toggle skipReadToggle;
 
     [Header("情報表示")]
     [SerializeField] private TextMeshProUGUI versionText;
@@ -33,11 +45,18 @@ public class Setting : MonoBehaviour
     [SerializeField] private Button soundTabButton;
     [SerializeField] private Button displayTabButton;
     [SerializeField] private Button effectTabButton;
+    [SerializeField] private Button conversationTabButton;
     [SerializeField] private Button infoTabButton;
     [SerializeField] private GameObject soundGroup;
     [SerializeField] private GameObject displayGroup;
     [SerializeField] private GameObject effectGroup;
+    [SerializeField] private GameObject conversationGroup;
     [SerializeField] private GameObject infoGroup;
+
+    [Header("タブの見た目（選択中のタブ）")]
+    [Tooltip("選択中のタブの絵（空なら絵は替えない）")]
+    [SerializeField] private Sprite tabSelectedSprite;
+    [SerializeField] private Color tabSelectedLabelColor = new(1f, 0.82f, 0.3f, 1f);
 
     [Header("共通")]
     [SerializeField] private Button closeBtn;
@@ -52,6 +71,29 @@ public class Setting : MonoBehaviour
     // 解像度ドロップダウンの選択肢（重複除去済み）
     private readonly List<Vector2Int> resolutionOptions = new();
 
+    // 表示モード（プルダウンの並び順）
+    private static readonly FullScreenMode[] DisplayModes =
+        { FullScreenMode.FullScreenWindow, FullScreenMode.ExclusiveFullScreen, FullScreenMode.Windowed };
+    private static readonly string[] DisplayModeLabels = { "ボーダーレス", "フルスクリーン", "ウィンドウ" };
+
+    // SE 音量を変えたあと、少し止まったら試し鳴らしする
+    private const float SePreviewDelay = 0.15f;
+    private float sePreviewAt = -1f;
+
+    // ---- タブ ----
+    private sealed class Tab
+    {
+        public Button Button;
+        public GameObject Group;
+        public Func<Selectable> FirstControl;
+        public Image Image;
+        public Sprite NormalSprite;
+        public TMP_Text Label;
+        public Color NormalLabelColor;
+    }
+
+    private readonly List<Tab> tabs = new();
+
     // ---- パッド/キー ----
     // 加算シーンのため、シーンファイルではなくここでフォーカス範囲を構成する。
     // モーダル（設定を閉じるまで下の画面へフォーカスが出ない）・B/Esc で閉じる・LB/RB でタブ切替。
@@ -60,6 +102,8 @@ public class Setting : MonoBehaviour
 
     private void Awake()
     {
+        BuildTabs();
+
         var canvas = GetComponentInParent<Canvas>();
         var host = canvas != null ? canvas.rootCanvas.gameObject : gameObject;
         focusScope = UIFocusScope.GetOrAdd(host);
@@ -77,28 +121,50 @@ public class Setting : MonoBehaviour
             .AddTo(this);
     }
 
+    private void BuildTabs()
+    {
+        tabs.Clear();
+        AddTab(soundTabButton, soundGroup, () => bgmSlider);
+        AddTab(displayTabButton, displayGroup, () => displayModeDropdown != null ? displayModeDropdown : fullscreenToggle);
+        AddTab(effectTabButton, effectGroup, () => fastEffectsToggle);
+        AddTab(conversationTabButton, conversationGroup, () => textSpeedSlider);
+        AddTab(infoTabButton, infoGroup, () => null);
+    }
+
+    private void AddTab(Button button, GameObject group, Func<Selectable> firstControl)
+    {
+        if (button == null && group == null) return;
+        var image = button != null ? button.targetGraphic as Image : null;
+        var label = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
+        tabs.Add(new Tab
+        {
+            Button = button,
+            Group = group,
+            FirstControl = firstControl,
+            Image = image,
+            NormalSprite = image != null ? image.sprite : null,
+            Label = label,
+            NormalLabelColor = label != null ? label.color : Color.white,
+        });
+    }
+
     private void ShowTabByNav(int index)
     {
-        const int tabCount = 4;
-        index = (index % tabCount + tabCount) % tabCount;
+        if (tabs.Count == 0) return;
+        index = (index % tabs.Count + tabs.Count) % tabs.Count;
         ShowTab(index);
         var target = TabFocusTarget(index);
         if (target != null && focusScope != null) focusScope.Select(target);
     }
 
-    /// <summary>タブを開いたとき最初に選ぶ要素（中身が無い「情報」タブは隣のタブボタン）。</summary>
+    /// <summary>タブを開いたとき最初に選ぶ要素（中身が無い「情報」タブはそのタブのボタン）。</summary>
     private Selectable TabFocusTarget(int index)
     {
-        Selectable first = index switch
-        {
-            0 => bgmSlider,
-            1 => fullscreenToggle,
-            2 => fastEffectsToggle,
-            _ => null,
-        };
+        if (index < 0 || index >= tabs.Count) return closeBtn;
+        var first = tabs[index].FirstControl?.Invoke();
         if (first != null && first.isActiveAndEnabled && first.IsInteractable()) return first;
-        foreach (var tab in new[] { soundTabButton, displayTabButton, effectTabButton, infoTabButton })
-            if (tab != null && tab.isActiveAndEnabled && tab.IsInteractable()) return tab;
+        var tabButton = tabs[index].Button;
+        if (tabButton != null && tabButton.isActiveAndEnabled && tabButton.IsInteractable()) return tabButton;
         return closeBtn;
     }
 
@@ -107,11 +173,28 @@ public class Setting : MonoBehaviour
         InitSound();
         InitDisplay();
         InitEffects();
+        InitConversation();
         InitInfo();
         InitTabs();
         Bind();
 
         ShowTab(0); // 初期表示はサウンド
+    }
+
+    private void Update()
+    {
+        if (sePreviewAt > 0f && Time.unscaledTime >= sePreviewAt)
+        {
+            sePreviewAt = -1f;
+            // 試し鳴らし（UISound の同フレーム抑止とは別に、必ず1回鳴らす）
+            SoundManager.Instance?.PlaySE(UISound.DecideKey);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 閉じるボタン以外（タイトルへ・シーン破棄）で閉じても、変えた設定をディスクへ書き出す
+        GameSettings.Save();
     }
 
     // ---- 初期化 ----
@@ -124,36 +207,54 @@ public class Setting : MonoBehaviour
 
     private void InitDisplay()
     {
-        if (fullscreenToggle) fullscreenToggle.isOn = Screen.fullScreen;
-
-        if (resolutionDropdown)
+        if (displayModeDropdown)
         {
-            // 端末が対応する解像度から重複（リフレッシュレート違い）を除いて列挙
-            resolutionOptions.Clear();
-            var labels = new List<string>();
-            foreach (var res in Screen.resolutions)
-            {
-                var size = new Vector2Int(res.width, res.height);
-                if (resolutionOptions.Contains(size)) continue;
-                resolutionOptions.Add(size);
-                labels.Add($"{size.x} × {size.y}");
-            }
-
-            resolutionDropdown.ClearOptions();
-            resolutionDropdown.AddOptions(labels);
-
-            // 現在の解像度を選択状態にする。
-            // 手動リサイズ等でリストに無いサイズの場合は「（現在）」項目を追加して正しく表示する
-            var current = new Vector2Int(Screen.width, Screen.height);
-            int index = resolutionOptions.IndexOf(current);
-            if (index < 0)
-            {
-                resolutionOptions.Add(current);
-                resolutionDropdown.AddOptions(new List<string> { $"{current.x} × {current.y}（現在）" });
-                index = resolutionOptions.Count - 1;
-            }
-            resolutionDropdown.SetValueWithoutNotify(index);
+            displayModeDropdown.ClearOptions();
+            displayModeDropdown.AddOptions(new List<string>(DisplayModeLabels));
+            displayModeDropdown.SetValueWithoutNotify(ModeIndex(Screen.fullScreenMode));
+            // 表示モードのプルダウンがあるときは旧トグルを出さない
+            if (fullscreenToggle) fullscreenToggle.gameObject.SetActive(false);
         }
+        else if (fullscreenToggle)
+        {
+            fullscreenToggle.isOn = Screen.fullScreenMode != FullScreenMode.Windowed;
+        }
+
+        RefreshResolutionOptions(new Vector2Int(Screen.width, Screen.height));
+    }
+
+    /// <summary>
+    /// 解像度の選択肢を作り直す。モニターの大きさ以下だけを、大きい順に並べる（リフレッシュレート違いは1つにまとめる）。
+    /// 一覧に無い大きさ（ウィンドウの端をつかんで変えたときなど）は「（現在）」として足す。
+    /// </summary>
+    private void RefreshResolutionOptions(Vector2Int current)
+    {
+        if (!resolutionDropdown) return;
+
+        var native = NativeSize();
+        resolutionOptions.Clear();
+        foreach (var res in Screen.resolutions)
+        {
+            var size = new Vector2Int(res.width, res.height);
+            if (size.x > native.x || size.y > native.y) continue;
+            if (!resolutionOptions.Contains(size)) resolutionOptions.Add(size);
+        }
+        resolutionOptions.Sort((a, b) => a.x != b.x ? b.x.CompareTo(a.x) : b.y.CompareTo(a.y));
+
+        var labels = new List<string>();
+        foreach (var size in resolutionOptions) labels.Add($"{size.x} × {size.y}");
+
+        int index = resolutionOptions.IndexOf(current);
+        if (index < 0)
+        {
+            resolutionOptions.Add(current);
+            labels.Add($"{current.x} × {current.y}（現在）");
+            index = resolutionOptions.Count - 1;
+        }
+
+        resolutionDropdown.ClearOptions();
+        resolutionDropdown.AddOptions(labels);
+        resolutionDropdown.SetValueWithoutNotify(index);
     }
 
     private void InitEffects()
@@ -162,34 +263,50 @@ public class Setting : MonoBehaviour
         if (reduceShakeToggle) reduceShakeToggle.isOn = GameSettings.ReduceShake;
     }
 
+    private void InitConversation()
+    {
+        if (textSpeedSlider)
+        {
+            textSpeedSlider.minValue = 0f;
+            textSpeedSlider.maxValue = 1f;
+            textSpeedSlider.wholeNumbers = false;
+            textSpeedSlider.SetValueWithoutNotify(GameSettings.TextSpeed);
+        }
+        if (autoAdvanceToggle) autoAdvanceToggle.SetIsOnWithoutNotify(GameSettings.AutoAdvance);
+        if (skipReadToggle) skipReadToggle.SetIsOnWithoutNotify(GameSettings.SkipRead);
+    }
+
     private void InitInfo()
     {
-        if (versionText) versionText.text = $"トムトムランド  Ver {Application.version}";
+        if (versionText) versionText.text = $"トコのトムトムランド  Ver {Application.version}";
     }
 
     private void InitTabs()
     {
-        if (soundTabButton) soundTabButton.onClick.AddListener(() => ShowTab(0));
-        if (displayTabButton) displayTabButton.onClick.AddListener(() => ShowTab(1));
-        if (effectTabButton) effectTabButton.onClick.AddListener(() => ShowTab(2));
-        if (infoTabButton) infoTabButton.onClick.AddListener(() => ShowTab(3));
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            int index = i;
+            if (tabs[i].Button) tabs[i].Button.onClick.AddListener(() => ShowTab(index));
+        }
     }
 
     private void ShowTab(int index)
     {
         currentTab = index;
-        if (soundGroup) soundGroup.SetActive(index == 0);
-        if (displayGroup) displayGroup.SetActive(index == 1);
-        if (effectGroup) effectGroup.SetActive(index == 2);
-        if (infoGroup) infoGroup.SetActive(index == 3);
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            var tab = tabs[i];
+            bool selected = i == index;
+            if (tab.Group) tab.Group.SetActive(selected);
 
-        // 選択中タブを少し強調（interactable を落として押下不能＝選択中表示を兼ねる）
-        if (soundTabButton) soundTabButton.interactable = index != 0;
-        if (displayTabButton) displayTabButton.interactable = index != 1;
-        if (effectTabButton) effectTabButton.interactable = index != 2;
-        if (infoTabButton) infoTabButton.interactable = index != 3;
+            // 選択中のタブは「押し込んだ絵＋金色の文字」で示す。押せないようにはしない
+            // （以前は interactable=false にしていたため、選んでいるタブが半透明で一番薄く見えていた）
+            if (tab.Image != null && tabSelectedSprite != null)
+                tab.Image.sprite = selected ? tabSelectedSprite : tab.NormalSprite;
+            if (tab.Label != null)
+                tab.Label.color = selected ? tabSelectedLabelColor : tab.NormalLabelColor;
+        }
 
-        // タブボタンを A で押すとそのボタンは押せなくなる（選択中表示）ので、戻り先をタブの中身にしておく
         if (focusScope != null)
         {
             var target = TabFocusTarget(index);
@@ -201,7 +318,7 @@ public class Setting : MonoBehaviour
 
     private void Bind()
     {
-        // サウンド: 即時反映 + 永続化
+        // サウンド: 即時反映（ディスクへは閉じるときに書き出す）
         if (bgmSlider)
             bgmSlider.onValueChanged.AddListener(value =>
             {
@@ -214,31 +331,37 @@ public class Setting : MonoBehaviour
             {
                 SoundManager.Instance.SetSEVolume(value);
                 GameSettings.SeVolume = value;
+                sePreviewAt = Time.unscaledTime + SePreviewDelay; // 動かし終わったら試し鳴らし
             });
 
-        // 画面: 即時反映 + 永続化
-        if (fullscreenToggle)
+        // 画面: 即時反映（保存は Unity が行う）
+        if (displayModeDropdown)
+            displayModeDropdown.onValueChanged.AddListener(OnDisplayModeChanged);
+        else if (fullscreenToggle)
             fullscreenToggle.onValueChanged.AddListener(isOn =>
-            {
-                GameSettings.Fullscreen = isOn;
-                Screen.fullScreen = isOn;
-            });
+                OnDisplayModeChanged(isOn ? ModeIndex(FullScreenMode.FullScreenWindow) : ModeIndex(FullScreenMode.Windowed)));
 
         if (resolutionDropdown)
             resolutionDropdown.onValueChanged.AddListener(index =>
             {
                 if (index < 0 || index >= resolutionOptions.Count) return;
-                var size = resolutionOptions[index];
-                GameSettings.Resolution = size;
-                Screen.SetResolution(size.x, size.y, GameSettings.Fullscreen);
+                ApplyScreen(resolutionOptions[index], Screen.fullScreenMode);
             });
 
-        // 演出・快適性: 永続化のみ（参照側が都度 GameSettings を見る）
+        // 演出・快適性: 参照側が都度 GameSettings を見る
         if (fastEffectsToggle)
             fastEffectsToggle.onValueChanged.AddListener(isOn => GameSettings.FastEffects = isOn);
 
         if (reduceShakeToggle)
             reduceShakeToggle.onValueChanged.AddListener(isOn => GameSettings.ReduceShake = isOn);
+
+        // 会話: 宴（ScenarioPlayer）が GameSettings.Changed を受けて反映する
+        if (textSpeedSlider)
+            textSpeedSlider.onValueChanged.AddListener(value => GameSettings.TextSpeed = value);
+        if (autoAdvanceToggle)
+            autoAdvanceToggle.onValueChanged.AddListener(isOn => GameSettings.AutoAdvance = isOn);
+        if (skipReadToggle)
+            skipReadToggle.onValueChanged.AddListener(isOn => GameSettings.SkipRead = isOn);
 
         // 閉じる
         closeBtn.onClick.AddListener(CloseSelf);
@@ -254,6 +377,66 @@ public class Setting : MonoBehaviour
         }
     }
 
+    // ---- 画面 ----
+
+    private static int ModeIndex(FullScreenMode mode)
+    {
+        if (mode == FullScreenMode.MaximizedWindow) mode = FullScreenMode.Windowed;
+        int i = Array.IndexOf(DisplayModes, mode);
+        return i >= 0 ? i : 0;
+    }
+
+    /// <summary>モニターの大きさ（デスクトップの解像度）。</summary>
+    private static Vector2Int NativeSize()
+    {
+        var display = Display.main;
+        if (display != null && display.systemWidth > 0 && display.systemHeight > 0)
+            return new Vector2Int(display.systemWidth, display.systemHeight);
+        var cur = Screen.currentResolution;
+        return new Vector2Int(cur.width, cur.height);
+    }
+
+    /// <summary>
+    /// 表示モードを変える。フルスクリーン系はモニターの大きさ、ウィンドウはモニターの約8割（16:9）にする
+    /// （モニターと同じ大きさのウィンドウはタイトルバーとタスクバーで下が切れるため）。
+    /// </summary>
+    private void OnDisplayModeChanged(int index)
+    {
+        if (index < 0 || index >= DisplayModes.Length) return;
+        var mode = DisplayModes[index];
+        var native = NativeSize();
+        var size = new Vector2Int(Screen.width, Screen.height);
+        if (mode == FullScreenMode.Windowed)
+        {
+            if (size.x >= native.x * 0.95f || size.y >= native.y * 0.95f) size = WindowedDefaultSize(native);
+        }
+        else
+        {
+            size = native;
+        }
+        ApplyScreen(size, mode);
+    }
+
+    private static Vector2Int WindowedDefaultSize(Vector2Int native)
+    {
+        int w = Mathf.RoundToInt(native.x * 0.8f);
+        int h = Mathf.RoundToInt(w * 9f / 16f);
+        if (h > native.y * 0.85f)
+        {
+            h = Mathf.RoundToInt(native.y * 0.8f);
+            w = Mathf.RoundToInt(h * 16f / 9f);
+        }
+        return new Vector2Int(Mathf.Max(640, w), Mathf.Max(360, h));
+    }
+
+    private void ApplyScreen(Vector2Int size, FullScreenMode mode)
+    {
+        Screen.SetResolution(size.x, size.y, mode);
+        // Screen.width などは次のフレームまで変わらないので、選択肢は変更先の値で作り直す
+        RefreshResolutionOptions(size);
+        if (displayModeDropdown) displayModeDropdown.SetValueWithoutNotify(ModeIndex(mode));
+    }
+
     private const string TitleSceneName = "TitleScene";
     private const string FightSceneName = "FightScene";
 
@@ -261,6 +444,7 @@ public class Setting : MonoBehaviour
     {
         if (isClosing) return;
         isClosing = true;
+        GameSettings.Save();
         OnCloseButtonClicked.OnNext(Unit.Default);
         SceneManager.UnloadSceneAsync("Setting");
     }
