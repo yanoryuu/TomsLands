@@ -498,16 +498,12 @@
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 1000000,
-          "effectText": "全施設の Lv2 への拡張を解禁"
+          "cost": 600000,
+          "effectText": "ほかの施設を Lv2 まで建てられる"
         },
         {
-          "cost": 4000000,
-          "effectText": "全施設の Lv3 への拡張と、祠の建設を解禁"
-        },
-        {
-          "cost": 10000000,
-          "effectText": "産業の土地スロット +1（産業投資は今後実装）"
+          "cost": 2400000,
+          "effectText": "ほかの施設を Lv3 まで建てられる"
         }
       ]
     },
@@ -517,129 +513,16 @@
       "requiredHallLevel": 0,
       "levels": [
         {
+          "cost": 400000,
+          "effectText": "配信の報酬に出るレリック +5種・スターターにレアが並ぶ"
+        },
+        {
           "cost": 1000000,
-          "effectText": "レリック Tier1（5種）が報酬の抽選に加わる"
+          "effectText": "報酬のレリック +9種・3択を辞退したときの買取 +50%"
         },
         {
-          "cost": 2500000,
-          "effectText": "レリック Tier2（4種）が加わる"
-        },
-        {
-          "cost": 5000000,
-          "effectText": "レリック Tier3（4種）が加わる"
-        }
-      ]
-    },
-    {
-      "id": "antique",
-      "facilityName": "骨董品店",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 4500000,
-          "effectText": "スターターレリックの候補に Rare が並ぶ"
-        },
-        {
-          "cost": 2500000,
-          "effectText": "レリック3択を辞退したときの買取額 +50%"
-        }
-      ]
-    },
-    {
-      "id": "shrine",
-      "facilityName": "祠",
-      "requiredHallLevel": 2,
-      "levels": [
-        {
-          "cost": 3000000,
-          "effectText": "レリック報酬の選択肢が 3 → 4 になる"
-        }
-      ]
-    },
-    {
-      "id": "bank",
-      "facilityName": "銀行",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 5000000,
-          "effectText": "借入枠の最終段階（20,000G）の拡張を解放"
-        },
-        {
-          "cost": 12000000,
-          "effectText": "借入の利息 50% → 45%"
-        },
-        {
-          "cost": 22000000,
-          "effectText": "借入の利息 45% → 40%"
-        }
-      ]
-    },
-    {
-      "id": "warehouse",
-      "facilityName": "倉庫",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 6000000,
-          "effectText": "持ち込み枠 +1（計3）"
-        },
-        {
-          "cost": 14000000,
-          "effectText": "持ち込み枠 +1（計4）"
-        },
-        {
-          "cost": 24000000,
-          "effectText": "持ち込み枠 +1（計5）"
-        }
-      ]
-    },
-    {
-      "id": "road",
-      "facilityName": "街道整備",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 2000000,
-          "effectText": "ラン開始時の初期資金 +1,000G"
-        },
-        {
-          "cost": 6000000,
-          "effectText": "初期資金 さらに +1,000G（計+2,000G）"
-        },
-        {
-          "cost": 13000000,
-          "effectText": "初期資金 さらに +1,000G（計+3,000G）"
-        }
-      ]
-    },
-    {
-      "id": "press",
-      "facilityName": "印刷所",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 4000000,
-          "effectText": "開始時フォロワー +500・注目 +10"
-        },
-        {
-          "cost": 9000000,
-          "effectText": "さらにフォロワー +500・注目 +10（計+1,000/+20）"
-        }
-      ]
-    },
-    {
-      "id": "artisan",
-      "facilityName": "職人組合",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 7000000,
-          "effectText": "ラン開始時から鍛冶屋 Lv2"
-        },
-        {
-          "cost": 16000000,
-          "effectText": "鍛冶屋の開発費 -15%"
+          "cost": 2400000,
+          "effectText": "報酬のレリック +13種・報酬の選択肢が4つになる"
         }
       ]
     },
@@ -649,61 +532,73 @@
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 7000000,
+          "cost": 400000,
           "effectText": "ラン開始時から情報屋 Lv2（金融商品が最初から使える）"
         },
         {
-          "cost": 16000000,
-          "effectText": "取引所の売買手数料 -1%"
+          "cost": 900000,
+          "effectText": "情報屋 Lv2 で開始・新聞の購読料 -25%"
+        },
+        {
+          "cost": 2000000,
+          "effectText": "情報屋 Lv2 で開始・新聞の購読料 -50%・取引所の手数料 -1%"
         }
       ]
     },
     {
-      "id": "workshop",
-      "facilityName": "工房区画",
+      "id": "bank",
+      "facilityName": "銀行",
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 6000000,
-          "effectText": "マシン設置枠 +1"
+          "cost": 300000,
+          "effectText": "出店への持ち込み上限 5万G → 10万G"
         },
         {
-          "cost": 15000000,
-          "effectText": "マシンの購入費 -15%"
+          "cost": 800000,
+          "effectText": "持ち込み上限 10万G → 20万G"
+        },
+        {
+          "cost": 1500000,
+          "effectText": "持ち込み上限 20万G → 40万G"
         }
       ]
     },
     {
-      "id": "farm",
-      "facilityName": "農場",
+      "id": "artisan",
+      "facilityName": "職人組合",
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 3000000,
-          "effectText": "毎朝 +所持金の5%G（朝レポート「村からの収穫」）"
+          "cost": 400000,
+          "effectText": "ラン開始時から鍛冶屋 Lv2"
         },
         {
-          "cost": 7000000,
-          "effectText": "毎朝 +所持金の10%G"
+          "cost": 1000000,
+          "effectText": "鍛冶屋 Lv2 で開始・鍛冶屋のレベルアップ費とマシンの購入費 -15%"
         },
         {
-          "cost": 14000000,
-          "effectText": "毎朝 +所持金の20%G"
+          "cost": 2200000,
+          "effectText": "鍛冶屋 Lv2 で開始・費用 -15%・マシンの設置枠 +1"
         }
       ]
     },
     {
-      "id": "training",
-      "facilityName": "訓練所",
+      "id": "plaza",
+      "facilityName": "広場",
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 5000000,
-          "effectText": "配信の売上 +5%"
+          "cost": 400000,
+          "effectText": "開始時フォロワー +500・注目 +10"
         },
         {
-          "cost": 12000000,
-          "effectText": "配信の売上 +10%"
+          "cost": 1000000,
+          "effectText": "開始時フォロワー +500・注目 +10・配信の売上 +5%"
+        },
+        {
+          "cost": 2200000,
+          "effectText": "開始時フォロワー +1,000・注目 +20・配信の売上 +10%"
         }
       ]
     }

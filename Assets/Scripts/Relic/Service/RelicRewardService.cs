@@ -5,7 +5,8 @@ using UnityEngine;
 
 /// <summary>
 /// レリックの報酬抽選と「配信リザルト3択」の保留管理。
-/// - 抽選はレア度の重み付き・所持済みと呪いを除外
+/// - 抽選はレア度の重み付き・所持済みと呪いを除外。村の冒険者ギルドのレベルまでに解禁されたものだけ（unlockGuildLevel）
+/// - 選択肢の数・辞退の買取額も冒険者ギルドで増える（VillageEffects）
 /// - 配信勝利時に BattleResultHandler が QueueBattleReward() を呼び、
 ///   TomsShopPresenter がホーム復帰時に PendingChoices を3択UIで表示する
 /// （保留は RelicInventoryModel 経由で relics.json に保存する: 選ぶ前に終了しても続きからで出し直す）
@@ -43,8 +44,10 @@ public class RelicRewardService
     /// <summary>レア度重み付きで count 個の候補を抽選する（重複・所持済み・呪い除外）。</summary>
     public List<RelicDefinition> PickChoices(int count)
     {
+        int unlockedTier = VillageEffects.Current.RelicUnlockTier;
         var pool = inventory.AllRelics
-            .Where(r => !string.IsNullOrEmpty(r.relicId) && !r.isCurse && !inventory.Has(r.relicId))
+            .Where(r => !string.IsNullOrEmpty(r.relicId) && !r.isCurse && !inventory.Has(r.relicId)
+                        && r.unlockGuildLevel <= unlockedTier)
             .ToList();
 
         var result = new List<RelicDefinition>();
@@ -88,7 +91,7 @@ public class RelicRewardService
     {
         if (PendingChoices.Count > 0) return;
 
-        var choices = PickChoices(GameConst.RelicRewardChoiceCount);
+        var choices = PickChoices(VillageEffects.Current.RelicChoiceCount(GameConst.RelicRewardChoiceCount));
         if (choices.Count == 0)
         {
             Debug.Log("[Relic] 報酬候補がありません（全所持 or マスター未登録）");
@@ -117,7 +120,7 @@ public class RelicRewardService
     {
         if (PendingChoices.Count == 0) return 0;
         var best = PendingChoices.Max(c => c.rarity);
-        return GameConst.RelicDeclineGold(best);
+        return VillageEffects.Current.ApplyDeclineGold(GameConst.RelicDeclineGold(best));
     }
 
     /// <summary>保留中の3択を辞退してゴールドに換える。もらえる額を返す（保留なしは0、入金は呼び出し側）。</summary>

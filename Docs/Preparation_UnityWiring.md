@@ -69,10 +69,13 @@ PreparationScene はモックアップC（`Docs/mockups/prep_C_summary.png`、�
 | `relicScroll` / `relicPrevButton` / `relicNextButton` | レリック一覧の ScrollRect と ◀ ▶ ボタン | ◀ ▶ で横スクロール（スクロールのみ） |
 | `flyerPriceText` / `appraisalPriceText` / `gracePriceText` | スタートダッシュ各カードの価格札 TMP | 名前と価格 `N,NNNG` を分けて表示（名前ラベルに「名前（N,NNNG）」の1行） |
 
-- 持ち込みの丸め・クランプは `PreparationModel.SetCarry(amount, carryMax)`（上限が1,000の倍数でなくても上限ちょうどまで可）。
+- 持ち込みの丸め・クランプは `PreparationModel.SetCarry(amount, carryMax)`（2026-10 から 10,000G 刻み。上限が刻みの倍数でなくても上限ちょうどまで可）。
+  上限は村の銀行レベルで 5万 / 10万 / 20万 / 40万G（`preparation.bankCarryLimits`）。持ち込みはクリアすると村資金へ戻るが、破産すると戻らない。
+- 難易度ボタンの文字の下に「配信N回・A〜B日」を出す（`PreparationView.SetDifficultyDetails`。日数はモード定義の dungeonCount × (店の日 min〜max + 配信の日1)）。
+- スターターレリックの候補: 呪い以外の Common。村の冒険者ギルド Lv1 以上なら、ギルドで解禁済みのレアも並ぶ。
   Presenter が `OnCarrySliderChanged` を購読して `RefreshAll` する。
 - スタートダッシュの価格は `GameConstSettings.asset` の `preparation.flyerCost / appraisalCost / graceCost`
-  （現在 100,000 / 150,000 / 200,000G）。Presenter が名前と価格を分けて `UpdateStartDash` に渡す。
+  （2026-10 から 300,000 / 500,000 / 700,000G。村の施設の Lv1 と取り合う値段）。Presenter が名前と価格を分けて `UpdateStartDash` に渡す。
 - 画面を開くときに `UIFx.PanelOpen`、レリック・難易度などの選択時に `Pop` を入れている。
 - 使っている素材: 背景・スタートダッシュのアイコン・チェックバッジ・金の選択枠は `Assets/UI/Preparation/`。
   ボタン・枠は既存素材（追加/文字なし0−0、新聞/4−0・4−1購読する・8紙面ベース・9題字枠、鍛冶屋・道具屋/6枠・7・10・11、

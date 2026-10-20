@@ -162,7 +162,7 @@ public class NewspaperPresenter : IStartable, IDisposable
                 companyId = c.companyId,
                 companyName = c.companyName,
                 emblem = view.EmblemOf(c.companyId),
-                price = c.price,
+                price = NewspaperSubscriptionModel.PriceOf(c),
                 contractTurns = c.contractTurns,
                 trust = c.trustRating,
                 speed = c.speedRating,
@@ -503,7 +503,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         int turn = Turn;
         if (!subscriptions.CanSubscribe(company, turn, Slots, tomsModel.PlayerMoney.Value)) return;
 
-        tomsModel.PurchaseItem(company.price);
+        tomsModel.PurchaseItem(NewspaperSubscriptionModel.PriceOf(company));
         subscriptions.Subscribe(company, turn);
         tomsModel.SavePlayerMoney();
         Save();

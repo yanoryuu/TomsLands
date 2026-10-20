@@ -29,6 +29,19 @@ public class ShopMachineModel
     /// <summary>設置状態の変化通知（UI再描画用）。</summary>
     public Subject<Unit> OnPlacementChanged { get; } = new();
 
+    /// <summary>購入費に掛ける率（1 = 定価。村の職人組合の割引をラン開始時・シーン読み込み時に渡す）。</summary>
+    public float PurchaseCostRate { get; set; } = 1f;
+
+    /// <summary>店レベルの設置枠に足す枠数（村の職人組合）。</summary>
+    public int ExtraSlots { get; set; }
+
+    /// <summary>実際に払う購入費（割引込み）。表示・支払い・撤去の返金はすべてこの額を基準にする。</summary>
+    public int GetPurchaseCost(ShopMachineData machine) =>
+        machine == null ? 0 : Mathf.Max(0, Mathf.RoundToInt(machine.cost * Mathf.Max(0f, PurchaseCostRate)));
+
+    /// <summary>撤去したときの返金額。</summary>
+    public int GetRemoveRefund(ShopMachineData machine) => Mathf.RoundToInt(GetPurchaseCost(machine) * RemoveRefundRate);
+
     public ShopMachineModel(List<ShopMachineData> machines)
     {
         this.machines = machines ?? new List<ShopMachineData>();
@@ -71,9 +84,10 @@ public class ShopMachineModel
         if (machine == null || tomsModel == null) return null;
         if (PlacedCount >= maxSlots) return null;                             // 設置枠
         if (machine.requiredShopLevel > tomsModel.ShopLevel.Value) return null;
-        if (tomsModel.PlayerMoney.Value < machine.cost) return null;
+        int cost = GetPurchaseCost(machine);
+        if (tomsModel.PlayerMoney.Value < cost) return null;
 
-        tomsModel.PurchaseItem(machine.cost);
+        tomsModel.PurchaseItem(cost);
         var placed = new PlacedMachine
         {
             PlacementId = Guid.NewGuid().ToString("N"),
@@ -86,7 +100,7 @@ public class ShopMachineModel
         SaveData();
         tomsModel.SavePlayerMoney();
         OnPlacementChanged.OnNext(Unit.Default);
-        Debug.Log($"[ShopMachine] 設置: {machine.machineName} {CountOf(machine.machineId)}台目 (-{machine.cost}G)");
+        Debug.Log($"[ShopMachine] 設置: {machine.machineName} {CountOf(machine.machineId)}台目 (-{cost}G)");
         return placed;
     }
 
@@ -97,7 +111,7 @@ public class ShopMachineModel
         var machine = placed != null ? GetMachine(placed.MachineId) : null;
         if (machine == null || placed == null) return false;
 
-        int refund = Mathf.RoundToInt(machine.cost * RemoveRefundRate);
+        int refund = GetRemoveRefund(machine);
         Placed.Remove(placed);
         tomsModel.AddRevenue(refund);
 

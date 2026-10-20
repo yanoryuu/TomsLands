@@ -54,13 +54,17 @@ public class NewspaperSubscriptionModel
         return best;
     }
 
+    /// <summary>購読料（村の酒場の割引込み）。表示・判定・支払いはすべてこの額。</summary>
+    public static int PriceOf(NewspaperCompanyData company) =>
+        company == null ? 0 : Math.Max(0, VillageEffects.Current.ApplyNewspaperPrice(company.price));
+
     /// <summary>購読できるか（枠・所持金・二重契約を見る）。</summary>
     public bool CanSubscribe(NewspaperCompanyData company, int turn, int slots, int money)
     {
         if (company == null) return false;
         if (IsSubscribed(company.companyId, turn)) return false;
         if (UsedSlots(turn) >= slots) return false;
-        return money >= Math.Max(0, company.price);
+        return money >= PriceOf(company);
     }
 
     /// <summary>契約を結ぶ。支払いは呼び出し側（TomsModel）で行う。</summary>
