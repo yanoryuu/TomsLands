@@ -225,14 +225,65 @@ public class PreparationSettingsData
 [Serializable]
 public class VillageSettingsData
 {
-    /// <summary>ランクリア時: 純資産 → 村資金への変換率。</summary>
+    // --- ラン終了 → 村資金の変換（Docs/Village_Meta_Design.md §4） ---
+    // 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え。クリア時は「持ち込み + 儲け × 率 × 難易度倍率」が村資金に入る
+    /// <summary>ランクリア時: 儲け → 村資金への変換率。</summary>
     public float conversionRate = 0.5f;
-    /// <summary>破産時: 手元現金 → 村資金への変換率（敗北の無害化）。</summary>
+    /// <summary>破産時: そのランの最高の儲け（所持金の最高値から求める）× 変換率 × この値。持ち込みは戻らない。</summary>
     public float bankruptcyConversionRate = 0.1f;
     /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>
     public float debtScalePerVillageLevel = 0f;
+    /// <summary>変換率に掛ける難易度ごとの倍率（index = GameModeId: Short / Medium / Long）。</summary>
+    public float[] difficultyConversionMultipliers = { 1f, 1.2f, 1.4f };
 
-    public VillageSettingsData Clone() => (VillageSettingsData)MemberwiseClone();
+    // --- ランク（儲け ÷ 難易度ごとの基準。A = 基準以上） ---
+    /// <summary>ランク A の基準となる儲け（index = GameModeId）。S = 基準×rankSRatio、B = ×rankBRatio、C = 0 以上、D = 赤字。</summary>
+    public int[] rankBaseProfits = { 60000, 150000, 300000 };
+    public float rankSRatio = 2f;
+    public float rankBRatio = 0.4f;
+
+    // --- 施設の効果（index = 施設レベル。0 = 未建設） ---
+    /// <summary>冒険者ギルド: 3択を辞退したときの買取額の倍率（このレベル以上で有効）。</summary>
+    public int guildDeclineBonusLevel = 2;
+    public float guildDeclineGoldMultiplier = 1.5f;
+    /// <summary>冒険者ギルド: このレベル以上で報酬の選択肢が +1。</summary>
+    public int guildExtraChoiceLevel = 3;
+    /// <summary>冒険者ギルド: このレベル以上でスターターレリックの候補にレアが並ぶ。</summary>
+    public int guildStarterRareLevel = 1;
+    /// <summary>酒場: このレベル以上で開始時の情報屋 Lv2。</summary>
+    public int tavernInfoBrokerLevel = 1;
+    /// <summary>酒場: 新聞の購読料の割引率。</summary>
+    public float[] tavernNewspaperDiscounts = { 0f, 0f, 0.25f, 0.5f };
+    /// <summary>酒場: 取引所（ファンド）の売買手数料の引き下げ幅（率のポイント）。</summary>
+    public float[] tavernFundFeeReductions = { 0f, 0f, 0f, 0.01f };
+    /// <summary>職人組合: このレベル以上で開始時の鍛冶屋 Lv2。</summary>
+    public int artisanBlacksmithLevel = 1;
+    /// <summary>職人組合: 鍛冶屋のレベルアップ費・マシン購入費の割引率。</summary>
+    public float[] artisanCostDiscounts = { 0f, 0f, 0.15f, 0.15f };
+    /// <summary>職人組合: マシン設置枠の追加数。</summary>
+    public int[] artisanMachineSlotAdds = { 0, 0, 0, 1 };
+    /// <summary>広場: 開始時のフォロワー・注目度の加算。</summary>
+    public int[] plazaStartFollowers = { 0, 500, 500, 1000 };
+    public int[] plazaStartAttention = { 0, 10, 10, 20 };
+    /// <summary>広場: 配信で売れた額への上乗せ率。</summary>
+    public float[] plazaStreamSalesBonuses = { 0f, 0f, 0.05f, 0.1f };
+
+    public VillageSettingsData Clone()
+    {
+        var clone = (VillageSettingsData)MemberwiseClone();
+        clone.difficultyConversionMultipliers = CopyOf(difficultyConversionMultipliers);
+        clone.rankBaseProfits = CopyOf(rankBaseProfits);
+        clone.tavernNewspaperDiscounts = CopyOf(tavernNewspaperDiscounts);
+        clone.tavernFundFeeReductions = CopyOf(tavernFundFeeReductions);
+        clone.artisanCostDiscounts = CopyOf(artisanCostDiscounts);
+        clone.artisanMachineSlotAdds = CopyOf(artisanMachineSlotAdds);
+        clone.plazaStartFollowers = CopyOf(plazaStartFollowers);
+        clone.plazaStartAttention = CopyOf(plazaStartAttention);
+        clone.plazaStreamSalesBonuses = CopyOf(plazaStreamSalesBonuses);
+        return clone;
+    }
+
+    private static T[] CopyOf<T>(T[] source) => source != null ? (T[])source.Clone() : Array.Empty<T>();
 }
 
 /// <summary>レリック（装備アイテム）関連の設定。</summary>
