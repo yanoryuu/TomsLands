@@ -29,7 +29,18 @@ public enum StreamingCommentTrigger
     DungeonCurse,
     DungeonReinforce,
     DungeonBossBuff,
+    // ── 賭けの立場・相場（SUMMARY E-8）。CSV の trigger 列はこの名前。末尾に足す ──
+    PriceSpike,         // 配信中に相場が急に上がった（{item} {price} {pct}）
+    BetOnHero,          // 配信開始: 店長が勇者の装備を抱えて勇者に張っている
+    BetOnDemon,         // 配信開始: 店長が魔王軍に出資して魔王側に張っている
+    VictoryBetDemon,    // 決着: 魔王側に張ったのに勇者が勝った
+    DefeatBetDemon,     // 決着: 魔王側に張って当たった（配当確定）
+    DefeatBetHero,      // 決着: 勇者に張って外れた
+    DemonSuperChat,     // 視聴者の魔王軍スパ（紫）への反応
 }
+
+/// <summary>この配信でプレイヤー（店長）がどちらに張っているか。配信コメントの出し分けに使う。</summary>
+public enum StreamingBetStance { None, Hero, Demon }
 
 public enum NicoCommentSize { Small, Medium, Big }
 

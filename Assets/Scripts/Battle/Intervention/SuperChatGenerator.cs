@@ -27,6 +27,8 @@ public sealed class SuperChatGenerator : IDisposable
     /// <summary>この配信で来た視聴者スパチャの件数（将来のフォロワー増加計算用）。</summary>
     public int Count { get; private set; }
     public int RedCount { get; private set; }
+    /// <summary>この配信で来た魔王軍スパ（紫）の件数。</summary>
+    public int DemonCount { get; private set; }
 
     public Observable<SuperChatInfo> OnSuperChat => _onSuperChat;
 
@@ -51,6 +53,7 @@ public sealed class SuperChatGenerator : IDisposable
         _heroName = heroName;
         Count = 0;
         RedCount = 0;
+        DemonCount = 0;
         IsRunning = true;
         _cts = new CancellationTokenSource();
         LoopAsync(_cts.Token).Forget();
@@ -102,14 +105,15 @@ public sealed class SuperChatGenerator : IDisposable
         string message = PickMessage(color);
         Count++;
         if (color == SuperChatColor.Red) RedCount++;
+        if (color == SuperChatColor.Purple) DemonCount++;
         _onSuperChat.OnNext(new SuperChatInfo(color, amount, message, isPlayer: false));
     }
 
     public SuperChatColor PickColor(int viewers, bool superBuzz)
     {
-        const int n = 7; // SuperChatColor の色数
+        const int n = 7; // 視聴者スパチャの7色（青〜赤）。8番目に魔王軍スパ（紫）を足す
         var w = _settings.colorWeights;
-        float[] weights = new float[n];
+        float[] weights = new float[n + 1];
         float viewerFactor = Mathf.Max(0, viewers) / Mathf.Max(1f, _settings.redViewerReference);
         for (int i = 0; i < n; i++)
         {
@@ -125,6 +129,8 @@ public sealed class SuperChatGenerator : IDisposable
             }
             weights[i] = baseW;
         }
+        // 魔王軍スパ: 赤と同じく同接で伸びる（超バズの倍率は掛けない。バズは勇者の配信の盛り上がりなので）
+        weights[n] = Mathf.Max(0f, _settings.demonColorWeight) * (1f + viewerFactor);
 
         float total = 0f;
         foreach (var x in weights) total += x;
@@ -135,15 +141,18 @@ public sealed class SuperChatGenerator : IDisposable
             r -= weights[i];
             if (r <= 0) return (SuperChatColor)i;
         }
-        return SuperChatColor.Red;
+        r -= weights[n];
+        return r <= 0 ? SuperChatColor.Purple : SuperChatColor.Red;
     }
 
     private int PickAmount(SuperChatColor color)
     {
         var ranges = _settings.amountRanges;
         int i = (int)color;
-        if (ranges == null || i >= ranges.Length) return 100 * (i + 1);
-        var r = ranges[i];
+        Vector2Int r;
+        if (color == SuperChatColor.Purple) r = _settings.demonAmountRange;
+        else if (ranges == null || i >= ranges.Length) return 100 * (i + 1);
+        else r = ranges[i];
         int min = Mathf.Min(r.x, r.y), max = Mathf.Max(r.x, r.y);
         int raw = _rng.Next(min, max + 1);
         // 見た目のキリをよくする（100G 未満は 10 刻み、それ以上は 100 刻み）
@@ -156,6 +165,7 @@ public sealed class SuperChatGenerator : IDisposable
         string[] pool = color switch
         {
             SuperChatColor.Red => _settings.redMessages,
+            SuperChatColor.Purple => _settings.demonMessages,
             SuperChatColor.Magenta or SuperChatColor.Orange or SuperChatColor.Yellow => _settings.midMessages,
             _ => _settings.lowMessages,
         };

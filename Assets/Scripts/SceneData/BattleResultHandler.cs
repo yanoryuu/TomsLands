@@ -88,10 +88,12 @@ public class BattleResultHandler : IStartable, IDisposable
         }
         else if (_outputData.Result == BattleResult.Victory)
         {
+            // 勇者側の配当: 装備の相場が上がる（×1.8、ボス撃破 ×2.2。直後の日送りで基準×3 に丸められる）
+            float winMul = ItemModel.HeroWinMultiplier(_outputData.DefeatedBossCount);
             if (!string.IsNullOrEmpty(_outputData.WeaponId))
-                _itemModel.BattleWinBonus(_outputData.WeaponId, 5);
+                _itemModel.BattleWinBonus(_outputData.WeaponId, winMul);
             if (!string.IsNullOrEmpty(_outputData.ArmorId))
-                _itemModel.BattleWinBonus(_outputData.ArmorId, 5);
+                _itemModel.BattleWinBonus(_outputData.ArmorId, winMul);
 
             // 配信勝利報酬: レリック3択を保留に積む（ホーム復帰時に選択UIが出る）
             _relicRewardService?.QueueBattleReward();
@@ -101,9 +103,17 @@ public class BattleResultHandler : IStartable, IDisposable
         else
         {
             if (!string.IsNullOrEmpty(_outputData.WeaponId))
-                _itemModel.BattleDefeatPenalty(_outputData.WeaponId, 2);
+                _itemModel.BattleDefeatPenalty(_outputData.WeaponId, ItemModel.HeroDefeatPriceDivisor);
             if (!string.IsNullOrEmpty(_outputData.ArmorId))
-                _itemModel.BattleDefeatPenalty(_outputData.ArmorId, 2);
+                _itemModel.BattleDefeatPenalty(_outputData.ArmorId, ItemModel.HeroDefeatPriceDivisor);
+
+            // 魔王側に張って当たった（防衛報酬を受け取った）ときも、勝ったときと同じくレリック3択を積む。
+            // 防衛報酬の受取累計（配当通知書の回収倍率）もここで記録する（精算と同じタイミング）
+            if (_outputData.IsDemonPayout)
+            {
+                _relicRewardService?.QueueBattleReward();
+                DemonPayoutHistory.Record(_outputData.DungeonKey, _outputData.DefenseReward);
+            }
 
             Debug.Log("[BattleResultHandler] Defeat penalties applied.");
         }
@@ -161,6 +171,7 @@ public class BattleResultHandler : IStartable, IDisposable
         // トコの一言用に、クリア前の勝敗・稼ぎを控えておく
         var talkResult = _outputData.Result;
         int talkEarnings = _outputData.TotalEarnings;
+        bool talkDemonPayout = _outputData.IsDemonPayout;
         RunHistory.RecordStreaming(talkResult, _outputData.SoldItems); // リザルトの振り返り用（途中終了は勝敗に数えない）
 
         // 結果をクリア（次回の戦闘まで誤発火しないように）
@@ -177,7 +188,7 @@ public class BattleResultHandler : IStartable, IDisposable
         // 途中終了には勝ち/負けの台詞しか無いので流さない
         if (!aborted)
             TokoTalk.PlayStreamingReturnAsync(
-                talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token).Forget();
+                talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token, talkDemonPayout).Forget();
     }
 
     public void Dispose()

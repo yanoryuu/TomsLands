@@ -33,9 +33,10 @@ public class SuperChatCardWidget : MonoBehaviour
         }
         if (rim != null)
         {
-            bool showRim = info.Color == SuperChatColor.Red || info.IsPlayer;
+            bool strong = info.Color == SuperChatColor.Red || info.Color == SuperChatColor.Purple;
+            bool showRim = strong || info.IsPlayer;
             rim.gameObject.SetActive(showRim);
-            rim.color = info.Color == SuperChatColor.Red ? Color.white : new Color(1f, 1f, 1f, 0.75f);
+            rim.color = strong ? Color.white : new Color(1f, 1f, 1f, 0.75f);
         }
     }
 
@@ -56,6 +57,8 @@ public class SuperChatCardWidget : MonoBehaviour
                 header = Hex(0xD2601A); body = Hex(0xEE8A2E); darkText = false; break;
             case SuperChatColor.Magenta:
                 header = Hex(0xB51F62); body = Hex(0xDC3D83); darkText = false; break;
+            case SuperChatColor.Purple: // 魔王軍スパ
+                header = Hex(0x4B2273); body = Hex(0x7A3FB0); darkText = false; break;
             default: // Red
                 header = Hex(0xA8241C); body = Hex(0xD63A2C); darkText = false; break;
         }

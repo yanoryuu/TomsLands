@@ -97,7 +97,7 @@ public class ItemPriceGraphView : MonoBehaviour
         else
         {
             if (currentPriceText != null)
-                currentPriceText.text = $"現在価格: {item.CurrentPrice.Value} G";
+                currentPriceText.text = $"配信価格: {item.CurrentPrice.Value} G";
 
             int totalChange = history.Count > 0 ? item.CurrentPrice.Value - history[0] : 0;
             if (totalChangeText != null)

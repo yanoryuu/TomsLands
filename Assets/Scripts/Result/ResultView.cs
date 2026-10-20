@@ -414,6 +414,8 @@ public class ResultView : MonoBehaviour
     private async UniTask<bool> RunAsync(Sequence seq, CancellationToken ct)
     {
         seq.SetLink(gameObject);
+        // 設定「演出を速くする」（EffectDurationScale 0.5）で倍速
+        seq.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
         _current = seq;
         _skipping = false;
         try
@@ -481,7 +483,7 @@ public class ResultView : MonoBehaviour
         float impact = at + 0.2f;
         seq.InsertCallback(impact, () => PlaySe(stampSe));
         seq.Insert(impact, rankStamp.DOPunchScale(new Vector3(-0.08f, -0.08f, 0f), 0.25f, 4, 0.5f));
-        if (statsPanel != null)
+        if (statsPanel != null && !GameSettings.ReduceShake) // 設定「画面シェイクを軽減」
             seq.Insert(impact, statsPanel.DOShakeAnchorPos(0.25f, 14f, 22, 90f, false, true));
 
         if (stampFlash != null)

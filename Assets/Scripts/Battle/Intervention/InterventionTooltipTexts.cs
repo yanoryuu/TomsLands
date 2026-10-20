@@ -38,7 +38,7 @@ public static class InterventionTooltipTexts
             }
             case HeroInterventionType.Skill:
                 return new Entry("スキル（青スパ）",
-                    $"勇者の次の攻撃が{Mul(s.skillMultiplier)}倍。敵をタップで狙える\n配信が盛り上がり、武器が売れやすくなる",
+                    $"勇者の次の攻撃が{Mul(s.skillMultiplier)}倍。敵をクリック（パッドは Y）で狙える\n配信が盛り上がり、武器が売れやすくなる",
                     SkillTitle);
             default:
                 return new Entry("必殺技（赤スパ）",

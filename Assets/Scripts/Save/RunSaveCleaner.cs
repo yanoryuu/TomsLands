@@ -25,6 +25,7 @@ public static class RunSaveCleaner
         NewspaperSaveStore.FileName, // 新聞の購読・スクラップ・既読
         NewsModel.ArcFileName,       // 新聞の連載で決まった分岐
         RunHistory.FileName, // リザルトの振り返り用（所持金推移・ハイライト）
+        DemonPayoutHistory.FileName, // 配当通知書の回収倍率（防衛報酬の受取累計）
     };
 
     /// <summary>
