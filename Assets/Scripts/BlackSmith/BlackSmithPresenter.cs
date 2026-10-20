@@ -369,6 +369,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         if (tomsModel.PlayerMoney.Value >= totalPrice)
         {
             Debug.Log($"{totalPrice}ゴールドのアイテムを購入");
+            item?.RecordAcquisition(quantity, BuyUnitPrice(item)); // 取得単価（在庫を増やす前に記録）
             itemModel.PurchaseItem(itemId, quantity);
             tomsModel.PurchaseItem(totalPrice);
             tomsModel.RecordProcurementSpend(totalPrice);

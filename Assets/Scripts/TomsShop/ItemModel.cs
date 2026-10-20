@@ -580,6 +580,7 @@ public class ItemModel
             if (canBuy <= 0) continue;
 
             int cost = canBuy * unitPrice;
+            item.RecordAcquisition(canBuy, unitPrice); // 取得単価（在庫を増やす前に記録）
             item.UpdateStock(item.Stock.Value + canBuy);
             tomsModel.PlayerMoney.Value -= cost;
             tomsModel.RecordProcurementSpend(cost);

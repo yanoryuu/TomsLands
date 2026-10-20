@@ -42,6 +42,7 @@ public class SellOrderModel
             OrderedPrice = item.CurrentPrice.Value,
             OrderedTurn = currentTurn,
             SettleTurn = currentTurn + Mathf.Max(1, delayTurns),
+            UnitCost = item.AverageCost,
         };
         PendingOrders.Add(order);
         RefreshEstimate();
@@ -98,6 +99,7 @@ public class SellOrderModel
                 OrderedPrice = order.OrderedPrice,
                 SettledPrice = settledPrice,
                 Income = income,
+                UnitCost = order.UnitCost,
             });
             result.BaseIncome = TomsModel.SaturatingAdd(result.BaseIncome, income);
 
@@ -108,6 +110,15 @@ public class SellOrderModel
         result.TotalIncome = marketing != null
             ? marketing.CalculateFinalRevenue(result.BaseIncome)
             : result.BaseIncome;
+
+        // 実現損益（F-1）: 倍率込みの入金を注文ごとに按分し、取得単価×数量を引く
+        double mul = result.BaseIncome > 0 ? (double)result.TotalIncome / result.BaseIncome : 1.0;
+        foreach (var s in result.Settled)
+        {
+            if (s.UnitCost < 0) { result.UnknownCostCount++; continue; }
+            result.KnownCostIncome = TomsModel.SaturatingAdd(result.KnownCostIncome, (int)Math.Min(int.MaxValue, Math.Round(s.Income * mul)));
+            result.KnownCostBasis = TomsModel.SaturatingAdd(result.KnownCostBasis, (int)Math.Min(int.MaxValue, (double)s.UnitCost * s.Quantity));
+        }
 
         RefreshEstimate();
         RunHistory.RecordSettlement(result); // リザルトの「一番儲かった商品」用

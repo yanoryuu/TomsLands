@@ -195,7 +195,10 @@ public class ShopMachineModel
         int produced = Mathf.Min(machine.dailyItemCount, room);
         int discarded = machine.dailyItemCount - produced;
         if (produced > 0)
+        {
+            runtime.RecordAcquisition(produced, 0); // 製造機の生成は取得単価 0G
             runtime.UpdateStock(runtime.Stock.Value + produced);
+        }
         string line = $"{machine.machineName}: {runtime.ItemName} ×{produced}";
         if (discarded > 0) line += $"（在庫満杯のため{discarded}個破棄）";
         result.Lines.Add(line);
@@ -239,6 +242,7 @@ public class ShopMachineModel
         int produced = Mathf.Min(producible, room);
         if (produced > 0)
         {
+            runtime.RecordAcquisition(produced, 0); // 製造機の生成は取得単価 0G
             runtime.UpdateStock(runtime.Stock.Value + produced);
             placed.ProductionProgress -= produced * master.basePrice;
             result.ProducedAnyItem = true;

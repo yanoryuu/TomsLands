@@ -592,6 +592,49 @@ public class GameFlowManager : IDisposable, IStartable
     }
 
     /// <summary>
+    /// 表示用: 次の配信（寄り道中は今日の配信）がこのランで何回目か（upcoming、1 始まり。もう無ければ 0）と、配信の総数（total）。
+    /// HUD の「配信 2/4」と、最後の配信の知らせ（K-11）に使う。
+    /// </summary>
+    public void GetStreamProgress(out int upcoming, out int total)
+    {
+        upcoming = 0;
+        total = 0;
+        if (_gameFlow == null) return;
+        // 寄り道中は今のノードが配信。それ以外は次のノードから先で最初の配信
+        int firstUpcomingIndex = IsAwaitingStream.Value ? _currentIndex : _currentIndex + 1;
+        for (int i = 0; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType != GameEvent.Battle) continue;
+            total++;
+            if (upcoming == 0 && i >= firstUpcomingIndex) upcoming = total;
+        }
+    }
+
+    /// <summary>表示用: 次の配信がこのランの最後の配信か（配信が残っていなければ false）。</summary>
+    public bool IsUpcomingStreamFinal()
+    {
+        GetStreamProgress(out int upcoming, out int total);
+        return upcoming > 0 && upcoming == total;
+    }
+
+    /// <summary>
+    /// 表示用: 今日までに配信した日（ターン番号）の一覧。価格チャートの「配信の印」に使う。
+    /// 寄り道中の今日の配信はまだ決着していないので含めない。
+    /// </summary>
+    public List<int> GetPastStreamTurns()
+    {
+        var result = new List<int>();
+        if (_gameFlow == null) return result;
+        int last = IsAwaitingStream.Value ? _currentIndex - 1 : _currentIndex;
+        for (int i = 0; i <= last && i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType == GameEvent.Battle)
+                result.Add(CalculateTurnNumber(i));
+        }
+        return result;
+    }
+
+    /// <summary>
     /// 返済日の朝、現金が返済額に足りないときに、今日入金予定の売り注文を前倒しで約定して入金する。
     /// 入金は通常その日の夜（営業サマリー）だが、返済の判定は朝なので、
     /// 「前日に並べて現金化した分」が数えられずに破産してしまうのを防ぐ。
