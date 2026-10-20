@@ -223,7 +223,7 @@ public class VillagePresenter : IStartable, IDisposable
         view.UpdateHud(model.VillageFunds, villageLevel);
 
         var population = view.Population;
-        if (population != null) population.Apply(villageLevel, animatePopulation);
+        if (population != null) population.ApplyScaled(villageLevel, model.MaxVillageLevel, animatePopulation);
 
         foreach (var plot in view.Plots)
         {

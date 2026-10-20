@@ -36,6 +36,9 @@ public class VillageModel
     /// <summary>村の総合Lv（全施設レベルの合計）。</summary>
     public int VillageLevel => facilities.Sum(f => GetLevel(f.facilityId));
 
+    /// <summary>全施設を最大まで建てたときの総合Lv。</summary>
+    public int MaxVillageLevel => facilities.Sum(f => f != null ? f.MaxLevel : 0);
+
     public int HallLevel => GetLevel(HallId);
 
     public int GetLevel(string facilityId) => metaProgress.GetFacilityLevel(facilityId);
