@@ -783,14 +783,14 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                     string total = remainingDays > 1 ? $"（残り{remainingDays}日 約{(long)perDay * remainingDays:N0}G）" : "";
                     return $"目安 1日 {Signed(perDay)}G{total}";
                 }
-                case RelicStatId.DebtAmountMul:
+                case RelicStatId.DebtAmountMul when m.op == RelicOp.Mul:
                 {
                     int next = DebtCalculator.GetAmount(tomsShopModel.DebtCycle.Value + 1, tomsShopModel, relicResolver);
                     int diff = Mathf.RoundToInt(next * (factor - 1f));
                     if (diff == 0) break;
                     return $"目安 次の納付で {Signed(diff)}G";
                 }
-                case RelicStatId.DividendMul:
+                case RelicStatId.DividendMul when m.op == RelicOp.Mul:
                 {
                     int dividend = itemModel.CalculateDividendIncome();
                     int perDay = Mathf.RoundToInt(dividend * (factor - 1f));
