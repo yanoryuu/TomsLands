@@ -38,6 +38,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private ItemTypeData.ItemAttribute? nextDungeonAttr;
     private readonly DungeonIntelModel dungeonIntel;
     private readonly MetaProgressModel metaProgress;
+    private readonly ScrapbookModel scrapbook;
 
     /// <summary>
     /// 初回チュートリアルの「オート購入（全額・調整不可）だけ」状態。
@@ -57,8 +58,10 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         HeroModel heroModel,
         RelicEffectResolver relicResolver,
         DungeonIntelModel dungeonIntel,
-        MetaProgressModel metaProgress)
+        MetaProgressModel metaProgress,
+        ScrapbookModel scrapbook = null)
     {
+        this.scrapbook = scrapbook;
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
         this.itemModel = itemModel;
@@ -250,8 +253,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 blackSmithView.HideBudgetPopup();
                 if (tutorialAutoBuyOnly)
                 {
-                    // 初回チュートリアル: 予算は所持金全額・方針はおすすめ順で固定
-                    HandleAutoBuy(tomsModel.PlayerMoney.Value, AutoBuyStrategy.Recommend);
+                    // 初回チュートリアル: 予算は所持金全額で固定。方針だけは自分で選ばせる（K-5。最初の5分で一度は「自分で選んだ」にする）
+                    HandleAutoBuy(tomsModel.PlayerMoney.Value, x.strategy);
                     CompleteTutorialAutoBuy();
                     return;
                 }
@@ -495,6 +498,39 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         }
     }
 
+    private static readonly Color StreamMarkerColor = new(1f, 0.82f, 0.3f, 1f);
+    private static readonly Color ScrapMarkerColor = new(0.93f, 0.9f, 0.82f, 1f);
+
+    /// <summary>
+    /// チャートの出来事の印（G-12）: 配信した日（金）と、貼った記事が載った日（紙色）。
+    /// どの記事がこの銘柄に効いたかは出さない（Docs/News_Spec.md §9.3「記事→銘柄のリンクは作らない」）。
+    /// 履歴の末尾が今日なので、i 番目は「今日 −(末尾からの距離)」の日。
+    /// </summary>
+    private List<PriceChartView.Marker> BuildChartMarkers(RuntimeItemData runtime)
+    {
+        var result = new List<PriceChartView.Marker>();
+        int n = runtime.ShopPriceHistory.Count;
+        if (n < 2) return result;
+        int today = gameFlowManager.CurrentTurn.Value;
+        int IndexOf(int turn) => n - 1 - (today - turn);
+
+        foreach (int turn in gameFlowManager.GetPastStreamTurns())
+        {
+            int i = IndexOf(turn);
+            if (i >= 0 && i < n) result.Add(new PriceChartView.Marker(i, StreamMarkerColor));
+        }
+        if (scrapbook != null)
+        {
+            var seen = new HashSet<int>();
+            foreach (var scrap in scrapbook.Pinned)
+            {
+                int i = IndexOf(scrap.publishTurn);
+                if (i >= 0 && i < n && seen.Add(i)) result.Add(new PriceChartView.Marker(i, ScrapMarkerColor));
+            }
+        }
+        return result;
+    }
+
     /// <summary>
     /// 仕入れの実効単価（レリックの仕入れ割引 ProcurementCostMul 適用後）。
     /// 注文ウィジェットの表示・購入上限・決済は必ずこれを使う（表示と請求のズレ防止）。
@@ -552,7 +588,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         int currentCount = blackSmithModel.itemCount.TryGetValue(itemId, out var entry) ? entry.count.Value : 0;
         blackSmithModel.SetItemCount(itemId, Mathf.Min(currentCount, quantityLimit), quantityLimit);
 
-        panel.ShowItem(runtime, basePrice, ItemModel.ExpectedRevenueOf(runtime));
+        panel.ShowItem(runtime, basePrice, ItemModel.ExpectedRevenueOf(runtime), markers: BuildChartMarkers(runtime));
         // 注文ウィジェットの単価はレリック割引適用後の実効単価にする
         panel.SetPrice(BuyUnitPrice(runtime));
 

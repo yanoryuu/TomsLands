@@ -103,7 +103,9 @@ public class ItemDetailPanel : MonoBehaviour
 
     /// <summary>選択された銘柄の情報をパネルに表示する（チャート・市場分析を更新）。</summary>
     /// <param name="useBattleHistory">true=配信中の価格履歴（BattlePriceHistory）をチャートに表示する。バトル中の補充ポップアップ用</param>
-    public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore, bool useBattleHistory = false)
+    /// <param name="markers">チャートに立てる出来事の印（配信・貼った記事。G-12）。null なら印なし</param>
+    public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore, bool useBattleHistory = false,
+        System.Collections.Generic.IReadOnlyList<PriceChartView.Marker> markers = null)
     {
         Root.SetActive(true);
         ApplyPadNavigation();
@@ -122,9 +124,9 @@ public class ItemDetailPanel : MonoBehaviour
 
         // 保有数は仕入れで増えるので、この銘柄を出している間は追従させる
         stockSubscription?.Dispose();
-        stockSubscription = runtime.Stock.Subscribe(stock =>
+        stockSubscription = runtime.Stock.Subscribe(_ =>
         {
-            if (salesRateText) salesRateText.text = $"保有 {stock:N0}個";
+            if (salesRateText) salesRateText.text = HoldingText(runtime);
         });
 
         if (priceChart)
@@ -132,7 +134,11 @@ public class ItemDetailPanel : MonoBehaviour
             if (useBattleHistory)
                 priceChart.SetData(runtime.BattlePriceHistory); // 配信中の価格変動（需要系列なし）
             else
+            {
                 priceChart.SetData(runtime.ShopPriceHistory, runtime.ShopDemandHistory);
+                // 基準価格の点線・平均取得単価の線・出来事の印（G-12）。縦軸は基準価格の 0.5〜1.8 倍に固定
+                priceChart.SetGuides(basePrice, runtime.HasKnownCost ? runtime.AverageCost : (int?)null, markers);
+            }
         }
 
         unitPrice = runtime.CurrentPrice.Value;
@@ -145,8 +151,15 @@ public class ItemDetailPanel : MonoBehaviour
     {
         if (demandText)     demandText.text = $"需要 {runtime.Demand.Value:P0}";
         if (basePriceText)  basePriceText.text = $"基準価 {basePrice:N0}G";
-        if (currentPriceText) currentPriceText.text = $"現在 {runtime.CurrentPrice.Value:N0}G";
-        if (salesRateText)  salesRateText.text = $"保有 {runtime.Stock.Value:N0}個";
+        if (currentPriceText)
+        {
+            // いま基準価格より高いのか安いのかを数字でも（G-12）
+            float vsBase = basePrice > 0 ? (float)(runtime.CurrentPrice.Value - basePrice) / basePrice : 0f;
+            currentPriceText.text = basePrice > 0 && Mathf.Abs(vsBase) >= 0.005f
+                ? $"現在 {runtime.CurrentPrice.Value:N0}G <size=75%>({FormatRate(vsBase)})</size>"
+                : $"現在 {runtime.CurrentPrice.Value:N0}G";
+        }
+        if (salesRateText)  salesRateText.text = HoldingText(runtime);
         if (wasSoldText)    wasSoldText.gameObject.SetActive(false);
         if (recommendText)  recommendText.text = $"現在の期待収益 {recommendScore:N0}";
         if (dividendText)
@@ -157,6 +170,22 @@ public class ItemDetailPanel : MonoBehaviour
                 dividendText.text = $"配当 {runtime.DividendPerTurn:N0}G/日・個（保有で毎日入金）";
         }
     }
+
+    /// <summary>
+    /// 「保有 12個・平均 540G (+13%)」。取得単価が分からない在庫（古いセーブ）は「保有 12個」だけ（F-1）。
+    /// 騰落は金色（含み益）・赤（含み損）。
+    /// </summary>
+    private static string HoldingText(RuntimeItemData runtime)
+    {
+        string head = $"保有 {runtime.Stock.Value:N0}個";
+        if (!runtime.HasKnownCost) return head;
+        var rate = runtime.CostChangeRate;
+        if (!rate.HasValue) return $"{head}・平均 {runtime.AverageCost:N0}G";
+        string color = rate.Value >= 0f ? "#E8A33D" : "#E06A5A";
+        return $"{head}・平均 {runtime.AverageCost:N0}G <color={color}>({FormatRate(rate.Value)})</color>";
+    }
+
+    private static string FormatRate(float rate) => $"{(rate >= 0 ? "+" : "")}{rate * 100f:0}%";
 
     // === 注文表示 ===
 
