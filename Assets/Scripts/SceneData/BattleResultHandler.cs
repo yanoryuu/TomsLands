@@ -77,6 +77,16 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
+        // 村の広場: 配信で売れた額に上乗せ（途中終了でも売れた分には付く）
+        int streamBonus = VillageEffects.Current.StreamSalesBonusGold(RawStreamSales(_outputData.SoldItems));
+        if (streamBonus > 0)
+        {
+            _tomsModel.AddRevenue(streamBonus);
+            _tomsModel.SavePlayerMoney();
+            Debug.Log($"[BattleResultHandler] 村の広場: 配信の売上に +{streamBonus}G");
+        }
+        RunHistory.RecordStreamEarnings(_outputData.TotalEarnings, _inputData.DungeonKey.ToString(), streamBonus);
+
         // 途中終了（配信終了ボタン）は勝ちでも負けでもない。売上の精算だけして、
         // 勝敗ボーナス/ペナルティ・経験値・最低保証レベルアップ・属性波及・レリック3択・戦績はすべて付けない
         bool aborted = _outputData.Result == BattleResult.Abort;
@@ -178,6 +188,19 @@ public class BattleResultHandler : IStartable, IDisposable
         if (!aborted)
             TokoTalk.PlayStreamingReturnAsync(
                 talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token).Forget();
+    }
+
+    /// <summary>配信中に売れた額の合計（Revenue 未設定なら品出し時価格×個数）。</summary>
+    private static int RawStreamSales(List<BattleOutputSoldItem> soldItems)
+    {
+        if (soldItems == null) return 0;
+        int total = 0;
+        foreach (var s in soldItems)
+        {
+            if (s == null) continue;
+            total += s.Revenue > 0 ? s.Revenue : s.SoldQuantity * s.SoldPrice;
+        }
+        return total;
     }
 
     public void Dispose()

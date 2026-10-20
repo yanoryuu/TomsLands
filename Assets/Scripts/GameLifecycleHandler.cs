@@ -25,6 +25,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly RelicInventoryModel _relicInventory;
     private readonly RunSetupData _runSetupData;
     private readonly PendingEventData _pendingEventData;
+    private readonly MetaProgressModel _metaProgress;
     private readonly CompositeDisposable _disposables = new();
 
     // コンストラクタ（依存関係はVContainerが注入）
@@ -44,7 +45,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         ShopMachineModel shopMachineModel,
         RelicInventoryModel relicInventory,
         RunSetupData runSetupData,
-        PendingEventData pendingEventData)
+        PendingEventData pendingEventData,
+        MetaProgressModel metaProgress)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -62,6 +64,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _relicInventory = relicInventory;
         _runSetupData = runSetupData;
         _pendingEventData = pendingEventData;
+        _metaProgress = metaProgress;
     }
 
     public void Start()
@@ -69,6 +72,11 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // ダンジョンカタログの初期化（共通）
         var dungeonCatalog = _dungeonRepository.CreateCatalog();
         _dungeonRepository.SetCatalog(dungeonCatalog);
+
+        // 村の職人組合: マシンの購入費の割引と設置枠の追加（ラン中は施設レベルが変わらないので毎回同じ値）
+        var village = VillageEffects.Current;
+        _shopMachineModel.PurchaseCostRate = 1f - village.CostDiscount;
+        _shopMachineModel.ExtraSlots = village.MachineSlotAdd;
 
         // 新規ランの判定。NewGame はタイトルの「初めから」と準備シーンの出店でだけ立つ
         // （TomsShop 入場後は下で Continue に戻すので、シーン帰還時に NewGame のことはない）。
@@ -167,11 +175,23 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _relicInventory.Clear();
 
         // 準備シーンの設定（借入・持ち込み・スターターレリック・スタートダッシュ）を適用
+        bool hadSetup = _runSetupData != null && _runSetupData.HasSetup;
+        int carried = hadSetup ? _runSetupData.CarriedGold : 0;
         ApplyRunSetup();
+
+        // 村の施設の開始時の効果（情報屋・鍛冶屋の初期レベル、広場のフォロワー・注目）
+        ApplyVillageStartBonuses();
+
+        // 儲け（純資産 − 初期資金 − 持ち込み − 立て替え）の計算用に、このランの元手を記録する
+        RunHistory.RecordRunStart(carried,
+            _metaProgress != null && _metaProgress.HasSeenTutorial(TutorialSteps.StepFundsAdvanceGranted));
 
         // --- フロー選択（自動/手動）とシードを確定して保存 ---
         bool useAuto = _startModeData.UseAutoGeneration;
         GameModeId mode = _startModeData.SelectedMode;
+        // 1周目（準備シーンを通らずに店で直接開店する初回）は短いラン（かんたん）にして、早く決着と村に届かせる
+        if (!hadSetup && TutorialSteps.ShouldStartDirectlyInShop(_metaProgress))
+            mode = GameModeId.Short;
         int seed = GameConst.FlowGeneration.randomSeed != 0
             ? GameConst.FlowGeneration.randomSeed
             : unchecked((int)DateTime.Now.Ticks);
@@ -241,6 +261,31 @@ public class GameLifecycleHandler : IStartable, IDisposable
 
         // 一度使ったら無効化（別スロットへの漏れ防止。StartModeData.SetContinue と同じパターン）
         _runSetupData.Clear();
+    }
+
+    /// <summary>
+    /// 村の施設の開始時の効果を新規ランへ適用する（VillageEffects。施設が無ければ何もしない）。
+    /// </summary>
+    private void ApplyVillageStartBonuses()
+    {
+        var village = VillageEffects.Current;
+        if (village.StartInfoBrokerLv2 && _tomsModel.InfoBrokerLevel.Value < 2)
+        {
+            _tomsModel.InfoBrokerLevel.Value = 2;
+            Debug.Log("[Village] 酒場: 情報屋 Lv2 で開始");
+        }
+        if (village.StartBlacksmithLv2 && _tomsModel.BlacksmithLevel.Value < 2)
+        {
+            _tomsModel.BlacksmithLevel.Value = 2;
+            Debug.Log("[Village] 職人組合: 鍛冶屋 Lv2 で開始");
+        }
+        if (village.StartFollowers > 0 || village.StartAttention > 0)
+        {
+            _shopStatusModel.ChangeFollowers(village.StartFollowers);
+            _shopStatusModel.ChangeAttention(village.StartAttention);
+            _shopStatusModel.SaveData();
+            Debug.Log($"[Village] 広場: フォロワー+{village.StartFollowers}, 注目+{village.StartAttention}");
+        }
     }
 
     /// <summary>
