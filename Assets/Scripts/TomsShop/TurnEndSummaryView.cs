@@ -26,6 +26,10 @@ public class TurnEndSummaryView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI settledIncomeText;
     [Tooltip("本日出した売り注文の見込み額（明日の営業後に入金）")]
     [SerializeField] private TextMeshProUGUI pendingIncomeText;
+    [Tooltip("本日の入金の値（サマリーの主役。左列1行目）。配線されていれば settledIncomeText（旧・シーン側の1行表示）は隠す")]
+    [SerializeField] private TextMeshProUGUI incomeValueText;
+    [Tooltip("明日の夜に入金の値（左列2行目）。配線されていれば pendingIncomeText（旧・シーン側の1行表示）は隠す")]
+    [SerializeField] private TextMeshProUGUI pendingValueText;
     [Tooltip("本日の入金の見出し（入金が無く注文だけの日は「本日の注文」に変える）")]
     [SerializeField] private TextMeshProUGUI settledIncomeLabel;
     [Tooltip("明日入金の見出し")]
@@ -171,22 +175,33 @@ public class TurnEndSummaryView : MonoBehaviour
         if (pendingIncomeLabel != null)
             pendingIncomeLabel.text = orderOnly ? "入金" : "明日の夜に入金";
 
-        if (settledIncomeText != null)
+        // 左列の行に配線されていれば、旧・1行表示（シーン側で足したテキスト）は隠して行のほうを使う
+        bool rows = incomeValueText != null;
+        if (rows)
+        {
+            if (settledIncomeText != null && settledIncomeText != incomeValueText) settledIncomeText.gameObject.SetActive(false);
+            if (pendingIncomeText != null && pendingIncomeText != pendingValueText) pendingIncomeText.gameObject.SetActive(false);
+        }
+        var income = rows ? incomeValueText : settledIncomeText;
+        var pending = rows ? pendingValueText : pendingIncomeText;
+        labeled &= rows;
+
+        if (income != null)
         {
             int target = orderOnly ? pendingEstimate : settledIncome;
             string prefix = labeled ? "+" : (orderOnly ? "本日の注文 +" : "本日の入金 +");
-            PlayIncomeCount(target, prefix);
+            PlayIncomeCount(income, target, prefix);
         }
 
-        if (pendingIncomeText != null)
+        if (pending != null)
         {
-            if (orderOnly) pendingIncomeText.text = "明日の夜";
-            else pendingIncomeText.text = labeled ? $"+{pendingEstimate:N0}G" : $"明日の夜に入金 +{pendingEstimate:N0}G";
+            if (orderOnly) pending.text = "明日の夜";
+            else pending.text = labeled ? $"+{pendingEstimate:N0}G" : $"明日の夜に入金 +{pendingEstimate:N0}G";
         }
     }
 
     /// <summary>本日の入金を 0 から数え上げる（金色。0.6秒 OutCubic）。演出を速くする設定に従う。</summary>
-    private void PlayIncomeCount(int target, string prefix)
+    private void PlayIncomeCount(TextMeshProUGUI settledIncomeText, int target, string prefix)
     {
         if (!settledColorCaptured)
         {

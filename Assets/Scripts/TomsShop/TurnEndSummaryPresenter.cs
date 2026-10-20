@@ -191,7 +191,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     }
 
     /// <summary>
-    /// 本日の入金の明細（F-2）: 値動きの大きかった銘柄を3行まで、倍率の内訳、実現損益（F-1）。
+    /// 本日の入金の明細（F-2）: 値動きの大きかった銘柄を2行まで、倍率の内訳、実現損益（F-1）。
     /// 何も約定していない日は空文字（パネル側で欄を隠す）。
     /// </summary>
     private static string BuildDetailText(TurnEndDayResult day)
@@ -203,7 +203,7 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         var rows = s.Settled
             .OrderByDescending(o => (long)Mathf.Abs(o.SettledPrice - o.OrderedPrice) * o.Quantity)
             .ThenByDescending(o => o.Income)
-            .Take(3);
+            .Take(2);
         foreach (var o in rows)
         {
             float change = o.OrderedPrice > 0 ? (float)(o.SettledPrice - o.OrderedPrice) / o.OrderedPrice : 0f;
@@ -212,7 +212,6 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
             if (moved) line += $"（{FormatPercent(change)}）";
             sb.AppendLine(moved ? $"<color={(change > 0 ? GoldHex : GrayHex)}>{line}</color>" : line);
         }
-        if (s.Settled.Count > 3) sb.AppendLine($"ほか {s.Settled.Count - 3}品");
 
         // 倍率の内訳（1 倍のものは出さない）
         var factors = new List<string>();
