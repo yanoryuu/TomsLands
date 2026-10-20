@@ -172,7 +172,7 @@ public class ItemDetailPanel : MonoBehaviour
     }
 
     /// <summary>
-    /// 「保有 12個・平均 540G (+13%)」。取得単価が分からない在庫（古いセーブ）は「保有 12個」だけ（F-1）。
+    /// 「保有 12個 平均540G +13%」。取得単価が分からない在庫（古いセーブ）は「保有 12個」だけ（F-1）。
     /// 騰落は金色（含み益）・赤（含み損）。
     /// </summary>
     private static string HoldingText(RuntimeItemData runtime)
@@ -180,9 +180,9 @@ public class ItemDetailPanel : MonoBehaviour
         string head = $"保有 {runtime.Stock.Value:N0}個";
         if (!runtime.HasKnownCost) return head;
         var rate = runtime.CostChangeRate;
-        if (!rate.HasValue) return $"{head}・平均 {runtime.AverageCost:N0}G";
+        if (!rate.HasValue) return $"{head} 平均{runtime.AverageCost:N0}G";
         string color = rate.Value >= 0f ? "#E8A33D" : "#E06A5A";
-        return $"{head}・平均 {runtime.AverageCost:N0}G <color={color}>({FormatRate(rate.Value)})</color>";
+        return $"{head} 平均{runtime.AverageCost:N0}G <color={color}>{FormatRate(rate.Value)}</color>";
     }
 
     private static string FormatRate(float rate) => $"{(rate >= 0 ? "+" : "")}{rate * 100f:0}%";

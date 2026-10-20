@@ -127,7 +127,7 @@ public class PriceChartView : MaskableGraphic
         if (drawDemand)
             AddPolyline(vh, demandValues, x0, x1, y0, y1, demandColor, 0f, 1f);
 
-        // 出来事の印（上端に小さな逆三角）
+        // 出来事の印（下端に小さな三角。上端は凡例と重なるので避ける）
         int n = priceValues.Count;
         if (n >= 2)
         {
@@ -135,7 +135,7 @@ public class PriceChartView : MaskableGraphic
             {
                 if (m.Index < 0 || m.Index >= n) continue;
                 float px = Mathf.Lerp(x0, x1, (float)m.Index / (n - 1));
-                AddTriangle(vh, new Vector2(px, y1 - markerSize), markerSize, m.Color);
+                AddTriangle(vh, new Vector2(px, y0 + markerSize), markerSize, m.Color);
             }
         }
     }
@@ -208,13 +208,13 @@ public class PriceChartView : MaskableGraphic
         vh.AddTriangle(idx + 2, idx + 3, idx + 0);
     }
 
-    /// <summary>下向きの三角（頂点が tip）。</summary>
+    /// <summary>上向きの三角（頂点が tip、底辺は tip の size 下）。</summary>
     private void AddTriangle(VertexHelper vh, Vector2 tip, float size, Color color)
     {
         int idx = vh.currentVertCount;
         AddVert(vh, tip, color);
-        AddVert(vh, tip + new Vector2(-size * 0.6f, size), color);
-        AddVert(vh, tip + new Vector2(size * 0.6f, size), color);
+        AddVert(vh, tip + new Vector2(size * 0.6f, -size), color);
+        AddVert(vh, tip + new Vector2(-size * 0.6f, -size), color);
         vh.AddTriangle(idx, idx + 1, idx + 2);
     }
 
