@@ -65,7 +65,8 @@ public static class EventDataLoader
         // 1行目はヘッダーなのでスキップ
         for (int i = 1; i < lines.Length; i++)
         {
-            var line = lines[i].Trim();
+            // ゼロ幅スペース（U+200B）は取り除く。ふりがな付きの文から貼り付けた名残で、検索・置換・文字数の計測を狂わせる
+            var line = lines[i].Replace("\u200B", "").Trim();
             if (string.IsNullOrEmpty(line)) continue;
 
             var columns = SplitCsvLine(line);
@@ -121,10 +122,24 @@ public static class EventDataLoader
                 e.commands.Add(cmd);
             }
 
+            WarnNonNumericAmount(e);
             result.Add(e);
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// amount が数値でない行をエラーで知らせる。実行時は 0 扱いで「（効果なし）」になり、気づきにくい
+    /// （2026-10 まで同梱の 007〜013・019〜021 が "Trust" や空欄のまま空振りしていた）。
+    /// </summary>
+    private static void WarnNonNumericAmount(TomsEvent e)
+    {
+        foreach (var cmd in e.commands)
+        {
+            if (cmd.parameters.TryGetValue("amount", out var raw) && !int.TryParse(raw, out _))
+                Debug.LogError($"[EventDataLoader] イベント {e.id}「{e.title}」の {cmd.command}.amount が数値ではありません（'{raw}'）。EventDatas.csv を直してください。");
+        }
     }
 
     /// <summary>

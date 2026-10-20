@@ -35,6 +35,8 @@ public class SceneTransitionService
 
     /// <summary>
     /// EventScene へ遷移する。事前に EventInputData を書き込んでおくこと。
+    /// 未使用（2026-10-20 確認）: PendingEventData.UseInlineEventPopup が常に true なので呼ばれない。EventScene は Build Settings に無く、
+    /// 呼ぶとビルドでは止まる。EventScenePresenter は ChangeMoney/ChangeTrust しか実行しない（AddItem・GrantRelic などが無い）。
     /// </summary>
     public void GoToEvent()
     {

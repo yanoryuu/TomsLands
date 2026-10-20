@@ -17,7 +17,7 @@ MonoBehaviour:
   hp: 416
   attackPower: 52
   defensePower: 11
-  elementType: 0
+  elementType: 2
   enemySprite: {fileID: 21300000, guid: 434a7633efddb4c6bb6db3687f6f2bb6, type: 3}
   skills: []
   description: 

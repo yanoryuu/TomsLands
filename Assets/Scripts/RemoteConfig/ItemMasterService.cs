@@ -5,34 +5,38 @@ using UnityEngine;
 
 /// <summary>
 /// アイテムマスター上書きの取得→検証→適用→キャッシュを制御する（RemoteConfigService のアイテム版）。
-/// フォールバック順序: サーバー成功 → ローカルキャッシュ → 上書きなし（SO 既定値）。
+/// 順序（2026-10-20〜 キャッシュ優先）: ローカルキャッシュ（最新は裏で取ってキャッシュだけ更新）→ サーバー取得 → 上書きなし（SO 既定値）。
 /// </summary>
 public sealed class ItemMasterService
 {
     private readonly IRemoteConfigSource _source;
     private readonly RemoteConfigCache _cache;
+    private readonly IRemoteConfigSource _backgroundSource;
 
-    public ItemMasterService(IRemoteConfigSource source, RemoteConfigCache cache)
+    /// <param name="backgroundSource">キャッシュで起動したあと裏で最新を取る取得元（長めのタイムアウト）。null なら source を使う。</param>
+    public ItemMasterService(IRemoteConfigSource source, RemoteConfigCache cache, IRemoteConfigSource backgroundSource = null)
     {
         _source = source;
         _cache = cache;
+        _backgroundSource = backgroundSource ?? source;
     }
 
     /// <summary>起動時に1回。masterItems ロードより前に await 完了させること。</summary>
     public async UniTask InitializeAsync(CancellationToken ct)
     {
-        // 1) サーバー取得（成功時のみキャッシュ更新）
-        var json = await _source.FetchEnvelopeJsonAsync(ct);
-        if (TryApply(json, save: true))
-            return;
-
-        // 2) ローカルキャッシュ（前回成功分）
+        // 1) ローカルキャッシュ（前回成功分）があれば待たずに使う。最新は裏で取り、次の起動から使う
         var cached = _cache.LoadJson();
         if (TryApply(cached, save: false))
         {
-            Debug.Log("[ItemMaster] キャッシュを適用しました。");
+            Debug.Log("[ItemMaster] キャッシュを適用しました（最新は裏で取得します）。");
+            RemoteConfigRefresh.RefreshCacheInBackground(_backgroundSource, _cache, ValidateOnly, "ItemMaster");
             return;
         }
+
+        // 2) キャッシュが無いときだけサーバー取得を待つ（成功時のみキャッシュ更新）
+        var json = await _source.FetchEnvelopeJsonAsync(ct);
+        if (TryApply(json, save: true))
+            return;
 
         // 3) 上書きなし（SO 既定値）
         ItemMaster.ResetToDefault();
@@ -65,6 +69,21 @@ public sealed class ItemMasterService
 
         if (save) _cache.Save(appliedVersion, json);
         return true;
+    }
+
+    /// <summary>ItemMaster を書き換えずに検証だけする（裏取り用）。通れば version、不採用なら -1。</summary>
+    private static int ValidateOnly(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return -1;
+        ItemMasterEnvelope env;
+        try { env = JsonUtility.FromJson<ItemMasterEnvelope>(json); }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[ItemMaster] 裏取りの解析失敗: {e.Message}");
+            return -1;
+        }
+        if (env == null || env.items == null || env.schemaVersion != ItemMaster.ExpectedSchemaVersion) return -1;
+        return Validate(env, out _) ? env.version : -1;
     }
 
     /// <summary>各行の値域・enum パース可否を検査。1行でも不正なら全体不採用。</summary>

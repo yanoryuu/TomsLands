@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: sea307
   m_EditorClassIdentifier: 
   enemyId: sea307
-  enemyName: "\u30B7\u30A7\u30EB\u30DE\u30CB\u30A2"
+  enemyName: "\u30E6\u30AD\u30DE\u30AD\u30AC\u30A4"
   hp: 150
   attackPower: 39
   defensePower: 9

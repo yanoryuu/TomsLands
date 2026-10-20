@@ -138,7 +138,7 @@ TomsLands は市場シミュレーション（毎日変動する価格・需要�
 | V1 コア | `feature/village-core` | SO+生成ツール、MetaProgress拡張、VillageScene骨子（**歩行可能シーン**: PlayerMove流用+区画プレースホルダー+接触インタラクション+投資パネル）、タイトル→村→準備遷移、Result/GameOver→村、純資産→村資金変換（+金融資産の純資産算入修正） | 村を歩いて施設に投資→スロット跨ぎ永続 |
 | V2 開始時効果 | `feature/village-start-bonus` | 初期資金/持ち込み枠/初期Lv/開始フォロワー/借入枠段階 | 施設Lvを変えてニューゲーム→初期値変化 |
 | V3 レリック解禁 | `feature/village-relic-unlock` | `unlockGuildLevel`+全抽選入口フィルタ、祠、23種のTier振り分け | ギルドLv0/3で3択の顔ぶれが変わる |
-| V4 常時効果 | `feature/village-passive` | Resolver注入、農場（朝レポート統合）、工房区画 | F12で施設Lv操作→売上/朝入金 |
+| V4 常時効果 | `feature/village-passive` | Resolver注入、農場（朝レポート統合）、工房区画 | F11で施設Lv操作→売上/朝入金 |
 | V5 産業投資 | `feature/village-industry` | **シグネチャー**: 属性別の価格/需要/出現係数、土地スロット、付け替え、仕入れ画面の村バッジ | 鉱山Lv2→金属系の基準価格が下がる |
 
 V1〜V2 で「村に投資すると次のランが強くなる」ループが成立するので、そこで一度プレイ確認を挟む。

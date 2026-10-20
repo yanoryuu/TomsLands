@@ -242,7 +242,9 @@ public class TomsShopView : MonoBehaviour
             HeroButton.onClick.AddListener(() => OnHeroClicked.OnNext(Unit.Default));
         SetItemButton.onClick.AddListener(() => OnSetItemClicked.OnNext(Unit.Default));
         InfoButton.onClick.AddListener(() => OnInfoClicked.OnNext(Unit.Default));
-        ToolButton.onClick.AddListener(() => OnToolClicked.OnNext(Unit.Default));
+        // 道具屋は作らないことにした（2026-10-20）。中身の無い画面へ入って戻れなくならないよう、ボタンは常に隠して配線もしない。
+        // OnToolClicked・TomsShopGamePhase.ToolShop・TomsModel.ToolShopLevel はシリアライズとセーブの互換のため残す
+        if (ToolButton != null) ToolButton.gameObject.SetActive(false);
         StartShopButton.onClick.AddListener(() => OnStartShopClicked.OnNext(Unit.Default));
         MapButton.onClick.AddListener(() => OnMapClicked.OnNext(Unit.Default));
         DungeonLevelUpButton.onClick.AddListener(() => OnDungeonLevelUpClicked.OnNext(Unit.Default));

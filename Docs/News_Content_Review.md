@@ -21,14 +21,14 @@
 ## 2. 推理の前提（相性表）
 
 ダンジョンの `requiredAttribute`（DungeonIndoData/*.asset）と `items_sheet.tsv` の防具の説明文から作った表。
+属性は敵側の5属性（火・水・木・光・闇）。旧属性の風は木に、土は闇にまとめた（a1f390f2・2026-10-16）。以下の §5 以降の検証記録に出る「風」「土」は当時の呼び名のまま残している。
 **L1 の武器の属性と L2 の防具の属性は、どのダンジョンでも同じになる**（コードの `ApplyTargetRule` もそうなっている）。
 
 | 敵の属性（攻撃） | 弱点 = L1 の武器 | 防ぐ = L2 の防具 | 該当するダンジョン |
 |---|---|---|---|
 | 火 | 水 | 水（水流の鎧＝火を無効） | 灼熱の火山牢 |
-| 水（氷） | 土 | 土（岩石の鎧＝水を弾く） | 氷霧の洞窟 |
-| 風 | 火 | 火（炎のたすき＝風を焼き払う） | 深緑の獣林 |
-| 土 | 風 | 風（疾風の鎧＝土を受け流す） | （なし。岩の巨兵などダンジョン外の事象で使う） |
+| 水（氷） | 木 | 木（新緑の鎧＝水を葉が吸い上げて受け流す） | 氷霧の洞窟 |
+| 木 | 火 | 火（炎のたすき＝木の攻撃を熱で焼き払う） | 深緑の獣林 |
 | 闇 | 光 | 光（聖光の鎧＝闇を受け止める） | 忘却の霊廟・魔王城 |
 | 光 | 闇 | 闇（暗黒の兜＝光を受け流す） | 古代機構城メタリオン |
 
@@ -44,15 +44,15 @@ L3 は「格上・懐が温かい・上の格の品・値の張る品」。
 
 | eventId | 規模/向き | targetRule（binds） | 正解の効き先 | 報じる社 | 推理の手がかり | 旧記事 |
 |---|---|---|---|---|---|---|
-| EV_ICE_OUTBREAK | 大 / + | L1:{dungeon}（IceMistCave） | **土の武器** | 王・ギ・商・か(loud) | 氷霧の洞窟（図鑑で弱点=土）／「並の刃では傷がつかない」「斬るより砕く」「叩き割る」 | N001・R001 |
+| EV_ICE_OUTBREAK | 大 / + | L1:{dungeon}（IceMistCave） | **木の武器** | 王・ギ・商・か(loud) | 氷霧の洞窟（図鑑で弱点=木）／「並の刃では傷がつかない」「甲殻の水気を吸い上げて脆くする」 | N001・R001 |
 | EV_VOLCANO | 中 / + | L2:{dungeon}（ScorchingVolcanoPrison） | **水の防具** | 王・ギ・か(loud)・職 | 火山牢の熱波・火の粉／「身支度」「身に着けるもの」「熱を冷まして受け流す素材」 | N002・R002 |
-| EV_BEAST_MIGRATION | 中 / + | L2:{dungeon}（DeepGreenBeastForest） | **火の防具** | 王・ギ・か | 獣林の群れ／「風のように駆ける」／「身を固めて出る」「爪牙による負傷」 | N009・R009 |
+| EV_BEAST_MIGRATION | 中 / + | L2:{dungeon}（DeepGreenBeastForest） | **火の防具** | 王・ギ・か | 獣林の群れ（木の敵）／「樹皮をまとう獣」「茂みから蔓ごと飛び出す」／「身を固めて出る」「爪牙による負傷」 | N009・R009 |
 | EV_DUNGEON_SURGE_*（6ダンジョン別） | 大 / + | L1:{dungeon}（next） | **次ダンジョンの弱点属性の武器** | 王・ギ・商・か(loud) | 行き先の魔物の性質（§6 の表）＋「攻めが通らない」「弱みを突ける得物」「刃を替える」 | 新規 |
 | EV_DUNGEON_INJURIES_*（6ダンジョン別） | 中 / + | L2:{dungeon}（next） | **次ダンジョンの弱点属性の防具** | 王・ギ・か | 行き先の魔物の攻撃の性質（§6）＋「その攻撃を打ち消す相性の守り」「負傷者相次ぐ」「受けて耐える」「身を守る備え」 | 新規 |
 | EV_MAUSOLEUM_RESTLESS | 中 / + | L1:{dungeon}（MausoleumOblivion） | **光の武器** | 王・ギ・か(loud) | 霊廟の死者・闇をまとう／「闇を払う得物」「清めの光で斬り払う」 | 新規 |
 | EV_METALLION_BEAM | 中 / + | L2:{dungeon}（AncientMechanicalCastle） | **闇の防具** | 王・ギ・職 | 機構兵の光線／「光を受け流せる守り」「光を吸い込む暗い素材」「鎧」 | 新規 |
 | EV_DUNGEON_CALM_*（6ダンジョン別） | 小 / - | L1:{dungeon}（next） | **次ダンジョンの弱点属性の武器（売れなくなる）** | 王・ギ・商 | 魔物の性質（§6）＋「弱みを突く攻め方が行き渡った」「魔物まばら」「手持ちの得物で十分」「買い替えを先送り」 | 新規 |
-| EV_ROCK_GOLEM | 中 / + | attr:Wind,Weapon（region） | **風の武器** | ギ・商・か | 岩の巨兵＝大地の力（土の敵）／「槌も斧も跳ね返す」「鋭い風で継ぎ目を裂く」「風に乗せた矢」 | 新規 |
+| EV_ROCK_GOLEM | 中 / + | attr:Wood,Weapon（region） | **木の武器** | ギ・商・か | 渦巻く水の体の巨兵（水の敵）／「槌も斧も水しぶきを上げて素通り」「水を吸い上げる木の力で水気を抜く」 | 新規 |
 
 ### hero
 
@@ -69,19 +69,19 @@ L3 は「格上・懐が温かい・上の格の品・値の張る品」。
 
 | eventId | 規模/向き | targetRule（binds） | 正解の効き先 | 報じる社 | 推理の手がかり | 旧記事 |
 |---|---|---|---|---|---|---|
-| EV_WIND_BUY | 中 / + | attr:Wind,Weapon | **風の武器** | ギ・商・か | 「風をまとう得物」「弓も槍も」／岩の魔物の討伐（土の敵） | N004 |
+| EV_WIND_BUY | 中 / + | attr:Wood,Weapon | **木の武器** | ギ・商・か | 「木の力をまとう得物」「弓も槍も」／水の魔物の討伐（水の敵） | N004 |
 | EV_RIVAL_CORNER_*（6ダンジョン別） | 小 / + | L2:{dungeon}（next） | **次ダンジョンの弱点属性の防具** | ギ・商・か | 行き先の魔物と攻撃の性質（§6）＋「打ち消す相性の品」「鎧や兜」「攻撃に耐える品」 | N008（水の品→次ダンジョン連動 L2 に一般化） |
 | EV_MERC_NIGHT | 小 / + | attr:Dark,Weapon | **闇の武器** | ギ・商・か(loud) | 「闇色・黒い得物」「光を放つ機構兵が狙い」（光の敵） | N012・C012 |
-| EV_RIVAL_CLEARANCE | 中 / - | attr:Earth,Armor | **土の防具（売れなくなる）** | 商・か・職 | 「岩を削り出した重い防具」「石の鎧を投げ売り」「市中にあふれる」 | 新規 |
-| EV_RIVAL_FIRE_PARTY | 中 / + | attr:Fire,Weapon | **火の武器** | ギ・商・か | 嵐を呼ぶ怪鳥（風の敵）／「風は焼き払う」「火の力を宿す類」「燃える刃」 | 新規 |
+| EV_RIVAL_CLEARANCE | 中 / - | attr:Dark,Armor | **闇の防具（売れなくなる）** | 商・か・職 | 「影鉄を鍛えた重い防具」「闇色に沈んだごつい鎧を山積み」「市中にあふれる」 | 新規 |
+| EV_RIVAL_FIRE_PARTY | 中 / + | attr:Fire,Weapon | **火の武器** | ギ・商・か | 木の葉の翼の怪鳥（木の敵）／「火の力を宿す類」「燃える刃」 | 新規 |
 
 ### supply
 
 | eventId | 規模/向き | targetRule（binds） | 正解の効き先 | 報じる社 | 推理の手がかり | 旧記事 |
 |---|---|---|---|---|---|---|
-| EV_MINE_COLLAPSE | 中 / + | attr:Earth,Armor | **土の防具** | 王・ギ・商・職 | 「硬質の鉱石」「岩のように固い鎧や兜」「防具づくりを支える」 | N005・R005 |
+| EV_MINE_COLLAPSE | 中 / + | attr:Dark,Armor | **闇の防具** | 王・ギ・商・職 | 「冥鉱石」「闇色の防具」「防具づくりを支える」 | N005・R005 |
 | EV_HOLY_RITE_DELAY | 中 / + | attr:Light,Armor | **光の防具** | 商・か・職 | 「聖別の儀」「光の加護を宿す鎧や兜」「聖なる光の守り」 | 新規 |
-| EV_TIMBER_GLUT | 小 / - | attr:Wind,Weapon | **風の武器（売れなくなる）** | 商・職 | 「しなやかな材」「弓や長柄・槍の柄」「風をはらむ軽い得物」「同じ品が市中にあふれる」 | 新規 |
+| EV_TIMBER_GLUT | 小 / - | attr:Wood,Weapon | **木の武器（売れなくなる）** | 商・職 | 「しなやかな材」「弓や長柄・槍の柄」「木の力を宿す軽い得物」「同じ品が市中にあふれる」 | 新規 |
 | EV_SPRING_DRY | 中 / + | attr:Water,Weapon | **水の武器** | 商・か・職 | 「霊泉が涸れる」「刃に水の流れを宿す」「火の魔物に挑む者に欠かせない」 | 新規 |
 | EV_FORGE_GLUT | 小 / - | attr:Fire,Armor | **火の防具（売れなくなる）** | 商・職 | 「火の精の大炉」「炎を宿す帯や兜がまとまって出回る」「値は保てまい」 | 新規 |
 
@@ -90,7 +90,7 @@ L3 は「格上・懐が温かい・上の格の品・値の張る品」。
 | eventId | 規模/向き | targetRule（binds） | 正解の効き先 | 報じる社 | 推理の手がかり | 旧記事 |
 |---|---|---|---|---|---|---|
 | EV_PILGRIM | 中 / + | attr:Light,Armor | **光の防具** | 商・か・職 | 「聖歌隊を光の加護をまとった装いで迎える習わし」「鎧や兜の手直し」 | N006（Light 種別なし→Light,Armor） |
-| EV_WIND_FESTIVAL | 中 / + | attr:Wind,Armor | **風の防具** | 商・か(loud) | 「風をはらむ軽やかな装い」「風の加護を受けた鎧や兜で練り歩く」 | N011・C011 |
+| EV_WIND_FESTIVAL | 中 / + | attr:Wood,Armor | **木の防具** | 商・か(loud) | 「若葉の加護を受けた軽い鎧や兜」「若葉をまとう装いで練り歩く」 | N011・C011 |
 | EV_GRAVEYARD | 中 / + | attr:Light,Weapon | **光の武器** | ギ・か(loud) | 「迷い出た死者」（闇の敵）／「清めの光を宿した得物で斬り払う」 | N007・C007（Dark→Light に変更） |
 | EV_DARK_FASHION | 小 / + | attr:Dark,Armor | **闇の防具** | 商・か・職 | 吟遊詩人の歌「黒衣の騎士」／「闇色の兜や鎧」「闇色に仕上げる」 | 新規 |
 | EV_FIRE_DANCE | 小 / + | attr:Fire,Armor | **火の防具** | 商・か | 「炎をかたどった帯やたすきを身に着けて踊る」 | 新規 |
@@ -109,7 +109,7 @@ L3 は「格上・懐が温かい・上の格の品・値の張る品」。
 | eventId | 規模/向き | targetRule（binds） | 正解の効き先 | 報じる社 | 推理の手がかり | 旧記事 |
 |---|---|---|---|---|---|---|
 | EV_VILLAGE_WATCH | 小 / + | type:Armor | **防具全般** | ギ・商・か | 「自警団の怪我人」「まず身を守るもの」「鎧や兜をそろえる」 | 新規 |
-| EV_VILLAGE_FLOOD | 小 / + | attr:Earth,Weapon | **土の武器** | ギ・か | 「水棲の魔物」（水の敵）／「刃がすべる」「重いもので叩きつぶす」「大地の重みで叩く得物」 | 新規 |
+| EV_VILLAGE_FLOOD | 小 / + | attr:Wood,Weapon | **木の武器** | ギ・か | 「水をまとう魔物」（水の敵）／「刃がすべる」「水を吸い上げる木の力を宿した得物」 | 新規 |
 
 ### 効き先の網羅（属性 × 種別）
 
@@ -117,10 +117,9 @@ L3 は「格上・懐が温かい・上の格の品・値の張る品」。
 |---|---|---|
 | 火 | RIVAL_FIRE_PARTY（＋獣林が次なら L1 系） | BEAST_MIGRATION・FIRE_DANCE・FORGE_GLUT(-) |
 | 水 | SPRING_DRY | VOLCANO |
-| 土 | ICE_OUTBREAK・VILLAGE_FLOOD | MINE_COLLAPSE・RIVAL_CLEARANCE(-) |
-| 風 | ROCK_GOLEM・WIND_BUY・TIMBER_GLUT(-) | WIND_FESTIVAL |
+| 木 | ICE_OUTBREAK・VILLAGE_FLOOD・ROCK_GOLEM・WIND_BUY・TIMBER_GLUT(-) | WIND_FESTIVAL・MUD_GIANT |
 | 光 | MAUSOLEUM_RESTLESS・GRAVEYARD | PILGRIM・HOLY_RITE_DELAY |
-| 闇 | MERC_NIGHT | METALLION_BEAM・DARK_FASHION |
+| 闇 | MERC_NIGHT | METALLION_BEAM・DARK_FASHION・MINE_COLLAPSE・RIVAL_CLEARANCE(-) |
 
 次ダンジョン連動（L1/L2 `dungeon=next`）が 7 事象（各6ダンジョン別）、L3 が 4 事象、種別だけが 3 事象。
 
@@ -128,7 +127,7 @@ L3 は「格上・懐が温かい・上の格の品・値の張る品」。
 
 | # | 内容 | 下書きでの扱い |
 |---|---|---|
-| Q1 | **氷 → 弱点は土**でよいか。旧 N001/R001 は「火（焼き割る）」、`InfoBrokerModel.IsItemEffectiveForDungeon` も氷霧の洞窟＝火としているが、ダンジョンデータ（IceCave.asset）は `requiredAttribute=2（Earth）` | ダンジョンデータを正として **土** に統一。R001 の「焼き割る」→「叩き割る」。InfoBrokerModel 側の食い違いはコード担当に要確認 |
+| Q1 | **氷 → 弱点は土**でよいか。旧 N001/R001 は「火（焼き割る）」、`InfoBrokerModel.IsItemEffectiveForDungeon` も氷霧の洞窟＝火としているが、ダンジョンデータ（IceCave.asset）は `requiredAttribute=2（Earth）` | ダンジョンデータを正として **土** に統一（2026-10-16 の5属性化で、今は **木**。IceCave.asset の requiredAttribute=2 は Wood）。R001 の「焼き割る」→「叩き割る」。InfoBrokerModel 側の食い違いはコード担当に要確認 |
 | Q2 | 旧 N007（墓地の人影）の対象が「闇の武器」だった。死者＝闇の敵なら L1 では光の武器になる | **光の武器** に変更 |
 | Q3 | 旧 N003（勇者の格上依頼）は Weapon（種別のみ）だったが、本文は「資金に余裕・格上」で L3 の読み | **L3** に変更 |
 | Q4 | 旧 N006（巡礼）は属性だけ（種別なし）。J1 の13択に合わせて種別を決めた | **光の防具** に変更（「装い」を本文で具体化） |
@@ -662,3 +661,25 @@ hard を合格にするには、HOT_SPRING_BOOM か LIGHTHOUSE_OUT のどちら�
 - 難易度ラベルの変更: EV_ARC_MINE_3A hard→normal、EV_ARC_EGG_2 normal→easy（連載で正体が明かされる話のため）
 - Jev の判定は1回ごとに±0.03程度揺れる。境目付近の事象（0.33〜0.37、0.83〜0.87）は再測定で合否が入れ替わりうる
 - 記事検証の Jev 費用（10/09 分）: 約40円
+
+## §19 Jev 再検証と approved 化（2026-10-20・属性統一 #83 と旧属性の名残の修正 D-5 の後）
+
+範囲: 全件（`AutoPlayNewsJevCheck` 既定・6シード）と、easy 以外・レア・連載の報道と結果文（`only="new J1"`）。費用 $0.072（約11円）。
+結果は `AutoPlayReports/news_jev_20261020_220908/`・`news_jev_20261020_221017/`（リポジトリ外）。判定は §18 と同じく事象単位（同じ事象の日本語報道の平均）。
+
+| 線 | 結果 | 判定 |
+|---|---|---|
+| easy ≥0.85 を8割以上 | 80/86（93%） | 合格 |
+| normal 0.5〜0.85 を8割以上 | 11/23（48%） | **不合格**（12事象が易しすぎ。連載の第2話以降が多い） |
+| hard 0.2〜0.5 を8割以上 | 6/8（75%） | **不合格**（LIGHTHOUSE_OUT 0.19・HERO_COURTSHIP 0.61） |
+| ミスリード（正解以外に0.35超） | 4本（GALE_HARPIES×3・LIGHTHOUSE_OUT.tabloid） | **不合格** |
+| レア 報道平均≤0.6・結果≥0.6 | 9/10（RARE_LEGEND_SMITH 報道 0.63） | **不合格** |
+| J3 社の個性 全社≥0.5 | 王立93%・ギルド91%・商業79%・かわら版100%・職人75% | 合格 |
+| 埋め草（対象なし ≥0.6） | 64/64 | 合格 |
+
+全線は合格しなかったので、**事象ごとに全項目（幅・ミスリード・レア）に合格したものだけ** approved にした（ユーザー決定 Q15「全項目合格したもの」）。
+- approved: 106 事象のテンプレート 498 本（報道・結果・訂正）と、埋め草 64 本すべて。訂正記事と easy の結果文は Jev が測らないので、その事象の報道の合否に従った。
+- draft のまま（製品ビルドでは事象ごと出ない）: EV_ARC_EGG_3A・EV_ARC_KNIGHT_2・EV_ARC_KNIGHT_3A・EV_ARC_MINE_2・EV_ARC_MINE_3B・EV_ARC_RATS_1・EV_ARC_RATS_3B・EV_ARC_STAR_2・EV_ARC_STAR_3B・EV_ARC_STONE_3B・EV_ARC_WINTER_3B・EV_FIRE_DANCE・EV_FORGE_GLUT・EV_GALE_HARPIES・EV_HERO_COURTSHIP・EV_HERO_MENTOR・EV_LIGHTHOUSE_OUT・EV_RARE_LEGEND_SMITH・EV_RIVAL_CLEARANCE・EV_SHADOW_CLAWS・EV_VILLAGE_DROUGHT（21事象）と、6シードで一度も載らず測れなかった EV_HERO_INJURED_MAUSOLEUM。
+- 英語（summaryEn）だけのミスリード: EV_ARC_WINTER_1.tabloid（any_Weapon 0.44）・EV_HERO_EXPEDITION_FOREST.guild（Fire_Weapon 0.37）・EV_ICE_OUTBREAK.guild（Water_Weapon 0.68）・EV_MUD_GIANT.commerce（Water_Armor 0.38）。画面に出るのは日本語なので合否には使っていない。
+- 影響: 製品ビルドで1周に出る事象は、draft 込みの約77%になる（20シードの発行カレンダーで 4,518 → 3,470 件）。記事なしで相場が動く事象の数は変わらない（18 → 15 件、A-10 の既知の問題）。
+- 次にやること: 上の21事象を直して（易しすぎる normal は手がかりを1段遠くに、GALE_HARPIES は木の葉・棘の突風で「木の防具」に寄るので火の防具の手がかりを足す）、`only` を付けて測り直し、合格したら approved にする。

@@ -12,7 +12,7 @@ public class GameConstData
     public int minItemStock = 0;
 
     // --- 所持金 ---
-    public int initMoney = 10000;
+    public int initMoney = 100000;
 
     // --- 借金 ---
     // ※ サーバー配信(gameconst.json)で上書き可能。ベイク値は GameConstSettings.asset。

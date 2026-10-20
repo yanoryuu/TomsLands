@@ -5,7 +5,7 @@ using VContainer;
 
 /// <summary>
 /// 開発用デバッグメニュー（OnGUI/IMGUIオーバーレイ）。仕様: Docs/DebugMenu_Spec.md
-/// F11キーで開閉する（旧F12も互換で有効）。各機能タブは DebugMenuView.*.cs の partial に分割。各シーンの LifetimeScope から自動生成されるためシーン配線は不要。
+/// F11キーで開閉する（F12 は Steam のスクリーンショットと重なるため外した）。各機能タブは DebugMenuView.*.cs の partial に分割。各シーンの LifetimeScope から自動生成されるためシーン配線は不要。
 /// Editor と Development Build でのみコンパイルされ、リリースビルドには一切含まれない
 /// （保険としてランタイムでも Debug.isDebugBuild を確認する）。
 ///
@@ -80,7 +80,8 @@ public partial class DebugMenuView : MonoBehaviour
     private void Update()
     {
         if (!Debug.isDebugBuild) return;
-        if (Input.GetKeyDown(KeyCode.F11) || Input.GetKeyDown(KeyCode.F12))
+        // F11 だけ。F12 は Steam のスクリーンショットのキーと重なり、撮影するとメニューが写り込むので外した（2026-10-20）
+        if (Input.GetKeyDown(KeyCode.F11))
         {
             _visible = !_visible;
         }

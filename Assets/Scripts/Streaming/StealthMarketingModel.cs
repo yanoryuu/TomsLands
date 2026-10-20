@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using R3;
 using UnityEngine;
 
+// 未使用（2026-10-20 確認）: 旧ステマ機能の名残。どのシーン・コードからも使われていない（StreamingView はビルド外の Information.unity にだけある）。
+// 廃止済みの TomsModel.Trust を前提にしているので、使うなら作り直すこと。
 [Serializable]
 public class StealthMarketingModel : IDisposable
 {

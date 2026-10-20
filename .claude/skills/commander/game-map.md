@@ -24,7 +24,7 @@ Unity 6000.0.32f1 / URP / uGUI+TMP / DOTween / VContainer 1.17 / R3 / UniTask（
 | 勇者/配信 | Hero/, Battle/, Streaming/, StreamingSetting/, SceneData/ | クリア確率, 配信戦闘, 販売ループ, 精算, シーン間受け渡し |
 | マーケ | Marketing/ | 広告・バズ・フォロワー |
 | メタ | Relic/, Preparation/, Village/, Save/ | レリック, 準備, 村, セーブスロット |
-| 他 | Scenario/(Utage), Debug/(F12), Editor/, Title/, Result/, GameOver/, Event/, Popup/, Boot/, RemoteConfig/, Config/ | |
+| 他 | Scenario/(Utage), Debug/(F11), Editor/, Title/, Result/, GameOver/, Event/, Popup/, Boot/, RemoteConfig/, Config/ | |
 
 ## 3. 高リスク領域（opus必須・変更時は理由を報告させる）
 - **StateManager / GameLifecycleHandler**: 初期化順依存。帰還時処理は GameLifecycleHandler → BattleResultHandler の登録順に依存。VContainerでは GameFlowManager.Start が先に走る
@@ -64,7 +64,8 @@ MVP: Model=Singleton / View=MonoBehaviour（R3 Subject公開）/ Presenter=IStar
 ## 6. 検証手段
 - unity-editor-mcp: `recompile`/`recompile_status`, `console`/`clear_console`, `editor_play`/`editor_stop`, `capture_game_view`/`screenshot`, `get_scene_hierarchy`/`find_gameobjects`, `get/set_serialized_field`, `save_prefab_contents`, `eval`/`eval_file`, `run_tests`, `build`
 - 注意: エディタ非フォーカスだとPlay/コンパイルが進まない（`editor_focus`）。ScreenSpaceOverlay Canvasはキャプチャに写らない。evalではDIインスタンスを取れない
-- テストコードは無し。F12 DebugMenu で所持金・NextTurn・バズを操作可能
+- テストコードは無し。F11 DebugMenu で所持金・NextTurn・バズを操作可能
+- ビルド前チェック: `Tools/TomsLands/ビルド前チェック`（Addressables・シーン・approved の記事数・ダンジョン一覧・同梱と配信値の差分）。ビルド時にも自動で走りエラーなら止まる。バッチ: `-executeMethod BuildPreflight.RunBatch`
 - 旧UnityMCP（CoplayDev）は削除済み。エディタ操作は Unity CLI（unity-editor-mcp = `unity mcp`）を使う
 
 ## 7. Docs

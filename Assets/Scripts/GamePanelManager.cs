@@ -5,10 +5,13 @@ public class GamePanelManager : MonoBehaviour
     [SerializeField] private GameObject tomsShopPanel;
     [SerializeField] private GameObject heroPanel;
     [SerializeField] private GameObject mapPanel;
+    // 旧・未使用: 設定は加算シーン Setting.unity を開く方式に移った（CommonPresenter）。GamePhase.Setting へ遷移する所は無い
     [SerializeField] private GameObject settingPanel;
     [SerializeField] private GameObject blackSmithPanel;
+    // 旧・未使用: 道具屋は作らない（2026-10-20）。中身の無い ToolShop.prefab を指している
     [SerializeField] private GameObject toolShopPanel;
     [SerializeField] private GameObject infoBrokerPanel;
+    // 旧・未使用: ラン終了は ResultScene へ抜ける（GameFlowManager.TransitionToResult）。GamePhase.Result へ遷移する所は無い
     [SerializeField] private GameObject endPhasePanel;
     [SerializeField] private GameObject commonPanel;
     [SerializeField] private GameObject turnEndSummaryPanel;
@@ -28,11 +31,11 @@ public class GamePanelManager : MonoBehaviour
         tomsShopPanel.SetActive(false);
         if (heroPanel != null) heroPanel.SetActive(false);
         blackSmithPanel.SetActive(false);
-        toolShopPanel.SetActive(false);
+        if (toolShopPanel != null) toolShopPanel.SetActive(false);
         infoBrokerPanel.SetActive(false);
         mapPanel.SetActive(false);
-        endPhasePanel.SetActive(false);
-        settingPanel.SetActive(false);
+        if (endPhasePanel != null) endPhasePanel.SetActive(false);
+        if (settingPanel != null) settingPanel.SetActive(false);
         commonPanel.SetActive(false);
         turnEndSummaryPanel.SetActive(false);
         dungeonLevelUpPanel.SetActive(false);
@@ -102,7 +105,9 @@ public class GamePanelManager : MonoBehaviour
                 ShowWithFx(blackSmithPanel);
                 break;
             case TomsShopGamePhase.ToolShop:
-                ShowWithFx(toolShopPanel);
+                // 道具屋は作らない。万一ここへ来ても空の画面に閉じ込めないよう、店の画面を出す
+                Debug.LogWarning("[GamePanelManager] 道具屋（ToolShop）は未使用です。店の画面を表示します。");
+                ShowWithFx(tomsShopPanel);
                 commonPanel.SetActive(true);
                 break;
             case TomsShopGamePhase.Broker:

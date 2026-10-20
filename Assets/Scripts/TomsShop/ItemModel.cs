@@ -347,6 +347,24 @@ public class ItemModel
     }
 
     /// <summary>
+    /// シード・ターン・銘柄から 0〜1 の値を決める（同じ入力なら常に同じ値）。
+    /// string.GetHashCode は実行環境で変わりうるので使わず、FNV-1a で混ぜる。
+    /// </summary>
+    private static float SeededUnit(int seed, int turn, string itemId)
+    {
+        unchecked
+        {
+            uint h = 2166136261u;
+            h = (h ^ (uint)seed) * 16777619u;
+            h = (h ^ (uint)turn) * 16777619u;
+            foreach (char c in itemId ?? string.Empty) h = (h ^ c) * 16777619u;
+            // 下位ビットの偏りを散らす（murmur3 の finalizer）
+            h ^= h >> 16; h *= 0x85ebca6bu; h ^= h >> 13; h *= 0xc2b2ae35u; h ^= h >> 16;
+            return (h & 0xFFFFFF) / (float)0x1000000;
+        }
+    }
+
+    /// <summary>
     /// TomsShop のターン切り替え時に呼ばれる経済更新。
     /// S1: 需要連動型じわじわ価格変動
     /// D2: 品出し陳列効果（需要変動）
@@ -408,6 +426,7 @@ public class ItemModel
         // ------------------------------------------------
         var engine = ResolvePriceEngine(settings, flowSeed);
         engine.BeginTurn(turnIndex);
+        int trendSeed = settings.abmSeed != 0 ? settings.abmSeed : flowSeed;
 
         foreach (var runtime in RuntimeItems)
         {
@@ -425,8 +444,12 @@ public class ItemModel
 
             // ------------------------------------------------
             // 流行度（Trend）の更新: ランダムウォーク + 0 への減衰
+            //   揺らぎはシード×ターン×銘柄から決める（同じシードなら同じ相場になる。ABM と同じ考え方）。
+            //   シードが無いとき（0）だけ従来どおり UnityEngine.Random。セーブ形式は変わらない
             // ------------------------------------------------
-            float drift = Random.Range(-settings.trendDriftMax, settings.trendDriftMax);
+            float drift = trendSeed != 0
+                ? Mathf.Lerp(-settings.trendDriftMax, settings.trendDriftMax, SeededUnit(trendSeed, turnIndex, runtime.ItemId))
+                : Random.Range(-settings.trendDriftMax, settings.trendDriftMax);
             float trendDecay = -runtime.Trend * settings.trendDecayRate;
             runtime.Trend = Mathf.Clamp(runtime.Trend + drift + trendDecay, -1f, 1f);
 
@@ -650,7 +673,7 @@ public class ItemModel
         );
         string json = JsonUtility.ToJson(dataList, true);
         SaveFile.WriteAtomic(SaveSlotManager.GetPath(SaveFileName), json);
-        Debug.Log("Item data saved.");
+        DevLog.Log("Item data saved.");
     }
 
     public void LoadData()
@@ -663,11 +686,13 @@ public class ItemModel
             return;
         }
 
+        var missing = new List<string>();
         var loadedItems = dataList.items
             .Select(item =>
             {
                 // 古いセーブデータとの互換: maxStock/requiredLevel/itemName がデフォルト値ならマスターから復元
                 var master = GetMasterItem(item.itemId);
+                if (master == null) missing.Add(item.itemId);
                 if (master != null)
                 {
                     item.maxStock = master.maxStock;
@@ -679,10 +704,19 @@ public class ItemModel
                     item.itemType = master.itemType;
                     item.itemAttribute = master.itemAttribute;
                 }
-                return new RuntimeItemData(item, SearchSpriteFromMaster(item.itemId), SearchBackgroundSpriteFromMaster(item.requiredLevel),
+                return new RuntimeItemData(item, master != null ? master.itemIcon : null, SearchBackgroundSpriteFromMaster(item.requiredLevel),
                     master != null ? master.dividendPerTurn : 0);
             })
             .ToList();
+
+        // 開発ビルドの配信シーンで全29銘柄が「Master item not found」になった記録がある（原因未特定・2026-10 の Player-prev.log）。
+        // 次に起きたとき原因を追えるよう、1件ずつではなくまとめて、マスター側の件数と ID も出す
+        if (missing.Count > 0)
+        {
+            string masterIds = masterItems == null ? "null" : string.Join(",", masterItems.Where(m => m != null).Select(m => m.itemId).Take(8));
+            Debug.LogWarning($"[ItemModel] セーブの {missing.Count}/{dataList.items.Count} 銘柄がマスターに無い（{string.Join(",", missing.Take(8))}…）。" +
+                             $"マスター {masterItems?.Count ?? 0} 件（{masterIds}…）。アイコン・最大在庫・名前がマスターから戻りません。");
+        }
 
         // アプリの更新で銘柄（ItemData SO）を足したとき、既存のセーブには無いので初期状態で末尾に足す
         // （マスターに無い銘柄は在庫が残っている可能性があるので消さない）
@@ -723,15 +757,6 @@ public class ItemModel
             .ToList();
 
         Debug.Log("Runtime items initialized from master.");
-    }
-
-    private Sprite SearchSpriteFromMaster(string itemId)
-    {
-        var master = GetMasterItem(itemId);
-        if (master != null) return master.itemIcon;
-
-        Debug.LogWarning($"Master item not found for ID: {itemId}");
-        return null;
     }
 
     /// <summary>レベルに応じた背景スプライトを取得する。</summary>

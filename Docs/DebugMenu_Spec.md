@@ -10,7 +10,7 @@
   万一 development フラグなしで混入しても表示・入力処理を一切行わない
 
 ## 起動・表示
-- F11 キーで開閉（旧F12も互換で有効。IMGUI/OnGUI オーバーレイ。シーン配線不要）
+- F11 キーで開閉（F12 は Steam のスクリーンショットと重なるため 2026-10-20 に外した。IMGUI/OnGUI オーバーレイ。シーン配線不要）
 - 各シーンの LifetimeScope から `RegisterComponentOnNewGameObject` で自動生成
   - GameLifetimeScope（TomsShop）/ VillageLifetimeScope / BattleLifetimeScope /
     TitleLifetimeScope / EventLifetimeScope / PreparationLifetimeScope / ResultLifetimeScope / GameOverLifetimeScope
