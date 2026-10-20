@@ -11,6 +11,8 @@ using UnityEngine.UI;
 /// - ウェーブクリア: 金白フラッシュ＋光の帯2本が横切る＋放射光とキラキラ
 /// - 次ウェーブへ: 木色の帯がワイプインし「WAVE n/m」が飛び込んで抜ける
 /// - ボス到達: 赤いビネットの明滅＋赤い警告帯スクロール＋警告マーク「！」＋警告音
+/// - 決着（SUMMARY E-1）: 勇者勝利は金のクリア演出＋「CLEAR!」の帯、魔王側の配当は紫の明滅＋「配当確定」の帯
+/// 設定「演出を速くする」で速くなり、「画面シェイクを軽減」で揺れを出さない（M-11）。
 /// 見た目の部品は Awake で自分の子に生成する（このオブジェクトの矩形＝配信画面に RectMask2D でクリップ）。
 /// 待ち時間は呼び出し側から渡す speed（戦闘スピード倍率）で縮み、BattlePauseController のポーズ中は止まる。
 /// </summary>
@@ -57,6 +59,16 @@ public class BattleWaveFxView : MonoBehaviour
     [Tooltip("SoundLibrary の SE キー（空なら鳴らさない）")]
     [SerializeField] private string bossWarningSeKey = "ボス警告";
 
+    [Header("決着（配信リザルトの前に配信画面のまま見せる溜め）")]
+    [SerializeField] private Color finaleHeroTextColor = new(1f, 0.86f, 0.32f, 1f);
+    [SerializeField] private Color finaleDemonBannerColor = new(0.2f, 0.07f, 0.3f, 0.97f);
+    [SerializeField] private Color finaleDemonEdgeColor = new(0.78f, 0.48f, 1f, 1f);
+    [SerializeField] private Color finaleDemonTextColor = new(0.93f, 0.8f, 1f, 1f);
+    [SerializeField] private Color finaleDemonTintColor = new(0.45f, 0.1f, 0.75f, 0.32f);
+    [SerializeField] private Color finaleDemonVignetteColor = new(0.42f, 0.05f, 0.7f, 0.85f);
+    [Tooltip("決着の帯の静止秒（等倍時）。全体でおよそ 1.8〜2 秒")]
+    [SerializeField] private float finaleHoldSeconds = 0.9f;
+
     // ---- 生成した部品 ----
     private RectTransform _area;
     private Image _flash;
@@ -66,6 +78,7 @@ public class BattleWaveFxView : MonoBehaviour
     private RectTransform _bannerRoot;
     private Image _banner;
     private TextMeshProUGUI _bannerText;
+    private readonly List<Image> _bannerEdges = new();
     private RawImage _vignette;
     private Image _bossTint;
     private RawImage _stripeTop, _stripeBottom;
@@ -113,6 +126,77 @@ public class BattleWaveFxView : MonoBehaviour
         await RunAsync(BuildBossSequence(), speed, pause, token);
     }
 
+    /// <summary>
+    /// 決着の溜め。heroWon=true は金のクリア演出＋帯、false は紫の明滅＋帯（魔王側の配当）。
+    /// skipRequested が true を返したら（クリック・決定）すぐ終える。戦闘は止まっているのでポーズは見ない。
+    /// </summary>
+    public async UniTask PlayFinaleAsync(bool heroWon, string label, CancellationToken token, System.Func<bool> skipRequested = null)
+    {
+        if (!Prepare())
+        {
+            Debug.LogWarning("[BattleWaveFxView] 決着の演出を出せませんでした（非アクティブ）。");
+            return;
+        }
+        float startedAt = Time.unscaledTime;
+        var seq = DOTween.Sequence();
+        if (heroWon)
+        {
+            seq.Append(BuildClearSequence());
+            seq.Insert(clearDuration * 0.3f, BuildBannerSequence(label, finaleHoldSeconds, bannerColor, bannerEdgeColor, finaleHeroTextColor));
+        }
+        else
+        {
+            seq.Append(BuildDemonTintSequence());
+            seq.Insert(0.15f, BuildBannerSequence(label, finaleHoldSeconds, finaleDemonBannerColor, finaleDemonEdgeColor, finaleDemonTextColor));
+        }
+        _current = seq;
+        seq.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
+        seq.SetLink(gameObject);
+        seq.OnKill(HideAll);
+        try
+        {
+            while (seq.IsActive() && !seq.IsComplete())
+            {
+                if (skipRequested != null && skipRequested()) break;
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+        }
+        finally
+        {
+            if (seq.IsActive()) seq.Kill();
+            if (_current == seq) _current = null;
+            Debug.Log($"[BattleWaveFxView] 決着の演出「{label}」{Time.unscaledTime - startedAt:0.00}秒");
+        }
+    }
+
+#if UNITY_EDITOR
+    [ContextMenu("Debug: 決着（CLEAR!）")]
+    private void DebugFinaleHero() => PlayFinaleAsync(true, "CLEAR!", destroyCancellationToken).Forget();
+
+    [ContextMenu("Debug: 決着（配当確定）")]
+    private void DebugFinaleDemon() => PlayFinaleAsync(false, "配当確定", destroyCancellationToken).Forget();
+#endif
+
+    /// <summary>紫の全面ティントとビネットを2回明滅させる（魔王側の決着）。</summary>
+    private Sequence BuildDemonTintSequence()
+    {
+        var seq = DOTween.Sequence();
+        _vignette.gameObject.SetActive(true);
+        _vignette.color = WithAlpha(finaleDemonVignetteColor, 0f);
+        _bossTint.gameObject.SetActive(true);
+        _bossTint.color = WithAlpha(finaleDemonTintColor, 0f);
+        const float p = 0.45f;
+        for (int i = 0; i < 2; i++)
+        {
+            float t = i * p;
+            seq.Insert(t, _vignette.DOFade(finaleDemonVignetteColor.a, p * 0.3f).SetEase(Ease.OutQuad));
+            seq.Insert(t + p * 0.3f, _vignette.DOFade(finaleDemonVignetteColor.a * 0.4f, p * 0.7f).SetEase(Ease.InQuad));
+            seq.Insert(t, _bossTint.DOFade(finaleDemonTintColor.a, p * 0.2f));
+            seq.Insert(t + p * 0.2f, _bossTint.DOFade(finaleDemonTintColor.a * 0.3f, p * 0.6f));
+        }
+        return seq;
+    }
+
     // ================= 再生の共通処理 =================
 
     /// <summary>前の演出を止めて部品を隠す（部品の初期化はこの後の Build*Sequence で行う）。</summary>
@@ -128,7 +212,8 @@ public class BattleWaveFxView : MonoBehaviour
     private async UniTask RunAsync(Sequence seq, float speed, BattlePauseController pause, CancellationToken token)
     {
         _current = seq;
-        seq.timeScale = Mathf.Max(0.05f, speed);
+        // speed は戦闘スピード倍率。設定「演出を速くする」（EffectDurationScale 0.5）ならさらに倍速
+        seq.timeScale = Mathf.Max(0.05f, speed) / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
         seq.SetLink(gameObject);
         seq.OnKill(HideAll);
 
@@ -223,19 +308,23 @@ public class BattleWaveFxView : MonoBehaviour
     // ================= 次ウェーブ =================
 
     private Sequence BuildBannerSequence(string label)
+        => BuildBannerSequence(label, bannerHoldSeconds, bannerColor, bannerEdgeColor, bannerTextColor);
+
+    private Sequence BuildBannerSequence(string label, float holdSeconds, Color bandColor, Color edgeColor, Color textColor)
     {
         var size = _area.rect.size;
         float h = size.y * bannerHeightRatio;
         _bannerRoot.sizeDelta = new Vector2(0f, h);
         _bannerRoot.gameObject.SetActive(true);
-        _banner.color = bannerColor;
+        _banner.color = bandColor;
+        foreach (var edge in _bannerEdges) edge.color = edgeColor;
         _banner.rectTransform.sizeDelta = new Vector2(size.x, 0f);
         _banner.rectTransform.localScale = new Vector3(0f, 1f, 1f);
         _banner.rectTransform.pivot = new Vector2(0f, 0.5f);
         _banner.rectTransform.anchoredPosition = new Vector2(-size.x * 0.5f, 0f);
 
         _bannerText.text = label;
-        _bannerText.color = bannerTextColor;
+        _bannerText.color = textColor;
         _bannerText.fontSize = h * 0.62f;
         var textRt = _bannerText.rectTransform;
         textRt.anchoredPosition = new Vector2(size.x, 0f);
@@ -249,7 +338,7 @@ public class BattleWaveFxView : MonoBehaviour
         // 文字が右から飛び込む
         seq.Insert(wipe * 0.5f, textRt.DOAnchorPosX(0f, fly).SetEase(Ease.OutBack, 1.2f));
         seq.Insert(wipe * 0.5f + fly, textRt.DOPunchScale(Vector3.one * 0.12f, 0.25f, 6, 0.6f));
-        float outAt = wipe * 0.5f + fly + bannerHoldSeconds;
+        float outAt = wipe * 0.5f + fly + holdSeconds;
         // 文字は左へ抜け、帯は右側へ縮んで消える
         seq.Insert(outAt, textRt.DOAnchorPosX(-size.x, fly).SetEase(Ease.InBack, 1.2f));
         seq.InsertCallback(outAt + fly * 0.4f, () =>
@@ -325,7 +414,8 @@ public class BattleWaveFxView : MonoBehaviour
         seq.Insert(0.05f, _signEdge.DOFade(1f, 0.12f));
         seq.Insert(0.05f, _sign.DOFade(1f, 0.12f));
         seq.Insert(0.05f, DOTween.To(() => _signMark.alpha, a => _signMark.alpha = a, 1f, 0.12f));
-        seq.Insert(0.33f, _signRoot.DOShakeAnchorPos(0.3f, signSize * 0.08f, 30, 90f, false, true));
+        if (!GameSettings.ReduceShake) // 設定「画面シェイクを軽減」
+            seq.Insert(0.33f, _signRoot.DOShakeAnchorPos(0.3f, signSize * 0.08f, 30, 90f, false, true));
         for (int i = 1; i < pulses; i++)
             seq.Insert(i * p, _signRoot.DOPunchScale(Vector3.one * 0.14f, p * 0.5f, 4, 0.5f));
         seq.Insert(total, _signRoot.DOScale(0.6f, 0.25f).SetEase(Ease.InBack));
@@ -409,6 +499,7 @@ public class BattleWaveFxView : MonoBehaviour
             rt.sizeDelta = new Vector2(0f, 5f);
             edge.color = bannerEdgeColor;
             edge.gameObject.SetActive(true);
+            _bannerEdges.Add(edge);
         }
         _bannerText = NewText("WaveText", _bannerRoot, font);
         _bannerText.characterSpacing = 6f;

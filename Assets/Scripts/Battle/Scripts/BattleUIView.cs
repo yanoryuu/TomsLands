@@ -19,8 +19,9 @@ public class BattleUIView : MonoBehaviour
     public BattleTempoData Tempo => GameConst.Data?.battleTempo ?? FallbackTempo;
     private static readonly BattleTempoData FallbackTempo = new();
 
+    /// <summary>戦闘スピード倍率（テンポ設定 × 配信画面の ×1/×2 切り替え）。</summary>
     private float SpeedMultiplier
-        => Mathf.Max(0.1f, overrideTempoInInspector ? battleSpeedMultiplier : Tempo.speedMultiplier);
+        => Mathf.Max(0.1f, (overrideTempoInInspector ? battleSpeedMultiplier : Tempo.speedMultiplier) * BattleSpeed.Multiplier);
 
     private float LogSeconds
         => Mathf.Max(0f, overrideTempoInInspector ? logDisplayDuration : Tempo.logSeconds);

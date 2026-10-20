@@ -754,7 +754,151 @@ MonoBehaviour:
       isCommentOut: 0
       debugInfo: 
     - rowIndex: 41
+      debugIndex: 61
+      strings:
+      - '*Toko_StreamDemonPayout_1'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 42
       debugIndex: 62
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "04_\u56F0\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u52C7\u8005\u3055\u307E\u3001\u3054\u3081\u3093\u306D\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 43
+      debugIndex: 63
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "12_\u30C9\u30E4\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3067\u3082\u9B54\u738B\u3055\u307E\u304B\u3089\u306E\u914D\u5F53\u3001\u3061\u3083\u30FC\u3093\u3068\u53D7\u3051\u53D6\u3063\u305F\u3088\uFF01\\n\u9B54\u738B\u8ECD\u306B\u5F35\u3063\u3066\u304A\u3044\u3066\u6B63\u89E3\u3060\u3063\u305F\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 44
+      debugIndex: 64
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 45
+      debugIndex: 66
+      strings:
+      - '*Toko_StreamDemonPayout_2'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 46
+      debugIndex: 67
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "11_\u30B8\u30C8\u76EE"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u52C7\u8005\u3055\u307E\u306F\u8CA0\u3051\u3061\u3083\u3063\u305F\u3051\u3069\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 47
+      debugIndex: 68
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "03_\u5927\u7B11\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u8AAD\u307F\u3069\u304A\u308A\u3001\u914D\u5F53\u306F\u304C\u3063\u307D\u308A\uFF01\\n\u3069\u3063\u3061\u304C\u52DD\u3063\u3066\u3082\u5132\u3051\u308B\u306E\u304C\u5546\u58F2\u4EBA\u3001\u3060\u3088\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 48
+      debugIndex: 69
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 49
+      debugIndex: 73
       strings:
       - '*Toko_RunClear_High'
       - 
@@ -771,8 +915,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 42
-      debugIndex: 63
+    - rowIndex: 50
+      debugIndex: 74
       strings:
       - 
       - "\u30C8\u30B3"
@@ -789,8 +933,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 43
-      debugIndex: 64
+    - rowIndex: 51
+      debugIndex: 75
       strings:
       - 
       - "\u30C8\u30B3"
@@ -807,8 +951,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 44
-      debugIndex: 65
+    - rowIndex: 52
+      debugIndex: 76
       strings:
       - 
       - "\u30C8\u30B3"
@@ -825,8 +969,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 45
-      debugIndex: 66
+    - rowIndex: 53
+      debugIndex: 77
       strings:
       - 
       - "\u30C8\u30B3"
@@ -843,8 +987,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 46
-      debugIndex: 67
+    - rowIndex: 54
+      debugIndex: 78
       strings:
       - EndScenario
       - 
@@ -861,8 +1005,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 47
-      debugIndex: 70
+    - rowIndex: 55
+      debugIndex: 81
       strings:
       - '*Toko_RunClear_Mid'
       - 
@@ -879,8 +1023,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 48
-      debugIndex: 71
+    - rowIndex: 56
+      debugIndex: 82
       strings:
       - 
       - "\u30C8\u30B3"
@@ -897,8 +1041,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 49
-      debugIndex: 72
+    - rowIndex: 57
+      debugIndex: 83
       strings:
       - 
       - "\u30C8\u30B3"
@@ -915,8 +1059,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 50
-      debugIndex: 73
+    - rowIndex: 58
+      debugIndex: 84
       strings:
       - 
       - "\u30C8\u30B3"
@@ -933,8 +1077,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 51
-      debugIndex: 74
+    - rowIndex: 59
+      debugIndex: 85
       strings:
       - EndScenario
       - 
@@ -951,8 +1095,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 52
-      debugIndex: 77
+    - rowIndex: 60
+      debugIndex: 88
       strings:
       - '*Toko_RunClear_Low'
       - 
@@ -969,8 +1113,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 53
-      debugIndex: 78
+    - rowIndex: 61
+      debugIndex: 89
       strings:
       - 
       - "\u30C8\u30B3"
@@ -987,8 +1131,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 54
-      debugIndex: 79
+    - rowIndex: 62
+      debugIndex: 90
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1005,8 +1149,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 55
-      debugIndex: 80
+    - rowIndex: 63
+      debugIndex: 91
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1023,8 +1167,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 56
-      debugIndex: 81
+    - rowIndex: 64
+      debugIndex: 92
       strings:
       - EndScenario
       - 
@@ -1041,8 +1185,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 57
-      debugIndex: 85
+    - rowIndex: 65
+      debugIndex: 96
       strings:
       - '*Toko_Bankrupt_Early'
       - 
@@ -1059,8 +1203,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 58
-      debugIndex: 86
+    - rowIndex: 66
+      debugIndex: 97
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1077,8 +1221,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 59
-      debugIndex: 87
+    - rowIndex: 67
+      debugIndex: 98
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1095,8 +1239,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 60
-      debugIndex: 88
+    - rowIndex: 68
+      debugIndex: 99
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1113,8 +1257,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 61
-      debugIndex: 89
+    - rowIndex: 69
+      debugIndex: 100
       strings:
       - EndScenario
       - 
@@ -1131,8 +1275,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 62
-      debugIndex: 92
+    - rowIndex: 70
+      debugIndex: 103
       strings:
       - '*Toko_Bankrupt_Late'
       - 
@@ -1149,8 +1293,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 63
-      debugIndex: 93
+    - rowIndex: 71
+      debugIndex: 104
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1167,8 +1311,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 64
-      debugIndex: 94
+    - rowIndex: 72
+      debugIndex: 105
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1185,8 +1329,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 65
-      debugIndex: 95
+    - rowIndex: 73
+      debugIndex: 106
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1203,162 +1347,18 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 66
-      debugIndex: 96
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 67
-      debugIndex: 101
-      strings:
-      - '*Run_Opening_Second'
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 68
-      debugIndex: 102
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "08_\u9A5A\u304D"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u2026\u2026\u3042\u308C\uFF1F\u3000\u3053\u3053\u3001\u304A\u5E97\u3092\u7D99\u3044\u3060\u521D\u65E5\u2026\u2026\uFF01\uFF1F"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 69
-      debugIndex: 103
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "04_\u56F0\u308A"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u68DA\u306B\u306F\u6642\u4EE3\u9045\u308C\u306E\u5546\u54C1\u3001\u7D0D\u4ED8\u306E\u65E5\u3082\u307E\u305F\u4E00\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3067\u3082\u3001\u524D\u306B\u898B\u3066\u304D\u305F\u6D41\u884C\u306E\u6CE2\u306F\u3061\u3083\u3093\u3068\u899A\u3048\u3066\u308B\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 70
-      debugIndex: 104
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "12_\u30C9\u30E4\u9854"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u4E8C\u5EA6\u76EE\u306E\u4E00\u65E5\u76EE\u3001\u4ECA\u5EA6\u3053\u305D\u3046\u307E\u304F\u3084\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 71
-      debugIndex: 105
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 72
-      debugIndex: 108
-      strings:
-      - '*Run_Opening_Again_1'
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 73
-      debugIndex: 109
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "11_\u30B8\u30C8\u76EE"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u307E\u305F\u521D\u65E5\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3053\u306E\u68DA\u306E\u6642\u4EE3\u9045\u308C\u3063\u3077\u308A\u3082\u3001\u3082\u3046\u3059\u3063\u304B\u308A\u898B\u6163\u308C\u3061\u3083\u3063\u305F\u3002"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
     - rowIndex: 74
-      debugIndex: 110
+      debugIndex: 107
       strings:
-      - 
-      - "\u30C8\u30B3"
-      - "02_\u7B11\u9854"
-      - CharacterLayer
+      - EndScenario
       - 
       - 
       - 
       - 
-      - "\u3067\u3082\u3001\u6D41\u884C\u306E\u8AAD\u307F\u65B9\u306A\u3089\u524D\u3088\u308A\u305A\u3063\u3068\u5206\u304B\u3063\u3066\u308B\u3002\\n\u30B5\u30AF\u30C3\u3068\u7ACB\u3066\u76F4\u3057\u3061\u3083\u304A\u3046\uFF01"
+      - 
+      - 
+      - 
+      - 
       - 
       - 
       - 
@@ -1366,9 +1366,9 @@ MonoBehaviour:
       isCommentOut: 0
       debugInfo: 
     - rowIndex: 75
-      debugIndex: 111
+      debugIndex: 112
       strings:
-      - EndScenario
+      - '*Run_Opening_Second'
       - 
       - 
       - 
@@ -1386,15 +1386,15 @@ MonoBehaviour:
     - rowIndex: 76
       debugIndex: 113
       strings:
-      - '*Run_Opening_Again_2'
+      - 
+      - "\u30C8\u30B3"
+      - "08_\u9A5A\u304D"
+      - CharacterLayer
       - 
       - 
       - 
       - 
-      - 
-      - 
-      - 
-      - 
+      - "\u2026\u2026\u3042\u308C\uFF1F\u3000\u3053\u3053\u3001\u304A\u5E97\u3092\u7D99\u3044\u3060\u521D\u65E5\u2026\u2026\uFF01\uFF1F"
       - 
       - 
       - 
@@ -1406,13 +1406,13 @@ MonoBehaviour:
       strings:
       - 
       - "\u30C8\u30B3"
-      - "03_\u5927\u7B11\u3044"
+      - "04_\u56F0\u308A"
       - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u304A\u306F\u3088\u3046\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\uFF01\\n\u30C8\u30B3\u306E\u304A\u5E97\u3001\u672C\u65E5\u3082\u4E00\u65E5\u76EE\u304B\u3089\u5143\u6C17\u306B\u958B\u5E97\u3060\u3088\uFF01"
+      - "\u68DA\u306B\u306F\u6642\u4EE3\u9045\u308C\u306E\u5546\u54C1\u3001\u7D0D\u4ED8\u306E\u65E5\u3082\u307E\u305F\u4E00\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3067\u3082\u3001\u524D\u306B\u898B\u3066\u304D\u305F\u6D41\u884C\u306E\u6CE2\u306F\u3061\u3083\u3093\u3068\u899A\u3048\u3066\u308B\uFF01"
       - 
       - 
       - 
@@ -1424,13 +1424,13 @@ MonoBehaviour:
       strings:
       - 
       - "\u30C8\u30B3"
-      - "10_\u771F\u5263"
+      - "12_\u30C9\u30E4\u9854"
       - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u524D\u306E\u5931\u6557\u3082\u6210\u529F\u3082\u3001\u305C\u3093\u3076\u6B21\u306E\u4ED5\u5165\u308C\u306B\u6D3B\u304B\u3059\u3002\\n\u305D\u308C\u304C\u4E00\u6D41\u306E\u5546\u4EBA\u3060\u3082\u3093\u306D\u3002"
+      - "\u4E8C\u5EA6\u76EE\u306E\u4E00\u65E5\u76EE\u3001\u4ECA\u5EA6\u3053\u305D\u3046\u307E\u304F\u3084\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
       - 
       - 
       - 
@@ -1456,7 +1456,151 @@ MonoBehaviour:
       isCommentOut: 0
       debugInfo: 
     - rowIndex: 80
-      debugIndex: 118
+      debugIndex: 119
+      strings:
+      - '*Run_Opening_Again_1'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 81
+      debugIndex: 120
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "11_\u30B8\u30C8\u76EE"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u307E\u305F\u521D\u65E5\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3053\u306E\u68DA\u306E\u6642\u4EE3\u9045\u308C\u3063\u3077\u308A\u3082\u3001\u3082\u3046\u3059\u3063\u304B\u308A\u898B\u6163\u308C\u3061\u3083\u3063\u305F\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 82
+      debugIndex: 121
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "02_\u7B11\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3067\u3082\u3001\u6D41\u884C\u306E\u8AAD\u307F\u65B9\u306A\u3089\u524D\u3088\u308A\u305A\u3063\u3068\u5206\u304B\u3063\u3066\u308B\u3002\\n\u30B5\u30AF\u30C3\u3068\u7ACB\u3066\u76F4\u3057\u3061\u3083\u304A\u3046\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 83
+      debugIndex: 122
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 84
+      debugIndex: 124
+      strings:
+      - '*Run_Opening_Again_2'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 85
+      debugIndex: 125
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "03_\u5927\u7B11\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u304A\u306F\u3088\u3046\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\uFF01\\n\u30C8\u30B3\u306E\u304A\u5E97\u3001\u672C\u65E5\u3082\u4E00\u65E5\u76EE\u304B\u3089\u5143\u6C17\u306B\u958B\u5E97\u3060\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 86
+      debugIndex: 126
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u524D\u306E\u5931\u6557\u3082\u6210\u529F\u3082\u3001\u305C\u3093\u3076\u6B21\u306E\u4ED5\u5165\u308C\u306B\u6D3B\u304B\u3059\u3002\\n\u305D\u308C\u304C\u4E00\u6D41\u306E\u5546\u4EBA\u3060\u3082\u3093\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 87
+      debugIndex: 127
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 88
+      debugIndex: 129
       strings:
       - '*Run_Opening_Again_3'
       - 
@@ -1473,8 +1617,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 81
-      debugIndex: 119
+    - rowIndex: 89
+      debugIndex: 130
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1491,8 +1635,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 82
-      debugIndex: 120
+    - rowIndex: 90
+      debugIndex: 131
       strings:
       - 
       - "\u30C8\u30B3"
@@ -1509,8 +1653,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 83
-      debugIndex: 121
+    - rowIndex: 91
+      debugIndex: 132
       strings:
       - EndScenario
       - 
@@ -1529,7 +1673,7 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/TokoTalk.csv
     type: 0
-    textLength: 3033
+    textLength: 3300
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: b361cdbd4b66b6142a70620ad4d402e9, type: 3}
     entityIndexTbl: 
@@ -2637,6 +2781,186 @@ MonoBehaviour:
     - rowIndex: 61
       debugIndex: 61
       strings:
+      - '*Toko_StreamDemonPayout_1'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 62
+      debugIndex: 62
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "04_\u56F0\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u52C7\u8005\u3055\u307E\u3001\u3054\u3081\u3093\u306D\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 63
+      debugIndex: 63
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "12_\u30C9\u30E4\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3067\u3082\u9B54\u738B\u3055\u307E\u304B\u3089\u306E\u914D\u5F53\u3001\u3061\u3083\u30FC\u3093\u3068\u53D7\u3051\u53D6\u3063\u305F\u3088\uFF01\\n\u9B54\u738B\u8ECD\u306B\u5F35\u3063\u3066\u304A\u3044\u3066\u6B63\u89E3\u3060\u3063\u305F\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 64
+      debugIndex: 64
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 65
+      debugIndex: 65
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 66
+      debugIndex: 66
+      strings:
+      - '*Toko_StreamDemonPayout_2'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 67
+      debugIndex: 67
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "11_\u30B8\u30C8\u76EE"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u52C7\u8005\u3055\u307E\u306F\u8CA0\u3051\u3061\u3083\u3063\u305F\u3051\u3069\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 68
+      debugIndex: 68
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "03_\u5927\u7B11\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u8AAD\u307F\u3069\u304A\u308A\u3001\u914D\u5F53\u306F\u304C\u3063\u307D\u308A\uFF01\\n\u3069\u3063\u3061\u304C\u52DD\u3063\u3066\u3082\u5132\u3051\u308B\u306E\u304C\u5546\u58F2\u4EBA\u3001\u3060\u3088\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 69
+      debugIndex: 69
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 70
+      debugIndex: 70
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 71
+      debugIndex: 71
+      strings:
       - 
       - 
       - 
@@ -2652,8 +2976,26 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 1
       debugInfo: 
-    - rowIndex: 62
-      debugIndex: 62
+    - rowIndex: 72
+      debugIndex: 72
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 73
+      debugIndex: 73
       strings:
       - '*Toko_RunClear_High'
       - 
@@ -2670,8 +3012,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 63
-      debugIndex: 63
+    - rowIndex: 74
+      debugIndex: 74
       strings:
       - 
       - "\u30C8\u30B3"
@@ -2688,8 +3030,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 64
-      debugIndex: 64
+    - rowIndex: 75
+      debugIndex: 75
       strings:
       - 
       - "\u30C8\u30B3"
@@ -2706,8 +3048,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 65
-      debugIndex: 65
+    - rowIndex: 76
+      debugIndex: 76
       strings:
       - 
       - "\u30C8\u30B3"
@@ -2724,8 +3066,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 66
-      debugIndex: 66
+    - rowIndex: 77
+      debugIndex: 77
       strings:
       - 
       - "\u30C8\u30B3"
@@ -2742,216 +3084,18 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 67
-      debugIndex: 67
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 68
-      debugIndex: 68
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 1
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 69
-      debugIndex: 69
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 1
-      debugInfo: 
-    - rowIndex: 70
-      debugIndex: 70
-      strings:
-      - '*Toko_RunClear_Mid'
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 71
-      debugIndex: 71
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "01_\u901A\u5E38"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u3075\u3045\u2026\u2026\u306A\u3093\u3068\u304B\u6700\u5F8C\u307E\u3067\u3001\u304A\u5E97\u3092\u7D9A\u3051\u3089\u308C\u305F\u306D\u3002"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 72
-      debugIndex: 72
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "02_\u7B11\u9854"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u5927\u6210\u529F\u3068\u307E\u3067\u306F\u3044\u304B\u306A\u3044\u3051\u3069\u3001\u304A\u5BA2\u3055\u3093\u3082\u3061\u3083\u3093\u3068\u5897\u3048\u305F\u3057\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 73
-      debugIndex: 73
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "10_\u771F\u5263"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u3067\u3082\u3001\u307E\u3060\u307E\u3060\u30D0\u30BA\u308C\u305F\u306F\u305A\u3002\\n\u4ECA\u56DE\u306E\u53CD\u7701\u3092\u6D3B\u304B\u3057\u3066\u3001\u6B21\u306F\u3082\u3063\u3068\u4E0A\u3092\u76EE\u6307\u3059\u3088\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 74
-      debugIndex: 74
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 75
-      debugIndex: 75
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 1
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 76
-      debugIndex: 76
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 1
-      debugInfo: 
-    - rowIndex: 77
-      debugIndex: 77
-      strings:
-      - '*Toko_RunClear_Low'
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
     - rowIndex: 78
       debugIndex: 78
       strings:
-      - 
-      - "\u30C8\u30B3"
-      - "05_\u60B2\u3057\u3044"
-      - CharacterLayer
+      - EndScenario
       - 
       - 
       - 
       - 
-      - "\u304A\u5E97\u306F\u6B8B\u3063\u305F\u3051\u3069\u2026\u2026\u5E33\u7C3F\u306F\u771F\u3063\u8D64\u3063\u304B\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      - 
       - 
       - 
       - 
@@ -2962,42 +3106,42 @@ MonoBehaviour:
       debugIndex: 79
       strings:
       - 
-      - "\u30C8\u30B3"
-      - "04_\u56F0\u308A"
-      - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u6D41\u884C\u3092\u8FFD\u3044\u304B\u3051\u3066\u308B\u3064\u3082\u308A\u304C\u3001\u305A\u3063\u3068\u7F6E\u3044\u3066\u3044\u304B\u308C\u3066\u305F\u306E\u304B\u3082\u3002"
       - 
       - 
       - 
-      isEmpty: 0
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
       isCommentOut: 0
       debugInfo: 
     - rowIndex: 80
       debugIndex: 80
       strings:
       - 
-      - "\u30C8\u30B3"
-      - "07_\u6012\u308A"
-      - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u2026\u2026\u3046\u3046\u3093\u3001\u3053\u306E\u307E\u307E\u3058\u3083\u7D42\u308F\u308C\u306A\u3044\uFF01\\n\u6B21\u3053\u305D\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\u4E2D\u3092\u30D0\u30BA\u3089\u305B\u3066\u307F\u305B\u308B\u3093\u3060\u304B\u3089\uFF01"
+      - 
+      - 
+      - 
+      - 
       - 
       - 
       - 
       isEmpty: 0
-      isCommentOut: 0
+      isCommentOut: 1
       debugInfo: 
     - rowIndex: 81
       debugIndex: 81
       strings:
-      - EndScenario
+      - '*Toko_RunClear_Mid'
       - 
       - 
       - 
@@ -3016,60 +3160,60 @@ MonoBehaviour:
       debugIndex: 82
       strings:
       - 
+      - "\u30C8\u30B3"
+      - "01_\u901A\u5E38"
+      - CharacterLayer
       - 
       - 
       - 
       - 
+      - "\u3075\u3045\u2026\u2026\u306A\u3093\u3068\u304B\u6700\u5F8C\u307E\u3067\u3001\u304A\u5E97\u3092\u7D9A\u3051\u3089\u308C\u305F\u306D\u3002"
       - 
       - 
       - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 1
+      isEmpty: 0
       isCommentOut: 0
       debugInfo: 
     - rowIndex: 83
       debugIndex: 83
       strings:
       - 
+      - "\u30C8\u30B3"
+      - "02_\u7B11\u9854"
+      - CharacterLayer
       - 
       - 
       - 
       - 
-      - 
-      - 
-      - 
-      - 
+      - "\u5927\u6210\u529F\u3068\u307E\u3067\u306F\u3044\u304B\u306A\u3044\u3051\u3069\u3001\u304A\u5BA2\u3055\u3093\u3082\u3061\u3083\u3093\u3068\u5897\u3048\u305F\u3057\uFF01"
       - 
       - 
       - 
       isEmpty: 0
-      isCommentOut: 1
+      isCommentOut: 0
       debugInfo: 
     - rowIndex: 84
       debugIndex: 84
       strings:
       - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
       - 
       - 
       - 
       - 
-      - 
-      - 
-      - 
-      - 
+      - "\u3067\u3082\u3001\u307E\u3060\u307E\u3060\u30D0\u30BA\u308C\u305F\u306F\u305A\u3002\\n\u4ECA\u56DE\u306E\u53CD\u7701\u3092\u6D3B\u304B\u3057\u3066\u3001\u6B21\u306F\u3082\u3063\u3068\u4E0A\u3092\u76EE\u6307\u3059\u3088\uFF01"
       - 
       - 
       - 
       isEmpty: 0
-      isCommentOut: 1
+      isCommentOut: 0
       debugInfo: 
     - rowIndex: 85
       debugIndex: 85
       strings:
-      - '*Toko_Bankrupt_Early'
+      - EndScenario
       - 
       - 
       - 
@@ -3088,78 +3232,6 @@ MonoBehaviour:
       debugIndex: 86
       strings:
       - 
-      - "\u30C8\u30B3"
-      - "08_\u9A5A\u304D"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u3055\u3001\u5DEE\u3057\u62BC\u3055\u3048\uFF01\uFF1F\u3000\u307E\u3060\u304A\u5E97\u3092\u7D99\u3044\u3060\u3070\u3063\u304B\u308A\u306A\u306E\u306B\u2026\u2026\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 87
-      debugIndex: 87
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "06_\u6CE3\u304D"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u3046\u3045\u2026\u2026\u30D0\u30BA\u3069\u3053\u308D\u304B\u3001\u6700\u521D\u306E\u7D0D\u4ED8\u3059\u3089\u6255\u3048\u306A\u3044\u306A\u3093\u3066\u2026\u2026\u3002"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 88
-      debugIndex: 88
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "10_\u771F\u5263"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u2026\u2026\u3067\u3082\u3001\u4F55\u304C\u58F2\u308C\u306A\u304B\u3063\u305F\u306E\u304B\u306F\u308F\u304B\u3063\u305F\u3002\\n\u6B21\u306F\u7D76\u5BFE\u3001\u3082\u3063\u3068\u4E0A\u624B\u304F\u3084\u3063\u3066\u307F\u305B\u308B\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 89
-      debugIndex: 89
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 90
-      debugIndex: 90
-      strings:
-      - 
       - 
       - 
       - 
@@ -3174,8 +3246,8 @@ MonoBehaviour:
       isEmpty: 1
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 91
-      debugIndex: 91
+    - rowIndex: 87
+      debugIndex: 87
       strings:
       - 
       - 
@@ -3192,10 +3264,82 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 1
       debugInfo: 
+    - rowIndex: 88
+      debugIndex: 88
+      strings:
+      - '*Toko_RunClear_Low'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 89
+      debugIndex: 89
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "05_\u60B2\u3057\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u304A\u5E97\u306F\u6B8B\u3063\u305F\u3051\u3069\u2026\u2026\u5E33\u7C3F\u306F\u771F\u3063\u8D64\u3063\u304B\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 90
+      debugIndex: 90
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "04_\u56F0\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u6D41\u884C\u3092\u8FFD\u3044\u304B\u3051\u3066\u308B\u3064\u3082\u308A\u304C\u3001\u305A\u3063\u3068\u7F6E\u3044\u3066\u3044\u304B\u308C\u3066\u305F\u306E\u304B\u3082\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 91
+      debugIndex: 91
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "07_\u6012\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u2026\u2026\u3046\u3046\u3093\u3001\u3053\u306E\u307E\u307E\u3058\u3083\u7D42\u308F\u308C\u306A\u3044\uFF01\\n\u6B21\u3053\u305D\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\u4E2D\u3092\u30D0\u30BA\u3089\u305B\u3066\u307F\u305B\u308B\u3093\u3060\u304B\u3089\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
     - rowIndex: 92
       debugIndex: 92
       strings:
-      - '*Toko_Bankrupt_Late'
+      - EndScenario
       - 
       - 
       - 
@@ -3214,60 +3358,60 @@ MonoBehaviour:
       debugIndex: 93
       strings:
       - 
-      - "\u30C8\u30B3"
-      - "05_\u60B2\u3057\u3044"
-      - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u3053\u3053\u307E\u3067\u9811\u5F35\u3063\u3066\u304D\u305F\u306E\u306B\u2026\u2026\u304A\u5E97\u3001\u5DEE\u3057\u62BC\u3055\u3048\u3089\u308C\u3061\u3083\u3063\u305F\u2026\u2026\u3002"
       - 
       - 
       - 
-      isEmpty: 0
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
       isCommentOut: 0
       debugInfo: 
     - rowIndex: 94
       debugIndex: 94
       strings:
       - 
-      - "\u30C8\u30B3"
-      - "04_\u56F0\u308A"
-      - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u7D0D\u4ED8\u306E\u984D\u3001\u3069\u3093\u3069\u3093\u5927\u304D\u304F\u306A\u3063\u3066\u305F\u3082\u3093\u306D\u3002\\n\u7A3C\u304E\u304C\u305C\u3093\u305C\u3093\u8FFD\u3044\u3064\u304B\u306A\u304B\u3063\u305F\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      - 
       - 
       - 
       - 
       isEmpty: 0
-      isCommentOut: 0
+      isCommentOut: 1
       debugInfo: 
     - rowIndex: 95
       debugIndex: 95
       strings:
       - 
-      - "\u30C8\u30B3"
-      - "10_\u771F\u5263"
-      - CharacterLayer
       - 
       - 
       - 
       - 
-      - "\u2026\u2026\u3046\u3046\u3093\u3002\u3053\u3053\u307E\u3067\u6765\u3089\u308C\u305F\u306E\u306F\u3001\u79C1\u306E\u5546\u58F2\u304C\u901A\u7528\u3057\u305F\u3063\u3066\u3053\u3068\u3002\\n\u6B21\u306F\u6700\u5F8C\u307E\u3067\u8D70\u308A\u304D\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
+      - 
+      - 
+      - 
+      - 
       - 
       - 
       - 
       isEmpty: 0
-      isCommentOut: 0
+      isCommentOut: 1
       debugInfo: 
     - rowIndex: 96
       debugIndex: 96
       strings:
-      - EndScenario
+      - '*Toko_Bankrupt_Early'
       - 
       - 
       - 
@@ -3286,6 +3430,78 @@ MonoBehaviour:
       debugIndex: 97
       strings:
       - 
+      - "\u30C8\u30B3"
+      - "08_\u9A5A\u304D"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3055\u3001\u5DEE\u3057\u62BC\u3055\u3048\uFF01\uFF1F\u3000\u307E\u3060\u304A\u5E97\u3092\u7D99\u3044\u3060\u3070\u3063\u304B\u308A\u306A\u306E\u306B\u2026\u2026\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 98
+      debugIndex: 98
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "06_\u6CE3\u304D"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3046\u3045\u2026\u2026\u30D0\u30BA\u3069\u3053\u308D\u304B\u3001\u6700\u521D\u306E\u7D0D\u4ED8\u3059\u3089\u6255\u3048\u306A\u3044\u306A\u3093\u3066\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 99
+      debugIndex: 99
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u2026\u2026\u3067\u3082\u3001\u4F55\u304C\u58F2\u308C\u306A\u304B\u3063\u305F\u306E\u304B\u306F\u308F\u304B\u3063\u305F\u3002\\n\u6B21\u306F\u7D76\u5BFE\u3001\u3082\u3063\u3068\u4E0A\u624B\u304F\u3084\u3063\u3066\u307F\u305B\u308B\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 100
+      debugIndex: 100
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 101
+      debugIndex: 101
+      strings:
+      - 
       - 
       - 
       - 
@@ -3300,8 +3516,8 @@ MonoBehaviour:
       isEmpty: 1
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 98
-      debugIndex: 98
+    - rowIndex: 102
+      debugIndex: 102
       strings:
       - 
       - 
@@ -3318,8 +3534,116 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 1
       debugInfo: 
-    - rowIndex: 99
-      debugIndex: 99
+    - rowIndex: 103
+      debugIndex: 103
+      strings:
+      - '*Toko_Bankrupt_Late'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 104
+      debugIndex: 104
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "05_\u60B2\u3057\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3053\u3053\u307E\u3067\u9811\u5F35\u3063\u3066\u304D\u305F\u306E\u306B\u2026\u2026\u304A\u5E97\u3001\u5DEE\u3057\u62BC\u3055\u3048\u3089\u308C\u3061\u3083\u3063\u305F\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 105
+      debugIndex: 105
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "04_\u56F0\u308A"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u7D0D\u4ED8\u306E\u984D\u3001\u3069\u3093\u3069\u3093\u5927\u304D\u304F\u306A\u3063\u3066\u305F\u3082\u3093\u306D\u3002\\n\u7A3C\u304E\u304C\u305C\u3093\u305C\u3093\u8FFD\u3044\u3064\u304B\u306A\u304B\u3063\u305F\u2026\u2026\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 106
+      debugIndex: 106
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u2026\u2026\u3046\u3046\u3093\u3002\u3053\u3053\u307E\u3067\u6765\u3089\u308C\u305F\u306E\u306F\u3001\u79C1\u306E\u5546\u58F2\u304C\u901A\u7528\u3057\u305F\u3063\u3066\u3053\u3068\u3002\\n\u6B21\u306F\u6700\u5F8C\u307E\u3067\u8D70\u308A\u304D\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 107
+      debugIndex: 107
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 108
+      debugIndex: 108
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 109
+      debugIndex: 109
       strings:
       - 
       - 
@@ -3336,8 +3660,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 1
       debugInfo: 
-    - rowIndex: 100
-      debugIndex: 100
+    - rowIndex: 110
+      debugIndex: 110
       strings:
       - 
       - 
@@ -3354,8 +3678,26 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 1
       debugInfo: 
-    - rowIndex: 101
-      debugIndex: 101
+    - rowIndex: 111
+      debugIndex: 111
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 112
+      debugIndex: 112
       strings:
       - '*Run_Opening_Second'
       - 
@@ -3372,8 +3714,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 102
-      debugIndex: 102
+    - rowIndex: 113
+      debugIndex: 113
       strings:
       - 
       - "\u30C8\u30B3"
@@ -3390,8 +3732,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 103
-      debugIndex: 103
+    - rowIndex: 114
+      debugIndex: 114
       strings:
       - 
       - "\u30C8\u30B3"
@@ -3408,8 +3750,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 104
-      debugIndex: 104
+    - rowIndex: 115
+      debugIndex: 115
       strings:
       - 
       - "\u30C8\u30B3"
@@ -3420,204 +3762,6 @@ MonoBehaviour:
       - 
       - 
       - "\u4E8C\u5EA6\u76EE\u306E\u4E00\u65E5\u76EE\u3001\u4ECA\u5EA6\u3053\u305D\u3046\u307E\u304F\u3084\u3063\u3066\u307F\u305B\u308B\u3088\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 105
-      debugIndex: 105
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 106
-      debugIndex: 106
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 1
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 107
-      debugIndex: 107
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 1
-      debugInfo: 
-    - rowIndex: 108
-      debugIndex: 108
-      strings:
-      - '*Run_Opening_Again_1'
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 109
-      debugIndex: 109
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "11_\u30B8\u30C8\u76EE"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u307E\u305F\u521D\u65E5\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3053\u306E\u68DA\u306E\u6642\u4EE3\u9045\u308C\u3063\u3077\u308A\u3082\u3001\u3082\u3046\u3059\u3063\u304B\u308A\u898B\u6163\u308C\u3061\u3083\u3063\u305F\u3002"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 110
-      debugIndex: 110
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "02_\u7B11\u9854"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u3067\u3082\u3001\u6D41\u884C\u306E\u8AAD\u307F\u65B9\u306A\u3089\u524D\u3088\u308A\u305A\u3063\u3068\u5206\u304B\u3063\u3066\u308B\u3002\\n\u30B5\u30AF\u30C3\u3068\u7ACB\u3066\u76F4\u3057\u3061\u3083\u304A\u3046\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 111
-      debugIndex: 111
-      strings:
-      - EndScenario
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 112
-      debugIndex: 112
-      strings:
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 1
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 113
-      debugIndex: 113
-      strings:
-      - '*Run_Opening_Again_2'
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 114
-      debugIndex: 114
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "03_\u5927\u7B11\u3044"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u304A\u306F\u3088\u3046\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\uFF01\\n\u30C8\u30B3\u306E\u304A\u5E97\u3001\u672C\u65E5\u3082\u4E00\u65E5\u76EE\u304B\u3089\u5143\u6C17\u306B\u958B\u5E97\u3060\u3088\uFF01"
-      - 
-      - 
-      - 
-      isEmpty: 0
-      isCommentOut: 0
-      debugInfo: 
-    - rowIndex: 115
-      debugIndex: 115
-      strings:
-      - 
-      - "\u30C8\u30B3"
-      - "10_\u771F\u5263"
-      - CharacterLayer
-      - 
-      - 
-      - 
-      - 
-      - "\u524D\u306E\u5931\u6557\u3082\u6210\u529F\u3082\u3001\u305C\u3093\u3076\u6B21\u306E\u4ED5\u5165\u308C\u306B\u6D3B\u304B\u3059\u3002\\n\u305D\u308C\u304C\u4E00\u6D41\u306E\u5546\u4EBA\u3060\u3082\u3093\u306D\u3002"
       - 
       - 
       - 
@@ -3663,6 +3807,204 @@ MonoBehaviour:
     - rowIndex: 118
       debugIndex: 118
       strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 1
+      debugInfo: 
+    - rowIndex: 119
+      debugIndex: 119
+      strings:
+      - '*Run_Opening_Again_1'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 120
+      debugIndex: 120
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "11_\u30B8\u30C8\u76EE"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u307E\u305F\u521D\u65E5\u304B\u3089\u304B\u3041\u2026\u2026\u3002\\n\u3053\u306E\u68DA\u306E\u6642\u4EE3\u9045\u308C\u3063\u3077\u308A\u3082\u3001\u3082\u3046\u3059\u3063\u304B\u308A\u898B\u6163\u308C\u3061\u3083\u3063\u305F\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 121
+      debugIndex: 121
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "02_\u7B11\u9854"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u3067\u3082\u3001\u6D41\u884C\u306E\u8AAD\u307F\u65B9\u306A\u3089\u524D\u3088\u308A\u305A\u3063\u3068\u5206\u304B\u3063\u3066\u308B\u3002\\n\u30B5\u30AF\u30C3\u3068\u7ACB\u3066\u76F4\u3057\u3061\u3083\u304A\u3046\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 122
+      debugIndex: 122
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 123
+      debugIndex: 123
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 124
+      debugIndex: 124
+      strings:
+      - '*Run_Opening_Again_2'
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 125
+      debugIndex: 125
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "03_\u5927\u7B11\u3044"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u304A\u306F\u3088\u3046\u3001\u30C8\u30E0\u30C8\u30E0\u30E9\u30F3\u30C9\uFF01\\n\u30C8\u30B3\u306E\u304A\u5E97\u3001\u672C\u65E5\u3082\u4E00\u65E5\u76EE\u304B\u3089\u5143\u6C17\u306B\u958B\u5E97\u3060\u3088\uFF01"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 126
+      debugIndex: 126
+      strings:
+      - 
+      - "\u30C8\u30B3"
+      - "10_\u771F\u5263"
+      - CharacterLayer
+      - 
+      - 
+      - 
+      - 
+      - "\u524D\u306E\u5931\u6557\u3082\u6210\u529F\u3082\u3001\u305C\u3093\u3076\u6B21\u306E\u4ED5\u5165\u308C\u306B\u6D3B\u304B\u3059\u3002\\n\u305D\u308C\u304C\u4E00\u6D41\u306E\u5546\u4EBA\u3060\u3082\u3093\u306D\u3002"
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 127
+      debugIndex: 127
+      strings:
+      - EndScenario
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 128
+      debugIndex: 128
+      strings:
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      - 
+      isEmpty: 1
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 129
+      debugIndex: 129
+      strings:
       - '*Run_Opening_Again_3'
       - 
       - 
@@ -3678,8 +4020,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 119
-      debugIndex: 119
+    - rowIndex: 130
+      debugIndex: 130
       strings:
       - 
       - "\u30C8\u30B3"
@@ -3696,8 +4038,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 120
-      debugIndex: 120
+    - rowIndex: 131
+      debugIndex: 131
       strings:
       - 
       - "\u30C8\u30B3"
@@ -3714,8 +4056,8 @@ MonoBehaviour:
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
-    - rowIndex: 121
-      debugIndex: 121
+    - rowIndex: 132
+      debugIndex: 132
       strings:
       - EndScenario
       - 
@@ -3734,6 +4076,6 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/TokoTalk.csv
     type: 0
-    textLength: 3504
+    textLength: 3811
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: b361cdbd4b66b6142a70620ad4d402e9, type: 3}

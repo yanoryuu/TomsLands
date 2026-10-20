@@ -131,7 +131,7 @@ public class CharacterStatusView : MonoBehaviour
     private void UpdateHpText(int current)
     {
         if (hpText != null)
-            hpText.text = FormatStat(hpLabel, current);
+            hpText.text = FormatStat(hpLabel, Mathf.Max(0, current)); // 倒れた一撃で HP がマイナスになっても表示は 0 で止める
     }
 
     private void UpdateMpText(int current)

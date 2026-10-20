@@ -311,6 +311,13 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         if (CurrentFace == InterventionFace.Dungeon) NotifyTab();
     }
 
+    public void PlayAutoTrigger(DungeonInterventionType type)
+    {
+        var w = DungeonWidget(type);
+        if (w != null) w.PlayAutoTrigger();
+        if (CurrentFace == InterventionFace.Hero) NotifyTab();
+    }
+
     public void SetInteractable(bool interactable)
     {
         _interactable = interactable;

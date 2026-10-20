@@ -39,6 +39,15 @@ public class BattleOutputData : ScriptableObject
     /// <summary>リザルトの「介入」1行に出す額（純支出 = 支出 − 返金）。</summary>
     public int InterventionNetSpending => InterventionSpending - InterventionRefund;
 
+    [Header("魔王側の配当（勇者敗北時の防衛報酬）")]
+    [Tooltip("防衛報酬（レリック補正込み）。純利益（TotalEarnings）には反映済み。0 なら防衛報酬なし")]
+    public int DefenseReward;
+    [Tooltip("配信したダンジョン（防衛報酬の受取累計をダンジョンごとに記録する）")]
+    public DungeonName DungeonKey;
+
+    /// <summary>魔王側に張って当たった（勇者が負け、防衛報酬を受け取った）か。</summary>
+    public bool IsDemonPayout => Result == BattleResult.Defeat && DefenseReward > 0;
+
     [Header("フラグ")]
     public bool HasResult;
 
@@ -60,6 +69,7 @@ public class BattleOutputData : ScriptableObject
         PeakViewers = 0;
         ViewerSuperChatCount = 0;
         SpecialMoveCount = 0;
+        DefenseReward = 0;
         HasResult = true;
         Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}, mobs={DefeatedMobCount}, bosses={DefeatedBossCount}");
     }
@@ -73,6 +83,13 @@ public class BattleOutputData : ScriptableObject
         ViewerSuperChatCount = Mathf.Max(0, viewerSuperChatCount);
         SpecialMoveCount = Mathf.Max(0, specialMoveCount);
         Debug.Log($"[BattleOutputData] SetStreamingStats: intervention={InterventionSpending} refund={InterventionRefund} peakViewers={PeakViewers} superChats={ViewerSuperChatCount} specials={SpecialMoveCount}");
+    }
+
+    /// <summary>防衛報酬と配信先を書き込む。SetResult の後に呼ぶ。</summary>
+    public void SetDefenseReward(int defenseReward, DungeonName dungeonKey)
+    {
+        DefenseReward = Mathf.Max(0, defenseReward);
+        DungeonKey = dungeonKey;
     }
 
     public void Clear()
@@ -89,6 +106,7 @@ public class BattleOutputData : ScriptableObject
         PeakViewers = 0;
         ViewerSuperChatCount = 0;
         SpecialMoveCount = 0;
+        DefenseReward = 0;
         HasResult = false;
     }
 }

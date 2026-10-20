@@ -147,6 +147,9 @@ public class BattleContext
         _phaseSpawnQueue.Enqueue(enemy);
     }
 
+    /// <summary>現在フェーズの未出現の敵（出現順）。勝敗メーターの見込み計算に使う（読むだけ）。</summary>
+    public IEnumerable<EnemyData> PendingSpawns => _phaseSpawnQueue;
+
     /// <summary>現在フェーズの次に出現する敵を覗く（無ければ null）。</summary>
     public EnemyData PeekNextSpawn() => _phaseSpawnQueue.Count > 0 ? _phaseSpawnQueue.Peek() : null;
 

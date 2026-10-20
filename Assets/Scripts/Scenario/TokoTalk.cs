@@ -17,6 +17,8 @@ public static class TokoTalk
     private static readonly string[] StreamLoseBig   = { "Toko_StreamLose_Big_1",   "Toko_StreamLose_Big_2" };
     private static readonly string[] StreamLoseSmall = { "Toko_StreamLose_Small_1", "Toko_StreamLose_Small_2" };
     private static readonly string[] StreamDeficit   = { "Toko_StreamDeficit_1",    "Toko_StreamDeficit_2" };
+    // 魔王側に張って当たった（勇者が負けて防衛報酬を受け取った）とき。売上の大小ではなく「配当」の話をする
+    private static readonly string[] StreamDemonPayout = { "Toko_StreamDemonPayout_1", "Toko_StreamDemonPayout_2" };
 
     // ---- ランクリア（ResultScene）----
     private const string RunClearHigh = "Toko_RunClear_High";
@@ -42,9 +44,11 @@ public static class TokoTalk
     // ラベル選択
     // =====================================================
 
-    public static string SelectStreamingReturnLabel(BattleResult result, int totalEarnings, int moneyAfter)
+    /// <param name="demonPayout">勇者が負けて防衛報酬を受け取った（魔王側の配当が出た）</param>
+    public static string SelectStreamingReturnLabel(BattleResult result, int totalEarnings, int moneyAfter, bool demonPayout = false)
     {
         if (totalEarnings < 0) return Pick(StreamDeficit);
+        if (demonPayout && result == BattleResult.Defeat) return Pick(StreamDemonPayout);
 
         int moneyBefore = Mathf.Max(1, moneyAfter - totalEarnings);
         bool big = totalEarnings >= moneyBefore * BigEarningsRatio;
@@ -84,13 +88,13 @@ public static class TokoTalk
     /// </summary>
     public static async UniTaskVoid PlayStreamingReturnAsync(
         BattleResult result, int totalEarnings, int moneyAfter,
-        MetaProgressModel meta, CancellationToken cancellationToken)
+        MetaProgressModel meta, CancellationToken cancellationToken, bool demonPayout = false)
     {
         try
         {
             if (meta == null || !meta.HasSeenTutorial(FirstStreamingEndTutorial)) return;
 
-            string label = SelectStreamingReturnLabel(result, totalEarnings, moneyAfter);
+            string label = SelectStreamingReturnLabel(result, totalEarnings, moneyAfter, demonPayout);
 
             await UniTask.Delay(TimeSpan.FromSeconds(ReturnTalkDelaySeconds), DelayType.UnscaledDeltaTime,
                 cancellationToken: cancellationToken);

@@ -26,6 +26,9 @@ public class BattleLifetimeScope : LifetimeScope
     [Header("配当通知書（勇者敗北時。未設定なら出さない）")]
     [SerializeField] private DemonKingPayoutView demonKingPayoutView;
 
+    [Header("勝敗メーター（配信中。未設定なら出さない）")]
+    [SerializeField] private BattleOutlookMeterView battleOutlookMeterView;
+
     [Header("バトル操作UI（一時停止・終了・在庫切れ）")]
     [SerializeField] private BattleControlView battleControlView;
 
@@ -111,6 +114,11 @@ public class BattleLifetimeScope : LifetimeScope
         }
         builder.RegisterInstance(itemVisualSettings);
 
+        // 配信リザルトの「相場への影響」（帰還後の装備の値段の見込み）に使う。店と同じ読み込み方
+        var shopEconomySettings = AddressableLoader.Load<ShopEconomySettings>("ShopEconomySettings");
+        if (shopEconomySettings != null)
+            builder.RegisterInstance(RemoteBalance.ApplyOverwrite("shopEconomy", shopEconomySettings));
+
         builder.Register<ItemModel>(Lifetime.Singleton);
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<PopUpManager>(Lifetime.Singleton)
@@ -149,6 +157,12 @@ public class BattleLifetimeScope : LifetimeScope
         if (demonKingPayoutView != null)
         {
             builder.RegisterComponent(demonKingPayoutView);
+        }
+
+        // 勝敗メーター（任意。TryResolve で取る）
+        if (battleOutlookMeterView != null)
+        {
+            builder.RegisterComponent(battleOutlookMeterView);
         }
 
         // BattleControlView（一時停止・配信終了・在庫切れポップアップ）

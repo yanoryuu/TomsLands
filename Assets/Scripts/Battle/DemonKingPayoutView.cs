@@ -110,6 +110,7 @@ public class DemonKingPayoutView : MonoBehaviour
         }
 
         _receiveTcs = new UniTaskCompletionSource();
+        _finalSePlayed = false;
         ApplyTexts(data);
         LayoutRows(data);
         PrepareHiddenState(data);
@@ -160,7 +161,8 @@ public class DemonKingPayoutView : MonoBehaviour
         if (defenseValueText != null) defenseValueText.text = FormatGold(data.BaseReward);
         if (relicLabelText != null) relicLabelText.text = $"レリック補正 <size=80%>×{data.RelicMultiplier:0.0#}</size>";
         if (relicValueText != null) relicValueText.text = "+" + FormatGold(data.RelicBonus);
-        if (stampText != null) stampText.text = FormatRate(data.ReturnRate);
+        // 回収倍率は受取累計で見る。はじめて支援額を回収しきった回だけ「元本回収」
+        if (stampText != null) stampText.text = data.JustRecoveredPrincipal ? "元本\n回収" : FormatRate(data.ReturnRate);
         if (bubbleText != null) bubbleText.text = DemonKingLines[UnityEngine.Random.Range(0, DemonKingLines.Length)];
         SetTotal(0);
     }
@@ -246,10 +248,13 @@ public class DemonKingPayoutView : MonoBehaviour
         await RevealRowAsync(totalRow, ct);
         int shown = 0;
         _countTween?.Kill();
-        _countTween = DOTween.To(() => shown, v => { shown = v; SetTotal(v); }, data.FinalReward, CountUpDuration)
+        float countDuration = CountUpDuration * GameSettings.EffectDurationScale;
+        PlaySe(CountSe);
+        _countTween = DOTween.To(() => shown, v => { shown = v; SetTotal(v); }, data.FinalReward, countDuration)
             .SetEase(Ease.OutCubic)
             .SetLink(gameObject);
         await DelaySeconds(CountUpDuration + 0.05f, ct);
+        PlayFinalSeOnce();
 
         // 4. 封蝋とハンコを「ポン」
         StampIn(sealRoot);
@@ -274,6 +279,7 @@ public class DemonKingPayoutView : MonoBehaviour
     {
         _countTween?.Kill();
         SetTotal(data.FinalReward);
+        PlayFinalSeOnce(); // スキップしたときも確定の音は1回だけ鳴らす
 
         ShowRow(supportRow, data.SupportAmount > 0);
         ShowRow(defenseRow, true);
@@ -351,8 +357,9 @@ public class DemonKingPayoutView : MonoBehaviour
         if (target != null) target.gameObject.SetActive(active);
     }
 
+    /// <summary>演出の待ち。設定「演出を速くする」で半分になる。</summary>
     private static UniTask DelaySeconds(float seconds, CancellationToken ct)
-        => UniTask.Delay(TimeSpan.FromSeconds(seconds), ignoreTimeScale: true, cancellationToken: ct);
+        => UniTask.Delay(TimeSpan.FromSeconds(seconds * GameSettings.EffectDurationScale), ignoreTimeScale: true, cancellationToken: ct);
 
     // =====================================================
     // 入力
@@ -364,6 +371,28 @@ public class DemonKingPayoutView : MonoBehaviour
     }
 
     private void OnReceiveClicked() => _receiveTcs?.TrySetResult();
+
+    // =====================================================
+    // 音（ボタンの押下音は ButtonSoundHandler が鳴らすので、ここは演出の音だけ）
+    // =====================================================
+
+    private const string CountSe = "営業/SE_数の増減";
+    private const string FinalSe = "営業/SE_売上音";
+    private bool _finalSePlayed;
+
+    private void PlayFinalSeOnce()
+    {
+        if (_finalSePlayed) return;
+        _finalSePlayed = true;
+        PlaySe(FinalSe);
+    }
+
+    private static void PlaySe(string key)
+    {
+        // Instance は見つからないと LogError を出すので、鳴らすときだけ取得する
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE(key);
+    }
 
 #if UNITY_EDITOR
     /// <summary>見た目確認用（Play 中に Inspector の右クリックメニューから）。</summary>

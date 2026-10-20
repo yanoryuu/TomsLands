@@ -228,6 +228,13 @@ public class StreamingCommentCatalog : ScriptableObject
         yield return B(StreamingCommentTrigger.DungeonCurse, 2, 3, 0.6f, prio: 2);
         yield return B(StreamingCommentTrigger.DungeonReinforce, 3, 4, 0.8f, prio: 3);
         yield return B(StreamingCommentTrigger.DungeonBossBuff, 5, 7, 1.0f, prio: 4);
+        yield return B(StreamingCommentTrigger.PriceSpike, 2, 3, 0.6f, cd: 2.5f, prio: 3);
+        yield return B(StreamingCommentTrigger.BetOnHero, 2, 3, 1.2f, prio: 3);
+        yield return B(StreamingCommentTrigger.BetOnDemon, 2, 3, 1.2f, prio: 3);
+        yield return B(StreamingCommentTrigger.VictoryBetDemon, 3, 4, 1.0f, prio: 5);
+        yield return B(StreamingCommentTrigger.DefeatBetDemon, 4, 6, 1.0f, prio: 5);
+        yield return B(StreamingCommentTrigger.DefeatBetHero, 2, 3, 1.0f, prio: 5);
+        yield return B(StreamingCommentTrigger.DemonSuperChat, 3, 5, 1.0f, prio: 4);
     }
 
     private static IEnumerable<Entry> BuiltInEntries()
