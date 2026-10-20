@@ -18,14 +18,22 @@ MonoBehaviour:
   icon: {fileID: 0}
   requiredHallLevel: 0
   levels:
-  - cost: 7000
+  - cost: 400000
     effectText: "\u30E9\u30F3\u958B\u59CB\u6642\u304B\u3089\u60C5\u5831\u5C4B Lv2\uFF08\u91D1\u878D\u5546\u54C1\u304C\u6700\u521D\u304B\u3089\u4F7F\u3048\u308B\uFF09"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 16000
-    effectText: "\u53D6\u5F15\u6240\u306E\u58F2\u8CB7\u624B\u6570\u6599 -1%"
+  - cost: 900000
+    effectText: "\u60C5\u5831\u5C4B Lv2 \u3067\u958B\u59CB\u30FB\u65B0\u805E\u306E\u8CFC\u8AAD\u6599
+      -25%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 2000000
+    effectText: "\u60C5\u5831\u5C4B Lv2 \u3067\u958B\u59CB\u30FB\u65B0\u805E\u306E\u8CFC\u8AAD\u6599
+      -50%\u30FB\u53D6\u5F15\u6240\u306E\u624B\u6570\u6599 -1%"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
