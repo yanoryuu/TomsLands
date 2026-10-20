@@ -19,6 +19,10 @@ public static class TutorialSteps
     /// <summary>立て替え後、「需要が高く価格が安い」商品の選び方を教わる会話。</summary>
     public const string FundsAdvanceAfter = "Tutorial_FundsAdvanceAfter";
     public const string ProphetMeeting    = "Tutorial_ProphetMeeting";
+    /// <summary>プロローグの後半（暗幕を開けてから、棚の商品が時代遅れだと気づく）。</summary>
+    public const string OpeningShop       = "Tutorial_OpeningShop";
+    /// <summary>初配信の前日、勇者に何を持たせるかを促す会話。</summary>
+    public const string HeroEquip         = "Tutorial_HeroEquip";
 
     // ---- 会話ではない段階フラグ ----
     /// <summary>初回のオート購入（所持金全額・調整不可）を済ませた。</summary>
