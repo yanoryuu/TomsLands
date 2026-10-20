@@ -135,7 +135,7 @@ public class PreparationPresenter : IStartable, IDisposable
             string detail = PreparationModel.DescribeModeShort(difficulty);
             view.ShowMessage(string.IsNullOrEmpty(detail)
                 ? $"難易度「{DifficultyLabel(difficulty)}」を選択した。"
-                : $"難易度「{DifficultyLabel(difficulty)}」を選択した。{detail}、最後の配信のあとで精算。");
+                : $"「{DifficultyLabel(difficulty)}」を選んだ。{detail}で、最後の配信のあとに精算する。");
             RefreshAll();
         }).AddTo(disposables);
 
