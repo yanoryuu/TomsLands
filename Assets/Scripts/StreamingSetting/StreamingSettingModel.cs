@@ -73,22 +73,31 @@ public class StreamingSettingModel
     }
 
     /// <summary>
-    /// 在庫が0以下のアイテムをSelected から除外する。
-    /// LoadData() の後に呼び出す。
+    /// 在庫が0以下のアイテムをSelected から除外し、残りの数量を今の在庫数までに丸める。
+    /// LoadData() の後と、確定の直前に呼び出す。
+    /// （前回の品出し数が今の在庫より多いまま確定すると、在庫を超えて売れて店の在庫が減らない）
     /// </summary>
     public void CleanupUnavailableItems(ItemModel itemModel)
     {
         var toRemove = new List<string>();
+        var toClamp = new List<KeyValuePair<string, int>>();
         foreach (var kv in _selected)
         {
             var runtime = itemModel.GetRuntimeItem(kv.Key);
             if (runtime == null || runtime.Stock.Value <= 0)
                 toRemove.Add(kv.Key);
+            else if (kv.Value > runtime.Stock.Value)
+                toClamp.Add(new KeyValuePair<string, int>(kv.Key, runtime.Stock.Value));
         }
         foreach (var id in toRemove)
         {
             _selected.Remove(id);
             Debug.Log($"[StreamingSettingModel] Removed unavailable item from selection: {id}");
+        }
+        foreach (var kv in toClamp)
+        {
+            Debug.Log($"[StreamingSettingModel] Clamped quantity to stock: {kv.Key} {_selected[kv.Key]} → {kv.Value}");
+            _selected[kv.Key] = kv.Value;
         }
     }
 

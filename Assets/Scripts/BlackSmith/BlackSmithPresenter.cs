@@ -169,8 +169,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
 
         var header = blackSmithView.Header;
         // 配信前の寄り道中は「今日これから配信するダンジョン」を出す（Next は今日より先を探すため）
-        bool awaitingStream = gameFlowManager.IsAwaitingStream.Value;
-        var nextKey = awaitingStream ? gameFlowManager.PendingBattleDungeon : gameFlowManager.GetNextBattleDungeon();
+        var nextKey = gameFlowManager.GetUpcomingStreamDungeon();
         var dungeon = nextKey.HasValue ? dungeonRepository.GetById(nextKey.Value) : null;
 
         if (dungeon == null)
@@ -184,7 +183,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         // お任せ仕入れ(DungeonFocus)の属性優先も働かせない（Docs/News_Spec.md §2 C4）。
         bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
         nextDungeonAttr = known ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
-        int turnsUntil = awaitingStream ? 0 : gameFlowManager.GetTurnsUntilNextBattle();
+        // 表示用の日数（今日 0・明日 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
+        int turnsUntil = gameFlowManager.GetDaysUntilNextStream();
         string weakness = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
         if (header != null) header.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
     }

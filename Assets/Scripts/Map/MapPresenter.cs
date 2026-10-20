@@ -54,16 +54,14 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
         if (dungeons == null) return list;
 
         // 次の行き先は鍛冶屋ヘッダーと同じ取り方（配信前の寄り道中は今日配信するダンジョン）
-        bool awaitingStream = gameFlowManager != null && gameFlowManager.IsAwaitingStream.Value;
-        DungeonName? nextKey = null;
-        if (gameFlowManager != null)
-            nextKey = awaitingStream ? gameFlowManager.PendingBattleDungeon : gameFlowManager.GetNextBattleDungeon();
+        DungeonName? nextKey = gameFlowManager != null ? gameFlowManager.GetUpcomingStreamDungeon() : null;
 
         string nextText = null;
         if (nextKey.HasValue)
         {
-            int turnsUntil = awaitingStream ? 0 : gameFlowManager.GetTurnsUntilNextBattle();
-            nextText = awaitingStream ? "本日配信" : turnsUntil >= 0 ? $"あと{turnsUntil}ターン" : "";
+            // 表示用の日数（今日 0・明日 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
+            int daysUntil = gameFlowManager.GetDaysUntilNextStream();
+            nextText = daysUntil == 0 ? "本日配信" : daysUntil > 0 ? $"あと{daysUntil}ターン" : "";
         }
 
         foreach (var data in dungeons)

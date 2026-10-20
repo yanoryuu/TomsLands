@@ -51,7 +51,13 @@ public class BattleResultView : MonoBehaviour
 
         if (resultTitleText != null)
         {
-            resultTitleText.text = result == BattleResult.Victory ? "勝利！" : "敗北...";
+            resultTitleText.text = result switch
+            {
+                BattleResult.Victory => "勝利！",
+                // 見出し枠は3文字ぶん（「勝利！」）なので、4文字は縮めて1行に収める
+                BattleResult.Abort => "<size=70%>配信終了</size>",
+                _ => "敗北...",
+            };
         }
 
         // 売上サマリー（StreamingSalesModel が集計した正確な金額を使用）

@@ -38,6 +38,7 @@ public class BattleSceneStarter : IAsyncStartable
     // ポーズ・在庫切れ管理
     private readonly BattlePauseController _pauseController = new();
     private bool _isRestockPopupShowing = false;
+    private bool _isEndConfirmShowing = false;
     private int _battleSpending = 0; // バトル中の補充購入で使った金額
     // バトル中に補充した数量（itemId → 合計数）。売却数の集計（BuildSoldItems）で使用
     private readonly Dictionary<string, int> _restockedQuantities = new();
@@ -113,10 +114,14 @@ public class BattleSceneStarter : IAsyncStartable
         foreach (var kv in selectedItems)
         {
             var runtime = _itemModel.GetRuntimeItem(kv.Key);
+            // 持ち込み数は今の在庫が上限（前回の品出し数が在庫より多いまま確定されても、在庫を超えて売らない）。
+            // StreamingSalesController.Setup が在庫をこの数で上書きするので、必ずここで丸める
+            int quantity = runtime != null ? Mathf.Min(kv.Value, runtime.Stock.Value) : 0;
+            if (quantity <= 0) continue;
             battleItems.Add(new BattleInputItem
             {
                 ItemId = kv.Key,
-                Quantity = kv.Value,
+                Quantity = quantity,
                 Price = runtime != null ? runtime.CurrentPrice.Value : 0
             });
         }
@@ -193,6 +198,11 @@ public class BattleSceneStarter : IAsyncStartable
             .Subscribe(defeat => _battleTcs.TrySetResult((BattleResult.Defeat, defeat.weaponId, defeat.armorId)))
             .AddTo(disposables);
 
+        // 戦闘ループの例外は敗北（防衛報酬あり）にせず途中終了として扱う
+        _battleSequencer.OnBattleError
+            .Subscribe(err => _battleTcs.TrySetResult((BattleResult.Abort, err.weaponId, err.armorId)))
+            .AddTo(disposables);
+
         _battleSequencer.OnEnemyDefeated
             .Subscribe(enemy =>
             {
@@ -210,9 +220,9 @@ public class BattleSceneStarter : IAsyncStartable
                 .Subscribe(_ => TogglePause())
                 .AddTo(disposables);
 
-            // 配信終了ボタン
+            // 配信終了ボタン（確認してから途中終了）
             _controlView.OnEndBattleRequested
-                .Subscribe(_ => ForceEndBattle())
+                .Subscribe(_ => ConfirmEndStreamingAsync(battleCts.Token).Forget())
                 .AddTo(disposables);
         }
 
@@ -245,6 +255,8 @@ public class BattleSceneStarter : IAsyncStartable
         // バトル終了 → ポーズ解除してからループキャンセル（WaitIfPausedAsync が抜けられるように）
         _pauseController.Resume();
         battleCts.Cancel();
+        // 途中終了でも戦闘ループを止める（止めないとリザルト表示中も裏で攻撃SE・価格変動が続く）
+        _battleSequencer.StopBattle();
 
         // 介入の受付を閉じる（未実行の指示は返金）→ 視聴者スパチャの発生を止める。
         // どちらも StopSales・スナップショットより前（§5-3 の停止順序）
@@ -336,14 +348,51 @@ public class BattleSceneStarter : IAsyncStartable
     // 配信強制終了
     // =====================================================
 
+    /// <summary>
+    /// 配信終了ボタン: 確認ポップアップを出し、「終了する」なら途中終了（Abort）で決着させる。
+    /// 確認中は一時停止する（止めないと確認している間に勇者が倒れたり勝ったりする）。
+    /// 確認中に決着したら battleCts のキャンセルでポップアップを閉じる。
+    /// </summary>
+    private async UniTaskVoid ConfirmEndStreamingAsync(CancellationToken token)
+    {
+        // ポップアップは同時に1つまで（補充ポップアップの最中は受け付けない）
+        if (_isEndConfirmShowing || _isRestockPopupShowing || _controlView == null) return;
+        _isEndConfirmShowing = true;
+
+        bool wasPaused = _pauseController.IsPaused;
+        if (!wasPaused)
+        {
+            _pauseController.Pause();
+            _controlView.UpdatePauseButtonText(true);
+        }
+
+        bool confirmed = false;
+        try
+        {
+            confirmed = await _controlView.ShowEndStreamingConfirmAsync(token);
+        }
+        finally
+        {
+            _isEndConfirmShowing = false;
+            if (!confirmed && !wasPaused)
+            {
+                _pauseController.Resume();
+                _controlView.UpdatePauseButtonText(false);
+            }
+        }
+
+        if (confirmed && !token.IsCancellationRequested) ForceEndBattle();
+    }
+
     private void ForceEndBattle()
     {
         // ポーズ解除してから終了（ループが WaitIfPausedAsync で詰まらないように）
         _pauseController.Resume();
         string weaponId = _inputData.EquippedItemIds.Count > 0 ? _inputData.EquippedItemIds[0] : "";
         string armorId  = _inputData.EquippedItemIds.Count > 1 ? _inputData.EquippedItemIds[1] : "";
-        _battleTcs?.TrySetResult((BattleResult.Defeat, weaponId, armorId));
-        Debug.Log("[BattleSceneStarter] 配信を強制終了しました。");
+        // 途中終了は勝ちでも負けでもない。防衛報酬・勝敗ボーナス・経験値・最低保証レベルアップは付かない
+        _battleTcs?.TrySetResult((BattleResult.Abort, weaponId, armorId));
+        Debug.Log("[BattleSceneStarter] 配信を途中終了しました（Abort）。");
     }
 
     // =====================================================
@@ -352,7 +401,7 @@ public class BattleSceneStarter : IAsyncStartable
 
     private async UniTaskVoid TryShowRestockAsync(RuntimeItemData item, CancellationToken token)
     {
-        if (_isRestockPopupShowing || _controlView == null) return;
+        if (_isRestockPopupShowing || _isEndConfirmShowing || _controlView == null) return;
         _isRestockPopupShowing = true;
 
         // ポップアップ中は一時停止（既にポーズ中でなければ）
@@ -532,7 +581,9 @@ public class BattleSceneStarter : IAsyncStartable
                 ItemId = item.ItemId,
                 SoldQuantity = totalSold,
                 SoldFromStock = Mathf.Min(totalSold, item.Quantity),
-                SoldPrice = item.Price
+                SoldPrice = item.Price,
+                // 実際に売れたときの価格の合計（配信中は価格が動くので「品出し時価格×個数」とは一致しない）
+                Revenue = _salesController != null ? _salesController.GetItemRevenue(item.ItemId) : totalSold * item.Price
             });
         }
         return soldItems;

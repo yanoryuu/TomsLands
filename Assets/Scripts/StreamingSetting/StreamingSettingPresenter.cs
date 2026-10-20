@@ -107,6 +107,27 @@ public class StreamingSettingPresenter : IDisposable
         _model.CleanupUnavailableItems(_itemModel);
         _view.PopulateSelected(_model.Selected, _itemModel);
         _view.PopulateAvailable(_itemModel.RuntimeItems);
+        ShowDungeonInfo();
+    }
+
+    /// <summary>
+    /// 行き先のダンジョン欄。名前はいつでも出し、レベルと弱点は情報を買ってあるときだけ出す
+    /// （情報屋の地図・地図の名札と同じ開示ルール）。
+    /// </summary>
+    private void ShowDungeonInfo()
+    {
+        var dungeon = _battleInputData != null ? _dungeonCatalog?.GetDungeon(_battleInputData.DungeonKey) : null;
+        if (dungeon == null)
+        {
+            _view.ShowDungeonInfo("—", "？", "？");
+            return;
+        }
+
+        bool purchased = TryGetPurchasedDungeonInfo(out _);
+        _view.ShowDungeonInfo(
+            dungeon.dungeonName,
+            purchased ? _battleInputData.DungeonLevel.ToString() : "？", // 見出し「レベル：」はシーン側にある
+            purchased ? ItemAttributeText.ToJapanese(dungeon.requiredAttribute) : "？");
     }
 
     /// <summary>
@@ -139,6 +160,8 @@ public class StreamingSettingPresenter : IDisposable
 
     private void ConfirmSelection()
     {
+        // 「前回と同じで確定」でも在庫を超えて持ち込まない
+        _model.CleanupUnavailableItems(_itemModel);
         _model.SaveData();
         _itemModel.SaveData();
         _confirmTcs?.TrySetResult();

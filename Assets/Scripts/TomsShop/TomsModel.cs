@@ -159,7 +159,17 @@ public class TomsModel
     /// <summary>
     /// 収入を所持金に加算する（旧名: Settlement。売り注文の「約定」と紛らわしいためリネーム）。
     /// </summary>
-    public void AddRevenue(int price) => PlayerMoney.Value += price;
+    public void AddRevenue(int price) => PlayerMoney.Value = SaturatingAdd(PlayerMoney.Value, price);
+
+    /// <summary>
+    /// int の範囲で頭打ちにする足し算。所持金は int なので、約21億を超えると負に回り込む
+    /// （一番儲かった瞬間に所持金がマイナスになる）のを防ぐ。
+    /// </summary>
+    public static int SaturatingAdd(int a, int b)
+    {
+        long sum = (long)a + b;
+        return sum > int.MaxValue ? int.MaxValue : sum < int.MinValue ? int.MinValue : (int)sum;
+    }
 
     public void PurchaseItem(int price) => PlayerMoney.Value -= price;
 

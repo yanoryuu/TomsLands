@@ -104,6 +104,9 @@ public class BattleOutputSoldItem
     public int SoldQuantity;
     /// <summary>ショップ在庫から減らす数（持ち込み数が上限。補充分は店在庫に無いため含めない）</summary>
     public int SoldFromStock;
+    /// <summary>品出し時の単価（配信中は価格が動くので、売上の計算には Revenue を使う）</summary>
     public int SoldPrice;
+    /// <summary>この商品の配信中の売上合計（売れたときの価格 × 個数の合計。補充分も含む）</summary>
+    public int Revenue;
 }
 

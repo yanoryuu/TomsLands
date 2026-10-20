@@ -157,7 +157,7 @@ AutoPlay.Stop("録画終了");
   属性ごとに「有利な魔物の数 − 不利な魔物の数」（`IsEffective` / `IsWeak`）が正なら有利、負なら不利。現在のデータでは
   深緑の獣林（木）: 有利=火 / 不利=水、灼熱の火山牢（火）: 有利=水 / 不利=木、氷霧の洞窟（水）: 有利=木 / 不利=火、
   魔王城・忘却の霊廟（闇）: 有利=光、古代機構城メタリオン（光）: 有利=闇。アイテム属性は敵と同じ5属性（火・水・木・光・闇）で、旧「風」は木、旧「土」は闇に統一済み（#83）。
-- 次の配信先は `GameFlowManager.GetNextBattleDungeon()`（配信日の朝の寄り道中は `PendingBattleDungeon`）、残り営業日は `GetTurnsUntilNextBattle()`（次の行き先が配信なら 0）。
+- 次の配信先は `GameFlowManager.GetNextBattleDungeon()`（配信日の朝の寄り道中は `PendingBattleDungeon`）、残り営業日は `GetTurnsUntilNextBattle()`（次の行き先が配信なら 0）。画面の表示は別の `GetDaysUntilNextStream()`（今日 0・明日 1）を使うので、AutoPlay の判断とは数え方が1つずれる。
   情報料は `InfoBrokerModel.GetDungeonInfoCosts()[ダンジョン][配信回数]`。魔王城など情報屋で扱っていないダンジョンは弱点を知る手段がない。
 
 ### 自動の流れ

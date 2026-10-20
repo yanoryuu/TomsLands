@@ -38,6 +38,15 @@ public class BattleActionExecutor
 
             if (presenter.GetModel().IsDead) continue;
 
+            // 行動ごとにポーズを確認する（ターンの頭だけだと、補充ポップアップ等で止めている間も
+            // 残りの攻撃が進み、勇者が倒れたりウェーブが進んだりする）
+            if (pauseController != null)
+            {
+                await pauseController.WaitIfPausedAsync(token);
+                if (IsBattleEnded()) break;
+                if (presenter.GetModel().IsDead) continue;
+            }
+
             // 介入: 勇者側の指示は勇者の手番、ダンジョン側の指示は魔物の手番の頭で実行（§4-4）
             if (interventions != null)
             {
@@ -68,7 +77,7 @@ public class BattleActionExecutor
             if (sound != null) sound.PlaySE(presenter.GetModel().Type == CharacterType.Hero ? "勇者攻撃" : "敵攻撃");
             int damageDealt = presenter.PerformAttack(targetPresenter, modifier.Multiplier, modifier.BonusDamage);
             string logMessage = $"{presenter.GetModel().Name} の攻撃！ {targetPresenter.GetModel().Name} に {damageDealt} のダメージ！";
-            await uiView.AddLogAsync(logMessage, token);
+            await uiView.AddLogAsync(logMessage, token, pauseController);
 
             // HPが0以下になった時点で即座に点滅→非表示
             if (targetPresenter.GetModel().IsDead)
