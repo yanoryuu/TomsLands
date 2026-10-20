@@ -39,6 +39,12 @@
 ## 店・鍛冶屋（通常営業チュートリアル／10/12台本）
 
 ### 会話データ（要エディタ操作）
+- 2026-10（K）: `Tutorial.csv` と `CharacterIntro.csv` を変更し、`Tutorial.book.asset` / `CharacterIntro.book.asset` は再インポート済み（バッチで `AdvScenarioDataProject.ImportAll()`）。
+  CSV をさらに直したら、エディタで宴の「シナリオをインポート」（またはプロジェクト `Assets/TomsScenario/TomsScenario.project.asset` の Import）をやり直す。
+  - 追加: `Tutorial_OpeningShop` / `Tutorial_HeroEquip` / `Tutorial_RelicFirst` / `Tutorial_StreamingEndHard` / `Intro_Newspaper`
+  - 変更: `Tutorial_FundsShortage`（良い知らせ）/ `Tutorial_FundsAdvance`（叱らない。「並べた次の日の夜に入金、あさってから使える」）/ `Tutorial_FundsAdvanceAfter`（新聞の2行）/
+    `Tutorial_ProphetMeeting` の最後（明日の配信）/ `Tutorial_StreamingPrepare`（在庫から選ぶ）/ `Intro_Hero` 1行目 / `Intro_DemonLord` 1行目（占い師の案内は無い）
+  - 口調は Docs の付録の基準（鍛冶屋「オレ」、魔王「我」、占い師「ボク・キミ・トコちゃん」）。主人公は「トコ」。
 - `Assets/TomsScenario/Scenarios/Tutorial.csv` を更新済み。上と同じ手順で再インポートして `Tutorial.book.asset` に反映する。
   - 変更: `Tutorial_Blacksmith` の最終行（「それじゃあ手持ちのお金、全部使って『オート購入』してみようっと！」）。
   - 追加: `Tutorial_FundsShortage`（店・2日目の朝）/ `Tutorial_FundsAdvance`（鍛冶屋・入金ルール〜立て替え）/
@@ -50,11 +56,19 @@
 |---|---|
 | 「初めから」で直接開店 | `TitlePresenter.StartNewGame`: スロットの `Tutorial_Opening` が未読なら VillageScene ではなく TomsShop をロード（難易度=ふつう、準備設定なし） |
 | 鍛冶屋以外クリック不可 | `TutorialPresenter.UpdateShopLock` → `TomsShopView.SetTutorialBlacksmithOnly` + `TurnPhaseView.SetAdvanceLocked`（初回オート購入が済むまで。鍛冶屋ボタンは脈動） |
-| オート購入で全額消費 | `BlackSmithPresenter`: `Tutorial_Blacksmith` 終了で予算ポップアップを自動表示（予算=所持金全額・入力/全額/半分/方針/キャンセル不可、「購入」だけ押せる）。それまで閉じる・タブ・並べ替え・一覧・詳細パネルはロック |
-| 売上リザルト後の会話 | 2ターン目の店入場で `Tutorial_FundsShortage` → 終了後に自動で鍛冶屋へ遷移 |
+| オート購入で全額消費 | `BlackSmithPresenter`: `Tutorial_Blacksmith` 終了で予算ポップアップを自動表示（予算=所持金全額・入力/全額/半分/キャンセル不可。**方針だけは選べる**（K-5、既定はおすすめ順）、あとは「購入」だけ押せる）。それまで閉じる・タブ・並べ替え・一覧・詳細パネルはロック |
+| 売上リザルト後の会話 | 2ターン目の店入場で `Tutorial_FundsShortage`（「昨日の注文がぜんぶ入った、代金は今夜」＝良い知らせとして。K-3）→ 朝の通知を出し終えてから自動で鍛冶屋へ遷移 |
 | 立て替え資金 | `Tutorial_FundsAdvance` 終了時に `TutorialSteps.FundsAdvanceAmount`(50,000G) を加算・保存（段階フラグ `TutorialStep_FundsAdvanceGranted` で一度きり） |
 | 需要高×価格安の強調 | `Tutorial_FundsAdvanceAfter` 終了で `BlackSmithModel.TutorialBargainHighlight=true` → スコア（需要÷(現在価格/基準価格)）上位最大3件の行を脈動＋背景明滅、最上位のタブを開いて選択。鍛冶屋を閉じると解除 |
-| 占い師との出会い | `Tutorial_ProphetMeeting` を 2ターン目→3ターン目（2日目の営業後）へ移動 |
+| 占い師との出会い | `Tutorial_ProphetMeeting` は **初配信の前日の朝**（3ターン目以降で、次の配信まで1日）に出す（K-6）。出会いそびれた場合は配信の当日・配信後に拾う |
+| 勇者に何を持たせるか（K-1） | 出会いの直後に `Tutorial_HeroEquip`（占い師「勝てば持たせた品は値上がり、ボスならなおさら。負ければ下がる」）→ 朝の通知を出し終えてから勇者画面を自動で開く |
+| 新聞の読み方（K-2） | `Tutorial_FundsAdvanceAfter` の最後に鍛冶屋の2行（先読みは新聞）。新聞を初めて開いたとき `Intro_Newspaper`（CharacterIntro.csv。5社・記事→属性→値動き・外れる記事・貼る） |
+| プロローグ（K-5） | `Tutorial_Opening`（暗幕のまま〜「開店だよー！」）→ 幕を開けて `Tutorial_OpeningShop`（棚の商品が時代遅れ〜） |
+| 初配信の後日談（K-8） | 勇者が勝っていれば `Tutorial_StreamingEnd`、負けていれば `Tutorial_StreamingEndHard`（「思ったより難しいね」「勝ち負けを読んで張れば」）。片方を見たらもう片方も既読にする。判定は `RunHistory.streamWins` |
+| レリックの説明（K-10） | 最初のレリック3択を出す直前に `Tutorial_RelicFirst`（TomsShopPresenter） |
+| イベント・バズの説明（K-9） | `TurnEvent_EventTutorial` は初めてイベントが起きたとき、`TurnEvent_BuzzTutorial` は初めて（ふつうの）バズが起きたとき。どちらも占い師に出会った後だけ。以前の「初配信の2日後／5日後に無条件」はやめた |
+| ボタンを段階的に開ける（K-7） | 1周目だけ `TutorialPresenter.ApplyStagedUnlock`: 1日目 鍛冶屋・陳列・返済 / 2日目 新聞 / 占い師に出会ったら 占い師・情報屋・地図・勇者 / 初配信のあと 魔王軍支援・広告 / 最初の返済か初配信の2日後 改装・設備。新しく出たボタンは一度だけ弾む（段階フラグ `TutorialStep_Open_*`）。2周目以降は全部出す |
+| 始めるまでのクリック（K-13） | どのスロットにもデータが無いとき（`SaveSlotManager.AnyProfileExists()==false`）、「初めから」はスロット選択を飛ばしてスロット1で始める |
 
 ### 任意の配線
 - `ItemShopSlot`（鍛冶屋の行プレハブ）に `tutorialHighlight`（強調枠の GameObject、初期非アクティブ）を追加できる。
