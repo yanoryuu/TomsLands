@@ -228,17 +228,19 @@ public class VillageSettingsData
     // --- ラン終了 → 村資金の変換（Docs/Village_Meta_Design.md §4） ---
     // 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え。クリア時は「持ち込み + 儲け × 率 × 難易度倍率」が村資金に入る
     /// <summary>ランクリア時: 儲け → 村資金への変換率。</summary>
-    public float conversionRate = 0.5f;
+    public float conversionRate = 20f;
     /// <summary>破産時: そのランの最高の儲け（所持金の最高値から求める）× 変換率 × この値。持ち込みは戻らない。</summary>
-    public float bankruptcyConversionRate = 0.1f;
+    public float bankruptcyConversionRate = 0.2f;
     /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>
     public float debtScalePerVillageLevel = 0f;
     /// <summary>変換率に掛ける難易度ごとの倍率（index = GameModeId: Short / Medium / Long）。</summary>
     public float[] difficultyConversionMultipliers = { 1f, 1.2f, 1.4f };
+    /// <summary>クリアしたら儲けに関係なく入る完走ボーナス（index = GameModeId）。赤字のクリアでも Lv1 を1つ建てられる額。</summary>
+    public int[] clearBaseFunds = { 300000, 450000, 600000 };
 
     // --- ランク（儲け ÷ 難易度ごとの基準。A = 基準以上） ---
     /// <summary>ランク A の基準となる儲け（index = GameModeId）。S = 基準×rankSRatio、B = ×rankBRatio、C = 0 以上、D = 赤字。</summary>
-    public int[] rankBaseProfits = { 60000, 150000, 300000 };
+    public int[] rankBaseProfits = { 60000, 130000, 220000 };
     public float rankSRatio = 2f;
     public float rankBRatio = 0.4f;
 
@@ -272,6 +274,7 @@ public class VillageSettingsData
     {
         var clone = (VillageSettingsData)MemberwiseClone();
         clone.difficultyConversionMultipliers = CopyOf(difficultyConversionMultipliers);
+        clone.clearBaseFunds = CopyOf(clearBaseFunds);
         clone.rankBaseProfits = CopyOf(rankBaseProfits);
         clone.tavernNewspaperDiscounts = CopyOf(tavernNewspaperDiscounts);
         clone.tavernFundFeeReductions = CopyOf(tavernFundFeeReductions);
