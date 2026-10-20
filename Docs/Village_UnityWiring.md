@@ -4,6 +4,12 @@ feature/village-core ブランチで実装した「村投資メタ層のコア�
 **シーン構築・配線・ビルド設定登録は実施済み**（このドキュメントは再現手順の記録）。
 村UIが未配線でもコンパイル・起動する（VillageSceneが素通りでPreparationSceneへ直行するだけ）。
 
+> **2026-10 更新（6施設・効果の本実装）**: 施設は領主館／冒険者ギルド／酒場（情報局）／銀行／職人組合／広場の6つ
+> （詳細は Village_Meta_Design.md §0）。区画は `Plot_hall / guild / tavern / bank / artisan / plaza` の6つで、
+> 旧・印刷所の区画を広場（`Plot_plaza`）に読み替え、倉庫・街道整備・農場・骨董品店・祠・工房区画・訓練所の区画はシーンから外した。
+> 効果は施設レベルから `VillageEffects` が決め、店シーンの読み込み時（GameLifetimeScope）に metaData.json から読み直す。
+> ラン終了時の村資金は「持ち込みの返却＋完走ボーナス＋儲け×率」、ランクは儲けで決める。以下の V1 の記述（変換率0.5・効果は表示のみ・13区画）は古い。
+
 ## 仕様の要点（詳細: Docs/Village_Meta_Design.md）
 
 - **フロー**: タイトル（ニューゲーム）→ **VillageScene** → PreparationScene → ラン。
@@ -19,7 +25,9 @@ feature/village-core ブランチで実装した「村投資メタ層のコア�
 
 ## 1. マスターデータ（実施済み）
 
-1. 13施設のマスターは `Assets/Resources_moved/Village/` にコミット済み（生成ツールは役目を終えたため削除済み）
+1. 6施設のマスターは `Assets/Resources_moved/Village/`（Village_hall/guild/tavern/bank/artisan/plaza）。
+   建設費・効果文はマスターシート villageFacilities（1行=1施設×1レベル。GAS の readVillageFacilities_ が levels[] にまとめて balance.json に入れる）と揃えてある。
+   配信（RemoteBalance.ApplyList）は同梱にある facilityId だけを上書きするので、シートから施設を消しても同梱の6つは消えない
 2. 新規アセットを足したら Tools > TomsLands > **Addressables一括登録（Resources_moved）** → ラベル `VillageFacilityData` が付与される
 
 ## 2. VillageScene の構成（実施済み・構造の記録）
@@ -61,7 +69,7 @@ VillageScene.unity（ビルド設定登録済み）
 ```
 
 - **注意: CanvasはScreen Space - Camera**（Overlayだと一部キャプチャ/合成で映らない。プロジェクト慣習にも一致）
-- FacilityPlot の `facilityId` はマスターの `facilityId`（hall/guild/antique/shrine/bank/warehouse/road/press/artisan/tavern/workshop/farm/training）と一致させること
+- FacilityPlot の `facilityId` はマスターの `facilityId`（hall/guild/tavern/bank/artisan/plaza）と一致させること
 - 建物プレースホルダーは自前生成のピクセル画（`Assets/Art/VillageTiles/village_buildings.png`）。
   製品版アートでは同名スプライトの差し替え、または各区画の `stageSprites` を個別に差し替える
 
@@ -73,6 +81,13 @@ VillageScene.unity（ビルド設定登録済み）
 4. 領主館ゲート: ギルドLv1→Lv2 は「領主館Lv1でLv2に拡張可能」でボタン不可 ✓ / 祠は領主館Lv2まで未解禁表示 ✓
 5. 出撃準備へ → PreparationScene に遷移 ✓
 6. metaData.json に villageFunds/facilities が保存・復元される（スロット跨ぎ永続）✓
+
+## 3-1. 6施設化（2026-10）で足した確認項目
+
+1. 投資パネルの効果文が6施設の新しい文になっている（バッチで 1920x1080 / 1280x800 のキャプチャを確認）
+2. 既存セーブ: 削除した施設に投資済みなら、読み込み時に統合先のレベルへ読み替え／返金され、Console に `[Meta] 村の施設の統合:` が出る
+3. 町人は「総合Lv ÷ 最大の総合Lv（17）」の割合で増える（VillagePopulationView.ApplyScaled）
+4. 初めて村に入ったとき: 前半の会話 → 帰還演出 → 後半の会話（VillageTutorialDirector の betweenParts）
 
 ## 4. 未確認・今後（V2以降）
 
