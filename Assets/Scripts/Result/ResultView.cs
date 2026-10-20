@@ -600,7 +600,7 @@ public class ResultView : MonoBehaviour
     {
         string record = $"討伐{d.StreamWins}・防衛{d.StreamLosses}";
         return d.StreamWins + d.StreamLosses > 0 || d.StreamEarningsTotal != 0
-            ? $"{record}\n<size=70%>配信 {FormatSigned(d.StreamEarningsTotal)}</size>"
+            ? $"<size=82%>{record}</size>\n<size=64%>配信 {FormatSigned(d.StreamEarningsTotal)}</size>"
             : record;
     }
 

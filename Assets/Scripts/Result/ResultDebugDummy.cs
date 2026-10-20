@@ -83,6 +83,7 @@ public static class ResultDebugDummy
             HasPreviousBest = true,
             PreviousBestProfit = Mathf.RoundToInt((netWorth - init) * 0.8f),
             RunNumber = 4,
+            VillageFunds = MetaProgressModel.CalculateVillageFunds(true, netWorth - init, 0, GameModeId.Medium),
         };
     }
 }
