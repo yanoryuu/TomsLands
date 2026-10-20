@@ -10,7 +10,8 @@ using UnityEngine.UI;
 /// <summary>
 /// 村シーンの初回チュートリアル会話（占い師に村づくりを教わる）の進行役。
 /// 前半（Tutorial_Village）は暗幕で村を隠した「まだ村ではない」状態で再生し、
-/// 暗幕をフェードアウトして村を見せてから後半（Tutorial_VillageBuild）を再生する。
+/// 暗幕をフェードアウトして村を見せ、（あれば）帰還の到着演出（今回の儲け→村資金）を流してから
+/// 後半（Tutorial_VillageBuild。看板を調べて投資する説明）を再生する。
 /// 会話中はプレイヤー移動（PlayerInput/PlayerMove）と村UIのクリックを止め、終わったら戻す。
 /// 既読は TutorialScenarioService（MetaProgressModel）が管理するので、途中で抜けても未読分だけ再生される。
 /// ScenarioPlayer やラベルが無い（ブック未インポート等）場合は何もせずに終わる。
@@ -44,7 +45,9 @@ public class VillageTutorialDirector
     /// </summary>
     /// <param name="uiCamera">村の Base カメラ（暗幕を宴の立ち絵より下に描くため）。null なら Camera.main</param>
     /// <param name="setUiLocked">村UIのクリック可否を切り替える（true=ロック）。null 可</param>
-    public async UniTask PlayAsync(Camera uiCamera, Action<bool> setUiLocked, CancellationToken ct)
+    /// <param name="betweenParts">前半と後半のあいだに流す演出（帰還の到着演出）。null 可</param>
+    public async UniTask PlayAsync(Camera uiCamera, Action<bool> setUiLocked, CancellationToken ct,
+        Func<CancellationToken, UniTask> betweenParts = null)
     {
         if (!ShouldPlay) return;
 
@@ -66,6 +69,9 @@ public class VillageTutorialDirector
                 // ▼背景切り替え（トコの村へ）: 暗幕を開けて村を見せる
                 await RevealAsync(ct);
             }
+
+            // 儲けが村資金になる見せ場を、投資の説明より先に出す（「さっきのお金で建てよう」につなぐ）
+            if (betweenParts != null) await betweenParts(ct);
 
             await scenario.PlayOnceAsync(BuildLabel, ct);
 
