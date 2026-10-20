@@ -52,10 +52,8 @@ public partial class DebugMenuView : MonoBehaviour
     /// <summary>村施設ID（VillageFacilityData.facilityId と一致させること）。</summary>
     private static readonly (string id, string label)[] Facilities =
     {
-        ("hall", "領主館"), ("bank", "銀行"), ("guild", "冒険者ギルド"), ("antique", "骨董品店"),
-        ("shrine", "祠"), ("tavern", "酒場"), ("warehouse", "倉庫"), ("workshop", "工房"),
-        ("artisan", "職人組合"), ("farm", "農場"), ("press", "印刷所"), ("road", "街道整備"),
-        ("training", "訓練所"),
+        ("hall", "領主館"), ("guild", "冒険者ギルド"), ("tavern", "酒場"),
+        ("bank", "銀行"), ("artisan", "職人組合"), ("plaza", "広場"),
     };
 
     [Inject]

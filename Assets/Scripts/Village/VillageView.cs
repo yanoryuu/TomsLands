@@ -201,7 +201,7 @@ public class VillageView : MonoBehaviour
         SetFundsDisplay(villageFunds);
         // metaCurrencyText（旧・銀行預金/のれん表示）は村資金へ統合したため使わない
         if (metaCurrencyText != null) metaCurrencyText.gameObject.SetActive(false);
-        if (villageLevelText != null) villageLevelText.text = $"トムの村（総合Lv{villageLevel}）";
+        if (villageLevelText != null) villageLevelText.text = $"トコの村（総合Lv{villageLevel}）";
     }
 
     /// <summary>村資金HUDの数値だけ更新する（到着演出のカウントアップ用）。</summary>
@@ -344,9 +344,12 @@ public class VillageView : MonoBehaviour
         if (conversionTitleText != null)
             conversionTitleText.text = cleared ? "ランクリア！ 村への還元" : "破産…… それでも村は待っている";
         if (conversionEarnedText != null)
+        {
+            string sign = earned >= 0 ? "+" : "−";
             conversionEarnedText.text = cleared
-                ? $"今回の稼ぎ {earned:N0}G"
-                : $"手元に残った {earned:N0}G";
+                ? $"今回の儲け {sign}{Mathf.Abs(earned):N0}G"
+                : $"いちばん儲かっていたとき {sign}{Mathf.Abs(earned):N0}G";
+        }
 
         if (conversionConvertedText != null)
         {

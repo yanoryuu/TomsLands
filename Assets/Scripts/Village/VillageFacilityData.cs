@@ -6,7 +6,8 @@ using UnityEngine;
 /// 村施設のマスターデータ（1施設=1アセット）。
 /// 配置: Assets/Resources_moved/Village/、Addressablesラベル "VillageFacilityData"。
 /// 配信: balance.json の "villageFacilities" リスト区画（facilityIdキー）で上書き可能。
-/// V1では効果はexpectText（表示）のみ。実効果の適用は V2以降（startBonus/modifiers/unlockRelicTier の器だけ先行）。
+/// 施設は6つ（hall/guild/tavern/bank/artisan/plaza）。effectText は表示用で、実際の効果は VillageEffects が
+/// 施設レベルから決める（数値は GameConst.Village）。startBonusKey/modifiers/unlockRelicTier は旧設計の器で未使用。
 /// </summary>
 [CreateAssetMenu(fileName = "VillageFacilityData", menuName = "ScriptableObjects/Village/VillageFacilityData")]
 public class VillageFacilityData : ScriptableObject
