@@ -183,27 +183,34 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
     /// <summary>
     /// ランクリアの精算（1回のみ）。ラン内データを消す前に metaData.json へ加算保存する。
-    /// 持ち帰った手元の現金がそのまま村資金になる（施設投資・次の出店への持ち込みに使う）。
+    /// 儲け（純資産 − 初期資金 − 持ち込み − 立て替え）から村資金を求め、持ち込みは返す（MetaProgressModel.ConvertRunToVillageFunds）。
     /// </summary>
     private void AwardMetaCurrencyOnce()
     {
         if (_metaAwarded || _lastStatistics == null || _metaProgress == null) return;
         _metaAwarded = true;
 
-        _metaProgress.RecordRunEnd(
-            cleared: true,
-            netWorth: _lastStatistics.NetWorth,
-            rank: _lastStatistics.Rank,
-            totalTurns: _lastStatistics.TotalTurns);
-
-        // 持ち帰ったお金を村資金へ（村と店の経営を繋ぐ唯一の橋）
+        var s = _lastStatistics;
         int converted = _metaProgress.ConvertRunToVillageFunds(
-            cleared: true,
-            netWorth: _lastStatistics.NetWorth,
-            finalCash: _lastStatistics.FinalMoney);
-        VillageArrivalReport.Set(cleared: true, earned: _lastStatistics.FinalMoney, converted: converted);
+            cleared: true, profit: s.Profit, carried: s.Carried, mode: s.Mode);
 
-        Debug.Log($"[ResultPresenter] 村資金 +{converted}G");
+        _metaProgress.RecordRunEnd(new RunRecordPlain
+        {
+            mode = (int)s.Mode,
+            cleared = true,
+            profit = s.Profit,
+            netWorth = s.NetWorth,
+            rank = s.Rank,
+            turns = s.TotalTurns,
+            streamWins = s.StreamWins,
+            streamLosses = s.StreamLosses,
+            streamEarnings = s.StreamEarningsTotal,
+            villageFunds = converted,
+            endedAt = DateTime.Now.ToString("yyyy/MM/dd HH:mm"),
+        });
+
+        VillageArrivalReport.Set(cleared: true, earned: s.Profit, converted: converted);
+        Debug.Log($"[ResultPresenter] 村資金 +{converted}G（儲け {s.Profit}G）");
     }
 
     public void Dispose()
