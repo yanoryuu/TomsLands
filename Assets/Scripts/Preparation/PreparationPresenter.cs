@@ -12,7 +12,7 @@ using VContainer.Unity;
 /// （「続きから」はこのシーンを通らず TomsShop へ直行する）。
 /// - 持ち込み資金: 前のランで持ち帰って銀行に預けたGを、上限（村の銀行レベル依存）まで持ち込む
 /// - 難易度: このランの難易度（かんたん/ふつう/むずかしい）をここで選ぶ（タイトルでは選ばない）
-/// - スターターレリック: 呪い以外の Common レリックから1個
+/// - スターターレリック: 呪い以外の Common レリックから1個（村の冒険者ギルドが建つと、解禁済みのレアも並ぶ）
 /// - スタートダッシュ: 村資金を払ってこのランに適用する消費効果3種
 /// 出店時に RunSetupData（+難易度は StartModeData）へ書き出し、GameLifecycleHandler.InitializeNewGame が消費する。
 /// UI未配線の間は旧挙動（即 TomsShop へ遷移）にフォールバックする。
@@ -75,6 +75,12 @@ public class PreparationPresenter : IStartable, IDisposable
         // 難易度の初期値はタイトルが入れた既定値（ふつう）を引き継ぐ
         model.SelectDifficulty(startModeData.SelectedMode);
 
+        // 難易度ボタンに配信の回数と日数を添える（ランの長さ＝賭けの回数を分かって選べるように）
+        view.SetDifficultyDetails(
+            PreparationModel.DescribeModeShort(GameModeId.Short),
+            PreparationModel.DescribeModeShort(GameModeId.Medium),
+            PreparationModel.DescribeModeShort(GameModeId.Long));
+
         Bind();
         BuildCatalogs();
         RefreshAll();
@@ -126,7 +132,10 @@ public class PreparationPresenter : IStartable, IDisposable
         view.OnDifficultySelected.Subscribe(difficulty =>
         {
             model.SelectDifficulty(difficulty);
-            view.ShowMessage($"難易度「{DifficultyLabel(difficulty)}」を選択した。");
+            string detail = PreparationModel.DescribeModeShort(difficulty);
+            view.ShowMessage(string.IsNullOrEmpty(detail)
+                ? $"難易度「{DifficultyLabel(difficulty)}」を選択した。"
+                : $"難易度「{DifficultyLabel(difficulty)}」を選択した。{detail}、最後の配信のあとで精算。");
             RefreshAll();
         }).AddTo(disposables);
 
@@ -151,9 +160,13 @@ public class PreparationPresenter : IStartable, IDisposable
         catalogDisposables.Dispose();
         catalogDisposables = new CompositeDisposable();
 
-        // スターターレリック: 呪い以外の Common
+        // スターターレリック: 呪い以外の Common。村の冒険者ギルドが建てば、ギルドで解禁済みのレアも並ぶ
+        var village = VillageEffects.From(metaProgress);
         var relicPool = (relicDefinitions ?? new List<RelicDefinition>())
-            .Where(r => r != null && !r.isCurse && r.rarity == RelicRarity.Common)
+            .Where(r => r != null && !r.isCurse &&
+                        (r.rarity == RelicRarity.Common ||
+                         (village.StarterRareUnlocked && r.rarity == RelicRarity.Rare && r.unlockGuildLevel <= village.RelicUnlockTier)))
+            .OrderBy(r => r.rarity)
             .ToList();
         relicSlots = view.PopulateCatalog(view.RelicCatalogParent, relicPool.Count);
         for (int i = 0; i < relicSlots.Count && i < relicPool.Count; i++)
