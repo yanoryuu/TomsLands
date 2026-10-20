@@ -294,7 +294,7 @@ runs.csv にも介入の列（回数・支出・返金・勇者側/ダンジョ�
 | 最終純資産の中央値 | ≥ 初期資金 × 1.5 | ランを通して資産が増える手応え（P10 が初期資金割れは許容、破産は不可） |
 | `negative_money` / `clearprob_mismatch` | 0 件 | 所持金のマイナス・表示確率と勝敗の食い違いはバグ扱い |
 
-初期資金は本番（サーバー配信）と同じ **100,000G** を既定にした（`AutoPlayBatchConfig.InitMoneyOverride`。GameConst のローカル値 10,000 は変えない）。
+初期資金は本番（サーバー配信）と同じ **100,000G** を既定にした（`AutoPlayBatchConfig.InitMoneyOverride`）。2026-10-20 に GameConst の同梱値も 100,000 にそろえた（`GameConst_RemoteConfig_Spec.md` §11）。
 Jev の累計コストが `CostLimitUsd`（既定 ≒100円）を超えたらバッチを自動で止める。
 
 ---

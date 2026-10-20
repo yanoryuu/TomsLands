@@ -19,7 +19,7 @@ MonoBehaviour:
     maxInfoBrokerLevel: 5
     maxItemStock: 99
     minItemStock: 0
-    initMoney: 10000
+    initMoney: 100000
     debtPaymentInterval: 7
     debtBaseAmount: 5000
     debtMultiplier: 1.8

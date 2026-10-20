@@ -71,8 +71,8 @@
   "maxInfoBrokerLevel": 5,
   "maxItemStock": 99,
   "minItemStock": 0,
-  "initMoney": 10000,
-  "debtPaymentInterval": 10,
+  "initMoney": 100000,
+  "debtPaymentInterval": 7,
   "debtBaseAmount": 5000,
   "debtMultiplier": 1.8,
   "heroExpPerMob": 10,
@@ -98,7 +98,7 @@
 ### 4.3 SpreadSheet 列設計（提案）
 | key | value | type | 備考 |
 |---|---|---|---|
-| initMoney | 10000 | int | |
+| initMoney | 100000 | int | |
 | debtMultiplier | 1.8 | float | |
 | blackSmithLevelUpCosts | 0,3000,6000,... | csv | 配列はカンマ区切り等のルールを決める |
 
@@ -149,10 +149,13 @@ RemoteConfigBootstrap        // 起動シーケンスでServiceを駆動（GameC
 - 取得タイミング: **起動スプラッシュ/タイトル**で完了させ、ゲーム本編開始前に適用（途中差し替えによる不整合を避ける）。
 - 適用は `GameConst.OverrideFromJson(json)` を呼ぶだけ。
 
-### フォールバック順序（堅牢性）
-1. サーバー取得成功 → 適用
-2. 失敗 → ローカルキャッシュ（前回成功分）を適用
-3. キャッシュ無し → ベイク済み `GameConstSettings`（=ビルド同梱）
+### フォールバック順序（堅牢性）— 2026-10-20 にキャッシュ優先へ変更
+1. ローカルキャッシュ（前回成功分）があれば、待たずにそれを適用して起動する。最新の配信は裏で取得し（タイムアウト 15 秒）、検証に通ればキャッシュだけ更新する（**ゲームに効くのは次の起動から**。ランの途中で値が変わらない）。`RemoteConfigRefresh`
+2. キャッシュが無い（初回起動など）ときだけサーバー取得を待つ（タイムアウト 3 秒。`BootScene` の `remoteConfigTimeoutSec`）。成功 → 適用してキャッシュ
+3. どちらも無い → ベイク済み `GameConstSettings`（=ビルド同梱）
+
+gameconst・items・balance の3つとも同じ順序（`RemoteConfigService` / `ItemMasterService` / `RemoteBalanceService`）。
+配信値を変えたあと、プレイヤーに効くのは「配信後に1回起動した、その次の起動」から。急ぎの修正はこの遅れを見込む。
 
 ---
 
@@ -198,3 +201,9 @@ RemoteConfigBootstrap        // 起動シーケンスでServiceを駆動（GameC
 - アセット配信: **Addressables 2.2.2**（導入済み・移行中）
 - JSON: `JsonUtility`（標準）/ 必要なら `com.unity.nuget.newtonsoft-json`（導入済み、ネスト・dictionaryに強い）
 ```
+
+## 11. 同梱と配信値をそろえる（2026-10-20）
+
+- 決定（Q1）: **初期資金 100,000G、返済間隔 7 日**。同梱 `GameConstSettings.asset`（と `GameConstData` の既定値）は initMoney 100000 / debtPaymentInterval 7。
+- 配信用のローカル写し `Docs/balance_upload/gameconst.json` も debtPaymentInterval 7 にした。**本番（Firebase Storage）への反映はスプレッドシートの data シートを 7 にして GAS からアップロードする（ユーザーが行う）**。
+- 差分の確認: `Tools/TomsLands/リモート設定/同梱と配信値の差分`（gameconst の配信にある項目と、イベントの命令・値・本文を比べる）。リリース前に差分 0 を確かめる。`Tools/TomsLands/ビルド前チェック` にも含まれる。

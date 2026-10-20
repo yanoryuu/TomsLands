@@ -30,7 +30,7 @@
 （`BattleSceneStarter.CalculateSupportAmount`）。セーブ形式は変えていない。
 
 ずれるケース:
-- デバッグメニュー（F12）の Lv ±1 で上げ下げしたとき（払っていないのに支援額が出る）
+- デバッグメニュー（F11）の Lv ±1 で上げ下げしたとき（払っていないのに支援額が出る）
 - 途中で `balance.json`（RemoteBalance）の `levelUpCost` が変わったとき（今の表の値で計算する）
 
 ## 1. 配置（FightScene、配線済み）

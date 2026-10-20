@@ -22,8 +22,8 @@ public class BootLifetimeScope : LifetimeScope
     [Tooltip("バランス調整（結合）の配信URL")]
     [SerializeField] private string balanceUrl =
         "https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/balance.json";
-    [Tooltip("取得タイムアウト（秒）")]
-    [SerializeField] private int remoteConfigTimeoutSec = 10;
+    [Tooltip("取得タイムアウト（秒）。キャッシュが無い初回起動だけこの時間まで待つ（キャッシュがあれば待たない）")]
+    [SerializeField] private int remoteConfigTimeoutSec = 3;
 
     protected override void Configure(IContainerBuilder builder)
     {
@@ -42,7 +42,7 @@ public class BootLifetimeScope : LifetimeScope
             IRemoteConfigSource src = (enabled && !string.IsNullOrEmpty(gcUrl))
                 ? new HttpRemoteConfigSource(gcUrl, timeout)
                 : new NullRemoteConfigSource();
-            return new RemoteConfigService(src, new RemoteConfigCache());
+            return new RemoteConfigService(src, new RemoteConfigCache(), BackgroundSource(enabled, gcUrl));
         }, Lifetime.Singleton);
 
         // アイテムマスター上書き
@@ -51,7 +51,7 @@ public class BootLifetimeScope : LifetimeScope
             IRemoteConfigSource src = (enabled && !string.IsNullOrEmpty(itemUrl))
                 ? new HttpRemoteConfigSource(itemUrl, timeout)
                 : new NullRemoteConfigSource();
-            return new ItemMasterService(src, new RemoteConfigCache("items"));
+            return new ItemMasterService(src, new RemoteConfigCache("items"), BackgroundSource(enabled, itemUrl));
         }, Lifetime.Singleton);
 
         // バランス調整（結合）
@@ -60,11 +60,17 @@ public class BootLifetimeScope : LifetimeScope
             IRemoteConfigSource src = (enabled && !string.IsNullOrEmpty(balUrl))
                 ? new HttpRemoteConfigSource(balUrl, timeout)
                 : new NullRemoteConfigSource();
-            return new RemoteBalanceService(src, new RemoteConfigCache("balance"));
+            return new RemoteBalanceService(src, new RemoteConfigCache("balance"), BackgroundSource(enabled, balUrl));
         }, Lifetime.Singleton);
 
         builder.RegisterEntryPoint<LoadingPresenter>();
 
         Debug.Log("[BootLifetimeScope] Configured.");
     }
+
+    /// <summary>キャッシュで起動したあと裏で最新を取る取得元。起動を待たせないのでタイムアウトは長め。</summary>
+    private static IRemoteConfigSource BackgroundSource(bool enabled, string url) =>
+        enabled && !string.IsNullOrEmpty(url)
+            ? new HttpRemoteConfigSource(url, RemoteConfigRefresh.BackgroundTimeoutSec)
+            : new NullRemoteConfigSource();
 }

@@ -171,7 +171,7 @@ MonoBehaviour:
   remoteConfigUrl: https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/gameconst.json
   itemMasterUrl: https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/items.json
   balanceUrl: https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/balance.json
-  remoteConfigTimeoutSec: 10
+  remoteConfigTimeoutSec: 3
 --- !u!1 &1317397571
 GameObject:
   m_ObjectHideFlags: 0

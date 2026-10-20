@@ -4,7 +4,8 @@ using UnityEngine;
 
 /// <summary>
 /// version 比較 → 取得 → キャッシュ → GameConst 適用 を制御する。
-/// フォールバック順序: サーバー成功 → ローカルキャッシュ → ベイク済みデフォルト。
+/// 順序（2026-10-20〜 キャッシュ優先）: ローカルキャッシュ（あれば即適用し、最新は裏で取ってキャッシュだけ更新）
+/// → キャッシュが無ければサーバー取得（短いタイムアウト）→ ベイク済みデフォルト。
 /// 値の範囲バリデーションはここ（適用判定）で行い、GameConst ファサードは
 /// 「来た値を信じて入れるだけ」に責務を保つ。
 /// </summary>
@@ -12,11 +13,14 @@ public sealed class RemoteConfigService
 {
     private readonly IRemoteConfigSource _source;
     private readonly RemoteConfigCache _cache;
+    private readonly IRemoteConfigSource _backgroundSource;
 
-    public RemoteConfigService(IRemoteConfigSource source, RemoteConfigCache cache)
+    /// <param name="backgroundSource">キャッシュで起動したあと裏で最新を取る取得元（長めのタイムアウト）。null なら source を使う。</param>
+    public RemoteConfigService(IRemoteConfigSource source, RemoteConfigCache cache, IRemoteConfigSource backgroundSource = null)
     {
         _source = source;
         _cache = cache;
+        _backgroundSource = backgroundSource ?? source;
     }
 
     /// <summary>
@@ -24,18 +28,19 @@ public sealed class RemoteConfigService
     /// </summary>
     public async UniTask InitializeAsync(CancellationToken ct)
     {
-        // 1) サーバー取得を試みる（成功時のみキャッシュ更新）
-        var json = await _source.FetchEnvelopeJsonAsync(ct);
-        if (TryApply(json, save: true))
-            return;
-
-        // 2) ローカルキャッシュ（前回成功分）
+        // 1) ローカルキャッシュ（前回成功分）があれば待たずに使う。最新は裏で取り、次の起動から使う
         var cached = _cache.LoadJson();
         if (TryApply(cached, save: false))
         {
-            Debug.Log("[RemoteConfig] キャッシュを適用しました。");
+            Debug.Log("[RemoteConfig] キャッシュを適用しました（最新は裏で取得します）。");
+            RemoteConfigRefresh.RefreshCacheInBackground(_backgroundSource, _cache, ValidateOnly, "RemoteConfig");
             return;
         }
+
+        // 2) キャッシュが無い（初回起動など）ときだけサーバー取得を待つ（成功時のみキャッシュ更新）
+        var json = await _source.FetchEnvelopeJsonAsync(ct);
+        if (TryApply(json, save: true))
+            return;
 
         // 3) ベイク済みデフォルト（GameConstSettings）
         GameConst.ResetToDefault();
@@ -63,6 +68,21 @@ public sealed class RemoteConfigService
 
         if (save) _cache.Save(appliedVersion, json);
         return true;
+    }
+
+    /// <summary>GameConst を書き換えずに検証だけする（裏取り用）。通れば version、不採用なら -1。</summary>
+    private static int ValidateOnly(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return -1;
+        var env = new GameConstEnvelope { data = new GameConstData() };
+        try { JsonUtility.FromJsonOverwrite(json, env); }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[RemoteConfig] 裏取りの解析失敗: {e.Message}");
+            return -1;
+        }
+        if (env.schemaVersion != GameConst.ExpectedSchemaVersion || env.data == null) return -1;
+        return Validate(env.data, out _) ? env.version : -1;
     }
 
     /// <summary>適用前ガード。0除算・負値・空配列など破綻を招く値を弾く。</summary>

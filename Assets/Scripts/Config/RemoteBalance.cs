@@ -50,6 +50,8 @@ public static class RemoteBalance
         }
         int version = root.Value<int?>("version") ?? 0;
 
+        NormalizeStrings(root);
+
         _sections.Clear();
         _lists.Clear();
         _heroLevels = null;
@@ -133,6 +135,28 @@ public static class RemoteBalance
 
         Debug.Log($"[RemoteBalance] version {version} を適用（single={_sections.Count}, list={_lists.Count}, heroLevels={(_heroLevels?.Count ?? 0)}, events={(_events?.Count ?? 0)}）");
         return version;
+    }
+
+    /// <summary>
+    /// 配信の文字列を整える（その場で書き換える）。
+    /// - シートに「\n」（バックスラッシュ＋n の2文字）と書いた改行は、JSON では "\\n" のまま届き、画面に「\n」が見える
+    ///   （ダンジョン説明。2026-10-20 時点の balance.json）。本物の改行にする。
+    /// - ゼロ幅スペース（U+200B）を取り除く（イベント本文に貼り付けの名残が混ざっていた）。
+    /// GAS 側（Docs/gas/GameConstGas.gs の cleanText_）でも同じ整形をするが、古い配信値・キャッシュのためにこちらでも行う。
+    /// </summary>
+    private static void NormalizeStrings(JToken token)
+    {
+        switch (token)
+        {
+            case JValue v when v.Type == JTokenType.String:
+                var s = (string)v.Value;
+                if (!string.IsNullOrEmpty(s) && (s.Contains("\\n") || s.Contains("\u200B")))
+                    v.Value = s.Replace("\\n", "\n").Replace("\u200B", "");
+                break;
+            case JContainer c:
+                foreach (var child in c.Children()) NormalizeStrings(child);
+                break;
+        }
     }
 
     /// <summary>単一設定SOへ上書き。区画が無ければ baked をそのまま返す。</summary>

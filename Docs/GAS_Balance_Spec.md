@@ -38,6 +38,7 @@
 - **フィールド名は対象クラスのフィールド名と完全一致**（下表）。
 - **省略したフィールドはゲーム既定値（ベイク済みSO）が保持される**（前方互換）。＝**変更したい値だけ書けばよい**。
 - 区画自体を省略すれば、その区画は丸ごと既定のまま。
+- **文字列セルの整形（2026-10-20〜）**: GAS の `cleanText_` が、セルに書いた「\n」（バックスラッシュ＋n の2文字）を本物の改行にし、ゼロ幅スペース（U+200B）を取り除いてから出力する。Unity 側（`RemoteBalance.NormalizeStrings`）でも同じ整形をする（古い配信値・キャッシュ用）。
 - **`schemaVersion` は必ず 1**（Unity `RemoteBalance.ExpectedSchemaVersion=1`）。不一致だと balance 全体が不採用。
 - **リスト区画の各要素には `id`（文字列）を必須**で入れる。`id` は突合キー専用で、ゲーム側のフィールドではない（無視される）。
 - **enum値は int で書く**（`elementType`, `requiredAttribute` など）。※ items.json は文字列だったが、balance はフィールド一致のため **int**。`buzzEffects` の `id` だけは enum 名の文字列（"Flame" 等、突合用）。
@@ -110,7 +111,7 @@
 列: `id, title, description, command1, param1Key1, param1Value1, command2, param2Key1, param2Value1`（command は最大10個まで `command{n}/param{n}Key1/param{n}Value1` で拡張可）。
 - `id`/`title` が空の行は Unity 側で除外される（空行プレースホルダを置いてもよい）。
 - 値はすべて**文字列扱い**（Unity側で必要に応じて数値パースする）。数値セルが number 型で出力されても受け側（JObject.Value&lt;string&gt;）で吸収する。
-- 現在使われている command: `ChangeMoney`（param: amount=金額±）, `ChangeTrust`（param: amount=信頼±）。
+- 現在使われている command: `ChangeMoney`（param: amount=金額±）, `ChangeTrust`（param: amount=信頼±）。amount は**必ず数値**（"Trust" や空欄だと 0 扱いで「（効果なし）」になる。2026-10-20 に同梱 CSV の 007〜013・019〜021 を配信値に合わせて直した。`EventDataLoader` は数値でない amount をエラーログで知らせる）。
 - シート雛形: `Docs/balance_tsv/events.tsv`（現行CSVの実データ21件を変換済み）。
 
 ### villageFacilities[]（部分・`VillageFacilityData`、2026-08追加）

@@ -5,6 +5,8 @@ source: D:\Unity\TomsLands\Assets\Resources_moved (worktree excluded)
 ## shopEconomy (ShopEconomySettings)  [sheet: shopEconomy / key-value]
 ```
 key	value
+useAbmPriceEngine	true
+demandPricePremium	0.5
 highDemandThreshold	0.7
 highDemandPriceRateMin	1.1
 highDemandPriceRateMax	1.3
@@ -28,6 +30,9 @@ spreadDemandAmplify	1
 retentionStabilizer	0.6
 followerWeight	0.1
 followerScale	1000
+sellOrderDelayTurns	1
+sellOrderPriceClampRate	0.2
+sellOrderFeeRate	0
 trendAmplitude	0.3
 trendConvergenceRate	0.15
 trendDriftMax	0.12

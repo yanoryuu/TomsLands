@@ -408,7 +408,7 @@ function convertValue_(key, rawValue, type) {
     case 'int': return toInt_(key, rawValue);
     case 'float': return toFloat_(key, rawValue);
     case 'bool': return (String(rawValue).trim().toLowerCase() === 'true');
-    case 'string': return String(rawValue);
+    case 'string': return cleanText_(rawValue);
     case 'int[]':
       return String(rawValue).split(',')
         .map(function (s) { return s.trim(); })
@@ -417,6 +417,16 @@ function convertValue_(key, rawValue, type) {
     default:
       throw new Error('未知の type "' + type + '"（key=' + key + '）。int/float/string/bool/int[] のいずれかに。');
   }
+}
+
+/**
+ * 文字列セルの整形。
+ * - セルに「\n」（バックスラッシュ＋n の2文字）と書いた改行を本物の改行にする。
+ *   そのまま送ると Unity 側で「\n」の文字がそのまま見える（ダンジョン説明など。2026-10-20）
+ * - ゼロ幅スペース（U+200B）を取り除く（ふりがな付きの文から貼り付けた名残。イベント本文に混ざっていた）
+ */
+function cleanText_(v) {
+  return String(v).replace(/\\n/g, '\n').replace(/\u200B/g, '');
 }
 
 /** 型サフィックス用キャスト（balanceリスト/heroLevels）。 */
@@ -436,7 +446,7 @@ function castCell_(cell, type, ctx) {
       return String(cell).trim().toLowerCase() === 'true';
     case 'string':
     default:
-      return String(cell);
+      return cleanText_(cell);
   }
 }
 

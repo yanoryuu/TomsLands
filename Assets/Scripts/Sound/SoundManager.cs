@@ -145,7 +145,7 @@ public class SoundManager : SingletonMonoBehaviour<SoundManager>
         src.volume = seVolume;
         src.Play();
 
-        Debug.Log($"[SoundManager] SE 再生: {key}");
+        DevLog.Log($"[SoundManager] SE 再生: {key}");
     }
 
     /// <summary>再生中の全 SE を停止する</summary>
