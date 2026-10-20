@@ -32,16 +32,17 @@ public class DungeonInfoView : MonoBehaviour
         closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
     }
     
-    /// <param name="clearProbability">勇者のクリア確率（%）。情報未購入時は使用されない</param>
-    public void ShowDungeonInfo(DungeonData dungeonData, float clearProbability)
+    /// <param name="clearProbability">勇者のクリア確率（%）。5段階の見込みにして出す。情報未購入時は使用されない</param>
+    /// <param name="weaknessKnown">弱点を知っているか（地図の名札と同じ判定。情報の購入とは別）</param>
+    public void ShowDungeonInfo(DungeonData dungeonData, float clearProbability, bool weaknessKnown)
     {
-        SetDungeonInfo(dungeonData, clearProbability);
+        SetDungeonInfo(dungeonData, clearProbability, weaknessKnown);
         dungeonInfoPanel.SetActive(true);
     }
 
     public void HideDungeonInfo() => dungeonInfoPanel.SetActive(false);
 
-    private void SetDungeonInfo(DungeonData d, float clearProbability)
+    private void SetDungeonInfo(DungeonData d, float clearProbability, bool weaknessKnown)
     {
         if (d == null) return;
 
@@ -52,15 +53,14 @@ public class DungeonInfoView : MonoBehaviour
         {
             dungeonDescriptionText.text = d.dungeonDescription;
             dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
-            dungeonRewardText.text = $"クリア確率：{clearProbability:F0}%";
         }
         else
         {
             // 情報未購入：???で表示
             dungeonDescriptionText.text = "？？？";
             dungeonLevelText.text = "Lv.？？？";
-            dungeonRewardText.text = "？？？";
         }
+        dungeonRewardText.text = BuildStatsText(d, clearProbability, weaknessKnown);
 
         //すでにある前のモンスターデータを削除
         foreach (var panel in dungeonMonsterPanels) Destroy(panel);
@@ -81,5 +81,18 @@ public class DungeonInfoView : MonoBehaviour
                 dungeonMonsterPanels.Add(panel);
             }
         }
+    }
+
+    /// <summary>
+    /// 数字欄の3行: 弱点／勇者のクリア見込み／防衛報酬（勇者が負けたら入る額）。
+    /// 勇者側・魔王側のどちらに張るかを、この3行で見比べられるようにする。
+    /// </summary>
+    private static string BuildStatsText(DungeonData d, float clearProbability, bool weaknessKnown)
+    {
+        string weakness = ItemAttributeText.Weakness(d.requiredAttribute, weaknessKnown);
+        if (!d.isShowedInfo) return $"{weakness}\nクリア見込み:？\n防衛報酬:？";
+
+        int reward = d.GetLevelData(d.currentDungeonLevel)?.rewardGold ?? 0;
+        return $"{weakness}\nクリア見込み:{ClearProbabilityCalculator.FormatOutlook(clearProbability)}\n防衛報酬:{reward:N0}G";
     }
 }

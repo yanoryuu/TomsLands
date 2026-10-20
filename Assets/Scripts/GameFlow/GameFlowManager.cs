@@ -556,6 +556,30 @@ public class GameFlowManager : IDisposable, IStartable
         => IsAwaitingStream.Value ? PendingBattleDungeon : GetNextBattleDungeon();
 
     /// <summary>
+    /// 表示用: 次の配信先（GetUpcomingStreamDungeon）の、その次に配信するダンジョン。無ければ null。
+    /// 地図で「その次」を1つだけ見せるために使う（それより先は見せない。Docs/Map_Overlay_Spec.md R3）。
+    /// </summary>
+    public DungeonName? GetStreamDungeonAfterUpcoming()
+    {
+        if (_gameFlow == null) return null;
+
+        // 寄り道中は今のノードが「次の配信」なので、この先で最初に見つかる配信が「その次」
+        bool upcomingCounted = IsAwaitingStream.Value && PendingBattleDungeon.HasValue;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var node = _gameFlow.GameFlowStack[i];
+            if (node.EventType != GameEvent.Battle) continue;
+            if (!upcomingCounted)
+            {
+                upcomingCounted = true;
+                continue;
+            }
+            return node.BattleDungeon;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// 表示用: 次の配信まであと何日か。今日が配信日（寄り道中）なら 0、明日なら 1。配信が無ければ -1。
     /// GetTurnsUntilNextBattle は「次のノードから配信の手前まで」の日数で、前日に 0 になる
     /// （AutoPlay がその意味を前提にしているので変えない）。画面に出すときはこちらを使う。

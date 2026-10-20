@@ -129,7 +129,8 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         mapInfoView.SetMapSlot(
             infoBrokerModel.availableDungeons,
             infoBrokerModel.GetDungeonInfoCosts(),
-            gameFlowManager.BattleCount.Value + 1);
+            gameFlowManager.BattleCount.Value + 1,
+            gameFlowManager.GetUpcomingStreamDungeon());
     }
 
     private void PurchaseDungeonInfo(DungeonName dungeonName)

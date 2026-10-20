@@ -16,6 +16,7 @@ public class HeroPanelView : MonoBehaviour
     [SerializeField] private TMP_Dropdown tacticsDropdown;
 
     [Header("表示")]
+    [Tooltip("戦うときの攻撃・防御（装備・レリック込み）")]
     [SerializeField] private TextMeshProUGUI heroStatusText;
     [SerializeField] private TextMeshProUGUI heroLevelText;
     [SerializeField] private TextMeshProUGUI heroHpText;
@@ -47,6 +48,7 @@ public class HeroPanelView : MonoBehaviour
     private readonly List<string>              armorIds           = new();
     private readonly List<HeroTactics>         tacticsValues      = new();
     private readonly Dictionary<Button, string> buttonDescriptions = new();
+    private readonly HashSet<TextMeshProUGUI>  poppedTexts        = new(); // 1回目の表示（プレハブの仮の文字から）はポップしない
     private bool suppressEvents;
 
     private void Awake()
@@ -153,15 +155,13 @@ public class HeroPanelView : MonoBehaviour
 
         if (heroMpText != null)
             heroMpText.text = $"{hero.mp.Value}";
+    }
 
-        if (heroStatusText != null)
-        {
-            heroStatusText.text =
-                $"Lv {hero.level.Value}\n" +
-                $"EXP {expText}\n" +
-                $"HP {hero.hp.Value} / MP {hero.mp.Value}\n" +
-                $"攻撃 {hero.attackPower.Value} / 防御 {hero.defensePower.Value}";
-        }
+    /// <summary>戦うときの攻撃・防御（装備・レリック込み）。装備を付け替えて数字が変わったら軽くポップする。</summary>
+    public void SetCombatStats(int attack, int defense)
+    {
+        if (heroStatusText == null) return;
+        SetTextWithPop(heroStatusText, $"攻撃 {attack}　防御 {defense}");
     }
 
     public void SetEquipmentIcons(Sprite weaponIcon, Sprite armorIcon)
@@ -170,14 +170,22 @@ public class HeroPanelView : MonoBehaviour
         SetIcon(armorIconImage, armorIcon);
     }
 
+    /// <summary>クリア見込みを5段階（楽勝〜絶望）で出す。見出し「クリア見込み」はパネル側にある。</summary>
     public void SetClearProbability(float probability, bool infoAvailable)
     {
-        if (clearProbabilityText != null)
-        {
-            clearProbabilityText.text = infoAvailable
-                ? $"クリア確率: {Mathf.RoundToInt(probability)}%"
-                : "クリア確率: 情報未購入";
-        }
+        if (clearProbabilityText == null) return;
+        SetTextWithPop(clearProbabilityText, infoAvailable
+            ? ClearProbabilityCalculator.FormatOutlook(probability)
+            : "情報未購入");
+    }
+
+    /// <summary>文字が変わったときだけ 0.2 秒ポップさせる（最初の表示ではポップしない）。</summary>
+    private void SetTextWithPop(TextMeshProUGUI text, string value)
+    {
+        bool changed = poppedTexts.Contains(text) && text.text != value && text.gameObject.activeInHierarchy;
+        poppedTexts.Add(text);
+        text.text = value;
+        if (changed) UIFx.Pop(text.transform, 0.85f, 0.2f);
     }
 
     public void SetDialogue(string message)
@@ -204,7 +212,7 @@ public class HeroPanelView : MonoBehaviour
         foreach (HeroTactics tactics in Enum.GetValues(typeof(HeroTactics)))
         {
             tacticsValues.Add(tactics);
-            labels.Add(GetTacticsName(tactics));
+            labels.Add(GetTacticsLabel(tactics));
         }
 
         tacticsDropdown.AddOptions(labels);
@@ -262,6 +270,13 @@ public class HeroPanelView : MonoBehaviour
         dropdown.AddOptions(labels);
         dropdown.SetValueWithoutNotify(selectedIndex);
         dropdown.RefreshShownValue();
+        // 閉じた枠は狭いので短い表記にする（一覧の行には在庫・値段などの詳しい表記を出す）。
+        // 選び直すと TMP_Dropdown が一覧の表記で上書きするが、選択 → Presenter.Refresh → ここ、で毎回戻る
+        if (dropdown.captionText != null && selectedIndex > 0)
+        {
+            string caption = options[selectedIndex - 1].Caption;
+            if (!string.IsNullOrEmpty(caption)) dropdown.captionText.text = caption;
+        }
         suppressEvents = false;
     }
 
@@ -272,24 +287,27 @@ public class HeroPanelView : MonoBehaviour
         image.enabled = sprite != null;
     }
 
-    private static string GetTacticsName(HeroTactics tactics) => tactics switch
+    /// <summary>「攻撃重視（武器↑）」。呼び名は HeroBattleInfluence に揃え、いちばん強く上がる値動きを添える。</summary>
+    private static string GetTacticsLabel(HeroTactics tactics)
     {
-        HeroTactics.Aggressive   => "攻撃重視",
-        HeroTactics.Defensive    => "防御重視",
-        HeroTactics.Stealth      => "慎重",
-        HeroTactics.MagicFocused => "属性重視",
-        _ => "バランス"
-    };
+        string tag = HeroBattleInfluence.GetStrongestEffectTag(tactics);
+        string name = HeroBattleInfluence.GetDisplayName(tactics);
+        return string.IsNullOrEmpty(tag) ? name : $"{name}（{tag}）";
+    }
 }
 
 public readonly struct HeroEquipmentOption
 {
-    public string ItemId { get; }
-    public string Label  { get; }
+    public string ItemId  { get; }
+    /// <summary>一覧の行の表記（名前・属性・在庫・値段・能力値）。</summary>
+    public string Label   { get; }
+    /// <summary>閉じた枠に出す短い表記。空なら Label のまま。</summary>
+    public string Caption { get; }
 
-    public HeroEquipmentOption(string itemId, string label)
+    public HeroEquipmentOption(string itemId, string label, string caption = null)
     {
-        ItemId = itemId;
-        Label  = label;
+        ItemId  = itemId;
+        Label   = label;
+        Caption = caption;
     }
 }

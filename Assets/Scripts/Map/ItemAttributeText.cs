@@ -1,16 +1,16 @@
 /// <summary>
-/// 属性の日本語表記（1文字）。地図の名札など、弱点を表示する画面で共有する。
-/// （BlackSmithPresenter.AttributeToJapanese と同じ対応）
+/// 属性の日本語表記（1文字）。属性・弱点を表示する画面はここを通す（英語の enum 名を画面に出さない）。
+/// 文字の対応は ItemTypeData.AttributeLabel が正（旧 Wind などの寄せ替えもそちらで行う）。
 /// </summary>
 public static class ItemAttributeText
 {
-    public static string ToJapanese(ItemTypeData.ItemAttribute attr) => attr switch
-    {
-        ItemTypeData.ItemAttribute.Fire  => "火",
-        ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Wood  => "木",
-        ItemTypeData.ItemAttribute.Light => "光",
-        ItemTypeData.ItemAttribute.Dark  => "闇",
-        _ => attr.ToString()
-    };
+    /// <summary>「火」「水」…。未定義の値は「？」。</summary>
+    public static string ToJapanese(ItemTypeData.ItemAttribute attr) => ItemTypeData.AttributeLabel(attr);
+
+    /// <summary>「火属性」。</summary>
+    public static string WithSuffix(ItemTypeData.ItemAttribute attr) => $"{ToJapanese(attr)}属性";
+
+    /// <summary>弱点の欄（地図の名札と同じ書き方）。知らないときは「弱点:?」。</summary>
+    public static string Weakness(ItemTypeData.ItemAttribute attr, bool known)
+        => known ? $"弱点:{ToJapanese(attr)}" : "弱点:?";
 }

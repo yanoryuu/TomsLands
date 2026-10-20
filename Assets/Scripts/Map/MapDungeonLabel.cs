@@ -23,6 +23,10 @@ public class MapDungeonLabel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nextText;
 
     [SerializeField, Range(0f, 1f)] private float clearedAlpha = 0.55f;
+    [Tooltip("「その次」の行き先に出すリボンの濃さ（NEXT より薄くして、次の行き先と見分ける）")]
+    [SerializeField, Range(0f, 1f)] private float afterNextAlpha = 0.55f;
+
+    private CanvasGroup ribbonGroup;
 
     public void Set(MapDungeonDisplay d)
     {
@@ -38,12 +42,17 @@ public class MapDungeonLabel : MonoBehaviour
         if (clearStamp) clearStamp.SetActive(cleared);
         if (failBadge) failBadge.SetActive(d.Status == DungeonStatus.Fail);
 
+        // 次の行き先には NEXT リボン、その次の行き先には同じリボンを薄くして「その次」と出す
+        bool afterNext = d.IsAfterNext && !d.IsNext;
         if (nextRibbon)
         {
             bool wasShown = nextRibbon.activeSelf;
-            nextRibbon.SetActive(d.IsNext);
+            nextRibbon.SetActive(d.IsNext || afterNext);
+            if (ribbonGroup == null && !nextRibbon.TryGetComponent(out ribbonGroup))
+                ribbonGroup = nextRibbon.AddComponent<CanvasGroup>();
+            ribbonGroup.alpha = afterNext ? afterNextAlpha : 1f;
             if (d.IsNext && !wasShown) UIFx.Pop(nextRibbon.transform, 0.85f, 0.22f);
         }
-        if (nextText) nextText.text = $"<color=#E8A33D>NEXT</color>  {d.NextText}";
+        if (nextText) nextText.text = afterNext ? "その次" : $"<color=#E8A33D>NEXT</color>  {d.NextText}";
     }
 }

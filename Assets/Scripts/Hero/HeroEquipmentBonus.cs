@@ -39,20 +39,27 @@ public static class HeroEquipmentBonus
         int weaponTier = GetTier(hero.weaponId.Value, itemModel);
         int armorTier = GetTier(hero.armorId.Value, itemModel);
 
-        float attack = 1f;
-        if (weaponTier > 0)
-            attack += GameConst.HeroWeaponAttackBonusBase + GameConst.HeroWeaponAttackBonusPerTier * (weaponTier - 1);
-
-        float defense = 1f;
-        float hp = 1f;
-        if (armorTier > 0)
-        {
-            defense += GameConst.HeroArmorDefenseBonusBase + GameConst.HeroArmorDefenseBonusPerTier * (armorTier - 1);
-            hp += GameConst.HeroArmorHpBonusBase + GameConst.HeroArmorHpBonusPerTier * (armorTier - 1);
-        }
+        float attack = 1f + WeaponAttackBonus(weaponTier);
+        float defense = 1f + ArmorDefenseBonus(armorTier);
+        float hp = 1f + ArmorHpBonus(armorTier);
 
         return new Multipliers(Mathf.Max(0.1f, hp), Mathf.Max(0.1f, attack), Mathf.Max(0.1f, defense));
     }
+
+    /// <summary>武器ランク tier の攻撃上乗せ（0.1 = +10%）。未装備（0）は 0。勇者画面の候補ラベルでも使う。</summary>
+    public static float WeaponAttackBonus(int tier)
+        => tier > 0 ? GameConst.HeroWeaponAttackBonusBase + GameConst.HeroWeaponAttackBonusPerTier * (tier - 1) : 0f;
+
+    /// <summary>防具ランク tier の防御上乗せ（0.15 = +15%）。未装備（0）は 0。</summary>
+    public static float ArmorDefenseBonus(int tier)
+        => tier > 0 ? GameConst.HeroArmorDefenseBonusBase + GameConst.HeroArmorDefenseBonusPerTier * (tier - 1) : 0f;
+
+    /// <summary>防具ランク tier の最大HP上乗せ（0.05 = +5%）。未装備（0）は 0。</summary>
+    public static float ArmorHpBonus(int tier)
+        => tier > 0 ? GameConst.HeroArmorHpBonusBase + GameConst.HeroArmorHpBonusPerTier * (tier - 1) : 0f;
+
+    /// <summary>店の品のランク（requiredLevel、最低1）。Get と同じ数え方。</summary>
+    public static int TierOf(RuntimeItemData item) => item != null ? Mathf.Max(1, item.RequiredLevel.Value) : 0;
 
     /// <summary>装備のランク（requiredLevel）。未装備・不明なら 0。</summary>
     private static int GetTier(string itemId, ItemModel itemModel)

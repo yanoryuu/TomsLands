@@ -12,7 +12,10 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
     [SerializeField] private Image backgroundImage;
     [SerializeField] private Image rowBackground;
     [SerializeField] private TextMeshProUGUI nameText;
+    [Tooltip("単価（数量に関係なく常に1個の値段）")]
     [SerializeField] private TextMeshProUGUI priceText;
+    [Tooltip("注文の合計「計 4,500G」。数量1以上のときだけ出す（未配線なら出さない）")]
+    [SerializeField] private TextMeshProUGUI totalText;
     [SerializeField] private TextMeshProUGUI stockText;
     [SerializeField] private Slider quantitySlider;
     [SerializeField] private TextMeshProUGUI quantityText;
@@ -214,10 +217,19 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         UpdatePriceText();
     }
 
+    /// <summary>
+    /// 行の金額は常に単価（値動きの矢印も単価の前日比なので揃える）。
+    /// 数量が1以上のときだけ、別の欄に合計を出す（以前は数量で単価と合計が切り替わり、相場が跳ねたように見えた）。
+    /// </summary>
     private void UpdatePriceText()
     {
-        int total = unitPrice * Mathf.Max(displayQuantity, 1);
-        if (priceText != null) priceText.SetText($"{total:N0}G");
+        if (priceText != null) priceText.SetText($"{unitPrice:N0}G");
+        if (totalText != null)
+        {
+            bool hasOrder = displayQuantity > 0;
+            totalText.gameObject.SetActive(hasOrder);
+            if (hasOrder) totalText.SetText($"計 {unitPrice * displayQuantity:N0}G");
+        }
     }
 
     // === 表示だけ更新（通知しない） ===
