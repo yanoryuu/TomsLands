@@ -69,13 +69,17 @@ public class PreStreamPresenter : IStartable, IDisposable
             ? $"配信に持ち込める在庫: {kinds}種 {total}個"
             : "配信に持ち込める在庫がありません！";
 
+        // 最後の配信なら、終わったら決算だと先に知らせる（K-11）
+        bool final = gameFlowManager.IsUpcomingStreamFinal();
+        string finalLine = final ? "\nこれが最後の配信。終わったら決算で、在庫は今の相場で評価されます。" : "";
+
         if (!fromProcurement)
         {
             string where = string.IsNullOrEmpty(dungeonName) ? "" : $"（{dungeonName}）";
             popUpManager.Show(new PopUpData
             {
-                Title = $"今日は配信日{where}",
-                Message = $"{stockLine}\n配信の前に鍛冶屋で仕入れますか？",
+                Title = final ? $"今日は最後の配信{where}" : $"今日は配信日{where}",
+                Message = $"{stockLine}{finalLine}\n配信の前に鍛冶屋で仕入れますか？",
                 ConfirmButtonText = "鍛冶屋へ寄る",
                 CancelButtonText = "このまま配信へ",
                 Size = PopupSizeEnum.Medium,
@@ -87,8 +91,8 @@ public class PreStreamPresenter : IStartable, IDisposable
         {
             popUpManager.Show(new PopUpData
             {
-                Title = "配信を始めますか？",
-                Message = stockLine,
+                Title = final ? "最後の配信を始めますか？" : "配信を始めますか？",
+                Message = stockLine + finalLine,
                 ConfirmButtonText = "配信を始める",
                 CancelButtonText = "仕入れを続ける",
                 Size = PopupSizeEnum.Medium,

@@ -780,7 +780,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                 {
                     int perDay = Mathf.RoundToInt(dailyIncome * (factor - 1f));
                     if (perDay == 0) break;
-                    string total = remainingDays > 1 ? $"（残り{remainingDays}日で 約{(long)perDay * remainingDays:N0}G）" : "";
+                    string total = remainingDays > 1 ? $"（残り{remainingDays}日 約{(long)perDay * remainingDays:N0}G）" : "";
                     return $"目安 1日 {Signed(perDay)}G{total}";
                 }
                 case RelicStatId.DebtAmountMul:
