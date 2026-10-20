@@ -14,7 +14,7 @@ using VContainer.Unity;
 /// ReactiveProperty / OnChanged はロード時にも流れるので、「その時点の状態を見直す」合図として扱い、
 /// 「手に入れた瞬間」の意味では使わない。
 /// </summary>
-public sealed class AchievementTracker : IStartable, IDisposable
+public sealed class AchievementTracker : IInitializable, IDisposable
 {
     /// <summary>判定に使う Model 一式（どれも null 可）。</summary>
     public sealed class Sources
@@ -78,7 +78,12 @@ public sealed class AchievementTracker : IStartable, IDisposable
         return s;
     }
 
-    public void Start()
+    /// <summary>
+    /// 購読を張る。IStartable.Start ではなく Initialize（全 EntryPoint の Start より前）で張るのは、
+    /// 配信から戻った店で BattleResultHandler.Start が精算と日送り（売り注文の約定・バズ判定）を
+    /// その場で行うため。Start で張ると、それより後に登録した分が取りこぼす。
+    /// </summary>
+    public void Initialize()
     {
         try
         {
@@ -457,7 +462,8 @@ public sealed class AchievementTracker : IStartable, IDisposable
         for (int k = 0; k < w.itemIds.Count && k < w.pinnedPrices.Count; k++)
         {
             var item = src.Items.GetRuntimeItem(w.itemIds[k]);
-            if (item == null || item.CurrentPrice.Value <= w.pinnedPrices[k]) continue;
+            // 相場の揺れで偶然上がっただけを拾わないよう、スクラップした日の値段から1割以上の値上がりを求める
+            if (item == null || item.CurrentPrice.Value < w.pinnedPrices[k] * AchievementDefinitions.ScrapRiseRate) continue;
             detail = $"{w.entryKey} の効き先 {item.ItemName} が {w.pinnedPrices[k]:N0}G → {item.CurrentPrice.Value:N0}G";
             return true;
         }

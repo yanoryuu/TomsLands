@@ -78,6 +78,8 @@ public static class AchievementDefinitions
     public const int GolemCount = 3;
     public const int ByAHairMoney = 1_000;               // 未満
     public const int CollectorRelics = 10;
+    /// <summary>読み的中: スクラップした日の値段の何倍以上になったら「値上がり」とみなすか。</summary>
+    public const float ScrapRiseRate = 1.1f;
     /// <summary>新聞社の数（実際の判定は NewsMasterLoader の社数。表示・Steam の進捗上限用）。</summary>
     public const int PaperCompanies = 5;
     /// <summary>

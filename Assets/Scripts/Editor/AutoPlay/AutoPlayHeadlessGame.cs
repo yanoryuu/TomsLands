@@ -363,7 +363,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             Scrapbook = Scrapbook, Subscriptions = Subscriptions, Marketing = Marketing,
             Flow = Flow, Hero = HeroModel, Dungeons = Dungeons, BattleOutput = _battleOut,
         });
-        _achievements.Start();
+        _achievements.Initialize();
     }
 
     private AchievementTracker _achievements;
