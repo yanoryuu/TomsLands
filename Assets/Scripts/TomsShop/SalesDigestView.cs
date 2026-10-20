@@ -116,19 +116,22 @@ public class SalesDigestView : MonoBehaviour
         }
     }
 
-    /// <summary>立ち位置を、左右に散らして count 個選ぶ。</summary>
+    /// <summary>
+    /// 立ち位置を count 個選ぶ。続けて来る客の値札が重ならないよう、左半分と右半分から交互に取る
+    /// （standPoints は左から順に並んでいる前提）。
+    /// </summary>
     private List<Transform> PickStandPoints(int count)
     {
-        var pool = new List<Transform>(standPoints);
-        pool.RemoveAll(t => t == null);
-        var result = new List<Transform>();
-        for (int i = 0; i < count; i++)
+        var points = standPoints.FindAll(t => t != null);
+        int half = (points.Count + 1) / 2;
+        var order = new List<Transform>();
+        for (int i = 0; i < half; i++)
         {
-            if (pool.Count == 0) pool.AddRange(standPoints.FindAll(t => t != null));
-            int pick = UnityEngine.Random.Range(0, pool.Count);
-            result.Add(pool[pick]);
-            pool.RemoveAt(pick);
+            order.Add(points[i]);
+            if (i + half < points.Count) order.Add(points[i + half]);
         }
+        var result = new List<Transform>();
+        for (int i = 0; i < count && order.Count > 0; i++) result.Add(order[i % order.Count]);
         return result;
     }
 

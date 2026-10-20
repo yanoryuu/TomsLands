@@ -240,9 +240,9 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
         return sb.ToString().TrimEnd();
     }
 
-    private const string GoldHex = "#C9821A";
-    private const string GrayHex = "#7A6A5A";
-    private const string RedHex = "#A8332B";
+    private const string GoldHex = "#FFD25A";
+    private const string GrayHex = "#D8CFC4";
+    private const string RedHex = "#FF9A8A";
 
     private static string FormatPercent(float rate) => $"{(rate >= 0 ? "+" : "")}{rate * 100f:0}%";
 
