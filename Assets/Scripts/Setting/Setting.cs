@@ -4,6 +4,8 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using VContainer;
+using VContainer.Unity;
 
 /// <summary>
 /// オプション画面（加算シーン「Setting」）。
@@ -239,27 +241,72 @@ public class Setting : MonoBehaviour
             reduceShakeToggle.onValueChanged.AddListener(isOn => GameSettings.ReduceShake = isOn);
 
         // 閉じる
-        closeBtn.onClick.AddListener(() =>
-        {
-            if (isClosing) return;
-            isClosing = true;
-            OnCloseButtonClicked.OnNext(Unit.Default);
-            SceneManager.UnloadSceneAsync("Setting");
-        });
+        closeBtn.onClick.AddListener(CloseSelf);
 
-        // タイトルへ戻る（タイトル画面から開いた場合は非表示）
+        // タイトルへ戻る。タイトル画面と配信中（FightScene）では出さない
+        // （配信は途中で抜けると決着が付かない。配信中に終了した場合は「続きから」でその配信をやり直す）
         if (toTitleBtn != null)
         {
-            bool onTitle = SceneManager.GetActiveScene().name == "TitleScene";
-            toTitleBtn.gameObject.SetActive(!onTitle);
-            toTitleBtn.onClick.AddListener(() =>
-            {
-                if (isClosing) return;
-                isClosing = true;
-                // Single ロードで Setting（加算シーン）ごと破棄される。
-                // ゲーム側の保存は GameLifecycleHandler.Dispose（スコープ破棄時）が行う。
-                SceneLoader.Load("TitleScene");
-            });
+            string activeScene = SceneManager.GetActiveScene().name;
+            bool hide = activeScene == TitleSceneName || activeScene == FightSceneName;
+            toTitleBtn.gameObject.SetActive(!hide);
+            toTitleBtn.onClick.AddListener(RequestReturnToTitle);
         }
+    }
+
+    private const string TitleSceneName = "TitleScene";
+    private const string FightSceneName = "FightScene";
+
+    private void CloseSelf()
+    {
+        if (isClosing) return;
+        isClosing = true;
+        OnCloseButtonClicked.OnNext(Unit.Default);
+        SceneManager.UnloadSceneAsync("Setting");
+    }
+
+    /// <summary>
+    /// 「タイトルへ」: 設定画面を閉じてから、店の確認ポップアップで聞く（誤タップ1回で戻らないように）。
+    /// 設定画面の上にポップアップを重ねるとフォーカスと表示順が設定画面と取り合うので、先に閉じる。
+    /// ポップアップを出せない構成（店以外のシーン）では従来どおりすぐ戻る。
+    /// </summary>
+    private void RequestReturnToTitle()
+    {
+        if (isClosing) return;
+
+        var scope = LifetimeScope.Find<GameLifetimeScope>();
+        PopUpManager popUpManager = null;
+        GameFlowManager gameFlow = null;
+        if (scope != null && scope.Container != null)
+        {
+            scope.Container.TryResolve(out popUpManager);
+            scope.Container.TryResolve(out gameFlow);
+        }
+
+        if (popUpManager == null)
+        {
+            isClosing = true;
+            // Single ロードで Setting（加算シーン）ごと破棄される。
+            // ゲーム側の保存は GameLifecycleHandler.Dispose（スコープ破棄時）が行う。
+            SceneLoader.Load(TitleSceneName);
+            return;
+        }
+
+        bool beforeStream = gameFlow != null && gameFlow.IsAwaitingStream.Value;
+        string message = beforeStream
+            ? "タイトルへ戻りますか？\n店の状態は保存されます。\n「続きから」では、今日の配信から始まります。"
+            : "タイトルへ戻りますか？\n店の状態は保存されます。";
+
+        CloseSelf();
+        popUpManager.Show(new PopUpData
+        {
+            Title = "タイトルへ戻る",
+            Message = message,
+            ConfirmButtonText = "タイトルへ",
+            CancelButtonText = "やめる",
+            Size = PopupSizeEnum.Medium,
+            // ゲーム側の保存は GameLifecycleHandler.Dispose（スコープ破棄時）が行う
+            OnConfirm = () => SceneLoader.Load(TitleSceneName),
+        });
     }
 }

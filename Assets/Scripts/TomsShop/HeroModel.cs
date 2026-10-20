@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 public class HeroModel
@@ -37,17 +36,16 @@ public class HeroModel
     {
         var saveData = heroData.ToSaveData();
         string json = JsonUtility.ToJson(saveData, true);
-        File.WriteAllText(GetSavePath(), json);
+        SaveFile.WriteAtomic(GetSavePath(), json);
         Debug.Log($"[HeroModel] Hero data saved. Lv={saveData.level}, EXP={saveData.experience}/{saveData.expToNextLevel}, HP={saveData.hp}, AT={saveData.attackPower}, DF={saveData.defensePower}");
     }
 
     public void LoadHeroData()
     {
         string path = GetSavePath();
-        if (File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければ下のマスター初期化で続行（SaveFile がログを出す）
+        if (SaveFile.TryReadJson<HeroSaveData>(path, out var saveData))
         {
-            string json = File.ReadAllText(path);
-            var saveData = JsonUtility.FromJson<HeroSaveData>(json);
             heroData = RuntimeHeroData.CreateFromSaveData(saveData);
             SyncEquippedItemsFromHeroData();
             Debug.Log($"[HeroModel] Hero data loaded. Lv={heroData.level.Value}, EXP={heroData.experience.Value}/{heroData.expToNextLevel.Value}");

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -275,7 +274,7 @@ public class ShopMachineModel
             // 旧フィールドも書いておく（旧ビルドで読んでも壊れないように）
             placedMachineIds = Placed.Select(p => p.MachineId).ToList(),
         };
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
     }
 
     public void LoadData()
@@ -283,9 +282,9 @@ public class ShopMachineModel
         Placed.Clear();
 
         string path = SaveSlotManager.GetPath(FileName);
-        if (File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければ設置なしで続行（SaveFile がログを出す）
+        if (SaveFile.TryReadJson<ShopMachineSaveData>(path, out var data))
         {
-            var data = JsonUtility.FromJson<ShopMachineSaveData>(File.ReadAllText(path));
             if (data?.placed != null && data.placed.Count > 0)
             {
                 foreach (var plain in data.placed)

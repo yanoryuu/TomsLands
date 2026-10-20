@@ -101,6 +101,18 @@ public static class SaveSlotManager
         return false;
     }
 
+    /// <summary>
+    /// いずれかのスロットにプロフィール（進行中のラン or 村の進行）があるか。
+    /// タイトルの「続きから」を押せるかの判定に使う（村の進行だけのスロットは続きからで村へ行く）。
+    /// <see cref="AnyExists"/> の意味（進行中のランがあるか）は変えない。
+    /// </summary>
+    public static bool AnyProfileExists()
+    {
+        for (int i = 0; i < MaxSlots; i++)
+            if (HasProfile(i)) return true;
+        return false;
+    }
+
     /// <summary>指定スロットのセーブデータをフォルダごと削除する。</summary>
     public static void DeleteSlot(int slot)
     {
@@ -123,6 +135,7 @@ public static class SaveSlotManager
     /// <summary>
     /// タイトルのスロット表示用に、保存サマリ（日数・所持金・難易度）を読み取る。
     /// 各モデルを完全にロードせず tomsData.json のみ参照する軽量な処理。
+    /// 本体が壊れていれば .bak から読む（SaveFile.TryReadJson）。どちらも読めなければ IsCorrupted を立てる。
     /// </summary>
     public static SaveSlotInfo GetSlotInfo(int slot)
     {
@@ -131,21 +144,18 @@ public static class SaveSlotManager
         var path = Path.Combine(SlotRoot(slot), PresenceMarkerFile);
         if (File.Exists(path))
         {
-            try
+            if (SaveFile.TryReadJson<TomsData>(path, out var data))
             {
-                var json = File.ReadAllText(path);
-                var data = JsonUtility.FromJson<TomsData>(json);
-                if (data != null)
-                {
-                    info.Exists = true;
-                    info.Day = data.currentTurn;
-                    info.Gold = data.shopMoney;
-                    info.Mode = (GameModeId)data.gameMode;
-                }
+                info.Exists = true;
+                info.Day = data.currentTurn;
+                info.Gold = data.shopMoney;
+                info.Mode = (GameModeId)data.gameMode;
             }
-            catch (Exception e)
+            else
             {
-                Debug.LogWarning($"[SaveSlotManager] スロット{slot}のサマリ読み取りに失敗: {e.Message}");
+                // ファイルはあるが読めない。続きからは選ばせず、削除だけできるようにする
+                info.IsCorrupted = true;
+                Debug.LogWarning($"[SaveSlotManager] スロット{slot}のラン内セーブが壊れています（削除できます）");
             }
         }
 
@@ -153,20 +163,18 @@ public static class SaveSlotManager
         var metaPath = Path.Combine(SlotRoot(slot), MetaMarkerFile);
         if (File.Exists(metaPath))
         {
-            try
+            if (SaveFile.TryReadJson<MetaProgressData>(metaPath, out var meta))
             {
-                var meta = JsonUtility.FromJson<MetaProgressData>(File.ReadAllText(metaPath));
-                if (meta != null)
-                {
-                    info.HasProfile = true;
-                    info.MetaCurrency = meta.metaCurrency;
-                    info.TotalRuns = meta.totalRuns;
-                    info.BestRank = meta.bestRank ?? "";
-                }
+                info.HasProfile = true;
+                info.MetaCurrency = meta.metaCurrency;
+                info.VillageFunds = meta.villageFunds;
+                info.TotalRuns = meta.totalRuns;
+                info.BestRank = meta.bestRank ?? "";
             }
-            catch (Exception e)
+            else
             {
-                Debug.LogWarning($"[SaveSlotManager] スロット{slot}のメタ情報読み取りに失敗: {e.Message}");
+                info.IsCorrupted = true;
+                Debug.LogWarning($"[SaveSlotManager] スロット{slot}のメタ進行が壊れています（削除できます）");
             }
         }
         info.HasProfile |= info.Exists;

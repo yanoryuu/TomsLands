@@ -35,7 +35,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
         var soundManager = SoundManager.Instance;
         if (soundManager != null)
             soundManager.PlayBGM("OP");
-        _view.SetSaveDataAvailable(SaveSlotManager.AnyExists());
+        _view.SetSaveDataAvailable(SaveSlotManager.AnyProfileExists());
         TransitionTo(TitleType.Start);
         Bind();
     }
@@ -165,17 +165,22 @@ public sealed class TitlePresenter : IStartable, IDisposable
                 SaveSlotManager.DeleteSlot(slot);
                 Debug.Log($"[TitlePresenter] Deleted save slot {slot + 1}");
                 RefreshSaveSlots();
-                _view.SetSaveDataAvailable(SaveSlotManager.AnyExists());
+                _view.SetSaveDataAvailable(SaveSlotManager.AnyProfileExists());
             }
         });
     }
 
     private void ShowOverwriteConfirmation(int slot)
     {
+        // 進行中のランは村に精算されずに消える（持ち込んだお金も戻らない）ことを先に伝える。村の進行は残る
+        var info = SaveSlotManager.GetSlotInfo(slot);
+        string runLine = info.Exists
+            ? $"進行中のラン（{SaveSlotView.GetModeLabel(info.Mode)} Day {info.Day}・所持金 {info.Gold:N0} G）は村に戻らずに消えます。\n村から持ち込んだお金も戻りません。"
+            : "進行中のランのデータは消えます。";
         _popUpManager.Show(new PopUpData
         {
             Title = "上書きの確認",
-            Message = $"スロット {slot + 1} には既にデータがあります。\n上書きして新しく始めますか？",
+            Message = $"スロット {slot + 1} には進行中のランがあります。\n{runLine}\n上書きして新しく始めますか？",
             ConfirmButtonText = "上書きする",
             CancelButtonText = "戻る",
             Size = PopupSizeEnum.Medium,
@@ -213,18 +218,31 @@ public sealed class TitlePresenter : IStartable, IDisposable
 
     private void ContinueGame(int slot)
     {
-        if (!SaveSlotManager.Exists(slot))
+        // 判定は読み込めた中身で行う（壊れて読めないラン内セーブで店に入らないように）
+        var info = SaveSlotManager.GetSlotInfo(slot);
+
+        if (info.Exists)
         {
-            // 読み直して空きスロット表示を更新（連打などで状態がずれた場合の保険）
-            RefreshSaveSlots();
-            _view.SetSaveDataAvailable(SaveSlotManager.AnyExists());
+            SaveSlotManager.CurrentSlot = slot;
+            _startModeData.SetContinue();
+            Debug.Log($"[TitlePresenter] Continue save slot {slot + 1}");
+            SceneLoader.Load(GameSceneName);
             return;
         }
 
-        SaveSlotManager.CurrentSlot = slot;
-        _startModeData.SetContinue();
-        Debug.Log($"[TitlePresenter] Continue save slot {slot + 1}");
-        SceneLoader.Load(GameSceneName);
+        if (info.HasProfile)
+        {
+            // ラン終了後で村の進行だけが残っているスロット → 村へ（ラン終了時と同じ行き先）。
+            // 新しいランは村 → 準備シーンの出店で始まる（StartModeData.SetNewGame は準備シーンが立てる）
+            SaveSlotManager.CurrentSlot = slot;
+            Debug.Log($"[TitlePresenter] Continue save slot {slot + 1} → 進行中のランが無いので村へ");
+            SceneLoader.Load("VillageScene");
+            return;
+        }
+
+        // 読み直して空きスロット表示を更新（連打などで状態がずれた場合の保険）
+        RefreshSaveSlots();
+        _view.SetSaveDataAvailable(SaveSlotManager.AnyProfileExists());
     }
 
     private void TransitionTo(TitleType screen)

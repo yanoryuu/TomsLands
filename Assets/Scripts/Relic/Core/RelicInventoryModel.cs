@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using R3;
 using UnityEngine;
@@ -21,6 +20,26 @@ public class RelicInventoryModel
 
     /// <summary>所持変化の通知（UI再描画用）。</summary>
     public Subject<Unit> OnChanged { get; } = new();
+
+    /// <summary>
+    /// 選ぶ前のレリック3択（relicId）。RelicRewardService.PendingChoices の保存先で、relics.json に一緒に書く。
+    /// 配信の直後に終了しても、続きからで同じ3択を出し直すため（ラン終了時は relics.json ごと消える）。
+    /// </summary>
+    private readonly List<string> pendingChoiceIds = new();
+
+    public IReadOnlyList<string> PendingChoiceIds => pendingChoiceIds;
+
+    /// <summary>保留の3択を読み直した・消したとき（LoadData / Clear）の通知。RelicRewardService が受けて表示用リストを作り直す。</summary>
+    public Subject<Unit> PendingChoicesReloaded { get; } = new();
+
+    /// <summary>保留の3択を置き換えて保存する（空のリストで保留なし）。</summary>
+    public void SetPendingChoices(IEnumerable<string> relicIds)
+    {
+        pendingChoiceIds.Clear();
+        if (relicIds != null)
+            pendingChoiceIds.AddRange(relicIds.Where(id => !string.IsNullOrEmpty(id)));
+        SaveData();
+    }
 
     public RelicInventoryModel(List<RelicDefinition> masterRelics)
     {
@@ -113,18 +132,22 @@ public class RelicInventoryModel
                 relicId = o.RelicId,
                 acquiredTurn = o.AcquiredTurn,
                 counters = new List<RelicCounter>(o.Counters),
-            }).ToList()
+            }).ToList(),
+            pendingChoices = new List<string>(pendingChoiceIds),
         };
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
     }
 
     public void LoadData()
     {
         Owned.Clear();
+        pendingChoiceIds.Clear();
         string path = SaveSlotManager.GetPath(FileName);
-        if (File.Exists(path))
+        // 壊れていれば .bak から復旧。どちらも読めなければ所持なしで続行（SaveFile がログを出す）
+        if (SaveFile.TryReadJson<RelicSaveData>(path, out var data))
         {
-            var data = JsonUtility.FromJson<RelicSaveData>(File.ReadAllText(path));
+            if (data.pendingChoices != null)
+                pendingChoiceIds.AddRange(data.pendingChoices.Where(id => !string.IsNullOrEmpty(id)));
             if (data?.owned != null)
             {
                 foreach (var plain in data.owned)
@@ -139,6 +162,7 @@ public class RelicInventoryModel
                 }
             }
         }
+        PendingChoicesReloaded.OnNext(Unit.Default);
         OnChanged.OnNext(Unit.Default);
     }
 
@@ -146,6 +170,8 @@ public class RelicInventoryModel
     public void Clear()
     {
         Owned.Clear();
+        pendingChoiceIds.Clear();
+        PendingChoicesReloaded.OnNext(Unit.Default);
         OnChanged.OnNext(Unit.Default);
     }
 }
@@ -176,4 +202,7 @@ public class RelicCounter
 public class RelicSaveData
 {
     public List<OwnedRelicPlain> owned = new();
+
+    // 配信勝利などで積んだ「選ぶ前の3択」の relicId（RelicRewardService.PendingChoices の保存用）。旧セーブは欠損→空
+    public List<string> pendingChoices = new();
 }

@@ -1,4 +1,3 @@
-using System.IO;
 using UnityEngine;
 using R3;
 
@@ -57,6 +56,19 @@ public class TomsModel
     /// </summary>
     public bool RunOpeningPending { get; set; }
 
+    /// <summary>
+    /// 表示待ちのイベント ID（店のイベントポップアップ）。空なら保留なし。
+    /// イベントノードで GameFlowManager がセットし、確認ボタンで PendingEventData が消えたら空に戻す。
+    /// ポップアップ表示中に終了しても、続きからで同じイベントを出し直すために保存する。
+    /// </summary>
+    public string PendingEventId { get; set; } = string.Empty;
+
+    /// <summary>表示待ちイベントの GameFlow インデックス（PendingEventData.GameFlowIndex の保存用）。</summary>
+    public int PendingEventIndex { get; set; }
+
+    /// <summary>読み込んだ tomsData.json の版（SaveVersion。版を入れる前のセーブは 0）。</summary>
+    public int LoadedSaveVersion { get; private set; }
+
     public TomsModel()
     {
         // ReactivePropertyの初回作成（一度だけ）
@@ -94,6 +106,8 @@ public class TomsModel
         BorrowedPrincipal = 0;
         FirstDebtDiscountRate = 0f;
         RunOpeningPending = true;
+        PendingEventId = string.Empty;
+        PendingEventIndex = 0;
     }
 
     /// <summary>
@@ -105,18 +119,24 @@ public class TomsModel
     {
         var data = new TomsData(PlayerMoney.Value, BlacksmithLevel.Value, CurrentTurn.Value, GameFlowIndex, InfoBrokerLevel.Value, DebtCycle.Value,
             FlowSeed, (int)GameMode, UseAutoFlow, ToolShopLevel.Value, Trust.Value, ShopLevel.Value,
-            BorrowedPrincipal, FirstDebtDiscountRate, RunOpeningPending);
+            BorrowedPrincipal, FirstDebtDiscountRate, RunOpeningPending)
+        {
+            saveVersion = SaveVersion.Current,
+            pendingEventId = PendingEventId ?? string.Empty,
+            pendingEventIndex = PendingEventIndex,
+        };
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SaveSlotManager.GetPath(SaveFileName), json);
+        // 一時ファイル→置き換え→.bak。失敗してもゲームは止めない（SaveFile がログを出す）
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(SaveFileName), json);
     }
 
     public void LoadPlayerMoney()
     {
         string path = SaveSlotManager.GetPath(SaveFileName);
-        if (File.Exists(path))
+        // 本体が壊れていれば .bak から復旧する。どちらも読めなければ下の「セーブなし」と同じ既定値で起動する
+        if (SaveFile.TryReadJson<TomsData>(path, out var data))
         {
-            string json = File.ReadAllText(path);
-            var data = JsonUtility.FromJson<TomsData>(json);
+            LoadedSaveVersion = SaveVersion.Migrate(data.saveVersion, SaveFileName);
             PlayerMoney.Value = data.shopMoney;
             BlacksmithLevel.Value = data.blacksmithLevel;
             InfoBrokerLevel.Value = data.infoBrokerLevel;
@@ -133,9 +153,14 @@ public class TomsModel
             BorrowedPrincipal = Mathf.Max(0, data.borrowedPrincipal);
             FirstDebtDiscountRate = Mathf.Clamp01(data.firstDebtDiscountRate);
             RunOpeningPending = data.runOpeningPending;
+            PendingEventId = data.pendingEventId ?? string.Empty;
+            PendingEventIndex = Mathf.Max(0, data.pendingEventIndex);
         }
         else
         {
+            LoadedSaveVersion = 0;
+            PendingEventId = string.Empty;
+            PendingEventIndex = 0;
             // セーブが無い＝新規ゲーム。ファイルあり分岐で読む全フィールドをコンストラクタの初期値に戻す
             // （同一インスタンスで別スロットを読み直したとき前スロットの値が残らないように）
             PlayerMoney.Value = GameConst.InitMoney;

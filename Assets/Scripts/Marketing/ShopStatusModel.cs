@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using R3;
 using UnityEngine;
 
@@ -11,6 +10,12 @@ public class ShopStatusData
     public int spread;
     public int retention;
     public int followers;
+
+    // --- 進行中のバズ（BuzzSystem）。効果データ(SO)は保存できないので種類から引き直す。旧セーブは欠損→バズなし ---
+    public bool hasBuzz;
+    public int buzzType;              // BuzzType を int で保存
+    public int buzzRemainingTurns;
+    public float buzzRevenueMultiplier;
 
     public ShopStatusData(int trust, int attention, int spread, int retention, int followers)
     {
@@ -96,24 +101,30 @@ public class ShopStatusModel
 
     public void SaveData()
     {
-        var data = new ShopStatusData(Trust.Value, Attention.Value, Spread.Value, Retention.Value, Followers.Value);
+        var data = new ShopStatusData(Trust.Value, Attention.Value, Spread.Value, Retention.Value, Followers.Value)
+        {
+            hasBuzz = SavedBuzz.HasValue,
+            buzzType = SavedBuzz.HasValue ? (int)SavedBuzz.Value.Type : 0,
+            buzzRemainingTurns = SavedBuzz?.RemainingTurns ?? 0,
+            buzzRevenueMultiplier = SavedBuzz?.RevenueMultiplier ?? 1f,
+        };
         string json = JsonUtility.ToJson(data, true);
-        File.WriteAllText(SavePath, json);
+        SaveFile.WriteAtomic(SavePath, json);
     }
 
     public void LoadData()
     {
-        if (!File.Exists(SavePath)) return;
-
-        string json = File.ReadAllText(SavePath);
-        var data = JsonUtility.FromJson<ShopStatusData>(json);
-        if (data == null) return;
+        // 壊れていれば .bak から復旧。どちらも読めなければ今の値（初期値）のまま続行（SaveFile がログを出す）
+        if (!SaveFile.TryReadJson<ShopStatusData>(SavePath, out var data)) return;
 
         Trust.Value = data.trust;
         Attention.Value = data.attention;
         Spread.Value = data.spread;
         Retention.Value = data.retention;
         Followers.Value = data.followers;
+        SavedBuzz = data.hasBuzz && data.buzzRemainingTurns > 0
+            ? new BuzzSnapshot((BuzzType)data.buzzType, data.buzzRemainingTurns, data.buzzRevenueMultiplier)
+            : (BuzzSnapshot?)null;
 
         Debug.Log($"[ShopStatusModel] セーブデータを読み込みました: 信頼={data.trust} 注目={data.attention} 拡散={data.spread} 維持={data.retention} フォロワー={data.followers}");
     }
@@ -141,6 +152,43 @@ public class ShopStatusModel
             Followers.Value = 0;
         }
 
+        // 新しいランでは前のランのバズを持ち越さない（BuzzSystem は OnReset を受けて進行中のバズを捨てる）
+        SavedBuzz = null;
+        SaveData();
+        _onReset.OnNext(Unit.Default);
+    }
+
+    // =====================================================
+    // 進行中のバズの保存（BuzzSystem が書き、起動時に読み戻す）
+    // =====================================================
+
+    /// <summary>保存用のバズの状態（種類・残りターン・売上倍率）。効果データ(SO)は種類から引き直す。</summary>
+    public readonly struct BuzzSnapshot
+    {
+        public readonly BuzzType Type;
+        public readonly int RemainingTurns;
+        public readonly float RevenueMultiplier;
+
+        public BuzzSnapshot(BuzzType type, int remainingTurns, float revenueMultiplier)
+        {
+            Type = type;
+            RemainingTurns = remainingTurns;
+            RevenueMultiplier = revenueMultiplier;
+        }
+    }
+
+    /// <summary>保存されている進行中のバズ（無ければ null）。</summary>
+    public BuzzSnapshot? SavedBuzz { get; private set; }
+
+    private readonly Subject<Unit> _onReset = new();
+
+    /// <summary>Reset（新しいラン）の通知。</summary>
+    public Observable<Unit> OnReset => _onReset;
+
+    /// <summary>進行中のバズを保存する（null でバズなし）。BuzzSystem がバズの開始・残りターンの変化・終了のたびに呼ぶ。</summary>
+    public void SaveBuzz(BuzzSnapshot? buzz)
+    {
+        SavedBuzz = buzz;
         SaveData();
     }
 

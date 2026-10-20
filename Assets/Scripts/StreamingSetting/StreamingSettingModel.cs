@@ -52,7 +52,7 @@ public class StreamingSettingModel
         var plains = _selected.Select(kvp => new StreamingSelectionItemPlain { itemId = kvp.Key, quantity = kvp.Value }).ToList();
         var dto = new StreamingSelectionPlain(plains);
         var json = JsonUtility.ToJson(dto, true);
-        File.WriteAllText(SaveSlotManager.GetPath(FileName), json);
+        SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), json);
         Debug.Log("Streaming selection saved.");
     }
 

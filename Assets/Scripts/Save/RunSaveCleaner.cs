@@ -38,11 +38,10 @@ public static class RunSaveCleaner
         foreach (var filename in RunFiles)
         {
             string path = Path.Combine(dir, filename);
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-                Debug.Log($"[RunSaveCleaner] Deleted save file: {filename}");
-            }
+            bool existed = File.Exists(path);
+            // 本体と一緒に .tmp / .bak / .corrupt も消す（残すと次のランの読み込みで前のランへ復旧しかねない）
+            SaveFile.DeleteWithBackups(path);
+            if (existed) Debug.Log($"[RunSaveCleaner] Deleted save file: {filename}");
         }
 
         // ダンジョン進行(save.json)は SaveSystem が .tmp/.bak を含めて管理している

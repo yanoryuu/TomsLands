@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 /// <summary>
@@ -40,7 +39,7 @@ public static class NewspaperSaveStore
                 records = scrapbook?.RecordsToPlain() ?? new(),
                 readIds = news?.ReadIdsToPlain() ?? new(),
             };
-            File.WriteAllText(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
+            SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
         }
         catch (Exception ex)
         {
@@ -59,7 +58,7 @@ public static class NewspaperSaveStore
         try
         {
             string path = SaveSlotManager.GetPath(FileName);
-            if (File.Exists(path)) data = JsonUtility.FromJson<SaveData>(File.ReadAllText(path));
+            if (!SaveFile.TryReadJson(path, out data)) data = null;
         }
         catch (Exception ex)
         {

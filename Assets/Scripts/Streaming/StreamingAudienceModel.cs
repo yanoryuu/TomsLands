@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using R3;
 using UnityEngine;
 
@@ -43,9 +42,8 @@ public static class StreamingAudienceBridge
         try
         {
             var path = SaveSlotManager.GetPath("shopStatusData.json");
-            if (!File.Exists(path)) return 0;
-            var data = JsonUtility.FromJson<ShopStatusData>(File.ReadAllText(path));
-            return data != null ? Mathf.Max(0, data.followers) : 0;
+            // 壊れていれば .bak から読む（SaveFile）
+            return SaveFile.TryReadJson<ShopStatusData>(path, out var data) ? Mathf.Max(0, data.followers) : 0;
         }
         catch (Exception e)
         {
