@@ -110,7 +110,7 @@ public class CommonPresenter : IStartable, IDisposable
                 BuzzType.Big => "超バズ中！",
                 _ => "バズ中！",
             };
-            buzzInfo = $"{label} 残り{buzz.RemainingTurns.Value}ターン";
+            buzzInfo = $"{label}残り{buzz.RemainingTurns.Value}日"; // HUD の1行に収める（下の行は次の配信まで）
         }
 
         commonView.UpdateCurrentTurn(tomsModel.CurrentTurn.Value, buzzInfo);

@@ -124,7 +124,7 @@ public class TomsShopView : MonoBehaviour
             string estimate = estimates != null && i < estimates.Count ? estimates[i] : null;
             string description = string.IsNullOrEmpty(estimate)
                 ? relic.description
-                : $"{relic.description}\n<color=#E8A33D>{estimate}</color>";
+                : $"{relic.description}\n<color=#B0601C>{estimate}</color>";
 
             var slot = relicChoiceSlots != null && i < relicChoiceSlots.Length ? relicChoiceSlots[i] : null;
             if (slot != null)
