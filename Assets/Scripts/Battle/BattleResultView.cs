@@ -41,6 +41,7 @@ public class BattleResultView : MonoBehaviour
     [SerializeField] private string demonColor = "#6A2FA0";
     [SerializeField] private string upColor = "#C0661A";
     [SerializeField] private string downColor = "#4A6A8A";
+    [SerializeField] private string zeroColor = "#A08670";
 
     private const float RowInterval = 0.16f;
     private const float CountUpDuration = 0.8f;
@@ -143,13 +144,20 @@ public class BattleResultView : MonoBehaviour
 
     private List<string> BuildLedgerRows(BattleSettlement s)
     {
-        var rows = new List<string> { Row("売上", Plus(s.Sales)) };
-        if (s.RestockCost > 0) rows.Add(Row("補充", Minus(s.RestockCost)));
-        if (s.RestockRefund > 0) rows.Add(Row("売れ残り返金", Plus(s.RestockRefund)));
-        if (s.InterventionNet > 0) rows.Add(Row("介入", Minus(s.InterventionNet)));
-        if (s.DefenseReward > 0) rows.Add(Row($"<color={demonColor}>防衛報酬</color>", $"<color={demonColor}>+{s.DefenseReward:N0} G</color>"));
-        return rows;
+        // 行は勝ち負けに関係なく同じ5行で揃える（0 の行も薄く出す。毎回同じ位置で読めるように）
+        return new List<string>
+        {
+            Row("売上", s.Sales > 0 ? Plus(s.Sales) : Zero()),
+            Row("補充", s.RestockCost > 0 ? Minus(s.RestockCost) : Zero()),
+            Row("売れ残り返金", s.RestockRefund > 0 ? Plus(s.RestockRefund) : Zero()),
+            Row("介入", s.InterventionNet > 0 ? Minus(s.InterventionNet) : Zero()),
+            s.DefenseReward > 0
+                ? Row($"<color={demonColor}>防衛報酬</color>", $"<color={demonColor}>+{s.DefenseReward:N0} G</color>")
+                : Row("防衛報酬", Zero()),
+        };
     }
+
+    private string Zero() => $"<color={zeroColor}>0 G</color>";
 
     /// <summary>左に項目、右に金額の1行（TMP の行の高さ0のテクニックで左右に揃える）。</summary>
     private string Row(string label, string value)
