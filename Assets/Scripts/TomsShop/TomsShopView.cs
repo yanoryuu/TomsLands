@@ -30,6 +30,9 @@ public class TomsShopView : MonoBehaviour
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
+    [Header("営業ダイジェスト（客が買っていく演出） ※未配線なら従来の暗転")]
+    [SerializeField] private SalesDigestView salesDigest;
+
     [Header("設置マシンの表示 ※未配線でも動作する")]
     [SerializeField] private ShopMachineDisplay shopMachineDisplay;
 
@@ -160,6 +163,9 @@ public class TomsShopView : MonoBehaviour
     }
 
     /// <summary>レリック3択を開いているか（朝の通知を1枚ずつ出す待ち合わせ用。F-4）。</summary>
+    /// <summary>営業ダイジェスト（未配線なら null）。</summary>
+    public SalesDigestView SalesDigest => salesDigest;
+
     public bool IsRelicChoiceOpen => relicChoicePanel != null && relicChoicePanel.activeSelf;
 
     /// <summary>朝レポートを開いているか（朝の通知を1枚ずつ出す待ち合わせ用。F-4）。</summary>
@@ -476,10 +482,10 @@ public class TomsShopView : MonoBehaviour
     /// ターン開始時にバズが発生した場合に呼び出される。
     /// </summary>
     /// <param name="buzzType">発生したバズの種類</param>
-    public void ShowBuzzAnnounce(BuzzType buzzType)
+    public void ShowBuzzAnnounce(BuzzType buzzType, string detail = null)
     {
         if (buzzAnnounceView != null)
-            buzzAnnounceView.ShowBuzzOccurred(buzzType);
+            buzzAnnounceView.ShowBuzzOccurred(buzzType, detail);
     }
 
     /// <summary>

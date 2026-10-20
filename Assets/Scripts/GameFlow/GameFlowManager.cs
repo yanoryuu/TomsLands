@@ -280,6 +280,9 @@ public class GameFlowManager : IDisposable, IStartable
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
         }
 
+        // 今朝の入金合計（朝レポートの見出し）を数えるため、朝の入金処理の前の所持金を記録する
+        if (_tomsModel != null) _morningReport?.MarkMoneyBefore(_tomsModel.PlayerMoney.Value);
+
         // 約定予定日を過ぎたのに営業サマリーを経由できなかった売り注文（配信日・イベント日を
         // 挟んだ場合）をここで精算する。借金の返済チェック(TomsShopPresenter.Entry)より
         // 前に必ず入金されるよう、この位置（日送りの朝）で行う。
@@ -355,6 +358,8 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.SavePlayerMoney();
             }
         }
+
+        if (_tomsModel != null) _morningReport?.MarkMoneyAfter(_tomsModel.PlayerMoney.Value);
 
         // マーケティングシステムのターン処理（バズ判定・持続効果適用）
         if (_marketingFacade != null)
@@ -608,6 +613,19 @@ public class GameFlowManager : IDisposable, IStartable
             total++;
             if (upcoming == 0 && i >= firstUpcomingIndex) upcoming = total;
         }
+    }
+
+    /// <summary>表示用: 今日より後に残っている店の日数（配信日・イベント・終わりは数えない）。レリック3択の目安に使う。</summary>
+    public int GetRemainingShopDays()
+    {
+        if (_gameFlow == null) return 0;
+        int days = 0;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var t = _gameFlow.GameFlowStack[i].EventType;
+            if (t == GameEvent.Shop) days++;
+        }
+        return days;
     }
 
     /// <summary>表示用: 次の配信がこのランの最後の配信か（配信が残っていなければ false）。</summary>

@@ -30,6 +30,9 @@ public class TurnEndSummaryPresenter : IStartable, IDisposable
     /// <summary>lastProcessedTurn の日の精算結果（再入時はこれを表示し直す）。</summary>
     private TurnEndDayResult lastResult;
 
+    /// <summary>直近に精算した日の結果（このシーンで一度も精算していなければ null）。</summary>
+    public TurnEndDayResult LastDay => lastResult;
+
     public TurnEndSummaryPresenter(
         TurnEndSummaryView view,
         ItemModel itemModel,
