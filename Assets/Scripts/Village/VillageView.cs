@@ -61,8 +61,11 @@ public class VillageView : MonoBehaviour
 
     private const string SpecialCaption = "特殊な効果";
     private static readonly Color SpecialCaptionColor = new(0.91f, 0.64f, 0.24f); // ui-rules の強調の金 #E8A33D
+    private const float SpecialCaptionMaxSize = 20f; // 「特殊な効果」は5文字なので、見出しの枠（幅120）に収まる大きさにする
     private string defaultNextCaption;
     private Color defaultNextCaptionColor;
+    private float defaultNextCaptionMaxSize;
+    private HorizontalAlignmentOptions defaultNextCaptionAlign;
 
     public IReadOnlyList<FacilityPlot> Plots => plots ?? System.Array.Empty<FacilityPlot>();
 
@@ -113,6 +116,8 @@ public class VillageView : MonoBehaviour
         {
             defaultNextCaption = nextCaptionText.text;
             defaultNextCaptionColor = nextCaptionText.color;
+            defaultNextCaptionMaxSize = nextCaptionText.fontSizeMax;
+            defaultNextCaptionAlign = nextCaptionText.horizontalAlignment;
         }
         if (specialFrame != null) specialFrame.SetActive(false);
 
@@ -338,6 +343,8 @@ public class VillageView : MonoBehaviour
         {
             nextCaptionText.text = nextIsSpecial ? SpecialCaption : defaultNextCaption;
             nextCaptionText.color = nextIsSpecial ? SpecialCaptionColor : defaultNextCaptionColor;
+            nextCaptionText.fontSizeMax = nextIsSpecial ? Mathf.Min(SpecialCaptionMaxSize, defaultNextCaptionMaxSize) : defaultNextCaptionMaxSize;
+            nextCaptionText.horizontalAlignment = nextIsSpecial ? HorizontalAlignmentOptions.Center : defaultNextCaptionAlign;
         }
         if (specialFrame != null) specialFrame.SetActive(nextIsSpecial);
 
