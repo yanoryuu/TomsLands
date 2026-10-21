@@ -170,4 +170,12 @@ public sealed class VillageEffects
         if (table == null || table.Length == 0) return default;
         return table[Mathf.Clamp(level, 0, table.Length - 1)];
     }
+
+    // ───────── Lv5: 領主館「配信の予定表」・冒険者ギルド「呪いのレリックが報酬に出る」 ─────────
+
+    /// <summary>領主館 Lv5: 地図にこのランの配信の予定（何日目・どのダンジョン）を全部出す。</summary>
+    public bool StreamScheduleVisible => IsMaxLevel(HallId);
+
+    /// <summary>冒険者ギルド Lv5: 配信の報酬の選択肢の1枠に呪いのレリック（危ない札）を出す。</summary>
+    public bool CurseRelicInRewards => IsMaxLevel(GuildId);
 }

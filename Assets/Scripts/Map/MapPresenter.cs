@@ -41,7 +41,37 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
 
     public void Dispose() => disposable.Dispose();
 
-    public void Entry() => mapView.SetDungeons(BuildDisplays());
+    public void Entry()
+    {
+        mapView.SetDungeons(BuildDisplays());
+        mapView.SetStreamSchedule(BuildSchedule());
+    }
+
+    /// <summary>
+    /// 領主館 Lv5「配信の予定表」: このランの配信（何日目・どのダンジョン）を全部並べる。Lv5 でなければ null（帯を隠す）。
+    /// 出すのは日とダンジョン名だけ。弱点・敵・Lv は名札・情報屋の開示ルールのまま（Docs/Map_Overlay_Spec.md R6）。
+    /// </summary>
+    private List<MapScheduleRow> BuildSchedule()
+    {
+        if (gameFlowManager == null || !VillageEffects.Current.StreamScheduleVisible) return null;
+
+        int today = gameFlowManager.CurrentTurn.Value;
+        var rows = new List<MapScheduleRow>();
+        foreach (var e in gameFlowManager.GetStreamSchedule())
+        {
+            var data = dungeonRepository.GetById(e.Dungeon);
+            string status = e.IsPast ? "済" : DayText.UntilStream(Math.Max(0, e.Day - today), "");
+            if (e.IsUpcoming) status = $"<color=#E8A33D>次</color>  {status}";
+            rows.Add(new MapScheduleRow
+            {
+                Name = data != null ? data.dungeonName : e.Dungeon.ToString(),
+                DayText = DayText.DayOf(e.Day),
+                StatusText = status,
+                IsPast = e.IsPast,
+            });
+        }
+        return rows;
+    }
 
     /// <summary>
     /// 名札の表示データを組み立てる（Docs/Map_Overlay_Spec.md R1〜R3）。

@@ -35,7 +35,7 @@ public class RelicDefinition : ScriptableObject
     public Sprite icon;
     public RelicRarity rarity = RelicRarity.Common;
     public RelicCategory category = RelicCategory.Any;
-    [Tooltip("呪い（デメリット持ち）。報酬抽選プールから除外され、イベント等でのみ付与される")]
+    [Tooltip("呪い（デメリット持ち）。ふだんの報酬抽選からは外れ、イベント等で付与される。冒険者ギルド Lv5 では配信の報酬の1枠（危ない札）に出る")]
     public bool isCurse;
     [Tooltip("報酬・スターターの抽選に入る冒険者ギルドのレベル（0=最初から。Docs/Village_Meta_Design.md §11-A）")]
     public int unlockGuildLevel;
