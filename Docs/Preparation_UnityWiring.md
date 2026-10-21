@@ -70,7 +70,7 @@ PreparationScene はモックアップC（`Docs/mockups/prep_C_summary.png`、�
 | `flyerPriceText` / `appraisalPriceText` / `gracePriceText` | スタートダッシュ各カードの価格札 TMP | 名前と価格 `N,NNNG` を分けて表示（名前ラベルに「名前（N,NNNG）」の1行） |
 
 - 持ち込みの丸め・クランプは `PreparationModel.SetCarry(amount, carryMax)`（2026-10 から 10,000G 刻み。上限が刻みの倍数でなくても上限ちょうどまで可）。
-  上限は村の銀行レベルで 5万 / 10万 / 20万 / 40万G（`preparation.bankCarryLimits`）。持ち込みはクリアすると村資金へ戻るが、破産すると戻らない。
+  上限は村の銀行レベルで 5万 / 10万 / 20万 / 40万 / 70万G（`preparation.bankCarryLimits`。Lv5 は Lv4 と同じ 70万G）。持ち込みはクリアすると村資金へ戻るが、破産すると戻らない。
 - 難易度ボタンの文字の下に「配信N回・A〜B日」を出す（`PreparationView.SetDifficultyDetails`。日数はモード定義の dungeonCount × (店の日 min〜max + 配信の日1)）。
 - スターターレリックの候補: 呪い以外の Common。村の冒険者ギルド Lv1 以上なら、ギルドで解禁済みのレアも並ぶ。
   Presenter が `OnCarrySliderChanged` を購読して `RefreshAll` する。
