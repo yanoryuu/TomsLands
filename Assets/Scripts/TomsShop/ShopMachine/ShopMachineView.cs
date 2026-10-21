@@ -39,6 +39,12 @@ public class ShopMachineView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private Button closeButton;
 
+    [Header("「店」画面のタブ（改装／設備） ※未配線でも動作する")]
+    [SerializeField] private ShopFacilityTabsView tabs;
+
+    /// <summary>改装タブへ切り替えたい（タブのクリック・LB/RB）。</summary>
+    public Observable<Unit> OnUpgradeTabRequested => tabs != null ? tabs.OnOtherTabRequested : Observable.Empty<Unit>();
+
     public Subject<Unit> OnPurchaseClicked { get; } = new();
     public Subject<Unit> OnRemoveClicked { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();

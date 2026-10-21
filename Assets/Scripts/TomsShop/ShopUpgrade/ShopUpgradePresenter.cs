@@ -41,6 +41,11 @@ public class ShopUpgradePresenter : IStartable, IDisposable
             .Subscribe(_ => HandleUpgrade())
             .AddTo(disposables);
 
+        // 「店」画面のタブ: 設備へ
+        view.OnMachineTabRequested
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.MachineShop))
+            .AddTo(disposables);
+
         // 所持金・店レベルの変化で表示を更新（画面表示中以外の更新は無害）
         tomsModel.PlayerMoney
             .Subscribe(_ => Refresh())

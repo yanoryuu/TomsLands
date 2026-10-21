@@ -87,16 +87,19 @@ public class TurnPhaseManager : IDisposable
     /// </summary>
     public TurnPhase? GetPhaseForScreen(TomsShopGamePhase screen) => screen switch
     {
+        // 仕入れの画面: 読み・仕入れに使うもの（鍛冶屋・新聞・情報屋・地図・勇者）
         TomsShopGamePhase.Broker
             or TomsShopGamePhase.BlackSmith
             or TomsShopGamePhase.ToolShop
+            or TomsShopGamePhase.Newspaper
+            or TomsShopGamePhase.Hero
+            or TomsShopGamePhase.Map => TurnPhase.Procurement,
+        // 陳列の画面: 店の準備・賭けの仕上げ（商品陳列・占い師・広告・店・魔王軍支援）
+        TomsShopGamePhase.Prophet
             or TomsShopGamePhase.DungeonLevelUp
             or TomsShopGamePhase.Advertisement
-            or TomsShopGamePhase.Hero
-            or TomsShopGamePhase.Map
             or TomsShopGamePhase.ShopUpgrade
-            or TomsShopGamePhase.MachineShop => TurnPhase.Procurement,
-        TomsShopGamePhase.Prophet => TurnPhase.Display,
+            or TomsShopGamePhase.MachineShop => TurnPhase.Display,
         TomsShopGamePhase.TurnEndSummary => TurnPhase.Sales,
         _ => null, // Shop（ホーム）
     };

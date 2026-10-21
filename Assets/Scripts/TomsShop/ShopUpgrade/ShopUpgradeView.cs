@@ -26,6 +26,12 @@ public class ShopUpgradeView : MonoBehaviour
     [Header("メッセージ")]
     [SerializeField] private TextMeshProUGUI messageText;
 
+    [Header("「店」画面のタブ（改装／設備） ※未配線でも動作する")]
+    [SerializeField] private ShopFacilityTabsView tabs;
+
+    /// <summary>設備タブへ切り替えたい（タブのクリック・LB/RB）。</summary>
+    public Observable<Unit> OnMachineTabRequested => tabs != null ? tabs.OnOtherTabRequested : Observable.Empty<Unit>();
+
     public Subject<Unit> OnUpgradeClicked { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
 

@@ -26,6 +26,11 @@ public class GamePanelManager : MonoBehaviour
     /// <summary>
     /// 全パネルを非表示にする
     /// </summary>
+    /// <summary>直前に出していた店のサブ画面（「店」画面のタブ切り替えをフェードさせない判定用）。</summary>
+    private TomsShopGamePhase? _lastSubPhase;
+
+    private static bool IsShopFacility(TomsShopGamePhase? p) => p == TomsShopGamePhase.ShopUpgrade || p == TomsShopGamePhase.MachineShop;
+
     private void HideAll()
     {
         tomsShopPanel.SetActive(false);
@@ -92,7 +97,21 @@ public class GamePanelManager : MonoBehaviour
     public void ShowTomsShopPanel(TomsShopGamePhase subPhase)
     {
         _commonWasActive = commonPanel != null && commonPanel.activeSelf;
+        // 「店」画面の改装⇔設備はタブの切り替えなので、パネルを差し替えるだけで開く演出は出さない
+        bool tabSwitch = IsShopFacility(_lastSubPhase) && IsShopFacility(subPhase) && _lastSubPhase != subPhase;
+        _lastSubPhase = subPhase;
         HideAll();
+        if (tabSwitch)
+        {
+            var panel = subPhase == TomsShopGamePhase.ShopUpgrade ? shopUpgradePanel : machineShopPanel;
+            if (panel != null)
+            {
+                panel.SetActive(true);
+                UIFocusManager.NotifyPanelShown(panel);
+            }
+            if (commonPanel != null) commonPanel.SetActive(true);
+            return;
+        }
 
         switch (subPhase)
         {

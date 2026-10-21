@@ -61,6 +61,11 @@ public class ShopMachinePresenter : IStartable, IDisposable
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
             .AddTo(disposables);
 
+        // 「店」画面のタブ: 改装へ
+        view.OnUpgradeTabRequested
+            .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.ShopUpgrade))
+            .AddTo(disposables);
+
         view.OnPurchaseClicked
             .Subscribe(_ => HandlePurchase())
             .AddTo(disposables);

@@ -505,7 +505,8 @@ public class TomsShopView : MonoBehaviour
         ShopFeature.DungeonLevelUp => DungeonLevelUpButton,
         ShopFeature.Advertisement => AdvertisementButton,
         ShopFeature.ShopUpgrade => ShopUpgradeButton,
-        ShopFeature.MachineShop => MachineShopButton,
+        // 「店の設備」は「店」ボタン（ShopUpgradeButton）の画面のタブに統合したので、ボタンは出さない
+        ShopFeature.MachineShop => null,
         _ => null,
     };
 
