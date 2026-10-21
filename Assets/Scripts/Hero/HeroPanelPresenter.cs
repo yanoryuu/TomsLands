@@ -18,10 +18,13 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
     private readonly DungeonIntelModel dungeonIntel;
     private readonly CompositeDisposable disposables = new();
 
-    /// <summary>候補ラベルで弱点に合う属性を強調する色（UI の金）。</summary>
-    private const string MatchColor = "#E8A33D";
-    /// <summary>在庫0の候補の色（選べるが目立たせない）。</summary>
-    private const string NoStockColor = "#8C8C8C";
+    /// <summary>
+    /// 候補ラベルで弱点に合う属性を強調する色（濃い赤茶）。
+    /// プルダウンの行は中間の茶色（10説明ボックス）なので、UI の金（#E8A33D）では沈んで読めない。
+    /// </summary>
+    private const string MatchColor = "#7A2E10";
+    /// <summary>在庫0の候補の色（選べるが目立たせない）。在庫ありの文字（#3A261C）より一段淡い濃茶。灰色は茶の行に沈むので使わない。</summary>
+    private const string NoStockColor = "#5A3A24";
 
     /// <summary>現在表示中のセリフ。ホバー終了時に復元するために保持する。</summary>
     private string currentDialogue = string.Empty;
@@ -269,7 +272,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
 
     /// <summary>
     /// 装備の候補。並びは「在庫あり → 弱点に合う（弱点を知っているときだけ）→ 強い順（ランク・値段）」。
-    /// 在庫0の品も選べるが、灰色で末尾に置く（装備に賭ける儲けは持っている数に比例するため、在庫を先に見せる）。
+    /// 在庫0の品も選べるが、淡い色で末尾に置く（装備に賭ける儲けは持っている数に比例するため、在庫を先に見せる）。
     /// </summary>
     private IReadOnlyList<HeroEquipmentOption> BuildEquipmentOptions(ItemTypeData.ItemType type, string selectedItemId, ItemTypeData.ItemAttribute? weakness)
     {
@@ -298,7 +301,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
 
     /// <summary>
     /// プルダウンの1行: 「炎の剣　火　在庫12　1,240G　攻撃+10%」。
-    /// 弱点に合う属性は金色、在庫0の行は灰色。
+    /// 弱点に合う属性は赤茶、在庫0の行は淡い濃茶。
     /// </summary>
     private static string BuildEquipmentLabel(RuntimeItemData item, ItemTypeData.ItemAttribute? weakness)
     {
