@@ -58,6 +58,8 @@ public class BattleOutputData : ScriptableObject
 
     [Header("フラグ")]
     public bool HasResult;
+    [Tooltip("配信が不具合（例外）で途中終了したか。配信終了ボタンでの途中終了は false（呪われた帳簿の取り立てに数える）")]
+    public bool AbortedByError;
 
     /// <summary>勝負配信の宣言の決着を書き込む。SetResult の後に呼ぶ。</summary>
     public void SetDeclaration(StreamDeclarationSide side, StreamDeclarationOutcome outcome, int bonus)
@@ -87,6 +89,7 @@ public class BattleOutputData : ScriptableObject
         SpecialMoveCount = 0;
         DefenseReward = 0;
         SetDeclaration(StreamDeclarationSide.None, StreamDeclarationOutcome.None, 0);
+        AbortedByError = false;
         HasResult = true;
         Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}, mobs={DefeatedMobCount}, bosses={DefeatedBossCount}");
     }
@@ -125,6 +128,7 @@ public class BattleOutputData : ScriptableObject
         SpecialMoveCount = 0;
         DefenseReward = 0;
         SetDeclaration(StreamDeclarationSide.None, StreamDeclarationOutcome.None, 0);
+        AbortedByError = false;
         HasResult = false;
     }
 }

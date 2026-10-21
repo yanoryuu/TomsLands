@@ -21,6 +21,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly RelicRewardService _relicRewardService;
     private readonly MetaProgressModel _metaProgress;
     private readonly ShopStatusModel _shopStatusModel;
+    private readonly RelicInventoryModel _relicInventory;
     private readonly CancellationTokenSource _talkCts = new();
 
     public BattleResultHandler(
@@ -34,8 +35,10 @@ public class BattleResultHandler : IStartable, IDisposable
         HeroModel heroModel,
         RelicRewardService relicRewardService,
         MetaProgressModel metaProgress,
-        ShopStatusModel shopStatusModel = null)
+        ShopStatusModel shopStatusModel = null,
+        RelicInventoryModel relicInventory = null)
     {
+        _relicInventory = relicInventory;
         _shopStatusModel = shopStatusModel;
         _metaProgress = metaProgress;
         _outputData = outputData;
@@ -139,6 +142,18 @@ public class BattleResultHandler : IStartable, IDisposable
             }
 
             Debug.Log("[BattleResultHandler] Defeat penalties applied.");
+        }
+
+        // 呪われた帳簿: 配信が外れた（勇者が負けて配当も無い・途中終了）ら、次の朝に所持金の一部を取り立てる。
+        // 不具合での途中終了は外れに数えない（宣言の Returned と同じ扱い）
+        bool missed = aborted
+            ? !_outputData.AbortedByError
+            : _outputData.Result != BattleResult.Victory && !_outputData.IsDemonPayout;
+        if (missed && LedgerMissPenaltyRelicBehaviour.IsOwned(_relicInventory))
+        {
+            _tomsModel.LedgerPenaltyPending = true;
+            _tomsModel.SavePlayerMoney();
+            Debug.Log("[BattleResultHandler] 呪われた帳簿: 外れた配信の取り立てを次の朝に行う");
         }
 
         int gainedExp = aborted

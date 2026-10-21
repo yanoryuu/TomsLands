@@ -1243,7 +1243,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
         // 精算と日送りは本物のハンドラで（TomsShop 帰還時の BattleResultHandler.Start と同じ）
         var handler = new BattleResultHandler(_battleOut, _battleIn, ItemModel, _stateManager, Flow,
-            Assets.Economy, TomsModel, HeroModel, RelicRewards, null);
+            Assets.Economy, TomsModel, HeroModel, RelicRewards, null, null, RelicInventory);
         try
         {
             handler.Start();

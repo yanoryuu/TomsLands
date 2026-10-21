@@ -32,7 +32,8 @@ feature/relics ブランチで実装した「レリック（ローグライト�
 | relic_charm | 商売繁盛のお守り | Rare | DemandFloorAdd, Add, 0.08 |
 | relic_seal | ギルドの減免状 | Epic | DebtAmountMul, Mul, 0.8 |
 | relic_piggy | 子豚の貯金箱 | Common | behaviours: dailyGold, param=100 |
-| relic_cursed_ledger | 呪われた帳簿 | Rare(isCurse) | ShopRevenueMul 1.3 + DebtAmountMul 1.2 |
+| relic_cursed_ledger | 呪われた帳簿 | Rare(isCurse) | ShopRevenueMul 1.3 + behaviours: ledgerMissPenalty, param=0.2（配信が外れた＝勇者が負けて配当も無い・配信終了ボタンでの途中終了なら、次の朝に所持金の20%を取り立てる。不具合での途中終了は数えない。2026-10-21 に納付金 ×1.2 から変更） |
+| relic_allin_dice | 命知らずのサイコロ | Rare(isCurse) | SellClampAdd +0.35（売り注文の約定が注文時の値段から ±55% まで動く。ふだんは ±20%）+ DebtAmountMul 1.1 |
 
 ## 2. イベントからの付与（CSV運用）
 

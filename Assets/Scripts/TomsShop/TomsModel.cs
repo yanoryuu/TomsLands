@@ -93,6 +93,9 @@ public class TomsModel
     /// <summary>宣言した配信の GameFlow インデックス。</summary>
     public int StreamDeclarationFlowIndex { get; set; }
 
+    /// <summary>呪われた帳簿（レリック）: 配信が外れて、次の朝に所持金の一部を取り立てられる予定か（LedgerMissPenaltyRelicBehaviour）。</summary>
+    public bool LedgerPenaltyPending { get; set; }
+
     public TomsModel()
     {
         // ReactivePropertyの初回作成（一度だけ）
@@ -146,6 +149,7 @@ public class TomsModel
         StreamDeclarationUsed = false;
         StreamDeclarationSide = StreamDeclarationSide.None;
         StreamDeclarationFlowIndex = 0;
+        LedgerPenaltyPending = false;
     }
 
     /// <summary>
@@ -170,6 +174,7 @@ public class TomsModel
             streamDeclarationUsed = StreamDeclarationUsed,
             streamDeclarationSide = (int)StreamDeclarationSide,
             streamDeclarationFlowIndex = StreamDeclarationFlowIndex,
+            ledgerPenaltyPending = LedgerPenaltyPending,
         };
         string json = JsonUtility.ToJson(data, true);
         // 一時ファイル→置き換え→.bak。失敗してもゲームは止めない（SaveFile がログを出す）
@@ -211,6 +216,7 @@ public class TomsModel
                 ? (StreamDeclarationSide)data.streamDeclarationSide
                 : StreamDeclarationSide.None;
             StreamDeclarationFlowIndex = Mathf.Max(0, data.streamDeclarationFlowIndex);
+            LedgerPenaltyPending = data.ledgerPenaltyPending;
         }
         else
         {

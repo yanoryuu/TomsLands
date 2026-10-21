@@ -53,6 +53,9 @@ public class TomsData
     public int streamDeclarationSide;      // StreamDeclarationSide を int で保存（0 = 宣言なし）
     public int streamDeclarationFlowIndex; // 宣言した配信の GameFlow インデックス
 
+    // --- 呪われた帳簿（レリック）: 外れた配信の翌朝の取り立て待ち。旧セーブは欠損時 false = 取り立てなし ---
+    public bool ledgerPenaltyPending;
+
     public TomsData(int shopMoney, int blacksmithLevel, int currentTurn, int gameFlowIndex = 0, int infoBrokerLevel = 1, int debtCycle = 0,
         int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false, int toolShopLevel = 1, float trust = 1f, int shopLevel = 1,
         int borrowedPrincipal = 0, float firstDebtDiscountRate = 0f, bool runOpeningPending = false)
