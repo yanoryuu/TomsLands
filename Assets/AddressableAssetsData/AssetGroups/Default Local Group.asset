@@ -278,6 +278,12 @@ MonoBehaviour:
     m_SerializedLabels:
     - ItemData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: f676edc4155b46818793349a66767e0d
+    m_Address: ItemData/MA1
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 43dded16963351d4086ad9e3e9bd43cf
     m_Address: Relic/relic_allin_dice
     m_ReadOnly: 0
