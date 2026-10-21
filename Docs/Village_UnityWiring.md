@@ -89,6 +89,15 @@ VillageScene.unity（ビルド設定登録済み）
 3. 町人は「総合Lv ÷ 最大の総合Lv（17）」の割合で増える（VillagePopulationView.ApplyScaled）
 4. 初めて村に入ったとき: 前半の会話 → 帰還演出 → 後半の会話（VillageTutorialDirector の betweenParts）
 
+## 3-2. 村の格（2026-10-21）で足した配線（Village_Meta_Design.md §0-7）
+
+- `VillageUI/RankNextText`（VillageLevelText の複製・26pt）→ `VillageView.rankNextText`。次の格の条件（王都では称号）。
+- `VillageUI/RecordBoardPopup`（ConversionPopup の複製。Title / BodyText / CloseButton「閉じる」）→ `VillageView.recordBoard*`。
+- `Plots/Plot_records`（FacilityPlot・facilityId = `records`、Stage0 に Cainos の Billboard 01、Bubble は Plot_plaza の複製）→ `VillageView.plots` の末尾。王都になるまで非表示。
+- 格が上がった瞬間のポップは ConversionPopup を流用（EarnedText と ConvertedText の位置を入れ替えて、格の名前を大きい金の行に出す。帰還報告では戻す）。
+- `ResultScene` の `StatsPanel/MerchantTitle`（周回の行の複製・金色 28pt、枠の下端の上）→ `ResultView.merchantTitleText`。
+- 確認（2026-10-21、エディタの Play・slot_0 に検証用の metaData を書いて確認し、元に戻した）: 準備画面の鍵、デバッグの施設 +1 と投資での格上げ（ポップ→会話）、王都の掲示板、タイトルのセーブ欄の称号。リザルトの称号は編集モードでの表示のみ（Result を直接読み込まない決まりのため）。
+
 ## 4. 未確認・今後（V2以降）
 
 - タイトル「ニューゲーム」→村、Result/GameOver→村 の通しプレイ（コード実装済み・実ラン未確認）

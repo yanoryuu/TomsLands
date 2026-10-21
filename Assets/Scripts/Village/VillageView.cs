@@ -268,21 +268,34 @@ public class VillageView : MonoBehaviour
         conversionPopup.SetActive(true);
         UIFx.PanelOpen(conversionPopup);
         if (conversionTitleText != null) conversionTitleText.text = title;
-        if (conversionEarnedText != null)
-        {
-            conversionEarnedText.text = rankLine;
-            conversionEarnedText.transform.DOKill();
-            conversionEarnedText.transform.localScale = Vector3.one * 0.6f;
-            conversionEarnedText.transform.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.15f)
-                .SetLink(conversionEarnedText.gameObject);
-        }
+        // 格の名前は大きい金の行（村資金の額を出す行）に出して上へ、解放の説明は小さい行に出して下へ入れ替える
+        SwapConversionRows(true);
         if (conversionConvertedText != null)
         {
-            conversionConvertedText.DOKill();
-            conversionConvertedText.text = unlockLine ?? "";
+            DOTween.Kill(conversionConvertedText.gameObject);
+            conversionConvertedText.text = rankLine;
+            var t = conversionConvertedText.transform;
+            t.DOKill();
+            t.localScale = Vector3.one * 0.6f;
+            t.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.15f).SetLink(conversionConvertedText.gameObject);
         }
+        if (conversionEarnedText != null) conversionEarnedText.text = unlockLine ?? "";
         if (conversionCloseButton != null) UIFx.Pop(conversionCloseButton.transform);
         return true;
+    }
+
+    private Vector2? earnedHome, convertedHome;
+
+    /// <summary>帰還収支ポップの2行（儲けの行・村資金の行）の位置を入れ替える／戻す。</summary>
+    private void SwapConversionRows(bool swapped)
+    {
+        if (conversionEarnedText == null || conversionConvertedText == null) return;
+        var e = conversionEarnedText.rectTransform;
+        var c = conversionConvertedText.rectTransform;
+        earnedHome ??= e.anchoredPosition;
+        convertedHome ??= c.anchoredPosition;
+        e.anchoredPosition = swapped ? convertedHome.Value : earnedHome.Value;
+        c.anchoredPosition = swapped ? earnedHome.Value : convertedHome.Value;
     }
 
     public bool IsConversionPopupOpen => conversionPopup != null && conversionPopup.activeSelf;
@@ -455,6 +468,8 @@ public class VillageView : MonoBehaviour
     {
         if (conversionPopup == null) return;
         conversionPopup.SetActive(true);
+        SwapConversionRows(false); // 格上げで入れ替えた行を戻す
+        if (conversionConvertedText != null) conversionConvertedText.transform.localScale = Vector3.one;
 
         if (conversionTitleText != null)
             conversionTitleText.text = cleared ? "ランクリア！　村への還元" : "破産……　それでも村は待っている";

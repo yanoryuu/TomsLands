@@ -305,7 +305,7 @@ public class PreparationView : MonoBehaviour
         };
         if (button == null) return;
 
-        if (locked) SetDifficultyDetail(button, lockText, 45);
+        if (locked) SetDifficultyDetail(button, lockText, 50);
         else if (!string.IsNullOrEmpty(detail)) SetDifficultyDetail(button, detail);
 
         if (button.targetGraphic != null)
@@ -318,11 +318,11 @@ public class PreparationView : MonoBehaviour
             label.color = locked ? new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * 0.75f) : baseColor;
         }
 
-        float size = Mathf.Clamp(((RectTransform)button.transform).rect.height * 0.42f, 28f, 56f);
+        float size = Mathf.Clamp(((RectTransform)button.transform).rect.height * 0.5f, 32f, 60f);
         UILockIcon.Attach(button.transform, locked, size);
     }
 
-    private static readonly Color LockedTint = new(0.62f, 0.62f, 0.62f, 1f);
+    private static readonly Color LockedTint = new(0.8f, 0.8f, 0.8f, 1f);
     private readonly Dictionary<TextMeshProUGUI, Color> labelColors = new();
 
     /// <summary>難易度の選択ハイライトを更新する。</summary>
