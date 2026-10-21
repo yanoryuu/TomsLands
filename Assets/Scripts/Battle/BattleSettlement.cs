@@ -44,7 +44,8 @@ public sealed class BattleSettlement
 
 /// <summary>
 /// 勇者の装備1つの相場の動き（配信リザルトの「相場への影響」1行）。
-/// 値段は帰還後に店で付く見込み（勝敗の倍率を掛け、ストップ高/安で丸めた値。ItemModel.PreviewPriceAfterBattle）。
+/// 左は配信前の店の値段、右は帰還後の店の値段（勝敗の倍率を掛け、ストップ高/安で丸めた値。ItemModel.PreviewPriceAfterBattle）。
+/// 帰還処理（BattleResultHandler）は日送りのあとに装備の値段をこの値へ揃えるので、翌朝の店の値段と一致する。
 /// </summary>
 public readonly struct BattleMarketImpact
 {
@@ -54,16 +55,19 @@ public readonly struct BattleMarketImpact
     public readonly int PriceAfter;
     /// <summary>帰還後に店に残る在庫（配信で売れた分を引いた数）</summary>
     public readonly int Stock;
+    /// <summary>在庫の平均取得単価。記録が無ければ null（含み損益を出さない）</summary>
+    public readonly int? UnitCost;
 
-    public BattleMarketImpact(string itemName, Sprite icon, int priceBefore, int priceAfter, int stock)
+    public BattleMarketImpact(string itemName, Sprite icon, int priceBefore, int priceAfter, int stock, int? unitCost = null)
     {
         ItemName = itemName;
         Icon = icon;
         PriceBefore = priceBefore;
         PriceAfter = priceAfter;
         Stock = Mathf.Max(0, stock);
+        UnitCost = unitCost.HasValue && unitCost.Value >= 0 ? unitCost : null;
     }
 
-    /// <summary>在庫ぶんの含み損益（値段の差 × 在庫）</summary>
-    public int StockGain => (PriceAfter - PriceBefore) * Stock;
+    /// <summary>在庫ぶんの含み損益（帰還後の値段 − 取得単価）× 在庫。取得単価が分からなければ null</summary>
+    public int? StockGain => UnitCost.HasValue ? (PriceAfter - UnitCost.Value) * Stock : (int?)null;
 }

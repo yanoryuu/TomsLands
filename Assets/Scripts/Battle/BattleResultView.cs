@@ -188,9 +188,15 @@ public class BattleResultView : MonoBehaviour
             sb.Append($"<color={inkColor}>{m.PriceBefore:N0}G</color> → <color={col}>{m.PriceAfter:N0}G {arrow}</color>");
             if (m.Stock > 0)
             {
-                int gain = m.StockGain;
-                string gainText = gain >= 0 ? $"+{gain:N0}G" : $"-{-gain:N0}G";
-                sb.Append($"  <color={inkColor}><size=85%>在庫{m.Stock}</size></color> <color={col}><size=85%>{gainText}</size></color>");
+                sb.Append($"  <color={inkColor}><size=85%>在庫{m.Stock}</size></color>");
+                // 含み損益は取得単価が分かるときだけ（取得単価から見た損益。値段の差ではない）
+                if (m.StockGain.HasValue)
+                {
+                    int gain = m.StockGain.Value;
+                    string gainCol = gain >= 0 ? upColor : downColor;
+                    string gainText = gain >= 0 ? $"+{gain:N0}G" : $"-{-gain:N0}G";
+                    sb.Append($" <color={gainCol}><size=85%>{gainText}</size></color>");
+                }
             }
             sb.Append('\n');
         }
