@@ -231,7 +231,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             var entry = newsModel.FindEntry(s.entryKey);
             string what = string.IsNullOrEmpty(s.prediction)
                 ? Shorten(entry?.Article?.headline, 12)
-                : $"予想: {ScrapPrediction.Label(s.prediction)}";
+                : $"予想メモ: {ScrapPrediction.Label(s.prediction)}";
             lines.Add($"第{s.publishTurn}号 {what}\n{StickyStatus(s, entry, turn)}");
         }
         foreach (var s in scrapbook.Pinned) Add(s);

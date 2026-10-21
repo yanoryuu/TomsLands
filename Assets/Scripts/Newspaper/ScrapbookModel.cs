@@ -283,7 +283,7 @@ public static class ScrapPrediction
     /// <summary>選べる予想の一覧（先頭は「予想なし」）。</summary>
     public static List<(string value, string label)> Options()
     {
-        var list = new List<(string, string)> { (string.Empty, "予想なし") };
+        var list = new List<(string, string)> { (string.Empty, "メモなし") };
         foreach (var a in Attributes)
             foreach (var t in Types)
                 list.Add(($"{a.id},{t.id}", $"{a.ja}の{t.ja}"));

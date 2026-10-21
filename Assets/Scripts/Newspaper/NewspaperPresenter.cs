@@ -384,7 +384,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         if (!string.IsNullOrEmpty(s.prediction))
         {
             bool ok = state != ScrapState.ConfirmedMiss && ScrapPrediction.IsCorrect(s.prediction, ev);
-            lines.Add($"予想: {ScrapPrediction.Label(s.prediction)} → {(ok ? "的中" : "外れ")}");
+            lines.Add($"予想メモ: {ScrapPrediction.Label(s.prediction)} → {(ok ? "的中" : "外れ")}");
         }
         return string.Join("\n", lines);
     }
