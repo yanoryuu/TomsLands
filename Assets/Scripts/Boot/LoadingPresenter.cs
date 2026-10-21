@@ -29,7 +29,7 @@ public sealed class LoadingPresenter : IAsyncStartable
     public async UniTask StartAsync(CancellationToken ct)
     {
         // 起動直後は裏に何も無いのでフェード無しで出す。以降の TitleScene への遷移はこのまま画面を引き継ぐ
-        SceneLoader.ShowImmediate("設定を確認中...");
+        SceneLoader.ShowImmediate("設定を確認中……");
         float startTime = Time.realtimeSinceStartup;
 
         try

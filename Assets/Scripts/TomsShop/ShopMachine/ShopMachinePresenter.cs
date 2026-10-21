@@ -84,7 +84,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
     {
         selectedMachineId = null;
         selectedPlacementId = null;
-        view?.ShowMessage("マシンを設置して店を強化しよう。同じマシンも枠が空いていれば複数台置ける。");
+        view?.ShowMessage("設備を置いて店を強化しよう。同じ設備も枠が空いていれば何台でも置ける。");
         view?.ClearDetail();
         view?.HideProducedItemSelector();
         view?.PopulatePlacements(0);

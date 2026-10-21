@@ -74,7 +74,7 @@ public static class InterventionTooltipTexts
 
     /// <summary>めくりタブ: いま見ている面から、めくった先の面を説明する。</summary>
     public static Entry Tab(InterventionFace current) => current == InterventionFace.Hero
-        ? new Entry("→ ダンジョンへの投資", "めくると魔物側に投資して勇者を邪魔できる", DungeonTitle)
+        ? new Entry("→ ダンジョンへの出資", "めくると魔物側に出資して勇者を邪魔できる", DungeonTitle)
         : new Entry("→ 勇者へのスパチャ", "めくると勇者にスパチャして助けられる", GoldTitle);
 
     private static string Pct(float ratio) => $"{Mathf.RoundToInt(ratio * 100f)}%";

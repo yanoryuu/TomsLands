@@ -586,7 +586,7 @@ public class ResultView : MonoBehaviour
 
     /// <summary>「4周目・30ターン」（周回数が不明なら ターン数だけ）。</summary>
     private static string FormatRunTurns(ResultStatisticsData d, int turns) =>
-        d.RunNumber > 0 ? $"{d.RunNumber}周目・{turns}ターン" : $"{turns}ターン";
+        d.RunNumber > 0 ? $"{d.RunNumber}周目・{DayText.Days(turns)}" : DayText.Days(turns);
 
     /// <summary>自己ベスト（この難易度の最高の儲け）。更新したら「更新！」、初クリアは「はじめて」。</summary>
     private static string FormatBest(ResultStatisticsData d)

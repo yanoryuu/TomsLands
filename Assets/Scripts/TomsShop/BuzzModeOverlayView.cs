@@ -155,7 +155,7 @@ public class BuzzModeOverlayView : MonoBehaviour
     public void UpdateRemainingTurns(int remainingTurns)
     {
         if (remainingTurnsText == null) return;
-        remainingTurnsText.text = remainingTurns > 0 ? $"残り{remainingTurns}ターン" : string.Empty;
+        remainingTurnsText.text = remainingTurns > 0 ? $"残り{DayText.Days(remainingTurns)}" : string.Empty;
     }
 
     private void ApplyAppearance(BuzzType buzzType)

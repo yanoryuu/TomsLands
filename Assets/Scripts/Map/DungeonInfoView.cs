@@ -58,7 +58,7 @@ public class DungeonInfoView : MonoBehaviour
         {
             // 情報未購入：???で表示
             dungeonDescriptionText.text = "？？？";
-            dungeonLevelText.text = "Lv.？？？";
+            dungeonLevelText.text = "Lv.？";
         }
         dungeonRewardText.text = BuildStatsText(d, clearProbability, weaknessKnown);
 

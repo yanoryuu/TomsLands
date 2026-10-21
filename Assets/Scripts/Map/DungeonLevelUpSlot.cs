@@ -50,7 +50,7 @@ public class DungeonLevelUpSlot : MonoBehaviour
         if (nextBadge) nextBadge.SetActive(data.IsNext);
         if (dungeonNameText)
             dungeonNameText.text = data.IsNext && nextBadge == null
-                ? $"<color=#E8A33D>NEXT</color> {data.DungeonName}"
+                ? $"<color=#E8A33D>次</color> {data.DungeonName}"
                 : data.DungeonName;
         if (costText)         costText.text           = data.IsMaxLevel ? "MAX" : $"{data.Cost:N0}G";
 

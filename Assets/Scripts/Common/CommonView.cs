@@ -157,8 +157,8 @@ public class CommonView : MonoBehaviour
     public void UpdateCurrentTurn(int turn, string buzzInfo = null)
     {
         currentTurnText.text = string.IsNullOrEmpty(buzzInfo)
-            ? $"Turn: {turn}"
-            : $"Turn: {turn} <size=60%>{buzzInfo}</size>";
+            ? DayText.DayOf(turn)
+            : $"{DayText.DayOf(turn)} <size=60%>{buzzInfo}</size>";
     }
 
     /// <summary>次の配信までの表示を更新する。空文字なら隠す。未配線なら何もしない。</summary>

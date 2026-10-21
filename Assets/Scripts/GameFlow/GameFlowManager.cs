@@ -297,7 +297,7 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.AddRevenue(overdue.TotalIncome);
                 _sellOrderModel.SaveData();
                 _tomsModel.SavePlayerMoney();
-                _morningReport?.Add($"売り注文の入金（持ち越し）: +{overdue.TotalIncome:N0}G");
+                _morningReport?.Add($"持ち越した売上の入金: +{overdue.TotalIncome:N0}G");
                 Debug.Log($"[GameFlowManager] 持ち越し売り注文を精算: +{overdue.TotalIncome}G ({overdue.Settled.Count}件)");
             }
         }
@@ -687,7 +687,7 @@ public class GameFlowManager : IDisposable, IStartable
         _tomsModel.AddRevenue(settled.TotalIncome);
         _sellOrderModel.SaveData();
         _tomsModel.SavePlayerMoney();
-        _morningReport?.Add($"返済のため本日分の売り注文を前倒しで入金: +{settled.TotalIncome:N0}G");
+        _morningReport?.Add($"納付日のため今日の売上を前倒しで入金: +{settled.TotalIncome:N0}G");
         Debug.Log($"[GameFlowManager] 返済日のため本日約定分を前倒し精算: +{settled.TotalIncome}G ({settled.Settled.Count}件)");
         return settled.TotalIncome;
     }

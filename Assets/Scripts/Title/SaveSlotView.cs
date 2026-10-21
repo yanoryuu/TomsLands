@@ -18,7 +18,7 @@ public sealed class SaveSlotView : MonoBehaviour
     [Header("表示")]
     [Tooltip("「スロット 1」などのラベル")]
     [SerializeField] private TextMeshProUGUI slotNumberText;
-    [Tooltip("「ふつう  Day 5  1,200 G」などのサマリ")]
+    [Tooltip("「ふつう　5日目　1,200G」などのサマリ")]
     [SerializeField] private TextMeshProUGUI summaryText;
     [Tooltip("空きスロット時に表示するオブジェクト")]
     [SerializeField] private GameObject emptyLabel;
@@ -77,11 +77,11 @@ public sealed class SaveSlotView : MonoBehaviour
     private static string BuildSummary(SaveSlotInfo info)
     {
         if (info.Exists)
-            return $"{GetModeLabel(info.Mode)}　Day {info.Day}　{info.Gold:N0} G";
+            return $"{GetModeLabel(info.Mode)}　{DayText.DayOf(info.Day)}　{info.Gold:N0}G";
         if (info.HasProfile)
         {
             // 進行中のランの行（難易度・日数・所持金）と同じくらいの長さに収める
-            return $"村の進行あり　村資金 {info.VillageFunds:N0} G　{info.TotalRuns}周";
+            return $"村の進行あり　村資金 {info.VillageFunds:N0}G　{info.TotalRuns}周";
         }
         if (info.IsCorrupted)
             return "データが壊れています（削除できます）";

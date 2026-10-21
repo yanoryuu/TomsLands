@@ -218,7 +218,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
         // 進行中のランは村に精算されずに消える（持ち込んだお金も戻らない）ことを先に伝える。村の進行は残る
         var info = SaveSlotManager.GetSlotInfo(slot);
         string runLine = info.Exists
-            ? $"進行中のラン（{SaveSlotView.GetModeLabel(info.Mode)} Day {info.Day}・所持金 {info.Gold:N0} G）は村に戻らずに消えます。\n村から持ち込んだお金も戻りません。"
+            ? $"進行中のラン（{SaveSlotView.GetModeLabel(info.Mode)} {DayText.DayOf(info.Day)}・所持金 {info.Gold:N0}G）は村に戻らずに消えます。\n村から持ち込んだお金も戻りません。"
             : "進行中のランのデータは消えます。";
         _popUpManager.Show(new PopUpData
         {

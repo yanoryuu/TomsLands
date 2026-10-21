@@ -3,7 +3,7 @@
 ## 村・準備
 
 ### 会話データ（要エディタ操作）
-- セリフは `Assets/TomsScenario/Scenarios/VillageTutorial.csv`（ラベル: `Tutorial_Village` / `Tutorial_VillageBuild` / `Tutorial_Preparation`）。
+- セリフは `Assets/TomsScenario/Scenarios/VillageTutorial.csv`（ラベル: `Tutorial_Village`（破産で帰ってきたときは別版 `Tutorial_Village_Bankrupt` を流し、`Tutorial_Village` を既読にする）/ `Tutorial_VillageBuild` / `Tutorial_Preparation`（出店で時が初日へ巻き戻り、村だけは残ることを占い師が説明する））。
 - 既存 CSV と同じ登録方法: `TomsScenario.project`（宴プロジェクト）の章 `Boot` は `scenarioDir` = `Assets/TomsScenario/Scenarios` フォルダを指しており、
   インポートするとフォルダ内の各 CSV から `<名前>.book.asset` が作られ、`Boot.chapter.asset` の `dataList` に並ぶ
   （`TomsScenario.scenarios.asset` は `Boot.chapter` を参照するだけ）。

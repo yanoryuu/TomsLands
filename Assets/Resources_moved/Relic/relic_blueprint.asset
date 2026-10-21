@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relicId: relic_blueprint
   relicName: "\u8077\u4EBA\u306E\u8A2D\u8A08\u56F3"
-  description: "\u7121\u99C4\u306E\u306A\u3044\u5DE5\u7A0B\u8868\u3002\u88FD\u9020\u6A5F\u306E\u6BCE\u671D\u306E\u88FD\u9020\u4E88\u7B97+500G\u3002"
+  description: "\u7121\u99C4\u306E\u306A\u3044\u5DE5\u7A0B\u8868\u3002\u6B66\u5177\u3092\u4F5C\u308B\u8A2D\u5099\u306E\u6BCE\u671D\u306E\u88FD\u9020\u4E88\u7B97+500G\u3002"
   icon: {fileID: 21300000, guid: 4fcc6403d5fd4911a63b519e0779cd8d, type: 3}
   rarity: 1
   category: 0

@@ -46,7 +46,7 @@ public class TomsModel
     /// </summary>
     public int BorrowedPrincipal { get; set; }
 
-    /// <summary>スタートダッシュ「返済猶予証」による初回返済額の割引率（0=なし）。</summary>
+    /// <summary>スタートダッシュ「初回減免状」による初回返済額の割引率（0=なし）。</summary>
     public float FirstDebtDiscountRate { get; set; }
 
     /// <summary>

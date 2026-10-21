@@ -19,9 +19,9 @@ public class DemonKingPayoutView : MonoBehaviour
     {
         "我が軍への出資、\n大儲けじゃったな！",
         "勇者め、\nざまあみろじゃ！",
-        "よく貢いでくれた。\n配当じゃ！",
+        "よう出資してくれた。\n配当じゃ！",
         "我が城は落ちぬ。\n次も頼んだのじゃ！",
-        "ふはは！\n投資の見返りじゃ！",
+        "ふはは！\n出資の見返りじゃ！",
     };
 
     private const float RowInterval = 0.16f;

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relicId: relic_allin_dice
   relicName: "\u547D\u77E5\u3089\u305A\u306E\u30B5\u30A4\u30B3\u30ED"
-  description: "\u7D04\u5B9A\u5024\u5E45\u304C\xB135%\u5E83\u304C\u308B\u304C\u3001\u501F\u91D1\u53D6\u308A\u3082\u5F37\u6C17\u306B\u306A\u308B\uFF08\u8FD4\u6E08\u984D+10%\uFF09\u3002"
+  description: "\u58F2\u308C\u308B\u5024\u6BB5\u306E\u3076\u308C\u5E45\u304C\u00B135%\u5E83\u304C\u308B\u304C\u3001\u53D6\u308A\u7ACB\u3066\u3082\u5F37\u6C17\u306B\u306A\u308B\uFF08\u7D0D\u4ED8\u91D1+10%\uFF09\u3002"
   icon: {fileID: 21300000, guid: e3a2a37a49a64cb5bf1bf02c4e929e2d, type: 3}
   rarity: 1
   category: 0

@@ -10,7 +10,7 @@ public static class ItemAttributeText
     /// <summary>「火属性」。</summary>
     public static string WithSuffix(ItemTypeData.ItemAttribute attr) => $"{ToJapanese(attr)}属性";
 
-    /// <summary>弱点の欄（地図の名札と同じ書き方）。知らないときは「弱点:?」。</summary>
+    /// <summary>弱点の欄（地図の名札と同じ書き方）。知らないときは「弱点:？」（不明は全角の「？」1字にそろえる）。</summary>
     public static string Weakness(ItemTypeData.ItemAttribute attr, bool known)
-        => known ? $"弱点:{ToJapanese(attr)}" : "弱点:?";
+        => known ? $"弱点:{ToJapanese(attr)}" : "弱点:？";
 }

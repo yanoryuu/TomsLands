@@ -21,6 +21,8 @@ public class VillageTutorialDirector
     // シナリオラベル（Assets/TomsScenario/Scenarios/VillageTutorial.csv と一致させること）
     public const string IntroLabel = "Tutorial_Village";
     public const string BuildLabel = "Tutorial_VillageBuild";
+    /// <summary>前半の別版。1周目を破産で終えたときに IntroLabel の代わりに流す（O-11）。</summary>
+    public const string BankruptIntroLabel = "Tutorial_Village_Bankrupt";
 
     private const float RevealDuration = 0.9f;
     private static readonly Color CurtainColor = new(0.06f, 0.05f, 0.05f, 1f);
@@ -46,8 +48,9 @@ public class VillageTutorialDirector
     /// <param name="uiCamera">村の Base カメラ（暗幕を宴の立ち絵より下に描くため）。null なら Camera.main</param>
     /// <param name="setUiLocked">村UIのクリック可否を切り替える（true=ロック）。null 可</param>
     /// <param name="betweenParts">前半と後半のあいだに流す演出（帰還の到着演出）。null 可</param>
+    /// <param name="bankrupt">破産して帰ってきたか（前半を破産版にする）</param>
     public async UniTask PlayAsync(Camera uiCamera, Action<bool> setUiLocked, CancellationToken ct,
-        Func<CancellationToken, UniTask> betweenParts = null)
+        Func<CancellationToken, UniTask> betweenParts = null, bool bankrupt = false)
     {
         if (!ShouldPlay) return;
 
@@ -64,7 +67,9 @@ public class VillageTutorialDirector
                 // ブック未インポート等でラベルが無いときは暗幕だけ出して終わらないよう即座に抜ける
                 if (!await HasLabelAsync(IntroLabel, ct)) return;
 
-                await scenario.PlayOnceAsync(IntroLabel, ct);
+                // 破産版のラベルがあればそちらを流して IntroLabel を既読にする（無ければ通常版）
+                if (!bankrupt || !await scenario.PlayVariantOnceAsync(BankruptIntroLabel, IntroLabel, ct))
+                    await scenario.PlayOnceAsync(IntroLabel, ct);
 
                 // ▼背景切り替え（トコの村へ）: 暗幕を開けて村を見せる
                 await RevealAsync(ct);

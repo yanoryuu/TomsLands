@@ -13,21 +13,17 @@ public class DungeonMonsterSlot : MonoBehaviour
     public void SetMonsterData(EnemyData enemyData)
     {
         monsterNameText.text = $"{enemyData.enemyName}";
-        monsterElementText.text = $"属性: {ElementTypeToJapanese(enemyData.elementType)}";
+        monsterElementText.text = $"属性:{ElementTypeToJapanese(enemyData.elementType)}";
         monsterIconImage.sprite = enemyData.enemySprite;
         isBoss = enemyData.isBoss;
 
         if (isBoss) isBossImage.gameObject.SetActive(true);
     }
 
-    private static string ElementTypeToJapanese(ElementType elementType) => elementType switch
+    /// <summary>敵の属性の表記。字は ItemAttributeText にそろえ、属性なしは「なし」。</summary>
+    private static string ElementTypeToJapanese(ElementType elementType)
     {
-        ElementType.Water => "水",
-        ElementType.Fire => "火",
-        ElementType.Wood => "木",
-        ElementType.Light => "光",
-        ElementType.Dark => "闇",
-        ElementType.None => "なし",
-        _ => elementType.ToString()
-    };
+        var attr = ElementAttributeMapper.ToItemAttribute(elementType);
+        return attr.HasValue ? ItemAttributeText.ToJapanese(attr.Value) : "なし";
+    }
 }

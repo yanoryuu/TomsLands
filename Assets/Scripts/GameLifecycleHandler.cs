@@ -250,11 +250,11 @@ public class GameLifecycleHandler : IStartable, IDisposable
             Debug.Log($"[RunSetup] 目利きの手引き: 全アイテム需要 +{settings.appraisalDemandBoost:P0}");
         }
 
-        // スタートダッシュ: 返済猶予証（初回返済額の割引。DebtCalculator が参照）
+        // スタートダッシュ: 初回減免状（初回返済額の割引。DebtCalculator が参照）
         if (_runSetupData.UseGrace)
         {
             _tomsModel.FirstDebtDiscountRate = settings.graceDiscountRate;
-            Debug.Log($"[RunSetup] 返済猶予証: 初回返済 -{settings.graceDiscountRate:P0}");
+            Debug.Log($"[RunSetup] 初回減免状: 初回返済 -{settings.graceDiscountRate:P0}");
         }
 
         _itemModel.SaveData();

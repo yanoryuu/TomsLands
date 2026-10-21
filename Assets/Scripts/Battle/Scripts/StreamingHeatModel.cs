@@ -73,7 +73,7 @@ public class StreamingHeatModel
     public string GetTierLabel()
     {
         float h = Heat.Value;
-        if (h < GetColdTierMax()) return "冷め気味...";
+        if (h < GetColdTierMax()) return "冷め気味……";
         if (h < GetNormalTierMax()) return "普通";
         if (h < GetHotTierMax()) return "盛り上がり中！";
         return "超人気！";

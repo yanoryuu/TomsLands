@@ -228,7 +228,7 @@ public class ShopMachineView : MonoBehaviour
     public void ClearDetail()
     {
         if (detailNameText != null) detailNameText.text = "";
-        if (detailDescriptionText != null) detailDescriptionText.text = "マシンを選択してください";
+        if (detailDescriptionText != null) detailDescriptionText.text = "設備を選んでください";
         if (detailEffectText != null) detailEffectText.text = "";
         if (detailCostText != null) detailCostText.text = "";
         if (detailIcon != null) detailIcon.enabled = false;
