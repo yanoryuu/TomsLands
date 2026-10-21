@@ -87,6 +87,12 @@ public class RuntimeItemData
     public bool WasSoldLastTurn { get; set; }
 
     /// <summary>
+    /// 直近の営業で店で売れた個数（売り圧力。翌朝の ApplyShopTurnEconomy が値段を押し下げて 0 に戻す）。
+    /// 営業から日送りの間に終了しても圧力が消えないようセーブする。
+    /// </summary>
+    public int LastShopSoldQuantity { get; set; }
+
+    /// <summary>
     /// 前ターンの需要値（需要変動幅の表示用）。
     /// ApplyShopTurnEconomy の冒頭でスナップショットされる。
     /// </summary>
@@ -230,6 +236,7 @@ public class RuntimeItemData
         Trend = plainData.trend;
         // 取得単価（F-1）。古いセーブには項目が無く、JsonUtility は初期値 -1（不明）のまま残す
         AverageCost = plainData.averageCost >= 0 && Stock.Value > 0 ? plainData.averageCost : UnknownCost;
+        LastShopSoldQuantity = Mathf.Max(0, plainData.lastShopSold);
 
         // ショップ価格・需要履歴の復元。旧セーブ（履歴なし）は現在値1点でシードする。
         ShopPriceHistory = (plainData.shopPriceHistory != null && plainData.shopPriceHistory.Count > 0)
@@ -302,6 +309,7 @@ public class RuntimeItemData
             previousPrice = PreviousPrice,
             trend = Trend,
             averageCost = Stock.Value > 0 ? AverageCost : UnknownCost,
+            lastShopSold = LastShopSoldQuantity,
             shopPriceHistory = new System.Collections.Generic.List<int>(ShopPriceHistory),
             shopDemandHistory = new System.Collections.Generic.List<float>(ShopDemandHistory)
         };
@@ -330,6 +338,7 @@ public class RuntimeItemDataPlain
     public float trend;
     /// <summary>平均取得単価。-1 = 不明（この項目が無い古いセーブも -1 のまま読み込まれる）。</summary>
     public int averageCost = RuntimeItemData.UnknownCost;
+    public int lastShopSold;   // 売り圧力（旧セーブは欠損時 0 = 圧力なし）
     public System.Collections.Generic.List<int> shopPriceHistory;
     public System.Collections.Generic.List<float> shopDemandHistory;
 }

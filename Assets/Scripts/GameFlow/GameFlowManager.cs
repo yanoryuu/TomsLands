@@ -93,6 +93,9 @@ public class GameFlowManager : IDisposable, IStartable
         _relicResolver = relicResolver;
         _relicHooks = relicHooks;
         _currentIndex = 0;
+
+        // 営業で1日に来る客の数（売れる量の上限）とおすすめ（適正値）の計算に、経済設定と広告ステータスを渡す（H-2 / G-11）
+        _itemModel?.ConfigureShopSales(economySettings, shopStatusModel);
     }
 
     /// <summary>

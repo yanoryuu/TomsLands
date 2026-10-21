@@ -21,8 +21,8 @@ MonoBehaviour:
     minItemStock: 0
     initMoney: 100000
     debtPaymentInterval: 7
-    debtBaseAmount: 5000
-    debtMultiplier: 1.8
+    debtBaseAmount: 15000
+    debtMultiplier: 1.5
     heroExpPerMob: 10
     heroExpPerBoss: 100
     heroBaseExpToNextLevel: 100

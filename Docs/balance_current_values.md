@@ -1,12 +1,10 @@
 # balance.json current values (for sheet paste)
 
-source: D:\Unity\TomsLands\Assets\Resources_moved (worktree excluded)
+source: マスターシート（2026-10-21 経済バランス H の変更後。Docs/balance_tsv と同じ）。ステータスの尺度は statMax=1000（Docs/ShopEconomy.md §10.3）
 
 ## shopEconomy (ShopEconomySettings)  [sheet: shopEconomy / key-value]
 ```
 key	value
-useAbmPriceEngine	true
-demandPricePremium	0.5
 highDemandThreshold	0.7
 highDemandPriceRateMin	1.1
 highDemandPriceRateMax	1.3
@@ -25,18 +23,29 @@ demandFloor	0.05
 demandCeiling	1
 trustFloorBoost	0.4
 attentionPriceAmplify	0.5
-attentionAffectsLowDemand	0
+attentionAffectsLowDemand	FALSE
 spreadDemandAmplify	1
 retentionStabilizer	0.6
 followerWeight	0.1
 followerScale	1000
-sellOrderDelayTurns	1
-sellOrderPriceClampRate	0.2
-sellOrderFeeRate	0
 trendAmplitude	0.3
 trendConvergenceRate	0.15
 trendDriftMax	0.12
 trendDecayRate	0.1
+useAbmPriceEngine	TRUE
+demandPricePremium	0.5
+sellOrderDelayTurns	1
+sellOrderPriceClampRate	0.2
+sellOrderFeeRate	0
+useShopCustomerCap	TRUE
+customersAtNeutralDemand	32
+customerBaseShare	0.2
+customerDemandSlope	1.6
+customerFollowerWeight	0.25
+customerAttentionBoost	0.3
+sellPressureStrength	0.04
+sellPressureDepth	40
+sellPressureMaxDrop	0.15
 ```
 
 ## gameBalance (GameBalanceData)  [sheet: gameBalance / key-value]
@@ -45,22 +54,29 @@ key	value
 statMin	0
 statMax	1000
 followerMin	0
-buzzAttentionCoeff	0.5
-buzzTrustCoeff	0.2
+buzzAttentionCoeff	0.05
+buzzTrustCoeff	0.02
 buzzMaxBaseChance	50
-flameTrustThreshold	50
+flameTrustThreshold	500
 flameChance	30
+bigBuzzTrustThreshold	800
 buzzBaseChance	10
 buzzMaxChance	20
 bigBuzzBaseChance	1
 bigBuzzMaxChance	5
 buzzContinueChance	50
 buzzEvolveToBigChance	20
-initialTrust	50
+initialTrust	500
 initialAttention	0
 initialSpread	0
 initialRetention	0
 initialFollowers	0
+buzzContinueRetentionBonus	35
+buzzContinueChanceMax	85
+attentionDecayRate	0.1
+spreadDecayRate	0.1
+retentionDecayRate	0.05
+trustDecayRate	0
 ```
 
 ## battlePrice (BattlePriceSettings)  [sheet: battlePrice / key-value]
@@ -96,21 +112,21 @@ lowPriceDemandGrowth	1.08
 
 ## advertisements (AdvertisementData)  [sheet: advertisements / row=element]
 ```
-id	advertisementName	cost	trustGain	attentionGain	spreadGain	retentionGain	followerGain
-総合マーケティング	総合マーケティング	3000	15	15	15	15	0
-SNSフォロワーキャンペーン	SNSフォロワーキャンペーン	1200	0	10	0	0	1000
-インフルエンサー起用	インフルエンサー起用	2000	0	20	40	0	0
-リピーター施策	リピーター施策	1800	20	0	0	40	0
-SNS広告	SNS広告	1000	0	40	0	20	0
-口コミキャンペーン	口コミキャンペーン	1500	40	0	20	0	0
+id	advertisementName	cost	trustGain	attentionGain	spreadGain	retentionGain	followerGain	statMax
+総合マーケティング	総合マーケティング	300000	150	150	150	150	0	0
+SNSフォロワーキャンペーン	SNSフォロワーキャンペーン	120000	0	100	0	0	10000	0
+インフルエンサー起用	インフルエンサー起用	200000	0	200	400	0	0	0
+リピーター施策	リピーター施策	180000	200	0	0	400	0	0
+SNS広告	SNS広告	100000	0	400	0	200	0	0
+口コミキャンペーン	口コミキャンペーン	150000	400	0	200	0	0	0
 ```
 
 ## buzzEffects (BuzzEffectData)  [sheet: buzzEffects / row=element]
 ```
-id	buzzType	immediateRevenueMultiplierBase	immediateRevenueSpreadCoeff	immediateTrustChange	immediateAttentionChange	immediateFollowerBase	immediateFollowerSpreadCoeff	immediateFollowerFixed	durationBase	durationRetentionDivisor	sustainedAllStatGain	sustainedFollowerGain	sustainedTrustChange	sustainedRevenueMultiplier	sustainedAdDiscountRate	afterTrustChange	afterAttentionChange	afterGrantFreeMarketing
-Big	2	2.5	0.01	15	20	0	30	0	3	25	5	300	0	0	0.3	20	0	1
-Flame	0	0.5	0	-30	20	-500	0	1	3	25	0	0	-5	0.5	0	0	-10	0
-Normal	1	1.5	0.01	5	0	0	10	0	3	25	2	100	0	0	0	10	0	0
+id	buzzType	immediateRevenueMultiplierBase	immediateRevenueSpreadCoeff	immediateTrustChange	immediateAttentionChange	immediateFollowerBase	immediateFollowerSpreadCoeff	immediateFollowerFixed	durationBase	durationRetentionDivisor	sustainedAllStatGain	sustainedFollowerGain	sustainedTrustChange	sustainedRevenueMultiplier	sustainedAdDiscountRate	afterTrustChange	afterAttentionChange	afterGrantFreeMarketing	immediateRevenueMultiplierMax
+Big	2	2.5	0.001	150	200	0	3	0	3	250	50	300	0	0	0.3	200	0	1	3.5
+Flame	0	0.5	0	-300	200	-500	0	1	3	250	0	0	-50	0.5	0	0	-100	0	0
+Normal	1	1.5	0.001	50	0	0	1	0	3	250	20	100	0	0	0	100	0	0	2.5
 ```
 
 ## followerMilestones (FollowerMilestoneData)  [sheet: followerMilestones / row=element]
@@ -152,3 +168,17 @@ Lv,MaxHp,Attack,Defense
 - enums are int. (buzzEffects.id and dungeons.id are name strings)
 - dungeons.requiredAttribute = ItemAttribute(Fire=0,Water=1,Wood=2,Light=4,Dark=5; 3 unused)
 - enemies excluded (dungeon-embedded enemies are not covered by current override path)
+## data（gameconst.json の data。H で変えた行だけ）
+```
+key	value	type
+debtBaseAmount	15000	int
+debtMultiplier	1.5	float
+debtFireSaleRate	0.6	float
+heroAttributeAttackBonus	1	float
+```
+
+## finance（追加）
+```
+bondUnitCapPerInfoLevel	10	int
+```
+債券の利率: 短期 0.06（5日）/ 長期 0.18（12日）。貯金ゴーレム（同梱のみ）: 5,600 / 9,100 / 15,400G。

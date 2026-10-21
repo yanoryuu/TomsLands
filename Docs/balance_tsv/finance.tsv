@@ -4,3 +4,4 @@ fundSellFeeRate	0.02	float
 forcedSaleExtraFeeRate	0.1	float
 bondEarlyRedemptionRate	0.85	float
 navHistoryCapacity	12	int
+bondUnitCapPerInfoLevel	10	int

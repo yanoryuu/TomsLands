@@ -58,6 +58,9 @@ public class CharacterPresenter : IDisposable, IBattleCharacterViewModel,IStarta
     public int PerformAttack(CharacterPresenter targetPresenter, float damageMultiplier = 1f, int bonusDamage = 0)
     {
         var targetModel = targetPresenter.GetModel();
+        // 属性の戦闘効果（Q7）: 勇者の武器が敵の弱点属性なら攻撃が上がる
+        if (this.model.Type == CharacterType.Hero)
+            damageMultiplier *= HeroEquipmentBonus.AttributeAttackMul(this.model.WeaponAttribute, targetModel.Element);
         int attack = damageMultiplier == 1f
             ? this.model.AttackPower
             : Mathf.Max(1, Mathf.RoundToInt(this.model.AttackPower * damageMultiplier));

@@ -103,11 +103,25 @@ public class DebtPresenter : IDisposable, IStartable
         {
             int shortfall = debtAmount - currentMoney;
             int liquidatable = portfolioModel.GetForcedLiquidationValue(itemModel, tomsModel.BlacksmithLevel.Value);
-            if (liquidatable > 0 && currentMoney + liquidatable >= debtAmount)
+            // 在庫の投げ売りと合わせて届くなら金融資産から先に売る（金融のほうが損が小さい）
+            if (liquidatable > 0 && currentMoney + liquidatable + DebtCalculator.GetFireSaleValue(itemModel) >= debtAmount)
             {
                 int raised = portfolioModel.LiquidateForDebt(shortfall, tomsModel, itemModel, tomsModel.BlacksmithLevel.Value);
                 currentMoney = tomsModel.PlayerMoney.Value;
                 UnityEngine.Debug.Log($"[Debt] 返済のため金融資産を強制売却: +{raised}G → 所持金 {currentMoney}G");
+            }
+        }
+
+        // それでも足りなければ在庫を相場の DebtFireSaleRate（既定 60%）で投げ売りする（H-8）。
+        // 在庫で大きく張っていた日に返済が来ても、痛いが続けられる失敗にする
+        if (currentMoney < debtAmount)
+        {
+            int fireSale = DebtCalculator.GetFireSaleValue(itemModel);
+            if (fireSale > 0 && currentMoney + fireSale >= debtAmount)
+            {
+                int raised = DebtCalculator.LiquidateInventoryForDebt(debtAmount - currentMoney, tomsModel, itemModel);
+                currentMoney = tomsModel.PlayerMoney.Value;
+                UnityEngine.Debug.Log($"[Debt] 返済のため在庫を投げ売り: +{raised}G → 所持金 {currentMoney}G");
             }
         }
 
@@ -124,6 +138,7 @@ public class DebtPresenter : IDisposable, IStartable
 
         tomsModel.PurchaseItem(debtAmount);
         tomsModel.DebtCycle.Value = cycle;
+        DebtCalculator.OnPaid(tomsModel);
         tomsModel.SavePlayerMoney();
 
         debtView.Hide();

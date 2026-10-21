@@ -27,6 +27,45 @@ public static class HeroEquipmentBonus
     }
 
     private static Dictionary<string, int> _masterTierCache;
+    private static Dictionary<string, ItemTypeData.ItemAttribute> _masterAttributeCache;
+
+    /// <summary>
+    /// 勇者の武器の属性（未装備・不明なら null）。属性の戦闘効果（Q7）に使う。
+    /// </summary>
+    public static ItemTypeData.ItemAttribute? GetWeaponAttribute(RuntimeHeroData hero, ItemModel itemModel = null)
+    {
+        string id = hero?.weaponId.Value;
+        if (string.IsNullOrEmpty(id)) return null;
+        if (itemModel != null)
+        {
+            var item = itemModel.GetRuntimeItem(id);
+            if (item != null) return ItemTypeData.NormalizeAttribute(item.ItemAttribute);
+        }
+        if (_masterAttributeCache == null)
+        {
+            _masterAttributeCache = new Dictionary<string, ItemTypeData.ItemAttribute>();
+            var masters = ItemMaster.ApplyOverrides(AddressableLoader.LoadAll<ItemData>("ItemData"));
+            if (masters != null)
+                foreach (var m in masters)
+                    if (m != null && !string.IsNullOrEmpty(m.itemId))
+                        _masterAttributeCache[m.itemId] = ItemTypeData.NormalizeAttribute(m.itemAttribute);
+        }
+        return _masterAttributeCache.TryGetValue(id, out var attr) ? attr : (ItemTypeData.ItemAttribute?)null;
+    }
+
+    /// <summary>
+    /// 属性の戦闘効果（Q7）: 武器の属性が敵の弱点（ElementAttributeMapper.IsEffective）なら、その敵への攻撃倍率
+    /// 1 + GameConst.HeroAttributeAttackBonus（既定 +100%＝弱点で2倍）。それ以外は 1。
+    /// 実戦闘（CharacterPresenter.PerformAttack）だけで使い、クリア確率（ClearProbabilityCalculator / Get）には入れない
+    /// （2026-10 ユーザー決定。表示の確率は属性を考えない「控えめな見込み」になる）。
+    /// </summary>
+    public static float AttributeAttackMul(ItemTypeData.ItemAttribute? weaponAttribute, ElementType enemyElement)
+    {
+        if (!weaponAttribute.HasValue || enemyElement == ElementType.None) return 1f;
+        return ElementAttributeMapper.IsEffective(weaponAttribute.Value, enemyElement)
+            ? Mathf.Max(0f, 1f + GameConst.HeroAttributeAttackBonus)
+            : 1f;
+    }
 
     /// <summary>
     /// 装備から倍率を求める。itemModel があればそのランク情報を使い、

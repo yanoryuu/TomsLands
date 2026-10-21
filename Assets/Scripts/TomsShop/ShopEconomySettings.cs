@@ -122,6 +122,29 @@ public class ShopEconomySettings : ScriptableObject
     [Tooltip("true にすると旧仕様（需要×売率の確率販売・即時入金なし版）に戻す退避フラグ。")]
     public bool useProbabilisticShopSales = false;
 
+    [Header("1日に来る客の数（売れる量の上限）— H-2 / Q3(a)")]
+    [Tooltip("true = 陳列した品は「その日に来る客の数」までしか売れない（売れ残りは在庫と棚に残り、翌日また売れる）。" +
+             "false = 従来どおり陳列分が全部売れる。")]
+    public bool useShopCustomerCap = true;
+    [Tooltip("需要 0.5・フォロワー0・注目0 の品に1日に来る客の数（＝売れる個数）。需要に比例して増減する。")]
+    public float customersAtNeutralDemand = 32f;
+    [Tooltip("需要 0 のときの客の数（customersAtNeutralDemand に対する割合）。需要1.0 で (1 + 1×customerDemandSlope)/(1+0.5×slope) 倍。")]
+    public float customerBaseShare = 0.2f;
+    [Tooltip("需要が客の数をどれだけ動かすか。客数 = base × (customerBaseShare + demand × slope) / (customerBaseShare + 0.5 × slope)。")]
+    public float customerDemandSlope = 1.6f;
+    [Tooltip("フォロワーによる客の増加。+ customerFollowerWeight × Log10(1 + Followers / followerScale)（10,000人で約+26%）。")]
+    public float customerFollowerWeight = 0.25f;
+    [Tooltip("注目度 MAX（statMax）で客が何割増えるか。")]
+    public float customerAttentionBoost = 0.3f;
+
+    [Header("売り圧力（大量に売ると値が下がる）— H-2 / Q3(b)")]
+    [Tooltip("店で売った量が翌朝の値段を押し下げる強さ。下落率 = 強さ × 売った数 ÷ 板の厚み（上限 sellPressureMaxDrop）。0 で無効。")]
+    public float sellPressureStrength = 0.04f;
+    [Tooltip("板の厚み（個）。需要が高いほど厚い（需要0で ×0.5、需要1で ×1.0）。厚いほど同じ量を売っても値が下がりにくい。")]
+    public float sellPressureDepth = 40f;
+    [Tooltip("1日の売り圧力による下落の上限（0.15 = −15%）。")]
+    public float sellPressureMaxDrop = 0.15f;
+
     [Header("流行度（Trend）自然需要収束モデル")]
     [Tooltip("Trend=±1.0 のとき naturalDemand が 0.5 からどれだけずれるか。" +
              "例: 0.30 → Trend=+1 で naturalDemand=0.80 / Trend=−1 で 0.20。想定レンジ: 0.1〜0.5")]

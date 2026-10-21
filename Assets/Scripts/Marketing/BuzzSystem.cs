@@ -148,7 +148,7 @@ public class BuzzSystem
             }
 
             // 継続判定（失敗したらこのターンで終了）
-            float continueChance = _balanceData != null ? _balanceData.buzzContinueChance : 50f;
+            float continueChance = CalculateContinueChance();
             float continueRoll = UnityEngine.Random.Range(0f, 100f);
             bool continues = continueRoll < continueChance;
 
@@ -232,6 +232,18 @@ public class BuzzSystem
                     + (_followerSystem != null ? _followerSystem.GetBuzzChanceBonus() : 0f);
 
         return Mathf.Clamp01(bonus / _balanceData.buzzMaxBaseChance);
+    }
+
+    /// <summary>
+    /// バズの継続率（%）。基本の継続率に顧客維持力のぶんを足し、上限で止める（H-7）。
+    /// 以前は維持力で最大持続ターンを伸ばしても毎日 50% で切れるため、ほとんど効いていなかった。
+    /// </summary>
+    public float CalculateContinueChance()
+    {
+        if (_balanceData == null) return 50f;
+        float retentionN = Mathf.Clamp01(_statusModel.Retention.Value / (float)Mathf.Max(1, _statusModel.StatMax));
+        float chance = _balanceData.buzzContinueChance + _balanceData.buzzContinueRetentionBonus * retentionN;
+        return Mathf.Clamp(chance, 0f, Mathf.Max(_balanceData.buzzContinueChance, _balanceData.buzzContinueChanceMax));
     }
 
     /// <summary>

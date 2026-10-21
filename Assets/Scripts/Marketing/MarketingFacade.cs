@@ -97,6 +97,9 @@ public class MarketingFacade : IStartable, IDisposable
     {
         Debug.Log("[MarketingFacade] ===== ターン処理開始 =====");
 
+        // 広告ステータスの毎朝の減衰（H-3。バズの判定より前＝今日の値で判定する）
+        _statusModel.ApplyDailyDecay();
+
         // バズシステムのターン処理
         var result = _buzzSystem.ProcessTurnStart();
 

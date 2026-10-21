@@ -50,6 +50,12 @@ public class TomsModel
     public float FirstDebtDiscountRate { get; set; }
 
     /// <summary>
+    /// 1周目に鍛冶屋が立て替えた資金（チュートリアル）。利息なしで初回の納付に上乗せされる（DebtCalculator）。
+    /// 返さなくてよいお金だと1周目だけ元手が1.5倍になり、返済日の緊張が生まれないため借りとして扱う（H-6）。
+    /// </summary>
+    public int AdvancePrincipal { get; set; }
+
+    /// <summary>
     /// ランの開始会話（プロローグ／周回の開始演出）がまだ再生されていないか。
     /// 新規ランで true になり、TutorialPresenter が再生し終えたら false にして保存する。
     /// 会話の途中で中断した場合は true のまま残るので、続きからで再生し直す。
@@ -105,6 +111,7 @@ public class TomsModel
         DebtCycle.Value = 0;
         BorrowedPrincipal = 0;
         FirstDebtDiscountRate = 0f;
+        AdvancePrincipal = 0;
         RunOpeningPending = true;
         PendingEventId = string.Empty;
         PendingEventIndex = 0;
@@ -124,6 +131,7 @@ public class TomsModel
             saveVersion = SaveVersion.Current,
             pendingEventId = PendingEventId ?? string.Empty,
             pendingEventIndex = PendingEventIndex,
+            advancePrincipal = AdvancePrincipal,
         };
         string json = JsonUtility.ToJson(data, true);
         // 一時ファイル→置き換え→.bak。失敗してもゲームは止めない（SaveFile がログを出す）
@@ -152,6 +160,7 @@ public class TomsModel
             ShopLevel.Value = Mathf.Max(1, data.shopLevel);
             BorrowedPrincipal = Mathf.Max(0, data.borrowedPrincipal);
             FirstDebtDiscountRate = Mathf.Clamp01(data.firstDebtDiscountRate);
+            AdvancePrincipal = Mathf.Max(0, data.advancePrincipal);
             RunOpeningPending = data.runOpeningPending;
             PendingEventId = data.pendingEventId ?? string.Empty;
             PendingEventIndex = Mathf.Max(0, data.pendingEventIndex);
@@ -172,6 +181,7 @@ public class TomsModel
             Trust.Value = 1f;
             BorrowedPrincipal = 0;
             FirstDebtDiscountRate = 0f;
+            AdvancePrincipal = 0;
             GameFlowIndex = 0;
             DebtCycle.Value = 0;
             FlowSeed = 0;
@@ -197,6 +207,18 @@ public class TomsModel
     }
 
     public void PurchaseItem(int price) => PlayerMoney.Value -= price;
+
+    /// <summary>
+    /// 鍛冶屋の立て替え資金を受け取る。所持金に足し、同じ額を初回の納付に上乗せする借りとして記録する（利息なし）。
+    /// 初回の納付が済んだあとに受け取った場合は次の納付に上乗せされる（DebtCalculator は次の回に足す）。
+    /// </summary>
+    public void GrantFundsAdvance(int amount)
+    {
+        if (amount <= 0) return;
+        AddRevenue(amount);
+        AdvancePrincipal = SaturatingAdd(AdvancePrincipal, amount);
+        SavePlayerMoney();
+    }
 
     // ========================================
     // 当日の仕入れ支出トラッカー（ターン評価の「資金効率」用）

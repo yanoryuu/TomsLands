@@ -307,6 +307,13 @@ Jev の累計コストが `CostLimitUsd`（既定 ≒100円）を超えたらバ
   `unity command eval --caller plugin --skill unity-cli --format json 'AutoPlayBatch.Start(new AutoPlayBatchConfig{ Mode=GameModeId.Short, Seeds=5 }); return "started";'`
   eval は即座に戻る（バッチは async で進む）。完了は `AutoPlayBatch.IsRunning` / `AutoPlayBatch.LastReportDir` をポーリングするか、
   `AutoPlayReports/` に `summary.md` が出るのを待つ。メニューは `ExecuteMenuItem` でも叩ける。
+- **バッチモード（エディタの画面を開かない）**: `Unity.exe -batchmode -nographics -projectPath <wt> -executeMethod AutoPlayCli.Run -apMode Medium -apSeeds 20 -apBots greedy,capaware,follower,golem -apOut <dir> -apLabel <名前>`
+  （`-quit` は付けない。終わると自分で終了する）。`-apAdvance 50000`（1周目の立て替え）、`-apSet "economy.x=1;gameconst.y=2"`（計測用の値の上書き）、
+  `-apUploadDir <dir>`（別の配信値で回す）。`<dir>/<名前>_table.md` に戦略ごとの最終純資産の表が出る。セーブは Temp/AutoPlay/ に逃がす。
+- **戦略ボット（H-1）**: `follower`（フォロワー広告を買い込む）/ `golem`（店を上げて貯金ゴーレムで枠を埋める）/ `bond`（余りを債券）/
+  `upgrade`・`upgrade_lite`（設備投資を払える限り・余裕のぶん）/ `max`（全部）/ `bargain`（割安度で仕入れ）/ `capaware`（1日の客の数×2日分だけ仕入れる）/
+  `oracle`（この先3日の新聞の本当の効果を知っている＝読みの上限側）。`AutoPlayStrategyBots.cs`。純資産にはマシンの撤去返金額と金融資産も入る。
+- 陳列は実ゲームと同じく1銘柄あたり在庫数まで（以前は `maxDisplayStockPerItem` で Lv1 5個に絞っていた。H-1）。
 - **エディットモードで Addressables が読めない場合**はエラーで止まる → TitleScene を Play してから実行（タイトルはゲームのモデルを作らないので干渉しない）。
 - 実行中にスクリプトを再コンパイルするとランは消える（ドメインリロード）。
 

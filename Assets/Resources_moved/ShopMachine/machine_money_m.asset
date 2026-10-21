@@ -17,7 +17,7 @@ MonoBehaviour:
   description: "\u305D\u3053\u305D\u3053\u7A3C\u3044\u3067\u304F\u308B\u50CD\u304D\u8005\u306E\u30B4\u30FC\u30EC\u30E0\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
-  cost: 7000
+  cost: 9100
   placementType: 0
   requiredShopLevel: 2
   effectType: 0

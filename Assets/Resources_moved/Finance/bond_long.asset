@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   productId: bond_long
   productName: "\u30AE\u30EB\u30C9\u9577\u671F\u50B5"
-  description: "\u30AE\u30EB\u30C9\u306E\u9060\u5F81\u3078\u306E\u51FA\u8CC7\u300212\u65E5\u5F8C\u306B\u5143\u672C+25%\u3067\u511F\u9084\u3055\u308C\u308B\u3002\u8FD4\u6E08\u65E5\u3068\u306E\u517C\u306D\u5408\u3044\u306B\u6CE8\u610F\u3002"
+  description: "\u30AE\u30EB\u30C9\u306E\u9060\u5F81\u3078\u306E\u51FA\u8CC7\u300212\u65E5\u5F8C\u306B\u5143\u672C+18%\u3067\u511F\u9084\u3055\u308C\u308B\u3002\u8FD4\u6E08\u65E5\u3068\u306E\u517C\u306D\u5408\u3044\u306B\u6CE8\u610F\u3002"
   icon: {fileID: 21300000, guid: 764d38f7b8b14113bad19fe6a17fb418, type: 3}
   kind: 0
   unlockInfoBrokerLevel: 2
   bondUnitPrice: 5000
-  bondInterestRate: 0.25
+  bondInterestRate: 0.18
   bondMaturityTurns: 12
   fundBaseUnitPrice: 1000
   useAttributeFilter: 0

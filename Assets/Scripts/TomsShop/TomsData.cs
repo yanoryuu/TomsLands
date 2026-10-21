@@ -39,6 +39,9 @@ public class TomsData
     public string pendingEventId;
     public int pendingEventIndex;
 
+    // --- 鍛冶屋の立て替え（1周目のチュートリアル）。次の納付に上乗せする借り。旧セーブは欠損時 0 = 借りなし ---
+    public int advancePrincipal;
+
     public TomsData(int shopMoney, int blacksmithLevel, int currentTurn, int gameFlowIndex = 0, int infoBrokerLevel = 1, int debtCycle = 0,
         int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false, int toolShopLevel = 1, float trust = 1f, int shopLevel = 1,
         int borrowedPrincipal = 0, float firstDebtDiscountRate = 0f, bool runOpeningPending = false)
