@@ -31,6 +31,10 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailLevelText;
     [SerializeField] private TextMeshProUGUI currentEffectText;
     [SerializeField] private TextMeshProUGUI nextEffectText;
+    [Tooltip("次Lv の見出し（Lv5 の欄では「特殊な効果」に変わる）")]
+    [SerializeField] private TextMeshProUGUI nextCaptionText;
+    [Tooltip("Lv5（特殊な効果）の欄だけ出す金の枠（任意）")]
+    [SerializeField] private GameObject specialFrame;
     [SerializeField] private TextMeshProUGUI detailCostText;
     [SerializeField] private Button investButton;
     [SerializeField] private TextMeshProUGUI investButtonLabel;
@@ -54,6 +58,14 @@ public class VillageView : MonoBehaviour
     public Subject<Unit> OnInvest { get; } = new();
     public Subject<Unit> OnPanelClosed { get; } = new();
     public Subject<Unit> OnConversionClosed { get; } = new();
+
+    private const string SpecialCaption = "特殊な効果";
+    private static readonly Color SpecialCaptionColor = new(0.91f, 0.64f, 0.24f); // ui-rules の強調の金 #E8A33D
+    private const float SpecialCaptionMaxSize = 20f; // 「特殊な効果」は5文字なので、見出しの枠（幅120）に収まる大きさにする
+    private string defaultNextCaption;
+    private Color defaultNextCaptionColor;
+    private float defaultNextCaptionMaxSize;
+    private HorizontalAlignmentOptions defaultNextCaptionAlign;
 
     public IReadOnlyList<FacilityPlot> Plots => plots ?? System.Array.Empty<FacilityPlot>();
 
@@ -99,6 +111,15 @@ public class VillageView : MonoBehaviour
                 if (conversionPopup != null) conversionPopup.SetActive(false);
                 OnConversionClosed.OnNext(Unit.Default);
             });
+
+        if (nextCaptionText != null)
+        {
+            defaultNextCaption = nextCaptionText.text;
+            defaultNextCaptionColor = nextCaptionText.color;
+            defaultNextCaptionMaxSize = nextCaptionText.fontSizeMax;
+            defaultNextCaptionAlign = nextCaptionText.horizontalAlignment;
+        }
+        if (specialFrame != null) specialFrame.SetActive(false);
 
         if (investPanel != null) investPanel.SetActive(false);
         if (conversionPopup != null) conversionPopup.SetActive(false);
@@ -292,9 +313,12 @@ public class VillageView : MonoBehaviour
         if (messageText != null) messageText.text = message;
     }
 
-    /// <summary>投資パネルを表示する。</summary>
+    /// <summary>
+    /// 投資パネルを表示する。nextIsSpecial=true なら「次Lv」の欄を Lv5 の特殊な効果として金の枠で出す
+    /// （Lv4 のときは次に付く効果、Lv5 のときは今付いている効果）。
+    /// </summary>
     public void ShowInvestPanel(VillageFacilityData facility, int level, string currentEffect, string nextEffect,
-        int cost, bool canInvest, string blockedReason)
+        int cost, bool canInvest, string blockedReason, bool nextIsSpecial = false)
     {
         if (investPanel == null) return;
         investPanel.SetActive(true);
@@ -315,6 +339,14 @@ public class VillageView : MonoBehaviour
             currentEffectText.text = string.IsNullOrEmpty(currentEffect) ? "-" : currentEffect;
         if (nextEffectText != null)
             nextEffectText.text = string.IsNullOrEmpty(nextEffect) ? "これ以上の拡張はない" : nextEffect;
+        if (nextCaptionText != null)
+        {
+            nextCaptionText.text = nextIsSpecial ? SpecialCaption : defaultNextCaption;
+            nextCaptionText.color = nextIsSpecial ? SpecialCaptionColor : defaultNextCaptionColor;
+            nextCaptionText.fontSizeMax = nextIsSpecial ? Mathf.Min(SpecialCaptionMaxSize, defaultNextCaptionMaxSize) : defaultNextCaptionMaxSize;
+            nextCaptionText.horizontalAlignment = nextIsSpecial ? HorizontalAlignmentOptions.Center : defaultNextCaptionAlign;
+        }
+        if (specialFrame != null) specialFrame.SetActive(nextIsSpecial);
 
         if (detailCostText != null)
             detailCostText.text = cost < 0 ? "-" : $"{cost:N0}G";

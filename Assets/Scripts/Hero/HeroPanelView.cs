@@ -36,6 +36,22 @@ public class HeroPanelView : MonoBehaviour
     [SerializeField] private Button tacticsInfoButton;
     [SerializeField] private Button clearProbabilityInfoButton;
 
+    [Header("細工（職人組合 Lv5。任意）")]
+    [Tooltip("「業物」「なまくら」のボタンをまとめた枠。職人組合が Lv5 のときだけ出す")]
+    [SerializeField] private GameObject craftRoot;
+    [SerializeField] private Button craftFineButton;
+    [SerializeField] private Button craftDullButton;
+    [Tooltip("武器アイコンに重ねる細工の印（業物／なまくら）")]
+    [SerializeField] private GameObject craftMark;
+    [SerializeField] private Image craftMarkBackground;
+    [SerializeField] private TextMeshProUGUI craftMarkText;
+    [Tooltip("業物の属性のアイコン（弱点を知っているときだけ出す）")]
+    [SerializeField] private Image craftAttributeIcon;
+    [Tooltip("属性アイコン（火・水・木・光・闇の順。金融の属性ファンドの絵）")]
+    [SerializeField] private Sprite[] attributeIcons = new Sprite[5];
+    [SerializeField] private Color craftFineColor = new Color32(0xE8, 0xA3, 0x3D, 0xFF);
+    [SerializeField] private Color craftDullColor = new Color32(0x6E, 0x74, 0x7A, 0xFF);
+
     public Subject<Unit>        OnCloseRequested { get; } = new();
     public Subject<string>      OnWeaponChanged  { get; } = new();
     public Subject<string>      OnArmorChanged   { get; } = new();
@@ -43,6 +59,8 @@ public class HeroPanelView : MonoBehaviour
     public Subject<Unit>        OnCharacterClicked { get; } = new();
     public Subject<string>      OnHoverEnter     { get; } = new();
     public Subject<Unit>        OnHoverExit      { get; } = new();
+    /// <summary>細工（職人組合 Lv5）のボタン。業物 / なまくら。</summary>
+    public Subject<ArtisanCraftKind> OnCraftRequested { get; } = new();
 
     private readonly List<string>              weaponIds          = new();
     private readonly List<string>              armorIds           = new();
@@ -93,6 +111,21 @@ public class HeroPanelView : MonoBehaviour
         RegisterInfoButton(armorInfoButton);
         RegisterInfoButton(tacticsInfoButton);
         RegisterInfoButton(clearProbabilityInfoButton);
+
+        if (craftFineButton != null)
+        {
+            craftFineButton.onClick.AddListener(() => OnCraftRequested.OnNext(ArtisanCraftKind.Fine));
+            RegisterInfoButton(craftFineButton);
+            RegisterNavDescription(craftFineButton, craftFineButton);
+        }
+        if (craftDullButton != null)
+        {
+            craftDullButton.onClick.AddListener(() => OnCraftRequested.OnNext(ArtisanCraftKind.Dull));
+            RegisterInfoButton(craftDullButton);
+            RegisterNavDescription(craftDullButton, craftDullButton);
+        }
+        if (craftRoot != null) craftRoot.SetActive(false);
+        if (craftMark != null) craftMark.SetActive(false);
 
         // パッド/キー: ドロップダウン（とクリア確率欄）を選んだら、対応する説明をホバー時と同じく表示する
         RegisterNavDescription(weaponDropdown, weaponInfoButton);
@@ -230,6 +263,51 @@ public class HeroPanelView : MonoBehaviour
         SetButtonDescription(weaponInfoButton, weapon);
         SetButtonDescription(armorInfoButton, armor);
         SetButtonDescription(clearProbabilityInfoButton, clearProbability);
+    }
+
+    /// <summary>
+    /// 細工（職人組合 Lv5）。show = ボタンの枠を出すか、canCraft = 押せるか（この配信の間にまだ細工していない・武器がある）。
+    /// kind = この配信の間にした細工（武器アイコンに印を出す）。fineAttribute = 業物で付く属性（弱点を知っているときだけ。知らなければ null）。
+    /// reveal = いま細工した（印を跳ねさせる）。
+    /// </summary>
+    public void SetCraft(bool show, bool canCraft, ArtisanCraftKind kind, ItemTypeData.ItemAttribute? fineAttribute,
+        string fineDescription, string dullDescription, bool reveal = false)
+    {
+        if (craftRoot != null) craftRoot.SetActive(show);
+        if (craftFineButton != null) craftFineButton.interactable = canCraft;
+        if (craftDullButton != null) craftDullButton.interactable = canCraft;
+        SetButtonDescription(craftFineButton, fineDescription);
+        SetButtonDescription(craftDullButton, dullDescription);
+
+        if (craftMark == null) return;
+        bool marked = kind != ArtisanCraftKind.None;
+        craftMark.SetActive(marked);
+        if (!marked) return;
+        bool fine = kind == ArtisanCraftKind.Fine;
+        if (craftMarkText != null) craftMarkText.text = fine ? "業物" : "なまくら";
+        if (craftMarkBackground != null) craftMarkBackground.color = fine ? craftFineColor : craftDullColor;
+        if (craftAttributeIcon != null)
+        {
+            var icon = fine && fineAttribute.HasValue ? AttributeIcon(fineAttribute.Value) : null;
+            craftAttributeIcon.sprite = icon;
+            craftAttributeIcon.gameObject.SetActive(icon != null);
+        }
+        if (reveal) UIFx.Pop(craftMark.transform, 1.6f, 0.22f);
+    }
+
+    private Sprite AttributeIcon(ItemTypeData.ItemAttribute attr)
+    {
+        if (attributeIcons == null) return null;
+        int index = ItemTypeData.NormalizeAttribute(attr) switch
+        {
+            ItemTypeData.ItemAttribute.Fire => 0,
+            ItemTypeData.ItemAttribute.Water => 1,
+            ItemTypeData.ItemAttribute.Wood => 2,
+            ItemTypeData.ItemAttribute.Light => 3,
+            ItemTypeData.ItemAttribute.Dark => 4,
+            _ => -1,
+        };
+        return index >= 0 && index < attributeIcons.Length ? attributeIcons[index] : null;
     }
 
     // ─────────────────────────────────────────────────────────

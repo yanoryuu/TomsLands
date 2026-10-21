@@ -232,7 +232,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             string what = string.IsNullOrEmpty(s.prediction)
                 ? Shorten(entry?.Article?.headline, 12)
                 : $"予想メモ: {ScrapPrediction.Label(s.prediction)}";
-            lines.Add($"第{s.publishTurn}号 {what}\n{StickyStatus(s, entry, turn)}");
+            lines.Add($"第{s.publishTurn}号 {what}\n{StickyStatus(s, entry, turn, scrapbook.VetStateOf(s.entryKey))}");
         }
         foreach (var s in scrapbook.Pinned) Add(s);
         foreach (var s in scrapbook.ConfirmedOn(turn))
@@ -240,19 +240,31 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         ui.Show(lines);
     }
 
-    private static string StickyStatus(ScrapbookModel.Scrap s, NewsIssueEntry entry, int turn)
+    /// <param name="vet">裏取り（酒場 Lv5）で分かった真偽。答えがまだのときは「○ あと2日で効く」のように印だけ前に付ける</param>
+    private static string StickyStatus(ScrapbookModel.Scrap s, NewsIssueEntry entry, int turn, ScrapState? vet = null)
     {
+        string timing;
         switch (ScrapbookModel.StateOf(s, entry, turn))
         {
             case ScrapState.ConfirmedHit: return "<color=#2F6E2B>○ 本物</color>";
             case ScrapState.ConfirmedPartial: return "<color=#A4500E>△ 誇張</color>";
             case ScrapState.ConfirmedMiss: return "<color=#A0281C>× 誤報</color>";
             case ScrapState.Unconfirmed:
-                return entry != null && turn >= entry.SettleTurn ? "<color=#7A4A20>決着した</color>" : "<color=#2F6E2B>効いている</color>";
+                timing = entry != null && turn >= entry.SettleTurn ? "<color=#7A4A20>決着した</color>" : "<color=#2F6E2B>効いている</color>";
+                break;
             default:
                 int days = entry != null ? ScrapbookModel.ConfirmableTurn(entry) - turn : -1;
-                return days > 0 ? $"<color=#7A4A20>あと{days}日で効く</color>" : "<color=#7A4A20>結果待ち</color>";
+                timing = days > 0 ? $"<color=#7A4A20>あと{days}日で効く</color>" : "<color=#7A4A20>結果待ち</color>";
+                break;
         }
+        string mark = vet switch
+        {
+            ScrapState.ConfirmedHit => "<color=#2F6E2B>○</color> ",
+            ScrapState.ConfirmedPartial => "<color=#A4500E>△</color> ",
+            ScrapState.ConfirmedMiss => "<color=#A0281C>×</color> ",
+            _ => string.Empty,
+        };
+        return mark + timing;
     }
 
     private static string Shorten(string s, int max)

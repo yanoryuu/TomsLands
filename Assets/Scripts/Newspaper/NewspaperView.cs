@@ -33,6 +33,10 @@ public class NewspaperView : MonoBehaviour
         public bool bodyOpen;
         public bool canScrapKind;   // 通常記事か（スクラップボタンを出すか）
         public bool canScrap;       // 押せるか（枠が満杯・貼り済みなら不可）
+        public bool showVet;        // 「裏を取る」を出すか（酒場 Lv5 で、まだ答えの出ていない報道）
+        public bool canVet;         // 押せるか（この配信の間にまだ使っていない）
+        public ScrapState? vetState; // 裏取りで分かった真偽（null = まだ）
+        public bool vetReveal;      // いま裏を取った（ハンコを押す演出）
     }
 
     public class PaperData
@@ -59,6 +63,12 @@ public class NewspaperView : MonoBehaviour
         public string followUp;     // 届いた続報（見出し＋リード）。空 = まだ（I-3）
         public string answer;       // 答え合わせ（効き先・値動き・予想の当たり外れ）。空 = まだ（I-4）
         public string prediction;   // 予想（ScrapPrediction の値）。空 = 予想なし（I-6）
+        public ScrapState? vetState; // 裏取り（酒場 Lv5）で分かった真偽。未確認のカードのバッジに出す
+
+        /// <summary>カードに出す状態（確認・続報の答えが無ければ裏取りの結果）。</summary>
+        public ScrapState Shown =>
+            state == ScrapState.ConfirmedHit || state == ScrapState.ConfirmedPartial || state == ScrapState.ConfirmedMiss || !vetState.HasValue
+                ? state : vetState.Value;
     }
 
     [Serializable]
@@ -184,6 +194,7 @@ public class NewspaperView : MonoBehaviour
     private readonly Subject<Unit> onBatchConfirmClicked = new();
     private readonly Subject<int> onIssueStep = new();
     private readonly Subject<(string entryKey, string value)> onPredictionChanged = new();
+    private readonly Subject<string> onVetClicked = new();
 
     public Observable<Unit> OnCloseClicked => onCloseClicked;
     /// <summary>記事（一面トップ or 小記事）のクリック。掲載キーが流れる。</summary>
@@ -200,6 +211,8 @@ public class NewspaperView : MonoBehaviour
     public Observable<int> OnIssueStep => onIssueStep;
     /// <summary>記事ポップアップで予想を選んだ（掲載キー, ScrapPrediction の値）。</summary>
     public Observable<(string entryKey, string value)> OnPredictionChanged => onPredictionChanged;
+    /// <summary>一面トップの「裏を取る」（酒場 Lv5）。掲載キーが流れる。</summary>
+    public Observable<string> OnVetClicked => onVetClicked;
 
     public IReadOnlyList<NewsMarketRowUI> MarketRows => marketRows ?? Array.Empty<NewsMarketRowUI>();
 
@@ -242,6 +255,7 @@ public class NewspaperView : MonoBehaviour
         {
             leadArticle.OnClicked += key => onArticleClicked.OnNext(key);
             leadArticle.OnScrapClicked += key => onScrapClicked.OnNext(key);
+            leadArticle.OnVetClicked += key => onVetClicked.OnNext(key);
         }
         if (pageTabs != null)
             foreach (var tab in pageTabs)
@@ -419,7 +433,11 @@ public class NewspaperView : MonoBehaviour
         {
             bool showLead = !p.isShopPage && p.hasLead;
             leadArticle.gameObject.SetActive(showLead);
-            if (showLead) leadArticle.SetData(p.lead);
+            if (showLead)
+            {
+                leadArticle.SetData(p.lead);
+                leadArticle.SetVet(p.lead.showVet, p.lead.canVet, p.lead.vetState, scrapCardPrefab, p.lead.vetReveal);
+            }
         }
 
         if (articleParent != null && articleCellPrefab != null)
@@ -461,6 +479,7 @@ public class NewspaperView : MonoBehaviour
     {
         var cell = Instantiate(articleCellPrefab, articleParent);
         cell.SetData(a);
+        cell.SetVetStamp(a.vetState, scrapCardPrefab);
         cell.OnClicked += key => onArticleClicked.OnNext(key);
         if (a.bodyOpen) cell.ShowBody(a.body);
         currentCells.Add(cell);
@@ -504,13 +523,13 @@ public class NewspaperView : MonoBehaviour
                 {
                     var s = list[i];
                     // 確認で枠が詰まるとカードの並びが変わるので、状態の変化は掲載キーで追う
-                    bool reveal = lastScrapStates.TryGetValue(s.entryKey, out var prev) && prev != s.state;
-                    card.SetData(s.entryKey, s.headline, s.lead, s.state, s.canAfford, confirmCost, reveal);
+                    bool reveal = lastScrapStates.TryGetValue(s.entryKey, out var prev) && prev != s.Shown;
+                    card.SetData(s.entryKey, s.headline, s.lead, s.state, s.canAfford, confirmCost, reveal, s.vetState);
                 }
             }
         }
         lastScrapStates.Clear();
-        foreach (var s in list) lastScrapStates[s.entryKey] = s.state;
+        foreach (var s in list) lastScrapStates[s.entryKey] = s.Shown;
 
         if (batchConfirmButton != null) batchConfirmButton.interactable = canBatch;
         if (batchConfirmLabel != null) batchConfirmLabel.text = $"まとめて確認 {batchCost:N0}G";
@@ -560,11 +579,11 @@ public class NewspaperView : MonoBehaviour
             popupBadge.enabled = popupBadge.sprite != null;
             // 誇張（△）はカードと同じく、薄くした確定バッジに「△」を重ねる（I-15）
             var mark = PopupPartialMark();
-            if (mark != null) mark.gameObject.SetActive(s.state == ScrapState.ConfirmedPartial && popupBadge.enabled);
+            if (mark != null) mark.gameObject.SetActive(s.Shown == ScrapState.ConfirmedPartial && popupBadge.enabled);
         }
         if (popupStateText != null)
         {
-            (string label, Color color) = s.state switch
+            (string label, Color color) = s.Shown switch
             {
                 ScrapState.Pending => ("結果待ち", pendingStateColor),
                 ScrapState.Unconfirmed => ("未確認", unconfirmedStateColor),
@@ -572,6 +591,8 @@ public class NewspaperView : MonoBehaviour
                 ScrapState.ConfirmedPartial => ("誇張", partialStateColor),
                 _ => ("誤報", missStateColor),
             };
+            // 裏取りで分かっただけ（確認・続報の答えはまだ）なら、そう添える
+            if (s.Shown != s.state) label += "（裏取り）";
             popupStateText.text = label;
             popupStateText.color = color;
         }
@@ -775,5 +796,6 @@ public class NewspaperView : MonoBehaviour
         onBatchConfirmClicked.Dispose();
         onIssueStep.Dispose();
         onPredictionChanged.Dispose();
+        onVetClicked.Dispose();
     }
 }

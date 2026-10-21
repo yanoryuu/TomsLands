@@ -7,6 +7,7 @@ using UnityEngine;
 /// レリックの報酬抽選と「配信リザルト3択」の保留管理。
 /// - 抽選はレア度の重み付き・所持済みと呪いを除外。村の冒険者ギルドのレベルまでに解禁されたものだけ（unlockGuildLevel）
 /// - 選択肢の数・辞退の買取額も冒険者ギルドで増える（VillageEffects）
+/// - 冒険者ギルド Lv5 では、配信の報酬の最後の1枠が呪いのレリック（危ない札）になる（未所持の呪いがあるときだけ）
 /// - 配信勝利時に BattleResultHandler が QueueBattleReward() を呼び、
 ///   TomsShopPresenter がホーム復帰時に PendingChoices を3択UIで表示する
 /// （保留は RelicInventoryModel 経由で relics.json に保存する: 選ぶ前に終了しても続きからで出し直す）
@@ -41,7 +42,7 @@ public class RelicRewardService
     /// <summary>PendingChoices の今の中身を保存する（積んだ・選んだ・辞退したとき）。</summary>
     private void SavePending() => inventory.SetPendingChoices(PendingChoices.Select(c => c.relicId));
 
-    /// <summary>レア度重み付きで count 個の候補を抽選する（重複・所持済み・呪い除外）。</summary>
+    /// <summary>レア度重み付きで count 個の候補を抽選する（重複・所持済み・呪い除外。呪いは PickCurseChoice で別に引く）。</summary>
     public List<RelicDefinition> PickChoices(int count)
     {
         int unlockedTier = VillageEffects.Current.RelicUnlockTier;
@@ -87,11 +88,15 @@ public class RelicRewardService
     /// レリック報酬の3択を保留に積む（既に保留があれば何もしない）。
     /// ホーム復帰時に TomsShopPresenter が選択UIを表示する。
     /// </summary>
-    public void QueueReward(string reason)
+    /// <param name="withCurse">true なら最後の1枠を呪いのレリックにする（冒険者ギルド Lv5 の配信報酬。枚数は増やさない）</param>
+    public void QueueReward(string reason, bool withCurse = false)
     {
         if (PendingChoices.Count > 0) return;
 
-        var choices = PickChoices(VillageEffects.Current.RelicChoiceCount(GameConst.RelicRewardChoiceCount));
+        int count = VillageEffects.Current.RelicChoiceCount(GameConst.RelicRewardChoiceCount);
+        var curse = withCurse ? PickCurseChoice() : null;
+        var choices = PickChoices(curse != null ? count - 1 : count);
+        if (curse != null) choices.Add(curse);
         if (choices.Count == 0)
         {
             Debug.Log("[Relic] 報酬候補がありません（全所持 or マスター未登録）");
@@ -103,7 +108,16 @@ public class RelicRewardService
     }
 
     /// <summary>配信勝利報酬の3択を保留に積む。</summary>
-    public void QueueBattleReward() => QueueReward("配信報酬");
+    public void QueueBattleReward() => QueueReward("配信報酬", VillageEffects.Current.CurseRelicInRewards);
+
+    /// <summary>危ない札の候補: 未所持の呪いのレリックから1つ（無ければ null）。解禁段階は見ない（Lv5 の効果なので）。</summary>
+    public RelicDefinition PickCurseChoice()
+    {
+        var pool = inventory.AllRelics
+            .Where(r => r != null && !string.IsNullOrEmpty(r.relicId) && r.isCurse && !inventory.Has(r.relicId))
+            .ToList();
+        return pool.Count > 0 ? PickWeighted(pool) : null;
+    }
 
     /// <summary>保留中の3択から1つ選んで獲得する。</summary>
     public bool ChoosePending(int index, int currentTurn)
@@ -119,7 +133,9 @@ public class RelicRewardService
     public int GetDeclineGold()
     {
         if (PendingChoices.Count == 0) return 0;
-        var best = PendingChoices.Max(c => c.rarity);
+        // 危ない札（呪い）は買取額の基準に入れない（並んだだけで辞退の額が上がらないように）
+        var basis = PendingChoices.Where(c => !c.isCurse).ToList();
+        var best = (basis.Count > 0 ? basis : PendingChoices).Max(c => c.rarity);
         return VillageEffects.Current.ApplyDeclineGold(GameConst.RelicDeclineGold(best));
     }
 

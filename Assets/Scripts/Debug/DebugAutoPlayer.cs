@@ -475,6 +475,15 @@ public class DebugAutoPlayer : MonoBehaviour
         string title = data.Title ?? "";
         bool awaitingStream = _gameFlow != null && _gameFlow.IsAwaitingStream.Value;
 
+        // 村 Lv5 の「勝負配信の宣言」「勝負の融資」は使わない（自動プレイは村の特殊な効果の手を持たない）
+        if (title == StreamDeclaration.OfferTitle || title == BankLoan.OfferTitle)
+        {
+            AddLog($"「{title}」: {data.CancelButtonText}");
+            SetStatus($"「{title}」を使わない");
+            data.OnCancel?.Invoke();
+            return true;
+        }
+
         if (awaitingStream && data.ConfirmButtonText == "鍛冶屋へ寄る")
         {
             // 配信日の朝: 標準戦略なら鍛冶屋で仕入れてから配信、それ以外はそのまま配信へ

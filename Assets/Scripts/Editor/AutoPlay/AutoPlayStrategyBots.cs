@@ -294,7 +294,7 @@ public sealed class AutoPlayReaderBot : AutoPlayStrategyBotBase, IAutoPlayFortun
     {
         if (!_fortune) return false;
         int reserve = s.TurnsUntilDebt <= 2 ? s.NextDebtAmount : 0;
-        if (s.Money - ProphetFortune.Cost - reserve < FortuneMinMoney) return false;
+        if (s.Money - ProphetFortune.CurrentCost - reserve < FortuneMinMoney) return false;
         return !_readNews || s.Items.Any(i => i.Unlocked && i.ReadNewsBias >= UpThreshold && i.ReadNewsDaysToEffect > 0);
     }
 

@@ -94,26 +94,26 @@ public class ProphetPresenter : IDisposable, IStartable
     {
         var s = ProphetDialogueLoader.Get(id);
         if (string.IsNullOrEmpty(s)) s = ProphetDialogueLoader.GetDefault();
-        return s.Replace("{days}", ProphetFortune.HorizonDays.ToString()).Replace("{cost}", ProphetFortune.Cost.ToString("N0"));
+        return s.Replace("{days}", ProphetFortune.HorizonDays.ToString()).Replace("{cost}", ProphetFortune.CurrentCost.ToString("N0"));
     }
 
     private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
 
     // =====================================================================
-    // 占い（I-11・Q20）: 3日先の相場の向きを 15,000G で占う。外れることもある（ProphetFortune.Accuracy）
+    // 占い（I-11・Q20）: 3日先の相場の向きを 15,000G（酒場 Lv4 で 10,000G）で占う。外れることもある（ProphetFortune.Accuracy）
     // =====================================================================
 
     private void BuyFortune()
     {
         int seed = tomsModel.FlowSeed, turn = Turn;
         if (ProphetFortune.IsBought(seed, turn)) { ShowFortune(false); return; }
-        if (tomsModel.PlayerMoney.Value < ProphetFortune.Cost)
+        if (tomsModel.PlayerMoney.Value < ProphetFortune.CurrentCost)
         {
             currentDialogue = Line("fortune_short");
             prophetView.ShowDialogue(currentDialogue);
             return;
         }
-        tomsModel.PurchaseItem(ProphetFortune.Cost);
+        tomsModel.PurchaseItem(ProphetFortune.CurrentCost);
         tomsModel.SavePlayerMoney();
         ProphetFortune.MarkBought(seed, turn);
         var sound = SoundManager.Instance;
@@ -157,7 +157,7 @@ public class ProphetPresenter : IDisposable, IStartable
             .ToList();
         prophetView.SetTrendHeader("荒れ相場");
         prophetView.ShowTrendRows(rows);
-        prophetView.ShowFortuneButton(true, tomsModel.PlayerMoney.Value >= ProphetFortune.Cost, $"{ProphetFortune.Cost:N0}Gで占う");
+        prophetView.ShowFortuneButton(true, tomsModel.PlayerMoney.Value >= ProphetFortune.CurrentCost, $"{ProphetFortune.CurrentCost:N0}Gで占う");
     }
 
     // 現在価格の高い順に上位3件を表示

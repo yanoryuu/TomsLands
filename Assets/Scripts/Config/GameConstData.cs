@@ -187,7 +187,7 @@ public class PreparationSettingsData
 {
     // --- 村資金の持ち込み（ラン終了時に手元Gが村資金になり、次の出店に持ち込める） ---
     /// <summary>持ち込みGの上限（index = 村の銀行レベル。0 = 未建設）。</summary>
-    public int[] bankCarryLimits = { 5000, 10000, 20000, 50000 };
+    public int[] bankCarryLimits = { 50000, 100000, 200000, 400000, 700000 };
 
     /// <summary>持ち込みアイテムのスロット数（合計個数の上限）。</summary>
     public int baseCarrySlots = 2;
@@ -250,31 +250,53 @@ public class VillageSettingsData
     public float rankSRatio = 2f;
     public float rankBRatio = 0.4f;
 
-    // --- 施設の効果（index = 施設レベル。0 = 未建設） ---
-    /// <summary>冒険者ギルド: 3択を辞退したときの買取額の倍率（このレベル以上で有効）。</summary>
-    public int guildDeclineBonusLevel = 2;
-    public float guildDeclineGoldMultiplier = 1.5f;
+    // --- 施設の効果（index = 施設レベル。0 = 未建設。施設の最大は Lv5） ---
+    // Lv5 は特殊な効果だけで、数値は Lv4 と同じ（配列の Lv5 の値は Lv4 と同じにしておく。足りなければ最後の値を使う）
+    /// <summary>この施設レベルで「特殊な効果」が付く（VillageEffects.IsMaxLevel。施設の最大レベル）。</summary>
+    public int specialEffectLevel = 5;
+    /// <summary>領主館: クリア時の完走ボーナス（clearBaseFunds）への上乗せ率。</summary>
+    public float[] hallClearBonusRates = { 0f, 0f, 0f, 0f, 0.15f, 0.15f };
+    /// <summary>冒険者ギルド: 報酬の3択を辞退したときの買取額の倍率。</summary>
+    public float[] guildDeclineGoldMultipliers = { 1f, 1f, 1.5f, 1.5f, 2f, 2f };
     /// <summary>冒険者ギルド: このレベル以上で報酬の選択肢が +1。</summary>
     public int guildExtraChoiceLevel = 3;
     /// <summary>冒険者ギルド: このレベル以上でスターターレリックの候補にレアが並ぶ。</summary>
     public int guildStarterRareLevel = 1;
-    /// <summary>酒場: このレベル以上で開始時の情報屋 Lv2。</summary>
-    public int tavernInfoBrokerLevel = 1;
+    /// <summary>冒険者ギルド: スターターレリックの候補に足すエピックの数（ランごとに選び直す）。</summary>
+    public int[] guildStarterEpicCounts = { 0, 0, 0, 0, 2, 2 };
+    /// <summary>酒場: ラン開始時の情報屋のレベル（0 = そのまま）。</summary>
+    public int[] tavernStartInfoBrokerLevels = { 0, 2, 2, 2, 3, 3 };
     /// <summary>酒場: 新聞の購読料の割引率。</summary>
-    public float[] tavernNewspaperDiscounts = { 0f, 0f, 0.25f, 0.5f };
+    public float[] tavernNewspaperDiscounts = { 0f, 0f, 0.25f, 0.5f, 0.65f, 0.65f };
     /// <summary>酒場: 取引所（ファンド）の売買手数料の引き下げ幅（率のポイント）。</summary>
-    public float[] tavernFundFeeReductions = { 0f, 0f, 0f, 0.01f };
-    /// <summary>職人組合: このレベル以上で開始時の鍛冶屋 Lv2。</summary>
-    public int artisanBlacksmithLevel = 1;
+    public float[] tavernFundFeeReductions = { 0f, 0f, 0f, 0.01f, 0.02f, 0.02f };
+    /// <summary>酒場: 占い師の値段（0 = 通常の値段 ProphetFortune.Cost のまま）。</summary>
+    public int[] tavernProphetPrices = { 0, 0, 0, 0, 10000, 10000 };
+    /// <summary>職人組合: ラン開始時の鍛冶屋のレベル（0 = そのまま）。</summary>
+    public int[] artisanStartBlacksmithLevels = { 0, 2, 2, 2, 3, 3 };
     /// <summary>職人組合: 鍛冶屋のレベルアップ費・マシン購入費の割引率。</summary>
-    public float[] artisanCostDiscounts = { 0f, 0f, 0.15f, 0.15f };
+    public float[] artisanCostDiscounts = { 0f, 0f, 0.15f, 0.15f, 0.25f, 0.25f };
     /// <summary>職人組合: マシン設置枠の追加数。</summary>
-    public int[] artisanMachineSlotAdds = { 0, 0, 0, 1 };
+    public int[] artisanMachineSlotAdds = { 0, 0, 0, 1, 2, 2 };
     /// <summary>広場: 開始時のフォロワー・注目度の加算。</summary>
-    public int[] plazaStartFollowers = { 0, 500, 500, 1000 };
-    public int[] plazaStartAttention = { 0, 10, 10, 20 };
+    public int[] plazaStartFollowers = { 0, 500, 500, 1000, 2000, 2000 };
+    public int[] plazaStartAttention = { 0, 10, 10, 20, 40, 40 };
     /// <summary>広場: 配信で売れた額への上乗せ率。</summary>
-    public float[] plazaStreamSalesBonuses = { 0f, 0f, 0.05f, 0.1f };
+    public float[] plazaStreamSalesBonuses = { 0f, 0f, 0.05f, 0.1f, 0.15f, 0.15f };
+
+    // --- Lv5 の特殊な効果: 銀行「勝負の融資」（借りる額は持ち込み上限 bankCarryLimits の最後の値） ---
+    /// <summary>銀行 Lv5: 勝負の融資の利息（0.1 = 1割。配信の次の日に元本 + 利息を返す）。</summary>
+    public float bankLoanInterestRate = 0.1f;
+
+    // --- Lv5 の特殊な効果: 広場「勝負配信の宣言」 ---
+    /// <summary>広場 Lv5: 宣言が当たったときの配信の売上・防衛報酬の倍率。</summary>
+    public float plazaDeclarationMultiplier = 1.5f;
+    /// <summary>広場 Lv5: 宣言が当たったときのフォロワー・注目の加算。</summary>
+    public int plazaDeclarationHitFollowers = 6000;
+    public int plazaDeclarationHitAttention = 100;
+    /// <summary>広場 Lv5: 宣言が外れたときのフォロワー・注目の減少（正の値で書く）。</summary>
+    public int plazaDeclarationMissFollowers = 2000;
+    public int plazaDeclarationMissAttention = 60;
 
     public VillageSettingsData Clone()
     {
@@ -282,7 +304,13 @@ public class VillageSettingsData
         clone.difficultyConversionMultipliers = CopyOf(difficultyConversionMultipliers);
         clone.clearBaseFunds = CopyOf(clearBaseFunds);
         clone.rankBaseProfits = CopyOf(rankBaseProfits);
+        clone.hallClearBonusRates = CopyOf(hallClearBonusRates);
+        clone.guildDeclineGoldMultipliers = CopyOf(guildDeclineGoldMultipliers);
+        clone.guildStarterEpicCounts = CopyOf(guildStarterEpicCounts);
+        clone.tavernStartInfoBrokerLevels = CopyOf(tavernStartInfoBrokerLevels);
         clone.tavernNewspaperDiscounts = CopyOf(tavernNewspaperDiscounts);
+        clone.tavernProphetPrices = CopyOf(tavernProphetPrices);
+        clone.artisanStartBlacksmithLevels = CopyOf(artisanStartBlacksmithLevels);
         clone.tavernFundFeeReductions = CopyOf(tavernFundFeeReductions);
         clone.artisanCostDiscounts = CopyOf(artisanCostDiscounts);
         clone.artisanMachineSlotAdds = CopyOf(artisanMachineSlotAdds);

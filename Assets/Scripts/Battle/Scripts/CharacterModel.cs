@@ -67,12 +67,15 @@ public class CharacterModel
         {
             // 装備補正（武器→攻撃、防具→防御/HP）。ランクが高い装備ほど強くなる
             var equip = HeroEquipmentBonus.Get(runtime);
-            WeaponAttribute = HeroEquipmentBonus.GetWeaponAttribute(runtime);
+            // 職人組合 Lv5「細工」: 業物は武器に配信先の弱点の属性が付き、なまくらは攻撃が下がる（クリア確率には入れない。ArtisanCraft）
+            bool hasWeapon = !string.IsNullOrEmpty(runtime.weaponId.Value);
+            WeaponAttribute = ArtisanCraft.BattleWeaponAttribute(hasWeapon, HeroEquipmentBonus.GetWeaponAttribute(runtime));
+            float craftAttackMul = ArtisanCraft.BattleAttackMul(hasWeapon);
             MaxHp = Scale(Mathf.RoundToInt(runtime.hp.Value * equip.Hp));
             CurrentHp = new ReactiveProperty<int>(MaxHp);
             MaxMp = runtime.mp.Value;
             CurrentMp = new ReactiveProperty<int>(runtime.mp.Value);
-            AttackPower = Scale(Mathf.RoundToInt(runtime.attackPower.Value * equip.Attack));
+            AttackPower = Scale(Mathf.RoundToInt(runtime.attackPower.Value * equip.Attack * craftAttackMul));
             DefensePower = Scale(Mathf.RoundToInt(runtime.defensePower.Value * equip.Defense));
             Debug.Log($"[CharacterModel] Hero created from RuntimeHeroData: HP={MaxHp}, AT={AttackPower}, DF={DefensePower} (powerMul={powerMul:F2}, equip HP x{equip.Hp:F2} AT x{equip.Attack:F2} DF x{equip.Defense:F2})");
         }

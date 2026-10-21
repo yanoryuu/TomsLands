@@ -42,6 +42,14 @@ public class RunHistoryData
     public bool hasBestStream;
     /// <summary>村の広場の効果で配信の売上に上乗せされた額の合計。</summary>
     public int streamBonusTotal;
+
+    // --- 村の銀行 Lv5「勝負の融資」（破産時の最高の儲けから借りた分を引くため）。旧セーブは欠損→0 = 借りていない ---
+    /// <summary>融資を受けた日（ターン）。0 = 借りていない。</summary>
+    public int bankLoanTurn;
+    /// <summary>融資を返した日（ターン）。0 = まだ返していない。</summary>
+    public int bankLoanRepaidTurn;
+    /// <summary>返す額（元本 + 利息）。</summary>
+    public int bankLoanOwed;
 }
 
 /// <summary>
@@ -170,6 +178,20 @@ public static class RunHistory
             }
         });
     }
+
+    /// <summary>勝負の融資を受けた（借りてから返すまでの所持金の記録には借りた分が入っている）。</summary>
+    public static void RecordBankLoan(int turn, int owed)
+    {
+        Modify(d =>
+        {
+            d.bankLoanTurn = turn;
+            d.bankLoanRepaidTurn = 0;
+            d.bankLoanOwed = UnityEngine.Mathf.Max(0, owed);
+        });
+    }
+
+    /// <summary>勝負の融資を返した。</summary>
+    public static void RecordBankLoanRepaid(int turn) => Modify(d => d.bankLoanRepaidTurn = turn);
 
     // ------------------------------------------------------------
 

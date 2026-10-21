@@ -18,6 +18,8 @@ public class NewsArticleCellUI : MonoBehaviour
     [SerializeField] private GameObject bodyRoot;      // 本文のまとまり。既定は非表示
     [SerializeField] private GameObject newBadge;      // 未読マーク
     [SerializeField] private Button rootButton;
+    [Tooltip("裏取り（酒場 Lv5）の結果の小さなハンコ（任意）")]
+    [SerializeField] private Image vetStamp;
 
     public string ArticleId { get; private set; }
     public event Action<string> OnClicked;
@@ -51,6 +53,17 @@ public class NewsArticleCellUI : MonoBehaviour
         if (bylineText != null) bylineText.text = a.byline;
         if (newBadge != null) newBadge.SetActive(!a.isRead);
         if (bodyRoot != null) bodyRoot.SetActive(false);
+    }
+
+    /// <summary>裏取りの結果（null = まだ・ハンコを隠す）。style はスクラップカードのプレハブ（○△× の素材の見本）。</summary>
+    public void SetVetStamp(ScrapState? stamp, NewsScrapCardUI style)
+    {
+        if (vetStamp == null) return;
+        bool show = stamp.HasValue && style != null;
+        vetStamp.gameObject.SetActive(show);
+        if (!show) return;
+        if (newBadge != null) newBadge.SetActive(false); // ハンコと未読マークを重ねない
+        style.PaintBadge(vetStamp, stamp.Value);
     }
 
     public void ShowBody(string body)

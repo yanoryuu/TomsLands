@@ -771,6 +771,8 @@ public class GameFlowManager : IDisposable, IStartable
 
         var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
         int dungeonLevel = dungeonData?.currentDungeonLevel ?? DungeonLevels.Unfunded; // Lv0 は戦闘は Lv1 と同じ・配当なし
+        // 職人組合 Lv5「細工」: この配信に効く細工を確定する（業物ならこの配信先の弱点の属性が付く）
+        ArtisanCraft.PrepareBattle(_tomsModel.FlowSeed, GetStreamNumberAt(_currentIndex), dungeonData?.requiredAttribute);
         _battleInputData.Setup(
             node.BattleDungeon,
             dungeonLevel,
@@ -841,8 +843,63 @@ public class GameFlowManager : IDisposable, IStartable
         _sceneTransition.GoToResult();
     }
 
+    /// <summary>その位置（フローの index）までの配信の回数（その位置が配信ならそれが何回目か）。職人組合 Lv5「細工」の配信の見分けに使う。</summary>
+    public int GetStreamNumberAt(int index)
+    {
+        if (_gameFlow == null) return 0;
+        int n = 0;
+        for (int i = 0; i <= index && i < _gameFlow.GameFlowStack.Count; i++)
+            if (_gameFlow.GameFlowStack[i].EventType == GameEvent.Battle) n++;
+        return n;
+    }
+
     public void Dispose()
     {
         IsAwaitingStream.Dispose();
     }
+
+    /// <summary>
+    /// 表示用: このランの配信の予定を、配信する順に全部返す（領主館 Lv5「配信の予定表」。Docs/Map_Overlay_Spec.md R6）。
+    /// フローはラン開始時にシード（手動フローなら SO）から決まり、ランの途中で並びは変わらないので、最初から最後まで同じ予定が出る。
+    /// 弱点・敵などは含めない（それは情報屋・新聞で知る）。寄り道中の今日の配信は「これから」に数える。
+    /// </summary>
+    public List<StreamScheduleEntry> GetStreamSchedule()
+    {
+        var result = new List<StreamScheduleEntry>();
+        if (_gameFlow == null) return result;
+
+        int firstUpcomingIndex = IsAwaitingStream.Value ? _currentIndex : _currentIndex + 1;
+        bool upcomingFound = false;
+        for (int i = 0; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var node = _gameFlow.GameFlowStack[i];
+            if (node.EventType != GameEvent.Battle) continue;
+            bool past = i < firstUpcomingIndex;
+            bool upcoming = !past && !upcomingFound;
+            if (upcoming) upcomingFound = true;
+            result.Add(new StreamScheduleEntry
+            {
+                Number = result.Count + 1,
+                Day = CalculateTurnNumber(i),
+                Dungeon = node.BattleDungeon,
+                IsPast = past,
+                IsUpcoming = upcoming,
+            });
+        }
+        return result;
+    }
+}
+
+/// <summary>配信の予定表の1行（GameFlowManager.GetStreamSchedule）。</summary>
+public struct StreamScheduleEntry
+{
+    /// <summary>このランで何回目の配信か（1始まり）。</summary>
+    public int Number;
+    /// <summary>配信する日（何日目）。</summary>
+    public int Day;
+    public DungeonName Dungeon;
+    /// <summary>もう配信した（決着済み）。</summary>
+    public bool IsPast;
+    /// <summary>次の配信（寄り道中は今日の配信）。</summary>
+    public bool IsUpcoming;
 }

@@ -75,6 +75,24 @@ public class TomsModel
     /// <summary>読み込んだ tomsData.json の版（SaveVersion。版を入れる前のセーブは 0）。</summary>
     public int LoadedSaveVersion { get; private set; }
 
+    // ---- 村の銀行 Lv5「勝負の融資」（1ランに1回。BankLoan） ----
+    /// <summary>このランで勝負の融資を使ったか（返し終えても true のまま）。</summary>
+    public bool BankLoanUsed { get; set; }
+    /// <summary>借りた元本（表示用）。</summary>
+    public int BankLoanPrincipal { get; set; }
+    /// <summary>まだ返していない額（元本 + 利息）。0 = 借りていない／返し終えた。</summary>
+    public int BankLoanOwed { get; set; }
+    /// <summary>返す日（配信の次の日のターン番号）。</summary>
+    public int BankLoanDueTurn { get; set; }
+
+    // ---- 村の広場 Lv5「勝負配信の宣言」（1ランに1回。StreamDeclaration） ----
+    /// <summary>このランで宣言を使ったか（配信が決着したあとも true のまま）。</summary>
+    public bool StreamDeclarationUsed { get; set; }
+    /// <summary>決着待ちの宣言（None = 宣言なし）。</summary>
+    public StreamDeclarationSide StreamDeclarationSide { get; set; }
+    /// <summary>宣言した配信の GameFlow インデックス。</summary>
+    public int StreamDeclarationFlowIndex { get; set; }
+
     public TomsModel()
     {
         // ReactivePropertyの初回作成（一度だけ）
@@ -115,6 +133,19 @@ public class TomsModel
         RunOpeningPending = true;
         PendingEventId = string.Empty;
         PendingEventIndex = 0;
+        ResetVillageLv5RunState();
+    }
+
+    /// <summary>村 Lv5 の「1ランに1回」の状態（勝負の融資・勝負配信の宣言）を新しいランの状態に戻す。</summary>
+    private void ResetVillageLv5RunState()
+    {
+        BankLoanUsed = false;
+        BankLoanPrincipal = 0;
+        BankLoanOwed = 0;
+        BankLoanDueTurn = 0;
+        StreamDeclarationUsed = false;
+        StreamDeclarationSide = StreamDeclarationSide.None;
+        StreamDeclarationFlowIndex = 0;
     }
 
     /// <summary>
@@ -132,6 +163,13 @@ public class TomsModel
             pendingEventId = PendingEventId ?? string.Empty,
             pendingEventIndex = PendingEventIndex,
             advancePrincipal = AdvancePrincipal,
+            bankLoanUsed = BankLoanUsed,
+            bankLoanPrincipal = BankLoanPrincipal,
+            bankLoanOwed = BankLoanOwed,
+            bankLoanDueTurn = BankLoanDueTurn,
+            streamDeclarationUsed = StreamDeclarationUsed,
+            streamDeclarationSide = (int)StreamDeclarationSide,
+            streamDeclarationFlowIndex = StreamDeclarationFlowIndex,
         };
         string json = JsonUtility.ToJson(data, true);
         // 一時ファイル→置き換え→.bak。失敗してもゲームは止めない（SaveFile がログを出す）
@@ -164,6 +202,15 @@ public class TomsModel
             RunOpeningPending = data.runOpeningPending;
             PendingEventId = data.pendingEventId ?? string.Empty;
             PendingEventIndex = Mathf.Max(0, data.pendingEventIndex);
+            BankLoanUsed = data.bankLoanUsed;
+            BankLoanPrincipal = Mathf.Max(0, data.bankLoanPrincipal);
+            BankLoanOwed = Mathf.Max(0, data.bankLoanOwed);
+            BankLoanDueTurn = Mathf.Max(0, data.bankLoanDueTurn);
+            StreamDeclarationUsed = data.streamDeclarationUsed;
+            StreamDeclarationSide = System.Enum.IsDefined(typeof(StreamDeclarationSide), data.streamDeclarationSide)
+                ? (StreamDeclarationSide)data.streamDeclarationSide
+                : StreamDeclarationSide.None;
+            StreamDeclarationFlowIndex = Mathf.Max(0, data.streamDeclarationFlowIndex);
         }
         else
         {
@@ -188,6 +235,7 @@ public class TomsModel
             GameMode = GameModeId.Short;
             UseAutoFlow = false;
             RunOpeningPending = false;
+            ResetVillageLv5RunState();
         }
     }
 
@@ -217,6 +265,29 @@ public class TomsModel
         if (amount <= 0) return;
         AddRevenue(amount);
         AdvancePrincipal = SaturatingAdd(AdvancePrincipal, amount);
+        SavePlayerMoney();
+    }
+
+    /// <summary>
+    /// 村の銀行 Lv5「勝負の融資」を受ける。元本を所持金に足し、返す額と返す日を記録して保存する（判定は BankLoan）。
+    /// </summary>
+    public void TakeBankLoan(int principal, int owed, int dueTurn)
+    {
+        if (principal <= 0 || BankLoanUsed) return;
+        AddRevenue(principal);
+        BankLoanUsed = true;
+        BankLoanPrincipal = principal;
+        BankLoanOwed = Mathf.Max(0, owed);
+        BankLoanDueTurn = dueTurn;
+        SavePlayerMoney();
+    }
+
+    /// <summary>勝負の融資を返す（所持金から返す額を引いて保存する。足りるかの判定と投げ売りは DebtPresenter）。</summary>
+    public void RepayBankLoan()
+    {
+        if (BankLoanOwed <= 0) return;
+        PurchaseItem(BankLoanOwed);
+        BankLoanOwed = 0;
         SavePlayerMoney();
     }
 

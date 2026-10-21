@@ -51,6 +51,8 @@ public class BattleSceneStarter : IAsyncStartable
     private bool _isRestockPopupShowing = false;
     private bool _isEndConfirmShowing = false;
     private int _battleSpending = 0; // バトル中の補充購入で使った金額
+    // 戦闘ループの例外で途中終了したか（勝負配信の宣言の回数を戻すかの判定。配信終了ボタンの途中終了とは分ける）
+    private bool _abortedByError;
     // バトル中に補充した数量（itemId → 合計数）。売却数の集計（BuildSoldItems）で使用
     private readonly Dictionary<string, int> _restockedQuantities = new();
     // 補充時の単価（itemId → 単価）。売れ残り分の返金計算で使用
@@ -221,7 +223,10 @@ public class BattleSceneStarter : IAsyncStartable
 
         // 戦闘ループの例外は敗北（防衛報酬あり）にせず途中終了として扱う
         _battleSequencer.OnBattleError
-            .Subscribe(err => _battleTcs.TrySetResult((BattleResult.Abort, err.weaponId, err.armorId)))
+            .Subscribe(err =>
+            {
+                if (_battleTcs.TrySetResult((BattleResult.Abort, err.weaponId, err.armorId))) _abortedByError = true;
+            })
             .AddTo(disposables);
 
         _battleSequencer.OnEnemyDefeated
@@ -315,7 +320,13 @@ public class BattleSceneStarter : IAsyncStartable
         int defeatReward = defeatRewardBreakdown.Total;
         // 介入: 払った総額を引き、未実行分の返金を戻す（介入なしならどちらも 0 で従来と同じ式）
         int interventionSpent = _interventions != null ? _interventions.TotalSpent : 0;
-        int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward - interventionSpent + interventionRefund;
+        // 村の広場 Lv5「勝負配信の宣言」: 当たれば配信の売上と防衛報酬 ×1.5（上乗せ分を純利益に足す）。途中終了は無効
+        var declarationSide = StreamDeclaration.ActiveFor(_tomsModel, _inputData.GameFlowIndex);
+        var declarationOutcome = StreamDeclaration.Judge(declarationSide, battleResult.result, _abortedByError);
+        int declarationBonus = declarationOutcome == StreamDeclarationOutcome.Hit ? StreamDeclaration.Bonus(rawSales, defeatReward) : 0;
+        int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward - interventionSpent + interventionRefund + declarationBonus;
+        if (declarationSide != StreamDeclarationSide.None)
+            Debug.Log($"[BattleSceneStarter] 勝負配信の宣言「{StreamDeclaration.Label(declarationSide)}」→ {declarationOutcome}（上乗せ {declarationBonus}G）");
         if (restockRefund > 0)
             Debug.Log($"[BattleSceneStarter] 補充分の売れ残りを返金: {restockRefund}G");
         _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings, defeatedMobCount, defeatedBossCount);
@@ -325,14 +336,23 @@ public class BattleSceneStarter : IAsyncStartable
                 _interventions.ViewerSuperChatCount, _interventions.SpecialMovesUsed);
         }
         _outputData.SetDefenseReward(defeatReward, _inputData.DungeonKey);
+        _outputData.SetDeclaration(declarationSide, declarationOutcome, declarationBonus);
 
         var settlement = new BattleSettlement(battleResult.result, rawSales, _battleSpending, restockRefund,
             _outputData.InterventionNetSpending, defeatReward, totalEarnings, soldItems,
-            BuildMarketImpacts(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, defeatedBossCount));
+            BuildMarketImpacts(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, defeatedBossCount))
+        {
+            DeclarationSide = declarationSide,
+            DeclarationOutcome = declarationOutcome,
+            DeclarationBonus = declarationBonus,
+        };
 
         // --- Phase 2.5: 決着の溜め（配信画面のまま。勝敗のコメント弾幕と最後の売上を見せる） ---
         if (battleResult.result != BattleResult.Abort)
             await PlayFinaleAsync(battleResult.result, settlement.IsDemonPayout, cancellation);
+        // 宣言が当たったら、続けて「宣言的中！」の帯（決着の帯と同じ作り。勇者側は金・魔王側は紫）
+        if (declarationOutcome == StreamDeclarationOutcome.Hit)
+            await PlayDeclarationHitAsync(declarationSide, cancellation);
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
@@ -422,6 +442,23 @@ public class BattleSceneStarter : IAsyncStartable
         catch (Exception e) when (e is not OperationCanceledException)
         {
             // 演出の失敗でリザルトに進めなくならないように
+            Debug.LogException(e);
+        }
+    }
+
+    private const string DeclarationHitLabel = "宣言的中！";
+
+    /// <summary>勝負配信の宣言が当たったときの帯（BattleWaveFxView.PlayBannerAsync）。演出が無ければ何もしない。</summary>
+    private async UniTask PlayDeclarationHitAsync(StreamDeclarationSide side, CancellationToken token)
+    {
+        var fx = _battleSequencer.WaveFx;
+        if (fx == null) return;
+        try
+        {
+            await fx.PlayBannerAsync(DeclarationHitLabel, side == StreamDeclarationSide.Demon, token, SkipPressed);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
             Debug.LogException(e);
         }
     }

@@ -240,6 +240,80 @@ public class ScrapbookModel
         pinned.Clear();
         archive.Clear();
         records.Clear();
+        vetted.Clear();
+    }
+
+    // --- 裏取り（酒場 Lv5。Docs/News_Spec.md §9.4） ---
+
+    /// <summary>
+    /// 裏取りで分かった記事1本の真偽。スクラップとは別に持ち、社の実測的中率には数えない
+    /// （実測は「確認・続報で答えが出た記事」だけの数字のまま。裏取りは選んだ1本なので偏る）。
+    /// 効き先（何の品に効くか）は出さない。答え合わせは確認・続報のときだけ（記事から銘柄へのリンクを作らない約束。§9.3）。
+    /// </summary>
+    [Serializable]
+    public class Vet
+    {
+        public string entryKey;
+        /// <summary>使った「配信の間」（次の配信がこのランの何回目か。GameFlowManager.GetStreamProgress の upcoming）。</summary>
+        public int window;
+        public int turn;
+        public bool hit;      // 本物か誇張（誤報でない）
+        public bool partial;  // 誇張
+    }
+
+    private readonly List<Vet> vetted = new();
+
+    public IReadOnlyList<Vet> Vetted => vetted;
+
+    public Vet FindVet(string entryKey) => vetted.Find(v => v.entryKey == entryKey);
+
+    /// <summary>その「配信の間」にもう裏取りを使ったか（配信の間に1回）。</summary>
+    public bool HasVetIn(int window) => vetted.Exists(v => v.window == window);
+
+    /// <summary>裏を取れる種類の記事か（通常の報道だけ。結果記事・訂正記事・埋め草は取らない）。</summary>
+    public static bool CanVetKind(NewsIssueEntry entry) => CanPinKind(entry);
+
+    /// <summary>まだ答えが出ていない（裏取りしていない・確認や続報で名鑑へ移っていない）報道か。</summary>
+    public bool IsVettable(NewsIssueEntry entry)
+    {
+        if (!CanVetKind(entry) || FindVet(entry.Key) != null) return false;
+        var scrap = archive.Find(s => s.entryKey == entry.Key);
+        return scrap == null;
+    }
+
+    public bool CanVet(NewsIssueEntry entry, int window) => IsVettable(entry) && !HasVetIn(window);
+
+    /// <summary>裏を取る（無料・配信の間に1回）。名鑑・実測的中率・スクラップの枠は変えない。</summary>
+    public bool VetArticle(NewsIssueEntry entry, int window, int turn)
+    {
+        if (!CanVet(entry, window)) return false;
+        vetted.Add(new Vet
+        {
+            entryKey = entry.Key,
+            window = window,
+            turn = turn,
+            hit = !entry.isFalseReport,
+            partial = IsExaggerated(entry),
+        });
+        return true;
+    }
+
+    /// <summary>裏取りの結果を ○△× の状態で（裏取りしていなければ null）。</summary>
+    public ScrapState? VetStateOf(string entryKey)
+    {
+        var v = FindVet(entryKey);
+        if (v == null) return null;
+        return !v.hit ? ScrapState.ConfirmedMiss : v.partial ? ScrapState.ConfirmedPartial : ScrapState.ConfirmedHit;
+    }
+
+    public List<Vet> VettedToPlain() => new(vetted);
+
+    public void VettedFromPlain(IEnumerable<Vet> plain)
+    {
+        vetted.Clear();
+        if (plain == null) return;
+        foreach (var v in plain)
+            if (v != null && !string.IsNullOrEmpty(v.entryKey)) vetted.Add(v);
     }
 
     // --- セーブ/ロード ---

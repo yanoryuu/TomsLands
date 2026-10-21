@@ -27,6 +27,7 @@ public static class RunSaveCleaner
         RunHistory.FileName, // リザルトの振り返り用（所持金推移・ハイライト）
         DemonPayoutHistory.FileName, // 配当通知書の回収倍率（防衛報酬の受取累計）
         AchievementStore.RunFileName, // 実績の1ラン内の途中経過（二枚舌・収集家など）
+        ArtisanCraft.FileName, // 職人組合 Lv5「細工」（配信の間に1回）
     };
 
     /// <summary>
