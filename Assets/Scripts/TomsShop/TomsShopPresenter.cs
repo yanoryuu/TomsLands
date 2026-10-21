@@ -404,7 +404,11 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         // 中身の決定（イベントの保留・返済の判定・バズ結果と朝レポートの消費）はここで同期的に行い、順序の意味は変えない。
         var steps = new List<MorningStep>();
 
-        ShowPendingEventIfExists();
+        // 配信から戻った朝は、帰還の会話が終わってから保留イベントを出す（会話の下に重ねない）。それ以外の朝は今までどおりすぐ出す
+        if (pendingEventData.HasPendingEvent && TokoTalk.IsStreamingReturnTalkActive)
+            steps.Add(new MorningStep(null, null, asyncShow: ShowPendingEventAfterReturnTalkAsync, skipFreeWait: true));
+        else
+            ShowPendingEventIfExists();
 
         // 借金返済チェック: 支払うべきサイクル数 > 支払い済みサイクル数 なら強制返済パネルを表示
         if (currentTurn / GameConst.DebtPaymentInterval > tomsShopModel.DebtCycle.Value)
@@ -500,12 +504,24 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         public readonly Func<bool> IsOpen;
         public readonly float HoldSeconds;
         public readonly Action OnClosed;
+        /// <summary>出す前の「保留イベント・会話が閉じるまで待つ」をしない（保留イベント自身を出す手のため）。</summary>
+        public readonly bool SkipFreeWait;
 
         public MorningStep(Action show, Func<bool> isOpen, float holdSeconds = 0f, Action onClosed = null,
-            Func<CancellationToken, UniTask> asyncShow = null)
+            Func<CancellationToken, UniTask> asyncShow = null, bool skipFreeWait = false)
         {
             Show = show; IsOpen = isOpen; HoldSeconds = holdSeconds; OnClosed = onClosed; AsyncShow = asyncShow;
+            SkipFreeWait = skipFreeWait;
         }
+    }
+
+    /// <summary>配信から戻った朝: 帰還の会話（と他の会話）が終わるのを待ってから保留イベントを出す。</summary>
+    private async UniTask ShowPendingEventAfterReturnTalkAsync(CancellationToken ct)
+    {
+        var player = UnityEngine.Object.FindFirstObjectByType<ScenarioPlayer>();
+        while (TokoTalk.IsStreamingReturnTalkActive || (player != null && player.IsPlaying.CurrentValue))
+            await UniTask.Yield(PlayerLoopTiming.Update, ct);
+        ShowPendingEventIfExists();
     }
 
     /// <summary>
@@ -529,7 +545,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             foreach (var step in steps)
             {
                 // 保留イベント（確認を押すまで）と会話の再生中は、次の通知を重ねない
-                await WaitUntilFreeAsync(ct);
+                if (!step.SkipFreeWait) await WaitUntilFreeAsync(ct);
                 if (step.AsyncShow != null) await step.AsyncShow(ct);
                 else step.Show?.Invoke();
                 if (step.HoldSeconds > 0f)
@@ -559,7 +575,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     {
         // ScenarioPlayer.Instance は見つからないとエラーログを出すので、ここでは直接探す
         var player = UnityEngine.Object.FindFirstObjectByType<ScenarioPlayer>();
-        while (pendingEventData.HasPendingEvent || (player != null && player.IsPlaying.CurrentValue))
+        // 配信から戻った朝は、帰還の会話（少し遅れて始まる）が予定されている間も待つ
+        while (pendingEventData.HasPendingEvent || TokoTalk.IsStreamingReturnTalkActive
+               || (player != null && player.IsPlaying.CurrentValue))
             await UniTask.Yield(PlayerLoopTiming.Update, ct);
     }
 

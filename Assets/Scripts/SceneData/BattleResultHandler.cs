@@ -206,6 +206,10 @@ public class BattleResultHandler : IStartable, IDisposable
         // 戦闘結果（在庫減少・需要/価格変動）を永続化
         _itemModel.SaveData();
 
+        // 帰還の会話を流すなら、日送り（NextTurn → 店の Entry で朝の通知が始まる）より先に予約しておく。
+        // 朝の通知（返済・納付・レリック選択など）は会話が終わるまで待つ（会話が始まる前に通知が出て重ならないように）
+        if (!aborted) TokoTalk.ReserveStreamingReturn(_metaProgress);
+
         // 戦闘結果処理後、次のターンへ進む
         int turnBefore = _gameFlowManager.CurrentTurn.Value;
         _gameFlowManager.NextTurn();
