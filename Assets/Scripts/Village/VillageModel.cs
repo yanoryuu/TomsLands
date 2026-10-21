@@ -58,7 +58,7 @@ public class VillageModel
     /// <summary>
     /// 投資可否の判定。ゲート仕様:
     /// - Lv1の建設: 領主館Lv >= requiredHallLevel（今の6施設はすべて0）
-    /// - Lv2以降: 領主館Lv >= 目標Lv-1（領主館Lv1で全施設のLv2解禁、Lv2でLv3解禁）
+    /// - Lv2以降: 領主館Lv >= 目標Lv-1（領主館LvN で他の施設を LvN+1 まで。Lv4 で Lv5 解禁）
     /// - 領主館自身はゲートなし
     /// </summary>
     public (bool ok, string reason) CanInvest(VillageFacilityData facility)

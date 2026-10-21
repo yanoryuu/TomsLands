@@ -982,13 +982,13 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"購読 {companyId}");
     }
 
-    /// <summary>占い師に占ってもらう（ProphetPresenter と同じ。1日1回 ProphetFortune.Cost）。</summary>
+    /// <summary>占い師に占ってもらう（ProphetPresenter と同じ。1日1回 ProphetFortune.CurrentCost）。</summary>
     public AutoPlayActionResult BuyFortune()
     {
         if (_fortuneTurn == CurrentTurn) return AutoPlayActionResult.Success("今日は占い済み");
-        if (TomsModel.PlayerMoney.Value < ProphetFortune.Cost) return Reject("占いの代金が足りない");
-        TomsModel.PurchaseItem(ProphetFortune.Cost);
-        FortuneSpend += ProphetFortune.Cost;
+        if (TomsModel.PlayerMoney.Value < ProphetFortune.CurrentCost) return Reject("占いの代金が足りない");
+        TomsModel.PurchaseItem(ProphetFortune.CurrentCost);
+        FortuneSpend += ProphetFortune.CurrentCost;
         _fortuneTurn = CurrentTurn;
         _fortune.Clear();
         var (ups, downs) = ProphetFortune.Read(ItemModel.RuntimeItems, NewsEffects, CurrentTurn, TomsModel.FlowSeed, TomsModel.BlacksmithLevel.Value);

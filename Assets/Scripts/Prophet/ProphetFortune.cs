@@ -9,12 +9,14 @@ using UnityEngine;
 /// ・中身は新聞の<b>本当の</b>効果（誤報は効果が無いので出ない。誇張は半分）。記事を読んで「上がる」と思った品が
 ///   占いに出なければ誤報を疑える＝新聞の裏取りになる（Docs/News_Spec.md §2 C5 の「有料観測」）
 /// ・占いは外れることがある。出した行ごとに (1 − Accuracy) の確率で、動かない品にすり替わる（シード×ターン×行で決まる。同じ日は何度見ても同じ）
-/// ・1日1回 Cost で買う。買った日はその日の中なら何度でも見られる（その日のターンを保存する）
+/// ・1日1回 CurrentCost で買う。買った日はその日の中なら何度でも見られる（その日のターンを保存する）
 /// </summary>
 public static class ProphetFortune
 {
-    /// <summary>占いの値段（ユーザー決定 2026-10-20）。</summary>
+    /// <summary>占いの通常の値段（ユーザー決定 2026-10-20）。支払いと表示は村の酒場の割引を含む <see cref="CurrentCost"/> を使う。</summary>
     public const int Cost = 15000;
+    /// <summary>今の占いの値段（村の酒場 Lv4 以上なら 10,000G。VillageEffects.ApplyProphetPrice）。</summary>
+    public static int CurrentCost => VillageEffects.Current.ApplyProphetPrice(Cost);
     /// <summary>何日先までの効果を見るか。</summary>
     public const int HorizonDays = 3;
     /// <summary>出す行の数（上がる・下がるそれぞれ）。</summary>

@@ -153,7 +153,7 @@ public class MetaProgressModel
     /// <summary>
     /// ラン終了時、そのランの儲けを村資金へ入れる（村と店の経営を繋ぐ唯一の橋・一方向）。
     /// 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え（RunProfit.Compute）。
-    /// クリア時: 持ち込み（儲けが赤字ならその分を引く）+ 完走ボーナス + max(0, 儲け) × 変換率 × 難易度倍率。
+    /// クリア時: 持ち込み（儲けが赤字ならその分を引く）+ 完走ボーナス（領主館 Lv4 で +15%）+ max(0, 儲け) × 変換率 × 難易度倍率。
     /// 破産時: 持ち込みは戻らない。そのランの最高の儲け × 変換率 × 難易度倍率 × bankruptcyConversionRate。
     /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
     /// </summary>
@@ -179,7 +179,7 @@ public class MetaProgressModel
         }
 
         long total = Mathf.Max(0, carried + Mathf.Min(0, profit))
-                     + (long)ClearBase(settings, mode)
+                     + (long)VillageEffects.Current.ApplyClearBonus(ClearBase(settings, mode))
                      + (long)Mathf.FloorToInt(Mathf.Max(0, profit) * rate);
         return (int)System.Math.Min(total, int.MaxValue);
     }

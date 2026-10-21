@@ -6,7 +6,9 @@ using System.Text;
 /// - 統合した施設（骨董品店・祠→冒険者ギルド／工房区画→職人組合／印刷所・訓練所→広場）:
 ///   統合先のレベル = max(統合先, 統合元)。統合先のレベルを上げなかった分（すでに統合先の方が高い等）は返金する
 /// - 削除した施設（倉庫・街道整備・農場）: 投資した額を返金する
-/// - 最大レベルが下がった施設（領主館 3→2）: 超えた分を返金する
+/// - 最大レベルを超えた施設: 超えた分を返金する（2026-10-21 に全施設の最大を Lv5 にしたので、旧セーブで超えるものは無い。
+///   以前は領主館の最大を2にしていたが、Lv5 化で領主館 Lv3〜5 が建つようになったため上限を5にそろえた。
+///   ここを Lv3 のまま残すと、建てた Lv4・Lv5 が読み込みのたびに Lv3 へ戻されてしまう）
 /// 返金額は旧マスターシートの建設費（配信していた値）で数える。
 /// 統合元の行は消すので、2回目以降の読み込みでは何もしない（冪等）。
 /// </summary>
@@ -25,15 +27,17 @@ public static class VillageFacilityMigration
         { "farm", null },
     };
 
-    /// <summary>統合後の各施設の最大レベル（超えた分は返金）。</summary>
+    /// <summary>統合後の各施設の最大レベル（超えた分は返金）。施設データ（Resources_moved/Village）の段数と合わせる。</summary>
+    public const int MaxFacilityLevel = 5;
+
     private static readonly Dictionary<string, int> MaxLevels = new()
     {
-        { VillageEffects.HallId, 2 },
-        { VillageEffects.GuildId, 3 },
-        { VillageEffects.TavernId, 3 },
-        { VillageEffects.BankId, 3 },
-        { VillageEffects.ArtisanId, 3 },
-        { VillageEffects.PlazaId, 3 },
+        { VillageEffects.HallId, MaxFacilityLevel },
+        { VillageEffects.GuildId, MaxFacilityLevel },
+        { VillageEffects.TavernId, MaxFacilityLevel },
+        { VillageEffects.BankId, MaxFacilityLevel },
+        { VillageEffects.ArtisanId, MaxFacilityLevel },
+        { VillageEffects.PlazaId, MaxFacilityLevel },
     };
 
     /// <summary>旧マスターシート villageFacilities の建設費（index 0 = Lv1）。</summary>

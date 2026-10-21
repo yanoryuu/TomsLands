@@ -175,12 +175,15 @@ public class PreparationPresenter : IStartable, IDisposable
         catalogDisposables.Dispose();
         catalogDisposables = new CompositeDisposable();
 
-        // スターターレリック: 呪い以外の Common。村の冒険者ギルドが建てば、ギルドで解禁済みのレアも並ぶ
+        // スターターレリック: 呪い以外の Common。村の冒険者ギルドが建てば、ギルドで解禁済みのレアも並ぶ。
+        // ギルド Lv4 からは解禁済みのエピックから StarterEpicCount 個（ランごとに選び直す）も並ぶ
         var village = VillageEffects.From(metaProgress);
-        var relicPool = (relicDefinitions ?? new List<RelicDefinition>())
+        var definitions = relicDefinitions ?? new List<RelicDefinition>();
+        var relicPool = definitions
             .Where(r => r != null && !r.isCurse &&
                         (r.rarity == RelicRarity.Common ||
                          (village.StarterRareUnlocked && r.rarity == RelicRarity.Rare && r.unlockGuildLevel <= village.RelicUnlockTier)))
+            .Concat(PickStarterEpics(definitions, village))
             .OrderBy(r => r.rarity)
             .ToList();
         relicSlots = view.PopulateCatalog(view.RelicCatalogParent, relicPool.Count);
@@ -196,6 +199,27 @@ public class PreparationPresenter : IStartable, IDisposable
                 RefreshAll();
             }).AddTo(catalogDisposables);
         }
+    }
+
+    /// <summary>
+    /// スターター候補に足すエピック（ギルド Lv4 以上）。準備画面を開き直しても同じ顔ぶれになるよう、
+    /// 今までのラン数をシードにして選ぶ（次のランでは選び直される）。
+    /// </summary>
+    private IEnumerable<RelicDefinition> PickStarterEpics(List<RelicDefinition> definitions, VillageEffects village)
+    {
+        int count = village.StarterEpicCount;
+        if (count <= 0) return Enumerable.Empty<RelicDefinition>();
+        var epics = definitions
+            .Where(r => r != null && !r.isCurse && r.rarity == RelicRarity.Epic && r.unlockGuildLevel <= village.RelicUnlockTier)
+            .OrderBy(r => r.relicId, System.StringComparer.Ordinal)
+            .ToList();
+        var rng = new System.Random(metaProgress.TotalRuns * 7919 + 17);
+        for (int i = epics.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            (epics[i], epics[j]) = (epics[j], epics[i]);
+        }
+        return epics.Take(count);
     }
 
     private void RefreshAll()

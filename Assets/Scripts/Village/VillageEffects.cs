@@ -7,6 +7,7 @@ using UnityEngine;
 /// 店シーンの読み込み時に <see cref="Refresh"/> で選択中スロットの metaData.json から作り直し、
 /// 店側の各所（新聞・取引所・鍛冶屋・マシン・配信の精算・レリック抽選）は <see cref="Current"/> を読む。
 /// 数値は GameConst.Village（配信値で調整可）。施設レベル0なら全て「効果なし」で従来と同じ挙動。
+/// 施設の最大は Lv5。数値の効果は Lv4 で頭打ちにし、Lv5（<see cref="IsMaxLevel"/>）は施設ごとの「特殊な効果」だけが付く。
 /// </summary>
 public sealed class VillageEffects
 {
@@ -17,6 +18,7 @@ public sealed class VillageEffects
     public const string ArtisanId = "artisan";
     public const string PlazaId = "plaza";
 
+    public int HallLevel { get; }
     public int GuildLevel { get; }
     public int TavernLevel { get; }
     public int BankLevel { get; }
@@ -29,10 +31,11 @@ public sealed class VillageEffects
     public static VillageEffects Current => _current ??= Refresh();
 
     /// <summary>効果なし（施設がすべてレベル0）。</summary>
-    public static readonly VillageEffects None = new(0, 0, 0, 0, 0);
+    public static readonly VillageEffects None = new(0, 0, 0, 0, 0, 0);
 
-    private VillageEffects(int guild, int tavern, int bank, int artisan, int plaza)
+    private VillageEffects(int hall, int guild, int tavern, int bank, int artisan, int plaza)
     {
+        HallLevel = Mathf.Max(0, hall);
         GuildLevel = Mathf.Max(0, guild);
         TavernLevel = Mathf.Max(0, tavern);
         BankLevel = Mathf.Max(0, bank);
@@ -44,6 +47,7 @@ public sealed class VillageEffects
         meta == null
             ? None
             : new VillageEffects(
+                meta.GetFacilityLevel(HallId),
                 meta.GetFacilityLevel(GuildId),
                 meta.GetFacilityLevel(TavernId),
                 meta.GetFacilityLevel(BankId),
@@ -56,7 +60,43 @@ public sealed class VillageEffects
     /// <summary>テスト・自動プレイ用に効果を差し替える（null で次回読み直し）。</summary>
     public static void Override(VillageEffects effects) => _current = effects;
 
+    /// <summary>テスト・自動プレイ用: 施設レベルを直接指定して作る（<see cref="Override"/> と組み合わせる）。</summary>
+    public static VillageEffects ForLevels(int hall, int guild, int tavern, int bank, int artisan, int plaza) =>
+        new(hall, guild, tavern, bank, artisan, plaza);
+
     private static VillageSettingsData Settings => GameConst.Village;
+
+    // ───────── 施設レベル・特殊な効果（Lv5） ─────────
+
+    /// <summary>施設のレベル（未知の施設IDは0）。</summary>
+    public int GetLevel(string facilityId) => facilityId switch
+    {
+        HallId => HallLevel,
+        GuildId => GuildLevel,
+        TavernId => TavernLevel,
+        BankId => BankLevel,
+        ArtisanId => ArtisanLevel,
+        PlazaId => PlazaLevel,
+        _ => 0,
+    };
+
+    /// <summary>「特殊な効果」が付く施設レベル（GameConst.Village.specialEffectLevel。施設の最大レベル = 5）。</summary>
+    public static int SpecialEffectLevel => Mathf.Max(1, Settings.specialEffectLevel);
+
+    /// <summary>
+    /// 施設が最大レベル（Lv5）で、特殊な効果が有効か。Lv5 の特殊な効果はすべてここを入口にして判定する
+    /// （領主館=配信の予定表／ギルド=呪いのレリックが報酬に出る／酒場=裏取り／銀行=勝負の融資／職人組合=細工／広場=勝負配信の宣言）。
+    /// </summary>
+    public bool IsMaxLevel(string facilityId) => GetLevel(facilityId) >= SpecialEffectLevel;
+
+    // ───────── 領主館 ─────────
+
+    /// <summary>クリア時の完走ボーナスへの上乗せ率（0.15 = +15%）。</summary>
+    public float ClearBonusRate => Mathf.Max(0f, At(Settings.hallClearBonusRates, HallLevel));
+
+    /// <summary>完走ボーナスに領主館の上乗せを足した額。</summary>
+    public int ApplyClearBonus(int baseFunds) =>
+        baseFunds <= 0 ? baseFunds : Mathf.RoundToInt(baseFunds * (1f + ClearBonusRate));
 
     // ───────── 冒険者ギルド ─────────
 
@@ -69,14 +109,19 @@ public sealed class VillageEffects
     public int RelicChoiceCount(int baseCount) =>
         baseCount + (GuildLevel >= Settings.guildExtraChoiceLevel ? 1 : 0);
 
-    public int ApplyDeclineGold(int baseGold) =>
-        GuildLevel >= Settings.guildDeclineBonusLevel
-            ? Mathf.RoundToInt(baseGold * Settings.guildDeclineGoldMultiplier)
-            : baseGold;
+    public int ApplyDeclineGold(int baseGold)
+    {
+        float mult = At(Settings.guildDeclineGoldMultipliers, GuildLevel);
+        return mult > 0f ? Mathf.RoundToInt(baseGold * mult) : baseGold;
+    }
+
+    /// <summary>スターターレリックの候補に足すエピックの数。</summary>
+    public int StarterEpicCount => Mathf.Max(0, At(Settings.guildStarterEpicCounts, GuildLevel));
 
     // ───────── 酒場（情報局） ─────────
 
-    public bool StartInfoBrokerLv2 => TavernLevel >= Settings.tavernInfoBrokerLevel;
+    /// <summary>ラン開始時の情報屋のレベル（0 = 変えない）。</summary>
+    public int StartInfoBrokerLevel => Mathf.Max(0, At(Settings.tavernStartInfoBrokerLevels, TavernLevel));
 
     public float NewspaperDiscount => Clamp01(At(Settings.tavernNewspaperDiscounts, TavernLevel));
 
@@ -87,9 +132,17 @@ public sealed class VillageEffects
     public float ApplyFundFee(float feeRate) =>
         Mathf.Max(0f, feeRate - At(Settings.tavernFundFeeReductions, TavernLevel));
 
+    /// <summary>占い師の値段（酒場の値段が設定されていて、通常より安いときだけ下げる）。</summary>
+    public int ApplyProphetPrice(int basePrice)
+    {
+        int price = At(Settings.tavernProphetPrices, TavernLevel);
+        return price > 0 && price < basePrice ? price : basePrice;
+    }
+
     // ───────── 職人組合 ─────────
 
-    public bool StartBlacksmithLv2 => ArtisanLevel >= Settings.artisanBlacksmithLevel;
+    /// <summary>ラン開始時の鍛冶屋のレベル（0 = 変えない）。</summary>
+    public int StartBlacksmithLevel => Mathf.Max(0, At(Settings.artisanStartBlacksmithLevels, ArtisanLevel));
 
     public float CostDiscount => Clamp01(At(Settings.artisanCostDiscounts, ArtisanLevel));
 

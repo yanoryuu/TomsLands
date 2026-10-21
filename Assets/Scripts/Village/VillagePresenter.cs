@@ -209,12 +209,26 @@ public class VillagePresenter : IStartable, IDisposable
         if (facility == null) return;
 
         int level = model.GetLevel(facility.facilityId);
-        string current = level > 0 ? facility.GetLevel(level)?.effectText : null;
-        string next = level < facility.MaxLevel ? facility.GetLevel(level + 1)?.effectText : null;
+        int special = VillageEffects.SpecialEffectLevel;
+        string current, next;
+        bool nextIsSpecial;
+        if (level >= facility.MaxLevel && level >= special && level >= 2)
+        {
+            // Lv5（最大）: 数値の効果は Lv4 のまま続くので「現在」に Lv4 を、金の枠に Lv5 の特殊な効果を出す
+            current = facility.GetLevel(level - 1)?.effectText;
+            next = facility.GetLevel(level)?.effectText;
+            nextIsSpecial = true;
+        }
+        else
+        {
+            current = level > 0 ? facility.GetLevel(level)?.effectText : null;
+            next = level < facility.MaxLevel ? facility.GetLevel(level + 1)?.effectText : null;
+            nextIsSpecial = level < facility.MaxLevel && level + 1 >= special;
+        }
         int cost = model.GetNextCost(facility);
         var (ok, reason) = model.CanInvest(facility);
 
-        view.ShowInvestPanel(facility, level, current, next, cost, ok, reason);
+        view.ShowInvestPanel(facility, level, current, next, cost, ok, reason, nextIsSpecial);
     }
 
     private void HandleInvest()

@@ -71,7 +71,7 @@ MonoBehaviour:
       declineGoldRare: 1200
       declineGoldEpic: 2500
     preparation:
-      bankCarryLimits: 50c30000a0860100400d0300801a0600
+      bankCarryLimits: 50c30000a0860100400d0300801a060060ae0a00
       baseCarrySlots: 2
       borrowInterestRate: 0.5
       creditLineAmounts: 000000008813000010270000204e0000
@@ -98,35 +98,58 @@ MonoBehaviour:
       rankBaseProfits: 60ea0000d0fb0100605b0300
       rankSRatio: 2
       rankBRatio: 0.4
-      guildDeclineBonusLevel: 2
-      guildDeclineGoldMultiplier: 1.5
+      specialEffectLevel: 5
+      hallClearBonusRates:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0.15
+      - 0.15
+      guildDeclineGoldMultipliers:
+      - 1
+      - 1
+      - 1.5
+      - 1.5
+      - 2
+      - 2
       guildExtraChoiceLevel: 3
       guildStarterRareLevel: 1
-      tavernInfoBrokerLevel: 1
+      guildStarterEpicCounts: 000000000000000000000000000000000200000002000000
+      tavernStartInfoBrokerLevels: 000000000200000002000000020000000300000003000000
       tavernNewspaperDiscounts:
       - 0
       - 0
       - 0.25
       - 0.5
+      - 0.65
+      - 0.65
       tavernFundFeeReductions:
       - 0
       - 0
       - 0
       - 0.01
-      artisanBlacksmithLevel: 1
+      - 0.02
+      - 0.02
+      tavernProphetPrices: 000000000000000000000000000000001027000010270000
+      artisanStartBlacksmithLevels: 000000000200000002000000020000000300000003000000
       artisanCostDiscounts:
       - 0
       - 0
       - 0.15
       - 0.15
-      artisanMachineSlotAdds: 00000000000000000000000001000000
-      plazaStartFollowers: 00000000f4010000f4010000e8030000
-      plazaStartAttention: 000000000a0000000a00000014000000
+      - 0.25
+      - 0.25
+      artisanMachineSlotAdds: 000000000000000000000000010000000200000002000000
+      plazaStartFollowers: 00000000f4010000f4010000e8030000d0070000d0070000
+      plazaStartAttention: 000000000a0000000a000000140000002800000028000000
       plazaStreamSalesBonuses:
       - 0
       - 0
       - 0.05
       - 0.1
+      - 0.15
+      - 0.15
     battleTempo:
       speedMultiplier: 1
       logSeconds: 0.4

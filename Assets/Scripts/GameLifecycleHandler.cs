@@ -269,15 +269,17 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private void ApplyVillageStartBonuses()
     {
         var village = VillageEffects.Current;
-        if (village.StartInfoBrokerLv2 && _tomsModel.InfoBrokerLevel.Value < 2)
+        int infoBroker = Mathf.Min(village.StartInfoBrokerLevel, GameConst.MaxInfoBrokerLevel);
+        if (infoBroker > _tomsModel.InfoBrokerLevel.Value)
         {
-            _tomsModel.InfoBrokerLevel.Value = 2;
-            Debug.Log("[Village] 酒場: 情報屋 Lv2 で開始");
+            _tomsModel.InfoBrokerLevel.Value = infoBroker;
+            Debug.Log($"[Village] 酒場: 情報屋 Lv{infoBroker} で開始");
         }
-        if (village.StartBlacksmithLv2 && _tomsModel.BlacksmithLevel.Value < 2)
+        int blacksmith = Mathf.Min(village.StartBlacksmithLevel, GameConst.MaxBlackSmithLevel);
+        if (blacksmith > _tomsModel.BlacksmithLevel.Value)
         {
-            _tomsModel.BlacksmithLevel.Value = 2;
-            Debug.Log("[Village] 職人組合: 鍛冶屋 Lv2 で開始");
+            _tomsModel.BlacksmithLevel.Value = blacksmith;
+            Debug.Log($"[Village] 職人組合: 鍛冶屋 Lv{blacksmith} で開始");
         }
         if (village.StartFollowers > 0 || village.StartAttention > 0)
         {

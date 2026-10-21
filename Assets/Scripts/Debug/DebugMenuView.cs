@@ -302,14 +302,14 @@ public partial class DebugMenuView : MonoBehaviour
 
         // 村施設レベル（メタ進行）
         GUILayout.Space(6);
-        GUILayout.Label("■ 村施設Lv（0〜3・メタ進行）", _headerStyle);
+        GUILayout.Label($"■ 村施設Lv（0〜{VillageFacilityMigration.MaxFacilityLevel}・メタ進行）", _headerStyle);
         foreach (var (id, label) in Facilities)
         {
             int lv = Meta.GetFacilityLevel(id);
             GUILayout.BeginHorizontal();
             GUILayout.Label($"{label}: Lv{lv}", GUILayout.Width(160));
             if (GUILayout.Button("-1")) { Meta.SetFacilityLevel(id, Mathf.Max(0, lv - 1)); Meta.SaveData(); }
-            if (GUILayout.Button("+1")) { Meta.SetFacilityLevel(id, Mathf.Min(3, lv + 1)); Meta.SaveData(); }
+            if (GUILayout.Button("+1")) { Meta.SetFacilityLevel(id, Mathf.Min(VillageFacilityMigration.MaxFacilityLevel, lv + 1)); Meta.SaveData(); }
             GUILayout.EndHorizontal();
         }
         GUILayout.Label("※村シーンの見た目はシーン再入で反映");
