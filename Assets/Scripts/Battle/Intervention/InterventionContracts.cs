@@ -41,6 +41,8 @@ public enum SuperChatColor
     Orange,
     Magenta,
     Red,
+    /// <summary>魔王軍スパ（視聴者のみ）。勇者に罠を仕掛ける。色の並び（強さ順）の外なので末尾に置く</summary>
+    Purple,
 }
 
 /// <summary>介入ボタン1つの表示状態。</summary>
@@ -131,6 +133,9 @@ public interface IInterventionCardView
 
     /// <summary>プレイヤーが押していない介入が発動したことを知らせる（視聴者の赤スパで必殺技が自動で出た等）。</summary>
     void PlayAutoTrigger(HeroInterventionType type);
+
+    /// <summary>プレイヤーが押していないダンジョン側の介入が発動したことを知らせる（視聴者の魔王軍スパで罠が出た等）。</summary>
+    void PlayAutoTrigger(DungeonInterventionType type);
 }
 
 /// <summary>赤スパ必殺技のカットイン（勇者立ち絵＋赤帯）。</summary>

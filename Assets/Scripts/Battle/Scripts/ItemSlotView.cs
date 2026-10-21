@@ -17,6 +17,17 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     [SerializeField] private Image arrowImage; // 売り場ホバー時に動かす矢印
     [SerializeField] private TMP_Text priceTargetText; // 在庫ホバー時に表示する下四角のTMP
 
+    [Header("配信価格（常に表示。未設定なら在庫数の文字を複製して作る）")]
+    [Tooltip("いまの配信価格と、配信開始時からの上げ下げ（↑橙 / ↓青灰）。店の相場とは別の値段")]
+    [SerializeField] private TMP_Text livePriceText;
+    [SerializeField] private Vector2 livePriceOffset = new(0f, 50f);
+    [SerializeField] private float livePriceFontSize = 30f;
+
+    private const string PriceUpColor = "#FFA640";   // ui-rules の状態色（需要70%以上のオレンジ）に寄せる
+    private const string PriceDownColor = "#A9BCD0"; // 同（需要40%未満の青灰）
+    private string _shownPriceItemId;
+    private int _shownPrice = -1;
+
     // ドラッグ＆ドロップを全体に通知
     public static event Action<ItemSlotView, ItemSlotView> OnItemDropped;
 
@@ -97,9 +108,62 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             if (backgroundImage != null) backgroundImage.enabled = false;
             if (stockText != null) stockText.gameObject.SetActive(false);
         }
+        UpdateLivePrice(item);
 
         if (canvasGroup != null)
             canvasGroup.alpha = 1.0f;
+    }
+
+    /// <summary>
+    /// 配信価格を常に出す（SUMMARY E-5）。配信開始時（BattlePriceHistory の先頭）より上なら ↑、下なら ↓。
+    /// 同じ品の値段が変わったフレームは数字を跳ねさせる。
+    /// </summary>
+    private void UpdateLivePrice(RuntimeItemData item)
+    {
+        var label = EnsureLivePriceText();
+        if (label == null) return;
+        if (item == null)
+        {
+            label.gameObject.SetActive(false);
+            _shownPriceItemId = null;
+            _shownPrice = -1;
+            return;
+        }
+
+        int price = item.CurrentPrice.Value;
+        var history = item.BattlePriceHistory;
+        int start = history != null && history.Count > 0 ? history[0] : price;
+        string arrow = price > start ? $"<color={PriceUpColor}>↑</color>"
+                     : price < start ? $"<color={PriceDownColor}>↓</color>"
+                     : string.Empty;
+        label.text = $"{price:N0}{arrow}";
+        label.gameObject.SetActive(true);
+
+        bool changed = _shownPriceItemId == item.ItemId && _shownPrice >= 0 && _shownPrice != price;
+        _shownPriceItemId = item.ItemId;
+        _shownPrice = price;
+        if (changed) UIFx.Pop(label.transform, price > start ? 1.3f : 0.8f, 0.22f);
+    }
+
+    private TMP_Text EnsureLivePriceText()
+    {
+        if (livePriceText != null) return livePriceText;
+        if (stockText == null) return null;
+        // 在庫数の文字（フォント・縁取り）をそのまま複製して上側に置く
+        livePriceText = Instantiate(stockText, transform);
+        livePriceText.name = "LivePrice";
+        livePriceText.raycastTarget = false;
+        livePriceText.enableAutoSizing = false;
+        livePriceText.fontSize = livePriceFontSize;
+        livePriceText.alignment = TextAlignmentOptions.Center;
+        livePriceText.textWrappingMode = TextWrappingModes.NoWrap;
+        livePriceText.overflowMode = TextOverflowModes.Overflow;
+        var rt = livePriceText.rectTransform;
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
+        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(140f, 30f);
+        rt.anchoredPosition = livePriceOffset;
+        return livePriceText;
     }
 
     public void UpdateStock(int stock)

@@ -102,16 +102,67 @@ public class ItemModel
         }
     }
 
-    public void BattleWinBonus(string itemId, int bonusAmountDivision = 1)
+    // ========================================
+    // 勇者側の配当（配信で勇者が勝ったときの装備の値上がり）
+    // ========================================
+
+    /// <summary>
+    /// 勇者勝利で装備（武器・防具）の相場に掛ける倍率。以前は ×5 で、同じ帰還処理の日送りで
+    /// 必ず基準価格×3（shopPriceCeilingRate）に張り付いていた（安く仕込んでも高く仕込んでも同じ値になる）。
+    /// ×1.8 / ボス撃破 ×2.2 にして、安く仕込んだ人ほど上がり幅が大きく残るようにする（2026-10 決定 Q4）。
+    /// </summary>
+    public const float HeroWinPriceMultiplier = 1.8f;
+    public const float HeroWinBossPriceMultiplier = 2.2f;
+    /// <summary>勇者敗北で装備の価格・需要を割る数（半値）。</summary>
+    public const int HeroDefeatPriceDivisor = 2;
+
+    /// <summary>勇者勝利時の装備の倍率（ボスを倒していれば ×2.2、それ以外 ×1.8）。</summary>
+    public static float HeroWinMultiplier(int defeatedBossCount)
+        => defeatedBossCount > 0 ? HeroWinBossPriceMultiplier : HeroWinPriceMultiplier;
+
+    /// <summary>
+    /// 帰還後に店で付く装備の値段の見込み（勝敗の倍率を掛けたあと、日送りの ストップ高/安 で丸めた値）。
+    /// 実際の値は日送りの相場の揺れ（±数%）が乗るので、配信リザルトの「相場への影響」の表示用。
+    /// multiplier &lt; 1 は敗北（割る）を表す。
+    /// </summary>
+    public static int PreviewPriceAfterBattle(int shopPrice, int basePrice, float multiplier, ShopEconomySettings settings)
+    {
+        float floorRate = settings != null ? settings.shopPriceFloorRate : 0.3f;
+        float ceilingRate = settings != null ? settings.shopPriceCeilingRate : 3f;
+        int raw = multiplier >= 1f
+            ? Mathf.RoundToInt(shopPrice * multiplier)
+            : shopPrice / Mathf.Max(1, Mathf.RoundToInt(1f / Mathf.Max(0.01f, multiplier)));
+        if (basePrice <= 0) return Mathf.Max(1, raw);
+        int floor = Mathf.Max(1, Mathf.RoundToInt(basePrice * floorRate));
+        int ceiling = Mathf.Max(floor, Mathf.RoundToInt(basePrice * ceilingRate));
+        return Mathf.Clamp(raw, floor, ceiling);
+    }
+
+    /// <summary>
+    /// 配信から帰った日の装備の値段を、配信リザルトで見せた見込み（<see cref="PreviewPriceAfterBattle"/>）に揃える。
+    /// 日送りの相場の揺れを乗せないため、日送りのあとに呼ぶ。replaceLatestHistory=true なら価格履歴の最新点（その日の値）も置き換える。
+    /// </summary>
+    public void SetPriceAfterBattle(string itemId, int price, bool replaceLatestHistory)
+    {
+        var runtime = GetRuntimeItem(itemId);
+        if (runtime == null) return;
+        runtime.CurrentPrice.Value = Mathf.Max(1, price);
+        runtime.UpdatePopularity();
+        var history = runtime.ShopPriceHistory;
+        if (replaceLatestHistory && history != null && history.Count > 0)
+            history[history.Count - 1] = runtime.CurrentPrice.Value;
+    }
+
+    public void BattleWinBonus(string itemId, float multiplier)
     {
         var runtime = GetRuntimeItem(itemId);
         if (runtime != null)
         {
-            runtime.CurrentPrice.Value *= bonusAmountDivision;
+            runtime.CurrentPrice.Value = Mathf.Max(1, Mathf.RoundToInt(runtime.CurrentPrice.Value * multiplier));
             // 需要率は掛け算後に 0～1 の範囲へクランプ
-            float newDemand = Mathf.Clamp01(runtime.Demand.Value * bonusAmountDivision);
+            float newDemand = Mathf.Clamp01(runtime.Demand.Value * multiplier);
             runtime.Demand.Value = newDemand;
-            Debug.Log($"Battle win bonus applied to {itemId}: price/demand x{bonusAmountDivision}.");
+            Debug.Log($"Battle win bonus applied to {itemId}: price/demand x{multiplier:0.0#}.");
         }
         else
         {

@@ -71,6 +71,17 @@ public class StreamingInteractionSettings : ScriptableObject
     [Header("ダンジョン側の実行時の配信熱")]
     public float dungeonInterventionHeat = 5f;
 
+    [Header("ダンジョン側の値段を防衛報酬に合わせる（0 のときは上の固定額）")]
+    [Tooltip("値段 = そのダンジョンLvの防衛報酬（rewardGold）× この割合。Lv1 の防衛報酬 15,000G に固定額 10,000〜100,000G だと、" +
+             "介入で勇者を負かしても赤字になり魔王側に張る意味が無かった（SUMMARY G-6）")]
+    [Range(0f, 3f)] public float trapRewardRatio = 0.3f;
+    [Range(0f, 3f)] public float curseRewardRatio = 0.5f;
+    [Range(0f, 3f)] public float reinforceRewardRatio = 0.8f;
+    [Range(0f, 3f)] public float bossBuffRewardRatio = 1.2f;
+    [Tooltip("防衛報酬に合わせた値段の丸め単位（G）と下限")]
+    [Min(1)] public int dungeonPriceStep = 500;
+    [Min(0)] public int dungeonPriceMin = 1000;
+
     // ───────── 共通 ─────────
     [Header("共通")]
     [Tooltip("指示を出した後のクールダウン（秒。両面共通）。一時停止中は進まない")]
@@ -120,6 +131,15 @@ public class StreamingInteractionSettings : ScriptableObject
     [Tooltip("視聴者の赤スパで必殺技が上限に達していたときの熱UP")]
     public float redOverLimitHeat = 8f;
 
+    [Header("視聴者スパチャ: 魔王軍スパ（紫）。偶然が勇者側（赤スパの必殺技）だけに働かないように、魔王側にも働く偶然を置く")]
+    [Tooltip("紫の重み（赤と同じく同接で伸びる）。0 なら出ない")]
+    [Min(0f)] public float demonColorWeight = 2f;
+    [Tooltip("視聴者の魔王軍スパで勇者に罠（次の被弾に追加ダメージ）を仕掛ける上限（1配信）")]
+    [Min(0)] public int viewerDemonTrapMaxPerStream = 2;
+    [Tooltip("魔王軍スパの表示金額の範囲（G。精算には入らない）")]
+    public Vector2Int demonAmountRange = new Vector2Int(10000, 50000);
+    public string[] demonMessages = { "魔王軍ばんざい", "勇者負けろ", "罠いけ", "{hero}ざまぁ", "魔王さまに献上" };
+
     [Header("視聴者スパチャ: 添えるコメント（空文字なら金額だけ）")]
     public string[] lowMessages = { "", "", "わこつ", "応援してます", "がんばれー", "初見です", "{hero}かわいい" };
     public string[] midMessages = { "", "ナイスファイト", "{hero}いけー！", "店長いつもありがとう", "その装備ほしい", "ボス倒して！" };
@@ -138,6 +158,27 @@ public class StreamingInteractionSettings : ScriptableObject
         _ => 0,
     };
 
+    /// <summary>
+    /// ダンジョン側の値段。defenseReward（そのダンジョンLvの防衛報酬の基本額）が 0 より大きく、割合が設定されていれば
+    /// 報酬に比例した値段（dungeonPriceStep で丸め、dungeonPriceMin 以上）。それ以外は固定額。
+    /// </summary>
+    public int GetPrice(DungeonInterventionType type, int defenseReward)
+    {
+        float ratio = type switch
+        {
+            DungeonInterventionType.Trap => trapRewardRatio,
+            DungeonInterventionType.Curse => curseRewardRatio,
+            DungeonInterventionType.Reinforce => reinforceRewardRatio,
+            DungeonInterventionType.BossBuff => bossBuffRewardRatio,
+            _ => 0f,
+        };
+        if (defenseReward <= 0 || ratio <= 0f) return GetPrice(type);
+        int step = Mathf.Max(1, dungeonPriceStep);
+        int price = Mathf.RoundToInt(defenseReward * ratio / step) * step;
+        return Mathf.Max(dungeonPriceMin, price);
+    }
+
+    /// <summary>固定額（防衛報酬が分からないとき・オートプレイの見積もり用）。</summary>
     public int GetPrice(DungeonInterventionType type) => type switch
     {
         DungeonInterventionType.Trap => trapPrice,

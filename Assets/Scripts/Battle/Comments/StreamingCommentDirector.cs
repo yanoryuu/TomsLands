@@ -40,6 +40,12 @@ public class StreamingCommentDirector : MonoBehaviour
     private bool _pinchFired;
     private int _lastTier = -1;
     private string _heroName = "勇者";
+    private StreamingBetStance _stance = StreamingBetStance.None;
+
+    /// <summary>
+    /// この配信の賭けの立場（BattleSceneStarter が配信開始前に入れる）。配信開始と決着のコメントが変わる。
+    /// </summary>
+    public void SetBetStance(StreamingBetStance stance) => _stance = stance;
 
     public StreamingCommentFeed Feed => _feed;
     public StreamingAudienceModel Audience => _audience;
@@ -78,6 +84,7 @@ public class StreamingCommentDirector : MonoBehaviour
         if (salesController != null)
         {
             salesController.OnSaleOccurred += OnSale;
+            salesController.OnPriceSpike += OnPriceSpike;
             salesController.OnItemStockDepleted
                 .Subscribe(item => _feed.Push(StreamingCommentTrigger.StockDepleted, Vars("item", item?.ItemName)))
                 .AddTo(_disposables);
@@ -86,7 +93,11 @@ public class StreamingCommentDirector : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (salesController != null) salesController.OnSaleOccurred -= OnSale;
+        if (salesController != null)
+        {
+            salesController.OnSaleOccurred -= OnSale;
+            salesController.OnPriceSpike -= OnPriceSpike;
+        }
         _disposables.Dispose();
         _feed?.Dispose();
         _audience?.Dispose();
@@ -156,12 +167,26 @@ public class StreamingCommentDirector : MonoBehaviour
 
         _feed.Start();
         _feed.Push(StreamingCommentTrigger.BattleStart);
+        if (_stance == StreamingBetStance.Hero) _feed.Push(StreamingCommentTrigger.BetOnHero);
+        else if (_stance == StreamingBetStance.Demon) _feed.Push(StreamingCommentTrigger.BetOnDemon);
     }
 
     private void EndLive(StreamingCommentTrigger? finalTrigger)
     {
         if (!_live) return;
-        if (finalTrigger.HasValue) _feed.Push(finalTrigger.Value, Vars("hero", _heroName));
+        if (finalTrigger.HasValue)
+        {
+            _feed.Push(finalTrigger.Value, Vars("hero", _heroName));
+            // 賭けの立場と結果の組み合わせ（「店長の顔ｗｗｗ」など）。配信が決着した＝賭けが決着した、を視聴者が言う
+            var stanceTrigger = (finalTrigger.Value, _stance) switch
+            {
+                (StreamingCommentTrigger.Victory, StreamingBetStance.Demon) => StreamingCommentTrigger.VictoryBetDemon,
+                (StreamingCommentTrigger.Defeat, StreamingBetStance.Demon) => StreamingCommentTrigger.DefeatBetDemon,
+                (StreamingCommentTrigger.Defeat, StreamingBetStance.Hero) => StreamingCommentTrigger.DefeatBetHero,
+                _ => (StreamingCommentTrigger?)null,
+            };
+            if (stanceTrigger.HasValue) _feed.Push(stanceTrigger.Value, Vars("hero", _heroName));
+        }
         _feed.Stop();
         _live = false;
         _ended = true;
@@ -234,6 +259,13 @@ public class StreamingCommentDirector : MonoBehaviour
     {
         if (!_live || item == null) return;
         _feed.Push(StreamingCommentTrigger.ItemSold, Vars("item", item.ItemName, "price", item.CurrentPrice.Value.ToString("N0")));
+    }
+
+    private void OnPriceSpike(RuntimeItemData item, int percent)
+    {
+        if (!_live || item == null) return;
+        _feed.Push(StreamingCommentTrigger.PriceSpike,
+            Vars("item", item.ItemName, "price", item.CurrentPrice.Value.ToString("N0"), "pct", percent.ToString()));
     }
 
     private static Dictionary<string, string> Vars(params string[] kv)

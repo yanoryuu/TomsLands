@@ -45,6 +45,8 @@ public sealed class InterventionPresenter : IDisposable
     private string _lastEnemyKey;
     private bool _live;
     private bool _stopped;
+    private int _defenseReward;
+    private int _viewerTrapsUsed;
 
     public InterventionCommandQueue Queue { get; }
 
@@ -58,6 +60,8 @@ public sealed class InterventionPresenter : IDisposable
     public int SpecialMovesUsed { get; private set; }
     public int BossBuffUsed { get; private set; }
     public bool IsLive => _live;
+    /// <summary>配信コメントの配線役（未配線なら null）。決着時の「賭けの立場」コメントに使う。</summary>
+    public StreamingCommentDirector CommentDirector => _refs.CommentDirector;
 
     public InterventionPresenter(
         StreamingInteractionSettings settings,
@@ -91,13 +95,15 @@ public sealed class InterventionPresenter : IDisposable
     /// <summary>
     /// 配信開始時（StartBattle の直前）に呼ぶ。キューを BattleSequencer に渡し、カード・視聴者スパチャを動かす。
     /// restockSpending は補充費用（BattleSceneStarter._battleSpending）の取得関数。
+    /// defenseReward はこのダンジョンLvの防衛報酬の基本額。ダンジョン側の値段をこれに合わせる（0 なら固定額）。
     /// </summary>
-    public void Start(StreamingSalesController sales, Func<int> restockSpending)
+    public void Start(StreamingSalesController sales, Func<int> restockSpending, int defenseReward = 0)
     {
         if (_live || _stopped) return;
         _live = true;
         _sales = sales;
         _restockSpending = restockSpending;
+        _defenseReward = Mathf.Max(0, defenseReward);
 
         Queue.CutIn = _refs.CutIn;
         if (_sequencer != null) _sequencer.SetInterventionQueue(Queue);
@@ -186,7 +192,7 @@ public sealed class InterventionPresenter : IDisposable
 
     public InterventionButtonState GetState(DungeonInterventionType type)
     {
-        int price = _settings.GetPrice(type);
+        int price = _settings.GetPrice(type, _defenseReward);
         int uses = type == DungeonInterventionType.BossBuff ? Mathf.Max(0, _settings.bossBuffMaxPerStream - BossBuffUsed) : -1;
         return new InterventionButtonState(price, price <= AvailableBalance, uses);
     }
@@ -235,7 +241,8 @@ public sealed class InterventionPresenter : IDisposable
                 if (!_live) continue;
                 if (IsPaused()) continue; // 一時停止中（補充ポップアップ含む）はクールダウンも止める
 
-                float dt = Time.deltaTime;
+                // クールダウンも ×2（BattleSpeed）で縮める（戦闘だけ速くなって介入できる回数が減らないように）
+                float dt = Time.deltaTime * BattleSpeed.Multiplier;
                 if (_cooldown > 0f) _cooldown = Mathf.Max(0f, _cooldown - dt);
                 float cd01 = _settings.cooldownSeconds > 0f ? _cooldown / _settings.cooldownSeconds : 0f;
                 if (View != null && !Mathf.Approximately(cd01, _lastCooldown01))
@@ -404,7 +411,20 @@ public sealed class InterventionPresenter : IDisposable
         if (_sales != null) _sales.AddHeat(_settings.heatPerTier * tier);
         Audience?.Spike(_settings.viewerSpikePerTier * tier);
 
-        if (info.Color == SuperChatColor.Red)
+        if (info.Color == SuperChatColor.Purple)
+        {
+            // 視聴者の魔王軍スパは勇者に罠を仕掛ける（赤スパの必殺技と対になる偶然。上限内・無料）
+            Feed?.Push(StreamingCommentTrigger.DemonSuperChat, Vars());
+            if (_viewerTrapsUsed < _settings.viewerDemonTrapMaxPerStream && !Queue.IsClosed && !Queue.Effects.TrapArmed)
+            {
+                Queue.Effects.TrapArmed = true;
+                _viewerTrapsUsed++;
+                Feed?.Push(StreamingCommentTrigger.DungeonTrap, Vars());
+                View?.PlayAutoTrigger(DungeonInterventionType.Trap);
+            }
+            RefreshButtons();
+        }
+        else if (info.Color == SuperChatColor.Red)
         {
             Feed?.Push(StreamingCommentTrigger.RedSuperChat, Vars());
             // 視聴者の赤スパは勇者の必殺技を自動で出す（上限内）。上限後は大弾幕＋熱のみ
@@ -440,6 +460,7 @@ public sealed class InterventionPresenter : IDisposable
         SuperChatColor.Yellow => "yellow",
         SuperChatColor.Orange => "orange",
         SuperChatColor.Magenta => "pink",
+        SuperChatColor.Purple => "purple",
         _ => "red",
     });
 

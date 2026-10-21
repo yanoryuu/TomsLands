@@ -68,8 +68,9 @@ public class StreamingSalesModel
             try
             {
                 // 1. 次の販売までの待ち時間を計算（ポーズ中は時間を進めない）
+                // ×2（BattleSpeed）のときは戦闘と同じ比で間隔を縮め、1配信あたりの販売回数を据え置く
                 float delay = _baseSalesInterval + UnityEngine.Random.Range(-_intervalRandomness, _intervalRandomness);
-                await PausableDelayAsync(Mathf.Max(0, delay), token);
+                await PausableDelayAsync(Mathf.Max(0, delay) / BattleSpeed.Multiplier, token);
 
                 if (ItemsForSale == null || ItemsForSale.Count == 0)
                     continue;
