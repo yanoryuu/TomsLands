@@ -190,6 +190,9 @@ public class BattleResultHandler : IStartable, IDisposable
         bool talkDemonPayout = _outputData.IsDemonPayout;
         RunHistory.RecordStreaming(talkResult, _outputData.SoldItems); // リザルトの振り返り用（途中終了は勝敗に数えない）
 
+        // 実績の判定（配信の決着・装備の値上がり・配当）。結果を消す前に渡す
+        AchievementEvents.ReportStreamSettled(_outputData, _inputData, _gameFlowManager.CurrentTurn.Value);
+
         // 結果をクリア（次回の戦闘まで誤発火しないように）
         _outputData.Clear();
 

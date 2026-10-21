@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using R3;
 
 /// <summary>スクラップ1件の状態（Docs/News_Spec.md §9.1）。</summary>
 public enum ScrapState
@@ -45,6 +46,13 @@ public class ScrapbookModel
     private readonly List<Scrap> archive = new();  // 確認済み（名鑑）
     private readonly List<CompanyRecord> records = new();
 
+    private readonly Subject<(NewsIssueEntry entry, int turn)> pinnedSubject = new();
+    private readonly Subject<(Scrap scrap, NewsIssueEntry entry)> confirmedSubject = new();
+    /// <summary>記事をスクラップした（ロード時は出ない）。実績の判定用。</summary>
+    public Observable<(NewsIssueEntry entry, int turn)> OnPinned => pinnedSubject;
+    /// <summary>スクラップを確認して真偽が分かった（ロード時は出ない）。実績の判定用。</summary>
+    public Observable<(Scrap scrap, NewsIssueEntry entry)> OnConfirmed => confirmedSubject;
+
     public IReadOnlyList<Scrap> Pinned => pinned;
     public IReadOnlyList<Scrap> Archive => archive;
 
@@ -75,6 +83,7 @@ public class ScrapbookModel
             publishTurn = entry.publishTurn,
             pinnedTurn = turn,
         });
+        pinnedSubject.OnNext((entry, turn));
         return true;
     }
 
@@ -105,6 +114,7 @@ public class ScrapbookModel
         var rec = RecordOf(scrap.companyId, create: true);
         rec.confirmed++;
         if (scrap.hit) rec.hits++;
+        confirmedSubject.OnNext((scrap, entry));
         return true;
     }
 

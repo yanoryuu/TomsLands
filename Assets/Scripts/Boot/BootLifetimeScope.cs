@@ -65,6 +65,15 @@ public class BootLifetimeScope : LifetimeScope
 
         builder.RegisterEntryPoint<LoadingPresenter>();
 
+        // Steam（初期化・コールバック・終了）。DontDestroyOnLoad で全シーンに残す。Steam が無ければ何もしない
+        builder.RegisterComponentOnNewGameObject<SteamManager>(Lifetime.Singleton, "SteamManager").DontDestroyOnLoad();
+        builder.RegisterBuildCallback(container =>
+        {
+            container.Resolve<SteamManager>();
+            // 実績サービスを先に作り、Steam が使えれば手元の記録とそろえる
+            _ = AchievementService.Shared;
+        });
+
         Debug.Log("[BootLifetimeScope] Configured.");
     }
 

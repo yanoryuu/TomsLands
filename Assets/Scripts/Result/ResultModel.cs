@@ -109,6 +109,10 @@ public class ResultModel
 
         FillRunReview(Statistics, finalMoney, history);
 
+        // 実績（クリア・ランク S・皆済など）。進行中のランが無いスロット（エディタの単体再生）では数えない
+        if (SaveSlotManager.Exists(SaveSlotManager.CurrentSlot))
+            AchievementEvents.ReportRunCleared(_tomsModel, rank);
+
         Debug.Log($"[ResultModel] Statistics built: NetWorth={netWorth}, Profit={profit.Profit} (持ち込み {profit.Carried} / 立て替え {profit.Advance}), Mode={mode}, Rank={rank}");
         return Statistics;
     }

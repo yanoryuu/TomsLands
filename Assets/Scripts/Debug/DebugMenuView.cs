@@ -40,7 +40,7 @@ public partial class DebugMenuView : MonoBehaviour
     private Vector2 _scroll;
     private GUIStyle _headerStyle;
     private int _tab;
-    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他", "画面移動", "オート", "便利", "ログ" };
+    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他", "画面移動", "オート", "便利", "ログ", "実績" };
 
     private float _volMultiplier = 1f;
     private float _baseLambda;
@@ -124,6 +124,7 @@ public partial class DebugMenuView : MonoBehaviour
             case 8: DrawAutoPlaySection(); break;     // DebugMenuView.AutoPlay.cs
             case 9: DrawUtilitySection(); break;      // DebugMenuView.Utility.cs
             case 10: DrawConsoleSection(); break;     // DebugMenuView.Console.cs
+            case 11: DrawAchievementSection(); break; // DebugMenuView.Achievements.cs
         }
 
         GUILayout.EndScrollView();
