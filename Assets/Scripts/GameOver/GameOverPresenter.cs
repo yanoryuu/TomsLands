@@ -31,7 +31,7 @@ public class GameOverPresenter : IDisposable, IStartable
         {
             if (review.HasValue) return review.Value;
             var history = RunHistory.Load();
-            var peak = RunProfit.ComputePeak(history, metaProgress, tomsModel.PlayerMoney.Value);
+            var peak = RunProfit.ComputePeak(history, metaProgress, tomsModel.PlayerMoney.Value, tomsModel.BankLoanOwed);
             var r = new BankruptReview
             {
                 History = history,

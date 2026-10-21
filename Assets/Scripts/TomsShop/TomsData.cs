@@ -42,6 +42,17 @@ public class TomsData
     // --- 鍛冶屋の立て替え（1周目のチュートリアル）。次の納付に上乗せする借り。旧セーブは欠損時 0 = 借りなし ---
     public int advancePrincipal;
 
+    // --- 村の銀行 Lv5「勝負の融資」（1ランに1回）。旧セーブは欠損時 false/0 = 使っていない・借りなし ---
+    public bool bankLoanUsed;
+    public int bankLoanPrincipal;   // 借りた元本（表示用）
+    public int bankLoanOwed;        // 返す額（元本 + 利息）。0 = 返し終えた／借りていない
+    public int bankLoanDueTurn;     // 返す日（配信の次の日のターン番号）
+
+    // --- 村の広場 Lv5「勝負配信の宣言」（1ランに1回）。旧セーブは欠損時 false/0 = 使っていない・宣言なし ---
+    public bool streamDeclarationUsed;
+    public int streamDeclarationSide;      // StreamDeclarationSide を int で保存（0 = 宣言なし）
+    public int streamDeclarationFlowIndex; // 宣言した配信の GameFlow インデックス
+
     public TomsData(int shopMoney, int blacksmithLevel, int currentTurn, int gameFlowIndex = 0, int infoBrokerLevel = 1, int debtCycle = 0,
         int flowSeed = 0, int gameMode = 0, bool useAutoFlow = false, int toolShopLevel = 1, float trust = 1f, int shopLevel = 1,
         int borrowedPrincipal = 0, float firstDebtDiscountRate = 0f, bool runOpeningPending = false)

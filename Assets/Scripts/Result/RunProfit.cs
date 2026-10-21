@@ -42,12 +42,29 @@ public readonly struct RunProfit
         return grantedThisRun ? TutorialSteps.FundsAdvanceAmount : 0;
     }
 
-    /// <summary>破産したラン用: 所持金の最高値をそのランの純資産の目安にした儲け（在庫・金融資産は数えない）。</summary>
-    public static RunProfit ComputePeak(RunHistoryData history, MetaProgressModel meta, int currentMoney)
+    /// <summary>
+    /// 破産したラン用: 所持金の最高値をそのランの純資産の目安にした儲け（在庫・金融資産は数えない）。
+    /// 村の銀行 Lv5「勝負の融資」で借りていた日の所持金は、返す額（outstandingLoan は今まだ返していない額）を引いて数える
+    /// （借りたお金が儲けに入らないように）。
+    /// </summary>
+    public static RunProfit ComputePeak(RunHistoryData history, MetaProgressModel meta, int currentMoney, int outstandingLoan = 0)
     {
-        int peak = currentMoney;
+        int peak = currentMoney - Mathf.Max(0, outstandingLoan);
         if (history?.moneyValues != null)
-            foreach (int v in history.moneyValues) peak = Mathf.Max(peak, v);
+        {
+            for (int i = 0; i < history.moneyValues.Count; i++)
+            {
+                int v = history.moneyValues[i];
+                int turn = history.moneyTurns != null && i < history.moneyTurns.Count ? history.moneyTurns[i] : 0;
+                if (IsLoanHeld(history, turn)) v -= history.bankLoanOwed;
+                peak = Mathf.Max(peak, v);
+            }
+        }
         return Compute(peak, history, meta);
     }
+
+    /// <summary>この日の終わりの所持金に、勝負の融資で借りた分が入っていたか。</summary>
+    private static bool IsLoanHeld(RunHistoryData history, int turn) =>
+        history.bankLoanTurn > 0 && history.bankLoanOwed > 0 && turn >= history.bankLoanTurn
+        && (history.bankLoanRepaidTurn <= 0 || turn < history.bankLoanRepaidTurn);
 }

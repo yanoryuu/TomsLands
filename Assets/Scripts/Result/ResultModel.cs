@@ -71,7 +71,10 @@ public class ResultModel
             financeAssets = _portfolioModel.TotalAssetsEstimate.Value;
         }
 
-        int netWorth = finalMoney + totalStockValue + financeAssets;
+        // 村の銀行 Lv5「勝負の融資」をまだ返していない（最後の配信の前に借りた）なら、返す額（元本 + 利息）を差し引く。
+        // 返し終えていれば所持金から引かれ済みなので、ここでは何もしない（二重に引かない）
+        int unpaidLoan = Mathf.Max(0, _tomsModel.BankLoanOwed);
+        int netWorth = finalMoney + totalStockValue + financeAssets - unpaidLoan;
         var history = RunHistory.Load();
         var mode = _tomsModel.GameMode;
         var profit = RunProfit.Compute(netWorth, history, _metaProgress);

@@ -556,10 +556,16 @@ public class TomsShopView : MonoBehaviour
     /// <summary>
     /// 次の納付金の額と残り日数をショップ画面内に表示する
     /// </summary>
-    public void UpdateNextDebt(int amount, int remainingTurns)
+    public void UpdateNextDebt(int amount, int remainingTurns, string label = null)
     {
         if (nextDebtText == null) return;
-        nextDebtText.text = $"次の納付\n{amount:#,0}G\n{DayText.Remaining(remainingTurns)}";
+        nextDebtText.text = $"{label ?? "次の納付"}\n{amount:#,0}G\n{DayText.Remaining(remainingTurns)}";
+    }
+
+    /// <summary>納付の表示を弾ませる（村の銀行 Lv5「勝負の融資」を借りたとき）。</summary>
+    public void PopNextDebt()
+    {
+        if (nextDebtText != null) UIFx.Pop(nextDebtText.transform, 0.85f, 0.2f);
     }
 
     /// <summary>

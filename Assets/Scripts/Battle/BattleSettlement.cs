@@ -27,6 +27,13 @@ public sealed class BattleSettlement
     /// <summary>魔王側に張って当たった（勇者が負け、防衛報酬を受け取った）</summary>
     public bool IsDemonPayout => Result == BattleResult.Defeat && DefenseReward > 0;
 
+    /// <summary>村の広場 Lv5「勝負配信の宣言」: 宣言した側（None = 宣言なし）。</summary>
+    public StreamDeclarationSide DeclarationSide { get; set; }
+    /// <summary>宣言の決着。</summary>
+    public StreamDeclarationOutcome DeclarationOutcome { get; set; }
+    /// <summary>宣言が当たって上乗せした額（NetProfit に入っている）。</summary>
+    public int DeclarationBonus { get; set; }
+
     public BattleSettlement(BattleResult result, int sales, int restockCost, int restockRefund, int interventionNet,
         int defenseReward, int netProfit, IReadOnlyList<BattleOutputSoldItem> soldItems, IReadOnlyList<BattleMarketImpact> marketImpacts)
     {

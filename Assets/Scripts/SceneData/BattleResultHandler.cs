@@ -20,6 +20,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly HeroModel _heroModel;
     private readonly RelicRewardService _relicRewardService;
     private readonly MetaProgressModel _metaProgress;
+    private readonly ShopStatusModel _shopStatusModel;
     private readonly CancellationTokenSource _talkCts = new();
 
     public BattleResultHandler(
@@ -32,8 +33,10 @@ public class BattleResultHandler : IStartable, IDisposable
         TomsModel tomsModel,
         HeroModel heroModel,
         RelicRewardService relicRewardService,
-        MetaProgressModel metaProgress)
+        MetaProgressModel metaProgress,
+        ShopStatusModel shopStatusModel = null)
     {
+        _shopStatusModel = shopStatusModel;
         _metaProgress = metaProgress;
         _outputData = outputData;
         _inputData = inputData;
@@ -86,6 +89,10 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log($"[BattleResultHandler] 村の広場: 配信の売上に +{streamBonus}G");
         }
         RunHistory.RecordStreamEarnings(_outputData.TotalEarnings, _inputData.DungeonKey.ToString(), streamBonus);
+
+        // 村の広場 Lv5「勝負配信の宣言」の決着: 当たり=フォロワー・注目が増える／外れ=減る（売上の上乗せは TotalEarnings に入っている）。
+        // 途中終了は無効（不具合での途中終了なら回数を戻す）。決着待ちの宣言はここで消す
+        StreamDeclaration.Resolve(_tomsModel, _shopStatusModel, _outputData.DeclarationOutcome);
 
         // 途中終了（配信終了ボタン）は勝ちでも負けでもない。売上の精算だけして、
         // 勝敗ボーナス/ペナルティ・経験値・最低保証レベルアップ・属性波及・レリック3択・戦績はすべて付けない

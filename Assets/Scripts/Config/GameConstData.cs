@@ -284,6 +284,20 @@ public class VillageSettingsData
     /// <summary>広場: 配信で売れた額への上乗せ率。</summary>
     public float[] plazaStreamSalesBonuses = { 0f, 0f, 0.05f, 0.1f, 0.15f, 0.15f };
 
+    // --- Lv5 の特殊な効果: 銀行「勝負の融資」（借りる額は持ち込み上限 bankCarryLimits の最後の値） ---
+    /// <summary>銀行 Lv5: 勝負の融資の利息（0.1 = 1割。配信の次の日に元本 + 利息を返す）。</summary>
+    public float bankLoanInterestRate = 0.1f;
+
+    // --- Lv5 の特殊な効果: 広場「勝負配信の宣言」 ---
+    /// <summary>広場 Lv5: 宣言が当たったときの配信の売上・防衛報酬の倍率。</summary>
+    public float plazaDeclarationMultiplier = 1.5f;
+    /// <summary>広場 Lv5: 宣言が当たったときのフォロワー・注目の加算。</summary>
+    public int plazaDeclarationHitFollowers = 6000;
+    public int plazaDeclarationHitAttention = 100;
+    /// <summary>広場 Lv5: 宣言が外れたときのフォロワー・注目の減少（正の値で書く）。</summary>
+    public int plazaDeclarationMissFollowers = 2000;
+    public int plazaDeclarationMissAttention = 60;
+
     public VillageSettingsData Clone()
     {
         var clone = (VillageSettingsData)MemberwiseClone();
