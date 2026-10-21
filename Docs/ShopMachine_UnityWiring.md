@@ -46,8 +46,8 @@ feature/shop-machines ブランチで実装した「マシン設置」と「朝�
    purchaseButton / removeButton / messageText / closeButton を割り当て。
 3. `GamePanelManager` → **Machine Shop Panel** に割り当て。
 4. `GameLifetimeScope` → **Shop Machine View** に割り当て（未配線の間はPresenter未登録=安全）。
-5. `TurnPhaseView` の `procurementGroup` に「店の設備」ボタンを追加し、
-   `TomsShopView` → **Machine Shop Button** に割り当て。
+5. 店ホームの「店の設備」ボタンは廃止（2026-10）。「店」ボタン（改装）の画面の「設備」タブから開く（ShopLevel_UnityWiring.md §2）。
+   `TomsShopView` の **Machine Shop Button** は非表示のまま残してある（`ShopFeature.MachineShop` は出さない）。
 
 ## 3. 店内の見た目反映
 

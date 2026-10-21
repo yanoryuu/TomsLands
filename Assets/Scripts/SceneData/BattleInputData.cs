@@ -13,7 +13,7 @@ public class BattleInputData : ScriptableObject
     public DungeonName DungeonKey;
 
     [Tooltip("現在のダンジョンレベル（1～5）")]
-    public int DungeonLevel = 1;
+    public int DungeonLevel = DungeonLevels.Unfunded;
 
     [Header("勇者の装備")]
     public List<string> EquippedItemIds = new();
@@ -31,7 +31,7 @@ public class BattleInputData : ScriptableObject
     public void Setup(DungeonName dungeonKey, int dungeonLevel, List<string> equippedItemIds, List<BattleInputItem> selectedItems, int gameFlowIndex)
     {
         DungeonKey = dungeonKey;
-        DungeonLevel = Mathf.Clamp(dungeonLevel, 1, 5);
+        DungeonLevel = Mathf.Clamp(dungeonLevel, DungeonLevels.Unfunded, 5); // Lv0 = 未出資（戦闘は Lv1 と同じ・配当なし）
         EquippedItemIds = new List<string>(equippedItemIds);
         SelectedItems = new List<BattleInputItem>(selectedItems);
         GameFlowIndex = gameFlowIndex;
@@ -41,7 +41,7 @@ public class BattleInputData : ScriptableObject
     public void Clear()
     {
         DungeonKey = default;
-        DungeonLevel = 1;
+        DungeonLevel = DungeonLevels.Unfunded;
         EquippedItemIds.Clear();
         SelectedItems.Clear();
         GameFlowIndex = 0;

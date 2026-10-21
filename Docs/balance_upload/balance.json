@@ -38,7 +38,10 @@
     "customerAttentionBoost": 0.3,
     "sellPressureStrength": 0.04,
     "sellPressureDepth": 40,
-    "sellPressureMaxDrop": 0.15
+    "sellPressureMaxDrop": 0.15,
+    "streamAnticipationDays": 3,
+    "streamAnticipationDemandUp": 0.04,
+    "streamAnticipationPriceUp": 0.03
   },
   "gameBalance": {
     "statMin": 0,

@@ -33,8 +33,9 @@ feature/shop-level ブランチで実装した「店レベル」システムの�
 3. `GamePanelManager` の Inspector → **Shop Upgrade Panel** にパネルを割り当てる。
 4. `GameLifetimeScope` の Inspector → **Shop Upgrade View** に View を割り当てる。
    ※ ここが未配線の間は Presenter が登録されず、改装画面は開けない（安全設計）。
-5. `TurnPhaseView` の `procurementGroup` 配下に「店の改装」ボタンを追加し、
-   `TomsShopView` の Inspector → **Shop Upgrade Button** に割り当てる。
+5. 店ホームの `displayGroup`（陳列の画面）の「店」ボタンを `TomsShopView` の **Shop Upgrade Button** に割り当てる（2026-10: 「店の改装」「店の設備」を1つの「店」ボタンにまとめた）。
+6. 画面は `Assets/Prefabs/Screens/ShopUpgrade.prefab`（設備は `MachineShop.prefab`）。どちらも「左にトコの立ち絵とメッセージ、右に購入の枠、左上にもどる、枠の上に 改装／設備 のタブ」で同じ組み方。
+   タブは `ShopFacilityTabsView`（View の **Tabs** に割り当て）。もう一方のタブ・LB/RB で `ShopUpgradePresenter` / `ShopMachinePresenter` が `TomsShopGamePhase` を切り替える。改装⇔設備の切り替えは `GamePanelManager` が開く演出なしで差し替える。
 
 ## 3. 陳列画面のカウンタ
 

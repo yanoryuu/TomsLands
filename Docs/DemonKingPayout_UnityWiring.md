@@ -95,3 +95,12 @@
   - [ ] 支援していないダンジョン → 支援額の行とハンコが出ない
   - [ ] レリック補正なし → レリック補正の行が出ない
   - [ ] 演出中クリックでスキップできる
+
+## 6. ダンジョン Lv0（未出資）— 2026-10 レビュー1
+- ダンジョンは **Lv0（未出資）** から始まる（`initDungeonLevel` = 0。SO・`Docs/balance_upload/balance.json`・`Docs/balance_tsv/dungeons.tsv`）。魔王軍支援で出資すると Lv1。
+- Lv0 は防衛報酬 0（`DungeonLevels.DefenseReward`）。配当通知書・「配当確定」の溜め・見出し・トコの配当台詞・Steam 実績 DEMON_DIVIDEND は防衛報酬 > 0 のときだけなので、Lv0 では出ない。
+- Lv0 の戦闘（敵の出方・クリア見込み）は Lv1 と同じ（`GetLevelData` が 1〜5 にクランプ）。
+- 介入の値段（防衛報酬に比例）は Lv1 の防衛報酬を下限にする（`BattleSceneStarter.InterventionPriceBase`）。
+- 最初の出資（Lv0→Lv1）の費用は Lv1 の行の `levelUpCost`（10,000G）。
+- 表示: 魔王軍支援・地図は「Lv.0（未出資）」、地図の防衛報酬は「なし（未出資）」、品出し画面のレベルは「0（未出資）」。
+- 旧セーブ: `save.json` のダンジョンは `levelVersion` を持たない。旧形式の Lv1 は出資していない状態なので Lv0 として読み、Lv2 以上はそのまま。あわせて、保存のキーが日本語のダンジョン名で読み込みの `Enum.TryParse` に必ず外れていた不具合（レベルが毎回 SO の初期値に戻っていた）を直した（enum 名で保存し、日本語名でも読める）。

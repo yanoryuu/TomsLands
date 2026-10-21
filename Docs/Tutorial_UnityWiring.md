@@ -67,7 +67,7 @@
 | 初配信の後日談（K-8） | 勇者が勝っていれば `Tutorial_StreamingEnd`、負けていれば `Tutorial_StreamingEndHard`（「思ったより難しいね」「勝ち負けを読んで張れば」）。片方を見たらもう片方も既読にする。判定は `RunHistory.streamWins` |
 | レリックの説明（K-10） | 最初のレリック3択を出す直前に `Tutorial_RelicFirst`（TomsShopPresenter） |
 | イベント・バズの説明（K-9） | `TurnEvent_EventTutorial` は初めてイベントが起きたとき、`TurnEvent_BuzzTutorial` は初めて（ふつうの）バズが起きたとき。どちらも占い師に出会った後だけ。以前の「初配信の2日後／5日後に無条件」はやめた |
-| ボタンを段階的に開ける（K-7） | 1周目だけ `TutorialPresenter.ApplyStagedUnlock`: 1日目 鍛冶屋・陳列・返済 / 2日目 新聞 / 占い師に出会ったら 占い師・情報屋・地図・勇者 / 初配信のあと 魔王軍支援・広告 / 最初の返済か初配信の2日後 改装・設備。新しく出たボタンは一度だけ弾む（段階フラグ `TutorialStep_Open_*`）。2周目以降は全部出す |
+| ボタンを段階的に開ける（K-7） | 1周目だけ `TutorialPresenter.ApplyStagedUnlock`: 1日目 鍛冶屋・陳列・返済 / 2日目 新聞 / 占い師に出会ったら 占い師・情報屋・地図・勇者 / 初配信のあと 魔王軍支援・広告 / 最初の返済か初配信の2日後 店（改装・設備はタブ）。新しく出たボタンは一度だけ弾む（段階フラグ `TutorialStep_Open_*`）。2周目以降は全部出す |
 | 始めるまでのクリック（K-13） | どのスロットにもデータが無いとき（`SaveSlotManager.AnyProfileExists()==false`）、「初めから」はスロット選択を飛ばしてスロット1で始める |
 
 ### 任意の配線

@@ -40,3 +40,6 @@ customerAttentionBoost	0.3	float
 sellPressureStrength	0.04	float
 sellPressureDepth	40	float
 sellPressureMaxDrop	0.15	float
+streamAnticipationDays	3	int
+streamAnticipationDemandUp	0.04	float
+streamAnticipationPriceUp	0.03	float

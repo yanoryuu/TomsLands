@@ -273,7 +273,7 @@ public class TutorialPresenter : IStartable, IDisposable
     ///   2日目: 新聞
     ///   占い師に出会ったら（初配信の前日）: 占い師・情報屋・地図・勇者
     ///   初配信のあと: 魔王軍支援・広告
-    ///   最初の返済か初配信の2日後: 改装・設備
+    ///   最初の返済か初配信の2日後: 店（改装・設備はタブ。「店の設備」ボタンは無くなったので MachineShop は出さない）
     /// 新しく出たボタンは一度だけ弾ませる。
     /// </summary>
     private void ApplyStagedUnlock()
@@ -294,8 +294,7 @@ public class TutorialPresenter : IStartable, IDisposable
         Apply(TomsShopView.ShopFeature.DungeonLevelUp, streamed);
         Apply(TomsShopView.ShopFeature.Advertisement, streamed);
         bool upgrades = repaid || (streamed && turn >= firstBattle + UpgradeUnlockDelay);
-        Apply(TomsShopView.ShopFeature.ShopUpgrade, upgrades);
-        Apply(TomsShopView.ShopFeature.MachineShop, upgrades);
+        Apply(TomsShopView.ShopFeature.ShopUpgrade, upgrades); // 「店」ボタン（改装・設備のタブ画面）
 
         void Apply(TomsShopView.ShopFeature feature, bool open)
         {
