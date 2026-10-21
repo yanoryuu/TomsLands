@@ -464,7 +464,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         {
             Stage = AutoPlayStage.Completed;
             // リザルト集計（ResultPresenter.Entry の写し）。実績のクリア・ランク S・皆済はここで判定される
-            new ResultModel(TomsModel, ItemModel, Portfolio).BuildStatistics();
+            new ResultModel(TomsModel, ItemModel, Portfolio, null).BuildStatistics();
             return;
         }
         if (scene == "GameOver") { Stage = AutoPlayStage.Bankrupt; return; }
