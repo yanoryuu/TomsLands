@@ -201,8 +201,10 @@ public class ShopMachineView : MonoBehaviour
         if (detailEffectText != null) detailEffectText.text = machine.EffectSummary;
         if (detailCostText != null)
         {
+            // 値段と「設置中・撤去の返金」を1行ずつ、折り返さずに出す（長いときは枠の自動縮小に任せる）
+            detailCostText.textWrappingMode = TextWrappingModes.NoWrap;
             detailCostText.text = placedCount > 0
-                ? $"{cost:N0}G\n設置中×{placedCount}（撤去で {removeRefund:N0}G 返金）"
+                ? $"{cost:N0}G\n設置中×{placedCount}／撤去で{removeRefund:N0}G"
                 : $"{cost:N0}G";
         }
 

@@ -61,9 +61,37 @@ public class NewsArticleCellUI : MonoBehaviour
         if (vetStamp == null) return;
         bool show = stamp.HasValue && style != null;
         vetStamp.gameObject.SetActive(show);
+        ShiftHeadlineForStamp(show);
         if (!show) return;
-        if (newBadge != null) newBadge.SetActive(false); // ハンコと未読マークを重ねない
+        // ハンコは左上、未読マークは右上なので重ならない（未読マークはそのまま出す）
         style.PaintBadge(vetStamp, stamp.Value);
+    }
+
+    private Vector4? headlineMargin;
+
+    /// <summary>ハンコは見出しの左に押すので、押してある間は見出しをハンコの幅だけ右へずらす。</summary>
+    private void ShiftHeadlineForStamp(bool stamped)
+    {
+        if (headlineText == null) return;
+        headlineMargin ??= headlineText.margin;
+        var m = headlineMargin.Value;
+        if (stamped) m.x += StampInset();
+        headlineText.margin = m;
+    }
+
+    /// <summary>見出しの左端からハンコの右端までの幅（ハンコが見出しより左にあれば 0）。</summary>
+    private float StampInset()
+    {
+        var cell = (RectTransform)transform;
+        var stampRect = vetStamp.rectTransform;
+        var headRect = headlineText.rectTransform;
+        // セル座標でのハンコの右端と見出しの左端
+        Vector3[] c = new Vector3[4];
+        stampRect.GetWorldCorners(c);
+        float stampRight = cell.InverseTransformPoint(c[2]).x;
+        headRect.GetWorldCorners(c);
+        float headLeft = cell.InverseTransformPoint(c[0]).x;
+        return Mathf.Max(0f, stampRight - headLeft + 4f);
     }
 
     public void ShowBody(string body)

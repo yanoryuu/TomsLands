@@ -49,8 +49,14 @@ public class HeroPanelView : MonoBehaviour
     [SerializeField] private Image craftAttributeIcon;
     [Tooltip("属性アイコン（火・水・木・光・闇の順。金融の属性ファンドの絵）")]
     [SerializeField] private Sprite[] attributeIcons = new Sprite[5];
-    [SerializeField] private Color craftFineColor = new Color32(0xE8, 0xA3, 0x3D, 0xFF);
-    [SerializeField] private Color craftDullColor = new Color32(0x6E, 0x74, 0x7A, 0xFF);
+    [Tooltip("業物のときだけ出す金縁（札に重ねる）")]
+    [SerializeField] private GameObject craftMarkGoldRim;
+    [Tooltip("札（木の板）に掛ける色。業物はそのまま、なまくらはくすませる")]
+    [SerializeField] private Color craftFineColor = Color.white;
+    [SerializeField] private Color craftDullColor = new Color32(0xB4, 0xA4, 0x94, 0xFF);
+    [Tooltip("札の文字の色（業物は金、なまくらは色あせた生成り）")]
+    [SerializeField] private Color craftFineTextColor = new Color32(0xFF, 0xD3, 0x5A, 0xFF);
+    [SerializeField] private Color craftDullTextColor = new Color32(0xE6, 0xD8, 0xC6, 0xFF);
 
     public Subject<Unit>        OnCloseRequested { get; } = new();
     public Subject<string>      OnWeaponChanged  { get; } = new();
@@ -284,8 +290,13 @@ public class HeroPanelView : MonoBehaviour
         craftMark.SetActive(marked);
         if (!marked) return;
         bool fine = kind == ArtisanCraftKind.Fine;
-        if (craftMarkText != null) craftMarkText.text = fine ? "業物" : "なまくら";
+        if (craftMarkText != null)
+        {
+            craftMarkText.text = fine ? "業物" : "なまくら";
+            craftMarkText.color = fine ? craftFineTextColor : craftDullTextColor;
+        }
         if (craftMarkBackground != null) craftMarkBackground.color = fine ? craftFineColor : craftDullColor;
+        if (craftMarkGoldRim != null) craftMarkGoldRim.SetActive(fine);
         if (craftAttributeIcon != null)
         {
             var icon = fine && fineAttribute.HasValue ? AttributeIcon(fineAttribute.Value) : null;
@@ -363,6 +374,7 @@ public class HeroPanelView : MonoBehaviour
         if (image == null) return;
         image.sprite  = sprite;
         image.enabled = sprite != null;
+        image.preserveAspect = true; // 装備の絵は縦長・横長がまちまちなので、枠に合わせて引き伸ばさない
     }
 
     /// <summary>「攻撃重視（武器↑）」。呼び名は HeroBattleInfluence に揃え、いちばん強く上がる値動きを添える。</summary>

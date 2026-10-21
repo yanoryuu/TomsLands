@@ -270,7 +270,7 @@
       "initialStock": 0,
       "maxStock": 99,
       "initialDisplayStock": 0,
-      "itemType": "Weapon",
+      "itemType": "Armor",
       "itemAttribute": "Light",
       "requiredLevel": 1,
       "salesRate": 1,

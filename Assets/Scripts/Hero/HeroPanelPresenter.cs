@@ -56,7 +56,48 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         stateManager.RegisterOnEnter(TomsShopGamePhase.Hero, Entry);
     }
 
-    public void Start() => Bind();
+    public void Start()
+    {
+        FixEquipmentSlotTypes();
+        Bind();
+    }
+
+    /// <summary>
+    /// 種類が変わった品を装備したままの古いセーブを直す（例: 聖光の盾 SH1 は武器→防具になった）。
+    /// 武器の枠に防具が入っていれば、防具の枠が空いていればそこへ移し、空いていなければ外す。
+    /// 防具の枠に武器が入っていれば外す。店に入るたびに呼ぶ（直すものが無ければ何もしない）。
+    /// </summary>
+    private void FixEquipmentSlotTypes()
+    {
+        var hero = heroModel?.heroData;
+        if (hero == null || itemModel == null) return;
+        bool changed = false;
+
+        var weapon = string.IsNullOrEmpty(hero.weaponId.Value) ? null : itemModel.GetRuntimeItem(hero.weaponId.Value);
+        if (weapon != null && weapon.ItemType != ItemTypeData.ItemType.Weapon)
+        {
+            if (weapon.ItemType == ItemTypeData.ItemType.Armor && string.IsNullOrEmpty(hero.armorId.Value))
+            {
+                hero.armorId.Value = weapon.ItemId;
+                hero.armorName.Value = weapon.ItemName;
+            }
+            hero.weaponId.Value = string.Empty;
+            hero.weaponName.Value = string.Empty;
+            changed = true;
+        }
+
+        var armor = string.IsNullOrEmpty(hero.armorId.Value) ? null : itemModel.GetRuntimeItem(hero.armorId.Value);
+        if (armor != null && armor.ItemType != ItemTypeData.ItemType.Armor)
+        {
+            hero.armorId.Value = string.Empty;
+            hero.armorName.Value = string.Empty;
+            changed = true;
+        }
+
+        if (!changed) return;
+        UnityEngine.Debug.Log($"[HeroPanelPresenter] 種類の合わない装備を直した: 武器={hero.weaponId.Value} 防具={hero.armorId.Value}");
+        SaveEquipment();
+    }
 
     public void Entry()
     {

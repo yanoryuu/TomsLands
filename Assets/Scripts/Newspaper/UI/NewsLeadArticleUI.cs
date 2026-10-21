@@ -78,9 +78,36 @@ public class NewsLeadArticleUI : MonoBehaviour
         if (vetStamp == null) return;
         bool show = stamp.HasValue && style != null;
         vetStamp.gameObject.SetActive(show);
+        KeepHeadlineClearOfStamp(show);
         if (!show) return;
-        if (newBadge != null) newBadge.SetActive(false); // ハンコは未読マークと同じ右上に押すので重ねない
+        // ハンコは左上、未読マークは右上なので重ならない（未読マークはそのまま出す）
         style.PaintBadge(vetStamp, stamp.Value);
         if (reveal) UIFx.Pop(vetStamp.transform, 1.8f, 0.22f);
+    }
+
+    private Vector4? headlineMargin;
+
+    /// <summary>
+    /// ハンコは左上に押すので、押してある間は見出し（中央寄せ）の左右をハンコの幅だけ空ける
+    /// （長い見出しがハンコの下に潜らないように。左右同じだけ空けるので中央はずれない）。
+    /// </summary>
+    private void KeepHeadlineClearOfStamp(bool stamped)
+    {
+        if (headlineText == null) return;
+        headlineMargin ??= headlineText.margin;
+        var m = headlineMargin.Value;
+        if (stamped)
+        {
+            var root = (RectTransform)transform;
+            var c = new Vector3[4];
+            vetStamp.rectTransform.GetWorldCorners(c);
+            float stampRight = root.InverseTransformPoint(c[2]).x;
+            headlineText.rectTransform.GetWorldCorners(c);
+            float headLeft = root.InverseTransformPoint(c[0]).x;
+            float inset = Mathf.Max(0f, stampRight - headLeft + 4f);
+            m.x += inset;
+            m.z += inset;
+        }
+        headlineText.margin = m;
     }
 }

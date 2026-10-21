@@ -330,6 +330,7 @@ public class BattleSceneStarter : IAsyncStartable
         if (restockRefund > 0)
             Debug.Log($"[BattleSceneStarter] 補充分の売れ残りを返金: {restockRefund}G");
         _outputData.SetResult(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, totalEarnings, defeatedMobCount, defeatedBossCount);
+        _outputData.AbortedByError = battleResult.result == BattleResult.Abort && _abortedByError;
         if (_interventions != null)
         {
             _outputData.SetStreamingStats(interventionSpent, _interventions.TotalRefunded, _interventions.PeakViewers,

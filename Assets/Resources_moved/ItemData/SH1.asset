@@ -20,7 +20,7 @@ MonoBehaviour:
   initialStock: 0
   maxStock: 99
   initialDisplayStock: 0
-  itemType: 0
+  itemType: 1
   itemAttribute: 4
   requiredLevel: 1
   salesRate: 1

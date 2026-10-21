@@ -34,6 +34,7 @@ public class RelicBehaviourRegistry
     {
         // 組み込みビヘイビアの登録
         Register("dailyGold", new DailyGoldRelicBehaviour());
+        Register(LedgerMissPenaltyRelicBehaviour.Key, new LedgerMissPenaltyRelicBehaviour());
     }
 
     public void Register(string key, IRelicBehaviour behaviour)
@@ -116,5 +117,46 @@ public class DailyGoldRelicBehaviour : IRelicBehaviour
         if (amount == 0 || context.TomsModel == null) return null;
         context.TomsModel.AddRevenue(amount);
         return $"+{amount:N0}G";
+    }
+}
+
+/// <summary>
+/// 呪われた帳簿: 配信が外れた（勇者が負けて配当も無い・途中終了）次の朝に、所持金の param（0.2 = 20%）を取り立てる。
+/// 外れの印は帰還処理（BattleResultHandler）が TomsModel.LedgerPenaltyPending に立てる
+/// （配信の次がイベントの日でも、日が進む朝まで持ち越す）。
+/// </summary>
+public class LedgerMissPenaltyRelicBehaviour : IRelicBehaviour
+{
+    public const string Key = "ledgerMissPenalty";
+
+    /// <summary>所持品に、この効果を持つレリックがあるか。</summary>
+    public static bool IsOwned(RelicInventoryModel inventory)
+    {
+        if (inventory == null) return false;
+        foreach (var def in inventory.OwnedDefinitions())
+        {
+            if (def?.behaviours == null) continue;
+            foreach (var b in def.behaviours)
+                if (b != null && b.behaviourKey == Key) return true;
+        }
+        return false;
+    }
+
+    /// <summary>取り立てる額（所持金が 0 以下なら 0）。</summary>
+    public static int PenaltyOf(int money, float rate)
+    {
+        if (money <= 0 || rate <= 0f) return 0;
+        return Mathf.Clamp(Mathf.FloorToInt(money * Mathf.Min(rate, 1f)), 0, money);
+    }
+
+    public string OnTurnStart(RelicHookContext context, float param)
+    {
+        var toms = context.TomsModel;
+        if (toms == null || !toms.LedgerPenaltyPending) return null;
+        toms.LedgerPenaltyPending = false;
+        int amount = PenaltyOf(toms.PlayerMoney.Value, param);
+        if (amount > 0) toms.PurchaseItem(amount);
+        toms.SavePlayerMoney();
+        return amount > 0 ? $"外れた配信の取り立て -{amount:N0}G" : null;
     }
 }
