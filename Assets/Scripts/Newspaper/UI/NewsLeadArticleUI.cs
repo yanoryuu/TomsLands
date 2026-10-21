@@ -79,6 +79,7 @@ public class NewsLeadArticleUI : MonoBehaviour
         bool show = stamp.HasValue && style != null;
         vetStamp.gameObject.SetActive(show);
         if (!show) return;
+        if (newBadge != null) newBadge.SetActive(false); // ハンコは未読マークと同じ右上に押すので重ねない
         style.PaintBadge(vetStamp, stamp.Value);
         if (reveal) UIFx.Pop(vetStamp.transform, 1.8f, 0.22f);
     }

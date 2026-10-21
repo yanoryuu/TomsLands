@@ -61,7 +61,9 @@ public class NewsArticleCellUI : MonoBehaviour
         if (vetStamp == null) return;
         bool show = stamp.HasValue && style != null;
         vetStamp.gameObject.SetActive(show);
-        if (show) style.PaintBadge(vetStamp, stamp.Value);
+        if (!show) return;
+        if (newBadge != null) newBadge.SetActive(false); // ハンコと未読マークを重ねない
+        style.PaintBadge(vetStamp, stamp.Value);
     }
 
     public void ShowBody(string body)
