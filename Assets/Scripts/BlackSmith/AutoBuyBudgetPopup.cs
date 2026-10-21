@@ -28,6 +28,9 @@ public class AutoBuyBudgetPopup : MonoBehaviour
 
     private int playerMoney;
 
+    /// <summary>Show で開いて、まだ閉じていないか（シーン上で最初から表示になっているのと区別する）。</summary>
+    public bool IsOpenedByShow { get; private set; }
+
     private void Awake()
     {
         fullAmountButton.onClick.AddListener(SetFullAmount);
@@ -127,10 +130,15 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         }
         if (confirmButton != null) confirmButton.interactable = true;
 
+        IsOpenedByShow = true;
         gameObject.SetActive(true);
     }
 
-    public void Hide() => gameObject.SetActive(false);
+    public void Hide()
+    {
+        IsOpenedByShow = false;
+        gameObject.SetActive(false);
+    }
 
     private void SetFullAmount()
     {

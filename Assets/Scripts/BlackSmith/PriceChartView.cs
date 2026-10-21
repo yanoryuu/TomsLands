@@ -157,8 +157,12 @@ public class PriceChartView : MaskableGraphic
         float lo = basePrice.Value * rangeMinRate;
         float hi = basePrice.Value * rangeMaxRate;
         if (costPrice.HasValue) { lo = Mathf.Min(lo, costPrice.Value); hi = Mathf.Max(hi, costPrice.Value); }
-        min = priceValues.Count > 0 ? Mathf.Min(min, lo) : lo;
-        max = priceValues.Count > 0 ? Mathf.Max(max, hi) : hi;
+        if (priceValues.Count == 0) { min = lo; max = hi; return; }
+        // 実際の値が固定範囲を超えたら軸を広げ、線が上端・下端に張り付いて切れて見えないよう余白も足す
+        float margin = (Mathf.Max(max, hi) - Mathf.Min(min, lo)) * 0.08f;
+        float dataMax = max, dataMin = min;
+        max = dataMax > hi ? dataMax + margin : hi;
+        min = dataMin < lo ? Mathf.Max(0f, dataMin - margin) : lo;
     }
 
     private void AddPolyline(VertexHelper vh, List<float> values,

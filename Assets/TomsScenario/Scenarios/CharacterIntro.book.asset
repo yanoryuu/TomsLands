@@ -566,7 +566,7 @@ MonoBehaviour:
       - 
       - 
       - 
-      - "\u300E\u25EF\u25EF\u30C0\u30F3\u30B8\u30E7\u30F3\u306B\u706B\u306E\u9B54\u7269\u300F\u307F\u305F\u3044\u306A\u8A18\u4E8B\u304C\u51FA\u305F\u3089\u2026\u2026\\n\u706B\u306B\u5F37\u3044\u6C34\u306E\u6B66\u5668\u304C\u6C42\u3081\u3089\u308C\u3066\u3001\u5024\u4E0A\u304C\u308A\u3059\u308B\u304B\u3082\uFF01"
+      - "\u300E\u30C0\u30F3\u30B8\u30E7\u30F3\u306B\u706B\u306E\u9B54\u7269\u304C\u51FA\u305F\u300F\u307F\u305F\u3044\u306A\u8A18\u4E8B\u304C\u51FA\u305F\u3089\u2026\u2026\\n\u706B\u306B\u5F37\u3044\u6C34\u306E\u6B66\u5668\u304C\u6C42\u3081\u3089\u308C\u3066\u3001\u5024\u4E0A\u304C\u308A\u3059\u308B\u304B\u3082\uFF01"
       - 
       - 
       - 
@@ -629,7 +629,7 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/CharacterIntro.csv
     type: 0
-    textLength: 1595
+    textLength: 1596
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 5572774c464fd2b47ab3b96739507bb7, type: 3}
     entityIndexTbl: 
@@ -1349,7 +1349,7 @@ MonoBehaviour:
       - 
       - 
       - 
-      - "\u300E\u25EF\u25EF\u30C0\u30F3\u30B8\u30E7\u30F3\u306B\u706B\u306E\u9B54\u7269\u300F\u307F\u305F\u3044\u306A\u8A18\u4E8B\u304C\u51FA\u305F\u3089\u2026\u2026\\n\u706B\u306B\u5F37\u3044\u6C34\u306E\u6B66\u5668\u304C\u6C42\u3081\u3089\u308C\u3066\u3001\u5024\u4E0A\u304C\u308A\u3059\u308B\u304B\u3082\uFF01"
+      - "\u300E\u30C0\u30F3\u30B8\u30E7\u30F3\u306B\u706B\u306E\u9B54\u7269\u304C\u51FA\u305F\u300F\u307F\u305F\u3044\u306A\u8A18\u4E8B\u304C\u51FA\u305F\u3089\u2026\u2026\\n\u706B\u306B\u5F37\u3044\u6C34\u306E\u6B66\u5668\u304C\u6C42\u3081\u3089\u308C\u3066\u3001\u5024\u4E0A\u304C\u308A\u3059\u308B\u304B\u3082\uFF01"
       - 
       - 
       - 
@@ -1412,6 +1412,6 @@ MonoBehaviour:
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/CharacterIntro.csv
     type: 0
-    textLength: 1695
+    textLength: 1696
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 5572774c464fd2b47ab3b96739507bb7, type: 3}
