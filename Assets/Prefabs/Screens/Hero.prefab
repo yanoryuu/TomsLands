@@ -3706,6 +3706,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Armor
       objectReference: {fileID: 0}
+    - target: {fileID: 1676587802115498107, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -4
+      objectReference: {fileID: 0}
     - target: {fileID: 3134297796645566653, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
       value: 32
@@ -3723,8 +3727,12 @@ PrefabInstance:
       value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 14
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -3863,9 +3871,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Tact
       objectReference: {fileID: 0}
+    - target: {fileID: 1676587802115498107, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -4
+      objectReference: {fileID: 0}
+    - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 18
+      objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 14
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -4000,6 +4016,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Weapon
       objectReference: {fileID: 0}
+    - target: {fileID: 1676587802115498107, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: -4
+      objectReference: {fileID: 0}
     - target: {fileID: 3134297796645566653, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
       value: 32
@@ -4017,8 +4037,12 @@ PrefabInstance:
       value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 14
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
