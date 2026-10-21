@@ -34,6 +34,9 @@ public class ShopMachineView : MonoBehaviour
     [Header("設置済み一覧（複数設置） ※未配線でも動作する")]
     [SerializeField] private GameObject placementGroup;
     [SerializeField] private Transform placementListParent;
+    [Tooltip("設置済み一覧を出している間だけカタログ（スクロール枠）の高さを詰め、一覧と重ならないようにする。上端は動かさない。空なら何もしない")]
+    [SerializeField] private RectTransform catalogArea;
+    [SerializeField] private float catalogHeightWithPlacements = 450f;
 
     [Header("その他")]
     [SerializeField] private TextMeshProUGUI messageText;
@@ -127,6 +130,25 @@ public class ShopMachineView : MonoBehaviour
         producedItemDropdown.RefreshShownValue();
     }
 
+    private Vector2? catalogBaseSize;
+    private Vector2 catalogBasePos;
+
+    /// <summary>設置済み一覧の有無に合わせてカタログの高さを切り替える（上端は固定）。</summary>
+    private void FitCatalogArea(bool hasPlacements)
+    {
+        if (catalogArea == null) return;
+        if (catalogBaseSize == null)
+        {
+            catalogBaseSize = catalogArea.sizeDelta;
+            catalogBasePos = catalogArea.anchoredPosition;
+        }
+        Vector2 size = catalogBaseSize.Value;
+        float height = hasPlacements ? Mathf.Min(size.y, catalogHeightWithPlacements) : size.y;
+        float top = catalogBasePos.y + size.y * (1f - catalogArea.pivot.y);
+        catalogArea.sizeDelta = new Vector2(size.x, height);
+        catalogArea.anchoredPosition = new Vector2(catalogBasePos.x, top - height * (1f - catalogArea.pivot.y));
+    }
+
     public void HideProducedItemSelector()
     {
         if (producedItemGroup != null) producedItemGroup.SetActive(false);
@@ -180,7 +202,7 @@ public class ShopMachineView : MonoBehaviour
         if (detailCostText != null)
         {
             detailCostText.text = placedCount > 0
-                ? $"{cost:N0}G　設置中×{placedCount}（撤去で {removeRefund:N0}G 返金）"
+                ? $"{cost:N0}G\n設置中×{placedCount}（撤去で {removeRefund:N0}G 返金）"
                 : $"{cost:N0}G";
         }
 
@@ -204,6 +226,7 @@ public class ShopMachineView : MonoBehaviour
         if (placementListParent == null || machineSlotPrefab == null)
         {
             if (placementGroup != null) placementGroup.SetActive(false);
+            FitCatalogArea(false);
             return slots;
         }
 
@@ -214,6 +237,7 @@ public class ShopMachineView : MonoBehaviour
         }
 
         if (placementGroup != null) placementGroup.SetActive(count > 0);
+        FitCatalogArea(placementGroup != null && count > 0);
 
         for (int i = 0; i < count; i++)
         {

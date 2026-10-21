@@ -211,7 +211,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     }
 
     /// <summary>
-    /// スクラップした記事を付箋に出す: 1行目「第N号 予想: 水の防具」、2行目「あと2日で効く／効いている／○ 本物…」。
+    /// スクラップした記事を付箋に出す: 1行目「第N号 予想メモ: 水の防具」、2行目「あと2日で効く／効いている／○ 本物…」。
     /// 続報が届いていれば、ここでも無料で答えを出す（新聞を開かなくても分かるように）。
     /// </summary>
     private void RenderStickyNotes()
@@ -231,7 +231,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
             var entry = newsModel.FindEntry(s.entryKey);
             string what = string.IsNullOrEmpty(s.prediction)
                 ? Shorten(entry?.Article?.headline, 12)
-                : $"予想: {ScrapPrediction.Label(s.prediction)}";
+                : $"予想メモ: {ScrapPrediction.Label(s.prediction)}";
             lines.Add($"第{s.publishTurn}号 {what}\n{StickyStatus(s, entry, turn)}");
         }
         foreach (var s in scrapbook.Pinned) Add(s);
