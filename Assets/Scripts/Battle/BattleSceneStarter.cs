@@ -500,6 +500,8 @@ public class BattleSceneStarter : IAsyncStartable
             int soldFromStock = 0;
             foreach (var s in soldItems) if (s.ItemId == id) soldFromStock += s.SoldFromStock;
             int after = ItemModel.PreviewPriceAfterBattle(shop.price, master.basePrice, mul, _economySettings);
+            // 左は配信前の店の値段。帰還処理が日送りのあとにこの after へ揃えるので、翌朝の店の値段と一致する。
+            // 含み損益の取得単価（平均取得単価）は #109 の記録が入ってから渡す（今は null＝出さない）
             list.Add(new BattleMarketImpact(runtime.ItemName, runtime.ItemIcon, shop.price, after, shop.stock - soldFromStock));
         }
         return list;

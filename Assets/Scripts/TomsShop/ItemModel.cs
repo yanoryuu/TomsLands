@@ -138,6 +138,21 @@ public class ItemModel
         return Mathf.Clamp(raw, floor, ceiling);
     }
 
+    /// <summary>
+    /// 配信から帰った日の装備の値段を、配信リザルトで見せた見込み（<see cref="PreviewPriceAfterBattle"/>）に揃える。
+    /// 日送りの相場の揺れを乗せないため、日送りのあとに呼ぶ。replaceLatestHistory=true なら価格履歴の最新点（その日の値）も置き換える。
+    /// </summary>
+    public void SetPriceAfterBattle(string itemId, int price, bool replaceLatestHistory)
+    {
+        var runtime = GetRuntimeItem(itemId);
+        if (runtime == null) return;
+        runtime.CurrentPrice.Value = Mathf.Max(1, price);
+        runtime.UpdatePopularity();
+        var history = runtime.ShopPriceHistory;
+        if (replaceLatestHistory && history != null && history.Count > 0)
+            history[history.Count - 1] = runtime.CurrentPrice.Value;
+    }
+
     public void BattleWinBonus(string itemId, float multiplier)
     {
         var runtime = GetRuntimeItem(itemId);

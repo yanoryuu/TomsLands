@@ -81,6 +81,12 @@ public class BattleResultHandler : IStartable, IDisposable
         // 勝敗ボーナス/ペナルティ・経験値・最低保証レベルアップ・属性波及・レリック3択・戦績はすべて付けない
         bool aborted = _outputData.Result == BattleResult.Abort;
 
+        // 勇者の装備の帰還後の値段（配信リザルトの「相場への影響」と同じ計算: 店の値段 × 勝敗の倍率 → ストップ高/安）。
+        // 日送り（NextTurn）の相場の揺れを乗せると配信リザルトの見込みと翌朝の値段がずれるので、日送りのあとにこの値へ揃える
+        var battlePrices = aborted ? null : PreviewBattlePrices(_outputData.Result == BattleResult.Victory
+            ? ItemModel.HeroWinMultiplier(_outputData.DefeatedBossCount)
+            : 1f / ItemModel.HeroDefeatPriceDivisor);
+
         // --- 勝敗ボーナス/ペナルティ ---
         if (aborted)
         {
@@ -181,7 +187,17 @@ public class BattleResultHandler : IStartable, IDisposable
         _itemModel.SaveData();
 
         // 戦闘結果処理後、次のターンへ進む
+        int turnBefore = _gameFlowManager.CurrentTurn.Value;
         _gameFlowManager.NextTurn();
+
+        // 装備の値段を配信リザルトで見せた値に揃える（日送りで相場が動いた日は、その日の価格履歴の最新点も置き換える）
+        if (battlePrices != null && battlePrices.Count > 0)
+        {
+            bool turnAdvanced = _gameFlowManager.CurrentTurn.Value != turnBefore;
+            foreach (var kv in battlePrices)
+                _itemModel.SetPriceAfterBattle(kv.Key, kv.Value, turnAdvanced);
+            _itemModel.SaveData();
+        }
 
         // 帰還したらトコの一言を流す。上の処理（精算→NextTurn）の順序には一切関与せず、
         // 少し待ってから店に留まっている場合だけ再生する（NextTurn で次の配信・リザルトへ直行する場合は流さない）。
@@ -189,6 +205,21 @@ public class BattleResultHandler : IStartable, IDisposable
         if (!aborted)
             TokoTalk.PlayStreamingReturnAsync(
                 talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token, talkDemonPayout).Forget();
+    }
+
+    /// <summary>勇者の装備（武器・防具）の帰還後の値段。BattleSceneStarter.BuildMarketImpacts と同じ式。</summary>
+    private Dictionary<string, int> PreviewBattlePrices(float multiplier)
+    {
+        var prices = new Dictionary<string, int>();
+        foreach (var id in new[] { _outputData.WeaponId, _outputData.ArmorId })
+        {
+            if (string.IsNullOrEmpty(id) || prices.ContainsKey(id)) continue;
+            var runtime = _itemModel.GetRuntimeItem(id);
+            var master = _itemModel.GetMasterItem(id);
+            if (runtime == null || master == null) continue;
+            prices[id] = ItemModel.PreviewPriceAfterBattle(runtime.CurrentPrice.Value, master.basePrice, multiplier, _economySettings);
+        }
+        return prices;
     }
 
     public void Dispose()
