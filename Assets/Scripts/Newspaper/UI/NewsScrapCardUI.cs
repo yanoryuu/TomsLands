@@ -49,8 +49,9 @@ public class NewsScrapCardUI : MonoBehaviour
     }
 
     /// <param name="reveal">直前の表示から状態が変わった（確認の結果が出た）ときに true。バッジの演出を出す</param>
+    /// <param name="vetState">裏取り（酒場 Lv5）で分かった真偽。まだ確認していないカードのバッジをこの ○△× にする（確認ボタンはそのまま）</param>
     public void SetData(string entryKey, string headline, string lead, ScrapState state, bool canAfford, int cost,
-        bool reveal = false)
+        bool reveal = false, ScrapState? vetState = null)
     {
         EntryKey = entryKey;
         lastState = state;
@@ -60,22 +61,10 @@ public class NewsScrapCardUI : MonoBehaviour
 
         if (badgeImage != null)
         {
-            badgeImage.color = Color.white;
-            switch (state)
-            {
-                case ScrapState.Pending: badgeImage.sprite = pendingSprite; break;
-                case ScrapState.Unconfirmed: badgeImage.sprite = unconfirmedSprite; break;
-                case ScrapState.ConfirmedHit: badgeImage.sprite = hitSprite; break;
-                case ScrapState.ConfirmedPartial: badgeImage.sprite = hitSprite; badgeImage.color = partialTint; break;
-                case ScrapState.ConfirmedMiss:
-                    if (missSprite != null) badgeImage.sprite = missSprite;
-                    else { badgeImage.sprite = hitSprite; badgeImage.color = missTint; }
-                    break;
-            }
-            // 誇張（△）は専用のバッジ素材が無いので、確定バッジを薄くして「△」の字を重ねる（I-15）
-            var mark = PartialMark();
-            if (mark != null) mark.gameObject.SetActive(state == ScrapState.ConfirmedPartial);
-            if (reveal) PlayReveal(state);
+            bool resolved = state == ScrapState.ConfirmedHit || state == ScrapState.ConfirmedPartial || state == ScrapState.ConfirmedMiss;
+            var shown = !resolved && vetState.HasValue ? vetState.Value : state;
+            PaintBadge(badgeImage, shown);
+            if (reveal) PlayReveal(shown);
         }
 
         if (confirmButton != null)
@@ -86,23 +75,48 @@ public class NewsScrapCardUI : MonoBehaviour
         if (confirmLabel != null) confirmLabel.text = $"確認 {cost:N0}G";
     }
 
-    private TextMeshProUGUI partialMark;
-
-    private TextMeshProUGUI PartialMark()
+    /// <summary>
+    /// ○△× などの状態バッジを target に塗る。カードのバッジのほか、裏取り（酒場 Lv5）のハンコにも同じ素材を使う
+    /// （記事の一面トップ・小記事。呼び出し側はカードのプレハブを見本に渡す）。
+    /// </summary>
+    public void PaintBadge(Image target, ScrapState state)
     {
-        if (partialMark != null || badgeImage == null) return partialMark;
+        if (target == null) return;
+        target.color = Color.white;
+        switch (state)
+        {
+            case ScrapState.Pending: target.sprite = pendingSprite; break;
+            case ScrapState.Unconfirmed: target.sprite = unconfirmedSprite; break;
+            case ScrapState.ConfirmedHit: target.sprite = hitSprite; break;
+            case ScrapState.ConfirmedPartial: target.sprite = hitSprite; target.color = partialTint; break;
+            case ScrapState.ConfirmedMiss:
+                if (missSprite != null) target.sprite = missSprite;
+                else { target.sprite = hitSprite; target.color = missTint; }
+                break;
+        }
+        // 誇張（△）は専用のバッジ素材が無いので、確定バッジを薄くして「△」の字を重ねる（I-15）
+        var mark = PartialMarkOf(target);
+        if (mark != null) mark.gameObject.SetActive(state == ScrapState.ConfirmedPartial);
+    }
+
+    private TextMeshProUGUI PartialMarkOf(Image target)
+    {
+        var existing = target.transform.Find("PartialMark");
+        if (existing != null) return existing.GetComponent<TextMeshProUGUI>();
         var go = new GameObject("PartialMark", typeof(RectTransform));
-        go.transform.SetParent(badgeImage.transform, false);
+        go.layer = target.gameObject.layer;
+        go.transform.SetParent(target.transform, false);
         var rt = (RectTransform)go.transform;
         rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-        partialMark = go.AddComponent<TextMeshProUGUI>();
-        if (headlineText != null) partialMark.font = headlineText.font;
-        partialMark.text = "△";
-        partialMark.alignment = TextAlignmentOptions.Center;
-        partialMark.fontSize = 40;
-        partialMark.color = new Color32(0xA4, 0x50, 0x0E, 0xFF); // 付箋・記事ポップアップの「△ 誇張」と同じ濃さ
-        partialMark.raycastTarget = false;
-        return partialMark;
+        var mark = go.AddComponent<TextMeshProUGUI>();
+        if (headlineText != null) mark.font = headlineText.font;
+        mark.text = "△";
+        mark.alignment = TextAlignmentOptions.Center;
+        // カードのバッジは 40。裏取りのハンコは大きさに合わせる
+        mark.fontSize = target == badgeImage ? 40f : Mathf.Max(14f, target.rectTransform.rect.height * 0.6f);
+        mark.color = new Color32(0xA4, 0x50, 0x0E, 0xFF); // 付箋・記事ポップアップの「△ 誇張」と同じ濃さ
+        mark.raycastTarget = false;
+        return mark;
     }
 
     /// <summary>確認の結果が出たときの演出。バッジを跳ねさせ、誤報ならカードを揺らす。</summary>

@@ -95,6 +95,7 @@ public class NewspaperPresenter : IStartable, IDisposable
         view.OnBatchConfirmClicked.Subscribe(_ => ConfirmBatch()).AddTo(disposables);
         view.OnIssueStep.Subscribe(StepIssue).AddTo(disposables);
         view.OnPredictionChanged.Subscribe(p => SetPrediction(p.entryKey, p.value)).AddTo(disposables);
+        view.OnVetClicked.Subscribe(VetArticle).AddTo(disposables);
     }
 
     // =====================================================================
@@ -289,6 +290,10 @@ public class NewspaperPresenter : IStartable, IDisposable
             bodyOpen = openedBodies.Contains(key),
             canScrapKind = ScrapbookModel.CanPinKind(e),
             canScrap = scrapbook.CanPin(e),
+            showVet = CanVetArticles && scrapbook.IsVettable(e),
+            canVet = CanVetArticles && scrapbook.CanVet(e, VetWindow),
+            vetState = scrapbook.VetStateOf(key),
+            vetReveal = key == justVettedKey,
         };
     }
 
@@ -354,6 +359,7 @@ public class NewspaperPresenter : IStartable, IDisposable
             followUp = FollowUpText(s),
             answer = AnswerText(s, entry, state),
             prediction = s.prediction ?? string.Empty,
+            vetState = scrapbook.VetStateOf(s.entryKey),
         };
     }
 
@@ -735,6 +741,39 @@ public class NewspaperPresenter : IStartable, IDisposable
         RenderCompanies();  // 実測バー・購読ボタンの可否（所持金）が変わる
         RenderPaper();      // スクラップ枠が空いたのでボタンの可否が変わる
         RenderScraps();
+    }
+
+    // ---------------- 裏取り（酒場 Lv5。News_Spec §9.4） ----------------
+
+    private string justVettedKey;
+
+    private static bool CanVetArticles => VillageEffects.Current.CanVetArticles;
+
+    /// <summary>今の「配信の間」（次の配信がこのランの何回目か。配信が残っていなければ 0）。裏取りは1つの間に1回。</summary>
+    private int VetWindow
+    {
+        get
+        {
+            if (gameFlowManager == null) return 0;
+            gameFlowManager.GetStreamProgress(out int upcoming, out _);
+            return upcoming;
+        }
+    }
+
+    /// <summary>
+    /// 一面トップの記事の裏を取る（無料）。真偽（本物／誇張／誤報）だけが分かり、ハンコが付く。
+    /// 効き先・名鑑・社の実測的中率・スクラップの枠は変えない（答え合わせは確認・続報のときだけ）。
+    /// </summary>
+    private void VetArticle(string entryKey)
+    {
+        if (!CanVetArticles) return;
+        var entry = newsModel.FindEntry(entryKey);
+        if (entry == null || !scrapbook.VetArticle(entry, VetWindow, Turn)) return;
+        Save();
+        justVettedKey = entryKey;
+        RenderPaper();
+        RenderScraps();
+        justVettedKey = null;
     }
 
     public void Dispose() => disposables.Dispose();

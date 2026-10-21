@@ -96,6 +96,10 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         view.OnHoverExit
             .Subscribe(_ => view.SetDialogue(currentDialogue))
             .AddTo(disposables);
+
+        view.OnCraftRequested
+            .Subscribe(Craft)
+            .AddTo(disposables);
     }
 
     private void ShowCharacterTalk()
@@ -188,7 +192,47 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         view.SetEquipmentIcons(weapon?.ItemIcon, armor?.ItemIcon);
         view.SetDialogue(dialogue);
         UpdateClearProbability();
+        RefreshCraft(false);
     }
+
+    // ───────── 細工（職人組合 Lv5。ArtisanCraft） ─────────
+
+    /// <summary>次の配信がこのランの何回目か（配信が残っていなければ 0）。細工は1つの「配信の間」に1回。</summary>
+    private int UpcomingStreamNumber()
+    {
+        if (gameFlowManager == null) return 0;
+        gameFlowManager.GetStreamProgress(out int upcoming, out _);
+        return upcoming;
+    }
+
+    private void RefreshCraft(bool reveal)
+    {
+        bool enabled = VillageEffects.Current.CanCraftHeroWeapon;
+        int stream = UpcomingStreamNumber();
+        var kind = enabled ? ArtisanCraft.KindFor(tomsModel.FlowSeed, stream) : ArtisanCraftKind.None;
+        bool hasWeapon = !string.IsNullOrEmpty(heroModel.heroData?.weaponId.Value);
+        bool canCraft = enabled && stream > 0 && kind == ArtisanCraftKind.None && hasWeapon;
+        // 業物で付く属性は、弱点を知っているときだけ印に出す（知らなければ「業物」の字だけ）
+        var shownAttribute = kind == ArtisanCraftKind.Fine ? GetKnownWeakness() : null;
+        string used = kind != ArtisanCraftKind.None ? $"\n{CraftLine("hover_craft_used")}" : string.Empty;
+        view.SetCraft(enabled && stream > 0, canCraft, kind, shownAttribute,
+            CraftLine("hover_craft_fine") + used, CraftLine("hover_craft_dull") + used, reveal);
+    }
+
+    private void Craft(ArtisanCraftKind kind)
+    {
+        if (!VillageEffects.Current.CanCraftHeroWeapon || kind == ArtisanCraftKind.None) return;
+        if (string.IsNullOrEmpty(heroModel.heroData?.weaponId.Value)) return;
+        int stream = UpcomingStreamNumber();
+        if (!ArtisanCraft.Apply(tomsModel.FlowSeed, stream, kind)) return;
+        // 勇者は細工に気づかない（なまくらでも礼を言う）
+        currentDialogue = CraftLine(kind == ArtisanCraftKind.Fine ? "craft_fine_done" : "craft_dull_done");
+        view.SetDialogue(currentDialogue);
+        RefreshCraft(true);
+    }
+
+    /// <summary>細工の台詞（HeroDialogues.csv。無ければ空）。</summary>
+    private static string CraftLine(string id) => HeroDialogueLoader.Get(id);
 
     /// <summary>
     /// クリア見込み（5段階）を計算して View に反映する。

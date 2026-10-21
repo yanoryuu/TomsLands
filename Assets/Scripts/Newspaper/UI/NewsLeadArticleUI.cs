@@ -20,17 +20,24 @@ public class NewsLeadArticleUI : MonoBehaviour
     [SerializeField] private GameObject newBadge;
     [SerializeField] private Button rootButton;
     [SerializeField] private Button scrapButton;   // 18スクラップする
+    [Tooltip("酒場 Lv5「裏を取る」（任意）。スクラップするの左に置く")]
+    [SerializeField] private Button vetButton;
+    [Tooltip("裏取りの結果のハンコ（任意）。○△× はスクラップカードの素材で塗る")]
+    [SerializeField] private Image vetStamp;
 
     public string EntryKey { get; private set; }
     /// <summary>スクラップへ飛ぶ演出の出発点（「スクラップする」ボタン。無ければ記事そのもの）。</summary>
     public RectTransform ScrapSource => scrapButton != null ? (RectTransform)scrapButton.transform : (RectTransform)transform;
     public event Action<string> OnClicked;
     public event Action<string> OnScrapClicked;
+    public event Action<string> OnVetClicked;
 
     private void Awake()
     {
         if (rootButton != null) rootButton.onClick.AddListener(() => OnClicked?.Invoke(EntryKey));
         if (scrapButton != null) scrapButton.onClick.AddListener(() => OnScrapClicked?.Invoke(EntryKey));
+        if (vetButton != null) vetButton.onClick.AddListener(() => OnVetClicked?.Invoke(EntryKey));
+        if (vetStamp != null) vetStamp.gameObject.SetActive(false);
         // パッド/キー: 記事の内側にある「スクラップする」へ右で移れるようにする
         if (rootButton != null && scrapButton != null) InnerSelectableNavigation.Attach(rootButton, scrapButton);
     }
@@ -55,5 +62,24 @@ public class NewsLeadArticleUI : MonoBehaviour
         }
 
         if (changed) UIFx.Pop(transform, 0.98f, 0.14f);
+    }
+
+    /// <summary>
+    /// 裏取り（酒場 Lv5）。showButton = ボタンを出すか（Lv5 でまだ答えの出ていない報道）、canVet = 押せるか（この配信の間にまだ使っていない）。
+    /// stamp = 裏取りで分かった真偽（null = まだ）。style はスクラップカードのプレハブ（○△× の素材の見本）。reveal = いま裏を取った（ハンコを押す演出）。
+    /// </summary>
+    public void SetVet(bool showButton, bool canVet, ScrapState? stamp, NewsScrapCardUI style, bool reveal = false)
+    {
+        if (vetButton != null)
+        {
+            vetButton.gameObject.SetActive(showButton && !stamp.HasValue);
+            vetButton.interactable = canVet;
+        }
+        if (vetStamp == null) return;
+        bool show = stamp.HasValue && style != null;
+        vetStamp.gameObject.SetActive(show);
+        if (!show) return;
+        style.PaintBadge(vetStamp, stamp.Value);
+        if (reveal) UIFx.Pop(vetStamp.transform, 1.8f, 0.22f);
     }
 }
