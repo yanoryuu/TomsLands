@@ -29,11 +29,11 @@ public static class DemoBuild
     }
 
     /// <summary>
-    /// 体験版の Steam App ID。【仮】体験版のアプリは Steamworks でまだ作っていない（0 = 未取得）。
-    /// 取得したらここだけ書き換える（steam_appid.txt・SteamPipe の VDF も合わせる。Docs/Demo_Build.md）。
-    /// 0 の間は開発ビルドにも steam_appid.txt を入れない。Steam の初期化に失敗しても体験版はそのまま動く。
+    /// 体験版の Steam App ID（トコのトムトムランド 体験版、2026-10-22 取得）。
+    /// 変えるときは SteamPipe の VDF（tools/steampipe/scripts/*_demo.vdf）も合わせる（Docs/Demo_Build.md）。
+    /// 0 にすると開発ビルドにも steam_appid.txt を入れない。Steam の初期化に失敗しても体験版はそのまま動く。
     /// </summary>
-    public const uint DemoSteamAppId = 0;
+    public const uint DemoSteamAppId = 5186790;
 
     /// <summary>製品版（トコのトムトムランド）の Steam App ID。「製品版へ」で開くストアページ。</summary>
     public const uint FullGameAppId = 4535810;

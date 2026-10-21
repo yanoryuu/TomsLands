@@ -1,9 +1,7 @@
 "AppBuild"
 {
-	// 【仮】トコのトムトムランド 体験版。体験版の App はまだ Steamworks で作っていない。
-	// 作ったら "0" を体験版の App ID に書き換える（Assets/Scripts/Demo/DemoBuild.cs の DemoSteamAppId も同じ値に）。
-	// 0 のままだと run_tomslands_demo_build.bat は止まる（間違って上げないため）。
-	"AppID" "0" // 【仮】体験版の App ID
+	// トコのトムトムランド 体験版（App 5186790）。Assets/Scripts/Demo/DemoBuild.cs の DemoSteamAppId と同じ値にする。
+	"AppID" "5186790"
 	"Desc" "TomsLands demo build" // 管理画面のビルド一覧に出る説明。上げる前に版（例: demo v1.0）に書き換える
 	"verbose" "0"
 	"preview" "0" // 1 にすると、アップロードせずに中身の確認だけする
@@ -14,6 +12,6 @@
 
 	"Depots"
 	{
-		"0" "depot_build_demo.vdf" // 【仮】左は体験版の Windows depot の番号（ふつうは体験版の App ID + 1）
+		"5186791" "depot_build_demo.vdf" // 【要確認】体験版の Windows depot。App ID + 1 と仮定。Steamworks の「SteamPipe > Depots」の番号と違えば直す
 	}
 }
