@@ -139,9 +139,24 @@ public class PreparationPresenter : IStartable, IDisposable
             RefreshAll();
         }).AddTo(disposables);
 
-        view.OnFlyerToggled.Subscribe(_ => { model.ToggleFlyer(); RefreshAll(); }).AddTo(disposables);
-        view.OnAppraisalToggled.Subscribe(_ => { model.ToggleAppraisal(); RefreshAll(); }).AddTo(disposables);
-        view.OnGraceToggled.Subscribe(_ => { model.ToggleGrace(); RefreshAll(); }).AddTo(disposables);
+        view.OnFlyerToggled.Subscribe(_ =>
+        {
+            model.ToggleFlyer();
+            ShowStartDashMessage(FlyerName, FlyerEffect(), GameConst.Preparation.flyerCost, model.UseFlyer);
+            RefreshAll();
+        }).AddTo(disposables);
+        view.OnAppraisalToggled.Subscribe(_ =>
+        {
+            model.ToggleAppraisal();
+            ShowStartDashMessage(AppraisalName, AppraisalEffect(), GameConst.Preparation.appraisalCost, model.UseAppraisal);
+            RefreshAll();
+        }).AddTo(disposables);
+        view.OnGraceToggled.Subscribe(_ =>
+        {
+            model.ToggleGrace();
+            ShowStartDashMessage(GraceName, GraceEffect(), GameConst.Preparation.graceCost, model.UseGrace);
+            RefreshAll();
+        }).AddTo(disposables);
 
         view.OnDepart.Subscribe(_ =>
         {
@@ -202,9 +217,9 @@ public class PreparationPresenter : IStartable, IDisposable
         view.UpdateCarrySlider(model.CarryAmount, carryMax, PreparationModel.CarryStepAmount);
 
         view.UpdateStartDash(
-            "宣伝ビラ", settings.flyerCost, model.UseFlyer,
-            "目利きの手引き", settings.appraisalCost, model.UseAppraisal,
-            "返済猶予証", settings.graceCost, model.UseGrace);
+            FlyerName, settings.flyerCost, model.UseFlyer,
+            AppraisalName, settings.appraisalCost, model.UseAppraisal,
+            GraceName, settings.graceCost, model.UseGrace);
 
         // レリック選択のハイライトを反映
         foreach (var slot in relicSlots)
@@ -245,6 +260,25 @@ public class PreparationPresenter : IStartable, IDisposable
         Debug.Log($"[Preparation] 出店: 難易度={model.Difficulty}, 持ち込み={model.CarryAmount}G, レリック={model.StarterRelicId}, ダッシュ=({model.UseFlyer},{model.UseAppraisal},{model.UseGrace}), 村資金残高={metaProgress.VillageFunds}G");
         SceneLoader.Load("TomsShop");
     }
+
+    // スタートダッシュ: 名前だけでは効き目が分からないので、押したときに効果を出す（O-10。名前の枠は狭く2行目が入らない）
+    private const string FlyerName = "宣伝ビラ";
+    private const string AppraisalName = "目利きの手引き";
+    private const string GraceName = "初回減免状";
+
+    private static string FlyerEffect()
+        => $"注目+{GameConst.Preparation.flyerAttention}・フォロワー+{GameConst.Preparation.flyerFollowers}";
+    private static string AppraisalEffect()
+        => $"全商品の需要+{Percent(GameConst.Preparation.appraisalDemandBoost)}";
+    private static string GraceEffect()
+        => $"最初の納付金-{Percent(GameConst.Preparation.graceDiscountRate)}";
+
+    private void ShowStartDashMessage(string name, string effect, int cost, bool on)
+        => view.ShowMessage(on
+            ? $"「{name}」を買う（{cost:N0}G）\n効果: {effect}"
+            : $"「{name}」をやめた\n効果: {effect}");
+
+    private static string Percent(float rate) => $"{Mathf.RoundToInt(rate * 100f)}%";
 
     private static string DifficultyLabel(GameModeId mode) => mode switch
     {

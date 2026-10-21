@@ -18,7 +18,7 @@ using UnityEngine.SceneManagement;
 public static class SceneLoader
 {
     private const string OverlayResourcePath = "LoadingOverlay";
-    private const string DefaultStatus = "Now Loading...";
+    private const string DefaultStatus = "読み込み中……";
     /// <summary>チラ見え防止の最小表示時間（秒）。フェードインが終わってから数える。</summary>
     public const float MinDisplaySec = 0.5f;
 

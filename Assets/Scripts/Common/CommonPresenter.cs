@@ -106,7 +106,7 @@ public class CommonPresenter : IStartable, IDisposable
         {
             string label = buzz.CurrentBuzzType.Value switch
             {
-                BuzzType.Flame => "炎上中…",
+                BuzzType.Flame => "炎上中……",
                 BuzzType.Big => "超バズ中！",
                 _ => "バズ中！",
             };

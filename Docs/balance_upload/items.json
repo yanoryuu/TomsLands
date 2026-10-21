@@ -14,7 +14,7 @@
       "itemAttribute": "Dark",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "宵闇を織り込んだような漆黒の鎧。光属性の攻撃を吸い込む深い闇色が冒険者に支持されている。"
+      "description": "宵闇を織り込んだような漆黒の鎧。光属性の魔物が出る場で人気の深い闇色が、冒険者に支持されている。"
     },
     {
       "itemId": "AR2",
@@ -27,7 +27,7 @@
       "itemAttribute": "Water",
       "requiredLevel": 2,
       "salesRate": 1,
-      "description": "熱を瞬時に冷却する素材でできた鎧。火属性ダメージをほぼ無効化する炎地帯の定番装備。"
+      "description": "熱を瞬時に冷却する素材でできた鎧。火属性の魔物が出る場で人気の、炎地帯の定番装備。"
     },
     {
       "itemId": "AR3",
@@ -40,7 +40,7 @@
       "itemAttribute": "Wood",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "若葉の繊維を編み込んだしなやかなアーマー。水属性の攻撃を葉が吸い上げて受け流す、動きを妨げない一着。"
+      "description": "若葉の繊維を編み込んだしなやかなアーマー。水属性の魔物が出る場で人気の、動きを妨げない一着。"
     },
     {
       "itemId": "AR4",
@@ -53,7 +53,7 @@
       "itemAttribute": "Dark",
       "requiredLevel": 4,
       "salesRate": 1,
-      "description": "冥府の闇を凝縮した超重量級の鎧。光属性の強攻撃すら完全に呑み込む究極の防御。"
+      "description": "冥府の闇を凝縮した超重量級の鎧。光属性の強敵が出る場で人気の、究極の防具。"
     },
     {
       "itemId": "AR5",
@@ -66,7 +66,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "炎をまとったたすき。木属性（森の魔物）の攻撃を熱で焼き払う、軽量ながら侮れない一品。"
+      "description": "炎をまとったたすき。木属性（森の魔物）が出る場で人気の、軽量ながら侮れない一品。"
     },
     {
       "itemId": "AR6",
@@ -79,7 +79,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "炎の力が宿るシンプルなベルト。木属性（森の魔物）への耐性が地味に助かる場面がある。"
+      "description": "炎の力が宿るシンプルなベルト。木属性（森の魔物）が出る場で地味に人気がある。"
     },
     {
       "itemId": "AR7",
@@ -92,7 +92,7 @@
       "itemAttribute": "Light",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "聖なる光の加護が宿る鎧。闇属性ダメージをやわらかく受け止める、信仰系冒険者に人気の一品。"
+      "description": "聖なる光の加護が宿る鎧。闇属性の魔物が出る場で人気の、信仰系冒険者に好まれる一品。"
     },
     {
       "itemId": "AR8",
@@ -105,7 +105,7 @@
       "itemAttribute": "Light",
       "requiredLevel": 5,
       "salesRate": 1,
-      "description": "純粋な光を結晶化した最高峰の鎧。闇属性への圧倒的な耐性で光属性使いの冒険者から絶大な支持を得ている。"
+      "description": "純粋な光を結晶化した最高峰の鎧。闇属性の魔物が出る場の定番として、光属性使いの冒険者から絶大な支持を得ている。"
     },
     {
       "itemId": "AX1",
@@ -157,7 +157,7 @@
       "itemAttribute": "Dark",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "宵闇色に染め上げた基本ヘルメット。光属性ダメージをがっちりガードする頑丈さで初心者から支持を集める。"
+      "description": "宵闇色に染め上げた基本ヘルメット。光属性の魔物が出る場で人気の頑丈な作りで、初心者から支持を集める。"
     },
     {
       "itemId": "HE2",
@@ -170,7 +170,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 2,
       "salesRate": 1,
-      "description": "木属性（森の魔物）の攻撃を受け止める兜。装備すると炎のような闘志が湧いてくると評判。"
+      "description": "木属性（森の魔物）が出る場で人気の兜。装備すると炎のような闘志が湧いてくると評判。"
     },
     {
       "itemId": "HE3",
@@ -183,7 +183,7 @@
       "itemAttribute": "Dark",
       "requiredLevel": 2,
       "salesRate": 1,
-      "description": "光属性ダメージを受け流すダークな兜。ミステリアスな外見が闇系冒険者に刺さる。"
+      "description": "光属性の魔物が出る場で人気のダークな兜。ミステリアスな外見が闇系冒険者に刺さる。"
     },
     {
       "itemId": "HE4",
@@ -196,7 +196,7 @@
       "itemAttribute": "Fire",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "高火力の木属性攻撃に耐える強化素材。森の魔物がひしめく地帯での生存率が段違い。"
+      "description": "高火力の強化素材で作った兜。森の魔物がひしめく地帯で人気が段違い。"
     },
     {
       "itemId": "HE5",
@@ -209,7 +209,7 @@
       "itemAttribute": "Dark",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "光属性の攻撃を受け流す兜。闇への高い耐性と禍々しいオーラが両立している。"
+      "description": "光属性の魔物が出る場で人気の兜。深い闇色と禍々しいオーラが目を引く。"
     },
     {
       "itemId": "HE6",
@@ -222,7 +222,7 @@
       "itemAttribute": "Light",
       "requiredLevel": 3,
       "salesRate": 1,
-      "description": "聖なる加護が宿る兜。闇属性への耐性と見た目の神々しさが映える。"
+      "description": "聖なる加護が宿る兜。闇属性の魔物が出る場で人気で、見た目の神々しさも映える。"
     },
     {
       "itemId": "HE7",
@@ -235,7 +235,7 @@
       "itemAttribute": "Water",
       "requiredLevel": 1,
       "salesRate": 1,
-      "description": "火属性ダメージを受け流すアクアヘルム。炎地帯でも冷静に戦える頼れる一品。"
+      "description": "火属性の魔物が出る場で人気のアクアヘルム。炎地帯の冒険者に頼られる一品。"
     },
     {
       "itemId": "HE8",
@@ -248,7 +248,7 @@
       "itemAttribute": "Wood",
       "requiredLevel": 4,
       "salesRate": 1,
-      "description": "水属性攻撃を受け流す若葉仕立ての兜。水属性への耐性がありながら軽く、動きを妨げない。"
+      "description": "水属性の魔物が出る場で人気の、若葉仕立ての兜。軽く、動きを妨げない。"
     },
     {
       "itemId": "HE9",
@@ -261,7 +261,7 @@
       "itemAttribute": "Light",
       "requiredLevel": 5,
       "salesRate": 1,
-      "description": "闇属性防御の最高峰ヘルメット。神々しい輝きに一目惚れする冒険者が後を絶たない。"
+      "description": "闇属性の魔物が出る場で人気の最高峰ヘルメット。神々しい輝きに一目惚れする冒険者が後を絶たない。"
     },
     {
       "itemId": "SH1",

@@ -92,7 +92,8 @@ public class VillagePresenter : IStartable, IDisposable
                         arrivalShown = true;
                         await PlayArrivalAsync(cleared, earned, converted, token);
                     }
-                    : null);
+                    : null,
+                bankrupt: hasArrival && !cleared);
         }
         catch (OperationCanceledException)
         {

@@ -45,13 +45,13 @@ public class GameOverView : MonoBehaviour
     public void Setup(int turn)
     {
         if (titleText != null)
-            titleText.text = "税金納付不能！！";
+            titleText.text = "納付金が払えない！！";
 
         if (messageText != null)
             messageText.text = "ト、トコちゃん！！\nお店が差し押さえられてしまいました！";
 
         if (turnText != null)
-            turnText.text = $"ターン {turn} で力尽きました...";
+            turnText.text = $"{DayText.DayOf(turn)}で力尽きました……";
     }
 
     /// <summary>

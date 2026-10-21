@@ -554,12 +554,12 @@ public class TomsShopView : MonoBehaviour
     public void ShowTurnAnnounce(int turn) => turnAnnounceView.Show(turn);
 
     /// <summary>
-    /// 次回税金の納付額と残りターン数をショップ画面内に表示する
+    /// 次の納付金の額と残り日数をショップ画面内に表示する
     /// </summary>
     public void UpdateNextDebt(int amount, int remainingTurns)
     {
         if (nextDebtText == null) return;
-        nextDebtText.text = $"次回納税\n{amount:#,0}G\nあと{remainingTurns}ターン";
+        nextDebtText.text = $"次の納付\n{amount:#,0}G\n{DayText.Remaining(remainingTurns)}";
     }
 
     /// <summary>

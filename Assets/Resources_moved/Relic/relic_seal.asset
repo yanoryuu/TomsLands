@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relicId: relic_seal
   relicName: "\u30AE\u30EB\u30C9\u306E\u6E1B\u514D\u72B6"
-  description: "\u30AE\u30EB\u30C9\u3068\u306E\u7279\u5225\u5951\u7D04\u3002\u501F\u91D1\u306E\u8FD4\u6E08\u984D-20%\u3002"
+  description: "\u30AE\u30EB\u30C9\u3068\u306E\u7279\u5225\u5951\u7D04\u3002\u7D0D\u4ED8\u91D1-20%\u3002"
   icon: {fileID: 21300000, guid: ef333fac6ed2409ba8989857147447cd, type: 3}
   rarity: 2
   category: 0

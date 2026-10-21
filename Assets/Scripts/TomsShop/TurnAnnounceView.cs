@@ -35,7 +35,7 @@ public class TurnAnnounceView : MonoBehaviour
     /// </summary>
     public void Show(int turn)
     {
-        announceText.text = $"— ターン {turn} —";
+        announceText.text = $"— {DayText.DayOf(turn)} —";
         announceText.color = Color.white;
         PlaySlideAnimation();
     }

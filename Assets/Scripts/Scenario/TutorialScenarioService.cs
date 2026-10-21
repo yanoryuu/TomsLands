@@ -30,6 +30,18 @@ public class TutorialScenarioService
     }
 
     /// <summary>
+    /// seenLabel が未読なら、代わりに playLabel（同じ場面の別版）を流して seenLabel を既読にする。
+    /// playLabel が無ければ何もしない（false）。呼び出し側は false のとき seenLabel を普通に流す。
+    /// </summary>
+    public async UniTask<bool> PlayVariantOnceAsync(string playLabel, string seenLabel, CancellationToken cancellationToken = default)
+    {
+        if (_meta == null || _meta.HasSeenTutorial(seenLabel)) return true;
+        if (!await PlayAsync(playLabel, cancellationToken)) return false;
+        _meta.MarkTutorialSeen(seenLabel);
+        return true;
+    }
+
+    /// <summary>
     /// 既読に関係なく毎回再生する。ランダムイベントの会話のように繰り返すもの向け。
     /// </summary>
     public static async UniTask PlayAlwaysAsync(string label, CancellationToken cancellationToken = default)

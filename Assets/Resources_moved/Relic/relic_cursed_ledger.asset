@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relicId: relic_cursed_ledger
   relicName: "\u546A\u308F\u308C\u305F\u5E33\u7C3F"
-  description: "\u58F2\u4E0A\u306F\u8DF3\u306D\u308B\u304C\u3001\u501F\u91D1\u53D6\u308A\u3082\u5F35\u308A\u5207\u308B\u3002\u55B6\u696D\u58F2\u4E0A+30%\u3001\u8FD4\u6E08\u984D+20%\u3002"
+  description: "\u58F2\u4E0A\u306F\u8DF3\u306D\u308B\u304C\u3001\u53D6\u7ACB\u4EBA\u3082\u5F35\u308A\u5207\u308B\u3002\u55B6\u696D\u58F2\u4E0A+30%\u3001\u7D0D\u4ED8\u91D1+20%\u3002"
   icon: {fileID: 21300000, guid: 56657e28080a4cefb4eb76fa84c85269, type: 3}
   rarity: 1
   category: 0

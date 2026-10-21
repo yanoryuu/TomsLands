@@ -53,6 +53,6 @@ public class MapDungeonLabel : MonoBehaviour
             ribbonGroup.alpha = afterNext ? afterNextAlpha : 1f;
             if (d.IsNext && !wasShown) UIFx.Pop(nextRibbon.transform, 0.85f, 0.22f);
         }
-        if (nextText) nextText.text = afterNext ? "その次" : $"<color=#E8A33D>NEXT</color>  {d.NextText}";
+        if (nextText) nextText.text = afterNext ? "その次" : $"<color=#E8A33D>次</color>  {d.NextText}";
     }
 }

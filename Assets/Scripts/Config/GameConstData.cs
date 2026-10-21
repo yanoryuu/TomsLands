@@ -213,7 +213,7 @@ public class PreparationSettingsData
     public int appraisalCost = 150000;
     public float appraisalDemandBoost = 0.15f;
     public int graceCost = 200000;
-    /// <summary>返済猶予証: 初回返済額の割引率。</summary>
+    /// <summary>初回減免状: 初回返済額の割引率。</summary>
     public float graceDiscountRate = 0.3f;
 
     public PreparationSettingsData Clone()

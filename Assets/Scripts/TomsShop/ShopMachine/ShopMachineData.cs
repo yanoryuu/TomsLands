@@ -65,10 +65,10 @@ public class ShopMachineData : ScriptableObject
     {
         ShopMachineEffectType.DailyMoney => $"毎朝 +{dailyMoney:N0}G",
         ShopMachineEffectType.DailyItem => dailyItemSelectable
-            ? $"選んだ武具を毎朝製造（{dailyProductionBudget:N0}G分/日）"
-            : $"毎朝 {dailyItemId} ×{dailyItemCount} を生成",
+            ? $"選んだ武具を毎朝 {dailyProductionBudget:N0}G分製造"
+            : $"毎朝 武具 ×{dailyItemCount} を製造",
         ShopMachineEffectType.RevenueMultiplier => $"営業売上 +{revenueMultiplierBonus:P0}",
-        ShopMachineEffectType.DemandFloorBonus => $"全商品の需要下限 +{demandFloorBonus:P0}",
+        ShopMachineEffectType.DemandFloorBonus => $"全商品の需要の底 +{demandFloorBonus:P0}",
         _ => "",
     };
 }

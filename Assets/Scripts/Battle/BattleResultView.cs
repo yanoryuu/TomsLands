@@ -137,7 +137,7 @@ public class BattleResultView : MonoBehaviour
             BattleResult.Abort => "配信終了",
             // 魔王側に張って当たった。「防衛成功」は世界観に合わないので使わない（決定 Q30）
             _ when s.IsDemonPayout => "配当確定",
-            _ => "敗北...",
+            _ => "敗北……",
         };
         resultTitleText.color = s.IsDemonPayout ? demonTitleColor : _titleBaseColor;
     }

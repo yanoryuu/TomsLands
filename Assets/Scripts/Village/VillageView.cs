@@ -342,7 +342,7 @@ public class VillageView : MonoBehaviour
         conversionPopup.SetActive(true);
 
         if (conversionTitleText != null)
-            conversionTitleText.text = cleared ? "ランクリア！ 村への還元" : "破産…… それでも村は待っている";
+            conversionTitleText.text = cleared ? "ランクリア！　村への還元" : "破産……　それでも村は待っている";
         if (conversionEarnedText != null)
         {
             string sign = earned >= 0 ? "+" : "−";

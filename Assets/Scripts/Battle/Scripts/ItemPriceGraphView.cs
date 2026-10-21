@@ -74,15 +74,7 @@ public class ItemPriceGraphView : MonoBehaviour
             if (go != null) go.SetActive(visible);
     }
 
-    private static string AttributeLabel(ItemTypeData.ItemAttribute attr) => attr switch
-    {
-        ItemTypeData.ItemAttribute.Fire  => "火",
-        ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Wood  => "木",
-        ItemTypeData.ItemAttribute.Light => "光",
-        ItemTypeData.ItemAttribute.Dark  => "闇",
-        _ => "",
-    };
+    private static string AttributeLabel(ItemTypeData.ItemAttribute attr) => ItemAttributeText.ToJapanese(attr);
 
     // ─────────────────────────────────────────
     //  公開 API
@@ -122,13 +114,13 @@ public class ItemPriceGraphView : MonoBehaviour
         else
         {
             if (currentPriceText != null)
-                currentPriceText.text = $"配信価格: {item.CurrentPrice.Value} G";
+                currentPriceText.text = $"配信価格: {item.CurrentPrice.Value:N0}G";
 
             int totalChange = history.Count > 0 ? item.CurrentPrice.Value - history[0] : 0;
             if (totalChangeText != null)
             {
                 string sign = totalChange >= 0 ? "+" : "";
-                totalChangeText.text = $"累計変動: {sign}{totalChange} G";
+                totalChangeText.text = $"累計変動: {sign}{totalChange:N0}G";
                 totalChangeText.color = totalChange > 0 ? lineColorUp
                                       : totalChange < 0 ? lineColorDown
                                       : lineColorFlat;

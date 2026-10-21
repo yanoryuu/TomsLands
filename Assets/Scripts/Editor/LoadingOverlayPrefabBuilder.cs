@@ -55,14 +55,14 @@ public static class LoadingOverlayPrefabBuilder
             raw.enabled = false; // 撮影が始まるまで白い四角を出さない
             var stage = hero.gameObject.AddComponent<LoadingHeroStage>();
 
-            // 「Now Loading...」（勇者の左）
+            // 「読み込み中……」（勇者の左）
             var status = CreateChild("Status", root.transform);
             status.anchorMin = status.anchorMax = new Vector2(1f, 0f);
             status.pivot = new Vector2(1f, 0f);
             status.sizeDelta = new Vector2(640f, 64f);
             status.anchoredPosition = new Vector2(-292f, 64f);
             var text = status.gameObject.AddComponent<TextMeshProUGUI>();
-            text.text = "Now Loading...";
+            text.text = "読み込み中……";
             text.fontSize = 40f;
             text.alignment = TextAlignmentOptions.BottomRight;
             text.color = new Color(1f, 0.94f, 0.78f, 1f); // 木と金のトーンに合わせた生成り色

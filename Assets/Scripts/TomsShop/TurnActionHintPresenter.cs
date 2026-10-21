@@ -203,7 +203,7 @@ public class TurnActionHintPresenter : IStartable, IDisposable
             hints.Add(new TurnActionHint
             {
                 Priority = HintPriority.Info,
-                Message  = $"{notSelling.Count}種が前ターン売れませんでした。陳列を見直してみてください",
+                Message  = $"{notSelling.Count}種が昨日売れませんでした。陳列を見直してみてください",
                 Target   = ActionTarget.ItemSelection,
             });
         }

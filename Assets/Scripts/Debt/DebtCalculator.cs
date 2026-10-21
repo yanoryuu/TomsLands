@@ -14,7 +14,7 @@ public static class DebtCalculator
 
         if (cycle == 1 && tomsModel != null)
         {
-            // スタートダッシュ「返済猶予証」: 初回返済額の割引
+            // スタートダッシュ「初回減免状」: 初回返済額の割引
             if (tomsModel.FirstDebtDiscountRate > 0f)
                 amount = Mathf.RoundToInt(amount * (1f - tomsModel.FirstDebtDiscountRate));
 

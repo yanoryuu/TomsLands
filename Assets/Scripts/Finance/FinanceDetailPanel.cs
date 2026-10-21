@@ -92,8 +92,8 @@ public class FinanceDetailPanel : MonoBehaviour
             detailText.text = product.kind == FinancialProductKind.Bond
                 ? $"満期: {product.bondMaturityTurns}日後\n利率: {product.bondInterestRate:P0}\n※満期まで資金はロックされる"
                 : (product.useAttributeFilter
-                    ? $"{AttributeLabel(product.attribute)}属性銘柄の市場価格に連動\nいつでも解約可能"
-                    : "全銘柄の市場価格に連動（市場指数）\nいつでも解約可能");
+                    ? $"{AttributeLabel(product.attribute)}属性の品の相場に連動\nいつでも解約可能"
+                    : "すべての品の相場に連動\nいつでも解約可能");
         }
 
         if (holdingsText != null)
@@ -128,15 +128,7 @@ public class FinanceDetailPanel : MonoBehaviour
 
     public int CurrentQuantity => quantity;
 
-    public static string AttributeLabel(ItemTypeData.ItemAttribute attr) => attr switch
-    {
-        ItemTypeData.ItemAttribute.Fire => "火",
-        ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Wood  => "木",
-        ItemTypeData.ItemAttribute.Light => "光",
-        ItemTypeData.ItemAttribute.Dark => "闇",
-        _ => attr.ToString()
-    };
+    public static string AttributeLabel(ItemTypeData.ItemAttribute attr) => ItemAttributeText.ToJapanese(attr);
 
     private void RefreshQuantity()
     {

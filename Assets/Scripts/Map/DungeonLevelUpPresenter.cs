@@ -236,7 +236,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     /// </summary>
     private string BuildRewardText(DungeonData data, int currentLevel, int nextLevel, bool isMax)
     {
-        if (!data.isShowedInfo) return "防衛報酬: ？？？";
+        if (!data.isShowedInfo) return "防衛報酬: ？";
 
         int currentReward = data.GetDefenseReward(currentLevel); // Lv0（未出資）は 0
         if (isMax) return $"防衛報酬 {currentReward:N0}G";

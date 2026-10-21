@@ -63,7 +63,7 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
         {
             // 表示用の日数（今日 0・明日 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
             int daysUntil = gameFlowManager.GetDaysUntilNextStream();
-            nextText = daysUntil == 0 ? "本日配信" : daysUntil > 0 ? $"あと{daysUntil}ターン" : "";
+            nextText = DayText.UntilStream(daysUntil, "");
         }
 
         foreach (var data in dungeons)
@@ -87,7 +87,7 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
             {
                 Key = data.key,
                 Name = data.dungeonName,
-                LevelText = bought ? DungeonLevels.Label(data.currentDungeonLevel) : "Lv.???",
+                LevelText = bought ? DungeonLevels.Label(data.currentDungeonLevel) : "Lv.？",
                 WeaknessText = ItemAttributeText.Weakness(data.requiredAttribute, weaknessKnown),
                 ProbabilityText = probability,
                 Status = data.dungeonStatus,

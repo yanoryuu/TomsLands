@@ -63,6 +63,6 @@ public class ShopMachineSlotUI : MonoBehaviour
         if (nameText != null) nameText.text = label;
         if (effectText != null) effectText.text = detail;
         if (costText != null) costText.text = "";
-        if (stateText != null) stateText.text = selected ? "▶ 選択中" : "";
+        if (stateText != null) stateText.text = selected ? "選択中" : "";
     }
 }

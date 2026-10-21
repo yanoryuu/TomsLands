@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relicId: relic_charm
   relicName: "\u5546\u58F2\u7E41\u76DB\u306E\u304A\u5B88\u308A"
-  description: "\u5BA2\u8DB3\u304C\u9014\u7D76\u3048\u306A\u3044\u4E0D\u601D\u8B70\u306A\u304A\u5B88\u308A\u3002\u5168\u5546\u54C1\u306E\u9700\u8981\u4E0B\u9650+8%\u3002"
+  description: "\u5BA2\u8DB3\u304C\u9014\u7D76\u3048\u306A\u3044\u4E0D\u601D\u8B70\u306A\u304A\u5B88\u308A\u3002\u5168\u5546\u54C1\u306E\u9700\u8981\u306E\u5E95+8%\u3002"
   icon: {fileID: 21300000, guid: 6226adbc4425409a8bfc9f5d91af03a4, type: 3}
   rarity: 1
   category: 0

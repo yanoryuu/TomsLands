@@ -38,9 +38,9 @@ public class BattleSceneStarter : IAsyncStartable
     private const float LiveHudInterval = 0.25f;
     /// <summary>決着の溜め（演出が無いときの待ち）の秒。</summary>
     private const float FinaleFallbackSeconds = 1.2f;
-    private const string FinaleHeroLabel = "CLEAR!";
+    private const string FinaleHeroLabel = "勝利！";
     private const string FinaleDemonLabel = "配当確定";
-    private const string FinaleDefeatLabel = "敗北…";
+    private const string FinaleDefeatLabel = "敗北……";
 
     // 配信チュートリアルのシナリオラベル
     private const string TutorialStreamingPrepare = "Tutorial_StreamingPrepare";

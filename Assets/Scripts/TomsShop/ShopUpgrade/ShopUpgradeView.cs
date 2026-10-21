@@ -64,8 +64,8 @@ public class ShopUpgradeView : MonoBehaviour
 
         if (displayKindsText != null)
             displayKindsText.text = isMax
-                ? $"同時陳列 {current.maxDisplayKinds}銘柄"
-                : $"同時陳列 {current.maxDisplayKinds} → {next.maxDisplayKinds}銘柄";
+                ? $"同時陳列 {current.maxDisplayKinds}種類"
+                : $"同時陳列 {current.maxDisplayKinds} → {next.maxDisplayKinds}種類";
 
         // 陳列個数の上限は撤廃した（制限は銘柄数のみ）ため常時無制限と表示
         if (displayStockText != null)

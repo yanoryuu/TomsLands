@@ -24,7 +24,7 @@ public class RunSetupData : ScriptableObject
     public bool UseFlyer;
     [Tooltip("目利きの手引き: 開始時の全アイテム需要を上振れさせる")]
     public bool UseAppraisal;
-    [Tooltip("返済猶予証: 初回返済額を割引する")]
+    [Tooltip("初回減免状: 初回返済額を割引する")]
     public bool UseGrace;
 
     private static RunSetupData runtimeFallback;
