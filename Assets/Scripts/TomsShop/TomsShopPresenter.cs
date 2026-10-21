@@ -278,6 +278,15 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => debtPresenter.ShowVoluntary())
             .AddTo(disposables);
 
+        // 勝負の融資を借りた・返した → 店ホームの納付の表示を更新（借りたときは表示を弾ませる）
+        debtPresenter.OnBankLoanChanged
+            .Subscribe(_ =>
+            {
+                RefreshNextDebtDisplay();
+                if (BankLoan.HasOutstanding(tomsShopModel)) tomsShopView.PopNextDebt();
+            })
+            .AddTo(disposables);
+
         // 返済完了 → 返済報酬のレリック3択を即表示し、次回返済表示を更新
         debtPresenter.OnDebtPaid
             .Subscribe(_ =>
@@ -334,6 +343,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         newsBadge.SetCount(NewspaperPresenter.CountUnread(newsModel, newspaperSubscriptions, gameFlowManager.CurrentTurn.Value));
     }
 
+    private const string BankLoanDisplayLabel = "融資の返済";
+    private const string BankLoanWithDebtDisplayLabel = "納付＋融資";
+
     private void RefreshNextDebtDisplay()
     {
         int cycle = tomsShopModel.DebtCycle.Value;
@@ -341,6 +353,22 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         int nextAmount = DebtCalculator.GetAmount(cycle + 1, tomsShopModel, relicResolver);
         int nextPaymentTurn = (cycle + 1) * GameConst.DebtPaymentInterval;
         int remainingTurns = nextPaymentTurn - gameFlowManager.CurrentTurn.Value;
+
+        // 勝負の融資を返していない間は、返す日が先に来るほうを出す（同じ日なら合わせた額）
+        if (BankLoan.HasOutstanding(tomsShopModel))
+        {
+            int loanRemaining = tomsShopModel.BankLoanDueTurn - gameFlowManager.CurrentTurn.Value;
+            if (loanRemaining < remainingTurns)
+            {
+                tomsShopView.UpdateNextDebt(tomsShopModel.BankLoanOwed, loanRemaining, BankLoanDisplayLabel);
+                return;
+            }
+            if (loanRemaining == remainingTurns)
+            {
+                tomsShopView.UpdateNextDebt(nextAmount + tomsShopModel.BankLoanOwed, remainingTurns, BankLoanWithDebtDisplayLabel);
+                return;
+            }
+        }
         tomsShopView.UpdateNextDebt(nextAmount, remainingTurns);
     }
 
@@ -388,6 +416,14 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                 () => debtPresenter.IsShowing));
         }
 
+        // 村の銀行 Lv5「勝負の融資」の返済日（配信の次の日）: 納付と同じく強制。納付と重なったら納付のあとに出す
+        if (BankLoan.IsDue(tomsShopModel, currentTurn))
+        {
+            steps.Add(new MorningStep(
+                () => debtPresenter.ShowBankLoanRepayment(gameFlowManager.SettleTodaySellOrdersForDebt),
+                () => debtPresenter.IsShowing));
+        }
+
         var announce = PrepareTurnOrBuzzAnnounce();
         if (announce != null) steps.Add(new MorningStep(announce, null, AnnounceSeconds));
 
@@ -426,6 +462,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         // 配信勝利報酬のレリック3択（保留があれば表示。初回だけ説明の会話を先に流す）
         steps.Add(new MorningStep(null, () => tomsShopView.IsRelicChoiceOpen, asyncShow: ShowPendingRelicChoicesAsync));
+
+        // 村の銀行 Lv5「勝負の融資」: 配信の前日の朝、最後に持ちかける（使わなければ何も起きない）
+        steps.Add(new MorningStep(() => debtPresenter.TryOfferBankLoan(), () => debtPresenter.IsBankLoanOfferShowing));
 
         RunMorningNotices(steps);
 
@@ -567,6 +606,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             portfolioModel.RefreshEstimate(itemModel, tomsShopModel.BlacksmithLevel.Value);
             total += portfolioModel.TotalAssetsEstimate.Value;
         }
+        total -= tomsShopModel.BankLoanOwed; // 勝負の融資の借りた分は資産に数えない（返す額を引く）
         return (int)Math.Min(int.MaxValue, total);
     }
 

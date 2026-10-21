@@ -41,14 +41,15 @@ public class DebtView : MonoBehaviour
 
     /// <summary>
     /// 支払い可能な返済UIを表示する。forced=true のとき閉じるボタンを非表示にする。
+    /// title / amountLabel は村の銀行 Lv5「勝負の融資」の返済で見出しと額の呼び名を変えるときに渡す（null なら納付）。
     /// </summary>
-    public void ShowPayment(int debtAmount, int currentMoney, int cycle, bool forced)
+    public void ShowPayment(int debtAmount, int currentMoney, int cycle, bool forced, string title = null, string amountLabel = null)
     {
         debtPanel.SetActive(true);
         if (bankruptcyPanel != null) bankruptcyPanel.SetActive(false);
 
-        if (titleText != null) titleText.text = $"第{cycle}回 納付日！";
-        if (debtAmountText != null) debtAmountText.text = $"納付金：{debtAmount:#,0}G";
+        if (titleText != null) titleText.text = title ?? $"第{cycle}回 納付日！";
+        if (debtAmountText != null) debtAmountText.text = $"{amountLabel ?? DefaultAmountLabel}：{debtAmount:#,0}G";
         if (currentMoneyText != null) currentMoneyText.text = $"所持金：{currentMoney:#,0}G";
 
         bool canPay = currentMoney >= debtAmount;
@@ -60,19 +61,22 @@ public class DebtView : MonoBehaviour
     /// <summary>
     /// 返済不能（ゲームオーバー）UIを表示する。強制モード専用。
     /// </summary>
-    public void ShowBankruptcy(int debtAmount, int currentMoney, int cycle)
+    public void ShowBankruptcy(int debtAmount, int currentMoney, int cycle, string title = null, string amountLabel = null)
     {
         debtPanel.SetActive(true);
         if (bankruptcyPanel != null) bankruptcyPanel.SetActive(true);
         if (closeButton != null) closeButton.gameObject.SetActive(false);
         payButton.interactable = false;
 
-        if (titleText != null) titleText.text = $"第{cycle}回 納付日！";
-        if (debtAmountText != null) debtAmountText.text = $"納付金：{debtAmount:#,0}G";
+        string label = amountLabel ?? DefaultAmountLabel;
+        if (titleText != null) titleText.text = title ?? $"第{cycle}回 納付日！";
+        if (debtAmountText != null) debtAmountText.text = $"{label}：{debtAmount:#,0}G";
         if (currentMoneyText != null) currentMoneyText.text = $"所持金：{currentMoney:#,0}G";
         if (bankruptcyMessageText != null)
-            bankruptcyMessageText.text = $"納付金 {debtAmount:#,0}G に対して所持金が {currentMoney:#,0}G……！\nト、トコちゃん！　お店が差し押さえられました！！";
+            bankruptcyMessageText.text = $"{label} {debtAmount:#,0}G に対して所持金が {currentMoney:#,0}G……！\nト、トコちゃん！　お店が差し押さえられました！！";
     }
+
+    private const string DefaultAmountLabel = "納付金";
 
     public void Hide()
     {

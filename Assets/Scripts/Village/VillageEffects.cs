@@ -161,6 +161,31 @@ public sealed class VillageEffects
     public int StreamSalesBonusGold(int rawSales) =>
         rawSales <= 0 ? 0 : Mathf.RoundToInt(rawSales * StreamSalesBonus);
 
+    // ───────── Lv5: 銀行「勝負の融資」・広場「勝負配信の宣言」（どちらも1ランに1回） ─────────
+
+    /// <summary>銀行 Lv5: 配信の前日に勝負の融資を受けられるか（使ったかどうかはランのセーブ TomsModel が持つ）。</summary>
+    public bool BankLoanUnlocked => IsMaxLevel(BankId);
+
+    /// <summary>勝負の融資で借りる額（持ち込み上限の最後の値。今は 70万G）。</summary>
+    public static int BankLoanPrincipal
+    {
+        get
+        {
+            var limits = GameConst.Preparation.bankCarryLimits;
+            return limits != null && limits.Length > 0 ? Mathf.Max(0, limits[limits.Length - 1]) : 0;
+        }
+    }
+
+    /// <summary>勝負の融資で返す額（元本 + 利息。利息は GameConst.Village.bankLoanInterestRate）。</summary>
+    public static int BankLoanRepayment(int principal) =>
+        principal <= 0 ? 0 : Mathf.RoundToInt(principal * (1f + Mathf.Max(0f, Settings.bankLoanInterestRate)));
+
+    /// <summary>広場 Lv5: 配信の前に勝つ側を宣言できるか（使ったかどうかはランのセーブ TomsModel が持つ）。</summary>
+    public bool StreamDeclarationUnlocked => IsMaxLevel(PlazaId);
+
+    /// <summary>宣言が当たったときの売上・防衛報酬の倍率（1 未満にはしない）。</summary>
+    public static float DeclarationMultiplier => Mathf.Max(1f, Settings.plazaDeclarationMultiplier);
+
     // ───────── 内部 ─────────
 
     private static float Clamp01(float v) => Mathf.Clamp01(v);
