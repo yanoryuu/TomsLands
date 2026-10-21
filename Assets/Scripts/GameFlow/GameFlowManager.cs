@@ -280,6 +280,9 @@ public class GameFlowManager : IDisposable, IStartable
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
         }
 
+        // 今朝の入金合計（朝レポートの見出し）を数えるため、朝の入金処理の前の所持金を記録する
+        if (_tomsModel != null) _morningReport?.MarkMoneyBefore(_tomsModel.PlayerMoney.Value);
+
         // 約定予定日を過ぎたのに営業サマリーを経由できなかった売り注文（配信日・イベント日を
         // 挟んだ場合）をここで精算する。借金の返済チェック(TomsShopPresenter.Entry)より
         // 前に必ず入金されるよう、この位置（日送りの朝）で行う。
@@ -355,6 +358,8 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.SavePlayerMoney();
             }
         }
+
+        if (_tomsModel != null) _morningReport?.MarkMoneyAfter(_tomsModel.PlayerMoney.Value);
 
         // マーケティングシステムのターン処理（バズ判定・持続効果適用）
         if (_marketingFacade != null)
@@ -589,6 +594,62 @@ public class GameFlowManager : IDisposable, IStartable
         if (IsAwaitingStream.Value) return 0;
         int turns = GetTurnsUntilNextBattle();
         return turns < 0 ? -1 : turns + 1;
+    }
+
+    /// <summary>
+    /// 表示用: 次の配信（寄り道中は今日の配信）がこのランで何回目か（upcoming、1 始まり。もう無ければ 0）と、配信の総数（total）。
+    /// HUD の「配信 2/4」と、最後の配信の知らせ（K-11）に使う。
+    /// </summary>
+    public void GetStreamProgress(out int upcoming, out int total)
+    {
+        upcoming = 0;
+        total = 0;
+        if (_gameFlow == null) return;
+        // 寄り道中は今のノードが配信。それ以外は次のノードから先で最初の配信
+        int firstUpcomingIndex = IsAwaitingStream.Value ? _currentIndex : _currentIndex + 1;
+        for (int i = 0; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType != GameEvent.Battle) continue;
+            total++;
+            if (upcoming == 0 && i >= firstUpcomingIndex) upcoming = total;
+        }
+    }
+
+    /// <summary>表示用: 今日より後に残っている店の日数（配信日・イベント・終わりは数えない）。レリック3択の目安に使う。</summary>
+    public int GetRemainingShopDays()
+    {
+        if (_gameFlow == null) return 0;
+        int days = 0;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var t = _gameFlow.GameFlowStack[i].EventType;
+            if (t == GameEvent.Shop) days++;
+        }
+        return days;
+    }
+
+    /// <summary>表示用: 次の配信がこのランの最後の配信か（配信が残っていなければ false）。</summary>
+    public bool IsUpcomingStreamFinal()
+    {
+        GetStreamProgress(out int upcoming, out int total);
+        return upcoming > 0 && upcoming == total;
+    }
+
+    /// <summary>
+    /// 表示用: 今日までに配信した日（ターン番号）の一覧。価格チャートの「配信の印」に使う。
+    /// 寄り道中の今日の配信はまだ決着していないので含めない。
+    /// </summary>
+    public List<int> GetPastStreamTurns()
+    {
+        var result = new List<int>();
+        if (_gameFlow == null) return result;
+        int last = IsAwaitingStream.Value ? _currentIndex - 1 : _currentIndex;
+        for (int i = 0; i <= last && i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType == GameEvent.Battle)
+                result.Add(CalculateTurnNumber(i));
+        }
+        return result;
     }
 
     /// <summary>

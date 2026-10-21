@@ -13,25 +13,42 @@ public class CommonView : MonoBehaviour
     [Header("売り注文の入金予定バッジ ※未配線でも動作する")]
     [SerializeField] private TextMeshProUGUI pendingIncomeText;
 
+    [Header("次の配信までの表示（G-3・K-11） ※未配線でも動作する")]
+    [SerializeField] private TextMeshProUGUI streamInfoText;
+
     [SerializeField] private Button menuButton;
 
     [Header("所持金カウントアップ演出")]
     [SerializeField] private float moneyCountDuration = 0.5f;
+    [Tooltip("増減が所持金のこの割合を超えたら、カウントを長めにする")]
+    [SerializeField] private float bigChangeRate = 0.3f;
+    [SerializeField] private float bigChangeDuration = 0.9f;
+    [SerializeField] private Color gainColor = new(0.91f, 0.64f, 0.24f, 1f);  // #E8A33D
+    [SerializeField] private Color lossColor = new(0.66f, 0.2f, 0.17f, 1f);   // #A8332B
+    [Tooltip("増減を浮かせて見せる時間（秒）")]
+    [SerializeField] private float deltaFloatDuration = 0.8f;
 
     public Subject<Unit> OnMenuButtonClicked { get; } = new();
 
     // 現在表示中の金額。カウントアップアニメの起点に使う。
     private int displayedMoney;
+    private int targetMoney;
     private bool moneyInitialized;
+    private bool moneyHeld;
     private Tween moneyTween;
+    private Tween colorTween;
+    private Color moneyBaseColor = Color.white;
 
     private void Awake()
     {
         menuButton.onClick.AddListener(() => OnMenuButtonClicked.OnNext(Unit.Default));
+        if (playerMoneyText != null) moneyBaseColor = playerMoneyText.color;
     }
 
     public void UpdatePlayerMoney(int money)
     {
+        targetMoney = money;
+
         // 初回はアニメーションせず即時表示する
         if (!moneyInitialized)
         {
@@ -41,21 +58,93 @@ public class CommonView : MonoBehaviour
             return;
         }
 
+        // 朝レポートを読んでいる間は、閉じたときにまとめて数え上げる（F-4）
+        if (moneyHeld) return;
+
+        AnimateMoney(displayedMoney, money);
+    }
+
+    /// <summary>
+    /// 所持金の表示を from に据え置く（朝レポートを開いている間など）。
+    /// 実際の所持金は変えない。ReleaseMoneyDisplay で今の額まで数え上げる。
+    /// </summary>
+    public void HoldMoneyDisplay(int from)
+    {
+        moneyHeld = true;
+        moneyTween?.Kill();
+        displayedMoney = from;
+        moneyInitialized = true;
+        SetMoneyText(from);
+    }
+
+    /// <summary>据え置いた表示を今の所持金まで数え上げる。</summary>
+    public void ReleaseMoneyDisplay()
+    {
+        if (!moneyHeld) return;
+        moneyHeld = false;
+        AnimateMoney(displayedMoney, targetMoney);
+    }
+
+    /// <summary>from → to へ数え上げ、増減を色と浮かぶ差分で見せる（F-5）。</summary>
+    private void AnimateMoney(int from, int to)
+    {
         // 直前のカウントアップが残っていれば停止して競合を防ぐ
         moneyTween?.Kill();
+        int delta = to - from;
+        if (delta == 0)
+        {
+            displayedMoney = to;
+            SetMoneyText(to);
+            return;
+        }
 
-        int from = displayedMoney;
+        float duration = Mathf.Abs(delta) > Mathf.Max(1, Mathf.Abs(from)) * bigChangeRate ? bigChangeDuration : moneyCountDuration;
         moneyTween = DOTween.To(() => from, value =>
             {
                 displayedMoney = value;
                 SetMoneyText(value);
-            }, money, moneyCountDuration)
+            }, to, duration)
             .SetEase(Ease.OutCubic)
+            .SetLink(gameObject)
             .OnComplete(() =>
             {
-                displayedMoney = money;
-                SetMoneyText(money);
+                displayedMoney = to;
+                SetMoneyText(to);
             });
+
+        FlashMoney(delta > 0 ? gainColor : lossColor, duration);
+        if (delta > 0 && playerMoneyText != null) UIFx.Pop(playerMoneyText.transform, 1.12f, 0.25f);
+        FloatDelta(delta);
+    }
+
+    private void FlashMoney(Color color, float duration)
+    {
+        if (playerMoneyText == null) return;
+        colorTween?.Kill();
+        playerMoneyText.color = color;
+        colorTween = playerMoneyText.DOColor(moneyBaseColor, 0.35f)
+            .SetDelay(duration)
+            .SetLink(playerMoneyText.gameObject);
+    }
+
+    /// <summary>所持金の下に「+1,200G」「-800G」を浮かせて消す。</summary>
+    private void FloatDelta(int delta)
+    {
+        if (playerMoneyText == null || !playerMoneyText.gameObject.activeInHierarchy) return;
+
+        var go = Instantiate(playerMoneyText.gameObject, playerMoneyText.transform.parent);
+        go.name = "MoneyDelta";
+        var tmp = go.GetComponent<TextMeshProUGUI>();
+        tmp.raycastTarget = false;
+        tmp.fontSize = playerMoneyText.fontSize * 0.7f;
+        tmp.color = delta > 0 ? gainColor : lossColor;
+        tmp.text = delta > 0 ? $"+{delta:N0}G" : $"-{-delta:N0}G";
+        var rt = (RectTransform)go.transform;
+        var start = ((RectTransform)playerMoneyText.transform).anchoredPosition + new Vector2(0f, -78f);
+        rt.anchoredPosition = start;
+        rt.DOAnchorPosY(start.y + 26f, deltaFloatDuration).SetEase(Ease.OutCubic).SetLink(go);
+        tmp.DOFade(0f, deltaFloatDuration * 0.5f).SetDelay(deltaFloatDuration * 0.5f).SetLink(go)
+            .OnComplete(() => Destroy(go));
     }
 
     // 例: 1,234,567G
@@ -69,7 +158,16 @@ public class CommonView : MonoBehaviour
     {
         currentTurnText.text = string.IsNullOrEmpty(buzzInfo)
             ? $"Turn: {turn}"
-            : $"Turn: {turn}\n<size=70%>{buzzInfo}</size>";
+            : $"Turn: {turn} <size=60%>{buzzInfo}</size>";
+    }
+
+    /// <summary>次の配信までの表示を更新する。空文字なら隠す。未配線なら何もしない。</summary>
+    public void UpdateStreamInfo(string text)
+    {
+        if (streamInfoText == null) return;
+        bool show = !string.IsNullOrEmpty(text);
+        streamInfoText.gameObject.SetActive(show);
+        if (show) streamInfoText.text = text;
     }
 
     /// <summary>
@@ -88,5 +186,6 @@ public class CommonView : MonoBehaviour
     private void OnDestroy()
     {
         moneyTween?.Kill();
+        colorTween?.Kill();
     }
 }

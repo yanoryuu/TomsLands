@@ -28,6 +28,9 @@ public class AutoBuyBudgetPopup : MonoBehaviour
 
     private int playerMoney;
 
+    /// <summary>Show で開いて、まだ閉じていないか（シーン上で最初から表示になっているのと区別する）。</summary>
+    public bool IsOpenedByShow { get; private set; }
+
     private void Awake()
     {
         fullAmountButton.onClick.AddListener(SetFullAmount);
@@ -105,7 +108,7 @@ public class AutoBuyBudgetPopup : MonoBehaviour
 
     /// <summary>
     /// ポップアップを開く。locked=true のとき（初回チュートリアル）は予算=所持金全額で固定し、
-    /// 予算入力・全額/半分・方針・キャンセルを押せなくして「購入」だけを押せる状態にする。
+    /// 予算入力・全額/半分・キャンセルを押せなくして、方針の選択と「購入」だけを押せる状態にする。
     /// </summary>
     public void Show(int currentPlayerMoney, bool locked)
     {
@@ -121,15 +124,21 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         if (cancelButton != null) cancelButton.interactable = editable;
         if (strategyDropdown != null)
         {
-            strategyDropdown.interactable = editable;
+            // 初回チュートリアルでも方針だけは選べる（K-5。既定はおすすめ順）
+            strategyDropdown.interactable = true;
             if (locked) strategyDropdown.SetValueWithoutNotify((int)AutoBuyStrategy.Recommend);
         }
         if (confirmButton != null) confirmButton.interactable = true;
 
+        IsOpenedByShow = true;
         gameObject.SetActive(true);
     }
 
-    public void Hide() => gameObject.SetActive(false);
+    public void Hide()
+    {
+        IsOpenedByShow = false;
+        gameObject.SetActive(false);
+    }
 
     private void SetFullAmount()
     {

@@ -499,6 +499,14 @@ public class DebugAutoPlayer : MonoBehaviour
             data.OnConfirm?.Invoke();
             return true;
         }
+        if (title == TomsShopPresenter.StreamEveConfirmTitle || title == "明日は最後の配信です")
+        {
+            // 配信前日の営業開始で一度だけ出る装備の確認（装備は勇者画面の戦略に任せ、そのまま営業する）
+            AddLog("配信前日の確認: このまま営業");
+            SetStatus("配信前日の確認を承認");
+            data.OnConfirm?.Invoke();
+            return true;
+        }
         if (title == "品出しゼロで配信します")
         {
             AddLog("品出しゼロで配信（確認を承認）");

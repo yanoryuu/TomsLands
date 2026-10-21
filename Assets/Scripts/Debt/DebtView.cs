@@ -25,6 +25,9 @@ public class DebtView : MonoBehaviour
     public Subject<Unit> OnCloseClicked { get; } = new();
     public Subject<Unit> OnGoToResultClicked { get; } = new();
 
+    /// <summary>返済パネル（破産を含む）を開いているか（朝の通知の待ち合わせ用。F-4）。</summary>
+    public bool IsShowing => debtPanel != null && debtPanel.activeSelf;
+
     private void Awake()
     {
         payButton.onClick.AddListener(() => OnPayClicked.OnNext(Unit.Default));

@@ -42,6 +42,44 @@ public class RuntimeItemData
     /// </summary>
     public float ExpectedRevenue => Demand.Value * CurrentPrice.Value * SalesRate;
 
+    /// <summary>取得単価が不明（古いセーブ・記録前の在庫）を表す値。</summary>
+    public const int UnknownCost = -1;
+
+    /// <summary>
+    /// 手持ち在庫の平均取得単価（移動平均, G/個）。不明なら <see cref="UnknownCost"/>。セーブ対象。
+    /// 仕入れ（手動・オート）は実効単価、製造機の生成は 0G で記録する。
+    /// 在庫が 0 になってから仕入れ直すと、その単価から数え直す。
+    /// 不明な在庫が残っているうちは混ぜずに不明のままにする（古いセーブの在庫を正しい値と取り違えないため）。
+    /// </summary>
+    public int AverageCost { get; private set; } = UnknownCost;
+
+    /// <summary>取得単価が分かっていて、在庫もあるか（含み損益を出せるか）。</summary>
+    public bool HasKnownCost => AverageCost >= 0 && Stock.Value > 0;
+
+    /// <summary>
+    /// 在庫が増える直前に呼び、取得単価を記録する（Stock を増やす前に呼ぶこと）。
+    /// </summary>
+    public void RecordAcquisition(int quantity, int unitCost)
+    {
+        if (quantity <= 0) return;
+        unitCost = Mathf.Max(0, unitCost);
+        int held = Mathf.Max(0, Stock.Value);
+        if (held == 0)
+        {
+            AverageCost = unitCost;
+            return;
+        }
+        if (AverageCost < 0) return; // 不明な在庫に混ぜない
+        double total = (double)AverageCost * held + (double)unitCost * quantity;
+        AverageCost = (int)System.Math.Round(total / (held + quantity));
+    }
+
+    /// <summary>今の価格で売った場合の含み損益（G）。取得単価が不明なら null。</summary>
+    public int? UnrealizedProfit => HasKnownCost ? (CurrentPrice.Value - AverageCost) * Stock.Value : (int?)null;
+
+    /// <summary>平均取得単価に対する今の価格の騰落率（0.13 = +13%）。不明・0G 取得なら null。</summary>
+    public float? CostChangeRate => HasKnownCost && AverageCost > 0 ? (float)(CurrentPrice.Value - AverageCost) / AverageCost : (float?)null;
+
     /// <summary>
     /// 前ターンの通常営業で売れたかどうか（S3 品出し販売結果フィードバック用）。
     /// シリアライズ不要（毎ターン SimulateShopSales で更新される）。
@@ -190,6 +228,8 @@ public class RuntimeItemData
         PreviousDemand = plainData.previousDemand > 0f ? plainData.previousDemand : Demand.Value;
         PreviousPrice = plainData.previousPrice > 0 ? plainData.previousPrice : CurrentPrice.Value;
         Trend = plainData.trend;
+        // 取得単価（F-1）。古いセーブには項目が無く、JsonUtility は初期値 -1（不明）のまま残す
+        AverageCost = plainData.averageCost >= 0 && Stock.Value > 0 ? plainData.averageCost : UnknownCost;
 
         // ショップ価格・需要履歴の復元。旧セーブ（履歴なし）は現在値1点でシードする。
         ShopPriceHistory = (plainData.shopPriceHistory != null && plainData.shopPriceHistory.Count > 0)
@@ -261,6 +301,7 @@ public class RuntimeItemData
             previousDemand = PreviousDemand,
             previousPrice = PreviousPrice,
             trend = Trend,
+            averageCost = Stock.Value > 0 ? AverageCost : UnknownCost,
             shopPriceHistory = new System.Collections.Generic.List<int>(ShopPriceHistory),
             shopDemandHistory = new System.Collections.Generic.List<float>(ShopDemandHistory)
         };
@@ -287,6 +328,8 @@ public class RuntimeItemDataPlain
     public float previousDemand;
     public int previousPrice;
     public float trend;
+    /// <summary>平均取得単価。-1 = 不明（この項目が無い古いセーブも -1 のまま読み込まれる）。</summary>
+    public int averageCost = RuntimeItemData.UnknownCost;
     public System.Collections.Generic.List<int> shopPriceHistory;
     public System.Collections.Generic.List<float> shopDemandHistory;
 }

@@ -71,22 +71,23 @@ public class BuzzAnnounceView : MonoBehaviour
             _defaultCharScale = characterImage.rectTransform.localScale.x;
     }
 
-    public void ShowBuzzOccurred(BuzzType buzzType)
+    /// <param name="detail">説明文の代わりに出す一文（倍率と、いつの入金に効くか。F-6）。null なら既定の説明</param>
+    public void ShowBuzzOccurred(BuzzType buzzType, string detail = null)
     {
         switch (buzzType)
         {
             case BuzzType.Flame:
-                Play("炎上発生！", "売上が大幅に減少します…", flameTitleColor,
+                Play("炎上発生！", detail ?? "売上が大幅に減少します…", flameTitleColor,
                     characterTint: flameCharacterTint, useRainbow: false, charScaleFactor: 1f, flameShake: true);
                 break;
 
             case BuzzType.Big:
-                Play("超バズ発生！！", "大注目！売上が大幅にアップ！", bigTitleColor,
+                Play("超バズ発生！！", detail ?? "大注目！売上が大幅にアップ！", bigTitleColor,
                     characterTint: Color.white, useRainbow: true, charScaleFactor: bigCharScale, flameShake: false);
                 break;
 
             default:
-                Play("バズ発生！", "注目が集まり売上がアップ！", normalTitleColor,
+                Play("バズ発生！", detail ?? "注目が集まり売上がアップ！", normalTitleColor,
                     characterTint: Color.white, useRainbow: false, charScaleFactor: 1f, flameShake: false);
                 break;
         }

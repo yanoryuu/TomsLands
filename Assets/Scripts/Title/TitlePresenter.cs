@@ -48,9 +48,15 @@ public sealed class TitlePresenter : IStartable, IDisposable
             .Subscribe(_ => TransitionTo(TitleType.ContinueOrNewGame))
             .AddTo(_disposables);
 
-        // 難易度はタイトルでは選ばない（村からの出店準備シーンで選ぶ）→ 保存先スロット選択へ直行
+        // 難易度はタイトルでは選ばない（村からの出店準備シーンで選ぶ）→ 保存先スロット選択へ直行。
+        // どのスロットにもデータが無い（初めて遊ぶ）ときは、選ぶ意味が無いのでスロット1でそのまま始める（K-13）。
+        // 判定は HasProfile（村の進行だけ残ったスロットも「データあり」）なので、村の進行を黙って上書きしない
         _view.OnNewGameSelected
-            .Subscribe(_ => OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot))
+            .Subscribe(_ =>
+            {
+                if (!SaveSlotManager.AnyProfileExists()) StartNewGame(0);
+                else OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot);
+            })
             .AddTo(_disposables);
 
         _view.OnContinueSelected

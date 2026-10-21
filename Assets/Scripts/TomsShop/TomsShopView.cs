@@ -30,6 +30,9 @@ public class TomsShopView : MonoBehaviour
     [Header("机の陳列")]
     [SerializeField] private ShopDeskDisplay shopDeskDisplay;
 
+    [Header("営業ダイジェスト（客が買っていく演出） ※未配線なら従来の暗転")]
+    [SerializeField] private SalesDigestView salesDigest;
+
     [Header("設置マシンの表示 ※未配線でも動作する")]
     [SerializeField] private ShopMachineDisplay shopMachineDisplay;
 
@@ -96,7 +99,7 @@ public class TomsShopView : MonoBehaviour
     /// レリック獲得3択を表示する。パネル未配線なら false を返す
     /// （呼び出し側が自動獲得にフォールバック）。
     /// </summary>
-    public bool ShowRelicChoices(IReadOnlyList<RelicDefinition> choices, string skipLabel = null)
+    public bool ShowRelicChoices(IReadOnlyList<RelicDefinition> choices, string skipLabel = null, IReadOnlyList<string> estimates = null)
     {
         if (relicChoicePanel == null || relicChoiceButtons == null || relicChoiceButtons.Length == 0)
             return false;
@@ -117,6 +120,12 @@ public class TomsShopView : MonoBehaviour
                 relicChoiceButtons[i].gameObject.SetActive(hasChoice);
             if (!hasChoice) continue;
 
+            // このランの実績からの目安（F-9）。出せない種類は空
+            string estimate = estimates != null && i < estimates.Count ? estimates[i] : null;
+            string description = string.IsNullOrEmpty(estimate)
+                ? relic.description
+                : $"{relic.description}\n<color=#B0601C>{estimate}</color>";
+
             var slot = relicChoiceSlots != null && i < relicChoiceSlots.Length ? relicChoiceSlots[i] : null;
             if (slot != null)
             {
@@ -124,7 +133,7 @@ public class TomsShopView : MonoBehaviour
                 Color? rarityColor = relic.isCurse || relic.rarity != RelicRarity.Common
                     ? RarityColor(relic.rarity, relic.isCurse)
                     : null;
-                slot.Setup(relic.relicName, relic.description, relic.icon, rarityColor);
+                slot.Setup(relic.relicName, description, relic.icon, rarityColor);
                 continue;
             }
 
@@ -137,7 +146,7 @@ public class TomsShopView : MonoBehaviour
                 var desc = relicChoiceDescTexts[i];
                 desc.textWrappingMode = TextWrappingModes.Normal;
                 desc.overflowMode = TextOverflowModes.Ellipsis;
-                desc.text = relic.description;
+                desc.text = description;
             }
         }
 
@@ -151,6 +160,49 @@ public class TomsShopView : MonoBehaviour
     {
         if (relicChoicePanel != null)
             relicChoicePanel.SetActive(false);
+    }
+
+    /// <summary>レリック3択を開いているか（朝の通知を1枚ずつ出す待ち合わせ用。F-4）。</summary>
+    /// <summary>営業ダイジェスト（未配線なら null）。</summary>
+    public SalesDigestView SalesDigest => salesDigest;
+
+    public bool IsRelicChoiceOpen => relicChoicePanel != null && relicChoicePanel.activeSelf;
+
+    /// <summary>朝レポートを開いているか（朝の通知を1枚ずつ出す待ち合わせ用。F-4）。</summary>
+    public bool IsMorningReportOpen => morningReportPanel != null && morningReportPanel.activeSelf;
+
+    /// <summary>
+    /// 所持レリックバーの該当アイコンを跳ねさせ、上に金額を浮かせる（F-8: レリックが効いた瞬間を見せる）。
+    /// 未配線・アイコンが無ければ何もしない。
+    /// </summary>
+    public void PopRelicIcon(string relicId, string amountText, float delay)
+    {
+        if (relicBarParent == null || string.IsNullOrEmpty(relicId)) return;
+        var icon = relicBarParent.Find($"Relic_{relicId}") as RectTransform;
+        if (icon == null || !icon.gameObject.activeInHierarchy) return;
+
+        DOVirtual.DelayedCall(delay, () =>
+        {
+            if (icon == null) return;
+            UIFx.Pop(icon, 1.35f, 0.3f);
+            if (string.IsNullOrEmpty(amountText)) return;
+            var go = new GameObject("RelicGain", typeof(RectTransform));
+            var rt = (RectTransform)go.transform;
+            rt.SetParent(icon, false);
+            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
+            rt.sizeDelta = new Vector2(220f, 40f);
+            rt.anchoredPosition = new Vector2(0f, 18f);
+            var tmp = go.AddComponent<TextMeshProUGUI>();
+            var font = morningReportText != null ? morningReportText.font : null;
+            if (font != null) tmp.font = font;
+            tmp.text = amountText;
+            tmp.fontSize = 26f;
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.color = new Color(0.91f, 0.64f, 0.24f, 1f);
+            tmp.raycastTarget = false;
+            rt.DOAnchorPosY(48f, 0.9f).SetEase(Ease.OutCubic).SetLink(go);
+            tmp.DOFade(0f, 0.4f).SetDelay(0.6f).SetLink(go).OnComplete(() => Destroy(go));
+        }).SetLink(icon.gameObject);
     }
 
     /// <summary>
@@ -356,6 +408,39 @@ public class TomsShopView : MonoBehaviour
             .SetLink(BlaskSmithButton.gameObject);
     }
 
+    /// <summary>1周目に段階的に開ける店ホームのボタン（K-7）。</summary>
+    public enum ShopFeature { Newspaper, Hero, Info, Map, Prophet, DungeonLevelUp, Advertisement, ShopUpgrade, MachineShop }
+
+    private Button FeatureButton(ShopFeature f) => f switch
+    {
+        ShopFeature.Newspaper => NewspaperButton,
+        ShopFeature.Hero => HeroButton,
+        ShopFeature.Info => InfoButton,
+        ShopFeature.Map => MapButton,
+        ShopFeature.Prophet => ProphetButton,
+        ShopFeature.DungeonLevelUp => DungeonLevelUpButton,
+        ShopFeature.Advertisement => AdvertisementButton,
+        ShopFeature.ShopUpgrade => ShopUpgradeButton,
+        ShopFeature.MachineShop => MachineShopButton,
+        _ => null,
+    };
+
+    /// <summary>
+    /// ボタンを出す/隠す。newlyOpened のときは開いたことが分かるよう一度弾ませる。未配線なら何もしない。
+    /// </summary>
+    public void SetFeatureVisible(ShopFeature feature, bool visible, bool newlyOpened = false)
+    {
+        var button = FeatureButton(feature);
+        if (button == null) return;
+        if (button.gameObject.activeSelf != visible) button.gameObject.SetActive(visible);
+        if (visible && newlyOpened && button.gameObject.activeInHierarchy)
+        {
+            var t = button.transform;
+            t.DOKill(true);
+            t.DOPunchScale(Vector3.one * 0.18f, 0.6f, 4, 0.6f).SetDelay(0.3f).SetLink(button.gameObject);
+        }
+    }
+
     private static void SetInteractableSafe(Selectable selectable, bool interactable)
     {
         if (selectable != null) selectable.interactable = interactable;
@@ -397,10 +482,10 @@ public class TomsShopView : MonoBehaviour
     /// ターン開始時にバズが発生した場合に呼び出される。
     /// </summary>
     /// <param name="buzzType">発生したバズの種類</param>
-    public void ShowBuzzAnnounce(BuzzType buzzType)
+    public void ShowBuzzAnnounce(BuzzType buzzType, string detail = null)
     {
         if (buzzAnnounceView != null)
-            buzzAnnounceView.ShowBuzzOccurred(buzzType);
+            buzzAnnounceView.ShowBuzzOccurred(buzzType, detail);
     }
 
     /// <summary>

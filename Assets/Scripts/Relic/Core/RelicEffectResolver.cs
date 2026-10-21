@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -39,6 +40,30 @@ public class RelicEffectResolver
 
     public int ModifyInt(RelicStatId stat, int baseValue) =>
         Mathf.RoundToInt(Modify(stat, baseValue));
+
+    /// <summary>
+    /// この StatId に効いている所持レリックと、そのレリック単体の倍率（Mul はその値、Add は 1+値）を返す（UI表示用。F-8）。
+    /// 計算は Modify と同じ値を使うので、表示と実際の効き目はずれない。
+    /// </summary>
+    public List<(RelicDefinition relic, float factor)> GetContributors(RelicStatId stat)
+    {
+        var result = new List<(RelicDefinition, float)>();
+        if (inventory == null) return result;
+        foreach (var def in inventory.OwnedDefinitions())
+        {
+            if (def?.modifiers == null) continue;
+            float factor = 1f;
+            bool hit = false;
+            foreach (var modifier in def.modifiers)
+            {
+                if (modifier.stat != stat) continue;
+                hit = true;
+                factor *= modifier.op == RelicOp.Mul ? modifier.value : 1f + modifier.value;
+            }
+            if (hit) result.Add((def, factor));
+        }
+        return result;
+    }
 
     /// <summary>この StatId に効いているレリックがあるか（UI表示用）。</summary>
     public bool HasAnyModifier(RelicStatId stat)
