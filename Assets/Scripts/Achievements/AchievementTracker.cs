@@ -293,15 +293,16 @@ public sealed class AchievementTracker : IInitializable, IDisposable
     private int SupportLevels(StreamSettledInfo info)
     {
         if (src.Dungeons == null || !src.Dungeons.TryGetById(info.DungeonKey, out var d) || d == null) return 0;
-        int level = info.DungeonLevel > 0 ? info.DungeonLevel : d.currentDungeonLevel;
-        return Mathf.Max(0, level - Mathf.Max(1, d.initDungeonLevel));
+        int level = info.DungeonLevel >= 0 ? info.DungeonLevel : d.currentDungeonLevel;
+        return Mathf.Max(0, level - Mathf.Max(DungeonLevels.Unfunded, d.initDungeonLevel));
     }
 
     /// <summary>BattleSceneStarter.CalculateDefeatReward と同じ式（防衛報酬は TotalEarnings に混ざって返ってくるため計算し直す）。</summary>
     private int DefenseReward(StreamSettledInfo info)
     {
         if (src.Dungeons == null || !src.Dungeons.TryGetById(info.DungeonKey, out var d) || d == null) return 0;
-        int baseReward = d.GetLevelData(info.DungeonLevel > 0 ? info.DungeonLevel : d.currentDungeonLevel)?.rewardGold ?? 0;
+        // Lv0（未出資）は防衛報酬 0 なので「配当確定」は解除されない
+        int baseReward = d.GetDefenseReward(info.DungeonLevel >= 0 ? info.DungeonLevel : d.currentDungeonLevel);
         return Mathf.RoundToInt(baseReward * RelicBattleEffects.DefeatRewardMul);
     }
 

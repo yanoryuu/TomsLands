@@ -27,6 +27,8 @@ public static class DungeonLevelUpDialogueLoader
             ? "敵の構成と報酬も見えておるから、支援効果を比べて選ぶがよい。"
             : "まだ敵情報は伏せられておる。費用と現在Lvを見て、勘と野望で選ぶのじゃ。";
 
+        if (currentLevel <= DungeonLevels.Unfunded)
+            return $"{dungeonName}にはまだ出資しておらんな。{cost}Gの設営費でLv.1になり、勇者が負ければ配当が入るぞ。{infoPart}";
         return $"{dungeonName}はLv.{currentLevel}からLv.{nextLevel}へ支援できるぞ。必要な設営費は{cost}Gじゃ。{infoPart}";
     }
 

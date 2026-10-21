@@ -18,7 +18,7 @@ MonoBehaviour:
   dungeonImage: {fileID: -4862453905761702663, guid: 544e6742b55244e0f8e214fa735515e0, type: 3}
   dungeonIcon: {fileID: -4848210636310060718, guid: 6e663873926f345688bcfaa1919e447d, type: 3}
   dungeonNameImage: {fileID: 4259132219002972973, guid: dd60ffdbf2ec847efa81a37aefaf8adf, type: 3}
-  initDungeonLevel: 1
+  initDungeonLevel: 0
   recommendedLevel: 7
   difficulty: 7
   requiredAttribute: 4

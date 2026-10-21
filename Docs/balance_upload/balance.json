@@ -284,7 +284,7 @@
       "key": "1",
       "dungeonName": "灼熱の火山牢",
       "dungeonDescription": "マグマが流れる火山の中に築かれた古代の監獄。今や炎をまとう魔物たちが跋扈する無法地帯と化している。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "5",
       "difficulty": "5",
       "requiredAttribute": "1"
@@ -294,7 +294,7 @@
       "key": "5",
       "dungeonName": "魔王城",
       "dungeonDescription": "世界の頂、空の果て。そこが最後の決戦の地、魔王城。城の周囲を覆う瘴気と闇が、魔王の強大な力を物語っている。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "10",
       "difficulty": "10",
       "requiredAttribute": "4"
@@ -304,7 +304,7 @@
       "key": "3",
       "dungeonName": "深緑の獣林",
       "dungeonDescription": "光が差し込まない鬱蒼とした森。魔獣と木の魔物の巣窟で、\n多くの新人冒険者がこの地を訪れる。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "1",
       "difficulty": "1",
       "requiredAttribute": "0"
@@ -314,7 +314,7 @@
       "key": "2",
       "dungeonName": "氷霧の洞窟",
       "dungeonDescription": "雪と氷に閉ざされた洞窟。視界の悪さに加え、肌を刺すような寒さが冒険者を襲う。滑りやすい氷の床にも注意が必要だ。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "3",
       "difficulty": "3",
       "requiredAttribute": "2"
@@ -324,7 +324,7 @@
       "key": "0",
       "dungeonName": "忘却の霊廟",
       "dungeonDescription": "かつての偉大なる王が眠る巨大な地下墓地。闇に魅入られた死者たちがさまよい、訪れし者たちの精神を蝕む。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "7",
       "difficulty": "7",
       "requiredAttribute": "4"
@@ -334,7 +334,7 @@
       "key": "4",
       "dungeonName": "古代機構城メタリオン",
       "dungeonDescription": "魔王軍の技術によって建造された鋼鉄の城塞。無数の歯車と機関が絶えず稼働し、その隙間からは聖なる光の残り火が漏れる。中に潜むモンスターたちは侵入者をすべて排除する。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "8",
       "difficulty": "9",
       "requiredAttribute": "5"

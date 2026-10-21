@@ -1155,7 +1155,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         int defeatReward = 0;
         if (!outcome.Victory)
         {
-            int reward = dungeon?.GetLevelData(level)?.rewardGold ?? 0;
+            int reward = dungeon?.GetDefenseReward(level) ?? 0;
             defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
         }
 
@@ -1261,7 +1261,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver),
             HasBoss = hasBoss,
             EnemyCount = count,
-            DefeatReward = Mathf.RoundToInt((dungeon.GetLevelData(level)?.rewardGold ?? 0) * rewardMul),
+            DefeatReward = Mathf.RoundToInt(dungeon.GetDefenseReward(level) * rewardMul),
             HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
             HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
             HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,

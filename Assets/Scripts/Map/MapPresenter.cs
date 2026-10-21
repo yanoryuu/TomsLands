@@ -87,7 +87,7 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
             {
                 Key = data.key,
                 Name = data.dungeonName,
-                LevelText = bought ? $"Lv.{data.currentDungeonLevel}" : "Lv.???",
+                LevelText = bought ? DungeonLevels.Label(data.currentDungeonLevel) : "Lv.???",
                 WeaknessText = ItemAttributeText.Weakness(data.requiredAttribute, weaknessKnown),
                 ProbabilityText = probability,
                 Status = data.dungeonStatus,

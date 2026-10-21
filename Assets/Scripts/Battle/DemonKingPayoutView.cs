@@ -156,7 +156,7 @@ public class DemonKingPayoutView : MonoBehaviour
 
     private void ApplyTexts(DemonKingPayoutData data)
     {
-        if (dungeonText != null) dungeonText.text = $"{data.DungeonName} Lv.{data.DungeonLevel}";
+        if (dungeonText != null) dungeonText.text = $"{data.DungeonName} {DungeonLevels.Label(data.DungeonLevel)}";
         if (supportValueText != null) supportValueText.text = FormatGold(data.SupportAmount);
         if (defenseValueText != null) defenseValueText.text = FormatGold(data.BaseReward);
         if (relicLabelText != null) relicLabelText.text = $"レリック補正 <size=80%>×{data.RelicMultiplier:0.0#}</size>";

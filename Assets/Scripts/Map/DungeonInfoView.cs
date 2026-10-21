@@ -52,7 +52,7 @@ public class DungeonInfoView : MonoBehaviour
         if (d.isShowedInfo)
         {
             dungeonDescriptionText.text = d.dungeonDescription;
-            dungeonLevelText.text = $"Lv.{d.currentDungeonLevel}";
+            dungeonLevelText.text = DungeonLevels.Label(d.currentDungeonLevel);
         }
         else
         {
@@ -92,7 +92,8 @@ public class DungeonInfoView : MonoBehaviour
         string weakness = ItemAttributeText.Weakness(d.requiredAttribute, weaknessKnown);
         if (!d.isShowedInfo) return $"{weakness}\nクリア見込み:？\n防衛報酬:？";
 
-        int reward = d.GetLevelData(d.currentDungeonLevel)?.rewardGold ?? 0;
-        return $"{weakness}\nクリア見込み:{ClearProbabilityCalculator.FormatOutlook(clearProbability)}\n防衛報酬:{reward:N0}G";
+        int reward = d.GetDefenseReward(d.currentDungeonLevel);
+        string rewardText = d.IsFunded ? $"{reward:N0}G" : "なし（未出資）";
+        return $"{weakness}\nクリア見込み:{ClearProbabilityCalculator.FormatOutlook(clearProbability)}\n防衛報酬:{rewardText}";
     }
 }

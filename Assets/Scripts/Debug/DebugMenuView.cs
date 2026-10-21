@@ -294,7 +294,7 @@ public partial class DebugMenuView : MonoBehaviour
                 if (d == null) continue;
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{d.dungeonName}: Lv{d.currentDungeonLevel}", GUILayout.Width(200));
-                if (GUILayout.Button("-1")) { d.currentDungeonLevel = Mathf.Max(1, d.currentDungeonLevel - 1); _dungeonRepository.Save(); }
+                if (GUILayout.Button("-1")) { d.currentDungeonLevel = Mathf.Max(DungeonLevels.Unfunded, d.currentDungeonLevel - 1); _dungeonRepository.Save(); }
                 if (GUILayout.Button("+1")) { d.currentDungeonLevel = Mathf.Min(5, d.currentDungeonLevel + 1); _dungeonRepository.Save(); }
                 GUILayout.EndHorizontal();
             }

@@ -76,4 +76,25 @@ public class DungeonInfoScriptableObj : ScriptableObject
     // ----------------------
     // 魔王軍が勝った時の報酬（※レベルごとに DungeonLevelData.rewardGold で設定）
     // ----------------------
+
+    /// <summary>
+    /// 指定レベルの防衛報酬（勇者敗北時に受け取る配当）。Lv0（魔王軍支援で未出資）は 0。
+    /// Lv0 の戦闘（敵の出方）は Lv1 と同じ（GetLevelData がクランプする）。
+    /// </summary>
+    public int GetDefenseReward(int level) => DungeonLevels.DefenseReward(GetLevelData(level), level);
+}
+
+/// <summary>
+/// ダンジョンレベルの約束事。Lv0 = 魔王軍支援で未出資（配当なし・戦闘は Lv1 と同じ）、出資すると Lv1。
+/// </summary>
+public static class DungeonLevels
+{
+    /// <summary>未出資のレベル。</summary>
+    public const int Unfunded = 0;
+
+    /// <summary>防衛報酬。未出資（Lv0 以下）は 0。</summary>
+    public static int DefenseReward(DungeonLevelData data, int level) => level <= Unfunded ? 0 : data?.rewardGold ?? 0;
+
+    /// <summary>表示用「Lv.0（未出資）」「Lv.3」。</summary>
+    public static string Label(int level, string prefix = "Lv.") => level <= Unfunded ? $"{prefix}0（未出資）" : $"{prefix}{level}";
 }

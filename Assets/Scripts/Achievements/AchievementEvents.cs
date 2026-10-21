@@ -7,7 +7,8 @@ public sealed class StreamSettledInfo
     public BattleResult Result;
     public int Turn;
     public DungeonName DungeonKey;
-    public int DungeonLevel;
+    /// <summary>配信したダンジョンのレベル（0 = 未出資、-1 = 不明）。</summary>
+    public int DungeonLevel = -1;
     public string WeaponId;
     public string ArmorId;
     /// <summary>配信中に売れた額（介入・防衛報酬を含まない売上だけ）。</summary>
@@ -52,7 +53,7 @@ public static class AchievementEvents
             Result = output.Result,
             Turn = turn,
             DungeonKey = input != null ? input.DungeonKey : default,
-            DungeonLevel = input != null ? input.DungeonLevel : 0,
+            DungeonLevel = input != null ? input.DungeonLevel : -1, // -1 = 不明（Lv0 は未出資）
             WeaponId = output.WeaponId,
             ArmorId = output.ArmorId,
             GrossSales = gross,

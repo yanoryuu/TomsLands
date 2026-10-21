@@ -770,7 +770,7 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
-        int dungeonLevel = dungeonData?.currentDungeonLevel ?? 1;
+        int dungeonLevel = dungeonData?.currentDungeonLevel ?? DungeonLevels.Unfunded; // Lv0 は戦闘は Lv1 と同じ・配当なし
         _battleInputData.Setup(
             node.BattleDungeon,
             dungeonLevel,

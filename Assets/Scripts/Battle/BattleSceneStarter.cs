@@ -277,7 +277,7 @@ public class BattleSceneStarter : IAsyncStartable
         // 介入の受付開始（キューを BattleSequencer に渡すので StartBattle より前）。
         // 補充費用は利用可能残高の計算に使う
         // ダンジョン側の値段はこのダンジョンLvの防衛報酬に合わせる（G-6）
-        _interventions?.Start(_salesController, () => _battleSpending, BaseDefenseReward());
+        _interventions?.Start(_salesController, () => _battleSpending, InterventionPriceBase());
 
         _battleSequencer.StartBattle(heroModel);
 
@@ -471,11 +471,21 @@ public class BattleSceneStarter : IAsyncStartable
         return heroStake >= demonStake ? StreamingBetStance.Hero : StreamingBetStance.Demon;
     }
 
-    /// <summary>このダンジョンLvの防衛報酬の基本額（レリック補正前）。</summary>
+    /// <summary>このダンジョンLvの防衛報酬の基本額（レリック補正前）。Lv0（未出資）は 0。</summary>
     private int BaseDefenseReward()
     {
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
-        return dungeon != null ? dungeon.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0 : 0;
+        return dungeon != null ? dungeon.GetDefenseReward(_inputData.DungeonLevel) : 0;
+    }
+
+    /// <summary>
+    /// 介入の値段の基準（防衛報酬に比例。G-6）。Lv0（未出資）は防衛報酬が 0 なので、値段が 0 にならないよう Lv1 の防衛報酬を下限にする。
+    /// </summary>
+    private int InterventionPriceBase()
+    {
+        var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
+        if (dungeon == null) return 0;
+        return dungeon.GetDefenseReward(Mathf.Max(1, _inputData.DungeonLevel));
     }
 
     /// <summary>
@@ -699,7 +709,7 @@ public class BattleSceneStarter : IAsyncStartable
         if (result != BattleResult.Defeat) return new DefeatRewardBreakdown(0, 1f, 0);
 
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
-        int baseReward = dungeon != null ? dungeon.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0 : 0;
+        int baseReward = dungeon != null ? dungeon.GetDefenseReward(_inputData.DungeonLevel) : 0;
 
         // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
         float mul = RelicBattleEffects.DefeatRewardMul;
@@ -730,7 +740,7 @@ public class BattleSceneStarter : IAsyncStartable
     {
         if (dungeon == null) return 0;
         int total = 0;
-        for (int lv = Mathf.Max(1, dungeon.initDungeonLevel); lv < currentLevel; lv++)
+        for (int lv = Mathf.Max(DungeonLevels.Unfunded, dungeon.initDungeonLevel); lv < currentLevel; lv++)
             total += dungeon.GetLevelData(lv)?.levelUpCost ?? 0;
         return total;
     }

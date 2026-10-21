@@ -63,10 +63,17 @@ public class DungeonData
     /// <summary>
     /// 現在レベルの報酬ゴールド（勇者敗北時にプレイヤーが受け取る）
     /// </summary>
-    public int rewardGold => GetLevelData(currentDungeonLevel)?.rewardGold ?? 0;
+    public int rewardGold => GetDefenseReward(currentDungeonLevel);
+
+    /// <summary>指定レベルの防衛報酬。Lv0（未出資）は 0。</summary>
+    public int GetDefenseReward(int level) => DungeonLevels.DefenseReward(GetLevelData(level), level);
+
+    /// <summary>魔王軍支援で出資済み（Lv1 以上）か。</summary>
+    public bool IsFunded => currentDungeonLevel > DungeonLevels.Unfunded;
 
     /// <summary>
     /// 現在レベルから次レベルへのレベルアップ費用。最大レベル時は 0。
+    /// Lv0→Lv1（最初の出資）は Lv1 の行の費用（GetLevelData のクランプ）と同じ。
     /// </summary>
     public int levelUpCost => GetLevelData(currentDungeonLevel)?.levelUpCost ?? 0;
 

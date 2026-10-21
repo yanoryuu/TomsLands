@@ -223,7 +223,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         return new DungeonLevelUpDetailData
         {
             DungeonName          = data.dungeonName,
-            LevelText            = isMax ? $"Lv.{currentLevel}（MAX）" : $"Lv.{currentLevel} → Lv.{nextLevel}",
+            LevelText            = isMax ? $"Lv.{currentLevel}（MAX）" : $"{DungeonLevels.Label(currentLevel)} → Lv.{nextLevel}",
             RewardText           = BuildRewardText(data, currentLevel, nextLevel, isMax),
             ClearProbabilityText = BuildClearProbabilityText(data, currentLevel, nextLevel, isMax),
             CurrentMonsters      = currentMonsters,
@@ -238,10 +238,10 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     {
         if (!data.isShowedInfo) return "防衛報酬: ？？？";
 
-        int currentReward = data.GetLevelData(currentLevel)?.rewardGold ?? 0;
+        int currentReward = data.GetDefenseReward(currentLevel); // Lv0（未出資）は 0
         if (isMax) return $"防衛報酬 {currentReward:N0}G";
 
-        int nextReward = data.GetLevelData(nextLevel)?.rewardGold ?? currentReward;
+        int nextReward = data.GetDefenseReward(nextLevel);
         return $"防衛報酬 {currentReward:N0}G → {nextReward:N0}G";
     }
 

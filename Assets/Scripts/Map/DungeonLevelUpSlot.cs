@@ -63,7 +63,7 @@ public class DungeonLevelUpSlot : MonoBehaviour
         isMaxLevel = maxLevel;
 
         if (currentLevelText)
-            currentLevelText.text = $"Lv.{currentLevel}";
+            currentLevelText.text = DungeonLevels.Label(currentLevel);
 
         if (isMaxLevel)
         {

@@ -126,7 +126,7 @@ public class StreamingSettingPresenter : IDisposable
         bool purchased = TryGetPurchasedDungeonInfo(out _);
         _view.ShowDungeonInfo(
             dungeon.dungeonName,
-            purchased ? _battleInputData.DungeonLevel.ToString() : "？", // 見出し「レベル：」はシーン側にある
+            purchased ? (_battleInputData.DungeonLevel <= DungeonLevels.Unfunded ? "0（未出資）" : _battleInputData.DungeonLevel.ToString()) : "？", // 見出し「レベル：」はシーン側にある
             purchased ? ItemAttributeText.ToJapanese(dungeon.requiredAttribute) : "？");
     }
 
