@@ -166,7 +166,7 @@ public class NewspaperView : MonoBehaviour
     [SerializeField] private Color hitStateColor = new Color32(0x2F, 0x6E, 0x2B, 0xFF);
     [SerializeField] private Color missStateColor = new Color32(0xA0, 0x28, 0x1C, 0xFF);
     [SerializeField] private Color partialStateColor = new Color32(0xA4, 0x50, 0x0E, 0xFF);
-    [Tooltip("記事ポップアップの予想（I-6。任意）。「予想なし」＋属性×種別＋高額の品")]
+    [Tooltip("記事ポップアップの予想（I-6。任意）。画面の呼び名は「予想メモ」。「メモなし」＋属性×種別＋高額の品")]
     [SerializeField] private TMP_Dropdown popupPredictionDropdown;
 
     // ---------------- 演出 ----------------
