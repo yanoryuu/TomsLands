@@ -15,6 +15,9 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
 
     private string dialogueId;
 
+    /// <summary>占いの結果の行で、品のアイコンと矢印のあいだにあける幅。</summary>
+    private const float FortuneLeftGap = 24f;
+
     public event Action<string> OnHoverEnter;
     public event Action OnHoverExit;
 
@@ -51,6 +54,8 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         string arrow = up ? "<color=#C8731E>↑</color>" : "<color=#4F6F8F>↓</color>";
         string size = strong ? (up ? "大きく上がる" : "大きく下がる") : (up ? "上がる" : "下がる");
         itemNameText.text = $"{arrow} {itemName} <size=60%>{size}</size>";
+        // 文が長いと自動縮小で枠いっぱいに広がり、矢印がアイコンにくっつくので左に間をあける
+        itemNameText.margin = new Vector4(FortuneLeftGap, 0f, 0f, 0f);
         trendText.text = string.Empty;
         demandText.text = string.Empty;
         this.dialogueId = dialogueId;

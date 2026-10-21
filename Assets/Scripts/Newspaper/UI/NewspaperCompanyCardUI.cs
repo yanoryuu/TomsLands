@@ -77,7 +77,7 @@ public class NewspaperCompanyCardUI : MonoBehaviour
             emblemImage.enabled = d.emblem != null;
         }
         if (nameText != null) nameText.text = d.companyName;
-        if (priceText != null) priceText.text = $"{d.price:N0}G / {d.contractTurns}ターン";
+        if (priceText != null) priceText.text = $"{d.price:N0}G / {DayText.Days(d.contractTurns)}";
 
         if (trustBar != null) trustBar.SetValue(d.trust);
         if (speedBar != null) speedBar.SetValue(d.speed);

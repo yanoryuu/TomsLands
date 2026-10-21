@@ -58,8 +58,8 @@ public class ProphetPresenter : IDisposable, IStartable
         prophetView.OnRowHoverEnter
             .Subscribe(id =>
             {
-                // 台詞の無い行（占いの結果など）は今の台詞のまま
-                var line = ProphetDialogueLoader.Get(id);
+                // 台詞の無い行は今の台詞のまま
+                var line = string.IsNullOrEmpty(id) ? null : ProphetDialogueLoader.Get(id);
                 if (!string.IsNullOrEmpty(line)) prophetView.ShowDialogue(line);
             })
             .AddTo(disposables);
@@ -72,10 +72,11 @@ public class ProphetPresenter : IDisposable, IStartable
     private void Entry()
     {
         characterTalkIndex = 0;
-        currentDialogue = ProphetDialogueLoader.GetDefault();
-        prophetView.ShowDialogue(currentDialogue);
         // 今日もう占っていれば結果を、まだなら荒れている品と「占う」ボタンを出す（I-11）
-        if (ProphetFortune.IsBought(tomsModel.FlowSeed, Turn)) ShowFortune(false);
+        bool bought = ProphetFortune.IsBought(tomsModel.FlowSeed, Turn);
+        currentDialogue = Line(bought ? "fortune_after" : "fortune_before");
+        prophetView.ShowDialogue(currentDialogue);
+        if (bought) ShowFortune(false);
         else ShowMarketHeat();
         ShowPriceRanking();
         ShowDungeonInfo();
@@ -86,6 +87,14 @@ public class ProphetPresenter : IDisposable, IStartable
         characterTalkIndex = (characterTalkIndex % 3) + 1;
         currentDialogue = ProphetDialogueLoader.Get($"character_talk_{characterTalkIndex}");
         prophetView.ShowDialogue(currentDialogue);
+    }
+
+    /// <summary>台詞 CSV の1行。{days}（占う先の日数）と {cost}（占いの値段）を埋める。行が無ければ default。</summary>
+    private static string Line(string id)
+    {
+        var s = ProphetDialogueLoader.Get(id);
+        if (string.IsNullOrEmpty(s)) s = ProphetDialogueLoader.GetDefault();
+        return s.Replace("{days}", ProphetFortune.HorizonDays.ToString()).Replace("{cost}", ProphetFortune.Cost.ToString("N0"));
     }
 
     private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
@@ -100,7 +109,7 @@ public class ProphetPresenter : IDisposable, IStartable
         if (ProphetFortune.IsBought(seed, turn)) { ShowFortune(false); return; }
         if (tomsModel.PlayerMoney.Value < ProphetFortune.Cost)
         {
-            currentDialogue = $"おや、{ProphetFortune.Cost:N0}G には少し足りないね。占いはまた今度かな。";
+            currentDialogue = Line("fortune_short");
             prophetView.ShowDialogue(currentDialogue);
             return;
         }
@@ -127,9 +136,7 @@ public class ProphetPresenter : IDisposable, IStartable
         prophetView.ShowFortuneButton(false, false, string.Empty);
         if (justBought)
         {
-            currentDialogue = rows.Count > 0
-                ? $"見えたよ。{ProphetFortune.HorizonDays}日先までの流れさ。占いは外れることもあるから、新聞と見比べてごらん。"
-                : $"うーん……{ProphetFortune.HorizonDays}日先までは、大きな波は見えないね。";
+            currentDialogue = Line(rows.Count > 0 ? "fortune_result" : "fortune_none");
             prophetView.ShowDialogue(currentDialogue);
         }
     }
@@ -196,7 +203,7 @@ public class ProphetPresenter : IDisposable, IStartable
 
         // 弱点は「知っている」ときだけ開示する（Docs/News_Spec.md §2 C4）。
         bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
-        string attributeName = known ? $"弱点: {AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点: ?";
+        string attributeName = ItemAttributeText.Weakness(dungeon.requiredAttribute, known);
         prophetView.ShowDungeonInfo(dungeon.dungeonName, attributeName, dungeon.difficulty, turnsUntil, dungeon.dungeonIcon);
 
         // おすすめは現在の期待収益（ExpectedRevenueOf）だけで決める。
@@ -212,16 +219,6 @@ public class ProphetPresenter : IDisposable, IStartable
             .ToList();
         prophetView.ShowRecommendedRows(recommended);
     }
-
-    private static string AttributeToJapanese(ItemTypeData.ItemAttribute attr) => attr switch
-    {
-        ItemTypeData.ItemAttribute.Fire  => "火",
-        ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Wood  => "木",
-        ItemTypeData.ItemAttribute.Light => "光",
-        ItemTypeData.ItemAttribute.Dark  => "闇",
-        _ => attr.ToString()
-    };
 
     public void Dispose() => disposables.Dispose();
 }

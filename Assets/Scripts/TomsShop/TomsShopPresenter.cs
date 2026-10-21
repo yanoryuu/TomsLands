@@ -900,7 +900,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         popUpManager?.Show(new PopUpData
         {
             Title = relic.relicName,
-            Message = string.IsNullOrEmpty(relic.description) ? "（効果の説明はまだない）" : relic.description,
+            Message = relic.description ?? string.Empty,
             IsCloseOnly = true,
             Size = PopupSizeEnum.Medium,
         });
@@ -1046,7 +1046,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                 case "AddItem":
                     if (cmd.parameters.TryGetValue("itemId", out var itemId))
                     {
-                        sb.AppendLine($"アイテム獲得: {itemId}");
+                        // 画面には ID ではなく品名を出す（見つからないときだけ ID）
+                        var gotName = itemModel.GetRuntimeItem(itemId)?.ItemName;
+                        sb.AppendLine($"{(string.IsNullOrEmpty(gotName) ? itemId : gotName)} を1つ入手");
                     }
                     break;
             }

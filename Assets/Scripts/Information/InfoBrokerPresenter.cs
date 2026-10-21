@@ -98,11 +98,11 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
                         ShowMapInfo();
                         break;
                     case InfoBrokerTab.Exchange:
-                        infoBrokerView.ShowDialogue("取引所へようこそ。債券やファンドで余った資金を働かせよう。");
+                        infoBrokerView.ShowDialogue("……取引所だ。債券やファンドで、余った金を働かせな。");
                         exchange.Refresh();
                         break;
                     case InfoBrokerTab.Development:
-                        infoBrokerView.ShowDialogue("情報網に投資するかい？レベルが上がれば、取引所で扱える商品が増えるよ。");
+                        infoBrokerView.ShowDialogue("情報網に金を入れるか？　Lv が上がれば、取引所の品が増える。");
                         RefreshDevelopmentPanel();
                         break;
                 }
@@ -192,7 +192,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         bool isMax = currentLevel >= GameConst.MaxInfoBrokerLevel;
         if (isMax)
         {
-            infoBrokerView.UpdateUnlockPreview("最大レベル", "これ以上解禁される商品はありません。");
+            infoBrokerView.UpdateUnlockPreview("最大レベル", "……これ以上、増える品は無い。");
             return;
         }
 
@@ -219,7 +219,7 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
 
         if (!tomsModel.UpgradeInfoBroker())
         {
-            infoBrokerView.ShowDialogue("資金が足りないか、もう鍛えるところがないね。");
+            infoBrokerView.ShowDialogue("金が足りないか、もう鍛えるところが無い。");
             return;
         }
 

@@ -153,7 +153,7 @@ public class ProphetView : MonoBehaviour
         dungeonAttributeText.text = attribute;
         // 難易度は情報屋と同じ ★ の数で出す
         dungeonDifficultyText.text = difficulty > 0 ? $"難易度: {new string('★', Mathf.Clamp(difficulty, 1, 10))}" : "難易度: —";
-        turnsUntilBattleText.text = turnsUntil == 0 ? "本日配信" : turnsUntil > 0 ? $"あと {turnsUntil} ターン" : "—";
+        turnsUntilBattleText.text = DayText.UntilStream(turnsUntil);
         if (dungeonIconImage != null) dungeonIconImage.sprite = icon;
     }
 

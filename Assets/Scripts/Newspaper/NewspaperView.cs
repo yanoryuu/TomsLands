@@ -73,7 +73,7 @@ public class NewspaperView : MonoBehaviour
     [Header("上部バー")]
     [SerializeField] private TextMeshProUGUI issueText;      // 第N号
     [SerializeField] private GameObject nextBattleRoot;
-    [SerializeField] private TextMeshProUGUI nextBattleText; // 次の戦闘まで N日
+    [SerializeField] private TextMeshProUGUI nextBattleText; // 次の配信まで あとN日 / 本日配信
     [SerializeField] private TextMeshProUGUI moneyText;      // 所持金
     [Tooltip("前の号 / 次の号（I-8。任意）")]
     [SerializeField] private Button prevIssueButton;
@@ -105,7 +105,7 @@ public class NewspaperView : MonoBehaviour
     [SerializeField] private Sprite wallPaperNormalSprite;
     [SerializeField] private TextMeshProUGUI[] wallPaperTexts;
     [SerializeField] private TextMeshProUGUI slotText;       // 購読枠 2/3
-    [SerializeField] private TextMeshProUGUI renewalText;    // 契約更新まで あと3ターン
+    [SerializeField] private TextMeshProUGUI renewalText;    // 契約更新まで あと3日
 
     // ---------------- 中央: 紙面 ----------------
 
@@ -153,9 +153,9 @@ public class NewspaperView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI popupByline;
     [SerializeField] private Color pendingStateColor = new Color32(0x8A, 0x5A, 0x2B, 0xFF);
     [SerializeField] private Color unconfirmedStateColor = new Color32(0x8A, 0x5A, 0x2B, 0xFF);
-    [SerializeField] private Color hitStateColor = new Color32(0x3E, 0x8E, 0x3A, 0xFF);
-    [SerializeField] private Color missStateColor = new Color32(0xB8, 0x3A, 0x2C, 0xFF);
-    [SerializeField] private Color partialStateColor = new Color32(0xC8, 0x7F, 0x1E, 0xFF);
+    [SerializeField] private Color hitStateColor = new Color32(0x2F, 0x6E, 0x2B, 0xFF);
+    [SerializeField] private Color missStateColor = new Color32(0xA0, 0x28, 0x1C, 0xFF);
+    [SerializeField] private Color partialStateColor = new Color32(0xA4, 0x50, 0x0E, 0xFF);
     [Tooltip("記事ポップアップの予想（I-6。任意）。「予想なし」＋属性×種別＋高額の品")]
     [SerializeField] private TMP_Dropdown popupPredictionDropdown;
 
@@ -328,7 +328,7 @@ public class NewspaperView : MonoBehaviour
         if (nextBattleText != null)
         {
             nextBattleText.gameObject.SetActive(hasBattle);
-            nextBattleText.text = turnsUntilBattle == 0 ? "次の戦闘まで 本日" : $"次の戦闘まで {turnsUntilBattle}日";
+            nextBattleText.text = turnsUntilBattle == 0 ? DayText.UntilStream(0) : $"次の配信まで {DayText.UntilStream(turnsUntilBattle)}";
         }
     }
 
@@ -383,7 +383,7 @@ public class NewspaperView : MonoBehaviour
         if (renewalText != null)
         {
             renewalText.gameObject.SetActive(turnsUntilRenewal > 0);
-            renewalText.text = $"契約更新まで あと{turnsUntilRenewal}ターン";
+            renewalText.text = $"契約更新まで {DayText.Remaining(turnsUntilRenewal)}";
         }
     }
 
@@ -558,6 +558,9 @@ public class NewspaperView : MonoBehaviour
             popupBadge.sprite = card.BadgeSprite;
             popupBadge.color = card.BadgeColor;
             popupBadge.enabled = popupBadge.sprite != null;
+            // 誇張（△）はカードと同じく、薄くした確定バッジに「△」を重ねる（I-15）
+            var mark = PopupPartialMark();
+            if (mark != null) mark.gameObject.SetActive(s.state == ScrapState.ConfirmedPartial && popupBadge.enabled);
         }
         if (popupStateText != null)
         {
@@ -590,6 +593,27 @@ public class NewspaperView : MonoBehaviour
     }
 
     private string popupEntryKey;
+
+    private TextMeshProUGUI popupPartialMark;
+
+    private TextMeshProUGUI PopupPartialMark()
+    {
+        if (popupPartialMark != null || popupBadge == null) return popupPartialMark;
+        var go = new GameObject("PartialMark", typeof(RectTransform));
+        go.transform.SetParent(popupBadge.transform, false);
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+        popupPartialMark = go.AddComponent<TextMeshProUGUI>();
+        if (popupStateText != null) popupPartialMark.font = popupStateText.font;
+        popupPartialMark.text = "△";
+        popupPartialMark.alignment = TextAlignmentOptions.Center;
+        popupPartialMark.enableAutoSizing = true;
+        popupPartialMark.fontSizeMin = 18;
+        popupPartialMark.fontSizeMax = 56;
+        popupPartialMark.color = partialStateColor;
+        popupPartialMark.raycastTarget = false;
+        return popupPartialMark;
+    }
 
     private void OnPredictionPicked(int index)
     {
