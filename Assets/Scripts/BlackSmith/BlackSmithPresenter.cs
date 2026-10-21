@@ -211,7 +211,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     }
 
     /// <summary>
-    /// スクラップした記事を付箋に出す: 1行目「第N号 予想: 水の防具」、2行目「あと2日で効く／効いている／○ 本物…」。
+    /// スクラップした記事を付箋に出す: 1行目「第N号 予想メモ: 水の防具」、2行目「あと2日で効く／効いている／○ 本物…」。
     /// 続報が届いていれば、ここでも無料で答えを出す（新聞を開かなくても分かるように）。
     /// </summary>
     private void RenderStickyNotes()
