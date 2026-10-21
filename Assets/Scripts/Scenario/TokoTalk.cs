@@ -40,6 +40,39 @@ public static class TokoTalk
 
     private const string TomsShopSceneName = "TomsShop";
 
+    /// <summary>予約したのに再生処理が始まらなかったとき、朝の通知を待たせるのをやめるまでの秒数（取りこぼしの保険）。</summary>
+    private const float ReserveTimeoutSeconds = 5f;
+
+    private static bool _returnTalkReserved;
+    private static float _returnTalkReservedAt;
+    private static bool _returnTalkRunning;
+
+    /// <summary>
+    /// 配信から戻った朝の会話が予定されている、または再生中か。
+    /// 朝の通知（TomsShopPresenter の返済・納付・レリック選択など）はこれが false になるまで次を出さない。
+    /// </summary>
+    public static bool IsStreamingReturnTalkActive =>
+        _returnTalkRunning
+        || (_returnTalkReserved && Time.realtimeSinceStartup - _returnTalkReservedAt < ReserveTimeoutSeconds);
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void ResetStatics()
+    {
+        _returnTalkReserved = false;
+        _returnTalkRunning = false;
+    }
+
+    /// <summary>
+    /// 配信から戻った朝の会話を流す予定を立てる（日送りで朝の通知が始まる前に呼ぶ）。
+    /// 会話を流さない条件（初配信の帰還）なら予約しない。予約は PlayStreamingReturnAsync の終わりで消える。
+    /// </summary>
+    public static void ReserveStreamingReturn(MetaProgressModel meta)
+    {
+        if (meta == null || !meta.HasSeenTutorial(FirstStreamingEndTutorial)) return;
+        _returnTalkReserved = true;
+        _returnTalkReservedAt = Time.realtimeSinceStartup;
+    }
+
     // =====================================================
     // ラベル選択
     // =====================================================
@@ -90,6 +123,8 @@ public static class TokoTalk
         BattleResult result, int totalEarnings, int moneyAfter,
         MetaProgressModel meta, CancellationToken cancellationToken, bool demonPayout = false)
     {
+        _returnTalkRunning = true;
+        _returnTalkReserved = false;
         try
         {
             if (meta == null || !meta.HasSeenTutorial(FirstStreamingEndTutorial)) return;
@@ -109,6 +144,12 @@ public static class TokoTalk
         catch (Exception e)
         {
             Debug.LogError($"[TokoTalk] 配信帰還の会話に失敗しました。\n{e}");
+        }
+        finally
+        {
+            // 会話が終わった（スキップ・シーン遷移での中止を含む）ので、待たせていた朝の通知を進める
+            _returnTalkRunning = false;
+            _returnTalkReserved = false;
         }
     }
 }
