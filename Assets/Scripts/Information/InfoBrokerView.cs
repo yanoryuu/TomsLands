@@ -48,7 +48,6 @@ public class InfoBrokerView : MonoBehaviour
 
     public Subject<Unit> OnCloseRequested { get; } = new();
     public Subject<Unit> OnCharacterClicked { get; } = new();
-    public Subject<Unit> OnRefreshRequested { get; } = new();
     public Subject<InfoBrokerTab> OnChangePanel { get; } = new();
     public Subject<Unit> OnLevelUpRequested { get; } = new();
 

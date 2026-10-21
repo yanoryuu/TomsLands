@@ -33,17 +33,25 @@ public class NewspaperPresenter : IStartable, IDisposable
     /// <remarks>ターン頭から開けば Shop、仕入れ画面から開けば BlackSmith に戻る。</remarks>
     private TomsShopGamePhase returnPhase = TomsShopGamePhase.Shop;
 
-    private int loadedSeed;
-    private bool loaded;
 
     // 画面内の選択状態（保存しない）
     private string selectedCompanyId;   // null = 壁新聞
+    private int issueOffset;            // 0 = 今日の号 / -1〜-BackIssueDays = 前の号（I-8）
     private string selectedPage = FrontPage;
     private string leadKey;             // 一面トップに出している掲載
     private readonly HashSet<string> openedBodies = new();
 
     // TomsModel.CurrentTurn はラン終了時にしか同期されないので、進行中のターンは GameFlowManager から取る
     private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
+
+    /// <summary>紙面に出している号（前の号を開いているときは過去のターン）。</summary>
+    private int IssueTurn => Math.Max(1, Turn + issueOffset);
+
+    /// <summary>前の号を何号さかのぼれるか（I-8）。</summary>
+    public const int BackIssueDays = 3;
+
+    /// <summary>左ペインの壁新聞カードの社ID（購読中でも壁新聞を開けるようにする。I-1）。</summary>
+    public const string WallPaperId = "";
 
     public NewspaperPresenter(
         NewspaperView view,
@@ -85,6 +93,8 @@ public class NewspaperPresenter : IStartable, IDisposable
         view.OnPageStep.Subscribe(StepPage).AddTo(disposables);
         view.OnConfirmClicked.Subscribe(ConfirmOne).AddTo(disposables);
         view.OnBatchConfirmClicked.Subscribe(_ => ConfirmBatch()).AddTo(disposables);
+        view.OnIssueStep.Subscribe(StepIssue).AddTo(disposables);
+        view.OnPredictionChanged.Subscribe(p => SetPrediction(p.entryKey, p.value)).AddTo(disposables);
     }
 
     // =====================================================================
@@ -103,24 +113,41 @@ public class NewspaperPresenter : IStartable, IDisposable
         // カレンダーの形式が変わる（旧形式 → フェーズ3）と、旧セーブのスクラップは掲載を引けなくなる。
         // 引けないまま枠を占有し続けないよう、ここで捨てる
         if (scrapbook.PruneMissing(key => newsModel.FindEntry(key) != null) > 0) Save();
+        // 続報（結果記事・訂正記事）が出たスクラップは、購読していなくても届いて無料で名鑑へ移る（I-3）
+        if (scrapbook.DeliverFollowUps(newsModel, Turn) > 0) Save();
 
         // 読む社: 前回の社がまだ購読中ならそれ、無ければ最初の購読社、無ければ壁新聞
         if (selectedCompanyId == null || !subscriptions.IsSubscribed(selectedCompanyId, Turn))
             selectedCompanyId = FirstSubscribed();
         selectedPage = FirstPageWithContent();
         leadKey = null;
+        issueOffset = 0;
         openedBodies.Clear();
 
         RenderAll();  // パネルのフェードは GamePanelManager が行う
         view.PlayIntro();
     }
 
-    private void EnsureLoaded(int seed)
+    private void EnsureLoaded(int seed) => NewspaperSaveStore.EnsureLoaded(seed, subscriptions, scrapbook, newsModel);
+
+    /// <summary>
+    /// 今日の号でまだ読んでいない報道の本数（店ホームの新聞ボタンのバッジ。I-7）。購読中の社の号と壁新聞の報道を数える。
+    /// </summary>
+    public static int CountUnread(NewsModel news, NewspaperSubscriptionModel subscriptions, int turn)
     {
-        if (loaded && loadedSeed == seed) return;
-        NewspaperSaveStore.Load(seed, subscriptions, scrapbook, newsModel);
-        loadedSeed = seed;
-        loaded = true;
+        if (news == null || !news.IsBuilt) return 0;
+        var issue = news.IssueOf(turn);
+        var seen = new HashSet<string>();
+        int n = 0;
+        void Count(NewsIssueEntry e)
+        {
+            if (e.kind != NewsEntryKind.Report || !seen.Add(e.Key) || news.IsRead(e.Key)) return;
+            n++;
+        }
+        foreach (var e in issue)
+            if (subscriptions != null && subscriptions.IsSubscribed(e.companyId, turn)) Count(e);
+        foreach (var e in WallPaperEntries(issue)) Count(e);
+        return n;
     }
 
     private void Save() => NewspaperSaveStore.Save(tomsModel.FlowSeed, subscriptions, scrapbook, newsModel);
@@ -142,7 +169,8 @@ public class NewspaperPresenter : IStartable, IDisposable
     {
         // 表示用の日数（今日 0・明日 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
         int untilBattle = gameFlowManager != null ? gameFlowManager.GetDaysUntilNextStream() : -1;
-        view.ShowHeader($"第{Turn}号", tomsModel.PlayerMoney.Value, untilBattle);
+        view.ShowHeader($"第{IssueTurn}号", tomsModel.PlayerMoney.Value, untilBattle);
+        view.ShowIssueStep(CanStepIssue(-1), CanStepIssue(1), issueOffset < 0);
     }
 
     private int Slots => NewsTuning.SubscriptionSlotsFor(tomsModel.ShopLevel.Value);
@@ -152,6 +180,9 @@ public class NewspaperPresenter : IStartable, IDisposable
         int turn = Turn;
         int money = tomsModel.PlayerMoney.Value;
         int slots = Slots;
+
+        // 壁新聞（無料）。購読中でもここを押せば壁新聞を読める（I-1）
+        view.ShowWallPaperCard(selectedCompanyId == null);
 
         var list = new List<NewspaperCompanyCardUI.Data>();
         foreach (var c in NewsMasterLoader.LoadCompanies())
@@ -219,11 +250,11 @@ public class NewspaperPresenter : IStartable, IDisposable
             if (lead != null)
             {
                 paper.hasLead = true;
-                paper.lead = ToArticle(lead, company == null);
+                paper.lead = ToArticle(lead, company);
                 paper.lead.bodyOpen = true;   // 一面トップは挿絵を置かず本文で埋める
             }
             foreach (var e in onPage)
-                if (e != lead) paper.grid.Add(ToArticle(e, company == null));
+                if (e != lead) paper.grid.Add(ToArticle(e, company));
         }
 
         view.ShowPaper(paper);
@@ -239,17 +270,21 @@ public class NewspaperPresenter : IStartable, IDisposable
         view.ShowTabs(pages, selectedPage, prev, next);
     }
 
-    private NewspaperView.ArticleData ToArticle(NewsIssueEntry e, bool withCompany)
+    private NewspaperView.ArticleData ToArticle(NewsIssueEntry e, NewspaperCompanyData company)
     {
         var a = e.Article;
         string key = e.Key;
+        // 載った面（うわさ欄など）を署名の前に添える。誤報は一面以外に回ることがあるので、これが手がかりになる（I-9）。
+        // 壁新聞は社名を伏せる（I-1）
+        string pageLabel = company != null ? PageLabel(PageOf(e, company)) : null;
+        string byline = FormatByline(a?.byline, null);
         return new NewspaperView.ArticleData
         {
             entryKey = key,
             headline = a?.headline ?? "",
             lead = a?.lead ?? "",
             body = a?.body ?? "",
-            byline = FormatByline(a?.byline, withCompany ? e.Company?.companyName : null),
+            byline = string.IsNullOrEmpty(pageLabel) ? byline : $"{pageLabel}／{byline}",
             isRead = a != null && newsModel.IsRead(key),
             bodyOpen = openedBodies.Contains(key),
             canScrapKind = ScrapbookModel.CanPinKind(e),
@@ -257,7 +292,16 @@ public class NewspaperPresenter : IStartable, IDisposable
         };
     }
 
-    /// <summary>署名。無署名は最も危険、という手がかりをそのまま出す。壁新聞では社名も添える。</summary>
+    /// <summary>一面以外の面の呼び名（一面は空）。</summary>
+    private static string PageLabel(string page) => page switch
+    {
+        "second" => "二面",
+        "market" => "市況欄",
+        "rumor" => "うわさ欄",
+        _ => null,
+    };
+
+    /// <summary>署名。無署名は最も危険、という手がかりをそのまま出す。</summary>
     private static string FormatByline(string byline, string companyName)
     {
         // 部署名（王立広報局など）はそのまま、個人名は「記者：」を付ける
@@ -281,7 +325,7 @@ public class NewspaperPresenter : IStartable, IDisposable
             if (state == ScrapState.Unconfirmed) unconfirmed++;
             list.Add(ToScrap(s, entry, state, money >= NewsTuning.ConfirmCost));
         }
-        // 今日確認したものは、空いた枠にそのまま答えを見せておく（翌日には名鑑へ消える）
+        // 今日確認したもの・続報が届いたものは、空いた枠にそのまま答えを見せておく（翌日には名鑑へ消える）
         foreach (var s in scrapbook.ConfirmedOn(turn))
         {
             if (list.Count >= scrapbook.Capacity) break;
@@ -293,7 +337,7 @@ public class NewspaperPresenter : IStartable, IDisposable
             NewsTuning.ConfirmCost, NewsTuning.ConfirmBatchCost);
     }
 
-    private static NewspaperView.ScrapData ToScrap(ScrapbookModel.Scrap s, NewsIssueEntry entry, ScrapState state, bool canAfford)
+    private NewspaperView.ScrapData ToScrap(ScrapbookModel.Scrap s, NewsIssueEntry entry, ScrapState state, bool canAfford)
     {
         // フェーズ3の記事は事象×テンプレートで組み立てて掲載に持たせているので、マスター検索では引けない。掲載から引く
         var a = entry?.Article ?? NewsMasterLoader.FindArticle(s.articleId);
@@ -307,7 +351,63 @@ public class NewspaperPresenter : IStartable, IDisposable
             byline = $"第{s.publishTurn}号／{FormatByline(a?.byline, company?.companyName)}",
             state = state,
             canAfford = canAfford,
+            followUp = FollowUpText(s),
+            answer = AnswerText(s, entry, state),
+            prediction = s.prediction ?? string.Empty,
         };
+    }
+
+    /// <summary>届いた続報の見出しとリード（無ければ空）。</summary>
+    private string FollowUpText(ScrapbookModel.Scrap s)
+    {
+        if (string.IsNullOrEmpty(s.followUpKey)) return string.Empty;
+        var a = newsModel.FindEntry(s.followUpKey)?.Article;
+        if (a == null) return string.Empty;
+        return string.IsNullOrEmpty(a.lead) ? a.headline : $"{a.headline}\n{a.lead}";
+    }
+
+    /// <summary>
+    /// 答え合わせ（I-4）: 確認した・続報が届いたスクラップに「何に効いたか」と掲載の日からの値動きを出す。
+    /// 答えが出る前は出さない（記事から銘柄へのリンクを作らない約束。News_Spec §9.3）。予想を書いていれば当たり外れも。
+    /// </summary>
+    private string AnswerText(ScrapbookModel.Scrap s, NewsIssueEntry entry, ScrapState state)
+    {
+        var ev = entry?.eventInstance;
+        bool resolved = state == ScrapState.ConfirmedHit || state == ScrapState.ConfirmedMiss || state == ScrapState.ConfirmedPartial;
+        if (ev == null || !resolved) return string.Empty;
+        string target = ScrapPrediction.TargetLabel(ev);
+        if (string.IsNullOrEmpty(target)) return string.Empty;
+        var lines = new List<string>();
+        float? move = PriceMoveSince(ev, s.publishTurn);
+        string moveText = move.HasValue ? $"（第{s.publishTurn}号の日から {move.Value * 100f:+0;-0}%）" : string.Empty;
+        lines.Add(state == ScrapState.ConfirmedMiss ? $"記事が言っていた効き先: {target}{moveText}" : $"効き先: {target}{moveText}");
+        if (!string.IsNullOrEmpty(s.prediction))
+        {
+            bool ok = state != ScrapState.ConfirmedMiss && ScrapPrediction.IsCorrect(s.prediction, ev);
+            lines.Add($"予想: {ScrapPrediction.Label(s.prediction)} → {(ok ? "的中" : "外れ")}");
+        }
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>効き先の品（解放済み）の、掲載の日から今日までの値動きの平均。品が無ければ null。</summary>
+    private float? PriceMoveSince(NewsEventInstance ev, int publishTurn)
+    {
+        var items = itemModel?.RuntimeItems;
+        if (items == null) return null;
+        int back = Math.Max(0, Turn - publishTurn);
+        int level = tomsModel.BlacksmithLevel.Value;
+        double sum = 0; int n = 0;
+        foreach (var r in items)
+        {
+            if (r.RequiredLevel.Value > level || !ev.Matches(r)) continue;
+            var h = r.ShopPriceHistory;
+            if (h == null || h.Count <= back) continue;
+            int then = h[h.Count - 1 - back];
+            if (then <= 0) continue;
+            sum += Math.Log(r.CurrentPrice.Value / (double)then);
+            n++;
+        }
+        return n > 0 ? (float)(Math.Exp(sum / n) - 1.0) : (float?)null;
     }
 
     private void RenderMarket()
@@ -386,7 +486,7 @@ public class NewspaperPresenter : IStartable, IDisposable
     /// </summary>
     private List<NewsIssueEntry> TodaysEntries(NewspaperCompanyData company)
     {
-        var sorted = SortForPaper(newsModel.IssueOf(Turn));
+        var sorted = SortForPaper(newsModel.IssueOf(IssueTurn));
         var list = new List<NewsIssueEntry>();
         if (company != null)
         {
@@ -394,21 +494,30 @@ public class NewspaperPresenter : IStartable, IDisposable
                 if (e.companyId == company.companyId) list.Add(e);
             return list;
         }
+        return WallPaperEntries(sorted);
+    }
 
-        foreach (var e in sorted)
+    /// <summary>
+    /// 壁新聞（無料）の中身（I-1）: <b>かわら版の一面の報道1本（社名は伏せる）＋埋め草</b>だけ。
+    /// 以前は全社の一面から2本を出していたので、王立官報・ギルド報の有料の一面がただで読めた。
+    /// AutoPlay のヘッドレス（AutoPlayHeadlessGame.Snapshot）も同じ規則を使う。
+    /// </summary>
+    public static List<NewsIssueEntry> WallPaperEntries(List<NewsIssueEntry> sortedIssue)
+    {
+        var list = new List<NewsIssueEntry>();
+        foreach (var e in sortedIssue)
         {
-            if (list.Count >= NewsTuning.WallPaperArticles) break;
-            if (e.kind != NewsEntryKind.Report) continue;
-            if (e.Article?.page != FrontPage) continue;
+            if (e.kind != NewsEntryKind.Report || e.companyId != NewsTuning.WallPaperCompany || e.Article?.page != FrontPage) continue;
+            list.Add(e);
+            break;
+        }
+        var fillers = new HashSet<string>();
+        foreach (var e in sortedIssue)
+        {
+            if (list.Count >= NewsTuning.WallPaperArticles + 1) break;
+            if (e.kind != NewsEntryKind.Filler || !fillers.Add(e.articleId)) continue;
             list.Add(e);
         }
-        // 一面記事が無い日は、どの面でも構わないので1本は出す（画面を空にしない）。報道が無ければ埋め草
-        if (list.Count == 0)
-            foreach (var e in sorted)
-                if (e.kind == NewsEntryKind.Report) { list.Add(e); break; }
-        if (list.Count == 0)
-            foreach (var e in sorted)
-                if (e.kind == NewsEntryKind.Filler) { list.Add(e); break; }
         return list;
     }
 
@@ -488,7 +597,20 @@ public class NewspaperPresenter : IStartable, IDisposable
 
     private void SelectCompany(string companyId)
     {
-        if (!subscriptions.IsSubscribed(companyId, Turn) || companyId == selectedCompanyId) return;
+        // 壁新聞カード（I-1）
+        if (string.IsNullOrEmpty(companyId))
+        {
+            if (selectedCompanyId == null) return;
+            selectedCompanyId = null;
+            selectedPage = FirstPageWithContent();
+            leadKey = null;
+            RenderHeader();
+            RenderCompanies();
+            RenderPaper();
+            view.AnimatePaper(0);
+            return;
+        }
+        if (!subscriptions.IsSubscribed(companyId, IssueTurn) || companyId == selectedCompanyId) return;
         selectedCompanyId = companyId;
         selectedPage = FirstPageWithContent();
         leadKey = null;
@@ -508,10 +630,11 @@ public class NewspaperPresenter : IStartable, IDisposable
         tomsModel.SavePlayerMoney();
         Save();
 
-        // 契約したらその社の号を開く
+        // 契約したらその社の今日の号を開く
         selectedCompanyId = companyId;
         selectedPage = FirstPageWithContent();
         leadKey = null;
+        issueOffset = 0;
         RenderAll();
         view.PopCompany(companyId);
         view.AnimatePaper(0);
@@ -540,6 +663,36 @@ public class NewspaperPresenter : IStartable, IDisposable
             SelectPage(PageOrder[i]);
             return;
         }
+    }
+
+    // ---------------- 前の号（I-8） ----------------
+
+    /// <summary>dir 号ぶん動けるか。前の号は BackIssueDays まで。社の号は、その日に購読していた号だけ読める。</summary>
+    private bool CanStepIssue(int dir)
+    {
+        int next = issueOffset + dir;
+        if (next > 0 || next < -BackIssueDays || Turn + next < 1) return false;
+        return selectedCompanyId == null || subscriptions.IsSubscribed(selectedCompanyId, Turn + next);
+    }
+
+    private void StepIssue(int dir)
+    {
+        if (!CanStepIssue(dir)) return;
+        issueOffset += dir;
+        selectedPage = FirstPageWithContent();
+        leadKey = null;
+        RenderHeader();
+        RenderPaper();
+        view.AnimatePaper(dir);
+    }
+
+    // ---------------- 予想（I-6） ----------------
+
+    private void SetPrediction(string entryKey, string value)
+    {
+        if (!scrapbook.SetPrediction(entryKey, value)) return;
+        Save();
+        RenderScraps();
     }
 
     private void ConfirmOne(string entryKey)

@@ -48,9 +48,21 @@ public static class NewsTuning
     // 2段目: 発効後の実需（小 / 中 / 大）
     // ---------------------------------------------------------------
 
-    public const float TrendSmall = 0.3f, KickSmall = 0.03f; public const int DurationSmall = 3;
-    public const float TrendMedium = 0.6f, KickMedium = 0.06f; public const int DurationMedium = 4;
-    public const float TrendLarge = 1.0f, KickLarge = 0.10f; public const int DurationLarge = 5;
+    public const float TrendSmall = 0.3f; public const int DurationSmall = 3;
+    public const float TrendMedium = 0.6f; public const int DurationMedium = 4;
+    public const float TrendLarge = 1.0f; public const int DurationLarge = 5;
+
+    /// <summary>発効ターンに需要へ直撃する量（小 / 中 / 大）。客の数が増える＝たくさん売れる。static は AutoPlay の計測で上書きするため。</summary>
+    public static float KickSmall = 0.03f, KickMedium = 0.06f, KickLarge = 0.10f;
+
+    /// <summary>
+    /// 効いている間、適正値に掛ける倍率の傾き（適正値 × (1 + FairPerTrend × trendDelta)）。中 0.6 で適正値 +X%。
+    /// 相場は適正値へ寄るので、これが「記事どおりに値が上がる」本体（Docs/News_Spec.md §7.3。2026-10 グループ I で追加）。
+    /// </summary>
+    public static float FairPerTrend = 0.7f;
+
+    /// <summary>効いている間、毎朝の値段に掛ける倍率の傾き（値段 × (1 + DriftPerTrend × trendDelta)）。</summary>
+    public static float DriftPerTrend = 0.05f;
 
     /// <summary>
     /// 誇張記事（truth = exaggerated）の2段目に掛ける倍率。
@@ -109,8 +121,11 @@ public static class NewsTuning
         return Mathf.Clamp(slots, 1, MaxSubscriptionSlots);
     }
 
-    /// <summary>未購読（契約0件）のときに一面へ出す無料の壁新聞の本数。</summary>
+    /// <summary>壁新聞（無料）に載せる埋め草の本数（I-1）。報道はかわら版の一面から1本だけ（社名は伏せる）。</summary>
     public const int WallPaperArticles = 2;
+
+    /// <summary>壁新聞に一面の報道を1本だけ写す社（I-1・Q16）。有料の社（王立・ギルドなど）の一面はただでは出さない。</summary>
+    public const string WallPaperCompany = "tabloid";
 
     // ---------------------------------------------------------------
     // スクラップと確認（§9）

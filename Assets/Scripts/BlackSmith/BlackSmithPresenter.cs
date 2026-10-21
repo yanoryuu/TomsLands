@@ -39,6 +39,8 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     private readonly DungeonIntelModel dungeonIntel;
     private readonly MetaProgressModel metaProgress;
     private readonly ScrapbookModel scrapbook;
+    private readonly NewsModel newsModel;
+    private readonly NewspaperSubscriptionModel subscriptions;
 
     /// <summary>
     /// 初回チュートリアルの「オート購入（全額・調整不可）だけ」状態。
@@ -59,9 +61,13 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         RelicEffectResolver relicResolver,
         DungeonIntelModel dungeonIntel,
         MetaProgressModel metaProgress,
-        ScrapbookModel scrapbook = null)
+        ScrapbookModel scrapbook = null,
+        NewsModel newsModel = null,
+        NewspaperSubscriptionModel subscriptions = null)
     {
         this.scrapbook = scrapbook;
+        this.newsModel = newsModel;
+        this.subscriptions = subscriptions;
         this.blackSmithModel = blackSmithModel;
         this.tomsModel = tomsModel;
         this.itemModel = itemModel;
@@ -84,6 +90,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         characterTalkIndex = 0;
         blackSmithView.ShowDialogue(BlackSmithDialogueLoader.Get("open"));
         UpdateNextDungeonBanner();
+        RenderStickyNotes();
         RefreshLineup();
         ChangePurchasePanel(blackSmithModel.weaponRuntimeItems, BlackSmithTab.Weapon);
 
@@ -192,6 +199,68 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         if (header != null) header.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
     }
 
+    // ========================================
+    // 付箋（I-6）と朝刊の入り口（I-7）
+    // ========================================
+
+    private void OpenNewspaper()
+    {
+        if (tutorialAutoBuyOnly) return;
+        if (stateManager.HasHandler(TomsShopGamePhase.Newspaper))
+            stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Newspaper);
+    }
+
+    /// <summary>
+    /// スクラップした記事を付箋に出す: 1行目「第N号 予想: 水の防具」、2行目「あと2日で効く／効いている／○ 本物…」。
+    /// 続報が届いていれば、ここでも無料で答えを出す（新聞を開かなくても分かるように）。
+    /// </summary>
+    private void RenderStickyNotes()
+    {
+        var ui = blackSmithView.StickyNotes;
+        if (ui == null || scrapbook == null || newsModel == null) return;
+        int seed = tomsModel.FlowSeed;
+        int turn = gameFlowManager.CurrentTurn.Value;
+        newsModel.Build(seed);
+        NewspaperSaveStore.EnsureLoaded(seed, subscriptions, scrapbook, newsModel);
+        if (scrapbook.DeliverFollowUps(newsModel, turn) > 0)
+            NewspaperSaveStore.Save(seed, subscriptions, scrapbook, newsModel);
+
+        var lines = new List<string>();
+        void Add(ScrapbookModel.Scrap s)
+        {
+            var entry = newsModel.FindEntry(s.entryKey);
+            string what = string.IsNullOrEmpty(s.prediction)
+                ? Shorten(entry?.Article?.headline, 12)
+                : $"予想: {ScrapPrediction.Label(s.prediction)}";
+            lines.Add($"第{s.publishTurn}号 {what}\n{StickyStatus(s, entry, turn)}");
+        }
+        foreach (var s in scrapbook.Pinned) Add(s);
+        foreach (var s in scrapbook.ConfirmedOn(turn))
+            if (lines.Count < scrapbook.Capacity) Add(s);
+        ui.Show(lines);
+    }
+
+    private static string StickyStatus(ScrapbookModel.Scrap s, NewsIssueEntry entry, int turn)
+    {
+        switch (ScrapbookModel.StateOf(s, entry, turn))
+        {
+            case ScrapState.ConfirmedHit: return "<color=#3E8E3A>○ 本物</color>";
+            case ScrapState.ConfirmedPartial: return "<color=#C8731E>△ 誇張</color>";
+            case ScrapState.ConfirmedMiss: return "<color=#B83A2C>× 誤報</color>";
+            case ScrapState.Unconfirmed:
+                return entry != null && turn >= entry.SettleTurn ? "<color=#8A5A2B>決着した</color>" : "<color=#3E8E3A>効いている</color>";
+            default:
+                int days = entry != null ? ScrapbookModel.ConfirmableTurn(entry) - turn : -1;
+                return days > 0 ? $"<color=#8A5A2B>あと{days}日で効く</color>" : "<color=#8A5A2B>結果待ち</color>";
+        }
+    }
+
+    private static string Shorten(string s, int max)
+    {
+        if (string.IsNullOrEmpty(s)) return string.Empty;
+        return s.Length <= max ? s : s.Substring(0, max) + "…";
+    }
+
     private static bool IsReturnablePhase(TomsShopGamePhase p) =>
         p != TomsShopGamePhase.BlackSmith
         && p != TomsShopGamePhase.Newspaper
@@ -219,6 +288,9 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         stateManager.CurrentTomsShopPhase
             .Subscribe(p => { if (IsReturnablePhase(p)) returnPhase = p; })
             .AddTo(disposables);
+
+        // 朝刊（付箋を押しても開く）。閉じると NewspaperPresenter が鍛冶屋へ戻す（I-7）
+        if (blackSmithView.StickyNotes != null) blackSmithView.StickyNotes.OnNewspaperClicked += OpenNewspaper;
 
         blackSmithView.OnCloseRequested.Subscribe(_ =>
         {

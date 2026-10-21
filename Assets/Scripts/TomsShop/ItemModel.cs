@@ -648,6 +648,15 @@ public class ItemModel
             float previousFairValue = ShopFairValue.Compute(
                 master.basePrice, runtime.PreviousDemand, settings.demandPricePremium, fairFloor, fairCeiling);
 
+            // ニュースの2段目（値段側）: 効いている間は適正値そのものを動かす（相場が寄っていく先）。
+            // 前日の適正値にも前日の倍率を掛け、需要を見る勢が「適正値が上がった」日を正しく見られるようにする。
+            // おすすめ（GetFairValue）には入れない（未来の情報を無料で出さない。News_Spec §2）
+            if (news != null)
+            {
+                fairValue = Mathf.Clamp(fairValue * news.FairRate(runtime, turnIndex), fairFloor, fairCeiling);
+                previousFairValue = Mathf.Clamp(previousFairValue * news.FairRate(runtime, turnIndex - 1), fairFloor, fairCeiling);
+            }
+
             var context = new ShopPriceContext(
                 runtime, master, settings, fairValue, previousFairValue, attentionFactor, retentionStability);
             float s1Rate = engine.GetPriceRate(in context);
@@ -660,6 +669,10 @@ public class ItemModel
             // 本物ならそこへ2段目の需要が来て値を支え、誤報なら値だけが落ちる。
             float newsHype = news != null ? news.HypeRate(runtime, turnIndex) : 1f;
             if (newsHype != 1f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * newsHype));
+
+            // 効いている間は、世間が記事どおりに買いに来る（売り圧力の前に掛ける。値段側の2段目）
+            float newsDrift = news != null ? news.PriceDrift(runtime, turnIndex) : 1f;
+            if (newsDrift != 1f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * newsDrift));
 
             // 配信前の期待買い: 需要の上げ（適正値の上げ）だけでは ABM の追従が遅く、店で売る分の売り圧力に負けて
             // 「弱点の武器を仕入れたのに下がり続ける」ので、値段にも直接乗せる（ニュースの跳ねと同じ扱い）

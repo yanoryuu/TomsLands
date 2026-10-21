@@ -350,7 +350,7 @@
 | `NewsIssueEntry` | `eventId`（事象への参照）と `templateId` / `fillerId` を持つ。効果の判定は事象側を見る |
 | `NewsModel` | `ActiveEffectsOn` 等を事象単位に。`IssueOf(turn, companyId)` を追加 |
 | `NewsEffectResolver` | 跳ねを「事象 × 日」で1回に（§3.3）。公開 API は不変 |
-| `NewspaperPresenter` | 社ごとの号を表示（壁新聞は全社の一面から1〜2本のまま）。埋め草は効果が無いのでスクラップ不可 |
+| `NewspaperPresenter` | 社ごとの号を表示。壁新聞は**かわら版の一面1本（社名を伏せる）＋埋め草**（2026-10 I-1。`NewspaperPresenter.WallPaperEntries`）。埋め草は効果が無いのでスクラップ不可 |
 | セーブ | 変更なし（シードから再現）。スクラップの掲載キーは「ターン:社:テンプレートID」に変わるので、旧セーブのスクラップは読み捨て |
 
 ---

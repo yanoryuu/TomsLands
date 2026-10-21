@@ -44,6 +44,10 @@ public class BlackSmithView : MonoBehaviour
     [Header("次ダンジョン情報バナー")]
     [SerializeField] private ProcurementHeaderView procurementHeader;
 
+    [Tooltip("スクラップの付箋と朝刊の入り口（I-6・I-7。任意）")]
+    [SerializeField] private ScrapStickyNotesUI stickyNotes;
+    public ScrapStickyNotesUI StickyNotes => stickyNotes;
+
     [Header("所持金表示")]
     [Tooltip("鍛冶屋専用の所持金テキスト（鍛冶屋表示中はCommonViewを出さないため）")]
     [SerializeField] private TextMeshProUGUI playerMoneyText;

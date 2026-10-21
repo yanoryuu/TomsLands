@@ -155,6 +155,20 @@ public static class AutoPlayCli
         md.AppendLine();
         md.AppendLine("異常の内訳: " + string.Join(" / ", runs.SelectMany(r => r.Anomalies).GroupBy(a => a.Kind)
             .OrderByDescending(x => x.Count()).Select(x => $"{x.Key}={x.Count()}")));
+        md.AppendLine();
+        md.AppendLine("新聞費（平均/ラン）: " + string.Join(" / ", runs.GroupBy(r => r.Bot).OrderBy(g => g.Key)
+            .Select(g => $"{g.Key} {g.Average(r => (double)r.TotalNewspaperSpend):N0}G")));
+        md.AppendLine();
+        md.AppendLine("占い費（平均/ラン）: " + string.Join(" / ", runs.GroupBy(r => r.Bot).OrderBy(g => g.Key)
+            .Select(g => $"{g.Key} {g.Average(r => (double)r.TotalFortuneSpend):N0}G")));
+        md.AppendLine();
+        md.AppendLine(AutoPlayNewsStudy.Summarize(runs));
+        var news = new StringBuilder("run,bot,event,truth,scale,sign,lead,duration,matched,reported,hype,pubToEffect,pubToBest,pubToSettle,pubToAfter,preToBest,demandGain,customerGain\n");
+        foreach (var e in runs.SelectMany(r => r.NewsEventRows))
+            news.AppendLine(string.Join(",", e.RunId, e.Bot, e.EventKey, e.Truth, e.ScaleRank, e.Sign, e.Lead, e.Duration, e.Matched, e.Reported,
+                e.Hype.ToString("F4", inv), e.PubToEffect.ToString("F4", inv), e.PubToBest.ToString("F4", inv), e.PubToSettle.ToString("F4", inv),
+                e.PubToAfter.ToString("F4", inv), e.PreToBest.ToString("F4", inv), e.DemandGain.ToString("F4", inv), e.CustomerGain.ToString("F4", inv)));
+        File.WriteAllText(Path.Combine(_outDir, _label + "_news.csv"), news.ToString(), new UTF8Encoding(false));
 
         File.WriteAllText(Path.Combine(_outDir, _label + "_table.md"), md.ToString(), new UTF8Encoding(false));
         File.WriteAllText(Path.Combine(_outDir, _label + "_table.csv"), csv.ToString(), new UTF8Encoding(false));

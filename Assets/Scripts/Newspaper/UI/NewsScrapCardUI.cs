@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// 右上ペインのスクラップカード1枚（Docs/News_Spec.md §9）。
-/// 状態バッジ（砂時計 / ? / ○ / ×）・見出し・リード。? のときだけ「確認 1,500G」を出す。
+/// 状態バッジ（砂時計 / ? / ○ / △ / ×）・見出し・リード。? のときだけ「確認 1,500G」を出す。
 /// カード自体を押すと記事の全文（<see cref="NewspaperView"/> の記事ポップアップ）を開く。
 /// </summary>
 public class NewsScrapCardUI : MonoBehaviour
@@ -18,6 +18,8 @@ public class NewsScrapCardUI : MonoBehaviour
     [Tooltip("誤報だったときのバッジ。未設定なら確定バッジを赤く染めて代用する")]
     [SerializeField] private Sprite missSprite;         // ばつ
     [SerializeField] private Color missTint = new Color(0.75f, 0.25f, 0.2f, 1f);
+    [Tooltip("誇張（△）のとき確定バッジに掛ける色（専用の素材が無いので色で分ける。I-15）")]
+    [SerializeField] private Color partialTint = new Color(1f, 1f, 1f, 0.25f);
     [SerializeField] private TextMeshProUGUI headlineText;
     [SerializeField] private TextMeshProUGUI leadText;
     [SerializeField] private Button confirmButton;          // 確認
@@ -64,11 +66,15 @@ public class NewsScrapCardUI : MonoBehaviour
                 case ScrapState.Pending: badgeImage.sprite = pendingSprite; break;
                 case ScrapState.Unconfirmed: badgeImage.sprite = unconfirmedSprite; break;
                 case ScrapState.ConfirmedHit: badgeImage.sprite = hitSprite; break;
+                case ScrapState.ConfirmedPartial: badgeImage.sprite = hitSprite; badgeImage.color = partialTint; break;
                 case ScrapState.ConfirmedMiss:
                     if (missSprite != null) badgeImage.sprite = missSprite;
                     else { badgeImage.sprite = hitSprite; badgeImage.color = missTint; }
                     break;
             }
+            // 誇張（△）は専用のバッジ素材が無いので、確定バッジを薄くして「△」の字を重ねる（I-15）
+            var mark = PartialMark();
+            if (mark != null) mark.gameObject.SetActive(state == ScrapState.ConfirmedPartial);
             if (reveal) PlayReveal(state);
         }
 
@@ -78,6 +84,25 @@ public class NewsScrapCardUI : MonoBehaviour
             confirmButton.interactable = canAfford;
         }
         if (confirmLabel != null) confirmLabel.text = $"確認 {cost:N0}G";
+    }
+
+    private TextMeshProUGUI partialMark;
+
+    private TextMeshProUGUI PartialMark()
+    {
+        if (partialMark != null || badgeImage == null) return partialMark;
+        var go = new GameObject("PartialMark", typeof(RectTransform));
+        go.transform.SetParent(badgeImage.transform, false);
+        var rt = (RectTransform)go.transform;
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+        partialMark = go.AddComponent<TextMeshProUGUI>();
+        if (headlineText != null) partialMark.font = headlineText.font;
+        partialMark.text = "△";
+        partialMark.alignment = TextAlignmentOptions.Center;
+        partialMark.fontSize = 40;
+        partialMark.color = new Color32(0xC8, 0x73, 0x1E, 0xFF);
+        partialMark.raycastTarget = false;
+        return partialMark;
     }
 
     /// <summary>確認の結果が出たときの演出。バッジを跳ねさせ、誤報ならカードを揺らす。</summary>

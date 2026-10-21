@@ -294,3 +294,25 @@ flowchart TD
 
 ### 11.4 配信値
 `streamAnticipationDays` / `streamAnticipationDemandUp` / `streamAnticipationPriceUp` は bal_shopEconomy に行が無ければ同梱の値（上の値）を使う。
+
+## 12. 新聞の効果が値段に効く量（2026-10 グループ I）
+
+「新聞を正しく読んでも儲からない」（§10 の計測で oracle が greedy を下回った）の対策。詳細は `Docs/News_Spec.md` §7.1、計測は `Docs/Level_Design_Log.md`「2026-10-21 新聞の効果量（グループ I）」。
+
+毎朝の値段の式（§11.1）に、新聞の事象が**効いている間（発効〜決着）だけ**次の2つを足した（`ItemModel.ApplyShopTurnEconomy`）。
+
+```
+適正値（ABM が寄せる先）  × (1 + FairPerTrend  × 効いている trendDelta の合計)
+値段（跳ねの後・売り圧力の前）× (1 + DriftPerTrend × 効いている trendDelta の合計)
+```
+
+| 項目 | 値 | 置き場所 |
+|---|---|---|
+| `NewsTuning.FairPerTrend` | 0.7 | コード定数（配信値ではない） |
+| `NewsTuning.DriftPerTrend` | 0.05 | コード定数 |
+
+- trendDelta は 小 0.3 / 中 0.6 / 大 1.0（誇張は半分、誤報は 0）。合計は ±1 で頭打ち。
+- 前日の適正値にも前日の倍率を掛けるので、需要を見る勢（DemandWatcher）が発効日に買いに来る。
+- おすすめ（`GetFairValue` / `RecommendScoreOf`）には入れない。読まないプレイヤーに未来の値上がりを教えないため。
+- 決着後は倍率が 1 に戻り、適正値への引き寄せ（anchorPull 0.22/日）で数日かけて戻る。効いている間に売るのが正解。
+- 計測（Medium・20シード・報道の朝に買って効いている間の最高で売る、効き先でない品との差）: 本物の中 +2% → 約 +40%、大 −3% → 約 +70%、誤報の中 −4% → −14%。
