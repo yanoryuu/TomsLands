@@ -338,6 +338,17 @@ public static class AutoPlayBatch
             if (kv.Length != 2) continue;
             var path = kv[0].Trim().Split('.');
             if (path.Length != 2) continue;
+            if (path[0] == "news" || path[0] == "fortune")
+            {
+                // 新聞の目盛り（NewsTuning の static フィールド。計測用）
+                var sf = (path[0] == "news" ? typeof(NewsTuning) : typeof(ProphetFortune)).GetField(path[1], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                if (sf == null || sf.IsLiteral || sf.IsInitOnly) { Debug.LogWarning($"[AutoPlay] 上書きできない項目: {kv[0]}"); continue; }
+                string sv = kv[1].Trim();
+                sf.SetValue(null, sf.FieldType == typeof(int) ? int.Parse(sv, System.Globalization.CultureInfo.InvariantCulture)
+                    : (object)float.Parse(sv, System.Globalization.CultureInfo.InvariantCulture));
+                done.Add($"{kv[0]}={sv}");
+                continue;
+            }
             object target = path[0] switch
             {
                 "economy" => assets.Economy,

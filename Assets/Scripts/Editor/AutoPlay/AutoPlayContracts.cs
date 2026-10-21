@@ -195,6 +195,15 @@ public sealed class AutoPlayItemView
     /// 「新聞を正しく読めたプレイヤー」の代理（oracle ボット専用。Jev には見せない）。
     /// </summary>
     public float OracleNewsBias;
+    /// <summary>
+    /// これまでに読んだ記事（購読中の紙面・壁新聞に載った報道）が「この品に効く」と言っている向きの合計（記事の規模の trendDelta。誤報・誇張も信じる）。
+    /// 効く期間が終わった記事と、訂正記事を読んだ記事は外す。reader ボット用（記事の効き先を正しく推理できたプレイヤーの代理）。
+    /// </summary>
+    public float ReadNewsBias;
+    /// <summary>読んだ記事のうち、この品に効く一番早いものが効き始めるまでの日数（0 = もう効いている / -1 = 該当なし）。発効日は掲載日＋社の早さ（lead）。</summary>
+    public int ReadNewsDaysToEffect = -1;
+    /// <summary>占い師の見立て（数日先の相場の向き。+1 上がる / 0 横ばい / -1 下がる。占っていなければ null）。</summary>
+    public int? FortuneDirection;
 }
 
 public sealed class AutoPlayAdView

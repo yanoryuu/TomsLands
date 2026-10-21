@@ -86,10 +86,6 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
             .Subscribe(_ => HandleLevelUp())
             .AddTo(disposables);
 
-        infoBrokerView.OnRefreshRequested
-            .Subscribe(_ => infoBrokerModel.UpdateInfoMessages())
-            .AddTo(disposables);
-
         infoBrokerView.OnChangePanel
             .Subscribe(tab =>
             {
@@ -165,7 +161,13 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         // リストを購入済み表示に更新し、右の詳細に解放された情報をそのまま見せる
         ShowMapInfo();
         mapInfoView.SelectDungeon(dungeonName);
-        infoBrokerView.ShowDialogue("いい買い物だ。右の詳細を見てくれ。弱点を突けば配信も楽になる。");
+        // 弱点が分かった瞬間を区切りにする（I-14）: 弱点の欄を跳ねさせ、次の一手（鍛冶屋でその属性の品）を名指しする
+        mapInfoView.PopWeakness();
+        var bought = infoBrokerModel.availableDungeons.Find(d => d.key == dungeonName);
+        string weak = bought != null ? ItemTypeData.AttributeLabel(bought.requiredAttribute) : null;
+        infoBrokerView.ShowDialogue(string.IsNullOrEmpty(weak)
+            ? "いい買い物だ。右の詳細を見てくれ……弱点を突けば、配信も楽になる。"
+            : $"{weak}が弱点だ……鍛冶屋で{weak}の品を仕入れて、勇者に持たせな。");
         Debug.Log($"[InfoBrokerPresenter] {dungeonName} の情報を {cost}G で購入しました。残金: {tomsModel.PlayerMoney.Value}G");
     }
 
@@ -224,11 +226,6 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         PlaySE("営業/SE_開発完了");
         infoBrokerView.ShowDialogue($"いい投資だ。情報網が広がった（Lv.{prevLevel} → Lv.{tomsModel.InfoBrokerLevel.Value}）。取引所を見てみな。");
         RefreshDevelopmentPanel();
-    }
-
-    public void RecordHeroPurchase(string itemId, int quantity, int price)
-    {
-        infoBrokerModel.RecordHeroPurchase(itemId, quantity, price);
     }
 
     private static void PlaySE(string key)

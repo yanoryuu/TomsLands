@@ -270,6 +270,17 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     private int _lastSalesTurn = -1;
     private int _lastDayBeginTurn = -1;
 
+    // 占い師（I-11）: 買った日と見立て（品 → +1/-1）
+    private int _fortuneTurn = -1;
+    private readonly Dictionary<string, int> _fortune = new();
+    public int FortuneSpend { get; private set; }
+
+    // 読んだ記事（reader ボット用）: 事象キー → (事象, 記事から読める発効日)。訂正記事を読んだら外す
+    private readonly Dictionary<string, (NewsEventInstance ev, int effectTurn)> _readEvents = new();
+
+    /// <summary>朝の相場の記録（ターン → 銘柄 → 値段・需要・客の数）。新聞の効果の計測（イベントスタディ）に使う。</summary>
+    public readonly Dictionary<int, Dictionary<string, (int price, float demand, int customers)>> MorningMarket = new();
+
     public AutoPlayStage Stage { get; private set; } = AutoPlayStage.ShopDay;
     /// <summary>新聞の発行カレンダーの概要（フェーズ3のデータで回っているかの確認用）。</summary>
     public string NewsInfo { get; private set; } = "";
@@ -642,14 +653,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         }
         else
         {
-            var sorted = issue.OrderBy(e => e.kind == NewsEntryKind.Report ? 0 : e.kind == NewsEntryKind.Result ? 1 : e.kind == NewsEntryKind.Filler ? 2 : 3).ToList();
-            foreach (var e in sorted)
-            {
-                if (visible.Count >= NewsTuning.WallPaperArticles) break;
-                if (e.kind == NewsEntryKind.Report && e.Article?.page == "front") visible.Add(e);
-            }
-            if (visible.Count == 0) { var r = sorted.FirstOrDefault(e => e.kind == NewsEntryKind.Report); if (r != null) visible.Add(r); }
-            if (visible.Count == 0) { var f = sorted.FirstOrDefault(e => e.kind == NewsEntryKind.Filler); if (f != null) visible.Add(f); }
+            // 壁新聞: かわら版の一面1本＋埋め草（NewspaperPresenter.WallPaperEntries と同じ規則。I-1）
+            visible.AddRange(NewspaperPresenter.WallPaperEntries(issue));
         }
         foreach (var e in visible)
         {
@@ -668,6 +673,46 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 HeadlineJa = a.headline,
                 SummaryEn = a.summaryEn,
             });
+        }
+
+        // --- 占い師の見立て（買った日だけ。I-11） ---
+        if (_fortuneTurn == turnNow)
+            foreach (var iv in s.Items)
+                iv.FortuneDirection = _fortune.TryGetValue(iv.Id, out var dir) ? dir : 0;
+
+        // --- 読んだ記事を覚える（reader ボット用。プレイヤーが紙面から読み取れる範囲: 効き先の推理＋社の早さから発効日） ---
+        if (Stage == AutoPlayStage.ShopDay)
+        {
+            foreach (var e in visible)
+            {
+                var ev = e.eventInstance;
+                if (ev == null) continue;
+                if (e.kind == NewsEntryKind.Correction) { _readEvents.Remove(ev.key); continue; }
+                if (e.kind != NewsEntryKind.Report || !ev.HasTarget || ev.trendDelta == 0f) continue;
+                int eff = e.effectTurn > 0 ? e.effectTurn : ev.effectTurn;
+                if (_readEvents.TryGetValue(ev.key, out var known)) eff = Mathf.Min(eff, known.effectTurn);
+                _readEvents[ev.key] = (ev, eff);
+            }
+            var morning = new Dictionary<string, (int price, float demand, int customers)>();
+            foreach (var iv in s.Items)
+            {
+                var r = ItemModel.GetRuntimeItem(iv.Id);
+                if (r == null) continue;
+                // 計測は解放済みの品だけ（未解放の品は値が動かないので、効き先の平均を薄めてしまう）
+                if (iv.Unlocked) morning[iv.Id] = (iv.Price, iv.Demand, iv.Customers == int.MaxValue ? -1 : iv.Customers);
+                float bias = 0f;
+                int days = int.MaxValue;
+                foreach (var kv in _readEvents.Values)
+                {
+                    int end = kv.effectTurn + Mathf.Max(1, kv.ev.durationTurns);
+                    if (turnNow >= end || !kv.ev.Matches(r)) continue;
+                    bias += kv.ev.trendDelta;
+                    days = Mathf.Min(days, Mathf.Max(0, kv.effectTurn - turnNow));
+                }
+                iv.ReadNewsBias = bias;
+                iv.ReadNewsDaysToEffect = days == int.MaxValue ? -1 : days;
+            }
+            MorningMarket[turnNow] = morning;
         }
 
         // --- 新聞社と購読枠・スクラップ ---
@@ -736,6 +781,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
         // 朝レポートは表示するだけの消費型。ログとして控える
         if (_morning.HasLines) Today.Notes.AddRange(_morning.Consume());
+
+        // 続報が出たスクラップは無料で名鑑へ（NewspaperPresenter.Entry と同じ。I-3）
+        Scrapbook.DeliverFollowUps(News, turn);
 
         // 1周目の立て替え（TutorialPresenter.GrantFundsAdvanceOnce の写し。2日目の朝に一度だけ）
         if (Config.TutorialAdvance > 0 && !_advanceGranted && turn >= 2)
@@ -934,11 +982,27 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"購読 {companyId}");
     }
 
+    /// <summary>占い師に占ってもらう（ProphetPresenter と同じ。1日1回 ProphetFortune.Cost）。</summary>
+    public AutoPlayActionResult BuyFortune()
+    {
+        if (_fortuneTurn == CurrentTurn) return AutoPlayActionResult.Success("今日は占い済み");
+        if (TomsModel.PlayerMoney.Value < ProphetFortune.Cost) return Reject("占いの代金が足りない");
+        TomsModel.PurchaseItem(ProphetFortune.Cost);
+        FortuneSpend += ProphetFortune.Cost;
+        _fortuneTurn = CurrentTurn;
+        _fortune.Clear();
+        var (ups, downs) = ProphetFortune.Read(ItemModel.RuntimeItems, NewsEffects, CurrentTurn, TomsModel.FlowSeed, TomsModel.BlacksmithLevel.Value);
+        foreach (var r in ups) _fortune[r.item.ItemId] = 1;
+        foreach (var r in downs) _fortune[r.item.ItemId] = -1;
+        return AutoPlayActionResult.Success($"占い 上{ups.Count} 下{downs.Count}");
+    }
+
     public AutoPlayActionResult PinScrap(string entryKey)
     {
         var entry = News.FindEntry(entryKey);
         if (entry == null || entry.publishTurn != CurrentTurn) return Reject($"{entryKey} は今日の紙面に無い");
-        if (!Subscriptions.IsSubscribed(entry.companyId, CurrentTurn) && Subscriptions.UsedSlots(CurrentTurn) > 0) return Reject("購読していない社の記事");
+        if (!Subscriptions.IsSubscribed(entry.companyId, CurrentTurn) && !NewspaperPresenter.WallPaperEntries(News.IssueOf(CurrentTurn)).Contains(entry))
+            return Reject("購読していない社の記事");
         if (!Scrapbook.Pin(entry, CurrentTurn)) return Reject("スクラップできない（枠が一杯・貼れない種類）");
         return AutoPlayActionResult.Success($"スクラップ {entryKey}");
     }

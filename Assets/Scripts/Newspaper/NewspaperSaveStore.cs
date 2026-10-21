@@ -47,10 +47,22 @@ public static class NewspaperSaveStore
         }
     }
 
+    /// <summary>
+    /// まだこのランのデータを読んでいなければ読む（新聞を開く前の店のホーム・仕入れ画面でも購読とスクラップが要るため）。
+    /// 読んだかどうかは ScrapbookModel.LoadedRunSeed で覚える（シーンを読み直すとモデルごと作り直される）。
+    /// </summary>
+    public static void EnsureLoaded(int runSeed, NewspaperSubscriptionModel subscriptions,
+        ScrapbookModel scrapbook, NewsModel news)
+    {
+        if (scrapbook != null && scrapbook.LoadedRunSeed == runSeed) return;
+        Load(runSeed, subscriptions, scrapbook, news);
+    }
+
     /// <summary>読み込む。ファイルが無い・シードが違う場合は空の状態にする。</summary>
     public static void Load(int runSeed, NewspaperSubscriptionModel subscriptions,
         ScrapbookModel scrapbook, NewsModel news)
     {
+        if (scrapbook != null) scrapbook.LoadedRunSeed = runSeed;
         subscriptions?.Clear();
         scrapbook?.Clear();
 

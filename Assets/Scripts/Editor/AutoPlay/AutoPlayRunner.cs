@@ -69,6 +69,8 @@ public sealed class AutoPlayRunResult
     public int TotalSupportSpend;
     public int TotalUpgradeSpend;
     public int TotalNewspaperSpend;
+    /// <summary>占い師への支払い（I-11）。</summary>
+    public int TotalFortuneSpend;
     public int TotalAdSpend;
     public int TotalMachineSpend;
     public int TotalFinanceSpend;
@@ -103,6 +105,8 @@ public sealed class AutoPlayRunResult
     public int HeroFlips;
     public readonly Dictionary<string, int> InterventionKinds = new();
     public readonly List<AutoPlayStreamRow> StreamRows = new();
+    /// <summary>新聞の事象ごとの値動き（イベントスタディ。AutoPlayNewsStudy）。</summary>
+    public readonly List<AutoPlayNewsEventRow> NewsEventRows = new();
 
     public readonly List<AutoPlayTurnRow> TurnRows = new();
     public readonly List<AutoPlayDecision> Decisions = new();
@@ -198,6 +202,15 @@ public sealed class AutoPlayRunner
 
                 if (snap.Stage == AutoPlayStage.ShopDay)
                 {
+                    // 占い師（I-11）: 占いを使うボットは、仕入れを決める前に占ってもらい、見立てを見てから決める
+                    if (_bot is IAutoPlayFortuneBot fortuneBot && fortuneBot.WantsFortune(snap))
+                    {
+                        using (_ctx.Enter())
+                        {
+                            _game.BuyFortune();
+                            snap = _game.Snapshot();
+                        }
+                    }
                     var plan = await _bot.PlanDayAsync(snap, ct);
                     using (_ctx.Enter())
                     {
@@ -479,6 +492,8 @@ public sealed class AutoPlayRunner
                     Result.FinalMachines = _game.Machines.PlacedCount;
                     Result.HeroFinalLevel = _game.HeroModel.heroData?.level.Value ?? 0;
                     Result.ArcInfo = _game.ArcSummary();
+                    AutoPlayNewsStudy.Collect(_game, Result);
+                    Result.TotalFortuneSpend = _game.FortuneSpend;
                 }
                 DrainLogs(SafeTurn());
                 _game.Dispose();

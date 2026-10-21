@@ -70,6 +70,13 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     // 営業開始演出の再生中フラグ（ボタン連打防止。フェーズが変わったら解除）
     private bool _salesStarting = false;
 
+    // 新聞ボタンの未読バッジ（I-7）
+    private readonly NewsModel newsModel;
+    private readonly NewspaperSubscriptionModel newspaperSubscriptions;
+    private readonly ScrapbookModel scrapbook;
+    private NewsUnreadBadge newsBadge;
+    private bool newsBadgeSearched;
+
     public TomsShopPresenter(
         TomsShopView tomsShopView,
         ItemSelectionPresenter itemSelectionPresenter,
@@ -98,8 +105,14 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         PortfolioModel portfolioModel = null,
         HeroModel heroModel = null,
         DungeonRepository dungeonRepository = null,
-        SellOrderModel sellOrderModel = null)
+        SellOrderModel sellOrderModel = null,
+        NewsModel newsModel = null,
+        NewspaperSubscriptionModel newspaperSubscriptions = null,
+        ScrapbookModel scrapbook = null)
     {
+        this.newsModel = newsModel;
+        this.newspaperSubscriptions = newspaperSubscriptions;
+        this.scrapbook = scrapbook;
         this.tomsShopView = tomsShopView;
         this.itemSelectionPresenter = itemSelectionPresenter;
         this.itemModel = itemModel;
@@ -308,6 +321,19 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
             .AddTo(disposables);
     }
 
+    /// <summary>新聞ボタンに「今日の未読 N本」を出す（I-7）。バッジが置かれていなければ何もしない。</summary>
+    private void RefreshNewsBadge()
+    {
+        if (!newsBadgeSearched)
+        {
+            newsBadgeSearched = true;
+            newsBadge = tomsShopView != null ? tomsShopView.GetComponentInChildren<NewsUnreadBadge>(true) : null;
+        }
+        if (newsBadge == null || newsModel == null) return;
+        NewspaperSaveStore.EnsureLoaded(tomsShopModel.FlowSeed, newspaperSubscriptions, scrapbook, newsModel);
+        newsBadge.SetCount(NewspaperPresenter.CountUnread(newsModel, newspaperSubscriptions, gameFlowManager.CurrentTurn.Value));
+    }
+
     private void RefreshNextDebtDisplay()
     {
         int cycle = tomsShopModel.DebtCycle.Value;
@@ -337,6 +363,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
         tomsShopView.RefreshDeskDisplay(itemModel.RuntimeItems);
         tomsShopView.RefreshMachineDisplay(shopMachineModel);
+        RefreshNewsBadge();
 
         // ターン変化はフェーズ開始判定に使うため、_lastKnownTurn が他で書き換わる前に捕捉する
         int currentTurn = gameFlowManager.CurrentTurn.Value;

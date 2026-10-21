@@ -42,6 +42,20 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         this.dialogueId = dialogueId;
     }
 
+    /// <summary>占いの結果の1行（I-11）。「↑ 上がる」「↓ 下がる」と、大きく動くかどうか。</summary>
+    public void SetFortune(Sprite icon, string itemName, int direction, bool strong, string dialogueId = "")
+    {
+        if (itemIcon != null && icon != null) itemIcon.sprite = icon;
+        bool up = direction > 0;
+        // 向きは品名の前に矢印で出す（右側の小さな欄は狭く、行によって切れるため）
+        string arrow = up ? "<color=#C8731E>↑</color>" : "<color=#4F6F8F>↓</color>";
+        string size = strong ? (up ? "大きく上がる" : "大きく下がる") : (up ? "上がる" : "下がる");
+        itemNameText.text = $"{arrow} {itemName} <size=60%>{size}</size>";
+        trendText.text = string.Empty;
+        demandText.text = string.Empty;
+        this.dialogueId = dialogueId;
+    }
+
     public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter?.Invoke(dialogueId);
     public void OnPointerExit(PointerEventData eventData) => OnHoverExit?.Invoke();
 }

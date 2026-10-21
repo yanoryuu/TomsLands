@@ -14,6 +14,7 @@ public class ProphetPresenter : IDisposable, IStartable
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
     private readonly DungeonIntelModel dungeonIntel;
+    private readonly NewsEffectResolver newsEffects;
     private readonly CompositeDisposable disposables = new();
     private string currentDialogue = string.Empty;
     private int characterTalkIndex;
@@ -25,8 +26,10 @@ public class ProphetPresenter : IDisposable, IStartable
         DungeonRepository dungeonRepository,
         StateManager stateManager,
         TomsModel tomsModel,
-        DungeonIntelModel dungeonIntel)
+        DungeonIntelModel dungeonIntel,
+        NewsEffectResolver newsEffects)
     {
+        this.newsEffects = newsEffects;
         this.prophetView = prophetView;
         this.itemModel = itemModel;
         this.gameFlowManager = gameFlowManager;
@@ -48,8 +51,17 @@ public class ProphetPresenter : IDisposable, IStartable
             .Subscribe(_ => ShowCharacterTalk())
             .AddTo(disposables);
 
+        prophetView.OnFortuneClicked
+            .Subscribe(_ => BuyFortune())
+            .AddTo(disposables);
+
         prophetView.OnRowHoverEnter
-            .Subscribe(id => prophetView.ShowDialogue(ProphetDialogueLoader.Get(id)))
+            .Subscribe(id =>
+            {
+                // 台詞の無い行（占いの結果など）は今の台詞のまま
+                var line = ProphetDialogueLoader.Get(id);
+                if (!string.IsNullOrEmpty(line)) prophetView.ShowDialogue(line);
+            })
             .AddTo(disposables);
 
         prophetView.OnRowHoverExit
@@ -62,7 +74,9 @@ public class ProphetPresenter : IDisposable, IStartable
         characterTalkIndex = 0;
         currentDialogue = ProphetDialogueLoader.GetDefault();
         prophetView.ShowDialogue(currentDialogue);
-        ShowMarketHeat();
+        // 今日もう占っていれば結果を、まだなら荒れている品と「占う」ボタンを出す（I-11）
+        if (ProphetFortune.IsBought(tomsModel.FlowSeed, Turn)) ShowFortune(false);
+        else ShowMarketHeat();
         ShowPriceRanking();
         ShowDungeonInfo();
     }
@@ -72,6 +86,52 @@ public class ProphetPresenter : IDisposable, IStartable
         characterTalkIndex = (characterTalkIndex % 3) + 1;
         currentDialogue = ProphetDialogueLoader.Get($"character_talk_{characterTalkIndex}");
         prophetView.ShowDialogue(currentDialogue);
+    }
+
+    private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
+
+    // =====================================================================
+    // 占い（I-11・Q20）: 3日先の相場の向きを 15,000G で占う。外れることもある（ProphetFortune.Accuracy）
+    // =====================================================================
+
+    private void BuyFortune()
+    {
+        int seed = tomsModel.FlowSeed, turn = Turn;
+        if (ProphetFortune.IsBought(seed, turn)) { ShowFortune(false); return; }
+        if (tomsModel.PlayerMoney.Value < ProphetFortune.Cost)
+        {
+            currentDialogue = $"おや、{ProphetFortune.Cost:N0}G には少し足りないね。占いはまた今度かな。";
+            prophetView.ShowDialogue(currentDialogue);
+            return;
+        }
+        tomsModel.PurchaseItem(ProphetFortune.Cost);
+        tomsModel.SavePlayerMoney();
+        ProphetFortune.MarkBought(seed, turn);
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE("営業/SE_仕入れ完了");
+        ShowFortune(true);
+    }
+
+    private void ShowFortune(bool justBought)
+    {
+        var (ups, downs) = ProphetFortune.Read(itemModel.RuntimeItems, newsEffects, Turn, tomsModel.FlowSeed, tomsModel.BlacksmithLevel.Value);
+        var rows = new List<(Sprite, string, int, bool)>();
+        foreach (var r in ups) rows.Add((r.item.ItemIcon, r.item.ItemName, 1, r.strength >= NewsTuning.TrendMedium));
+        foreach (var r in downs)
+        {
+            if (rows.Count >= ProphetFortune.MaxRows + 1) break;
+            rows.Add((r.item.ItemIcon, r.item.ItemName, -1, r.strength >= NewsTuning.TrendMedium));
+        }
+        prophetView.SetTrendHeader("占いの結果");
+        prophetView.ShowFortuneRows(rows);
+        prophetView.ShowFortuneButton(false, false, string.Empty);
+        if (justBought)
+        {
+            currentDialogue = rows.Count > 0
+                ? $"見えたよ。{ProphetFortune.HorizonDays}日先までの流れさ。占いは外れることもあるから、新聞と見比べてごらん。"
+                : $"うーん……{ProphetFortune.HorizonDays}日先までは、大きな波は見えないね。";
+            prophetView.ShowDialogue(currentDialogue);
+        }
     }
 
     // 相場が荒れている銘柄の上位3件。
@@ -88,7 +148,9 @@ public class ProphetPresenter : IDisposable, IStartable
             .Take(3)
             .Select(x => (x.r.ItemIcon, x.r.ItemName, x.heat, x.r.Demand.Value))
             .ToList();
+        prophetView.SetTrendHeader("荒れ相場");
         prophetView.ShowTrendRows(rows);
+        prophetView.ShowFortuneButton(true, tomsModel.PlayerMoney.Value >= ProphetFortune.Cost, $"{ProphetFortune.Cost:N0}Gで占う");
     }
 
     // 現在価格の高い順に上位3件を表示
@@ -134,7 +196,7 @@ public class ProphetPresenter : IDisposable, IStartable
 
         // 弱点は「知っている」ときだけ開示する（Docs/News_Spec.md §2 C4）。
         bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
-        string attributeName = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
+        string attributeName = known ? $"弱点: {AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点: ?";
         prophetView.ShowDungeonInfo(dungeon.dungeonName, attributeName, dungeon.difficulty, turnsUntil, dungeon.dungeonIcon);
 
         // おすすめは現在の期待収益（ExpectedRevenueOf）だけで決める。

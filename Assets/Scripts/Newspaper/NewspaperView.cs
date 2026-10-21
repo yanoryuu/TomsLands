@@ -56,6 +56,9 @@ public class NewspaperView : MonoBehaviour
         public string byline;       // 「第N号／社名／記者：…」
         public ScrapState state;
         public bool canAfford;
+        public string followUp;     // 届いた続報（見出し＋リード）。空 = まだ（I-3）
+        public string answer;       // 答え合わせ（効き先・値動き・予想の当たり外れ）。空 = まだ（I-4）
+        public string prediction;   // 予想（ScrapPrediction の値）。空 = 予想なし（I-6）
     }
 
     [Serializable]
@@ -72,7 +75,22 @@ public class NewspaperView : MonoBehaviour
     [SerializeField] private GameObject nextBattleRoot;
     [SerializeField] private TextMeshProUGUI nextBattleText; // 次の戦闘まで N日
     [SerializeField] private TextMeshProUGUI moneyText;      // 所持金
+    [Tooltip("前の号 / 次の号（I-8。任意）")]
+    [SerializeField] private Button prevIssueButton;
+    [SerializeField] private Button nextIssueButton;
     [SerializeField] private Button closeButton;
+
+    /// <summary>前の号・次の号ボタンの可否（I-8）。前の号を開いている間は号数を少し沈めて今日の号でないと分かるようにする。</summary>
+    public void ShowIssueStep(bool canPrev, bool canNext, bool isBackIssue)
+    {
+        if (prevIssueButton != null) prevIssueButton.interactable = canPrev;
+        if (nextIssueButton != null)
+        {
+            nextIssueButton.gameObject.SetActive(isBackIssue);
+            nextIssueButton.interactable = canNext;
+        }
+        if (issueText != null) issueText.alpha = isBackIssue ? 0.7f : 1f;
+    }
 
     // ---------------- 左: 購読 ----------------
 
@@ -80,6 +98,12 @@ public class NewspaperView : MonoBehaviour
     [SerializeField] private Transform companyCardParent;
     [SerializeField] private NewspaperCompanyCardUI companyCardPrefab;
     [SerializeField] private List<CompanyEmblem> emblems = new();
+    [Tooltip("左ペイン先頭の壁新聞カード（I-1。任意）。押すと壁新聞を読む")]
+    [SerializeField] private Button wallPaperButton;
+    [SerializeField] private Image wallPaperBackground;
+    [SerializeField] private Sprite wallPaperSelectedSprite;
+    [SerializeField] private Sprite wallPaperNormalSprite;
+    [SerializeField] private TextMeshProUGUI[] wallPaperTexts;
     [SerializeField] private TextMeshProUGUI slotText;       // 購読枠 2/3
     [SerializeField] private TextMeshProUGUI renewalText;    // 契約更新まで あと3ターン
 
@@ -131,6 +155,9 @@ public class NewspaperView : MonoBehaviour
     [SerializeField] private Color unconfirmedStateColor = new Color32(0x8A, 0x5A, 0x2B, 0xFF);
     [SerializeField] private Color hitStateColor = new Color32(0x3E, 0x8E, 0x3A, 0xFF);
     [SerializeField] private Color missStateColor = new Color32(0xB8, 0x3A, 0x2C, 0xFF);
+    [SerializeField] private Color partialStateColor = new Color32(0xC8, 0x7F, 0x1E, 0xFF);
+    [Tooltip("記事ポップアップの予想（I-6。任意）。「予想なし」＋属性×種別＋高額の品")]
+    [SerializeField] private TMP_Dropdown popupPredictionDropdown;
 
     // ---------------- 演出 ----------------
 
@@ -155,6 +182,8 @@ public class NewspaperView : MonoBehaviour
     private readonly Subject<int> onPageStep = new();
     private readonly Subject<string> onConfirmClicked = new();
     private readonly Subject<Unit> onBatchConfirmClicked = new();
+    private readonly Subject<int> onIssueStep = new();
+    private readonly Subject<(string entryKey, string value)> onPredictionChanged = new();
 
     public Observable<Unit> OnCloseClicked => onCloseClicked;
     /// <summary>記事（一面トップ or 小記事）のクリック。掲載キーが流れる。</summary>
@@ -167,6 +196,10 @@ public class NewspaperView : MonoBehaviour
     public Observable<int> OnPageStep => onPageStep;
     public Observable<string> OnConfirmClicked => onConfirmClicked;
     public Observable<Unit> OnBatchConfirmClicked => onBatchConfirmClicked;
+    /// <summary>前の号（-1）/ 次の号（+1）。</summary>
+    public Observable<int> OnIssueStep => onIssueStep;
+    /// <summary>記事ポップアップで予想を選んだ（掲載キー, ScrapPrediction の値）。</summary>
+    public Observable<(string entryKey, string value)> OnPredictionChanged => onPredictionChanged;
 
     public IReadOnlyList<NewsMarketRowUI> MarketRows => marketRows ?? Array.Empty<NewsMarketRowUI>();
 
@@ -196,6 +229,15 @@ public class NewspaperView : MonoBehaviour
             nextPageButton.onClick.AddListener(() => onPageStep.OnNext(1));
         if (batchConfirmButton != null)
             batchConfirmButton.onClick.AddListener(() => onBatchConfirmClicked.OnNext(Unit.Default));
+        if (wallPaperButton != null) wallPaperButton.onClick.AddListener(() => onCompanySelected.OnNext(NewspaperPresenter.WallPaperId));
+        if (prevIssueButton != null) prevIssueButton.onClick.AddListener(() => onIssueStep.OnNext(-1));
+        if (nextIssueButton != null) nextIssueButton.onClick.AddListener(() => onIssueStep.OnNext(1));
+        if (popupPredictionDropdown != null)
+        {
+            popupPredictionDropdown.ClearOptions();
+            popupPredictionDropdown.AddOptions(ScrapPrediction.Options().ConvertAll(o => o.label));
+            popupPredictionDropdown.onValueChanged.AddListener(OnPredictionPicked);
+        }
         if (leadArticle != null)
         {
             leadArticle.OnClicked += key => onArticleClicked.OnNext(key);
@@ -315,6 +357,19 @@ public class NewspaperView : MonoBehaviour
             }
             card.SetData(d);
         }
+    }
+
+    /// <summary>壁新聞カード。読んでいる間は明るい（購読中の社と同じ）見た目にする。</summary>
+    public void ShowWallPaperCard(bool selected)
+    {
+        if (wallPaperBackground != null)
+        {
+            var sprite = selected ? wallPaperSelectedSprite : wallPaperNormalSprite;
+            if (sprite != null) wallPaperBackground.sprite = sprite;
+        }
+        if (wallPaperTexts != null)
+            foreach (var t in wallPaperTexts)
+                if (t != null) t.color = selected ? new Color32(0x4A, 0x2E, 0x1E, 0xFF) : new Color32(0xF7, 0xEB, 0xD2, 0xFF);
     }
 
     public void PopCompany(string companyId)
@@ -483,8 +538,19 @@ public class NewspaperView : MonoBehaviour
         if (popupLead != null) popupLead.text = s.lead;
         if (popupBody != null)
         {
-            popupBody.text = s.body;
-            popupBody.gameObject.SetActive(!string.IsNullOrEmpty(s.body));
+            // 続報（I-3）と答え合わせ（I-4）は本文の後ろに区切って足す
+            string text = s.body ?? string.Empty;
+            if (!string.IsNullOrEmpty(s.followUp)) text += (text.Length > 0 ? "\n\n" : "") + $"【続報】{s.followUp}";
+            if (!string.IsNullOrEmpty(s.answer)) text += (text.Length > 0 ? "\n\n" : "") + $"<color=#8A5A2B>{s.answer}</color>";
+            popupBody.text = text;
+            popupBody.gameObject.SetActive(!string.IsNullOrEmpty(text));
+        }
+        popupEntryKey = s.entryKey;
+        if (popupPredictionDropdown != null)
+        {
+            int index = Math.Max(0, ScrapPrediction.Options().FindIndex(o => o.value == (s.prediction ?? string.Empty)));
+            popupPredictionDropdown.SetValueWithoutNotify(index);
+            popupPredictionDropdown.RefreshShownValue();
         }
         if (popupByline != null) popupByline.text = s.byline;
         if (popupBadge != null && card != null)
@@ -499,7 +565,8 @@ public class NewspaperView : MonoBehaviour
             {
                 ScrapState.Pending => ("結果待ち", pendingStateColor),
                 ScrapState.Unconfirmed => ("未確認", unconfirmedStateColor),
-                ScrapState.ConfirmedHit => ("的中", hitStateColor),
+                ScrapState.ConfirmedHit => ("本物", hitStateColor),
+                ScrapState.ConfirmedPartial => ("誇張", partialStateColor),
                 _ => ("誤報", missStateColor),
             };
             popupStateText.text = label;
@@ -520,6 +587,16 @@ public class NewspaperView : MonoBehaviour
             articlePopupPanel.localScale = Vector3.one * 0.86f;
             articlePopupPanel.DOScale(1f, 0.24f).SetEase(Ease.OutBack).SetLink(articlePopupPanel.gameObject);
         }
+    }
+
+    private string popupEntryKey;
+
+    private void OnPredictionPicked(int index)
+    {
+        if (string.IsNullOrEmpty(popupEntryKey)) return;
+        var options = ScrapPrediction.Options();
+        if (index < 0 || index >= options.Count) return;
+        onPredictionChanged.OnNext((popupEntryKey, options[index].value));
     }
 
     private void CloseArticlePopup()
@@ -672,5 +749,7 @@ public class NewspaperView : MonoBehaviour
         onPageStep.Dispose();
         onConfirmClicked.Dispose();
         onBatchConfirmClicked.Dispose();
+        onIssueStep.Dispose();
+        onPredictionChanged.Dispose();
     }
 }

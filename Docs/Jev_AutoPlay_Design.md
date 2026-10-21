@@ -447,3 +447,14 @@ API なし・Medium・20シード・初期資金100,000G（`AutoPlayReports/2026
 
 **判定**: 「Lv5 まで育てた場合に限って」ハイリスク・ハイリターンで元が取れる（ROI≒1.4、7割のランで黒字、純資産は貪欲の 1.3〜1.7倍、破産 5〜15%）。
 Lv3〜4 への投資と介入だけの戦略は、どの組み合わせでも元が取れない（ROI 0.03〜0.6）。原因は防衛報酬の段差（Lv4 80k → Lv5 200k の崖）と、Lv4 以下では勇者がほぼ負けないこと。
+
+## 11. 新聞の計測（2026-10 グループ I）
+
+- **ボット**（`AutoPlayStrategyBots.cs`）:
+  - `reader` … 新聞を普通に読むプレイヤーの代理。購読して、載った報道の効き先（属性×種別・高額帯）と「掲載日＋社の早さ」の発効日を覚え（`ReadNewsBias` / `ReadNewsDaysToEffect`。**誤報・誇張も信じる**。訂正記事を読んだら外す）、上がると読んだ品は客の数×3日分仕入れて効き始めるまで並べずに持ち、効いている間に売る。残りは capaware と同じ。効き先の推理は完璧（＝読みが上手いプレイヤー側）。
+  - `fortune` … 新聞を読まず、所持金に余裕（15万G＋返済分）がある日に占い師に占ってもらい、上がると出た品に張る。
+  - `reader_fortune` … reader が、占いに「上がる」と出なかった記事を疑う（裏取り）。
+- **占い**: ランナーは `IAutoPlayFortuneBot.WantsFortune` が true なら、計画の前に `BuyFortune`（15,000G）してスナップショットを取り直す（`FortuneDirection`）。
+- **イベントスタディ**（`AutoPlayNewsStudy.cs`）: 朝の相場を全ターン記録し（`AutoPlayHeadlessGame.MorningMarket`、解放済みの品だけ）、事象ごとに「報道の朝に買う → 発効・効いている間の最高・決着・決着+3」の値動きを、効き先の品と効き先でない品の差で出す。`<label>_table.md` の末尾と `<label>_news.csv`。
+- **上書き**: `-apSet "news.FairPerTrend=0.7;news.DriftPerTrend=0.05;fortune.Accuracy=0.8"`（`NewsTuning` / `ProphetFortune` の static フィールド）。
+- 壁新聞は本体と同じ `NewspaperPresenter.WallPaperEntries`、続報の配達は毎朝 `ScrapbookModel.DeliverFollowUps`。

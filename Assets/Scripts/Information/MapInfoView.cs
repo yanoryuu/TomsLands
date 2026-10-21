@@ -1,4 +1,5 @@
 using System;
+using DG.Tweening;
 using System.Collections.Generic;
 using System.Linq;
 using R3;
@@ -167,6 +168,17 @@ public class MapInfoView : MonoBehaviour
             if (slot != null) slot.SetSelected(slot.DungeonKey == key);
         }
         ShowDetail(data);
+    }
+
+    /// <summary>情報を買った直後: 弱点の欄を跳ねさせ、金色に少し光らせる（I-14。新聞のハンコと同じ扱い）。</summary>
+    public void PopWeakness()
+    {
+        if (weaknessText == null || !weaknessText.gameObject.activeInHierarchy) return;
+        UIFx.Pop(weaknessText.transform, 1.25f, 0.25f);
+        var baseColor = weaknessText.color;
+        weaknessText.DOKill();
+        weaknessText.color = new Color32(0xE8, 0xA3, 0x3D, 0xFF);
+        weaknessText.DOColor(baseColor, 0.6f).SetDelay(0.25f).SetLink(weaknessText.gameObject);
     }
 
     private void ShowDetail(DungeonData data)

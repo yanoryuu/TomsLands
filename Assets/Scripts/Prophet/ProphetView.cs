@@ -7,9 +7,15 @@ using UnityEngine.UI;
 
 public class ProphetView : MonoBehaviour
 {
-    [Header("トレンドセクション")]
+    [Header("トレンドセクション（占いの結果もここに出す）")]
     [SerializeField] private Transform trendRowParent;
     [SerializeField] private ProphetTrendRowUI trendRowPrefab;
+    [Tooltip("セクションの見出し（荒れている品 / 占いの結果）。任意")]
+    [SerializeField] private TMP_Text trendHeaderText;
+
+    [Header("占い（I-11。任意）")]
+    [SerializeField] private Button fortuneButton;
+    [SerializeField] private TMP_Text fortuneButtonLabel;
 
     [Header("価格ランキングセクション")]
     [SerializeField] private Transform rankingRowParent;
@@ -37,6 +43,7 @@ public class ProphetView : MonoBehaviour
     [SerializeField] private Button characterButton;
 
     public Subject<Unit> OnCloseClicked { get; } = new();
+    public Subject<Unit> OnFortuneClicked { get; } = new();
     public Subject<Unit> OnCharacterClicked { get; } = new();
     public Subject<string> OnRowHoverEnter { get; } = new();
     public Subject<Unit> OnRowHoverExit { get; } = new();
@@ -55,6 +62,7 @@ public class ProphetView : MonoBehaviour
     private void Awake()
     {
         closeButton.onClick.AddListener(() => OnCloseClicked.OnNext(Unit.Default));
+        if (fortuneButton != null) fortuneButton.onClick.AddListener(() => OnFortuneClicked.OnNext(Unit.Default));
         if (characterButton != null)
         {
             characterButton.onClick.AddListener(() => OnCharacterClicked.OnNext(Unit.Default));
@@ -93,6 +101,37 @@ public class ProphetView : MonoBehaviour
         }
     }
 
+    /// <summary>トレンドセクションの見出し。</summary>
+    public void SetTrendHeader(string text)
+    {
+        if (trendHeaderText != null) trendHeaderText.text = text;
+    }
+
+    /// <summary>「占う」ボタン。占った日は隠す。</summary>
+    public void ShowFortuneButton(bool visible, bool interactable, string label)
+    {
+        if (fortuneButton == null) return;
+        fortuneButton.gameObject.SetActive(visible);
+        fortuneButton.interactable = interactable;
+        if (fortuneButtonLabel != null) fortuneButtonLabel.text = label;
+    }
+
+    /// <summary>占いの結果（上がる品・下がる品）。direction +1 / -1、strong = 大きく動く。</summary>
+    public void ShowFortuneRows(List<(Sprite icon, string name, int direction, bool strong)> items)
+    {
+        RequestRowFocus(trendRowParent);
+        ClearChildren(trendRowParent);
+        for (int i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            var row = Instantiate(trendRowPrefab, trendRowParent);
+            row.SetFortune(item.icon, item.name, item.direction, item.strong, $"fortune_{(item.direction > 0 ? "up" : "down")}");
+            row.OnHoverEnter += id => OnRowHoverEnter.OnNext(id);
+            row.OnHoverExit += () => OnRowHoverExit.OnNext(Unit.Default);
+            UIFx.Pop(row.transform, 0.9f, 0.2f + i * 0.05f);
+        }
+    }
+
     public void ShowRankingRows(List<(int rank, Sprite icon, string name, int price)> items)
     {
         RequestRowFocus(rankingRowParent);
@@ -110,8 +149,10 @@ public class ProphetView : MonoBehaviour
     public void ShowDungeonInfo(string dungeonName, string attribute, int difficulty, int turnsUntil, Sprite icon)
     {
         dungeonNameText.text = turnsUntil >= 0 ? dungeonName : "次のダンジョンなし";
-        dungeonAttributeText.text = $"属性: {attribute}";
-        dungeonDifficultyText.text = $"難易度: {difficulty}";
+        // attribute は呼び出し側が「弱点: 火」の形で渡す（以前は「属性: 弱点:火」と二重になっていた。I-12）
+        dungeonAttributeText.text = attribute;
+        // 難易度は情報屋と同じ ★ の数で出す
+        dungeonDifficultyText.text = difficulty > 0 ? $"難易度: {new string('★', Mathf.Clamp(difficulty, 1, 10))}" : "難易度: —";
         turnsUntilBattleText.text = turnsUntil == 0 ? "本日配信" : turnsUntil > 0 ? $"あと {turnsUntil} ターン" : "—";
         if (dungeonIconImage != null) dungeonIconImage.sprite = icon;
     }

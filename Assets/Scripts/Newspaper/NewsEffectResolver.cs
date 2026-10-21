@@ -54,6 +54,24 @@ public class NewsEffectResolver
     }
 
     /// <summary>
+    /// 効いている間、適正値（相場が引き寄せられる値）に掛ける倍率（2段目の値段側）。
+    /// 需要だけを動かすと、需要の収束（15%/日）が遅く、適正値は数%しか動かない。相場は適正値へ寄るので、
+    /// 記事の効果がノイズと売り圧力に埋もれていた（Docs/News_Spec.md §7.3）。効く期間が終わると 1 に戻り、値も戻っていく。
+    /// </summary>
+    public float FairRate(RuntimeItemData item, int turn)
+    {
+        float bias = TrendBias(item, turn);
+        return bias == 0f ? 1f : Mathf.Max(0.1f, 1f + NewsTuning.FairPerTrend * bias);
+    }
+
+    /// <summary>効いている間、毎朝の値段に掛ける倍率（世間が記事どおりに買いに来る分）。</summary>
+    public float PriceDrift(RuntimeItemData item, int turn)
+    {
+        float bias = TrendBias(item, turn);
+        return bias == 0f ? 1f : Mathf.Max(0.1f, 1f + NewsTuning.DriftPerTrend * bias);
+    }
+
+    /// <summary>
     /// そのターンの価格に掛ける倍率（1段目）。
     ///   報じられた日   … × その日の跳ね（同じ事象は1日1回。その日の一番大きい面の値）
     ///   剥がれ始めから … × (跳ねの累計)^(-1/N) を N ターン（N = HypeUnwindTurns）。合計で跳ねが剥がれる
