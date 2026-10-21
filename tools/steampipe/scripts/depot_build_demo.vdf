@@ -1,6 +1,6 @@
 "DepotBuild"
 {
-	"DepotID" "0" // 【仮】体験版の Windows depot。Steamworks の管理画面の「SteamPipe > Depots」の番号にする
+	"DepotID" "5186791" // 体験版の Windows depot（Steamworks で確認済み）
 
 	"FileMapping"
 	{

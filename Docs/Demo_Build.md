@@ -1,6 +1,6 @@
 # 体験版（DEMO_BUILD）
 
-トコのトムトムランドの体験版は、製品版と**同じプロジェクト**で、スクリプト定義 `DEMO_BUILD` を入れてビルドする。Steam では製品版とは**別のアプリ**（体験版の App ID は未取得）。
+トコのトムトムランドの体験版は、製品版と**同じプロジェクト**で、スクリプト定義 `DEMO_BUILD` を入れてビルドする。Steam では製品版とは**別のアプリ**（体験版の App ID は 5186790）。
 
 切り替えと定数は `Assets/Scripts/Demo/DemoBuild.cs` の1か所にまとめてある。コードは `DemoBuild.IsDemo` を見て分岐する。
 
@@ -39,8 +39,8 @@
 - 体験版のセーブは製品版へ引き継がない。
 
 ## Steam
-- 体験版の App ID は `DemoBuild.DemoSteamAppId`（**今は 0 = 未取得**）。取得したらここだけ書き換える。
-- `steam_appid.txt`: 体験版の開発ビルドには `DemoSteamAppId` を書く。0 の間は入れない（本編の 4535810 を入れると体験版が本編として Steam につながる）。製品ビルドには入れない（`Editor/SteamAppIdPostBuild.cs`）。
+- 体験版の App ID は `DemoBuild.DemoSteamAppId` = **5186790**（2026-10-22 取得）。Windows の depot は 5186791（Steamworks で確認済み）。
+- `steam_appid.txt`: 体験版の開発ビルドには `DemoSteamAppId`（5186790）を書く。0 にすると入れない（本編の 4535810 を入れると体験版が本編として Steam につながる）。製品ビルドには入れない（`Editor/SteamAppIdPostBuild.cs`）。
 - App ID が未取得の間や Steam 外の起動では Steam の初期化に失敗するが、そのまま遊べる（`SteamManager` はゲームを止めない）。このとき「ストアページへ」はブラウザで開く。
 - 実績: `AchievementTracker` を登録しない、`AchievementService` の Unlock・ReportMax・HandleRunCleared などは何もしない、`AchievementEvents` も何もしない。体験版の App には実績を作らない。
 
