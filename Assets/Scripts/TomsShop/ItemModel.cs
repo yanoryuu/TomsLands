@@ -515,7 +515,7 @@ public class ItemModel
     /// <param name="flowSeed">ランのシード。ABM のトレーダー編成に使う。0 なら設定または乱数にフォールバック。</param>
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
         float machineDemandFloorBonus = 0f, int turnIndex = 0, int flowSeed = 0,
-        NewsEffectResolver news = null)
+        NewsEffectResolver news = null, ItemTypeData.ItemAttribute? anticipationAttribute = null)
     {
         if (settings == null) return;
 
@@ -623,8 +623,13 @@ public class ItemModel
             // 短い窓では Trend バイアスだけでは体感に届かないため。
             float newsDemandKick = news != null ? news.DemandKick(runtime, turnIndex) : 0f;
 
+            // 配信前の期待: 次の配信先の弱点属性の品は、配信までの数日、決着を見越して買われる（需要が少しずつ上がる）。
+            // 呼び出し側（GameFlowManager）が日数の条件を見て属性を渡す。品出し・売り圧力とは別枠
+            bool anticipated = anticipationAttribute.HasValue && runtime.ItemAttribute == anticipationAttribute.Value;
+            float anticipationKick = anticipated ? settings.streamAnticipationDemandUp : 0f;
+
             runtime.Demand.Value = Mathf.Clamp(
-                runtime.Demand.Value + convergenceDelta + displayDelta + newsDemandKick,
+                runtime.Demand.Value + convergenceDelta + displayDelta + newsDemandKick + anticipationKick,
                 dynamicDemandFloor, settings.demandCeiling);
 
             // ------------------------------------------------
@@ -655,6 +660,11 @@ public class ItemModel
             // 本物ならそこへ2段目の需要が来て値を支え、誤報なら値だけが落ちる。
             float newsHype = news != null ? news.HypeRate(runtime, turnIndex) : 1f;
             if (newsHype != 1f) newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * newsHype));
+
+            // 配信前の期待買い: 需要の上げ（適正値の上げ）だけでは ABM の追従が遅く、店で売る分の売り圧力に負けて
+            // 「弱点の武器を仕入れたのに下がり続ける」ので、値段にも直接乗せる（ニュースの跳ねと同じ扱い）
+            if (anticipated && settings.streamAnticipationPriceUp != 0f)
+                newPrice = Mathf.Max(1, Mathf.RoundToInt(newPrice * (1f + settings.streamAnticipationPriceUp)));
 
             // 売り圧力（Q3(b)）: 昨日店で売った量が多いほど今朝の値段が下がる。板の厚みは需要が高いほど厚い。
             // 約定は今日の値段で決まるので、一度に大量に売ると自分の約定値も下がる（分散するほうが得）。

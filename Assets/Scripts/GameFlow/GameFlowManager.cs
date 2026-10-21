@@ -277,7 +277,7 @@ public class GameFlowManager : IDisposable, IStartable
             ResolveNewsArcs();
 
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
-                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects);
+                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects, GetStreamAnticipationAttribute());
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
@@ -592,6 +592,22 @@ public class GameFlowManager : IDisposable, IStartable
     /// GetTurnsUntilNextBattle は「次のノードから配信の手前まで」の日数で、前日に 0 になる
     /// （AutoPlay がその意味を前提にしているので変えない）。画面に出すときはこちらを使う。
     /// </summary>
+    /// <summary>
+    /// 配信前の期待を乗せる属性（次の配信先の弱点）。配信まで streamAnticipationDays 日以内のときだけ返す。
+    /// 弱点は情報屋で買う情報だが、相場は世間の期待として動く（値動きから推せるのは「どれかが上がっている」まで。Docs/ShopEconomy.md §11）。
+    /// </summary>
+    private ItemTypeData.ItemAttribute? GetStreamAnticipationAttribute()
+    {
+        if (_economySettings == null || _economySettings.streamAnticipationDays <= 0
+            || (_economySettings.streamAnticipationDemandUp == 0f && _economySettings.streamAnticipationPriceUp == 0f)) return null;
+        int days = GetDaysUntilNextStream();
+        if (days < 1 || days > _economySettings.streamAnticipationDays) return null;
+        var key = GetNextBattleDungeon();
+        if (!key.HasValue || _dungeonRepository == null) return null;
+        var dungeon = _dungeonRepository.GetById(key.Value);
+        return dungeon != null ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
+    }
+
     public int GetDaysUntilNextStream()
     {
         if (IsAwaitingStream.Value) return 0;

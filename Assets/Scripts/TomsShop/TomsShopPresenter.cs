@@ -575,8 +575,7 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         popUpManager.Show(new PopUpData
         {
             Title = EmptyDisplayConfirmTitle,
-            Message = "まだ何も並べていません。
-このまま営業すると、今日の売上はありません。",
+            Message = "まだ何も並べていません。\nこのまま営業すると、今日の売上はありません。",
             ConfirmButtonText = "営業する",
             CancelButtonText = "陳列にもどる",
             Size = PopupSizeEnum.Medium,

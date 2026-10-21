@@ -145,6 +145,14 @@ public class ShopEconomySettings : ScriptableObject
     [Tooltip("1日の売り圧力による下落の上限（0.15 = −15%）。")]
     public float sellPressureMaxDrop = 0.15f;
 
+    [Header("配信前の期待（次の配信先の弱点属性が買われる）")]
+    [Tooltip("次の配信まで何日以内なら、配信先の弱点属性の品に期待の需要が乗るか（1 = 前日だけ）。0 で無効。")]
+    public int streamAnticipationDays = 3;
+    [Tooltip("その間、弱点属性の品の需要に毎朝足す量（0.04 = 需要 +0.04/日 ≒ 適正値 +4%/日）。決着で勝てば ×1.8、負ければ半値。")]
+    public float streamAnticipationDemandUp = 0.04f;
+    [Tooltip("その間、弱点属性の品の値段に毎朝掛ける期待買いの上げ幅（0.03 = +3%/日）。店で普通に売る量（1日30〜40個＝売り圧力 −4〜5%）なら下がり続けない強さ。")]
+    public float streamAnticipationPriceUp = 0.03f;
+
     [Header("流行度（Trend）自然需要収束モデル")]
     [Tooltip("Trend=±1.0 のとき naturalDemand が 0.5 からどれだけずれるか。" +
              "例: 0.30 → Trend=+1 で naturalDemand=0.80 / Trend=−1 で 0.20。想定レンジ: 0.1〜0.5")]
