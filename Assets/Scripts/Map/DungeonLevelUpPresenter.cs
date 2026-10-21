@@ -14,6 +14,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     private readonly HeroModel           heroModel;
     private readonly ItemModel           itemModel;
     private readonly RelicEffectResolver relicResolver;
+    private readonly GameFlowManager     gameFlowManager;
 
     private readonly CompositeDisposable disposables     = new();
     private          CompositeDisposable slotDisposables = new();
@@ -28,9 +29,11 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         StateManager       stateManager,
         HeroModel          heroModel,
         ItemModel          itemModel,
-        RelicEffectResolver relicResolver)
+        RelicEffectResolver relicResolver,
+        GameFlowManager    gameFlowManager)
     {
         this.relicResolver = relicResolver;
+        this.gameFlowManager = gameFlowManager;
         this.view              = view;
         this.dungeonRepository = dungeonRepository;
         this.tomsModel         = tomsModel;
@@ -51,9 +54,9 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         view.ClearDungeonDetail();
         RefreshList();
 
-        // 先頭ダンジョンを自動選択して、空の詳細パネルを見せない
+        // 先頭（＝次の配信先）を自動選択して、空の詳細パネルを見せない
         // （会話は開店挨拶を維持したいので HandleSlotSelected は使わない）
-        var first = dungeonRepository.availableDungeons.FirstOrDefault();
+        var first = OrderedDungeons().FirstOrDefault();
         if (first != null)
         {
             selectedKey = first.key;
@@ -83,7 +86,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         slotDisposables.Dispose();
         slotDisposables = new CompositeDisposable();
 
-        var dungeons = new List<DungeonData>(dungeonRepository.availableDungeons);
+        var dungeons = OrderedDungeons();
         var slotData = dungeons.Select(BuildSlotData).ToList();
         var slots    = view.PopulateDungeonList(slotData);
 
@@ -160,6 +163,26 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
 
     // ─────────────────────────────────────────────────────────
 
+    /// <summary>次の配信先（地図の NEXT と同じ取り方）。無ければ null。</summary>
+    private DungeonName? UpcomingKey => gameFlowManager != null ? gameFlowManager.GetUpcomingStreamDungeon() : null;
+
+    /// <summary>一覧の並び。次の配信先を先頭に置き、残りはデータの順のまま。</summary>
+    private List<DungeonData> OrderedDungeons()
+    {
+        var dungeons = new List<DungeonData>(dungeonRepository.availableDungeons.Where(d => d != null));
+        var next = UpcomingKey;
+        if (!next.HasValue) return dungeons;
+
+        int index = dungeons.FindIndex(d => d.key == next.Value);
+        if (index > 0)
+        {
+            var item = dungeons[index];
+            dungeons.RemoveAt(index);
+            dungeons.Insert(0, item);
+        }
+        return dungeons;
+    }
+
     private DungeonLevelUpSlotData BuildSlotData(DungeonData data)
     {
         bool isMax       = data.currentDungeonLevel >= GameConst.MaxDungeonLevel;
@@ -179,6 +202,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
             Shortage     = shortage,
             CanAfford    = !isMax && tomsModel.PlayerMoney.Value >= cost,
             IsMaxLevel   = isMax,
+            IsNext       = UpcomingKey == data.key,
         };
     }
 
@@ -199,7 +223,7 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
         return new DungeonLevelUpDetailData
         {
             DungeonName          = data.dungeonName,
-            LevelText            = isMax ? $"Lv.{currentLevel}（MAX）" : $"Lv.{currentLevel} → Lv.{nextLevel}",
+            LevelText            = isMax ? $"Lv.{currentLevel}（MAX）" : $"{DungeonLevels.Label(currentLevel)} → Lv.{nextLevel}",
             RewardText           = BuildRewardText(data, currentLevel, nextLevel, isMax),
             ClearProbabilityText = BuildClearProbabilityText(data, currentLevel, nextLevel, isMax),
             CurrentMonsters      = currentMonsters,
@@ -214,26 +238,28 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
     {
         if (!data.isShowedInfo) return "防衛報酬: ？？？";
 
-        int currentReward = data.GetLevelData(currentLevel)?.rewardGold ?? 0;
+        int currentReward = data.GetDefenseReward(currentLevel); // Lv0（未出資）は 0
         if (isMax) return $"防衛報酬 {currentReward:N0}G";
 
-        int nextReward = data.GetLevelData(nextLevel)?.rewardGold ?? currentReward;
+        int nextReward = data.GetDefenseReward(nextLevel);
         return $"防衛報酬 {currentReward:N0}G → {nextReward:N0}G";
     }
 
     /// <summary>
-    /// 勇者のクリア確率の変化テキストを作る。
-    /// レベルアップで確率が下がる＝防衛（敗北時報酬）を狙いやすくなることを示す。
+    /// 勇者のクリア見込み（5段階）の変化テキストを作る。例: 「勇者のクリア見込み 互角 → 不利」。
+    /// レベルアップで見込みが下がる＝防衛（敗北時報酬）を狙いやすくなることを示す。
     /// </summary>
     private string BuildClearProbabilityText(DungeonData data, int currentLevel, int nextLevel, bool isMax)
     {
-        if (!data.isShowedInfo) return "クリア確率: ？？？";
+        const string label = "勇者のクリア見込み";
+        if (!data.isShowedInfo) return $"{label} ？";
 
         float currentProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, currentLevel, relicResolver);
-        if (isMax) return $"クリア確率 {currentProb:F0}%";
+        string current = ClearProbabilityCalculator.FormatOutlook(currentProb);
+        if (isMax) return $"{label} {current}";
 
         float nextProb = ClearProbabilityCalculator.Calculate(heroModel.heroData, itemModel, data, nextLevel, relicResolver);
-        return $"クリア確率 {currentProb:F0}% → {nextProb:F0}%";
+        return $"{label} {current} → {ClearProbabilityCalculator.FormatOutlook(nextProb)}";
     }
 
     public void Dispose()

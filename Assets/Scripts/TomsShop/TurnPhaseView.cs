@@ -8,6 +8,10 @@ using UnityEngine.UI;
 /// <summary>
 /// ターン進行フェーズ（イベント/仕入れ/商品陳列/営業）のUI出し分け。
 /// 同一の Shop ホーム内で、現フェーズに対応するボタングループだけを表示する。
+///
+/// パッド/キーの近道（店ホームのルートスコープが最前面のとき）:
+///   Start / キーボード Esc（「戻る」が無いとき）= 設定画面（パッドの B では開かない。配信画面と同じ規則）
+///   Y / キーボード R = 「次へ」ボタンを押す（営業フェーズの「営業開始」は誤爆防止のため近道にしない）
 /// </summary>
 public class TurnPhaseView : MonoBehaviour
 {
@@ -59,8 +63,18 @@ public class TurnPhaseView : MonoBehaviour
 
         // パッド操作: 店ホームのフォーカス単位（プレハブルートの UIFocusScope）。B/Esc は「戻る」ボタン
         _focusScope = GetComponentInParent<UIFocusScope>(true);
-        if (_focusScope != null && backButton != null)
-            _focusScope.SetCancelButton(backButton);
+        if (_focusScope != null)
+        {
+            if (backButton != null) _focusScope.SetCancelButton(backButton);
+            // 「戻る」が出ていない（仕入れ）ときのキーボード Esc は設定画面へ。パッドの B は誤操作で開かないよう何もしない
+            _focusScope.SetCancelFallback(() =>
+            {
+                if (ControllerInput.Device.CurrentValue == InputDeviceKind.Keyboard) OpenMenu();
+            });
+            _focusScope.OnButton
+                .Subscribe(OnScopeButton)
+                .AddTo(this);
+        }
 
         // グループ入場演出のために初期位置を記録しておく（Tween中断後の位置ずれ防止）
         foreach (var g in new[] { procurementGroup, displayGroup, salesGroup })
@@ -139,6 +153,39 @@ public class TurnPhaseView : MonoBehaviour
         _focusScope.FirstSelected = first;
         if (phaseChanged && first.gameObject.activeInHierarchy)
             _focusScope.Select(first);
+    }
+
+    // ---------------------------------------------------------------- パッド/キーの近道
+
+    private void OnScopeButton(ControllerButton button)
+    {
+        switch (button)
+        {
+            case ControllerButton.Start:
+                OpenMenu();
+                break;
+            case ControllerButton.Y:
+                PressAdvance();
+                break;
+        }
+    }
+
+    /// <summary>設定画面を開く（HUD の歯車と同じ。開いている・ロード中なら何もしない）。</summary>
+    private static void OpenMenu()
+    {
+        if (SettingSceneOpener.Open()) UISound.PlayDecide();
+    }
+
+    /// <summary>「次へ」を押したことにする（押下アニメ・音つき）。</summary>
+    private void PressAdvance()
+    {
+        if (advanceButton == null || !advanceButton.isActiveAndEnabled || !advanceButton.IsInteractable()) return;
+        var es = UnityEngine.EventSystems.EventSystem.current;
+        if (es != null)
+            UnityEngine.EventSystems.ExecuteEvents.Execute(advanceButton.gameObject,
+                new UnityEngine.EventSystems.BaseEventData(es), UnityEngine.EventSystems.ExecuteEvents.submitHandler);
+        else
+            advanceButton.onClick.Invoke();
     }
 
     /// <summary>

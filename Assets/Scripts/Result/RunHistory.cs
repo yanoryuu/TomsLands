@@ -24,6 +24,24 @@ public class RunHistoryData
     public List<string> itemIds = new();
     public List<string> itemNames = new();
     public List<int> itemRevenues = new();
+
+    // --- ラン開始時の元手（儲け = 純資産 − 初期資金 − 持ち込み − 立て替え の計算用）。旧セーブは欠損→ false/0 ---
+    /// <summary>RecordRunStart で記録したか（false = このデータより前に始まったラン）。</summary>
+    public bool startRecorded;
+    /// <summary>村資金から持ち込んだ額。</summary>
+    public int carriedGold;
+    /// <summary>ラン開始時点で、チュートリアルの立て替え（返済不要の資金）をすでに受け取っていたか。</summary>
+    public bool advanceGrantedBefore;
+
+    // --- 配信の成績（リザルトの振り返り用）。旧セーブは欠損→0 ---
+    /// <summary>配信の収支（TotalEarnings）の合計。</summary>
+    public int streamEarningsTotal;
+    /// <summary>一番稼いだ配信の収支と行き先。</summary>
+    public int bestStreamEarnings;
+    public string bestStreamDungeon = "";
+    public bool hasBestStream;
+    /// <summary>村の広場の効果で配信の売上に上乗せされた額の合計。</summary>
+    public int streamBonusTotal;
 }
 
 /// <summary>
@@ -125,6 +143,34 @@ public static class RunHistory
     /// <summary>バズが新しく発生した。</summary>
     public static void RecordBuzz() => Modify(d => d.buzzCount++);
 
+    /// <summary>新規ランの開始時に元手を記録する（ニューゲームでファイルが消えた直後に呼ぶ）。</summary>
+    public static void RecordRunStart(int carriedGold, bool advanceGrantedBefore)
+    {
+        Modify(d =>
+        {
+            d.startRecorded = true;
+            d.carriedGold = UnityEngine.Mathf.Max(0, carriedGold);
+            d.advanceGrantedBefore = advanceGrantedBefore;
+        });
+    }
+
+    /// <summary>配信1回ぶんの収支を記録する（途中終了も含む）。bonus は村の広場による上乗せ分。</summary>
+    public static void RecordStreamEarnings(int totalEarnings, string dungeonName, int bonus)
+    {
+        Modify(d =>
+        {
+            d.streamEarningsTotal += totalEarnings + bonus;
+            d.streamBonusTotal += bonus;
+            int net = totalEarnings + bonus;
+            if (!d.hasBestStream || net > d.bestStreamEarnings)
+            {
+                d.hasBestStream = true;
+                d.bestStreamEarnings = net;
+                d.bestStreamDungeon = dungeonName ?? "";
+            }
+        });
+    }
+
     // ------------------------------------------------------------
 
     private static void AddItemRevenue(RunHistoryData d, string itemId, string itemName, int revenue)
@@ -167,6 +213,7 @@ public static class RunHistory
             data.itemIds ??= new List<string>();
             data.itemNames ??= new List<string>();
             data.itemRevenues ??= new List<int>();
+            data.bestStreamDungeon ??= "";
             return data;
         }
         catch (Exception e)

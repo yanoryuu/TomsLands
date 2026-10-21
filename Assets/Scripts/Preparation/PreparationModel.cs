@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class PreparationModel
 {
-    private const int CarryStep = 1000;
+    private const int CarryStep = 10000;
 
     /// <summary>銀行の施設ID（村施設マスタ VillageFacilityData.facilityId）。</summary>
     public const string BankFacilityId = "bank";
@@ -76,6 +76,29 @@ public class PreparationModel
     public void ToggleFlyer() => UseFlyer = !UseFlyer;
     public void ToggleAppraisal() => UseAppraisal = !UseAppraisal;
     public void ToggleGrace() => UseGrace = !UseGrace;
+
+    /// <summary>
+    /// 難易度の中身（配信の回数とおおよその日数）。GameConst のモード定義から数える
+    /// （1回の配信の前に店の日が min〜max 日、配信の日が1日。イベントは日に数えない）。
+    /// </summary>
+    public static (int streams, int minDays, int maxDays) DescribeMode(GameModeId mode)
+    {
+        var config = GameConst.GetGameMode(mode);
+        if (config == null) return (0, 0, 0);
+        int streams = Mathf.Max(0, config.dungeonCount);
+        int minShop = Mathf.Max(0, config.minShopTurnsBetweenBattles);
+        int maxShop = Mathf.Max(minShop, config.maxShopTurnsBetweenBattles);
+        return (streams, streams * (minShop + 1), streams * (maxShop + 1));
+    }
+
+    /// <summary>「配信2回・6〜8日」の形。</summary>
+    public static string DescribeModeShort(GameModeId mode)
+    {
+        var (streams, minDays, maxDays) = DescribeMode(mode);
+        if (streams <= 0) return "";
+        string days = minDays == maxDays ? $"{minDays}日" : $"{minDays}〜{maxDays}日";
+        return $"配信{streams}回・{days}";
+    }
 
     /// <summary>選択中のスタートダッシュの合計コスト（村資金から支払う）。</summary>
     public int StartDashTotalCost

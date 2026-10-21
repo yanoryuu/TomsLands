@@ -21,6 +21,10 @@ public class ItemPriceGraphView : MonoBehaviour
     [SerializeField] private TMP_Text itemNameText;
     [SerializeField] private TMP_Text currentPriceText;
     [SerializeField] private TMP_Text totalChangeText;
+    [Tooltip("属性（火・水…）の文字。未設定なら出さない")]
+    [SerializeField] private TMP_Text itemAttributeText;
+    [Tooltip("品を選ぶまで隠すもの（見出し・値・アイコン枠など）。未選択のとき「武器名 / 00000G」の仮の値が見えないように")]
+    [SerializeField] private GameObject[] hideUntilShown;
 
     [Header("グラフエリア")]
     [Tooltip("折れ線グラフを描画する RectTransform。Pivot=(0,0)、Anchor=左下 推奨。")]
@@ -60,7 +64,25 @@ public class ItemPriceGraphView : MonoBehaviour
         if (closeButton != null)
             closeButton.onClick.AddListener(Hide);
         Hide();
+        SetInfoVisible(false);
     }
+
+    private void SetInfoVisible(bool visible)
+    {
+        if (hideUntilShown == null) return;
+        foreach (var go in hideUntilShown)
+            if (go != null) go.SetActive(visible);
+    }
+
+    private static string AttributeLabel(ItemTypeData.ItemAttribute attr) => attr switch
+    {
+        ItemTypeData.ItemAttribute.Fire  => "火",
+        ItemTypeData.ItemAttribute.Water => "水",
+        ItemTypeData.ItemAttribute.Wood  => "木",
+        ItemTypeData.ItemAttribute.Light => "光",
+        ItemTypeData.ItemAttribute.Dark  => "闇",
+        _ => "",
+    };
 
     // ─────────────────────────────────────────
     //  公開 API
@@ -77,8 +99,11 @@ public class ItemPriceGraphView : MonoBehaviour
             itemIconImage.enabled = item.ItemIcon != null;
         }
 
+        SetInfoVisible(true);
         if (itemNameText != null)
             itemNameText.text = item.ItemName;
+        if (itemAttributeText != null)
+            itemAttributeText.text = AttributeLabel(item.ItemAttribute);
 
         var history = item.BattlePriceHistory;
         if (compactMode)
@@ -97,7 +122,7 @@ public class ItemPriceGraphView : MonoBehaviour
         else
         {
             if (currentPriceText != null)
-                currentPriceText.text = $"現在価格: {item.CurrentPrice.Value} G";
+                currentPriceText.text = $"配信価格: {item.CurrentPrice.Value} G";
 
             int totalChange = history.Count > 0 ? item.CurrentPrice.Value - history[0] : 0;
             if (totalChangeText != null)

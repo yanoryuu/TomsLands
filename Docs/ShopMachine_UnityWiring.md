@@ -26,12 +26,13 @@ feature/shop-machines ブランチで実装した「マシン設置」と「朝�
 ## 1. マシンのマスターデータ作成（必須）
 
 `Assets/Resources_moved/` に Create > ScriptableObjects > ShopMachine > **ShopMachineData** を作成し、
-**ラベル `ShopMachineData`** を付与。回収4〜6ターン基準の推奨初期ラインナップ:
+**ラベル `ShopMachineData`** を付与。回収4〜6ターン基準の推奨初期ラインナップ（お金を産むマシン＝貯金ゴーレムは 2026-10 に7日回収へ値上げ。強さ・台数・撤去返金は据え置き。Docs/ShopEconomy.md §10）:
 
 | machineId | 効果 | コスト | 数値目安 | requiredShopLevel |
 |---|---|---|---|---|
-| machine_money_s | DailyMoney | 4,000G | +800G/朝（5ターン回収） | 1 |
-| machine_money_l | DailyMoney | 12,000G | +2,200G/朝 | 3 |
+| machine_money_s | DailyMoney | 5,600G | +800G/朝（7日で回収） | 1 |
+| machine_money_m | DailyMoney | 9,100G | +1,300G/朝（7日で回収） | 2 |
+| machine_money_l | DailyMoney | 15,400G | +2,200G/朝（7日で回収） | 3 |
 | machine_maker | DailyItem | 6,000G | 安価な武器×2/朝 | 2 |
 | machine_attract | RevenueMultiplier | 8,000G | 売上+10% | 2 |
 | machine_fridge | DemandFloorBonus | 5,000G | 需要下限+8% | 1 |
@@ -45,8 +46,8 @@ feature/shop-machines ブランチで実装した「マシン設置」と「朝�
    purchaseButton / removeButton / messageText / closeButton を割り当て。
 3. `GamePanelManager` → **Machine Shop Panel** に割り当て。
 4. `GameLifetimeScope` → **Shop Machine View** に割り当て（未配線の間はPresenter未登録=安全）。
-5. `TurnPhaseView` の `procurementGroup` に「店の設備」ボタンを追加し、
-   `TomsShopView` → **Machine Shop Button** に割り当て。
+5. 店ホームの「店の設備」ボタンは廃止（2026-10）。「店」ボタン（改装）の画面の「設備」タブから開く（ShopLevel_UnityWiring.md §2）。
+   `TomsShopView` の **Machine Shop Button** は非表示のまま残してある（`ShopFeature.MachineShop` は出さない）。
 
 ## 3. 店内の見た目反映
 

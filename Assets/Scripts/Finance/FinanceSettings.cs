@@ -19,6 +19,11 @@ public class FinanceSettings : ScriptableObject
     [Tooltip("債券を満期前に強制解約したとき戻る元本の割合（利息なし）")]
     public float bondEarlyRedemptionRate = 0.85f;
 
+    [Header("債券の口数の上限（H-9）")]
+    [Tooltip("1銘柄の債券を同時に持てる口数 = この値 × 情報屋レベル（0 = 上限なし）。" +
+             "無リスクの債券に全額を入れるだけで勝てないようにする")]
+    public int bondUnitCapPerInfoLevel = 10;
+
     [Header("チャート")]
     [Tooltip("ファンド基準価額の履歴保持ターン数")]
     public int navHistoryCapacity = 12;

@@ -60,6 +60,33 @@ public class GameBalanceData : ScriptableObject
     [Range(0f, 100f)]
     public float buzzEvolveToBigChance = 20f;
 
+    [Tooltip("顧客維持力が MAX（statMax）のとき継続率に足す量（%）。維持力で「バズを長持ちさせる」が効くようにする（H-7）")]
+    public float buzzContinueRetentionBonus = 35f;
+
+    [Tooltip("継続率の上限（%）")]
+    [Range(0f, 100f)]
+    public float buzzContinueChanceMax = 85f;
+
+    // =====================================================
+    // ステータスの減衰（H-3）
+    // =====================================================
+    [Header("毎朝の減衰（割合。0.1 = 毎朝 10% 減る）")]
+    [Tooltip("注目度は話題なので早く冷める")]
+    [Range(0f, 1f)]
+    public float attentionDecayRate = 0.10f;
+
+    [Tooltip("拡散力も早く冷める")]
+    [Range(0f, 1f)]
+    public float spreadDecayRate = 0.10f;
+
+    [Tooltip("顧客維持力はゆっくり下がる")]
+    [Range(0f, 1f)]
+    public float retentionDecayRate = 0.05f;
+
+    [Tooltip("信頼度の減衰（既定 0。信頼は炎上・イベントで下がる）")]
+    [Range(0f, 1f)]
+    public float trustDecayRate = 0f;
+
     // =====================================================
     // バズ種類判定
     // =====================================================

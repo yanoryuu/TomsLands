@@ -64,7 +64,7 @@ public class VillageArrivalFx : MonoBehaviour
     /// 到着演出を再生する。
     /// </summary>
     /// <param name="cleared">クリア帰還か（false=破産）</param>
-    /// <param name="earned">稼ぎ（クリア=純資産 / 破産=手元現金）</param>
+    /// <param name="earned">儲け（クリア=このランの儲け / 破産=いちばん儲かっていたときの儲け）</param>
     /// <param name="converted">村資金へ変換された額</param>
     /// <param name="fundsAfterValue">変換後の村資金（現在値）</param>
     /// <param name="fundsText">村資金HUDのテキスト（コインの到達先）</param>

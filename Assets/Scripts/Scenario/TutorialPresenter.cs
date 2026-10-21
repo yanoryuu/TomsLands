@@ -31,6 +31,14 @@ public class TutorialPresenter : IStartable, IDisposable
     private const string FundsAdvanceAfter = TutorialSteps.FundsAdvanceAfter;
     private const string ProphetMeeting    = TutorialSteps.ProphetMeeting;
     private const string StreamingEnd      = "Tutorial_StreamingEnd";
+    /// <summary>初配信で勇者が負けたときの後日談（K-8。後半の使用料の話は StreamingEnd と同じ）。</summary>
+    private const string StreamingEndHard  = "Tutorial_StreamingEndHard";
+    /// <summary>プロローグの後半。暗幕を開けて店を見せてから話す（K-5）。</summary>
+    private const string OpeningShop       = TutorialSteps.OpeningShop;
+    /// <summary>初配信の前日、勇者に何を持たせるかを促す（K-1）。会話のあと勇者画面を開く。</summary>
+    private const string HeroEquip         = TutorialSteps.HeroEquip;
+    /// <summary>新聞を初めて開いたときの読み方の会話（K-2）。</summary>
+    private const string IntroNewspaper    = "Intro_Newspaper";
     private const string EventTutorial     = "TurnEvent_EventTutorial";
     private const string BuzzTutorial      = "TurnEvent_BuzzTutorial";
     private const string IntroHero         = "Intro_Hero";
@@ -49,16 +57,19 @@ public class TutorialPresenter : IStartable, IDisposable
     private const string EventLabelPrefix = "Event_";
 
     /// <summary>
-    /// 占い師と出会うターン。台詞が「ふぅ……なんとか少しは売れたけど……」なので2日目の営業後（=3ターン目の朝）。
-    /// 1日目の営業後（2ターン目の朝）は「お金が増えてない」会話（FundsShortage）を出すため、ぶつからないよう3にしている。
-    /// 自動生成フローは最初の配信までに店ターンが最低2つ入る（初配信は4ターン目以降）ので、配信の前に必ず出会える。
+    /// 占い師と出会う最も早いターン。出会うのは「初配信の前日の朝」（K-6。「早速広場で試してみよう」から配信まで日が空かないように）。
+    /// 1日目の営業後（2ターン目の朝）は「注文が入った」会話（FundsShortage）を出すため、ぶつからないよう3以降にしている。
+    /// 自動生成フローは最初の配信までに店ターンが最低2つ入る（初配信は4ターン目以降）ので、前日は必ず3ターン目以降になる。
     /// </summary>
     private const int ProphetMeetingTurn = 3;
     /// <summary>入金の遅れに気づく会話を出すターン（1日目の営業後の朝）。</summary>
     private const int FundsShortageTurn = 2;
-    /// <summary>初配信から何ターン後にイベント／バズのチュートリアルを出すか。</summary>
-    private const int EventTutorialDelay = 2;
-    private const int BuzzTutorialDelay  = 5;
+    /// <summary>新聞ボタンを出すターン（2日目から。K-7）。</summary>
+    private const int NewspaperUnlockTurn = 2;
+    /// <summary>改装・設備のボタンを、初配信の何日後に出すか（最初の返済が先に来ればそのとき。K-7）。</summary>
+    private const int UpgradeUnlockDelay = 2;
+    /// <summary>ボタンを開けたことを覚える段階フラグの接頭辞（一度だけ弾ませる）。</summary>
+    private const string UnlockFlagPrefix = "TutorialStep_Open_";
 
     private readonly TutorialScenarioService _scenario;
     private readonly MetaProgressModel   _meta;
@@ -70,6 +81,8 @@ public class TutorialPresenter : IStartable, IDisposable
     private readonly TomsShopView        _shopView;
     private readonly TurnPhaseView       _turnPhaseView;
     private readonly BlackSmithModel     _blackSmithModel;
+    private readonly MarketingFacade     _marketing;
+    private readonly MorningReportModel  _morningReport;
     private readonly CompositeDisposable _disposables = new();
     private readonly CancellationTokenSource _cts = new();
 
@@ -113,7 +126,9 @@ public class TutorialPresenter : IStartable, IDisposable
         PendingEventData  pendingEventData,
         TomsShopView      shopView,
         TurnPhaseView     turnPhaseView,
-        BlackSmithModel   blackSmithModel)
+        BlackSmithModel   blackSmithModel,
+        MarketingFacade   marketing = null,
+        MorningReportModel morningReport = null)
     {
         _scenario         = scenario;
         _meta             = meta;
@@ -125,12 +140,15 @@ public class TutorialPresenter : IStartable, IDisposable
         _shopView         = shopView;
         _turnPhaseView    = turnPhaseView;
         _blackSmithModel  = blackSmithModel;
+        _marketing        = marketing;
+        _morningReport    = morningReport;
 
         _stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith,     OnEnterBlacksmith);
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Hero,           () => EnqueueOnce(IntroHero));
         _stateManager.RegisterOnEnter(TomsShopGamePhase.DungeonLevelUp, () => EnqueueOnce(IntroDemonLord));
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Prophet,        () => EnqueueOnce(IntroProphet));
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Broker,         () => EnqueueOnce(IntroInfoBroker));
+        _stateManager.RegisterOnEnter(TomsShopGamePhase.Newspaper,      () => EnqueueOnce(IntroNewspaper));
 
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Shop, OnEnterShop);
     }
@@ -143,6 +161,7 @@ public class TutorialPresenter : IStartable, IDisposable
 
         // 初回は鍛冶屋以外を押せなくする（オート購入を済ませるまで）
         UpdateShopLock();
+        ApplyStagedUnlock();
 
         // 商品陳列フェーズに初めて入ったとき
         _turnPhaseManager.CurrentTurnPhase
@@ -160,6 +179,18 @@ public class TutorialPresenter : IStartable, IDisposable
         _gameFlow.CurrentTurn
             .Subscribe(OnTurnChanged)
             .AddTo(_disposables);
+
+        // バズの説明は、初めて（ふつうの）バズが起きたときに流す（K-9。以前は初配信の5日後に無条件で流れていた）
+        var buzz = _marketing?.Buzz;
+        if (buzz != null)
+        {
+            // IsBuzzActive と CurrentBuzzType は別々に更新されるので CombineLatest でそろえる
+            buzz.IsBuzzActive
+                .CombineLatest(buzz.CurrentBuzzType, (active, type) => active && type == BuzzType.Normal)
+                .Where(normalBuzz => normalBuzz)
+                .Subscribe(_ => { if (_meta.HasSeenTutorial(ProphetMeeting)) EnqueueOnce(BuzzTutorial); })
+                .AddTo(_disposables);
+        }
     }
 
     private void OnEnterBlacksmith()
@@ -191,6 +222,7 @@ public class TutorialPresenter : IStartable, IDisposable
 
         // 初回オート購入が済むまでは鍛冶屋以外を押せない
         UpdateShopLock();
+        ApplyStagedUnlock();
 
         // 鍛冶屋で初回の仕入れを済ませて店へ戻ってきたら、陳列へ進む案内を出す
         if (_meta.HasSeenTutorial(Blacksmith) && !TutorialSteps.IsFirstAutoBuyPending(_meta))
@@ -205,9 +237,25 @@ public class TutorialPresenter : IStartable, IDisposable
             EnqueueOnce(FundsShortage, GoToBlacksmithForFundsTutorial);
         }
 
-        // 初めての配信から帰ってきたら、占い師との後日談を出す
-        if (_meta.FirstBattleTurn > 0) EnqueueOnce(StreamingEnd);
+        // 初めての配信から帰ってきたら、占い師との後日談を出す。勇者が負けたら「思ったより難しいね」の版（K-8）
+        if (_meta.FirstBattleTurn > 0 && !_scenario.HasSeen(StreamingEnd) && !_scenario.HasSeen(StreamingEndHard))
+        {
+            bool won = RunHistory.Load().streamWins > 0;
+            string label = won ? StreamingEnd : StreamingEndHard;
+            string other = won ? StreamingEndHard : StreamingEnd;
+            EnqueueOnce(label, () => _meta.MarkTutorialSeen(other));
+        }
+
+        // 初配信の前日（占い師に出会った朝）: 勇者に何を持たせるかを促し、勇者画面を開く（K-1）
+        if (IsFirstStreamEve()) EnqueueOnce(HeroEquip, () => NavigateAfterNoticesAsync(TomsShopGamePhase.Hero).Forget());
     }
+
+    /// <summary>初配信の前日か（まだ一度も配信しておらず、次の配信が明日）。占い師との出会いと同じ朝になる。</summary>
+    private bool IsFirstStreamEve() =>
+        _meta.FirstBattleTurn <= 0
+        && _gameFlow.CurrentTurn.Value >= ProphetMeetingTurn
+        && !_gameFlow.IsAwaitingStream.Value
+        && _gameFlow.GetDaysUntilNextStream() == 1;
 
     /// <summary>店の「鍛冶屋以外クリック不可」と「次へ」の停止を、初回オート購入待ちかどうかに合わせる。</summary>
     private void UpdateShopLock()
@@ -219,26 +267,88 @@ public class TutorialPresenter : IStartable, IDisposable
         if (_turnPhaseView != null) _turnPhaseView.SetAdvanceLocked(lockOn);
     }
 
-    /// <summary>「鍛冶屋さんに行って聞いてみよう！」の後、自動で鍛冶屋へ移動する。</summary>
-    private void GoToBlacksmithForFundsTutorial()
+    /// <summary>
+    /// 1周目だけ、店ホームのボタンを段階的に出す（K-7。最初は必要なものだけ）。2周目以降は全部出す。
+    ///   1日目: 鍛冶屋・陳列・返済（常に出ている）
+    ///   2日目: 新聞
+    ///   占い師に出会ったら（初配信の前日）: 占い師・情報屋・地図・勇者
+    ///   初配信のあと: 魔王軍支援・広告
+    ///   最初の返済か初配信の2日後: 店（改装・設備はタブ。「店の設備」ボタンは無くなったので MachineShop は出さない）
+    /// 新しく出たボタンは一度だけ弾ませる。
+    /// </summary>
+    private void ApplyStagedUnlock()
     {
-        if (_meta.HasSeenTutorial(FundsAdvanceAfter)) return;
-        if (_gameFlow.IsAwaitingStream.Value) return;
-        if (_stateManager.CurrentTomsShopPhase.Value != TomsShopGamePhase.Shop) return;
-        if (!_stateManager.HasHandler(TomsShopGamePhase.BlackSmith)) return;
-        _stateManager.ChangeTomsShopPhase(TomsShopGamePhase.BlackSmith);
+        if (_shopView == null) return;
+        bool firstRun = _meta == null || _meta.TotalRuns <= 0;
+        int turn = _gameFlow.CurrentTurn.Value;
+        bool prophetMet = _meta == null || _meta.HasSeenTutorial(ProphetMeeting);
+        int firstBattle = _meta?.FirstBattleTurn ?? 0;
+        bool streamed = firstBattle > 0;
+        bool repaid = _tomsModel != null && _tomsModel.DebtCycle.Value > 0;
+
+        Apply(TomsShopView.ShopFeature.Newspaper, turn >= NewspaperUnlockTurn || prophetMet);
+        Apply(TomsShopView.ShopFeature.Prophet, prophetMet);
+        Apply(TomsShopView.ShopFeature.Info, prophetMet);
+        Apply(TomsShopView.ShopFeature.Map, prophetMet);
+        Apply(TomsShopView.ShopFeature.Hero, prophetMet);
+        Apply(TomsShopView.ShopFeature.DungeonLevelUp, streamed);
+        Apply(TomsShopView.ShopFeature.Advertisement, streamed);
+        bool upgrades = repaid || (streamed && turn >= firstBattle + UpgradeUnlockDelay);
+        Apply(TomsShopView.ShopFeature.ShopUpgrade, upgrades); // 「店」ボタン（改装・設備のタブ画面）
+
+        void Apply(TomsShopView.ShopFeature feature, bool open)
+        {
+            if (!firstRun)
+            {
+                _shopView.SetFeatureVisible(feature, true);
+                return;
+            }
+            string flag = UnlockFlagPrefix + feature;
+            bool newly = open && _meta != null && !_meta.HasSeenTutorial(flag);
+            // 初日から出ているもの（このラン開始時点で条件を満たす）は弾ませない
+            if (newly) _meta.MarkTutorialSeen(flag);
+            _shopView.SetFeatureVisible(feature, open, newly && turn > 1);
+        }
     }
 
     /// <summary>
-    /// 鍛冶屋の立て替え資金を所持金に加える（返済不要）。段階フラグで一度きりにする。
+    /// 会話のあとの自動移動（鍛冶屋・勇者画面）。朝の通知（税金・朝レポート・レリック）を出している間は待ってから移る。
+    /// 待っている間に別の画面へ移っていたら何もしない。
+    /// </summary>
+    private async UniTaskVoid NavigateAfterNoticesAsync(TomsShopGamePhase target)
+    {
+        try
+        {
+            if (_morningReport != null)
+                await UniTask.WaitUntil(() => !_morningReport.IsShowingNotices, cancellationToken: _cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        if (_gameFlow.IsAwaitingStream.Value) return;
+        if (_stateManager.CurrentTomsShopPhase.Value != TomsShopGamePhase.Shop) return;
+        if (_turnPhaseManager.CurrentTurnPhase.Value == TurnPhase.Event) return;
+        if (!_stateManager.HasHandler(target)) return;
+        _stateManager.ChangeTomsShopPhase(target);
+    }
+
+    /// <summary>「鍛冶屋さんに相談してみよう！」の後、自動で鍛冶屋へ移動する（朝の通知を出し終えてから）。</summary>
+    private void GoToBlacksmithForFundsTutorial()
+    {
+        if (_meta.HasSeenTutorial(FundsAdvanceAfter)) return;
+        NavigateAfterNoticesAsync(TomsShopGamePhase.BlackSmith).Forget();
+    }
+
+    /// <summary>
+    /// 鍛冶屋の立て替え資金を所持金に加える。利息なしで次の納付に上乗せされる借り（H-6。TomsModel.GrantFundsAdvance）。段階フラグで一度きりにする。
     /// フラグを先に保存してから加算するので、途中で落ちても二重には入らない。
     /// </summary>
     private void GrantFundsAdvanceOnce()
     {
         if (_tomsModel == null || _meta.HasSeenTutorial(TutorialSteps.StepFundsAdvanceGranted)) return;
         _meta.MarkTutorialSeen(TutorialSteps.StepFundsAdvanceGranted);
-        _tomsModel.AddRevenue(TutorialSteps.FundsAdvanceAmount);
-        _tomsModel.SavePlayerMoney();
+        _tomsModel.GrantFundsAdvance(TutorialSteps.FundsAdvanceAmount);
         var soundManager = SoundManager.Instance;
         if (soundManager != null) soundManager.PlaySE("営業/SE_売上音");
         Debug.Log($"[TutorialPresenter] 鍛冶屋の立て替え資金 +{TutorialSteps.FundsAdvanceAmount}G → {_tomsModel.PlayerMoney.Value}G");
@@ -246,13 +356,16 @@ public class TutorialPresenter : IStartable, IDisposable
 
     private void OnTurnChanged(int turn)
     {
-        if (turn >= ProphetMeetingTurn) EnqueueOnce(ProphetMeeting);
-
-        int firstBattleTurn = _meta.FirstBattleTurn;
-        if (firstBattleTurn <= 0) return;
-
-        if (turn >= firstBattleTurn + EventTutorialDelay) EnqueueOnce(EventTutorial);
-        if (turn >= firstBattleTurn + BuzzTutorialDelay)  EnqueueOnce(BuzzTutorial);
+        // 占い師との出会いは初配信の前日の朝（K-6）。配信が遅れて出会いそびれないよう、配信の当日・配信後も拾う
+        if (turn >= ProphetMeetingTurn && !_scenario.HasSeen(ProphetMeeting))
+        {
+            int days = _gameFlow.GetDaysUntilNextStream();
+            if ((days >= 0 && days <= 1) || _meta.FirstBattleTurn > 0)
+                EnqueueOnce(ProphetMeeting);
+        }
+        // 出会いの直後に、勇者に何を持たせるかの会話をつなぐ（K-1。キューは順番に流れる）
+        if (IsFirstStreamEve()) EnqueueOnce(HeroEquip, () => NavigateAfterNoticesAsync(TomsShopGamePhase.Hero).Forget());
+        // イベント・バズの説明は「起きたとき」に流す（K-9。EnqueuePendingEventScenario と Start のバズ購読）
     }
 
     /// <summary>
@@ -270,6 +383,8 @@ public class TutorialPresenter : IStartable, IDisposable
             _curtain = ScenarioCurtain.Show();
             // プロローグだけは既読管理する（周回の開始会話は毎ラン流す）
             Enqueue(new QueuedScenario(label, onceOnly: label == Opening, isRunOpening: true));
+            // プロローグの後半（棚の話）は、幕を開けて店を見せてから話す（K-5）
+            if (label == Opening) EnqueueOnce(OpeningShop);
         }
 
         // 最初の営業の手順説明は1周目だけ（既読なら何もしない）。幕を開けて店を見せてから流す
@@ -311,6 +426,8 @@ public class TutorialPresenter : IStartable, IDisposable
         string id = _pendingEventData.PendingEvent?.id;
         if (string.IsNullOrEmpty(id)) return;
         Enqueue(new QueuedScenario(EventLabelPrefix + id, onceOnly: false));
+        // 初めてのイベントのあとに、イベントの説明を一度だけ（K-9。占い師に出会う前は出さない）
+        if (_meta.HasSeenTutorial(ProphetMeeting)) EnqueueOnce(EventTutorial);
     }
 
     /// <summary>未読なら再生キューに積む。既読・重複は無視する。onCompleted は既読になったときだけ呼ぶ。</summary>

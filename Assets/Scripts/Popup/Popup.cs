@@ -17,6 +17,9 @@ public class Popup : MonoBehaviour
     public void SetData(PopUpData data)
     {
         gameObject.SetActive(true);
+        // 開く演出（モーダルはフェード＋小さなポップで揃える）
+        UIFx.PanelOpen(gameObject, 0.15f);
+        UIFx.Pop(transform, 0.92f, 0.2f);
         if (titleText != null) titleText.text = data.Title ?? "";
         if (messageText != null) messageText.text = data.Message ?? "";
 

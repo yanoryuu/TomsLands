@@ -69,6 +69,14 @@ public sealed class AutoPlayRunResult
     public int TotalSupportSpend;
     public int TotalUpgradeSpend;
     public int TotalNewspaperSpend;
+    public int TotalAdSpend;
+    public int TotalMachineSpend;
+    public int TotalFinanceSpend;
+    public int TotalFireSale;
+    public int FireSales;
+    public int FinalFollowers;
+    public int FinalShopLevel;
+    public int FinalMachines;
     public int Supports;
     public int RejectedActions;
     public int LogErrors;
@@ -296,8 +304,20 @@ public sealed class AutoPlayRunner
             if (target != null) _game.ConfirmScrap(target.entryKey);
         }
         if (plan.HeroWeapon != null || plan.HeroArmor != null) _game.EquipHero(plan.HeroWeapon, plan.HeroArmor);
-        if (plan.Upgrade == "blacksmith") _game.UpgradeBlacksmith();
-        else if (plan.Upgrade == "shop") _game.UpgradeShop();
+        for (int u = 0; u < Mathf.Max(1, plan.UpgradeTimes); u++)
+        {
+            bool ok = plan.Upgrade switch
+            {
+                "blacksmith" => _game.UpgradeBlacksmith().Ok,
+                "shop" => _game.UpgradeShop().Ok,
+                // 両方: 安い方から（どちらも上げられなくなるまで）
+                "both" => (_game.UpgradeShop().Ok | _game.UpgradeBlacksmith().Ok),
+                _ => false,
+            };
+            if (!ok) break;
+        }
+        foreach (var id in plan.PlaceMachines ?? new List<string>()) _game.PlaceMachine(id);
+        foreach (var ad in plan.Advertisements ?? new List<string>()) _game.BuyAdvertisement(ad);
 
         if (!string.IsNullOrEmpty(plan.SupportDungeon))
         {
@@ -311,7 +331,8 @@ public sealed class AutoPlayRunner
             }
         }
 
-        if (plan.AutoBuyBudget > 0) _game.AutoBuy(plan.AutoBuyBudget, plan.AutoBuyStrategy);
+        foreach (var b in plan.Bonds ?? new List<AutoPlayStreamItem>()) _game.BuyBond(b.ItemId, b.Quantity);
+        if (plan.AutoBuyBudget > 0) _game.AutoBuy(Mathf.Min(plan.AutoBuyBudget, _game.TomsModel.PlayerMoney.Value), plan.AutoBuyStrategy);
         foreach (var p in plan.Purchases) _game.Buy(p.ItemId, p.Quantity);
 
         _game.ClearDisplay();
@@ -405,7 +426,7 @@ public sealed class AutoPlayRunner
             Money = money,
             StockValue = stockValue,
             PendingOrders = pending,
-            NetWorth = money + stockValue + pending,
+            NetWorth = _game.NetWorth(),
             Spend = day.Spend,
             ShopIncome = day.ShopIncome,
             StreamEarnings = day.StreamEarnings,
@@ -434,6 +455,11 @@ public sealed class AutoPlayRunner
         Result.TotalSupportSpend += day.SupportSpend;
         Result.TotalUpgradeSpend += day.UpgradeSpend;
         Result.TotalNewspaperSpend += day.NewspaperSpend;
+        Result.TotalAdSpend += day.AdSpend;
+        Result.TotalMachineSpend += day.MachineSpend;
+        Result.TotalFinanceSpend += day.FinanceSpend;
+        Result.TotalFireSale += day.FireSale;
+        if (day.FireSale > 0) Result.FireSales++;
         Result.RejectedActions += day.RejectedActions;
     }
 
@@ -447,8 +473,10 @@ public sealed class AutoPlayRunner
                 {
                     Result.Turns = _game.CurrentTurn;
                     Result.FinalMoney = _game.TomsModel.PlayerMoney.Value;
-                    int stockValue = _game.ItemModel.RuntimeItems.Sum(r => r.Stock.Value * r.CurrentPrice.Value);
-                    Result.FinalNetWorth = Result.FinalMoney + stockValue + _game.SellOrders.PendingTotalEstimate.Value;
+                    Result.FinalNetWorth = _game.NetWorth();
+                    Result.FinalFollowers = _game.ShopStatus.Followers.Value;
+                    Result.FinalShopLevel = _game.TomsModel.ShopLevel.Value;
+                    Result.FinalMachines = _game.Machines.PlacedCount;
                     Result.HeroFinalLevel = _game.HeroModel.heroData?.level.Value ?? 0;
                     Result.ArcInfo = _game.ArcSummary();
                 }

@@ -11,7 +11,7 @@ using VContainer.Unity;
 /// - 区画（FacilityPlot）の調べる→投資パネル→投資
 /// - 総合Lvに応じて町人が増える（VillagePopulationView。投資で増えた分はその場でポップして現れる）
 /// - 出店 → PreparationScene / タイトルへ → TitleScene
-/// - 初回入場時: 村チュートリアル会話（VillageTutorialDirector）→ その後に帰還演出
+/// - 初回入場時: 村チュートリアル前半（暗幕）→ 帰還演出（儲け→村資金）→ 後半（看板を調べて投資）
 /// 村と店の経営（ラン）は別フロー: ここでの操作はラン外のメタ層のみに影響する。
 /// View未配線（IsInteractiveReady=false）の場合は PreparationScene へ素通りする。
 /// </summary>
@@ -82,9 +82,17 @@ public class VillagePresenter : IStartable, IDisposable
     {
         tutorialPlaying = true;
         view.HideInvestPanel();
+        bool arrivalShown = false;
         try
         {
-            await tutorial.PlayAsync(view.UiCamera, view.SetUiInputLocked, ct);
+            await tutorial.PlayAsync(view.UiCamera, view.SetUiInputLocked, ct,
+                hasArrival
+                    ? async token =>
+                    {
+                        arrivalShown = true;
+                        await PlayArrivalAsync(cleared, earned, converted, token);
+                    }
+                    : null);
         }
         catch (OperationCanceledException)
         {
@@ -99,7 +107,7 @@ public class VillagePresenter : IStartable, IDisposable
             tutorialPlaying = false;
         }
 
-        if (hasArrival) PlayArrival(cleared, earned, converted);
+        if (hasArrival && !arrivalShown) PlayArrival(cleared, earned, converted);
         else view.ShowMessage("まずは立て看板を調べて、最初の施設を建ててみよう。");
     }
 
@@ -157,6 +165,27 @@ public class VillagePresenter : IStartable, IDisposable
             RefreshAll();
             view.ShowMessage(DefaultMessage);
         });
+    }
+
+    /// <summary>到着演出を流して終わるまで待つ（チュートリアルの前半と後半のあいだ用）。</summary>
+    private async UniTask PlayArrivalAsync(bool cleared, int earned, int converted, CancellationToken ct)
+    {
+        var fx = view.ArrivalFx;
+        if (fx == null || !fx.CanPlay || view.FundsText == null)
+        {
+            // 旧・収支ポップは閉じるボタンを待たない（会話中は村UIのクリックを止めているため）
+            view.ShowConversionPopup(cleared, earned, converted);
+            return;
+        }
+        var done = new UniTaskCompletionSource();
+        arrivalPlaying = true;
+        fx.Play(cleared, earned, converted, model.VillageFunds, view.FundsText, view.SetFundsDisplay, () =>
+        {
+            arrivalPlaying = false;
+            RefreshAll();
+            done.TrySetResult();
+        });
+        await done.Task.AttachExternalCancellation(ct);
     }
 
     private void SelectFacility(string facilityId)
@@ -223,7 +252,7 @@ public class VillagePresenter : IStartable, IDisposable
         view.UpdateHud(model.VillageFunds, villageLevel);
 
         var population = view.Population;
-        if (population != null) population.Apply(villageLevel, animatePopulation);
+        if (population != null) population.ApplyScaled(villageLevel, model.MaxVillageLevel, animatePopulation);
 
         foreach (var plot in view.Plots)
         {

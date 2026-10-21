@@ -77,9 +77,25 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
+        // 村の広場: 配信で売れた額に上乗せ（途中終了でも売れた分には付く）
+        int streamBonus = VillageEffects.Current.StreamSalesBonusGold(RawStreamSales(_outputData.SoldItems));
+        if (streamBonus > 0)
+        {
+            _tomsModel.AddRevenue(streamBonus);
+            _tomsModel.SavePlayerMoney();
+            Debug.Log($"[BattleResultHandler] 村の広場: 配信の売上に +{streamBonus}G");
+        }
+        RunHistory.RecordStreamEarnings(_outputData.TotalEarnings, _inputData.DungeonKey.ToString(), streamBonus);
+
         // 途中終了（配信終了ボタン）は勝ちでも負けでもない。売上の精算だけして、
         // 勝敗ボーナス/ペナルティ・経験値・最低保証レベルアップ・属性波及・レリック3択・戦績はすべて付けない
         bool aborted = _outputData.Result == BattleResult.Abort;
+
+        // 勇者の装備の帰還後の値段（配信リザルトの「相場への影響」と同じ計算: 店の値段 × 勝敗の倍率 → ストップ高/安）。
+        // 日送り（NextTurn）の相場の揺れを乗せると配信リザルトの見込みと翌朝の値段がずれるので、日送りのあとにこの値へ揃える
+        var battlePrices = aborted ? null : PreviewBattlePrices(_outputData.Result == BattleResult.Victory
+            ? ItemModel.HeroWinMultiplier(_outputData.DefeatedBossCount)
+            : 1f / ItemModel.HeroDefeatPriceDivisor);
 
         // --- 勝敗ボーナス/ペナルティ ---
         if (aborted)
@@ -88,10 +104,12 @@ public class BattleResultHandler : IStartable, IDisposable
         }
         else if (_outputData.Result == BattleResult.Victory)
         {
+            // 勇者側の配当: 装備の相場が上がる（×1.8、ボス撃破 ×2.2。直後の日送りで基準×3 に丸められる）
+            float winMul = ItemModel.HeroWinMultiplier(_outputData.DefeatedBossCount);
             if (!string.IsNullOrEmpty(_outputData.WeaponId))
-                _itemModel.BattleWinBonus(_outputData.WeaponId, 5);
+                _itemModel.BattleWinBonus(_outputData.WeaponId, winMul);
             if (!string.IsNullOrEmpty(_outputData.ArmorId))
-                _itemModel.BattleWinBonus(_outputData.ArmorId, 5);
+                _itemModel.BattleWinBonus(_outputData.ArmorId, winMul);
 
             // 配信勝利報酬: レリック3択を保留に積む（ホーム復帰時に選択UIが出る）
             _relicRewardService?.QueueBattleReward();
@@ -101,9 +119,17 @@ public class BattleResultHandler : IStartable, IDisposable
         else
         {
             if (!string.IsNullOrEmpty(_outputData.WeaponId))
-                _itemModel.BattleDefeatPenalty(_outputData.WeaponId, 2);
+                _itemModel.BattleDefeatPenalty(_outputData.WeaponId, ItemModel.HeroDefeatPriceDivisor);
             if (!string.IsNullOrEmpty(_outputData.ArmorId))
-                _itemModel.BattleDefeatPenalty(_outputData.ArmorId, 2);
+                _itemModel.BattleDefeatPenalty(_outputData.ArmorId, ItemModel.HeroDefeatPriceDivisor);
+
+            // 魔王側に張って当たった（防衛報酬を受け取った）ときも、勝ったときと同じくレリック3択を積む。
+            // 防衛報酬の受取累計（配当通知書の回収倍率）もここで記録する（精算と同じタイミング）
+            if (_outputData.IsDemonPayout)
+            {
+                _relicRewardService?.QueueBattleReward();
+                DemonPayoutHistory.Record(_outputData.DungeonKey, _outputData.DefenseReward);
+            }
 
             Debug.Log("[BattleResultHandler] Defeat penalties applied.");
         }
@@ -161,7 +187,11 @@ public class BattleResultHandler : IStartable, IDisposable
         // トコの一言用に、クリア前の勝敗・稼ぎを控えておく
         var talkResult = _outputData.Result;
         int talkEarnings = _outputData.TotalEarnings;
+        bool talkDemonPayout = _outputData.IsDemonPayout;
         RunHistory.RecordStreaming(talkResult, _outputData.SoldItems); // リザルトの振り返り用（途中終了は勝敗に数えない）
+
+        // 実績の判定（配信の決着・装備の値上がり・配当）。結果を消す前に渡す
+        AchievementEvents.ReportStreamSettled(_outputData, _inputData, _gameFlowManager.CurrentTurn.Value);
 
         // 結果をクリア（次回の戦闘まで誤発火しないように）
         _outputData.Clear();
@@ -170,14 +200,52 @@ public class BattleResultHandler : IStartable, IDisposable
         _itemModel.SaveData();
 
         // 戦闘結果処理後、次のターンへ進む
+        int turnBefore = _gameFlowManager.CurrentTurn.Value;
         _gameFlowManager.NextTurn();
+
+        // 装備の値段を配信リザルトで見せた値に揃える（日送りで相場が動いた日は、その日の価格履歴の最新点も置き換える）
+        if (battlePrices != null && battlePrices.Count > 0)
+        {
+            bool turnAdvanced = _gameFlowManager.CurrentTurn.Value != turnBefore;
+            foreach (var kv in battlePrices)
+                _itemModel.SetPriceAfterBattle(kv.Key, kv.Value, turnAdvanced);
+            _itemModel.SaveData();
+        }
 
         // 帰還したらトコの一言を流す。上の処理（精算→NextTurn）の順序には一切関与せず、
         // 少し待ってから店に留まっている場合だけ再生する（NextTurn で次の配信・リザルトへ直行する場合は流さない）。
         // 途中終了には勝ち/負けの台詞しか無いので流さない
         if (!aborted)
             TokoTalk.PlayStreamingReturnAsync(
-                talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token).Forget();
+                talkResult, talkEarnings, _tomsModel.PlayerMoney.Value, _metaProgress, _talkCts.Token, talkDemonPayout).Forget();
+    }
+
+    /// <summary>勇者の装備（武器・防具）の帰還後の値段。BattleSceneStarter.BuildMarketImpacts と同じ式。</summary>
+    private Dictionary<string, int> PreviewBattlePrices(float multiplier)
+    {
+        var prices = new Dictionary<string, int>();
+        foreach (var id in new[] { _outputData.WeaponId, _outputData.ArmorId })
+        {
+            if (string.IsNullOrEmpty(id) || prices.ContainsKey(id)) continue;
+            var runtime = _itemModel.GetRuntimeItem(id);
+            var master = _itemModel.GetMasterItem(id);
+            if (runtime == null || master == null) continue;
+            prices[id] = ItemModel.PreviewPriceAfterBattle(runtime.CurrentPrice.Value, master.basePrice, multiplier, _economySettings);
+        }
+        return prices;
+    }
+
+    /// <summary>配信中に売れた額の合計（Revenue 未設定なら品出し時価格×個数）。</summary>
+    private static int RawStreamSales(List<BattleOutputSoldItem> soldItems)
+    {
+        if (soldItems == null) return 0;
+        int total = 0;
+        foreach (var s in soldItems)
+        {
+            if (s == null) continue;
+            total += s.Revenue > 0 ? s.Revenue : s.SoldQuantity * s.SoldPrice;
+        }
+        return total;
     }
 
     public void Dispose()

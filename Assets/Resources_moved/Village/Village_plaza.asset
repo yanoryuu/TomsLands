@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
+  m_Name: Village_plaza
+  m_EditorClassIdentifier: 
+  facilityId: plaza
+  facilityName: "\u5E83\u5834"
+  description: "\u4EBA\u304C\u96C6\u307E\u308B\u5834\u6240\u306B\u306F\u3001\u5642\u3068\u5BA2\u304C\u96C6\u307E\u308B\u3002"
+  icon: {fileID: 0}
+  requiredHallLevel: 0
+  levels:
+  - cost: 400000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
+      +10"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 1000000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
+      +10\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +5%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 2200000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +1,000\u30FB\u6CE8\u76EE
+      +20\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +10%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0

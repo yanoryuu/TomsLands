@@ -58,6 +58,17 @@ public sealed class AutoPlayBatchConfig
     public float SecondsPerBattleTurn = 3f;
     /// <summary>同じシードで「新聞を購読しない貪欲」（greedy+nonews）も回す。新聞の効果の測定用。</summary>
     public bool ControlRunsWithoutNewspaper;
+    /// <summary>戦略ボット（H-1。"follower" / "golem" / "bond" / "upgrade" / "max" / "bargain"）。API 不要。</summary>
+    public List<string> StrategyBots = new();
+    /// <summary>1周目の鍛冶屋の立て替えを再現する額（0 = なし）。</summary>
+    public int TutorialAdvance;
+    /// <summary>
+    /// 計測用の値の上書き（"economy.x=1;balance.x=2;finance.x=3;gameconst.x=4"）。配信値を当てたあとに入れる。
+    /// economy=ShopEconomySettings / balance=GameBalanceData / finance=FinanceSettings / gameconst=GameConstData。
+    /// </summary>
+    public string Overrides = "";
+    /// <summary>配信値を読むフォルダ（空 = Docs/balance_upload）。変更前の値で比べるとき用。</summary>
+    public string UploadFolderOverride = "";
 }
 
 /// <summary>ボット名に接尾辞を付けるだけのラッパー（対照群の識別用）。</summary>
@@ -142,6 +153,7 @@ public static class AutoPlayBatch
 
         try
         {
+            _uploadFolderOverride = config.UploadFolderOverride;
             LastRemoteInfo = await ApplyRemoteConfigAsync(config.RemoteConfig);
             Debug.Log("[AutoPlay] リモート配信: " + LastRemoteInfo);
             var assets = AutoPlayAssets.Load(out var error);
@@ -150,6 +162,12 @@ public static class AutoPlayBatch
                 LastMessage = error;
                 Debug.LogError("[AutoPlay] " + error);
                 return;
+            }
+            if (!string.IsNullOrEmpty(config.Overrides))
+            {
+                string applied = ApplyOverrides(config.Overrides, assets);
+                LastRemoteInfo += " / 上書き: " + applied;
+                Debug.Log("[AutoPlay] 上書き: " + applied);
             }
 
             var personas = config.JevPersonas ?? new List<string>();
@@ -179,6 +197,7 @@ public static class AutoPlayBatch
                         ViewerRedChancePerTurn = config.ViewerRedChancePerTurn,
                         SecondsPerBattleTurn = config.SecondsPerBattleTurn,
                         AllowNewspaper = !bot.Name.EndsWith("+nonews"),
+                        TutorialAdvance = config.TutorialAdvance,
                     }, assets, ctx);
                     Runners.Add(new AutoPlayRunner(game, bot, ctx, config.MaxStepsPerRun));
                 }
@@ -263,6 +282,12 @@ public static class AutoPlayBatch
                 bots.Add((new AutoPlayDungeonBot(v), config.EnableInterventions));
         foreach (var p in personas)
             bots.Add((new AutoPlayJevBot(AutoPlayPersona.Find(p), config.JevDecisionMode, seed), config.EnableInterventions));
+        foreach (var name in config.StrategyBots ?? new List<string>())
+        {
+            var b = AutoPlayStrategyBots.Create(name);
+            if (b != null) bots.Add((b, config.EnableInterventions));
+            else Debug.LogWarning($"[AutoPlay] 不明な戦略ボット: {name}");
+        }
         if (config.ControlRunsWithoutNewspaper && config.UseGreedyBot)
             bots.Add((new AutoPlayRenamedBot(new AutoPlayGreedyBot(), "+nonews"), config.EnableInterventions));
         if (config.EnableInterventions && config.ControlRunsWithoutInterventions)
@@ -298,7 +323,41 @@ public static class AutoPlayBatch
     // =================================================================
 
     private const string ProductionBase = "https://storage.googleapis.com/tokotomland.firebasestorage.app/config/production/";
-    public static string UploadFolder => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Docs", "balance_upload");
+    private static string _uploadFolderOverride;
+    public static string UploadFolder => !string.IsNullOrEmpty(_uploadFolderOverride)
+        ? _uploadFolderOverride
+        : Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Docs", "balance_upload");
+
+    /// <summary>"economy.x=1;gameconst.y=2" を反射で入れる（計測用）。入れた項目の一覧を返す。</summary>
+    private static string ApplyOverrides(string spec, AutoPlayAssets assets)
+    {
+        var done = new List<string>();
+        foreach (var part in spec.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=');
+            if (kv.Length != 2) continue;
+            var path = kv[0].Trim().Split('.');
+            if (path.Length != 2) continue;
+            object target = path[0] switch
+            {
+                "economy" => assets.Economy,
+                "balance" => assets.Balance,
+                "finance" => assets.Finance,
+                "gameconst" => GameConst.Data,
+                _ => null,
+            };
+            var f = target?.GetType().GetField(path[1], System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (f == null) { Debug.LogWarning($"[AutoPlay] 上書きできない項目: {kv[0]}"); continue; }
+            string v = kv[1].Trim();
+            object val = f.FieldType == typeof(int) ? int.Parse(v, System.Globalization.CultureInfo.InvariantCulture)
+                : f.FieldType == typeof(float) ? float.Parse(v, System.Globalization.CultureInfo.InvariantCulture)
+                : f.FieldType == typeof(bool) ? bool.Parse(v)
+                : (object)v;
+            f.SetValue(target, val);
+            done.Add($"{kv[0]}={v}");
+        }
+        return string.Join(",", done);
+    }
 
     /// <summary>直近のバッチで当てたリモート配信の説明（どの値で回ったか）。</summary>
     public static string LastRemoteInfo { get; private set; } = "";

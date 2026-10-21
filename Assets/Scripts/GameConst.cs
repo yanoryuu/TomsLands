@@ -156,6 +156,7 @@ public static class GameConst
     public static int DebtPaymentInterval => Data.debtPaymentInterval;
     public static int DebtBaseAmount => Data.debtBaseAmount;
     public static float DebtMultiplier => Data.debtMultiplier;
+    public static float DebtFireSaleRate => Data.debtFireSaleRate;
     public static int HeroExpPerMob => Data.heroExpPerMob;
     public static int HeroExpPerBoss => Data.heroExpPerBoss;
     public static int HeroBaseExpToNextLevel => Data.heroBaseExpToNextLevel;
@@ -169,6 +170,7 @@ public static class GameConst
     public static float HeroArmorDefenseBonusPerTier => Data.heroArmorDefenseBonusPerTier;
     public static float HeroArmorHpBonusBase => Data.heroArmorHpBonusBase;
     public static float HeroArmorHpBonusPerTier => Data.heroArmorHpBonusPerTier;
+    public static float HeroAttributeAttackBonus => Data.heroAttributeAttackBonus;
     public static int[] BlackSmithLevelUpCosts => Data.blackSmithLevelUpCosts;
 
     // --- ゲームフロー自動生成 ---
@@ -192,12 +194,14 @@ public static class GameConst
 
     /// <summary>
     /// 鍛冶屋の現在レベルからレベルアップコストを取得。最大レベル／範囲外なら -1 を返す。
+    /// 村の職人組合の割引（VillageEffects.ApplyCraftCost）を含む。表示と支払いはどちらもここを通す。
     /// </summary>
     public static int GetBlackSmithLevelUpCost(int currentLevel)
     {
         var costs = Data.blackSmithLevelUpCosts;
         if (currentLevel <= 0 || currentLevel >= Data.maxBlackSmithLevel) return -1;
-        return costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
+        int cost = costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
+        return cost < 0 ? cost : VillageEffects.Current.ApplyCraftCost(cost);
     }
 
     public static int[] InfoBrokerLevelUpCosts => Data.infoBrokerLevelUpCosts;

@@ -15,7 +15,13 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
     private readonly BattleInputData battleInputData;
     private readonly DungeonRepository dungeonRepository;
     private readonly GameFlowManager gameFlowManager;
+    private readonly DungeonIntelModel dungeonIntel;
     private readonly CompositeDisposable disposables = new();
+
+    /// <summary>候補ラベルで弱点に合う属性を強調する色（UI の金）。</summary>
+    private const string MatchColor = "#E8A33D";
+    /// <summary>在庫0の候補の色（選べるが目立たせない）。</summary>
+    private const string NoStockColor = "#8C8C8C";
 
     /// <summary>現在表示中のセリフ。ホバー終了時に復元するために保持する。</summary>
     private string currentDialogue = string.Empty;
@@ -30,9 +36,11 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         BattleInputData battleInputData,
         DungeonRepository dungeonRepository,
         RelicEffectResolver relicResolver,
-        GameFlowManager gameFlowManager)
+        GameFlowManager gameFlowManager,
+        DungeonIntelModel dungeonIntel)
     {
         this.gameFlowManager = gameFlowManager;
+        this.dungeonIntel = dungeonIntel;
         this.relicResolver = relicResolver;
         this.view = view;
         this.heroModel = heroModel;
@@ -129,7 +137,8 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
     {
         heroModel.heroData.tactics.Value = tactics;
         heroModel.SaveHeroData();
-        Refresh(HeroDialogueLoader.Get("tactics_changed"));
+        // 変えた直後に倍率が見えるよう、相場への影響の倍率を添える
+        Refresh($"{HeroDialogueLoader.Get("tactics_changed")}\n{TacticsEffectLine(tactics)}");
     }
 
     private bool CanEquip(string itemId, ItemTypeData.ItemType expectedType)
@@ -168,8 +177,12 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         var armor = itemModel.GetRuntimeItem(hero.armorId.Value);
 
         view.SetHeroStatus(hero);
-        view.SetWeaponOptions(BuildEquipmentOptions(ItemTypeData.ItemType.Weapon, hero.weaponId.Value), hero.weaponId.Value);
-        view.SetArmorOptions(BuildEquipmentOptions(ItemTypeData.ItemType.Armor, hero.armorId.Value), hero.armorId.Value);
+        var stats = ClearProbabilityCalculator.GetEffectiveStats(hero, itemModel, relicResolver);
+        view.SetCombatStats(stats.Attack, stats.Defense);
+
+        var weakness = GetKnownWeakness();
+        view.SetWeaponOptions(BuildEquipmentOptions(ItemTypeData.ItemType.Weapon, hero.weaponId.Value, weakness), hero.weaponId.Value);
+        view.SetArmorOptions(BuildEquipmentOptions(ItemTypeData.ItemType.Armor, hero.armorId.Value, weakness), hero.armorId.Value);
         view.SetTacticsOptions(hero.tactics.Value);
         view.SetTacticsHoverDescription(GetTacticsHoverDesc(hero.tactics.Value));
         view.SetEquipmentIcons(weapon?.ItemIcon, armor?.ItemIcon);
@@ -178,8 +191,8 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
     }
 
     /// <summary>
-    /// クリア確率を計算して View に反映する。
-    /// ダンジョン情報が未購入の場合は非表示にする。
+    /// クリア見込み（5段階）を計算して View に反映する。
+    /// ダンジョン情報が未購入の場合は「情報未購入」にする。
     /// </summary>
     private void UpdateClearProbability()
     {
@@ -198,6 +211,16 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
             relicResolver);
 
         view.SetClearProbability(probability, true);
+    }
+
+    /// <summary>次の配信先の弱点を知っていればその属性（情報屋・新聞で知ったか。地図の名札と同じ判定）。</summary>
+    private ItemTypeData.ItemAttribute? GetKnownWeakness()
+    {
+        if (dungeonRepository == null || gameFlowManager == null || dungeonIntel == null) return null;
+        var nextKey = gameFlowManager.GetUpcomingStreamDungeon();
+        if (!nextKey.HasValue || !dungeonIntel.IsWeaknessKnown(nextKey.Value)) return null;
+        var data = dungeonRepository.GetById(nextKey.Value);
+        return data != null ? data.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
     }
 
     /// <summary>
@@ -244,14 +267,20 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         targetName.Value = item.ItemName;
     }
 
-    private IReadOnlyList<HeroEquipmentOption> BuildEquipmentOptions(ItemTypeData.ItemType type, string selectedItemId)
+    /// <summary>
+    /// 装備の候補。並びは「在庫あり → 弱点に合う（弱点を知っているときだけ）→ 強い順（ランク・値段）」。
+    /// 在庫0の品も選べるが、灰色で末尾に置く（装備に賭ける儲けは持っている数に比例するため、在庫を先に見せる）。
+    /// </summary>
+    private IReadOnlyList<HeroEquipmentOption> BuildEquipmentOptions(ItemTypeData.ItemType type, string selectedItemId, ItemTypeData.ItemAttribute? weakness)
     {
         int blacksmithLevel = tomsModel.BlacksmithLevel.Value;
         var options = itemModel.RuntimeItems
             .Where(item => item.ItemType == type && item.RequiredLevel.Value <= blacksmithLevel)
-            .OrderBy(item => item.RequiredLevel.Value)
-            .ThenBy(item => item.CurrentPrice.Value)
-            .Select(item => new HeroEquipmentOption(item.ItemId, BuildEquipmentLabel(item)))
+            .OrderByDescending(item => item.Stock.Value > 0)
+            .ThenByDescending(item => IsWeaknessMatch(item, weakness))
+            .ThenByDescending(item => item.RequiredLevel.Value)
+            .ThenByDescending(item => item.CurrentPrice.Value)
+            .Select(item => new HeroEquipmentOption(item.ItemId, BuildEquipmentLabel(item, weakness), BuildEquipmentCaption(item)))
             .ToList();
 
         if (!string.IsNullOrEmpty(selectedItemId) && options.All(option => option.ItemId != selectedItemId))
@@ -264,16 +293,50 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         return options;
     }
 
-    private static string BuildEquipmentLabel(RuntimeItemData item) => item.ItemName;
+    private static bool IsWeaknessMatch(RuntimeItemData item, ItemTypeData.ItemAttribute? weakness)
+        => weakness.HasValue && ItemTypeData.NormalizeAttribute(item.ItemAttribute) == ItemTypeData.NormalizeAttribute(weakness.Value);
 
-    private static string GetTacticsHoverDesc(HeroTactics tactics) => tactics switch
+    /// <summary>
+    /// プルダウンの1行: 「炎の剣　火　在庫12　1,240G　攻撃+10%」。
+    /// 弱点に合う属性は金色、在庫0の行は灰色。
+    /// </summary>
+    private static string BuildEquipmentLabel(RuntimeItemData item, ItemTypeData.ItemAttribute? weakness)
     {
-        HeroTactics.Aggressive   => HeroDialogueLoader.Get("hover_tactics_aggressive"),
-        HeroTactics.Defensive    => HeroDialogueLoader.Get("hover_tactics_defensive"),
-        HeroTactics.Stealth      => HeroDialogueLoader.Get("hover_tactics_stealth"),
-        HeroTactics.MagicFocused => HeroDialogueLoader.Get("hover_tactics_magic"),
-        _                        => HeroDialogueLoader.Get("hover_tactics_balanced"),
-    };
+        string attribute = ItemAttributeText.ToJapanese(item.ItemAttribute);
+        if (IsWeaknessMatch(item, weakness)) attribute = $"<color={MatchColor}>{attribute}</color>";
+
+        int tier = HeroEquipmentBonus.TierOf(item);
+        string bonus = item.ItemType == ItemTypeData.ItemType.Weapon
+            ? $"攻撃+{HeroEquipmentBonus.WeaponAttackBonus(tier) * 100f:0}%"
+            : $"防御+{HeroEquipmentBonus.ArmorDefenseBonus(tier) * 100f:0}% HP+{HeroEquipmentBonus.ArmorHpBonus(tier) * 100f:0}%";
+
+        string label = $"{item.ItemName}　{attribute}　在庫{item.Stock.Value}　{item.CurrentPrice.Value:N0}G　{bonus}";
+        return item.Stock.Value > 0 ? label : $"<color={NoStockColor}>{label}</color>";
+    }
+
+    /// <summary>閉じたプルダウンに出す短い表記（枠が狭いので名前と属性だけ）。</summary>
+    private static string BuildEquipmentCaption(RuntimeItemData item)
+        => $"{item.ItemName}（{ItemAttributeText.ToJapanese(item.ItemAttribute)}）";
+
+    /// <summary>
+    /// 作戦の説明。1行目に相場への影響の倍率（HeroBattleInfluence と同じ数字）を出す。
+    /// 作戦は配信中の値動き専用で、クリア見込み（勝ち負け）には効かない。
+    /// </summary>
+    private static string GetTacticsHoverDesc(HeroTactics tactics)
+    {
+        string body = tactics switch
+        {
+            HeroTactics.Aggressive   => HeroDialogueLoader.Get("hover_tactics_aggressive"),
+            HeroTactics.Defensive    => HeroDialogueLoader.Get("hover_tactics_defensive"),
+            HeroTactics.Stealth      => HeroDialogueLoader.Get("hover_tactics_stealth"),
+            HeroTactics.MagicFocused => HeroDialogueLoader.Get("hover_tactics_magic"),
+            _                        => HeroDialogueLoader.Get("hover_tactics_balanced"),
+        };
+        return $"{TacticsEffectLine(tactics)}\n{body}";
+    }
+
+    private static string TacticsEffectLine(HeroTactics tactics)
+        => $"<size=80%>相場への影響: {HeroBattleInfluence.BuildTacticsMultiplierText(tactics)}</size>";
 
     public void Dispose() => disposables.Dispose();
 }

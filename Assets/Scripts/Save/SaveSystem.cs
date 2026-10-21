@@ -19,10 +19,13 @@ public static class SaveSystem
             if (d == null || string.IsNullOrWhiteSpace(d.dungeonName)) continue;
             game.dungeons.Add(new DungeonSaveData
             {
-                dungeonKey = d.dungeonName,
+                // 以前は dungeonName（日本語名）を書いていて、読み込みの Enum.TryParse で必ず外れて
+                // セーブのレベルが SO の初期値に戻っていた。enum 名で書く（読み込みは日本語名も受け付ける）
+                dungeonKey = d.key.ToString(),
                 currentDungeonLevel = d.currentDungeonLevel,
                 dungeonStatus = d.dungeonStatus,
-                isShowedInfo = d.isShowedInfo
+                isShowedInfo = d.isShowedInfo,
+                levelVersion = 1
             });
         }
 

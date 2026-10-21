@@ -1,0 +1,120 @@
+using UnityEngine;
+
+/// <summary>
+/// 村の施設レベルから決まる「次のランに効く効果」（Docs/Village_Meta_Design.md §11）。
+/// 施設は6つ: 領主館（他施設の Lv2・Lv3 の解禁）／冒険者ギルド／酒場（情報局）／銀行／職人組合／広場。
+/// 村と店の経営（ラン）は別フローで、ラン中に施設レベルは変わらない。
+/// 店シーンの読み込み時に <see cref="Refresh"/> で選択中スロットの metaData.json から作り直し、
+/// 店側の各所（新聞・取引所・鍛冶屋・マシン・配信の精算・レリック抽選）は <see cref="Current"/> を読む。
+/// 数値は GameConst.Village（配信値で調整可）。施設レベル0なら全て「効果なし」で従来と同じ挙動。
+/// </summary>
+public sealed class VillageEffects
+{
+    public const string HallId = "hall";
+    public const string GuildId = "guild";
+    public const string TavernId = "tavern";
+    public const string BankId = "bank";
+    public const string ArtisanId = "artisan";
+    public const string PlazaId = "plaza";
+
+    public int GuildLevel { get; }
+    public int TavernLevel { get; }
+    public int BankLevel { get; }
+    public int ArtisanLevel { get; }
+    public int PlazaLevel { get; }
+
+    private static VillageEffects _current;
+
+    /// <summary>今のスロットの効果（未読み込みなら metaData.json から読む）。</summary>
+    public static VillageEffects Current => _current ??= Refresh();
+
+    /// <summary>効果なし（施設がすべてレベル0）。</summary>
+    public static readonly VillageEffects None = new(0, 0, 0, 0, 0);
+
+    private VillageEffects(int guild, int tavern, int bank, int artisan, int plaza)
+    {
+        GuildLevel = Mathf.Max(0, guild);
+        TavernLevel = Mathf.Max(0, tavern);
+        BankLevel = Mathf.Max(0, bank);
+        ArtisanLevel = Mathf.Max(0, artisan);
+        PlazaLevel = Mathf.Max(0, plaza);
+    }
+
+    public static VillageEffects From(MetaProgressModel meta) =>
+        meta == null
+            ? None
+            : new VillageEffects(
+                meta.GetFacilityLevel(GuildId),
+                meta.GetFacilityLevel(TavernId),
+                meta.GetFacilityLevel(BankId),
+                meta.GetFacilityLevel(ArtisanId),
+                meta.GetFacilityLevel(PlazaId));
+
+    /// <summary>選択中スロットの metaData.json から作り直して <see cref="Current"/> にする。</summary>
+    public static VillageEffects Refresh() => _current = From(new MetaProgressModel());
+
+    /// <summary>テスト・自動プレイ用に効果を差し替える（null で次回読み直し）。</summary>
+    public static void Override(VillageEffects effects) => _current = effects;
+
+    private static VillageSettingsData Settings => GameConst.Village;
+
+    // ───────── 冒険者ギルド ─────────
+
+    /// <summary>報酬・スターターの抽選に入るレリックの解禁段階（RelicDefinition.unlockGuildLevel 以下が対象）。</summary>
+    public int RelicUnlockTier => GuildLevel;
+
+    public bool StarterRareUnlocked => GuildLevel >= Settings.guildStarterRareLevel;
+
+    /// <summary>報酬の選択肢の数（基本の rewardChoiceCount + ギルドの追加）。</summary>
+    public int RelicChoiceCount(int baseCount) =>
+        baseCount + (GuildLevel >= Settings.guildExtraChoiceLevel ? 1 : 0);
+
+    public int ApplyDeclineGold(int baseGold) =>
+        GuildLevel >= Settings.guildDeclineBonusLevel
+            ? Mathf.RoundToInt(baseGold * Settings.guildDeclineGoldMultiplier)
+            : baseGold;
+
+    // ───────── 酒場（情報局） ─────────
+
+    public bool StartInfoBrokerLv2 => TavernLevel >= Settings.tavernInfoBrokerLevel;
+
+    public float NewspaperDiscount => Clamp01(At(Settings.tavernNewspaperDiscounts, TavernLevel));
+
+    public int ApplyNewspaperPrice(int price) =>
+        price <= 0 ? price : Mathf.RoundToInt(price * (1f - NewspaperDiscount));
+
+    /// <summary>ファンドの売買手数料率から酒場の引き下げ分を引く（0 未満にはしない）。</summary>
+    public float ApplyFundFee(float feeRate) =>
+        Mathf.Max(0f, feeRate - At(Settings.tavernFundFeeReductions, TavernLevel));
+
+    // ───────── 職人組合 ─────────
+
+    public bool StartBlacksmithLv2 => ArtisanLevel >= Settings.artisanBlacksmithLevel;
+
+    public float CostDiscount => Clamp01(At(Settings.artisanCostDiscounts, ArtisanLevel));
+
+    public int ApplyCraftCost(int cost) =>
+        cost <= 0 ? cost : Mathf.RoundToInt(cost * (1f - CostDiscount));
+
+    public int MachineSlotAdd => Mathf.Max(0, At(Settings.artisanMachineSlotAdds, ArtisanLevel));
+
+    // ───────── 広場 ─────────
+
+    public int StartFollowers => Mathf.Max(0, At(Settings.plazaStartFollowers, PlazaLevel));
+    public int StartAttention => Mathf.Max(0, At(Settings.plazaStartAttention, PlazaLevel));
+    public float StreamSalesBonus => Mathf.Max(0f, At(Settings.plazaStreamSalesBonuses, PlazaLevel));
+
+    /// <summary>配信で売れた額への上乗せ（G）。</summary>
+    public int StreamSalesBonusGold(int rawSales) =>
+        rawSales <= 0 ? 0 : Mathf.RoundToInt(rawSales * StreamSalesBonus);
+
+    // ───────── 内部 ─────────
+
+    private static float Clamp01(float v) => Mathf.Clamp01(v);
+
+    private static T At<T>(T[] table, int level)
+    {
+        if (table == null || table.Length == 0) return default;
+        return table[Mathf.Clamp(level, 0, table.Length - 1)];
+    }
+}

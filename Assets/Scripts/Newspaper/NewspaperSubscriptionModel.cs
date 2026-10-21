@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using R3;
 
 /// <summary>
 /// 新聞の購読契約と購読枠（Docs/News_Spec.md §8）。
@@ -21,6 +22,10 @@ public class NewspaperSubscriptionModel
     }
 
     private readonly List<Contract> contracts = new();
+
+    private readonly Subject<string> subscribed = new();
+    /// <summary>契約を結んだ（社ID。ロード時は出ない）。実績の判定用。</summary>
+    public Observable<string> OnSubscribed => subscribed;
 
     /// <summary>そのターンに有効な契約。</summary>
     public List<Contract> ActiveOn(int turn)
@@ -54,13 +59,17 @@ public class NewspaperSubscriptionModel
         return best;
     }
 
+    /// <summary>購読料（村の酒場の割引込み）。表示・判定・支払いはすべてこの額。</summary>
+    public static int PriceOf(NewspaperCompanyData company) =>
+        company == null ? 0 : Math.Max(0, VillageEffects.Current.ApplyNewspaperPrice(company.price));
+
     /// <summary>購読できるか（枠・所持金・二重契約を見る）。</summary>
     public bool CanSubscribe(NewspaperCompanyData company, int turn, int slots, int money)
     {
         if (company == null) return false;
         if (IsSubscribed(company.companyId, turn)) return false;
         if (UsedSlots(turn) >= slots) return false;
-        return money >= Math.Max(0, company.price);
+        return money >= PriceOf(company);
     }
 
     /// <summary>契約を結ぶ。支払いは呼び出し側（TomsModel）で行う。</summary>
@@ -74,6 +83,7 @@ public class NewspaperSubscriptionModel
             startTurn = turn,
             endTurn = turn + Math.Max(1, company.contractTurns),
         });
+        subscribed.OnNext(company.companyId);
     }
 
     public void Clear() => contracts.Clear();

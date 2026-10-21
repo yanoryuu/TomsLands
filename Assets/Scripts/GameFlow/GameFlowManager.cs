@@ -93,6 +93,9 @@ public class GameFlowManager : IDisposable, IStartable
         _relicResolver = relicResolver;
         _relicHooks = relicHooks;
         _currentIndex = 0;
+
+        // 営業で1日に来る客の数（売れる量の上限）とおすすめ（適正値）の計算に、経済設定と広告ステータスを渡す（H-2 / G-11）
+        _itemModel?.ConfigureShopSales(economySettings, shopStatusModel);
     }
 
     /// <summary>
@@ -274,11 +277,14 @@ public class GameFlowManager : IDisposable, IStartable
             ResolveNewsArcs();
 
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
-                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects);
+                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects, GetStreamAnticipationAttribute());
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
         }
+
+        // 今朝の入金合計（朝レポートの見出し）を数えるため、朝の入金処理の前の所持金を記録する
+        if (_tomsModel != null) _morningReport?.MarkMoneyBefore(_tomsModel.PlayerMoney.Value);
 
         // 約定予定日を過ぎたのに営業サマリーを経由できなかった売り注文（配信日・イベント日を
         // 挟んだ場合）をここで精算する。借金の返済チェック(TomsShopPresenter.Entry)より
@@ -355,6 +361,8 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.SavePlayerMoney();
             }
         }
+
+        if (_tomsModel != null) _morningReport?.MarkMoneyAfter(_tomsModel.PlayerMoney.Value);
 
         // マーケティングシステムのターン処理（バズ判定・持続効果適用）
         if (_marketingFacade != null)
@@ -556,15 +564,111 @@ public class GameFlowManager : IDisposable, IStartable
         => IsAwaitingStream.Value ? PendingBattleDungeon : GetNextBattleDungeon();
 
     /// <summary>
+    /// 表示用: 次の配信先（GetUpcomingStreamDungeon）の、その次に配信するダンジョン。無ければ null。
+    /// 地図で「その次」を1つだけ見せるために使う（それより先は見せない。Docs/Map_Overlay_Spec.md R3）。
+    /// </summary>
+    public DungeonName? GetStreamDungeonAfterUpcoming()
+    {
+        if (_gameFlow == null) return null;
+
+        // 寄り道中は今のノードが「次の配信」なので、この先で最初に見つかる配信が「その次」
+        bool upcomingCounted = IsAwaitingStream.Value && PendingBattleDungeon.HasValue;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var node = _gameFlow.GameFlowStack[i];
+            if (node.EventType != GameEvent.Battle) continue;
+            if (!upcomingCounted)
+            {
+                upcomingCounted = true;
+                continue;
+            }
+            return node.BattleDungeon;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// 表示用: 次の配信まであと何日か。今日が配信日（寄り道中）なら 0、明日なら 1。配信が無ければ -1。
     /// GetTurnsUntilNextBattle は「次のノードから配信の手前まで」の日数で、前日に 0 になる
     /// （AutoPlay がその意味を前提にしているので変えない）。画面に出すときはこちらを使う。
     /// </summary>
+    /// <summary>
+    /// 配信前の期待を乗せる属性（次の配信先の弱点）。配信まで streamAnticipationDays 日以内のときだけ返す。
+    /// 弱点は情報屋で買う情報だが、相場は世間の期待として動く（値動きから推せるのは「どれかが上がっている」まで。Docs/ShopEconomy.md §11）。
+    /// </summary>
+    private ItemTypeData.ItemAttribute? GetStreamAnticipationAttribute()
+    {
+        if (_economySettings == null || _economySettings.streamAnticipationDays <= 0
+            || (_economySettings.streamAnticipationDemandUp == 0f && _economySettings.streamAnticipationPriceUp == 0f)) return null;
+        int days = GetDaysUntilNextStream();
+        if (days < 1 || days > _economySettings.streamAnticipationDays) return null;
+        var key = GetNextBattleDungeon();
+        if (!key.HasValue || _dungeonRepository == null) return null;
+        var dungeon = _dungeonRepository.GetById(key.Value);
+        return dungeon != null ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
+    }
+
     public int GetDaysUntilNextStream()
     {
         if (IsAwaitingStream.Value) return 0;
         int turns = GetTurnsUntilNextBattle();
         return turns < 0 ? -1 : turns + 1;
+    }
+
+    /// <summary>
+    /// 表示用: 次の配信（寄り道中は今日の配信）がこのランで何回目か（upcoming、1 始まり。もう無ければ 0）と、配信の総数（total）。
+    /// HUD の「配信 2/4」と、最後の配信の知らせ（K-11）に使う。
+    /// </summary>
+    public void GetStreamProgress(out int upcoming, out int total)
+    {
+        upcoming = 0;
+        total = 0;
+        if (_gameFlow == null) return;
+        // 寄り道中は今のノードが配信。それ以外は次のノードから先で最初の配信
+        int firstUpcomingIndex = IsAwaitingStream.Value ? _currentIndex : _currentIndex + 1;
+        for (int i = 0; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType != GameEvent.Battle) continue;
+            total++;
+            if (upcoming == 0 && i >= firstUpcomingIndex) upcoming = total;
+        }
+    }
+
+    /// <summary>表示用: 今日より後に残っている店の日数（配信日・イベント・終わりは数えない）。レリック3択の目安に使う。</summary>
+    public int GetRemainingShopDays()
+    {
+        if (_gameFlow == null) return 0;
+        int days = 0;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            var t = _gameFlow.GameFlowStack[i].EventType;
+            if (t == GameEvent.Shop) days++;
+        }
+        return days;
+    }
+
+    /// <summary>表示用: 次の配信がこのランの最後の配信か（配信が残っていなければ false）。</summary>
+    public bool IsUpcomingStreamFinal()
+    {
+        GetStreamProgress(out int upcoming, out int total);
+        return upcoming > 0 && upcoming == total;
+    }
+
+    /// <summary>
+    /// 表示用: 今日までに配信した日（ターン番号）の一覧。価格チャートの「配信の印」に使う。
+    /// 寄り道中の今日の配信はまだ決着していないので含めない。
+    /// </summary>
+    public List<int> GetPastStreamTurns()
+    {
+        var result = new List<int>();
+        if (_gameFlow == null) return result;
+        int last = IsAwaitingStream.Value ? _currentIndex - 1 : _currentIndex;
+        for (int i = 0; i <= last && i < _gameFlow.GameFlowStack.Count; i++)
+        {
+            if (_gameFlow.GameFlowStack[i].EventType == GameEvent.Battle)
+                result.Add(CalculateTurnNumber(i));
+        }
+        return result;
     }
 
     /// <summary>
@@ -666,7 +770,7 @@ public class GameFlowManager : IDisposable, IStartable
         }
 
         var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
-        int dungeonLevel = dungeonData?.currentDungeonLevel ?? 1;
+        int dungeonLevel = dungeonData?.currentDungeonLevel ?? DungeonLevels.Unfunded; // Lv0 は戦闘は Lv1 と同じ・配当なし
         _battleInputData.Setup(
             node.BattleDungeon,
             dungeonLevel,

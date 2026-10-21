@@ -21,8 +21,8 @@ MonoBehaviour:
     minItemStock: 0
     initMoney: 100000
     debtPaymentInterval: 7
-    debtBaseAmount: 5000
-    debtMultiplier: 1.8
+    debtBaseAmount: 15000
+    debtMultiplier: 1.5
     heroExpPerMob: 10
     heroExpPerBoss: 100
     heroBaseExpToNextLevel: 100
@@ -71,7 +71,7 @@ MonoBehaviour:
       declineGoldRare: 1200
       declineGoldEpic: 2500
     preparation:
-      bankCarryLimits: 8813000010270000204e000050c30000
+      bankCarryLimits: 50c30000a0860100400d0300801a0600
       baseCarrySlots: 2
       borrowInterestRate: 0.5
       creditLineAmounts: 000000008813000010270000204e0000
@@ -79,17 +79,54 @@ MonoBehaviour:
       metaCurrencyDivisor: 5000
       rankBonuses: c800000078000000460000002800000014000000
       metaCurrencyPerTurn: 2
-      flyerCost: 100000
+      flyerCost: 300000
       flyerAttention: 20
       flyerFollowers: 100
-      appraisalCost: 150000
+      appraisalCost: 500000
       appraisalDemandBoost: 0.15
-      graceCost: 200000
+      graceCost: 700000
       graceDiscountRate: 0.3
     village:
-      conversionRate: 0.5
-      bankruptcyConversionRate: 0.1
+      conversionRate: 25
+      bankruptcyConversionRate: 0.2
       debtScalePerVillageLevel: 0
+      difficultyConversionMultipliers:
+      - 1
+      - 1.2
+      - 1.4
+      clearBaseFunds: e0930400d0dd0600c0270900
+      rankBaseProfits: 60ea0000d0fb0100605b0300
+      rankSRatio: 2
+      rankBRatio: 0.4
+      guildDeclineBonusLevel: 2
+      guildDeclineGoldMultiplier: 1.5
+      guildExtraChoiceLevel: 3
+      guildStarterRareLevel: 1
+      tavernInfoBrokerLevel: 1
+      tavernNewspaperDiscounts:
+      - 0
+      - 0
+      - 0.25
+      - 0.5
+      tavernFundFeeReductions:
+      - 0
+      - 0
+      - 0
+      - 0.01
+      artisanBlacksmithLevel: 1
+      artisanCostDiscounts:
+      - 0
+      - 0
+      - 0.15
+      - 0.15
+      artisanMachineSlotAdds: 00000000000000000000000001000000
+      plazaStartFollowers: 00000000f4010000f4010000e8030000
+      plazaStartAttention: 000000000a0000000a00000014000000
+      plazaStreamSalesBonuses:
+      - 0
+      - 0
+      - 0.05
+      - 0.1
     battleTempo:
       speedMultiplier: 1
       logSeconds: 0.4

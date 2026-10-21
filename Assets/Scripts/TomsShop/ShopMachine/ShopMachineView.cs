@@ -39,6 +39,12 @@ public class ShopMachineView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI messageText;
     [SerializeField] private Button closeButton;
 
+    [Header("「店」画面のタブ（改装／設備） ※未配線でも動作する")]
+    [SerializeField] private ShopFacilityTabsView tabs;
+
+    /// <summary>改装タブへ切り替えたい（タブのクリック・LB/RB）。</summary>
+    public Observable<Unit> OnUpgradeTabRequested => tabs != null ? tabs.OnOtherTabRequested : Observable.Empty<Unit>();
+
     public Subject<Unit> OnPurchaseClicked { get; } = new();
     public Subject<Unit> OnRemoveClicked { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
@@ -159,8 +165,10 @@ public class ShopMachineView : MonoBehaviour
         slotCounterText.color = used >= max ? new Color(1f, 0.55f, 0.35f) : Color.white;
     }
 
-    public void ShowDetail(ShopMachineData machine, int placedCount, bool canPurchase, int removeRefund)
+    /// <param name="purchaseCost">実際に払う額（村の割引込み）。負なら定価 machine.cost を出す。</param>
+    public void ShowDetail(ShopMachineData machine, int placedCount, bool canPurchase, int removeRefund, int purchaseCost = -1)
     {
+        int cost = purchaseCost >= 0 ? purchaseCost : machine.cost;
         if (detailIcon != null)
         {
             detailIcon.sprite = machine.icon;
@@ -172,8 +180,8 @@ public class ShopMachineView : MonoBehaviour
         if (detailCostText != null)
         {
             detailCostText.text = placedCount > 0
-                ? $"{machine.cost:N0}G　設置中×{placedCount}（撤去で {removeRefund:N0}G 返金）"
-                : $"{machine.cost:N0}G";
+                ? $"{cost:N0}G　設置中×{placedCount}（撤去で {removeRefund:N0}G 返金）"
+                : $"{cost:N0}G";
         }
 
         // 複数設置可: 購入ボタンは常に表示（枠・資金・店Lvで interactable 制御）

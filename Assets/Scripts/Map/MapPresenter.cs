@@ -55,6 +55,8 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
 
         // 次の行き先は鍛冶屋ヘッダーと同じ取り方（配信前の寄り道中は今日配信するダンジョン）
         DungeonName? nextKey = gameFlowManager != null ? gameFlowManager.GetUpcomingStreamDungeon() : null;
+        // その次の行き先も1つだけ出す（2手先の仕込みのため。それより先は出さない）
+        DungeonName? afterNextKey = gameFlowManager != null ? gameFlowManager.GetStreamDungeonAfterUpcoming() : null;
 
         string nextText = null;
         if (nextKey.HasValue)
@@ -72,12 +74,12 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
             // 弱点は情報屋・新聞で知ったかで開示（鍛冶屋ヘッダーと同じ判定）
             bool bought = data.isShowedInfo;
             bool weaknessKnown = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(data.key);
-            string probability = "??%";
+            string probability = "？";
             if (bought)
             {
                 float p = ClearProbabilityCalculator.Calculate(
                     heroModel.heroData, itemModel, data, data.currentDungeonLevel, relicResolver);
-                probability = $"{p:F0}%";
+                probability = ClearProbabilityCalculator.FormatOutlook(p);
             }
 
             bool isNext = nextKey.HasValue && nextKey.Value == data.key;
@@ -85,12 +87,13 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
             {
                 Key = data.key,
                 Name = data.dungeonName,
-                LevelText = bought ? $"Lv.{data.currentDungeonLevel}" : "Lv.???",
-                WeaknessText = weaknessKnown ? $"弱点:{ItemAttributeText.ToJapanese(data.requiredAttribute)}" : "弱点:?",
+                LevelText = bought ? DungeonLevels.Label(data.currentDungeonLevel) : "Lv.???",
+                WeaknessText = ItemAttributeText.Weakness(data.requiredAttribute, weaknessKnown),
                 ProbabilityText = probability,
                 Status = data.dungeonStatus,
                 IsNext = isNext,
                 NextText = isNext ? nextText : null,
+                IsAfterNext = afterNextKey.HasValue && afterNextKey.Value == data.key,
             });
         }
         return list;
@@ -107,11 +110,12 @@ public class MapPresenter : IPresenter, IStartable, IDisposable
             var data = dungeonRepository.GetById(key);
             if (data == null) return;
 
-            // 勇者の現在ステータスでのクリア確率（現在のダンジョンレベル基準）
+            // 勇者の現在ステータスでのクリア見込み（現在のダンジョンレベル基準）
             float clearProbability = ClearProbabilityCalculator.Calculate(
                 heroModel.heroData, itemModel, data, data.currentDungeonLevel, relicResolver);
+            bool weaknessKnown = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(data.key);
 
-            dungeonInfoView.ShowDungeonInfo(data, clearProbability);
+            dungeonInfoView.ShowDungeonInfo(data, clearProbability, weaknessKnown);
         }).AddTo(disposable);
 
         mapView.OnBackRequested

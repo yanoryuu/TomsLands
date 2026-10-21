@@ -33,6 +33,9 @@ public class GameLifetimeScope : LifetimeScope
 
     protected override void Configure(IContainerBuilder builder)
     {
+        // 村の施設の効果（次のランに効く分）を選択中スロットの metaData.json から読み直す（VillageEffects.Current）
+        VillageEffects.Refresh();
+
         // --- 1. Infrastructure / Data Setup ---
         // マスターデータのロードと登録
         // スプレッドシート由来の上書きを適用してから登録（以降の master 参照すべてに反映される）
@@ -113,6 +116,7 @@ public class GameLifetimeScope : LifetimeScope
             Debug.LogWarning("[GameLifetimeScope] FinanceSettings.asset が見つかりません。デフォルト値で生成しました。Create > ScriptableObjects > Finance > FinanceSettings で作成し Addressables に登録してください。");
         }
         financeSettings = RemoteBalance.ApplyOverwrite("finance", financeSettings);
+        financeSettings = ApplyVillageFundFee(financeSettings);
         builder.RegisterInstance(financeSettings);
 
         var financialProducts = AddressableLoader.LoadAll<FinancialProductData>("FinancialProductData");
@@ -377,6 +381,9 @@ public class GameLifetimeScope : LifetimeScope
         // マーケティングシステムのファサード（統合窓口）
         builder.RegisterEntryPoint<MarketingFacade>().AsSelf();
 
+        // Steam 実績の判定（各 Model を購読するだけ。どの処理の順番にも関わらない）
+        builder.RegisterEntryPoint<AchievementTracker>();
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         // --- 6. デバッグメニュー（F12で開閉、リリースビルドには含まれない） ---
         builder.RegisterComponentOnNewGameObject<DebugMenuView>(Lifetime.Singleton, "DebugMenu");
@@ -384,6 +391,24 @@ public class GameLifetimeScope : LifetimeScope
 #endif
 
         Debug.Log("GameLifetimeScope configured.");
+    }
+
+    /// <summary>
+    /// 村の酒場（情報局）によるファンドの売買手数料の引き下げを反映した複製を返す（効果が無ければそのまま）。
+    /// ベイク済みアセットを直接書き換えないよう、必ず複製してから変える。
+    /// </summary>
+    private static FinanceSettings ApplyVillageFundFee(FinanceSettings settings)
+    {
+        var effects = VillageEffects.Current;
+        float buy = effects.ApplyFundFee(settings.fundBuyFeeRate);
+        float sell = effects.ApplyFundFee(settings.fundSellFeeRate);
+        if (Mathf.Approximately(buy, settings.fundBuyFeeRate) && Mathf.Approximately(sell, settings.fundSellFeeRate))
+            return settings;
+        var clone = Instantiate(settings);
+        clone.name = settings.name;
+        clone.fundBuyFeeRate = buy;
+        clone.fundSellFeeRate = sell;
+        return clone;
     }
 
     /// <summary>

@@ -15,9 +15,9 @@ MonoBehaviour:
   advertisementName: "SNS\u5E83\u544A"
   icon: {fileID: -383429797838547754, guid: df7fac4807b58444c9d37ccc35e116b4, type: 3}
   selectedBackground: {fileID: -1843028302627794106, guid: 2f0b892e10da27e43847221aca56d1e3, type: 3}
-  cost: 1000
+  cost: 100000
   trustGain: 0
-  attentionGain: 40
+  attentionGain: 400
   spreadGain: 0
-  retentionGain: 20
+  retentionGain: 200
   followerGain: 0

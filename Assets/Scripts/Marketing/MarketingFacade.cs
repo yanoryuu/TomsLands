@@ -26,6 +26,10 @@ public class MarketingFacade : IStartable, IDisposable
     private readonly FollowerSystem _followerSystem;
     private readonly SalesCalculator _salesCalculator;
     private readonly CompositeDisposable _disposables = new();
+    private readonly Subject<BuzzTurnResult> turnProcessed = new();
+
+    /// <summary>日送りのマーケティング処理（バズ判定）が終わった。1日1回。実績のバズ連続日数の判定用。</summary>
+    public Observable<BuzzTurnResult> OnTurnProcessed => turnProcessed;
 
     public MarketingFacade(
         ShopStatusModel statusModel,
@@ -97,6 +101,9 @@ public class MarketingFacade : IStartable, IDisposable
     {
         Debug.Log("[MarketingFacade] ===== ターン処理開始 =====");
 
+        // 広告ステータスの毎朝の減衰（H-3。バズの判定より前＝今日の値で判定する）
+        _statusModel.ApplyDailyDecay();
+
         // バズシステムのターン処理
         var result = _buzzSystem.ProcessTurnStart();
 
@@ -119,6 +126,7 @@ public class MarketingFacade : IStartable, IDisposable
 
         Debug.Log("[MarketingFacade] ===== ターン処理完了 =====");
 
+        turnProcessed.OnNext(result);
         return result;
     }
 

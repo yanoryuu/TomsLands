@@ -1003,11 +1003,33 @@
                 },
                 {
                     "name": "",
+                    "id": "be333765-0081-4740-8090-6ca9064639ef",
+                    "path": "<Keyboard>/f",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "ButtonX",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "62a87383-45c2-40f8-a9ef-9ef3857681ce",
                     "path": "<Gamepad>/buttonNorth",
                     "interactions": "",
                     "processors": "",
                     "groups": "Gamepad",
+                    "action": "ButtonY",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aaa07524-2005-4c54-bd5d-bc7cc9fd87ef",
+                    "path": "<Keyboard>/r",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
                     "action": "ButtonY",
                     "isComposite": false,
                     "isPartOfComposite": false

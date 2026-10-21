@@ -35,6 +35,9 @@ public class BuzzEffectData : ScriptableObject
     [Tooltip("拡散力による売上倍率ボーナス係数（売上倍率 += 拡散力 × この値）")]
     public float immediateRevenueSpreadCoeff = 0.01f;
 
+    [Tooltip("売上倍率の上限（0 = 上限なし）。拡散力を積むだけで倍率が伸び続けないようにする（H-3）")]
+    public float immediateRevenueMultiplierMax = 0f;
+
     [Header("即時効果 ─ ステータス変化")]
     [Tooltip("信頼度の変化量（マイナスも可）")]
     public int immediateTrustChange;
@@ -103,8 +106,12 @@ public class BuzzEffectData : ScriptableObject
     /// 即時売上倍率を計算する
     /// 計算式: 基礎値 + (拡散力 × 拡散力係数)
     /// </summary>
-    public float CalculateRevenueMultiplier(int spreadPower) =>
-        immediateRevenueMultiplierBase + spreadPower * immediateRevenueSpreadCoeff;
+    public float CalculateRevenueMultiplier(int spreadPower)
+    {
+        float m = immediateRevenueMultiplierBase + spreadPower * immediateRevenueSpreadCoeff;
+        // 上限（H-3）。拡散力を積むほど倍率が際限なく伸びていた（拡散1000で ×12.5）
+        return immediateRevenueMultiplierMax > 0f ? Mathf.Min(m, immediateRevenueMultiplierMax) : m;
+    }
 
     /// <summary>
     /// 即時フォロワー変化量を計算する

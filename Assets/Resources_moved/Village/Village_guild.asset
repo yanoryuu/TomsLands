@@ -14,24 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   facilityId: guild
   facilityName: "\u5192\u967A\u8005\u30AE\u30EB\u30C9"
-  description: "\u8155\u5229\u304D\u304C\u96C6\u307E\u308C\u3070\u304A\u5B9D\u3082\u96C6\u307E\u308B\u3002"
+  description: "\u8155\u5229\u304D\u304C\u96C6\u307E\u308C\u3070\u3001\u304A\u5B9D\u306E\u8A71\u3082\u96C6\u307E\u308B\u3002"
   icon: {fileID: 0}
   requiredHallLevel: 0
   levels:
-  - cost: 4000
-    effectText: "\u30EC\u30EA\u30C3\u30AF Tier1\uFF085\u7A2E\uFF09\u304C\u5831\u916C\u306E\u62BD\u9078\u306B\u52A0\u308F\u308B"
+  - cost: 400000
+    effectText: "\u914D\u4FE1\u306E\u5831\u916C\u306B\u51FA\u308B\u30EC\u30EA\u30C3\u30AF
+      +5\u7A2E\u30FB\u30B9\u30BF\u30FC\u30BF\u30FC\u306B\u30EC\u30A2\u304C\u4E26\u3076"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 10000
-    effectText: "\u30EC\u30EA\u30C3\u30AF Tier2\uFF084\u7A2E\uFF09\u304C\u52A0\u308F\u308B"
+  - cost: 1000000
+    effectText: "\u5831\u916C\u306E\u30EC\u30EA\u30C3\u30AF +9\u7A2E\u30FB3\u629E\u3092\u8F9E\u9000\u3057\u305F\u3068\u304D\u306E\u8CB7\u53D6
+      +50%"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 20000
-    effectText: "\u30EC\u30EA\u30C3\u30AF Tier3\uFF084\u7A2E\uFF09\u304C\u52A0\u308F\u308B"
+  - cost: 2400000
+    effectText: "\u5831\u916C\u306E\u30EC\u30EA\u30C3\u30AF +13\u7A2E\u30FB\u5831\u916C\u306E\u9078\u629E\u80A2\u304C4\u3064\u306B\u306A\u308B"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []

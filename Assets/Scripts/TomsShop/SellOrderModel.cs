@@ -21,6 +21,10 @@ public class SellOrderModel
     /// <summary>未約定注文の見込み入金額合計（注文時価格ベース）。UIバインド用。</summary>
     public ReactiveProperty<int> PendingTotalEstimate { get; } = new(0);
 
+    private readonly Subject<SellSettlementResult> settled = new();
+    /// <summary>注文が約定して入金額が決まった（通常・持ち越し・返済前倒しのどれでも。実績の「入金」判定用）。</summary>
+    public Observable<SellSettlementResult> OnSettled => settled;
+
     public SellOrderModel()
     {
         LoadData();
@@ -42,6 +46,7 @@ public class SellOrderModel
             OrderedPrice = item.CurrentPrice.Value,
             OrderedTurn = currentTurn,
             SettleTurn = currentTurn + Mathf.Max(1, delayTurns),
+            UnitCost = item.AverageCost,
         };
         PendingOrders.Add(order);
         RefreshEstimate();
@@ -98,6 +103,7 @@ public class SellOrderModel
                 OrderedPrice = order.OrderedPrice,
                 SettledPrice = settledPrice,
                 Income = income,
+                UnitCost = order.UnitCost,
             });
             result.BaseIncome = TomsModel.SaturatingAdd(result.BaseIncome, income);
 
@@ -109,10 +115,20 @@ public class SellOrderModel
             ? marketing.CalculateFinalRevenue(result.BaseIncome)
             : result.BaseIncome;
 
+        // 実現損益（F-1）: 倍率込みの入金を注文ごとに按分し、取得単価×数量を引く
+        double mul = result.BaseIncome > 0 ? (double)result.TotalIncome / result.BaseIncome : 1.0;
+        foreach (var s in result.Settled)
+        {
+            if (s.UnitCost < 0) { result.UnknownCostCount++; continue; }
+            result.KnownCostIncome = TomsModel.SaturatingAdd(result.KnownCostIncome, (int)Math.Min(int.MaxValue, Math.Round(s.Income * mul)));
+            result.KnownCostBasis = TomsModel.SaturatingAdd(result.KnownCostBasis, (int)Math.Min(int.MaxValue, (double)s.UnitCost * s.Quantity));
+        }
+
         RefreshEstimate();
         RunHistory.RecordSettlement(result); // リザルトの「一番儲かった商品」用
 
         Debug.Log($"[SellOrder] 約定: {result.Settled.Count}件 → 入金 {result.TotalIncome}G（基本 {result.BaseIncome}G）");
+        settled.OnNext(result);
         return result;
     }
 

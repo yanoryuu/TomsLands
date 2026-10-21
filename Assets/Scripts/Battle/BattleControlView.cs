@@ -16,6 +16,10 @@ public class BattleControlView : MonoBehaviour
     [Header("End Battle")]
     [SerializeField] private Button endBattleButton;
 
+    [Header("配信の速さ（×1 / ×2）。未配線なら切り替えなし")]
+    [SerializeField] private Button speedButton;
+    [SerializeField] private TextMeshProUGUI speedButtonText;
+
     [Header("在庫補充（数量選択）")]
     [Tooltip("数量を選べる補充ポップアップ。未設定の場合は従来の10個固定ポップアップにフォールバックする")]
     [SerializeField] private RestockQuantityPopup restockQuantityPopup;
@@ -29,6 +33,7 @@ public class BattleControlView : MonoBehaviour
 
     public Subject<Unit> OnPauseToggled { get; } = new();
     public Subject<Unit> OnEndBattleRequested { get; } = new();
+    public Subject<Unit> OnSpeedToggled { get; } = new();
 
     private PopUpManager popUpManager;
 
@@ -41,6 +46,16 @@ public class BattleControlView : MonoBehaviour
             pauseButton.onClick.AddListener(() => OnPauseToggled.OnNext(Unit.Default));
         if (endBattleButton != null)
             endBattleButton.onClick.AddListener(() => OnEndBattleRequested.OnNext(Unit.Default));
+        if (speedButton != null)
+            speedButton.onClick.AddListener(() => OnSpeedToggled.OnNext(Unit.Default));
+        UpdateSpeedButtonText();
+    }
+
+    /// <summary>×1 / ×2 ボタンの表示を今の倍率に合わせる。</summary>
+    public void UpdateSpeedButtonText()
+    {
+        if (speedButtonText != null) speedButtonText.text = BattleSpeed.Label;
+        if (speedButton != null) UIFx.Pop(speedButton.transform, 0.9f, 0.14f);
     }
 
     public void UpdatePauseButtonText(bool isPaused)

@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 10,
   "schemaVersion": 1,
   "updatedAt": "2026-10-05T02:18:49.028Z",
   "shopEconomy": {
@@ -29,29 +29,47 @@
     "trendAmplitude": 0.3,
     "trendConvergenceRate": 0.15,
     "trendDriftMax": 0.12,
-    "trendDecayRate": 0.1
+    "trendDecayRate": 0.1,
+    "useShopCustomerCap": true,
+    "customersAtNeutralDemand": 32,
+    "customerBaseShare": 0.2,
+    "customerDemandSlope": 1.6,
+    "customerFollowerWeight": 0.25,
+    "customerAttentionBoost": 0.3,
+    "sellPressureStrength": 0.04,
+    "sellPressureDepth": 40,
+    "sellPressureMaxDrop": 0.15,
+    "streamAnticipationDays": 3,
+    "streamAnticipationDemandUp": 0.04,
+    "streamAnticipationPriceUp": 0.03
   },
   "gameBalance": {
     "statMin": 0,
     "statMax": 1000,
     "followerMin": 0,
-    "buzzAttentionCoeff": 0.5,
-    "buzzTrustCoeff": 0.2,
+    "buzzAttentionCoeff": 0.05,
+    "buzzTrustCoeff": 0.02,
     "buzzMaxBaseChance": 50,
-    "flameTrustThreshold": 50,
+    "flameTrustThreshold": 500,
     "flameChance": 30,
-    "bigBuzzTrustThreshold": 80,
+    "bigBuzzTrustThreshold": 800,
     "buzzBaseChance": 10,
     "buzzMaxChance": 20,
     "bigBuzzBaseChance": 1,
     "bigBuzzMaxChance": 5,
     "buzzContinueChance": 50,
     "buzzEvolveToBigChance": 20,
-    "initialTrust": 50,
+    "initialTrust": 500,
     "initialAttention": 0,
     "initialSpread": 0,
     "initialRetention": 0,
-    "initialFollowers": 0
+    "initialFollowers": 0,
+    "buzzContinueRetentionBonus": 35,
+    "buzzContinueChanceMax": 85,
+    "attentionDecayRate": 0.1,
+    "spreadDecayRate": 0.1,
+    "retentionDecayRate": 0.05,
+    "trustDecayRate": 0
   },
   "battlePrice": {
     "weaponPriceUpOnHit": 1.1,
@@ -86,17 +104,18 @@
     "fundSellFeeRate": 0.02,
     "forcedSaleExtraFeeRate": 0.1,
     "bondEarlyRedemptionRate": 0.85,
-    "navHistoryCapacity": 12
+    "navHistoryCapacity": 12,
+    "bondUnitCapPerInfoLevel": 10
   },
   "advertisements": [
     {
       "id": "総合マーケティング",
       "advertisementName": "総合マーケティング",
       "cost": "300000",
-      "trustGain": "1500",
-      "attentionGain": "1500",
-      "spreadGain": "1500",
-      "retentionGain": "1500",
+      "trustGain": "150",
+      "attentionGain": "150",
+      "spreadGain": "150",
+      "retentionGain": "150",
       "followerGain": "0",
       "statMax": "0"
     },
@@ -105,7 +124,7 @@
       "advertisementName": "SNSフォロワーキャンペーン",
       "cost": "120000",
       "trustGain": "0",
-      "attentionGain": "1000",
+      "attentionGain": "100",
       "spreadGain": "0",
       "retentionGain": "0",
       "followerGain": "10000",
@@ -116,8 +135,8 @@
       "advertisementName": "インフルエンサー起用",
       "cost": "200000",
       "trustGain": "0",
-      "attentionGain": "2000",
-      "spreadGain": "3000",
+      "attentionGain": "200",
+      "spreadGain": "400",
       "retentionGain": "0",
       "followerGain": "0",
       "statMax": "0"
@@ -126,10 +145,10 @@
       "id": "リピーター施策",
       "advertisementName": "リピーター施策",
       "cost": "180000",
-      "trustGain": "2000",
+      "trustGain": "200",
       "attentionGain": "0",
       "spreadGain": "0",
-      "retentionGain": "3000",
+      "retentionGain": "400",
       "followerGain": "0",
       "statMax": "0"
     },
@@ -138,9 +157,9 @@
       "advertisementName": "SNS広告",
       "cost": "100000",
       "trustGain": "0",
-      "attentionGain": "3000",
+      "attentionGain": "400",
       "spreadGain": "0",
-      "retentionGain": "2000",
+      "retentionGain": "200",
       "followerGain": "0",
       "statMax": "0"
     },
@@ -148,9 +167,9 @@
       "id": "口コミキャンペーン",
       "advertisementName": "口コミキャンペーン",
       "cost": "150000",
-      "trustGain": "3000",
+      "trustGain": "400",
       "attentionGain": "0",
-      "spreadGain": "2000",
+      "spreadGain": "200",
       "retentionGain": "0",
       "followerGain": "0",
       "statMax": "0"
@@ -161,64 +180,67 @@
       "id": "Big",
       "buzzType": "2",
       "immediateRevenueMultiplierBase": "2.5",
-      "immediateRevenueSpreadCoeff": "0.01",
-      "immediateTrustChange": "15",
-      "immediateAttentionChange": "20",
+      "immediateRevenueSpreadCoeff": "0.001",
+      "immediateTrustChange": "150",
+      "immediateAttentionChange": "200",
       "immediateFollowerBase": "0",
-      "immediateFollowerSpreadCoeff": "30",
+      "immediateFollowerSpreadCoeff": "3",
       "immediateFollowerFixed": "0",
       "durationBase": "3",
-      "durationRetentionDivisor": "25",
-      "sustainedAllStatGain": "5",
+      "durationRetentionDivisor": "250",
+      "sustainedAllStatGain": "50",
       "sustainedFollowerGain": "300",
       "sustainedTrustChange": "0",
       "sustainedRevenueMultiplier": "0",
       "sustainedAdDiscountRate": "0.3",
-      "afterTrustChange": "20",
+      "afterTrustChange": "200",
       "afterAttentionChange": "0",
-      "afterGrantFreeMarketing": "1"
+      "afterGrantFreeMarketing": "1",
+      "immediateRevenueMultiplierMax": "3.5"
     },
     {
       "id": "Flame",
       "buzzType": "0",
       "immediateRevenueMultiplierBase": "0.5",
       "immediateRevenueSpreadCoeff": "0",
-      "immediateTrustChange": "-30",
-      "immediateAttentionChange": "20",
+      "immediateTrustChange": "-300",
+      "immediateAttentionChange": "200",
       "immediateFollowerBase": "-500",
       "immediateFollowerSpreadCoeff": "0",
       "immediateFollowerFixed": "1",
       "durationBase": "3",
-      "durationRetentionDivisor": "25",
+      "durationRetentionDivisor": "250",
       "sustainedAllStatGain": "0",
       "sustainedFollowerGain": "0",
-      "sustainedTrustChange": "-5",
+      "sustainedTrustChange": "-50",
       "sustainedRevenueMultiplier": "0.5",
       "sustainedAdDiscountRate": "0",
       "afterTrustChange": "0",
-      "afterAttentionChange": "-10",
-      "afterGrantFreeMarketing": "0"
+      "afterAttentionChange": "-100",
+      "afterGrantFreeMarketing": "0",
+      "immediateRevenueMultiplierMax": "0"
     },
     {
       "id": "Normal",
       "buzzType": "1",
       "immediateRevenueMultiplierBase": "1.5",
-      "immediateRevenueSpreadCoeff": "0.01",
-      "immediateTrustChange": "5",
+      "immediateRevenueSpreadCoeff": "0.001",
+      "immediateTrustChange": "50",
       "immediateAttentionChange": "0",
       "immediateFollowerBase": "0",
-      "immediateFollowerSpreadCoeff": "10",
+      "immediateFollowerSpreadCoeff": "1",
       "immediateFollowerFixed": "0",
       "durationBase": "3",
-      "durationRetentionDivisor": "25",
-      "sustainedAllStatGain": "2",
+      "durationRetentionDivisor": "250",
+      "sustainedAllStatGain": "20",
       "sustainedFollowerGain": "100",
       "sustainedTrustChange": "0",
       "sustainedRevenueMultiplier": "0",
       "sustainedAdDiscountRate": "0",
-      "afterTrustChange": "10",
+      "afterTrustChange": "100",
       "afterAttentionChange": "0",
-      "afterGrantFreeMarketing": "0"
+      "afterGrantFreeMarketing": "0",
+      "immediateRevenueMultiplierMax": "2.5"
     }
   ],
   "followerMilestones": [
@@ -265,7 +287,7 @@
       "key": "1",
       "dungeonName": "灼熱の火山牢",
       "dungeonDescription": "マグマが流れる火山の中に築かれた古代の監獄。今や炎をまとう魔物たちが跋扈する無法地帯と化している。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "5",
       "difficulty": "5",
       "requiredAttribute": "1"
@@ -275,7 +297,7 @@
       "key": "5",
       "dungeonName": "魔王城",
       "dungeonDescription": "世界の頂、空の果て。そこが最後の決戦の地、魔王城。城の周囲を覆う瘴気と闇が、魔王の強大な力を物語っている。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "10",
       "difficulty": "10",
       "requiredAttribute": "4"
@@ -285,7 +307,7 @@
       "key": "3",
       "dungeonName": "深緑の獣林",
       "dungeonDescription": "光が差し込まない鬱蒼とした森。魔獣と木の魔物の巣窟で、\n多くの新人冒険者がこの地を訪れる。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "1",
       "difficulty": "1",
       "requiredAttribute": "0"
@@ -295,7 +317,7 @@
       "key": "2",
       "dungeonName": "氷霧の洞窟",
       "dungeonDescription": "雪と氷に閉ざされた洞窟。視界の悪さに加え、肌を刺すような寒さが冒険者を襲う。滑りやすい氷の床にも注意が必要だ。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "3",
       "difficulty": "3",
       "requiredAttribute": "2"
@@ -305,7 +327,7 @@
       "key": "0",
       "dungeonName": "忘却の霊廟",
       "dungeonDescription": "かつての偉大なる王が眠る巨大な地下墓地。闇に魅入られた死者たちがさまよい、訪れし者たちの精神を蝕む。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "7",
       "difficulty": "7",
       "requiredAttribute": "4"
@@ -315,7 +337,7 @@
       "key": "4",
       "dungeonName": "古代機構城メタリオン",
       "dungeonDescription": "魔王軍の技術によって建造された鋼鉄の城塞。無数の歯車と機関が絶えず稼働し、その隙間からは聖なる光の残り火が漏れる。中に潜むモンスターたちは侵入者をすべて排除する。",
-      "initDungeonLevel": "1",
+      "initDungeonLevel": "0",
       "recommendedLevel": "8",
       "difficulty": "9",
       "requiredAttribute": "5"
@@ -498,16 +520,12 @@
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 1000000,
-          "effectText": "全施設の Lv2 への拡張を解禁"
+          "cost": 600000,
+          "effectText": "ほかの施設を Lv2 まで建てられる"
         },
         {
-          "cost": 4000000,
-          "effectText": "全施設の Lv3 への拡張と、祠の建設を解禁"
-        },
-        {
-          "cost": 10000000,
-          "effectText": "産業の土地スロット +1（産業投資は今後実装）"
+          "cost": 2400000,
+          "effectText": "ほかの施設を Lv3 まで建てられる"
         }
       ]
     },
@@ -517,129 +535,16 @@
       "requiredHallLevel": 0,
       "levels": [
         {
+          "cost": 400000,
+          "effectText": "配信の報酬に出るレリック +5種・スターターにレアが並ぶ"
+        },
+        {
           "cost": 1000000,
-          "effectText": "レリック Tier1（5種）が報酬の抽選に加わる"
+          "effectText": "報酬のレリック +9種・3択を辞退したときの買取 +50%"
         },
         {
-          "cost": 2500000,
-          "effectText": "レリック Tier2（4種）が加わる"
-        },
-        {
-          "cost": 5000000,
-          "effectText": "レリック Tier3（4種）が加わる"
-        }
-      ]
-    },
-    {
-      "id": "antique",
-      "facilityName": "骨董品店",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 4500000,
-          "effectText": "スターターレリックの候補に Rare が並ぶ"
-        },
-        {
-          "cost": 2500000,
-          "effectText": "レリック3択を辞退したときの買取額 +50%"
-        }
-      ]
-    },
-    {
-      "id": "shrine",
-      "facilityName": "祠",
-      "requiredHallLevel": 2,
-      "levels": [
-        {
-          "cost": 3000000,
-          "effectText": "レリック報酬の選択肢が 3 → 4 になる"
-        }
-      ]
-    },
-    {
-      "id": "bank",
-      "facilityName": "銀行",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 5000000,
-          "effectText": "借入枠の最終段階（20,000G）の拡張を解放"
-        },
-        {
-          "cost": 12000000,
-          "effectText": "借入の利息 50% → 45%"
-        },
-        {
-          "cost": 22000000,
-          "effectText": "借入の利息 45% → 40%"
-        }
-      ]
-    },
-    {
-      "id": "warehouse",
-      "facilityName": "倉庫",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 6000000,
-          "effectText": "持ち込み枠 +1（計3）"
-        },
-        {
-          "cost": 14000000,
-          "effectText": "持ち込み枠 +1（計4）"
-        },
-        {
-          "cost": 24000000,
-          "effectText": "持ち込み枠 +1（計5）"
-        }
-      ]
-    },
-    {
-      "id": "road",
-      "facilityName": "街道整備",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 2000000,
-          "effectText": "ラン開始時の初期資金 +1,000G"
-        },
-        {
-          "cost": 6000000,
-          "effectText": "初期資金 さらに +1,000G（計+2,000G）"
-        },
-        {
-          "cost": 13000000,
-          "effectText": "初期資金 さらに +1,000G（計+3,000G）"
-        }
-      ]
-    },
-    {
-      "id": "press",
-      "facilityName": "印刷所",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 4000000,
-          "effectText": "開始時フォロワー +500・注目 +10"
-        },
-        {
-          "cost": 9000000,
-          "effectText": "さらにフォロワー +500・注目 +10（計+1,000/+20）"
-        }
-      ]
-    },
-    {
-      "id": "artisan",
-      "facilityName": "職人組合",
-      "requiredHallLevel": 0,
-      "levels": [
-        {
-          "cost": 7000000,
-          "effectText": "ラン開始時から鍛冶屋 Lv2"
-        },
-        {
-          "cost": 16000000,
-          "effectText": "鍛冶屋の開発費 -15%"
+          "cost": 2400000,
+          "effectText": "報酬のレリック +13種・報酬の選択肢が4つになる"
         }
       ]
     },
@@ -649,61 +554,73 @@
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 7000000,
+          "cost": 400000,
           "effectText": "ラン開始時から情報屋 Lv2（金融商品が最初から使える）"
         },
         {
-          "cost": 16000000,
-          "effectText": "取引所の売買手数料 -1%"
+          "cost": 900000,
+          "effectText": "情報屋 Lv2 で開始・新聞の購読料 -25%"
+        },
+        {
+          "cost": 2000000,
+          "effectText": "情報屋 Lv2 で開始・新聞の購読料 -50%・取引所の手数料 -1%"
         }
       ]
     },
     {
-      "id": "workshop",
-      "facilityName": "工房区画",
+      "id": "bank",
+      "facilityName": "銀行",
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 6000000,
-          "effectText": "マシン設置枠 +1"
+          "cost": 300000,
+          "effectText": "出店への持ち込み上限 5万G → 10万G"
         },
         {
-          "cost": 15000000,
-          "effectText": "マシンの購入費 -15%"
+          "cost": 800000,
+          "effectText": "持ち込み上限 10万G → 20万G"
+        },
+        {
+          "cost": 1500000,
+          "effectText": "持ち込み上限 20万G → 40万G"
         }
       ]
     },
     {
-      "id": "farm",
-      "facilityName": "農場",
+      "id": "artisan",
+      "facilityName": "職人組合",
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 3000000,
-          "effectText": "毎朝 +所持金の5%G（朝レポート「村からの収穫」）"
+          "cost": 400000,
+          "effectText": "ラン開始時から鍛冶屋 Lv2"
         },
         {
-          "cost": 7000000,
-          "effectText": "毎朝 +所持金の10%G"
+          "cost": 1000000,
+          "effectText": "鍛冶屋 Lv2 で開始・鍛冶屋のレベルアップ費とマシンの購入費 -15%"
         },
         {
-          "cost": 14000000,
-          "effectText": "毎朝 +所持金の20%G"
+          "cost": 2200000,
+          "effectText": "鍛冶屋 Lv2 で開始・費用 -15%・マシンの設置枠 +1"
         }
       ]
     },
     {
-      "id": "training",
-      "facilityName": "訓練所",
+      "id": "plaza",
+      "facilityName": "広場",
       "requiredHallLevel": 0,
       "levels": [
         {
-          "cost": 5000000,
-          "effectText": "配信の売上 +5%"
+          "cost": 400000,
+          "effectText": "開始時フォロワー +500・注目 +10"
         },
         {
-          "cost": 12000000,
-          "effectText": "配信の売上 +10%"
+          "cost": 1000000,
+          "effectText": "開始時フォロワー +500・注目 +10・配信の売上 +5%"
+        },
+        {
+          "cost": 2200000,
+          "effectText": "開始時フォロワー +1,000・注目 +20・配信の売上 +10%"
         }
       ]
     }
@@ -768,6 +685,112 @@
       "MaxHp": 2500,
       "Attack": 370,
       "Defense": 38
+    }
+  ],
+  "financialProducts": [
+    {
+      "id": "bond_long",
+      "productName": "ギルド長期債",
+      "description": "ギルドの遠征への出資。12日後に元本+18%で償還される。返済日との兼ね合いに注意。",
+      "kind": 0,
+      "unlockInfoBrokerLevel": 2,
+      "bondUnitPrice": 5000,
+      "bondInterestRate": 0.18,
+      "bondMaturityTurns": 12,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": false,
+      "attribute": 0
+    },
+    {
+      "id": "bond_short",
+      "productName": "ギルド短期債",
+      "description": "ギルドへの短期出資。5日後に元本+6%で償還される。満期まで資金はロックされる。",
+      "kind": 0,
+      "unlockInfoBrokerLevel": 1,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.06,
+      "bondMaturityTurns": 5,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": false,
+      "attribute": 0
+    },
+    {
+      "id": "fund_dark",
+      "productName": "闇属性ファンド",
+      "description": "闇属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。",
+      "kind": 1,
+      "unlockInfoBrokerLevel": 2,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.15,
+      "bondMaturityTurns": 8,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": true,
+      "attribute": 5
+    },
+    {
+      "id": "fund_fire",
+      "productName": "火属性ファンド",
+      "description": "火属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。",
+      "kind": 1,
+      "unlockInfoBrokerLevel": 2,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.15,
+      "bondMaturityTurns": 8,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": true,
+      "attribute": 0
+    },
+    {
+      "id": "fund_light",
+      "productName": "光属性ファンド",
+      "description": "光属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。",
+      "kind": 1,
+      "unlockInfoBrokerLevel": 2,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.15,
+      "bondMaturityTurns": 8,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": true,
+      "attribute": 4
+    },
+    {
+      "id": "fund_market",
+      "productName": "武具市場ファンド",
+      "description": "全銘柄の市場価格に連動するインデックスファンド。市場全体の地合いが分かる。いつでも解約可能。",
+      "kind": 1,
+      "unlockInfoBrokerLevel": 1,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.15,
+      "bondMaturityTurns": 8,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": false,
+      "attribute": 0
+    },
+    {
+      "id": "fund_water",
+      "productName": "水属性ファンド",
+      "description": "水属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。",
+      "kind": 1,
+      "unlockInfoBrokerLevel": 2,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.15,
+      "bondMaturityTurns": 8,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": true,
+      "attribute": 1
+    },
+    {
+      "id": "fund_wind",
+      "productName": "木属性ファンド",
+      "description": "木属性銘柄の市場価格に連動するファンド。次のダンジョンの弱点に賭けろ。いつでも解約可能。",
+      "kind": 1,
+      "unlockInfoBrokerLevel": 2,
+      "bondUnitPrice": 2000,
+      "bondInterestRate": 0.15,
+      "bondMaturityTurns": 8,
+      "fundBaseUnitPrice": 1000,
+      "useAttributeFilter": true,
+      "attribute": 2
     }
   ]
 }

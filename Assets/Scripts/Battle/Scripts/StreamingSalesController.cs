@@ -32,6 +32,23 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>売り場のアイテムが1個以上売れた時に発火する（ShopkeeperCharacter など外部購読用）。</summary>
     public event System.Action<RuntimeItemData> OnSaleOccurred;
 
+    /// <summary>
+    /// 配信中に相場が急に上がった（前回の表示から +15% 以上、または配信開始時の2倍を初めて超えた）。
+    /// 引数の int は配信開始時からの上昇率（%）。配信コメント（PriceSpike）が購読する。
+    /// </summary>
+    public event System.Action<RuntimeItemData, int> OnPriceSpike;
+
+    /// <summary>売り場（StreamingSalesView）。配信収支メーターの更新に使う（未配線なら null）。</summary>
+    public StreamingSalesView View => view;
+
+    // 相場の急変の判定（itemId → 前回見た価格 / 2倍超えを通知済みか / 最後に通知した時刻）
+    private const float PriceSpikeRate = 0.15f;
+    private const float PriceSpikeDoubleRate = 2f;
+    private const float PriceSpikeCooldownSeconds = 3f;
+    private readonly Dictionary<string, int> _spikeLastPrice = new();
+    private readonly HashSet<string> _spikeDoubled = new();
+    private readonly Dictionary<string, float> _spikeLastTime = new();
+
     /// <summary>売り場のアイテムの在庫がゼロになった時に発火する。</summary>
     public R3.Subject<RuntimeItemData> OnItemStockDepleted { get; } = new();
 
@@ -136,7 +153,8 @@ public class StreamingSalesController : MonoBehaviour
     /// <summary>
     /// BattleSceneStarterから呼ばれる初期化メソッド。
     /// BattleInputDataのSelectedItemsをInventory（在庫）に配置する。
-    /// 売り場（ItemsForSale）は空で開始し、プレイヤーが手動で配置する。
+    /// 売り場（ItemsForSale）には見込み売上（ItemModel.ExpectedRevenueOf）の高い順に売り場の枠数ぶんを最初から並べる
+    /// （空の売り場で始まると、ドラッグするまで何も売れず最初の数秒が無駄になっていた。SUMMARY E-7）。
     /// </summary>
     public void Setup(ItemModel itemModel, List<BattleInputItem> selectedItems)
     {
@@ -159,8 +177,14 @@ public class StreamingSalesController : MonoBehaviour
             }
         }
 
-        // 売り場は空、選択アイテムはInventoryに配置
-        StartStreamingPhase(itemModel, new List<RuntimeItemData>(), inventoryItems);
+        // 見込み売上の高い順に売り場へ並べ、残りは在庫側に置く
+        int sellSlots = view != null && view.ItemSlots != null ? view.ItemSlots.Count : 0;
+        var ranked = new List<RuntimeItemData>(inventoryItems);
+        ranked.Sort((a, b) => ItemModel.ExpectedRevenueOf(b).CompareTo(ItemModel.ExpectedRevenueOf(a)));
+        var forSale = new List<RuntimeItemData>();
+        for (int i = 0; i < ranked.Count && forSale.Count < sellSlots; i++) forSale.Add(ranked[i]);
+        var rest = inventoryItems.FindAll(item => !forSale.Contains(item));
+        StartStreamingPhase(itemModel, forSale, rest);
     }
 
     /// <summary>
@@ -495,6 +519,41 @@ public class StreamingSalesController : MonoBehaviour
             if (i < inventorySlotItemRefs.Count)
                 inventorySlotViews[i].SetItem(inventorySlotItemRefs[i]);
         }
+
+        if (_salesActive) DetectPriceSpikes();
+    }
+
+    /// <summary>売り場・在庫の品の値動きを見て、急に上がった品を OnPriceSpike で知らせる。</summary>
+    private void DetectPriceSpikes()
+    {
+        if (OnPriceSpike == null) return;
+        if (_model?.ItemsForSale != null)
+            foreach (var item in _model.ItemsForSale) CheckPriceSpike(item);
+        foreach (var item in inventorySlotItemRefs) CheckPriceSpike(item);
+    }
+
+    private void CheckPriceSpike(RuntimeItemData item)
+    {
+        if (item == null) return;
+        int price = item.CurrentPrice.Value;
+        int start = item.BattlePriceHistory != null && item.BattlePriceHistory.Count > 0 ? item.BattlePriceHistory[0] : price;
+        if (!_spikeLastPrice.TryGetValue(item.ItemId, out int last))
+        {
+            _spikeLastPrice[item.ItemId] = price;
+            return;
+        }
+        _spikeLastPrice[item.ItemId] = price;
+        if (price <= last || start <= 0) return;
+
+        bool jump = last > 0 && (price - last) / (float)last >= PriceSpikeRate;
+        bool doubled = price >= start * PriceSpikeDoubleRate && _spikeDoubled.Add(item.ItemId);
+        if (!jump && !doubled) return;
+
+        float now = Time.unscaledTime;
+        if (_spikeLastTime.TryGetValue(item.ItemId, out float lastTime) && now - lastTime < PriceSpikeCooldownSeconds && !doubled) return;
+        _spikeLastTime[item.ItemId] = now;
+        int percent = Mathf.RoundToInt((price - start) * 100f / start);
+        OnPriceSpike?.Invoke(item, percent);
     }
 
     /// <summary>

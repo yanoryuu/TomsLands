@@ -15,11 +15,14 @@ public class MapPurchaseSlot : MonoBehaviour
     [SerializeField] private TextMeshProUGUI priceText;
     [SerializeField] private Button infoButton;
     [SerializeField] private Button purchaseButton;
+    [Tooltip("次の配信先の印（地図の NEXT リボンと同じ見た目）。未配線なら名前の前に NEXT と付ける")]
+    [SerializeField] private GameObject nextBadge;
 
     /// <summary>行がクリックされた（選択→右の詳細に表示）。</summary>
     public Subject<DungeonName> OnSelected { get; } = new();
 
     private DungeonName dungeonKey;
+    private string dungeonName;
     private Image rowBackground;
     private Selectable focusTarget;
 
@@ -45,6 +48,17 @@ public class MapPurchaseSlot : MonoBehaviour
         }
     }
 
+    /// <summary>次の配信先の行か（NEXT の印を付ける）。SetMapInfo の後に呼ぶ。</summary>
+    public void SetUpcoming(bool upcoming)
+    {
+        if (nextBadge != null)
+        {
+            nextBadge.SetActive(upcoming);
+            return;
+        }
+        if (nameText != null && upcoming) nameText.text = $"<color=#E8A33D>NEXT</color> {dungeonName}";
+    }
+
     /// <summary>パッド/キーでこの行を選ぶときのフォーカス先（行全体のボタン）。</summary>
     public Selectable FocusTarget => focusTarget;
 
@@ -53,6 +67,7 @@ public class MapPurchaseSlot : MonoBehaviour
     public void SetMapInfo(DungeonName key, string dungeonName, Sprite sprite, int price, bool purchased, bool sellable)
     {
         dungeonKey = key;
+        this.dungeonName = dungeonName;
         if (icon) icon.sprite = sprite;
         if (nameText) nameText.text = dungeonName;
         if (priceText)

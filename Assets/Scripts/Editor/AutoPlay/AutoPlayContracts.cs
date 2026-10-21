@@ -32,6 +32,14 @@ public interface IPlayerActions
     /// <summary>勇者の装備を変える（HeroPanelPresenter.SetWeapon/SetArmor と同等。null = 変えない / "" = 外す）。</summary>
     AutoPlayActionResult EquipHero(string weaponId, string armorId);
 
+    // --- 店の投資（広告・マシン・金融。H-1 の戦略ボット用） ---
+    /// <summary>広告を打つ（AdvertisementPresenter → AdvertisementSystem.Execute と同等）。</summary>
+    AutoPlayActionResult BuyAdvertisement(string advertisementName);
+    /// <summary>マシンを買って設置する（ShopMachinePresenter → ShopMachineModel.TryPurchaseAndPlace と同等）。</summary>
+    AutoPlayActionResult PlaceMachine(string machineId);
+    /// <summary>債券を買う（ExchangePanelController → PortfolioModel.BuyBond と同等）。</summary>
+    AutoPlayActionResult BuyBond(string productId, int units);
+
     // --- 新聞（Docs/News_Spec.md §8・§9） ---
     /// <summary>新聞を購読する（NewspaperPresenter.Subscribe と同等。5ターン契約・枠は店レベル・自動更新なし）。</summary>
     AutoPlayActionResult SubscribeNewspaper(string companyId);
@@ -106,10 +114,27 @@ public sealed class AutoPlaySnapshot
     public int ShopUpgradeCost;      // -1 = 最大
     public int BlacksmithLevel;
     public int BlacksmithUpgradeCost; // -1 = 最大
+    public int InfoBrokerLevel;
+
+    // --- 広告・マシン・金融（H-1） ---
+    public int Followers;
+    public int Trust;
+    public int Attention;
+    public int Spread;
+    public int Retention;
+    public int StatMax;
+    public List<AutoPlayAdView> Ads = new();
+    public int MachineSlots;
+    public List<string> PlacedMachines = new();
+    public List<AutoPlayMachineView> Machines = new();
+    public List<AutoPlayBondView> Bonds = new();
+    public int PortfolioValue;
 
     public int TurnsUntilStream;      // -1 = もう配信なし
     public string NextStreamDungeon;  // 次（配信日なら今日）の配信ダンジョン
     public int NextStreamDungeonLevel;
+    /// <summary>次の配信先の弱点属性（情報屋で買える情報。ItemAttribute 名）。</summary>
+    public string NextStreamWeakness;
     public float NextStreamClearChancePct;
 
     public int HeroLevel;
@@ -161,6 +186,49 @@ public sealed class AutoPlayItemView
     public bool Displayed;
     public float SalesRate;
     public int DividendPerTurn;
+    /// <summary>今日来る客の数（店で1日に売れる上限。上限なしは int.MaxValue）。</summary>
+    public int Customers;
+    /// <summary>おすすめのスコア（ItemModel.RecommendScoreOf）。</summary>
+    public float RecommendScore;
+    /// <summary>
+    /// 【オラクル】この先3日の新聞の本当の効果（需要の向き。TrendBias + DemandKick の合計）。
+    /// 「新聞を正しく読めたプレイヤー」の代理（oracle ボット専用。Jev には見せない）。
+    /// </summary>
+    public float OracleNewsBias;
+}
+
+public sealed class AutoPlayAdView
+{
+    public string Name;
+    public int Cost;          // 割引後
+    public int FollowerGain;
+    public int TrustGain;
+    public int AttentionGain;
+    public int SpreadGain;
+    public int RetentionGain;
+}
+
+public sealed class AutoPlayMachineView
+{
+    public string Id;
+    public string Type;       // ShopMachineEffectType
+    public int Cost;
+    public int RequiredShopLevel;
+    public int DailyMoney;
+    public float RevenueBonus;
+    public bool Purchasable;  // 店レベル・枠・所持金を満たす
+}
+
+public sealed class AutoPlayBondView
+{
+    public string Id;
+    public int UnitPrice;
+    public float InterestRate;
+    public int MaturityTurns;
+    public bool Unlocked;
+    public int HeldUnits;
+    /// <summary>あと何口買えるか（上限なしは int.MaxValue）。</summary>
+    public int RemainingUnits;
 }
 
 public sealed class AutoPlayDungeonView
@@ -253,6 +321,14 @@ public sealed class AutoPlayDayPlan
     public List<string> PinScraps = new();
     /// <summary>none / one（未確認の先頭1件 1,500G）/ batch（3件 4,000G）。</summary>
     public string ConfirmScraps = "none";
+    /// <summary>打つ広告（上から順。払えなければ飛ばす）。</summary>
+    public List<string> Advertisements = new();
+    /// <summary>買って設置するマシン（上から順。枠・店レベル・資金が足りなければ飛ばす）。</summary>
+    public List<string> PlaceMachines = new();
+    /// <summary>買う債券（銘柄・口数。上から順、払える口数に切り詰める）。</summary>
+    public List<AutoPlayStreamItem> Bonds = new();
+    /// <summary>この日の設備投資を何回まで続けるか（Upgrade を最大まで重ねる用）。</summary>
+    public int UpgradeTimes = 1;
 
     public List<AutoPlayDecision> Decisions = new();
 }

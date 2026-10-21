@@ -48,9 +48,15 @@ public sealed class TitlePresenter : IStartable, IDisposable
             .Subscribe(_ => TransitionTo(TitleType.ContinueOrNewGame))
             .AddTo(_disposables);
 
-        // 難易度はタイトルでは選ばない（村からの出店準備シーンで選ぶ）→ 保存先スロット選択へ直行
+        // 難易度はタイトルでは選ばない（村からの出店準備シーンで選ぶ）→ 保存先スロット選択へ直行。
+        // どのスロットにもデータが無い（初めて遊ぶ）ときは、選ぶ意味が無いのでスロット1でそのまま始める（K-13）。
+        // 判定は HasProfile（村の進行だけ残ったスロットも「データあり」）なので、村の進行を黙って上書きしない
         _view.OnNewGameSelected
-            .Subscribe(_ => OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot))
+            .Subscribe(_ =>
+            {
+                if (!SaveSlotManager.AnyProfileExists()) StartNewGame(0);
+                else OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot);
+            })
             .AddTo(_disposables);
 
         _view.OnContinueSelected
@@ -60,6 +66,11 @@ public sealed class TitlePresenter : IStartable, IDisposable
         // オプション画面（加算シーン。プレイ中メニューと同じ Setting シーンを共用）
         _view.OnOptionSelected
             .Subscribe(_ => OpenOptionScene())
+            .AddTo(_disposables);
+
+        // ゲーム終了（確認のあと Application.Quit）
+        _view.OnQuitRequested
+            .Subscribe(_ => RequestQuit())
             .AddTo(_disposables);
 
         _view.OnSaveSlotSelected
@@ -98,6 +109,38 @@ public sealed class TitlePresenter : IStartable, IDisposable
                 SceneManager.UnloadSceneAsync(settingSceneName);
             });
         };
+    }
+
+    /// <summary>
+    /// 「ゲーム終了」: 確認してから終了する（初期フォーカスは「やめる」側）。
+    /// タイトルではランの途中経過を持っていない（店・村から戻るときに保存済み）ので、そのまま終わってよい。
+    /// </summary>
+    private void RequestQuit()
+    {
+        if (_popUpManager == null)
+        {
+            QuitApplication();
+            return;
+        }
+        _popUpManager.Show(new PopUpData
+        {
+            Title = "ゲーム終了",
+            Message = "ゲームを終了しますか？",
+            ConfirmButtonText = "終了する",
+            CancelButtonText = "やめる",
+            Size = PopupSizeEnum.Small,
+            OnConfirm = QuitApplication,
+        });
+    }
+
+    private static void QuitApplication()
+    {
+        Debug.Log("[Title] ゲームを終了します");
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     private void GoBack()

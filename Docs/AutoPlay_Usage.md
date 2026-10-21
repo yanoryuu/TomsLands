@@ -104,6 +104,7 @@ AutoPlay.Stop("録画終了");
 | 店: 配信前の情報収集 | 次の配信先の弱点が不明なら 情報屋 → 地図 → ダンジョン →「情報を買う」→ 閉じる | AutoPlayController.Procurement（実ボタン押下） |
 | 店: 陳列 | 陳列パネルを開く → オート陳列 → 閉じる | DebugAutoPlayer（`ItemSelectionPresenter` + `ItemSelectionView.OnAutoDisplayRequested`） |
 | 店: 営業 | 営業開始 → 演出待ち | DebugAutoPlayer（`TomsShopView.OnStartShopClicked`） |
+| 店: 営業開始の確認 | 品出しゼロの確認「品出しゼロで営業します」と配信前日の確認「明日は配信です」は自動で承認 | `TomsShopPresenter.RequestStartSales` / DebugAutoPlayer.HandlePopup |
 | 店: 精算（サマリー） | 確認 → 次のターンへ | DebugAutoPlayer（`TurnEndSummaryView.OnConfirmClicked`） |
 | 店: 割り込み | 納税パネル（払える→支払う / 任意→閉じる）、レリック3択（戦略）、朝レポートを閉じる、各種お知らせを閉じる | DebugAutoPlayer |
 | 店: 破産 | 「結果へ」を押してゲームオーバーへ | ボタン押下 |
@@ -150,7 +151,8 @@ AutoPlay.Stop("録画終了");
   （例: 深緑の獣林=木の魔物 → 弱点 火、氷霧の洞窟=水の魔物 → 弱点 木。有利関係は `ElementAttributeMapper.IsEffective`: 水→火、火→木、木→水、光⇔闇）。
 - 武具の属性は `RuntimeItemData.ItemAttribute`。配信中に魔物を倒すたび、その魔物に**有利な属性の商品は価格×`effectiveAttributeRate`・需要＋**、不利な属性は価格・需要−
   （`StreamingSalesController` 案5 / `BattleDemandTracker` 案A）。品出しのオート選択（`StreamingSettingPresenter`）も弱点属性・有利属性を加点する。
-- **勇者のクリア率には属性は効かない**（装備ボーナス `HeroEquipmentBonus` はランク＝requiredLevel のみ。そもそも勇者の装備は店の在庫と別）。相性が効くのは配信中の売上（価格・需要）。
+- **勇者の武器の属性は実際の戦闘に効く**（2026-10 Q7: 敵の弱点属性なら、その敵への攻撃 +100%。`HeroEquipmentBonus.AttributeAttackMul`）。
+  ただし**クリア確率の表示には入れない**（表示は属性を考えない控えめな見込み）。装備は店の在庫と別。相性は配信中の売上（価格・需要）にも効く。
 - 弱点は「知っている」ときだけ使える: 情報屋で情報を買う（`InfoBrokerPresenter.PurchaseDungeonInfo` → `DungeonIntelModel.MarkWeaknessKnown`）と、
   鍛冶屋の上部バナーに「弱点:X」が出て、お任せ購入の「次ダンジョン特化」（`AutoBuyStrategy.DungeonFocus`）が弱点属性を優先するようになる。知らなければバナーは「弱点:?」で特化も効かない。
 - 出現する魔物の属性は `DungeonData.dungeonMonsters`（現在のダンジョンLvの `EnemyData.elementType`）。ゲーム側の品出しオート選択と同じく、**ダンジョン情報を買うまでは使わない**。

@@ -26,6 +26,11 @@ public class GamePanelManager : MonoBehaviour
     /// <summary>
     /// 全パネルを非表示にする
     /// </summary>
+    /// <summary>直前に出していた店のサブ画面（「店」画面のタブ切り替えをフェードさせない判定用）。</summary>
+    private TomsShopGamePhase? _lastSubPhase;
+
+    private static bool IsShopFacility(TomsShopGamePhase? p) => p == TomsShopGamePhase.ShopUpgrade || p == TomsShopGamePhase.MachineShop;
+
     private void HideAll()
     {
         tomsShopPanel.SetActive(false);
@@ -47,12 +52,16 @@ public class GamePanelManager : MonoBehaviour
         if (newspaperPanel != null) newspaperPanel.SetActive(false);
     }
 
+    // 全画面の切替は旧パネルを即座に消すので、フェードを 0 から始めると背景（カメラの背景色）が一瞬抜けて見える。
+    // 少し見えた状態から始めてチラつきを抑える
+    private const float SwitchFadeFrom = 0.35f;
+
     /// <summary>パネルを表示し、開き演出（フェードイン）を再生する。</summary>
     private static void ShowWithFx(GameObject panel)
     {
         if (panel == null) return;
         panel.SetActive(true);
-        UIFx.PanelOpen(panel);
+        UIFx.PanelOpen(panel, 0.18f, SwitchFadeFrom);
         // パッド/キー操作時のフォーカスをこのパネルへ（フェード中でも入る）。マウス操作時は何もしない
         UIFocusManager.NotifyPanelShown(panel);
     }
@@ -87,17 +96,32 @@ public class GamePanelManager : MonoBehaviour
     /// </summary>
     public void ShowTomsShopPanel(TomsShopGamePhase subPhase)
     {
+        _commonWasActive = commonPanel != null && commonPanel.activeSelf;
+        // 「店」画面の改装⇔設備はタブの切り替えなので、パネルを差し替えるだけで開く演出は出さない
+        bool tabSwitch = IsShopFacility(_lastSubPhase) && IsShopFacility(subPhase) && _lastSubPhase != subPhase;
+        _lastSubPhase = subPhase;
         HideAll();
+        if (tabSwitch)
+        {
+            var panel = subPhase == TomsShopGamePhase.ShopUpgrade ? shopUpgradePanel : machineShopPanel;
+            if (panel != null)
+            {
+                panel.SetActive(true);
+                UIFocusManager.NotifyPanelShown(panel);
+            }
+            if (commonPanel != null) commonPanel.SetActive(true);
+            return;
+        }
 
         switch (subPhase)
         {
             case TomsShopGamePhase.Shop:
                 ShowWithFx(tomsShopPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.Hero:
                 ShowWithFx(heroPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.BlackSmith:
                 // 鍛冶屋はCommonView(Turn/所持金/メニュー)と自前UIが重なるため出さない。
@@ -108,7 +132,7 @@ public class GamePanelManager : MonoBehaviour
                 // 道具屋は作らない。万一ここへ来ても空の画面に閉じ込めないよう、店の画面を出す
                 Debug.LogWarning("[GamePanelManager] 道具屋（ToolShop）は未使用です。店の画面を表示します。");
                 ShowWithFx(tomsShopPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.Broker:
                 // 情報屋も鍛冶屋と同レイアウトのためCommonViewを出さない（所持金は専用表示）
@@ -119,27 +143,27 @@ public class GamePanelManager : MonoBehaviour
                 break;
             case TomsShopGamePhase.DungeonLevelUp:
                 ShowWithFx(dungeonLevelUpPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.TurnEndSummary:
                 ShowWithFx(turnEndSummaryPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.Advertisement:
                 ShowWithFx(advertisementPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.Prophet:
                 ShowWithFx(prophetPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.ShopUpgrade:
                 ShowWithFx(shopUpgradePanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.MachineShop:
                 ShowWithFx(machineShopPanel);
-                commonPanel.SetActive(true);
+                ShowCommonPanel();
                 break;
             case TomsShopGamePhase.Newspaper:
                 // 朝刊は鍛冶屋・情報屋と同じ全画面レイアウト。
@@ -147,6 +171,19 @@ public class GamePanelManager : MonoBehaviour
                 ShowWithFx(newspaperPanel);
                 break;
         }
+    }
+
+    private bool _commonWasActive;
+
+    /// <summary>
+    /// HUD（所持金・ターン・メニュー）を出す。切替の前から出ていたなら出しっぱなし（毎回フェードしてチラつかせない）、
+    /// 新しく出すときだけ本体のパネルと同じフェードを掛ける（HUD だけ先にパッと出ないように）。
+    /// </summary>
+    private void ShowCommonPanel()
+    {
+        if (commonPanel == null) return;
+        commonPanel.SetActive(true);
+        if (!_commonWasActive) UIFx.PanelOpen(commonPanel, 0.18f, SwitchFadeFrom);
     }
 
     /// <summary>

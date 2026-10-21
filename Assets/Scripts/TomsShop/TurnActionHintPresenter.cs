@@ -74,7 +74,7 @@ public class TurnActionHintPresenter : IStartable, IDisposable
     {
         ActionTarget.ItemSelection => TurnPhase.Display,
         ActionTarget.BlackSmith    => TurnPhase.Procurement,
-        ActionTarget.Advertisement => TurnPhase.Procurement,
+        ActionTarget.Advertisement => TurnPhase.Display, // 広告は陳列の画面に置いた
         _                          => TurnPhase.Procurement,
     };
 

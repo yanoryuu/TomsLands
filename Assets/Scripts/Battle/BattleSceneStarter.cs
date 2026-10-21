@@ -30,6 +30,17 @@ public class BattleSceneStarter : IAsyncStartable
     private readonly InterventionPresenter _interventions; // 介入（勇者側・ダンジョン側）
     private readonly SuperChatGenerator _superChats;       // 視聴者ランダムスパチャ（収入にしない）
     private readonly DemonKingPayoutView _payoutView;      // 配当通知書（未配線なら null。勇者敗北時のみ表示）
+    private readonly BattleOutlookMeterView _outlookMeter; // 勝敗メーター（未配線なら null）
+    private readonly ShopEconomySettings _economySettings; // 「相場への影響」の見込み（ストップ高/安）。未登録なら既定値
+    private readonly StreamingInteractionSettings _interactionSettings;
+
+    /// <summary>勝敗メーター・配信収支メーターを更新する間隔（秒）。</summary>
+    private const float LiveHudInterval = 0.25f;
+    /// <summary>決着の溜め（演出が無いときの待ち）の秒。</summary>
+    private const float FinaleFallbackSeconds = 1.2f;
+    private const string FinaleHeroLabel = "CLEAR!";
+    private const string FinaleDemonLabel = "配当確定";
+    private const string FinaleDefeatLabel = "敗北…";
 
     // 配信チュートリアルのシナリオラベル
     private const string TutorialStreamingPrepare = "Tutorial_StreamingPrepare";
@@ -45,6 +56,8 @@ public class BattleSceneStarter : IAsyncStartable
     // 補充時の単価（itemId → 単価）。売れ残り分の返金計算で使用
     private readonly Dictionary<string, int> _restockUnitCosts = new();
     private UniTaskCompletionSource<(BattleResult result, string weaponId, string armorId)> _battleTcs;
+    // 配信前の店の値段と在庫（装備の「相場への影響」用。配信中の値動きは店に持ち帰らないので、店の値段はこれ）
+    private readonly Dictionary<string, (int price, int stock)> _shopSnapshot = new();
 
     public BattleSceneStarter(
         BattleSequencer battleSequencer,
@@ -64,8 +77,11 @@ public class BattleSceneStarter : IAsyncStartable
         SuperChatGenerator superChats,
         IObjectResolver resolver)
     {
-        // 配当通知書は任意の画面なので、未登録でも解決エラーにしない
+        // 配当通知書・勝敗メーターは任意の画面なので、未登録でも解決エラーにしない
         resolver.TryResolve(out _payoutView);
+        resolver.TryResolve(out _outlookMeter);
+        resolver.TryResolve(out _economySettings);
+        resolver.TryResolve(out _interactionSettings);
         _interventions = interventions;
         _superChats = superChats;
         _tutorialScenario = tutorialScenario;
@@ -142,6 +158,11 @@ public class BattleSceneStarter : IAsyncStartable
         }
 
         _battleSequencer.SetDungeon(targetDungeon, _inputData.DungeonLevel);
+
+        // 店の値段・在庫を控える（配信中は Setup で在庫・値段が配信用に書き換わる）。賭けの立場もここで決める
+        SnapshotShopState();
+        var director = _interventions?.CommentDirector;
+        if (director != null) director.SetBetStance(ResolveBetStance());
 
         // 勇者モデルを構築
         var heroModel = new HeroModel();
@@ -224,6 +245,17 @@ public class BattleSceneStarter : IAsyncStartable
             _controlView.OnEndBattleRequested
                 .Subscribe(_ => ConfirmEndStreamingAsync(battleCts.Token).Forget())
                 .AddTo(disposables);
+
+            // ×1 / ×2（戦闘・販売ループ・介入のクールダウンを同じ比で縮める）
+            _controlView.OnSpeedToggled
+                .Subscribe(_ =>
+                {
+                    float speed = BattleSpeed.Toggle();
+                    _controlView.UpdateSpeedButtonText();
+                    Debug.Log($"[BattleSceneStarter] 配信の速さ ×{speed:0}");
+                })
+                .AddTo(disposables);
+            _controlView.UpdateSpeedButtonText();
         }
 
         // 在庫切れ検知
@@ -244,9 +276,13 @@ public class BattleSceneStarter : IAsyncStartable
 
         // 介入の受付開始（キューを BattleSequencer に渡すので StartBattle より前）。
         // 補充費用は利用可能残高の計算に使う
-        _interventions?.Start(_salesController, () => _battleSpending);
+        // ダンジョン側の値段はこのダンジョンLvの防衛報酬に合わせる（G-6）
+        _interventions?.Start(_salesController, () => _battleSpending, InterventionPriceBase());
 
         _battleSequencer.StartBattle(heroModel);
+
+        // 勝敗メーター・配信収支メーター（決着まで）
+        RunLiveHudAsync(battleCts.Token).Forget();
 
         // バトル終了待ち
         var battleResult = await _battleTcs.Task;
@@ -288,13 +324,22 @@ public class BattleSceneStarter : IAsyncStartable
             _outputData.SetStreamingStats(interventionSpent, _interventions.TotalRefunded, _interventions.PeakViewers,
                 _interventions.ViewerSuperChatCount, _interventions.SpecialMovesUsed);
         }
+        _outputData.SetDefenseReward(defeatReward, _inputData.DungeonKey);
+
+        var settlement = new BattleSettlement(battleResult.result, rawSales, _battleSpending, restockRefund,
+            _outputData.InterventionNetSpending, defeatReward, totalEarnings, soldItems,
+            BuildMarketImpacts(battleResult.result, battleResult.weaponId, battleResult.armorId, soldItems, defeatedBossCount));
+
+        // --- Phase 2.5: 決着の溜め（配信画面のまま。勝敗のコメント弾幕と最後の売上を見せる） ---
+        if (battleResult.result != BattleResult.Abort)
+            await PlayFinaleAsync(battleResult.result, settlement.IsDemonPayout, cancellation);
 
         // --- Phase 3: Result（配信リザルト画面） ---
         Debug.Log("[BattleSceneStarter] Phase 3: Result");
         if (_panelManager != null) _panelManager.ShowPanel(StreamingGamePhase.StreamingResult);
         if (_resultView != null)
         {
-            await _resultView.ShowResultAsync(battleResult.result, soldItems, totalEarnings, _outputData.InterventionNetSpending);
+            await _resultView.ShowResultAsync(settlement);
         }
         else
         {
@@ -311,6 +356,165 @@ public class BattleSceneStarter : IAsyncStartable
         // --- Phase 4: TomsShop に戻る ---
         Debug.Log("[BattleSceneStarter] Returning to TomsShop...");
         _sceneTransition.ReturnToTomsShop();
+    }
+
+    // =====================================================
+    // 配信中の表示（勝敗メーター・配信収支）と決着の溜め
+    // =====================================================
+
+    /// <summary>
+    /// 決着まで、勝敗メーター（G-5）と配信収支メーター（E-6）を一定間隔で更新する。
+    /// 介入・補充・被弾・撃破はどれもこの間隔のうちに反映される。
+    /// </summary>
+    private async UniTaskVoid RunLiveHudAsync(CancellationToken token)
+    {
+        var salesView = _salesController != null ? _salesController.View : null;
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                int spending = _battleSpending + (_interventions != null ? _interventions.NetSpending : 0);
+                int money = _tomsModel != null ? _tomsModel.PlayerMoney.Value : 0;
+                int sales = _salesController != null ? _salesController.GetTotalSalesValue() : 0;
+                int available = _interventions != null ? _interventions.AvailableBalance : money + sales - spending;
+                if (salesView != null) salesView.SetLedger(spending, available);
+
+                if (_outlookMeter != null && _battleSequencer.Context != null)
+                    _outlookMeter.SetValue(BattleOutlookEstimator.Estimate(
+                        _battleSequencer.Context, _interventions?.Queue.Effects, _interactionSettings));
+
+                await UniTask.Delay(TimeSpan.FromSeconds(LiveHudInterval), ignoreTimeScale: true, cancellationToken: token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // 決着（battleCts のキャンセル）で止める
+        }
+    }
+
+    /// <summary>
+    /// 決着の溜め（E-1）。勇者勝利は金の「CLEAR!」、魔王側に張って当たったら紫の「配当確定」を配信画面に重ねる。
+    /// クリック・決定ボタンで飛ばせる。演出が未配線なら少し待つだけ。
+    /// </summary>
+    private async UniTask PlayFinaleAsync(BattleResult result, bool demonPayout, CancellationToken token)
+    {
+        if (_outlookMeter != null) _outlookMeter.SetValue(result == BattleResult.Victory ? 1f : 0f);
+        var fx = _battleSequencer.WaveFx;
+        bool heroWon = result == BattleResult.Victory;
+        string label = heroWon ? FinaleHeroLabel : demonPayout ? FinaleDemonLabel : FinaleDefeatLabel;
+        try
+        {
+            if (fx != null)
+            {
+                await fx.PlayFinaleAsync(heroWon, label, token, SkipPressed);
+            }
+            else
+            {
+                float wait = FinaleFallbackSeconds * GameSettings.EffectDurationScale;
+                float elapsed = 0f;
+                while (elapsed < wait && !SkipPressed())
+                {
+                    await UniTask.Yield(PlayerLoopTiming.Update, token);
+                    elapsed += Time.unscaledDeltaTime;
+                }
+            }
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            // 演出の失敗でリザルトに進めなくならないように
+            Debug.LogException(e);
+        }
+    }
+
+    /// <summary>決着の溜めを飛ばす入力（クリック・決定・パッドの A）。</summary>
+    private static bool SkipPressed()
+    {
+        var mouse = UnityEngine.InputSystem.Mouse.current;
+        if (mouse != null && mouse.leftButton.wasPressedThisFrame) return true;
+        var keyboard = UnityEngine.InputSystem.Keyboard.current;
+        if (keyboard != null && (keyboard.enterKey.wasPressedThisFrame || keyboard.spaceKey.wasPressedThisFrame)) return true;
+        var pad = UnityEngine.InputSystem.Gamepad.current;
+        return pad != null && pad.buttonSouth.wasPressedThisFrame;
+    }
+
+    // =====================================================
+    // 賭けの立場・勇者側の配当（相場への影響）
+    // =====================================================
+
+    /// <summary>勇者の装備の、配信前の店の値段と在庫を控える。</summary>
+    private void SnapshotShopState()
+    {
+        _shopSnapshot.Clear();
+        foreach (var id in _inputData.EquippedItemIds)
+        {
+            if (string.IsNullOrEmpty(id) || _shopSnapshot.ContainsKey(id)) continue;
+            var runtime = _itemModel.GetRuntimeItem(id);
+            if (runtime != null) _shopSnapshot[id] = (runtime.CurrentPrice.Value, runtime.Stock.Value);
+        }
+    }
+
+    /// <summary>
+    /// この配信で店長がどちらに張っているか（配信コメントの出し分け用。E-8）。
+    /// 勇者側 = 勇者の装備の在庫を抱えている（勝てば値上がり）。魔王側 = このダンジョンを魔王軍支援で育てた／魔王系レリックがある。
+    /// 両方なら金額の大きい方。
+    /// </summary>
+    private StreamingBetStance ResolveBetStance()
+    {
+        int heroStake = 0;
+        foreach (var kv in _shopSnapshot) heroStake += kv.Value.price * kv.Value.stock;
+
+        var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
+        int demonStake = CalculateSupportAmount(dungeon, _inputData.DungeonLevel);
+        if (RelicBattleEffects.DefeatRewardMul > 1.0001f) demonStake = Mathf.Max(demonStake, BaseDefenseReward());
+
+        if (heroStake <= 0 && demonStake <= 0) return StreamingBetStance.None;
+        return heroStake >= demonStake ? StreamingBetStance.Hero : StreamingBetStance.Demon;
+    }
+
+    /// <summary>このダンジョンLvの防衛報酬の基本額（レリック補正前）。Lv0（未出資）は 0。</summary>
+    private int BaseDefenseReward()
+    {
+        var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
+        return dungeon != null ? dungeon.GetDefenseReward(_inputData.DungeonLevel) : 0;
+    }
+
+    /// <summary>
+    /// 介入の値段の基準（防衛報酬に比例。G-6）。Lv0（未出資）は防衛報酬が 0 なので、値段が 0 にならないよう Lv1 の防衛報酬を下限にする。
+    /// </summary>
+    private int InterventionPriceBase()
+    {
+        var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
+        if (dungeon == null) return 0;
+        return dungeon.GetDefenseReward(Mathf.Max(1, _inputData.DungeonLevel));
+    }
+
+    /// <summary>
+    /// 勇者の装備の相場が勝敗でどう動くか（E-4）。勝ち: ×1.8（ボス撃破 ×2.2）、負け: 半値。
+    /// 値は帰還処理（BattleResultHandler）と同じ倍率を、店の値段に掛けてストップ高/安で丸めた見込み。
+    /// </summary>
+    private List<BattleMarketImpact> BuildMarketImpacts(BattleResult result, string weaponId, string armorId,
+        List<BattleOutputSoldItem> soldItems, int defeatedBossCount)
+    {
+        var list = new List<BattleMarketImpact>();
+        if (result == BattleResult.Abort) return list;
+        float mul = result == BattleResult.Victory
+            ? ItemModel.HeroWinMultiplier(defeatedBossCount)
+            : 1f / ItemModel.HeroDefeatPriceDivisor;
+
+        foreach (var id in new[] { weaponId, armorId })
+        {
+            if (string.IsNullOrEmpty(id) || !_shopSnapshot.TryGetValue(id, out var shop)) continue;
+            var master = _itemModel.GetMasterItem(id);
+            var runtime = _itemModel.GetRuntimeItem(id);
+            if (master == null || runtime == null) continue;
+            int soldFromStock = 0;
+            foreach (var s in soldItems) if (s.ItemId == id) soldFromStock += s.SoldFromStock;
+            int after = ItemModel.PreviewPriceAfterBattle(shop.price, master.basePrice, mul, _economySettings);
+            // 左は配信前の店の値段。帰還処理が日送りのあとにこの after へ揃えるので、翌朝の店の値段と一致する。
+            // 含み損益の取得単価（平均取得単価）は #109 の記録が入ってから渡す（今は null＝出さない）
+            list.Add(new BattleMarketImpact(runtime.ItemName, runtime.ItemIcon, shop.price, after, shop.stock - soldFromStock));
+        }
+        return list;
     }
 
     // =====================================================
@@ -505,7 +709,7 @@ public class BattleSceneStarter : IAsyncStartable
         if (result != BattleResult.Defeat) return new DefeatRewardBreakdown(0, 1f, 0);
 
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
-        int baseReward = dungeon != null ? dungeon.GetLevelData(_inputData.DungeonLevel)?.rewardGold ?? 0 : 0;
+        int baseReward = dungeon != null ? dungeon.GetDefenseReward(_inputData.DungeonLevel) : 0;
 
         // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
         float mul = RelicBattleEffects.DefeatRewardMul;
@@ -522,8 +726,9 @@ public class BattleSceneStarter : IAsyncStartable
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
         string dungeonName = dungeon != null ? dungeon.dungeonName : _inputData.DungeonKey.ToString();
         int supportAmount = CalculateSupportAmount(dungeon, _inputData.DungeonLevel);
+        // 回収倍率は防衛報酬の受取累計で見る（今回分は帰還処理で記録されるので、ここでは足して表示するだけ）
         return new DemonKingPayoutData(dungeonName, _inputData.DungeonLevel, supportAmount,
-            reward.BaseReward, reward.Multiplier, reward.Total);
+            reward.BaseReward, reward.Multiplier, reward.Total, DemonPayoutHistory.GetTotal(_inputData.DungeonKey));
     }
 
     /// <summary>
@@ -535,7 +740,7 @@ public class BattleSceneStarter : IAsyncStartable
     {
         if (dungeon == null) return 0;
         int total = 0;
-        for (int lv = Mathf.Max(1, dungeon.initDungeonLevel); lv < currentLevel; lv++)
+        for (int lv = Mathf.Max(DungeonLevels.Unfunded, dungeon.initDungeonLevel); lv < currentLevel; lv++)
             total += dungeon.GetLevelData(lv)?.levelUpCost ?? 0;
         return total;
     }

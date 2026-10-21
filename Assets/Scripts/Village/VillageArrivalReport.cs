@@ -7,7 +7,7 @@ public static class VillageArrivalReport
 {
     public static bool HasReport { get; private set; }
     public static bool Cleared { get; private set; }
-    /// <summary>クリア時=最終純資産 / 破産時=手元に残った現金。</summary>
+    /// <summary>クリア時=このランの儲け / 破産時=そのランでいちばん儲かっていたときの儲け。</summary>
     public static int Earned { get; private set; }
     /// <summary>村資金へ変換された額。</summary>
     public static int Converted { get; private set; }

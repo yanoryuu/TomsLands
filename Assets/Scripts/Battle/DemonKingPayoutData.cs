@@ -1,3 +1,5 @@
+using UnityEngine;
+
 /// <summary>
 /// 配当通知書（DemonKingPayoutView）に渡す内訳。
 /// お金の計算は BattleSceneStarter で済んでいるので、ここは表示用の値だけを持つ。
@@ -22,8 +24,16 @@ public sealed class DemonKingPayoutData
     /// <summary>実際に受け取る額（基本額 × 倍率。totalEarnings に含まれている額と同じ）</summary>
     public int FinalReward { get; }
 
-    public DemonKingPayoutData(string dungeonName, int dungeonLevel, int supportAmount, int baseReward, float relicMultiplier, int finalReward)
+    /// <summary>このダンジョンでこれまでに受け取った防衛報酬の合計（今回分を含まない）</summary>
+    public int PreviousTotalReward { get; }
+
+    /// <summary>今回分を含めた防衛報酬の受取累計</summary>
+    public int CumulativeReward => PreviousTotalReward + FinalReward;
+
+    public DemonKingPayoutData(string dungeonName, int dungeonLevel, int supportAmount, int baseReward, float relicMultiplier, int finalReward,
+        int previousTotalReward = 0)
     {
+        PreviousTotalReward = Mathf.Max(0, previousTotalReward);
         DungeonName = dungeonName;
         DungeonLevel = dungeonLevel;
         SupportAmount = supportAmount;
@@ -38,6 +48,12 @@ public sealed class DemonKingPayoutData
     /// <summary>レリック補正で増えた額</summary>
     public int RelicBonus => FinalReward - BaseReward;
 
-    /// <summary>回収倍率（受取額 ÷ 支援額）。支援額が 0 なら 0</summary>
-    public float ReturnRate => SupportAmount > 0 ? (float)FinalReward / SupportAmount : 0f;
+    /// <summary>
+    /// 回収倍率（受取累計 ÷ 支援額）。支援額が 0 なら 0。
+    /// 支援は1回払えばずっと効き、防衛報酬は負けるたびに入るので、1回分ではなく累計で見る
+    /// </summary>
+    public float ReturnRate => SupportAmount > 0 ? (float)CumulativeReward / SupportAmount : 0f;
+
+    /// <summary>今回の受け取りで、はじめて支援額を回収しきった（累計が支援額に届いた）</summary>
+    public bool JustRecoveredPrincipal => SupportAmount > 0 && PreviousTotalReward < SupportAmount && CumulativeReward >= SupportAmount;
 }

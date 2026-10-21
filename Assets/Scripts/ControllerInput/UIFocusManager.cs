@@ -135,7 +135,14 @@ public static class UIFocusManager
         scope.Modal = true;
         scope.Priority = Mathf.Max(scope.Priority, priority);
         if (onCancel != null)
-            scope.SetCancelAction(onCancel);
+        {
+            // B/Esc で閉じるときも「戻る」音を鳴らす（閉じるボタンを押したときと揃える）
+            scope.SetCancelAction(() =>
+            {
+                UISound.PlayBack();
+                onCancel();
+            });
+        }
         RequestRefocus();
         return scope;
     }

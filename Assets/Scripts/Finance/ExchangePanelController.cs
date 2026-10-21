@@ -143,7 +143,11 @@ public class ExchangePanelController : IDisposable
         float fee = product.kind == FinancialProductKind.IndexFund && financeSettings != null
             ? financeSettings.fundBuyFeeRate : 0f;
         int per = Mathf.RoundToInt(unitPrice * (1f + fee));
-        return per <= 0 ? 0 : tomsModel.PlayerMoney.Value / per;
+        int byMoney = per <= 0 ? 0 : tomsModel.PlayerMoney.Value / per;
+        // 債券は同時に持てる口数に上限がある（H-9）
+        return product.kind == FinancialProductKind.Bond
+            ? Mathf.Min(byMoney, portfolioModel.GetRemainingBondUnits(product, tomsModel.InfoBrokerLevel.Value))
+            : byMoney;
     }
 
     private void SelectProduct(string productId)
@@ -201,7 +205,10 @@ public class ExchangePanelController : IDisposable
         }
         else
         {
-            showMessage("資金が足りないようだ。");
+            showMessage(product.kind == FinancialProductKind.Bond
+                        && portfolioModel.GetRemainingBondUnits(product, tomsModel.InfoBrokerLevel.Value) < quantity
+                ? $"この債券は {portfolioModel.GetBondUnitCap(product, tomsModel.InfoBrokerLevel.Value)}口までしか持てない。"
+                : "資金が足りないようだ。");
         }
     }
 

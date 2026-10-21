@@ -100,6 +100,10 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
             await UniTask.WaitWhile(() => engine != null && engine.IsWaitBootLoading, cancellationToken: cancellationToken);
             if (engine == null) return;
 
+            // 設定画面の「会話」（文字の速さ・オート・既読スキップ）と SE 音量を反映する
+            // （宴のシステムセーブの読み込みが済んでから入れないと、読み込んだ値で上書きされる）
+            ApplyGameSettings();
+
             engine.StartGame(label);
 
             // 実際に再生が始まるまで待つ（開始しない場合はタイムアウトで打ち切る）
@@ -197,6 +201,35 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
         }
     }
 
+    // 宴の会話の効果音（選択肢のクリック音など）の既定音量。ゲームの SE 音量を掛けて使う（ScenarioSystem.prefab の AdvConfig 既定値）
+    private const float UtageBaseSeVolume = 0.5f;
+
+    /// <summary>
+    /// ゲームの設定（GameSettings）を宴の AdvConfig へ反映する。
+    /// 文字の速さ・オート送り・既読スキップと、会話の効果音の音量（ゲームの SE 音量に合わせる）。
+    /// エンジンの起動読み込み中は何もしない（読み込み後に PlayAsync で入れ直す）。
+    /// </summary>
+    public void ApplyGameSettings()
+    {
+        if (engine == null || engine.IsWaitBootLoading) return;
+        var config = engine.Config;
+        if (config == null) return;
+
+        config.MessageSpeed = GameSettings.TextSpeed;
+        config.MessageSpeedRead = GameSettings.TextSpeed;
+        config.IsAutoBrPage = GameSettings.AutoAdvance;
+        // 既読スキップ: 読んだページだけ早送り（未読では止まる）
+        config.IsSkipUnread = false;
+        config.IsSkip = GameSettings.SkipRead;
+
+        // ゲームの SE 音量（Utage にも SoundManager があるので global:: で区別する）
+        var gameSound = global::SoundManager.Instance;
+        float seVolume = gameSound != null ? gameSound.GetSEVolume() : GameSettings.SeVolume;
+        config.SeVolume = UtageBaseSeVolume * seVolume;
+    }
+
+    private void OnGameSettingsChanged() => ApplyGameSettings();
+
     /// <summary>シナリオスレッドが実際に走り出したか。</summary>
     private bool IsScenarioThreadRunning()
     {
@@ -223,10 +256,12 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
         if (engine == null) engine = GetComponentInChildren<AdvEngine>(true);
         // 宴のカメラを各シーンの Base カメラへ Overlay として積む（Base のままだと URP が画面を黄色でクリアする）
         if (!TryGetComponent<UtageCameraStacker>(out _)) gameObject.AddComponent<UtageCameraStacker>();
+        GameSettings.Changed += OnGameSettingsChanged;
     }
 
     private void OnDestroy()
     {
+        GameSettings.Changed -= OnGameSettingsChanged;
         isDisposed = true;
         scopeInputBlock?.Dispose();
         GamepadInputStrategy.SelectionActive = false;

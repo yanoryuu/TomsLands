@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 4,
   "schemaVersion": 1,
   "updatedAt": "2026-08-22T07:07:23.606Z",
   "data": {
@@ -11,8 +11,8 @@
     "minItemStock": 0,
     "initMoney": 100000,
     "debtPaymentInterval": 7,
-    "debtBaseAmount": 5000,
-    "debtMultiplier": 1.8,
+    "debtBaseAmount": 15000,
+    "debtMultiplier": 1.5,
     "heroExpPerMob": 10,
     "heroExpPerBoss": 100,
     "heroBaseExpToNextLevel": 100,
@@ -22,6 +22,8 @@
       6000,
       12000,
       20000
-    ]
+    ],
+    "debtFireSaleRate": 0.6,
+    "heroAttributeAttackBonus": 1.0
   }
 }

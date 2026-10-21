@@ -288,7 +288,7 @@ public partial class DebugMenuView
         NavSaveRunIfInShop();
 
         var dungeon = _dungeonRepository.GetById(key.Value);
-        int level = dungeon?.currentDungeonLevel ?? 1;
+        int level = dungeon?.currentDungeonLevel ?? DungeonLevels.Unfunded;
         _navBattleInputData.Setup(
             key.Value,
             level,

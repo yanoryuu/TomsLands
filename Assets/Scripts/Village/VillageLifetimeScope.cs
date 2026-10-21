@@ -26,6 +26,9 @@ public class VillageLifetimeScope : LifetimeScope
         // 会話チュートリアルの再生＋既読管理（ScenarioPlayer は ScenarioSystemLoader が常駐させている）
         builder.Register<TutorialScenarioService>(Lifetime.Singleton);
 
+        // Steam 実績（村おこし）の判定
+        builder.RegisterEntryPoint<AchievementTracker>();
+
         // View / Presenter（View未配線なら Start() で素通りする）
         if (villageView != null)
         {

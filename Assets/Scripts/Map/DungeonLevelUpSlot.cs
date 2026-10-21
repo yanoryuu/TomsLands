@@ -12,6 +12,8 @@ public class DungeonLevelUpSlot : MonoBehaviour
     [SerializeField] private Button            selectButton;
     [SerializeField] private Button            levelUpButton;
     [SerializeField] private TextMeshProUGUI   levelUpButtonText;
+    [Tooltip("次の配信先の印（地図の NEXT リボンと同じ見た目）。未配線なら名前の前に NEXT と付ける")]
+    [SerializeField] private GameObject        nextBadge;
 
     public DungeonName DungeonKey { get; private set; }
     private bool isMaxLevel;
@@ -45,7 +47,11 @@ public class DungeonLevelUpSlot : MonoBehaviour
         DungeonKey = data.DungeonKey;
 
         if (dungeonIconImage) dungeonIconImage.sprite = data.Icon;
-        if (dungeonNameText)  dungeonNameText.text    = data.DungeonName;
+        if (nextBadge) nextBadge.SetActive(data.IsNext);
+        if (dungeonNameText)
+            dungeonNameText.text = data.IsNext && nextBadge == null
+                ? $"<color=#E8A33D>NEXT</color> {data.DungeonName}"
+                : data.DungeonName;
         if (costText)         costText.text           = data.IsMaxLevel ? "MAX" : $"{data.Cost:N0}G";
 
         UpdateLevel(data.CurrentLevel, data.IsMaxLevel);
@@ -57,7 +63,7 @@ public class DungeonLevelUpSlot : MonoBehaviour
         isMaxLevel = maxLevel;
 
         if (currentLevelText)
-            currentLevelText.text = $"Lv.{currentLevel}";
+            currentLevelText.text = DungeonLevels.Label(currentLevel);
 
         if (isMaxLevel)
         {
@@ -89,4 +95,6 @@ public class DungeonLevelUpSlotData
     public int         Shortage;
     public bool        CanAfford;
     public bool        IsMaxLevel;
+    /// <summary>次の配信先か（一覧の先頭に置き、NEXT の印を付ける）。</summary>
+    public bool        IsNext;
 }

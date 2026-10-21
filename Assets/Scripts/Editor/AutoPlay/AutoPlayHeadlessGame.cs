@@ -202,6 +202,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public float SecondsPerBattleTurn = 3f;
         /// <summary>false = 新聞を購読できない（新聞の効果を測る対照群「+nonews」用）。</summary>
         public bool AllowNewspaper = true;
+        /// <summary>1周目の鍛冶屋の立て替え（TutorialPresenter.GrantFundsAdvanceOnce）を2日目の朝に再現する額（0 = なし＝2周目以降と同じ）。</summary>
+        public int TutorialAdvance;
     }
 
     // --- 当日の集計（ランナーが読む） ---
@@ -221,6 +223,10 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public string BattleDungeon = "";
         public float BattleClearPct;
         public int RejectedActions;
+        public int AdSpend;
+        public int MachineSpend;
+        public int FinanceSpend;
+        public int FireSale;
         public readonly List<string> Notes = new();
     }
 
@@ -241,6 +247,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     public ShopStatusModel ShopStatus { get; private set; }
     public MarketingFacade Marketing { get; private set; }
     public NewsModel News { get; private set; }
+    public NewsEffectResolver NewsEffects { get; private set; }
     public NewspaperSubscriptionModel Subscriptions { get; private set; }
     public ScrapbookModel Scrapbook { get; private set; }
     public GameFlowManager Flow { get; private set; }
@@ -259,6 +266,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     private System.Random _rng;
 
     private bool _streamPending;
+    private bool _advanceGranted;
     private int _lastSalesTurn = -1;
     private int _lastDayBeginTurn = -1;
 
@@ -305,6 +313,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         Subscriptions = new NewspaperSubscriptionModel();
         Scrapbook = new ScrapbookModel();
         var newsEffects = new NewsEffectResolver(News);
+        NewsEffects = newsEffects;
         HeroModel = new HeroModel();
         _pendingEvent = new PendingEventData();
 
@@ -353,7 +362,20 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         NewsInfo = $"phase3={News.IsPhase3} events={News.Events.Count} calendar={News.Calendar.Count}";
 
         Stage = AutoPlayStage.ShopDay;
+
+        // Steam 実績の判定を本物と同じ Model の購読で走らせる（記録は隔離フォルダ、Steam には送らない）。
+        // ログの [Achievement] 解除 でボットがどの実績に届いたかが分かる
+        _achievements = new AchievementTracker(new AchievementTracker.Sources
+        {
+            Toms = TomsModel, Items = ItemModel, SellOrders = SellOrders, ShopStatus = ShopStatus,
+            Machines = Machines, Relics = RelicInventory, RelicResolver = RelicResolver,
+            Scrapbook = Scrapbook, Subscriptions = Subscriptions, Marketing = Marketing,
+            Flow = Flow, Hero = HeroModel, Dungeons = Dungeons, BattleOutput = _battleOut,
+        });
+        _achievements.Initialize();
     }
+
+    private AchievementTracker _achievements;
 
     private static DungeonRepository CreateDungeonRepository(List<DungeonInfoScriptableObj> infos)
     {
@@ -374,6 +396,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         if (Dungeons != null) UnityEngine.Object.DestroyImmediate(Dungeons.gameObject);
         foreach (var so in new ScriptableObject[] { _startMode, _battleIn, _battleOut, _eventIn, _eventOut })
             if (so != null) UnityEngine.Object.DestroyImmediate(so);
+        _achievements?.Dispose();
         Flow?.Dispose();
         _stateManager?.Dispose();
     }
@@ -404,15 +427,46 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         }
     }
 
-    public int MaxDisplayPerItem =>
-        Assets.ShopLevels != null ? Mathf.Max(1, Assets.ShopLevels.GetEntry(TomsModel.ShopLevel.Value).maxDisplayStockPerItem) : 99;
+    /// <summary>
+    /// 1銘柄あたりの陳列数の上限。実ゲームでは撤廃済み（ItemSelectionPresenter は在庫数まで並べられる）なので在庫の上限と同じ。
+    /// 以前は ShopLevelSettings.maxDisplayStockPerItem（Lv1 で5個）で絞っていて、AutoPlay の収支が実ゲームより小さく出ていた（H-1）。
+    /// </summary>
+    public int MaxDisplayPerItem => Mathf.Max(1, GameConst.MaxItemStock);
+
+    /// <summary>マシン設置枠（店レベル由来）。</summary>
+    public int MachineSlots => Assets.ShopLevels != null ? Assets.ShopLevels.GetEntry(TomsModel.ShopLevel.Value).machineSlots : 0;
+
+    /// <summary>
+    /// 純資産 = 所持金 + 在庫の時価 + 未約定の売り注文 + 金融資産の評価額 + 設置済みマシンの撤去返金額。
+    /// 戦略ごとの比較（H-1）で、マシン・債券に変えたお金を「消えた」扱いにしないため。
+    /// </summary>
+    public int NetWorth()
+    {
+        long total = TomsModel.PlayerMoney.Value;
+        total += ItemModel.RuntimeItems.Sum(r => (long)r.Stock.Value * r.CurrentPrice.Value);
+        total += SellOrders.PendingTotalEstimate.Value;
+        if (Portfolio != null)
+        {
+            Portfolio.RefreshEstimate(ItemModel, TomsModel.BlacksmithLevel.Value);
+            total += Portfolio.TotalAssetsEstimate.Value;
+        }
+        if (Machines != null)
+            total += Machines.Placed.Sum(p => (long)Mathf.RoundToInt((Machines.GetMachine(p.MachineId)?.cost ?? 0) * 0.5f));
+        return total >= int.MaxValue ? int.MaxValue : (int)total;
+    }
 
     /// <summary>直近のシーン遷移要求を見てステージを決める（NextTurn・配信精算の後に呼ぶ）。</summary>
     private void ResolveStageAfterFlow()
     {
         var scene = Context.LastSceneRequest;
         Context.LastSceneRequest = null;
-        if (scene == "ResultScene") { Stage = AutoPlayStage.Completed; return; }
+        if (scene == "ResultScene")
+        {
+            Stage = AutoPlayStage.Completed;
+            // リザルト集計（ResultPresenter.Entry の写し）。実績のクリア・ランク S・皆済はここで判定される
+            new ResultModel(TomsModel, ItemModel, Portfolio, null).BuildStatistics();
+            return;
+        }
         if (scene == "GameOver") { Stage = AutoPlayStage.Bankrupt; return; }
         if (_streamPending || Flow.IsAwaitingStream.Value) { Stage = AutoPlayStage.StreamDay; return; }
         Stage = AutoPlayStage.ShopDay;
@@ -436,7 +490,64 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             BlacksmithLevel = TomsModel.BlacksmithLevel.Value,
             BlacksmithUpgradeCost = TomsModel.BlacksmithLevel.Value >= GameConst.MaxBlackSmithLevel
                 ? -1 : GameConst.GetBlackSmithLevelUpCost(TomsModel.BlacksmithLevel.Value),
+            InfoBrokerLevel = TomsModel.InfoBrokerLevel.Value,
         };
+
+        // --- 広告・マシン・金融 ---
+        var status = ShopStatus;
+        s.Followers = status.Followers.Value;
+        s.Trust = status.Trust.Value;
+        s.Attention = status.Attention.Value;
+        s.Spread = status.Spread.Value;
+        s.Retention = status.Retention.Value;
+        s.StatMax = status.StatMax;
+        foreach (var ad in Assets.Advertisements ?? new List<AdvertisementData>())
+        {
+            if (ad == null) continue;
+            var eff = Marketing.Ads.GetEffectiveGains(ad);
+            s.Ads.Add(new AutoPlayAdView
+            {
+                Name = ad.advertisementName,
+                Cost = Marketing.Ads.GetDiscountedCost(ad),
+                FollowerGain = eff.Followers,
+                TrustGain = eff.Trust,
+                AttentionGain = eff.Attention,
+                SpreadGain = eff.Spread,
+                RetentionGain = eff.Retention,
+            });
+        }
+        s.MachineSlots = MachineSlots;
+        s.PlacedMachines = Machines.Placed.Select(p => p.MachineId).ToList();
+        foreach (var m in Machines.AllMachines)
+        {
+            if (m == null) continue;
+            s.Machines.Add(new AutoPlayMachineView
+            {
+                Id = m.machineId,
+                Type = m.effectType.ToString(),
+                Cost = m.cost,
+                RequiredShopLevel = m.requiredShopLevel,
+                DailyMoney = m.effectType == ShopMachineEffectType.DailyMoney ? m.dailyMoney : 0,
+                RevenueBonus = m.effectType == ShopMachineEffectType.RevenueMultiplier ? m.revenueMultiplierBonus : 0f,
+                Purchasable = Machines.PlacedCount < s.MachineSlots && m.requiredShopLevel <= TomsModel.ShopLevel.Value
+                              && TomsModel.PlayerMoney.Value >= m.cost,
+            });
+        }
+        foreach (var p in Portfolio.AllProducts)
+        {
+            if (p == null || p.kind != FinancialProductKind.Bond) continue;
+            s.Bonds.Add(new AutoPlayBondView
+            {
+                Id = p.productId,
+                UnitPrice = p.bondUnitPrice,
+                InterestRate = p.bondInterestRate,
+                MaturityTurns = p.bondMaturityTurns,
+                Unlocked = p.unlockInfoBrokerLevel <= TomsModel.InfoBrokerLevel.Value,
+                HeldUnits = Portfolio.GetHeldUnits(p.productId),
+                RemainingUnits = Portfolio.GetRemainingBondUnits(p, TomsModel.InfoBrokerLevel.Value),
+            });
+        }
+        s.PortfolioValue = Portfolio.TotalAssetsEstimate.Value;
 
         int cycle = TomsModel.DebtCycle.Value + 1;
         s.NextDebtAmount = DebtCalculator.GetAmount(cycle, TomsModel, RelicResolver);
@@ -464,6 +575,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             var d = Dungeons.GetById(next.Value);
             s.NextStreamDungeon = next.Value.ToString();
             s.NextStreamDungeonLevel = d?.currentDungeonLevel ?? 1;
+            s.NextStreamWeakness = d != null ? d.requiredAttribute.ToString() : "";
             s.NextStreamClearChancePct = d != null
                 ? ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver) : 0f;
         }
@@ -495,6 +607,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 Displayed = r.IsDisplay.Value,
                 SalesRate = r.SalesRate,
                 DividendPerTurn = r.DividendPerTurn,
+                Customers = ItemModel.GetDailyCustomers(r),
+                RecommendScore = ItemModel.RecommendScoreOf(r),
+                OracleNewsBias = OracleBias(r),
             });
         }
 
@@ -596,6 +711,16 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return s;
     }
 
+    /// <summary>この先3日の新聞の本当の効果（オラクル）。</summary>
+    private float OracleBias(RuntimeItemData r)
+    {
+        if (NewsEffects == null) return 0f;
+        float sum = 0f;
+        for (int t = CurrentTurn + 1; t <= CurrentTurn + 3; t++)
+            sum += NewsEffects.TrendBias(r, t) + NewsEffects.DemandKick(r, t);
+        return sum;
+    }
+
     // =================================================================
     // 営業日の頭（TomsShopPresenter.Entry の写し: 借金の強制返済 → 保留イベント）
     // =================================================================
@@ -611,6 +736,14 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
         // 朝レポートは表示するだけの消費型。ログとして控える
         if (_morning.HasLines) Today.Notes.AddRange(_morning.Consume());
+
+        // 1周目の立て替え（TutorialPresenter.GrantFundsAdvanceOnce の写し。2日目の朝に一度だけ）
+        if (Config.TutorialAdvance > 0 && !_advanceGranted && turn >= 2)
+        {
+            _advanceGranted = true;
+            TomsModel.GrantFundsAdvance(Config.TutorialAdvance);
+            Today.Notes.Add($"鍛冶屋の立て替え +{Config.TutorialAdvance}G（初回の納付に上乗せ）");
+        }
 
         // 借金の強制返済（DebtPresenter.ShowForced → OnPay / OnBankruptcy の写し）
         if (turn / GameConst.DebtPaymentInterval > TomsModel.DebtCycle.Value)
@@ -633,11 +766,25 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             {
                 int shortfall = amount - money;
                 int liquidatable = Portfolio.GetForcedLiquidationValue(ItemModel, TomsModel.BlacksmithLevel.Value);
-                if (liquidatable > 0 && money + liquidatable >= amount)
+                if (liquidatable > 0 && money + liquidatable + DebtCalculator.GetFireSaleValue(ItemModel) >= amount)
                 {
                     Portfolio.LiquidateForDebt(shortfall, TomsModel, ItemModel, TomsModel.BlacksmithLevel.Value);
                     money = TomsModel.PlayerMoney.Value;
                     Today.Notes.Add("金融資産を強制売却して返済");
+                }
+            }
+
+            // 在庫の投げ売り（DebtPresenter.ShowForced の写し。H-8）
+            if (money < amount)
+            {
+                int fireSale = DebtCalculator.GetFireSaleValue(ItemModel);
+                if (fireSale > 0 && money + fireSale >= amount)
+                {
+                    var lines = new List<string>();
+                    int raised = DebtCalculator.LiquidateInventoryForDebt(amount - money, TomsModel, ItemModel, lines);
+                    money = TomsModel.PlayerMoney.Value;
+                    Today.FireSale += raised;
+                    Today.Notes.Add($"在庫を投げ売りして返済: +{raised}G（{string.Join("・", lines)}）");
                 }
             }
 
@@ -653,6 +800,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
             TomsModel.PurchaseItem(amount);
             TomsModel.DebtCycle.Value = cycle;
+            DebtCalculator.OnPaid(TomsModel);
             TomsModel.SavePlayerMoney();
             RelicRewards.QueueReward($"返済報酬(サイクル{cycle})");
             Today.DebtPaid = amount;
@@ -833,6 +981,41 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"店 Lv{TomsModel.ShopLevel.Value}");
     }
 
+    // ---------------- 広告・マシン・金融（H-1） ----------------
+
+    public AutoPlayActionResult BuyAdvertisement(string advertisementName)
+    {
+        var ad = (Assets.Advertisements ?? new List<AdvertisementData>()).FirstOrDefault(a => a != null && a.advertisementName == advertisementName);
+        if (ad == null) return Reject($"不明な広告 {advertisementName}");
+        int before = TomsModel.PlayerMoney.Value;
+        if (!Marketing.ExecuteAdvertisement(ad)) return Reject($"{advertisementName} を打てない（資金不足）");
+        Today.AdSpend += before - TomsModel.PlayerMoney.Value;
+        return AutoPlayActionResult.Success($"広告 {advertisementName}");
+    }
+
+    public AutoPlayActionResult PlaceMachine(string machineId)
+    {
+        var m = Machines.GetMachine(machineId);
+        if (m == null) return Reject($"不明なマシン {machineId}");
+        int before = TomsModel.PlayerMoney.Value;
+        if (Machines.TryPurchaseAndPlace(m, TomsModel, MachineSlots) == null) return Reject($"{machineId} を置けない（枠・店レベル・資金）");
+        Today.MachineSpend += before - TomsModel.PlayerMoney.Value;
+        return AutoPlayActionResult.Success($"マシン {machineId}");
+    }
+
+    public AutoPlayActionResult BuyBond(string productId, int units)
+    {
+        var p = Portfolio.GetProduct(productId);
+        if (p == null || p.kind != FinancialProductKind.Bond) return Reject($"不明な債券 {productId}");
+        if (p.unlockInfoBrokerLevel > TomsModel.InfoBrokerLevel.Value) return Reject($"{productId} は情報屋レベル不足");
+        int qty = Mathf.Min(units, TomsModel.PlayerMoney.Value / Mathf.Max(1, p.bondUnitPrice),
+            Portfolio.GetRemainingBondUnits(p, TomsModel.InfoBrokerLevel.Value));
+        if (qty <= 0) return Reject($"{productId} を買えない（資金・口数の上限）");
+        if (!Portfolio.BuyBond(p, qty, TomsModel, CurrentTurn)) return Reject($"{productId} の購入に失敗");
+        Today.FinanceSpend += qty * p.bondUnitPrice;
+        return AutoPlayActionResult.Success($"債券 {productId} x{qty}");
+    }
+
     public AutoPlayActionResult ClearDisplay()
     {
         foreach (var r in ItemModel.RuntimeItems)
@@ -972,7 +1155,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         int defeatReward = 0;
         if (!outcome.Victory)
         {
-            int reward = dungeon?.GetLevelData(level)?.rewardGold ?? 0;
+            int reward = dungeon?.GetDefenseReward(level) ?? 0;
             defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
         }
 
@@ -1078,7 +1261,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver),
             HasBoss = hasBoss,
             EnemyCount = count,
-            DefeatReward = Mathf.RoundToInt((dungeon.GetLevelData(level)?.rewardGold ?? 0) * rewardMul),
+            DefeatReward = Mathf.RoundToInt(dungeon.GetDefenseReward(level) * rewardMul),
             HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
             HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
             HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,

@@ -65,7 +65,7 @@ public class StreamingSettingPresenter : IDisposable
         _view.PopulateSelected(_model.Selected, _itemModel);
 
         // 2) 利用可能アイテム一覧（所持数0のアイテムはView側でフィルタ）
-        _view.PopulateAvailable(_itemModel.RuntimeItems);
+        _view.PopulateAvailable(_itemModel.RuntimeItems, BuildMatchupResolver());
 
         // 3) 選択
         _view.OnItemSelected
@@ -106,7 +106,7 @@ public class StreamingSettingPresenter : IDisposable
         _model.LoadData();
         _model.CleanupUnavailableItems(_itemModel);
         _view.PopulateSelected(_model.Selected, _itemModel);
-        _view.PopulateAvailable(_itemModel.RuntimeItems);
+        _view.PopulateAvailable(_itemModel.RuntimeItems, BuildMatchupResolver());
         ShowDungeonInfo();
     }
 
@@ -126,7 +126,7 @@ public class StreamingSettingPresenter : IDisposable
         bool purchased = TryGetPurchasedDungeonInfo(out _);
         _view.ShowDungeonInfo(
             dungeon.dungeonName,
-            purchased ? _battleInputData.DungeonLevel.ToString() : "？", // 見出し「レベル：」はシーン側にある
+            purchased ? (_battleInputData.DungeonLevel <= DungeonLevels.Unfunded ? "0（未出資）" : _battleInputData.DungeonLevel.ToString()) : "？", // 見出し「レベル：」はシーン側にある
             purchased ? ItemAttributeText.ToJapanese(dungeon.requiredAttribute) : "？");
     }
 
@@ -195,6 +195,31 @@ public class StreamingSettingPresenter : IDisposable
         _view.PopulateSelected(_model.Selected, _itemModel);
         _model.SaveData();
         _view.SetQuickConfirmLabel(_model.Selected.Count);
+    }
+
+    /// <summary>
+    /// 品ごとの有利・不利。判定は配信中の値動きと同じ（敵の属性ごとに ElementAttributeMapper.IsEffective / IsWeak）。
+    /// 行き先の情報を買っていなければ全部「？」。
+    /// </summary>
+    private Func<RuntimeItemData, AttributeMatchup> BuildMatchupResolver()
+    {
+        if (!TryGetPurchasedDungeonInfo(out var dungeon) || dungeon == null)
+            return _ => AttributeMatchup.Unknown;
+
+        var enemyElements = GetDungeonEnemyElements(dungeon, _battleInputData.DungeonLevel);
+        return item =>
+        {
+            int effective = 0, weak = 0;
+            foreach (var element in enemyElements)
+            {
+                if (element == ElementType.None) continue;
+                if (ElementAttributeMapper.IsEffective(item.ItemAttribute, element)) effective++;
+                else if (ElementAttributeMapper.IsWeak(item.ItemAttribute, element)) weak++;
+            }
+            if (effective > weak) return AttributeMatchup.Advantage;
+            if (weak > effective) return AttributeMatchup.Disadvantage;
+            return AttributeMatchup.Neutral;
+        };
     }
 
     private List<KeyValuePair<string, int>> BuildAutoSelection()

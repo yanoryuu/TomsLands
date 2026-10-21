@@ -270,6 +270,26 @@ public class PreparationView : MonoBehaviour
         carrySlider.interactable = carrySliderMax > 0;
     }
 
+    /// <summary>難易度ボタンの文字の下に中身（配信の回数と日数）を小さく添える。ラベルが無いボタンは何もしない。</summary>
+    public void SetDifficultyDetails(string easy, string normal, string hard)
+    {
+        SetDifficultyDetail(easyButton, easy);
+        SetDifficultyDetail(normalButton, normal);
+        SetDifficultyDetail(hardButton, hard);
+    }
+
+    private static void SetDifficultyDetail(Button button, string detail)
+    {
+        if (button == null || string.IsNullOrEmpty(detail)) return;
+        var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (label == null) return;
+        string name = label.text;
+        int nl = name.IndexOf('\n');
+        if (nl >= 0) name = name.Substring(0, nl);
+        label.textWrappingMode = TextWrappingModes.NoWrap;
+        label.text = $"{name}\n<size=55%>{detail}</size>";
+    }
+
     /// <summary>難易度の選択ハイライトを更新する。</summary>
     public void UpdateDifficultySelection(GameModeId selected)
     {

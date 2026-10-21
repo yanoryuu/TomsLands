@@ -88,8 +88,8 @@ public class DungeonRepository : MonoBehaviour
         {
             if (sd == null || string.IsNullOrWhiteSpace(sd.dungeonKey)) continue;
 
-            // 文字列 → enum へ安全にパース（順序変更に強い）
-            if (!Enum.TryParse<DungeonName>(sd.dungeonKey, out var key))
+            // 文字列 → enum へ安全にパース（順序変更に強い）。旧セーブは日本語のダンジョン名で書いてあるので名前でも引く
+            if (!Enum.TryParse<DungeonName>(sd.dungeonKey, out var key) && !TryFindKeyByName(sd.dungeonKey, out key))
             {
                 Debug.LogWarning($"[DungeonRepository] Unknown dungeonKey in save: {sd.dungeonKey}");
                 continue;
@@ -106,6 +106,8 @@ public class DungeonRepository : MonoBehaviour
 
             var d = new DungeonData(so);
             d.currentDungeonLevel = sd.currentDungeonLevel; // セーブ値で上書き
+            // 旧形式（未出資が Lv1）の Lv1 は出資の記録が無い状態なので Lv0 として読む。Lv2 以上は出資済みなのでそのまま
+            if (sd.levelVersion < 1 && d.currentDungeonLevel <= 1) d.currentDungeonLevel = DungeonLevels.Unfunded;
             d.dungeonStatus = sd.dungeonStatus;             // セーブ値で上書き
             d.isShowedInfo = sd.isShowedInfo;               // セーブ値で上書き
             rebuilt.Add(d);
@@ -121,6 +123,16 @@ public class DungeonRepository : MonoBehaviour
         }
 
         availableDungeons = rebuilt;
+        return true;
+    }
+
+    private bool TryFindKeyByName(string name, out DungeonName key)
+    {
+        key = default;
+        if (dungeonInfos == null || string.IsNullOrEmpty(name)) return false;
+        var so = dungeonInfos.FirstOrDefault(x => x != null && x.dungeonName == name);
+        if (so == null) return false;
+        key = so.key;
         return true;
     }
 

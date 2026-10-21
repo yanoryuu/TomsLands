@@ -264,6 +264,27 @@ public class ShopStatusModel
     /// <summary>
     /// ステータス値を上下限内にクランプする。
     /// </summary>
+    /// <summary>
+    /// 毎朝の減衰（H-3）。注目・拡散は早く、維持はゆっくり冷める。広告を「一度買えば終わり」から「張りどきを選ぶ」ものにする。
+    /// 減衰率は GameBalanceData（配信で上書き可）。1 未満の端数は切り捨て（0 に向かって減る）。
+    /// </summary>
+    public void ApplyDailyDecay()
+    {
+        if (_balanceData == null) return;
+        int Decay(int v, float rate) => rate <= 0f || v <= 0 ? v : ClampStat(Mathf.FloorToInt(v * (1f - Mathf.Clamp01(rate))));
+        int t = Decay(Trust.Value, _balanceData.trustDecayRate);
+        int a = Decay(Attention.Value, _balanceData.attentionDecayRate);
+        int s = Decay(Spread.Value, _balanceData.spreadDecayRate);
+        int r = Decay(Retention.Value, _balanceData.retentionDecayRate);
+        if (t == Trust.Value && a == Attention.Value && s == Spread.Value && r == Retention.Value) return;
+        Trust.Value = t;
+        Attention.Value = a;
+        Spread.Value = s;
+        Retention.Value = r;
+        Debug.Log($"[ShopStatus] 毎朝の減衰 → 信頼={t} 注目={a} 拡散={s} 維持={r}");
+        SaveData();
+    }
+
     private int ClampStat(int value)
     {
         int min = _balanceData != null ? _balanceData.statMin : 0;

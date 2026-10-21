@@ -40,7 +40,7 @@ public partial class DebugMenuView : MonoBehaviour
     private Vector2 _scroll;
     private GUIStyle _headerStyle;
     private int _tab;
-    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他", "画面移動", "オート", "便利", "ログ" };
+    private static readonly string[] TabNames = { "情報", "お金", "レベル", "レリック", "マーケ", "相場", "その他", "画面移動", "オート", "便利", "ログ", "実績" };
 
     private float _volMultiplier = 1f;
     private float _baseLambda;
@@ -52,10 +52,8 @@ public partial class DebugMenuView : MonoBehaviour
     /// <summary>村施設ID（VillageFacilityData.facilityId と一致させること）。</summary>
     private static readonly (string id, string label)[] Facilities =
     {
-        ("hall", "領主館"), ("bank", "銀行"), ("guild", "冒険者ギルド"), ("antique", "骨董品店"),
-        ("shrine", "祠"), ("tavern", "酒場"), ("warehouse", "倉庫"), ("workshop", "工房"),
-        ("artisan", "職人組合"), ("farm", "農場"), ("press", "印刷所"), ("road", "街道整備"),
-        ("training", "訓練所"),
+        ("hall", "領主館"), ("guild", "冒険者ギルド"), ("tavern", "酒場"),
+        ("bank", "銀行"), ("artisan", "職人組合"), ("plaza", "広場"),
     };
 
     [Inject]
@@ -126,6 +124,7 @@ public partial class DebugMenuView : MonoBehaviour
             case 8: DrawAutoPlaySection(); break;     // DebugMenuView.AutoPlay.cs
             case 9: DrawUtilitySection(); break;      // DebugMenuView.Utility.cs
             case 10: DrawConsoleSection(); break;     // DebugMenuView.Console.cs
+            case 11: DrawAchievementSection(); break; // DebugMenuView.Achievements.cs
         }
 
         GUILayout.EndScrollView();
@@ -295,7 +294,7 @@ public partial class DebugMenuView : MonoBehaviour
                 if (d == null) continue;
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"{d.dungeonName}: Lv{d.currentDungeonLevel}", GUILayout.Width(200));
-                if (GUILayout.Button("-1")) { d.currentDungeonLevel = Mathf.Max(1, d.currentDungeonLevel - 1); _dungeonRepository.Save(); }
+                if (GUILayout.Button("-1")) { d.currentDungeonLevel = Mathf.Max(DungeonLevels.Unfunded, d.currentDungeonLevel - 1); _dungeonRepository.Save(); }
                 if (GUILayout.Button("+1")) { d.currentDungeonLevel = Mathf.Min(5, d.currentDungeonLevel + 1); _dungeonRepository.Save(); }
                 GUILayout.EndHorizontal();
             }

@@ -128,3 +128,10 @@ ReactiveProperty 経由の変更なので購読中のUIには即反映される�
 - 一覧は新しい300件まで描画（IMGUI の負荷対策）。行クリックで全文とスタックトレースを下に表示
 - クリア、絞り込み結果をクリップボードへコピー（Warning/Error はスタックトレース付き）、Player.log のパス表示
 - Log のスタックトレースは Player Settings の Stack Trace 設定に従う（None だと空）
+
+### 実績（DebugMenuView.Achievements.cs）
+- Steam の状態（SteamManager.StatusMessage）と、手元の実績記録のパス（persistentDataPath/achievements.json。自動テストの隔離中はその隔離フォルダ）
+- 22個の実績の解除状態（■解除済み / □未解除）と、Stat を持つものは進み具合 [現在/目標]
+- Stats（MAX_MONEY など10個）の値、このランの途中経過（今日の入金・バズ連続日数・勇者側/魔王側で儲けたか・配信日のクリア見込み・このランのレリック数・見張り中のスクラップ・クリアを数えたか）
+- 「全部リセット…」→「本当にリセットする」で、手元の記録と Steam の実績・Stats をすべて消す（SteamUserStats.ResetAllStats(true)）。このメニュー自体がエディタ／開発ビルドにしか無い。ランの途中経過（achievementRun.json）は消さない
+- 実績の一覧と条件は Docs/SteamAchievements.md

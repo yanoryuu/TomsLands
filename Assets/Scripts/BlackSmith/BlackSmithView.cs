@@ -117,6 +117,12 @@ public class BlackSmithView : MonoBehaviour
         if (autoBuyButton != null)
             autoBuyButton.onClick.AddListener(() => OnAutoBuyRequested.OnNext(Unit.Default));
 
+        // TomsShop.unity の鍛冶屋インスタンスで予算ポップアップが「表示」に上書きされている（#77 以来）ため、
+        // シーンを読み込むたびに Show を通らない（予算欄が空・所持金が既定の文字の）ポップアップが出ていた。
+        // まだ Show で開いていなければここで閉じる（チュートリアルで先に Show された場合は閉じない）
+        if (autoBuyBudgetPopup != null && !autoBuyBudgetPopup.IsOpenedByShow)
+            autoBuyBudgetPopup.gameObject.SetActive(false);
+
         if (autoBuyBudgetPopup != null)
             autoBuyBudgetPopup.OnConfirmClicked
                 .Subscribe(budget => OnAutoBuyBudgetConfirmed.OnNext((budget, autoBuyBudgetPopup.SelectedStrategy)))
