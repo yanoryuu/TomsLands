@@ -192,12 +192,14 @@ public static class GameConst
 
     /// <summary>
     /// 鍛冶屋の現在レベルからレベルアップコストを取得。最大レベル／範囲外なら -1 を返す。
+    /// 村の職人組合の割引（VillageEffects.ApplyCraftCost）を含む。表示と支払いはどちらもここを通す。
     /// </summary>
     public static int GetBlackSmithLevelUpCost(int currentLevel)
     {
         var costs = Data.blackSmithLevelUpCosts;
         if (currentLevel <= 0 || currentLevel >= Data.maxBlackSmithLevel) return -1;
-        return costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
+        int cost = costs != null && currentLevel < costs.Length ? costs[currentLevel] : -1;
+        return cost < 0 ? cost : VillageEffects.Current.ApplyCraftCost(cost);
     }
 
     public static int[] InfoBrokerLevelUpCosts => Data.infoBrokerLevelUpCosts;

@@ -74,6 +74,16 @@ public static class ResultDebugDummy
             BestItemName = "鋼のロングソード",
             BestItemRevenue = Mathf.RoundToInt(netWorth * 0.32f),
             BestItemIcon = null,
+            Mode = GameModeId.Medium,
+            Profit = netWorth - init,
+            StreamEarningsTotal = Mathf.RoundToInt(netWorth * 0.4f),
+            HasBestStream = true,
+            BestStreamEarnings = Mathf.RoundToInt(netWorth * 0.18f),
+            BestStreamDungeon = "（確認用）",
+            HasPreviousBest = true,
+            PreviousBestProfit = Mathf.RoundToInt((netWorth - init) * 0.8f),
+            RunNumber = 4,
+            VillageFunds = MetaProgressModel.CalculateVillageFunds(true, netWorth - init, 0, GameModeId.Medium),
         };
     }
 }

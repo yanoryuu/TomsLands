@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using R3;
 using UnityEngine;
 
 /// <summary>
@@ -22,10 +23,21 @@ public class VillageModel
 
     public IReadOnlyList<VillageFacilityData> Facilities => facilities;
 
+    private readonly Subject<string> invested = new();
+    /// <summary>施設に投資してレベルが上がった（施設ID）。実績の判定用。</summary>
+    public Observable<string> OnInvested => invested;
+
+    /// <summary>村のすべての施設が建っている（Lv1 以上）か。施設の数はデータ次第で決め打ちしない。施設データが無ければ false。</summary>
+    public bool AreAllFacilitiesBuilt() =>
+        facilities.Count > 0 && facilities.All(f => f != null && GetLevel(f.facilityId) >= 1);
+
     public int VillageFunds => metaProgress.VillageFunds;
 
     /// <summary>村の総合Lv（全施設レベルの合計）。</summary>
     public int VillageLevel => facilities.Sum(f => GetLevel(f.facilityId));
+
+    /// <summary>全施設を最大まで建てたときの総合Lv。</summary>
+    public int MaxVillageLevel => facilities.Sum(f => f != null ? f.MaxLevel : 0);
 
     public int HallLevel => GetLevel(HallId);
 
@@ -45,7 +57,7 @@ public class VillageModel
 
     /// <summary>
     /// 投資可否の判定。ゲート仕様:
-    /// - Lv1の建設: 領主館Lv >= requiredHallLevel（祠=2、他は0）
+    /// - Lv1の建設: 領主館Lv >= requiredHallLevel（今の6施設はすべて0）
     /// - Lv2以降: 領主館Lv >= 目標Lv-1（領主館Lv1で全施設のLv2解禁、Lv2でLv3解禁）
     /// - 領主館自身はゲートなし
     /// </summary>
@@ -96,6 +108,7 @@ public class VillageModel
         metaProgress.SetFacilityLevel(facilityId, next);
         metaProgress.SaveData();
         message = $"{facility.facilityName} が Lv{next} になった！";
+        invested.OnNext(facilityId);
         Debug.Log($"[Village] 投資: {facilityId} → Lv{next} ({cost}G, 残り村資金 {metaProgress.VillageFunds}G)");
         return true;
     }

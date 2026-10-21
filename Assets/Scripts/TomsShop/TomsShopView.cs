@@ -104,6 +104,7 @@ public class TomsShopView : MonoBehaviour
         if (relicChoicePanel == null || relicChoiceButtons == null || relicChoiceButtons.Length == 0)
             return false;
         choices ??= System.Array.Empty<RelicDefinition>();
+        EnsureRelicChoiceCapacity(choices.Count);
 
         // 辞退ボタンの文言（「辞退して◯◯Gもらう」等）を差し替える
         if (!string.IsNullOrEmpty(skipLabel) && relicChoiceSkipButton != null)
@@ -154,6 +155,89 @@ public class TomsShopView : MonoBehaviour
         UIFx.PanelOpen(relicChoicePanel);
         if (relicChoiceWindow != null) UIFx.Pop(relicChoiceWindow, 0.92f, 0.22f);
         return true;
+    }
+
+    // 村の冒険者ギルドで選択肢が4つになったとき用。シーンに置いた3枚のカードを複製して並べ直す
+    private int relicChoiceBaseCount;
+    private Vector2[] relicChoiceBasePositions;
+    private Vector3 relicChoiceBaseScale = Vector3.one;
+
+    /// <summary>
+    /// 選択肢の数だけカードを用意する（足りなければ最後のカードを複製）。
+    /// 元の枚数を超えるときは、元の並びの幅に収まるよう縮めて等間隔に並べ直す。
+    /// </summary>
+    private void EnsureRelicChoiceCapacity(int count)
+    {
+        if (relicChoiceButtons == null || relicChoiceButtons.Length == 0) return;
+        if (relicChoiceBaseCount == 0)
+        {
+            relicChoiceBaseCount = relicChoiceButtons.Length;
+            relicChoiceBasePositions = new Vector2[relicChoiceBaseCount];
+            for (int i = 0; i < relicChoiceBaseCount; i++)
+                if (relicChoiceButtons[i] != null && relicChoiceButtons[i].transform is RectTransform rt)
+                    relicChoiceBasePositions[i] = rt.anchoredPosition;
+            if (relicChoiceButtons[0] != null) relicChoiceBaseScale = relicChoiceButtons[0].transform.localScale;
+        }
+
+        var template = relicChoiceButtons[relicChoiceButtons.Length - 1];
+        while (relicChoiceButtons.Length < count && template != null)
+        {
+            var clone = Instantiate(template, template.transform.parent);
+            clone.onClick.RemoveAllListeners();
+            int index = relicChoiceButtons.Length;
+            clone.onClick.AddListener(() => OnRelicChoiceSelected.OnNext(index));
+            System.Array.Resize(ref relicChoiceButtons, index + 1);
+            relicChoiceButtons[index] = clone;
+            if (relicChoiceSlots != null && relicChoiceSlots.Length > 0)
+            {
+                System.Array.Resize(ref relicChoiceSlots, index + 1);
+                relicChoiceSlots[index] = clone.GetComponentInChildren<RelicChoiceSlotView>(true);
+            }
+        }
+
+        int shown = Mathf.Max(count, 1);
+        if (shown <= relicChoiceBaseCount)
+        {
+            for (int i = 0; i < relicChoiceBaseCount && i < relicChoiceButtons.Length; i++)
+            {
+                if (relicChoiceButtons[i] == null || !(relicChoiceButtons[i].transform is RectTransform rt)) continue;
+                rt.anchoredPosition = relicChoiceBasePositions[i];
+                SetRelicCardScale(i, 1f);
+            }
+            return;
+        }
+
+        // 元の端から端までの幅（カード1枚ぶんの間隔 × 枚数）に収める
+        float baseSpacing = relicChoiceBaseCount > 1
+            ? (relicChoiceBasePositions[relicChoiceBaseCount - 1].x - relicChoiceBasePositions[0].x) / (relicChoiceBaseCount - 1)
+            : 450f;
+        float span = baseSpacing * relicChoiceBaseCount;
+        float spacing = span / shown;
+        float scale = Mathf.Min(1f, spacing / Mathf.Max(1f, baseSpacing) * 1.02f);
+        float y = relicChoiceBasePositions[0].y;
+        for (int i = 0; i < shown && i < relicChoiceButtons.Length; i++)
+        {
+            if (relicChoiceButtons[i] == null || !(relicChoiceButtons[i].transform is RectTransform rt)) continue;
+            rt.anchoredPosition = new Vector2((i - (shown - 1) * 0.5f) * spacing, y);
+            SetRelicCardScale(i, scale);
+        }
+    }
+
+    /// <summary>
+    /// カードの大きさを変える。カード（RelicChoiceSlotView）はホバーのたびに自分の大きさを戻すので、
+    /// その基準の大きさ（BaseScale）として渡す。カード部品が無い旧UIはボタンの transform を直接縮める。
+    /// </summary>
+    private void SetRelicCardScale(int index, float scale)
+    {
+        var button = relicChoiceButtons[index];
+        var slot = relicChoiceSlots != null && index < relicChoiceSlots.Length ? relicChoiceSlots[index] : null;
+        if (slot != null && slot.transform == button.transform)
+        {
+            slot.BaseScale = relicChoiceBaseScale.x * scale;
+            return;
+        }
+        button.transform.localScale = relicChoiceBaseScale * scale;
+        if (slot != null) slot.BaseScale = 1f;
     }
 
     public void HideRelicChoices()

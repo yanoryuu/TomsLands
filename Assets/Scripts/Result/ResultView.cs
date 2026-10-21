@@ -27,8 +27,11 @@ public class ResultView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI netWorthText;
 
     [Header("=== ゲーム情報 ===")]
+    [Tooltip("何周目・ターン数")]
     [SerializeField] private TextMeshProUGUI totalTurnsText;
+    [Tooltip("自己ベスト（この難易度の最高の儲け）。旧・鍛冶屋Lvの行を使っている")]
     [SerializeField] private TextMeshProUGUI blacksmithLevelText;
+    [Tooltip("村へ入る村資金。旧・情報屋Lvの行を使っている")]
     [SerializeField] private TextMeshProUGUI infoBrokerLevelText;
 
     [Header("=== ボタン ===")]
@@ -98,6 +101,7 @@ public class ResultView : MonoBehaviour
 
     private static readonly Color PlusColor = new(0.62f, 0.88f, 0.45f);
     private static readonly Color MinusColor = new(1f, 0.52f, 0.45f);
+    private static readonly Color NewBestColor = new(0.91f, 0.64f, 0.24f); // 金 #E8A33D
 
     /// <summary>村へ戻るボタンが押された</summary>
     public Subject<Unit> OnGoToTitleClicked { get; } = new();
@@ -164,14 +168,16 @@ public class ResultView : MonoBehaviour
         if (data == null) return;
 
         SetText(finalMoneyText, FormatGold(data.FinalMoney));
-        SetText(moneyDifferenceText, FormatSigned(data.MoneyDifference));
+        // 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え（ランクと村資金の基準）
+        SetText(moneyDifferenceText, FormatSigned(data.Profit));
         if (moneyDifferenceText != null)
-            moneyDifferenceText.color = data.MoneyDifference >= 0 ? PlusColor : MinusColor;
+            moneyDifferenceText.color = data.Profit >= 0 ? PlusColor : MinusColor;
         SetText(stockValueText, FormatGold(data.TotalStockValue));
         SetText(netWorthText, FormatGold(data.NetWorth));
-        SetText(totalTurnsText, $"{data.TotalTurns}");
-        SetText(blacksmithLevelText, $"Lv.{data.BlacksmithLevel}");
-        SetText(infoBrokerLevelText, $"Lv.{data.InfoBrokerLevel}");
+        SetText(totalTurnsText, FormatRunTurns(data, data.TotalTurns));
+        SetText(blacksmithLevelText, FormatBest(data));
+        if (blacksmithLevelText != null && data.IsNewBest) blacksmithLevelText.color = NewBestColor;
+        SetText(infoBrokerLevelText, FormatSigned(data.VillageFunds));
 
         // --- ランク ---
         var rankSprite = GetRankSprite(data.Rank);
@@ -205,7 +211,7 @@ public class ResultView : MonoBehaviour
             bestItemIcon.enabled = data.BestItemIcon != null;
             bestItemIcon.preserveAspect = true;
         }
-        SetText(streamRecordText, $"{data.StreamWins}勝 {data.StreamLosses}敗");
+        SetText(streamRecordText, FormatStreamRecord(data));
         SetText(buzzCountText, $"{data.BuzzCount}回");
     }
 
@@ -294,12 +300,12 @@ public class ResultView : MonoBehaviour
         float t = 0.45f;
         const float rowStep = 0.26f;
         InsertRow(seq, ref t, rowStep, finalMoneyText, v => FormatGold(v), data.FinalMoney, 0.5f);
-        InsertRow(seq, ref t, rowStep, moneyDifferenceText, v => FormatSigned(v), data.MoneyDifference, 0.5f);
+        InsertRow(seq, ref t, rowStep, moneyDifferenceText, v => FormatSigned(v), data.Profit, 0.5f);
         InsertRow(seq, ref t, rowStep, stockValueText, v => FormatGold(v), data.TotalStockValue, 0.5f);
         InsertRow(seq, ref t, rowStep + 0.12f, netWorthText, v => FormatGold(v), data.NetWorth, 0.8f, punch: true);
-        InsertRow(seq, ref t, rowStep, totalTurnsText, v => $"{v}", data.TotalTurns, 0.3f);
-        InsertRow(seq, ref t, rowStep, blacksmithLevelText, v => $"Lv.{v}", data.BlacksmithLevel, 0.2f);
-        InsertRow(seq, ref t, rowStep, infoBrokerLevelText, v => $"Lv.{v}", data.InfoBrokerLevel, 0.2f);
+        InsertRow(seq, ref t, rowStep, totalTurnsText, v => FormatRunTurns(data, v), data.TotalTurns, 0.3f);
+        InsertRow(seq, ref t, rowStep, blacksmithLevelText, _ => FormatBest(data), 0, 0.01f, punch: data.IsNewBest);
+        InsertRow(seq, ref t, rowStep, infoBrokerLevelText, v => FormatSigned(v), data.VillageFunds, 0.5f);
 
         // 所持金グラフを左から描く（統計と並行）
         const float chartStart = 0.6f, chartDur = 1.6f;
@@ -577,6 +583,28 @@ public class ResultView : MonoBehaviour
     private static string FormatGold(int v) => $"{v:#,0}G";
 
     private static string FormatSigned(int v) => v >= 0 ? $"+{v:#,0}G" : $"-{-v:#,0}G";
+
+    /// <summary>「4周目・30ターン」（周回数が不明なら ターン数だけ）。</summary>
+    private static string FormatRunTurns(ResultStatisticsData d, int turns) =>
+        d.RunNumber > 0 ? $"{d.RunNumber}周目・{turns}ターン" : $"{turns}ターン";
+
+    /// <summary>自己ベスト（この難易度の最高の儲け）。更新したら「更新！」、初クリアは「はじめて」。</summary>
+    private static string FormatBest(ResultStatisticsData d)
+    {
+        if (!d.HasPreviousBest) return "はじめてのクリア";
+        return d.IsNewBest
+            ? $"更新！ {FormatSigned(d.Profit)}"
+            : FormatSigned(d.PreviousBestProfit);
+    }
+
+    /// <summary>配信の成績: 勇者の勝ち（討伐）・負け（防衛）と、配信の収支の合計。</summary>
+    private static string FormatStreamRecord(ResultStatisticsData d)
+    {
+        string record = $"討伐{d.StreamWins}・防衛{d.StreamLosses}";
+        return d.StreamWins + d.StreamLosses > 0 || d.StreamEarningsTotal != 0
+            ? $"<size=82%>{record}</size>\n<size=64%>配信 {FormatSigned(d.StreamEarningsTotal)}</size>"
+            : record;
+    }
 
     private Sprite GetRankSprite(string rank)
     {

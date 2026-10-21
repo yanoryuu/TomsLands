@@ -19,6 +19,7 @@ MonoBehaviour:
   rarity: 1
   category: 0
   isCurse: 0
+  unlockGuildLevel: 2
   modifiers:
   - stat: 10
     op: 1

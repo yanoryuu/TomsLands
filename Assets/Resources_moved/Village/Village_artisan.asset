@@ -14,18 +14,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   facilityId: artisan
   facilityName: "\u8077\u4EBA\u7D44\u5408"
-  description: "\u6751\u306E\u935B\u51B6\u304C\u5E97\u3092\u652F\u3048\u308B\u3002"
+  description: "\u6751\u306E\u8077\u4EBA\u304C\u5E97\u3092\u652F\u3048\u308B\u3002"
   icon: {fileID: 0}
   requiredHallLevel: 0
   levels:
-  - cost: 7000
+  - cost: 400000
     effectText: "\u30E9\u30F3\u958B\u59CB\u6642\u304B\u3089\u935B\u51B6\u5C4B Lv2"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 16000
-    effectText: "\u935B\u51B6\u5C4B\u306E\u958B\u767A\u8CBB -15%"
+  - cost: 1000000
+    effectText: "\u935B\u51B6\u5C4B Lv2 \u3067\u958B\u59CB\u30FB\u935B\u51B6\u5C4B\u306E\u30EC\u30D9\u30EB\u30A2\u30C3\u30D7\u8CBB\u3068\u30DE\u30B7\u30F3\u306E\u8CFC\u5165\u8CBB
+      -15%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 2200000
+    effectText: "\u935B\u51B6\u5C4B Lv2 \u3067\u958B\u59CB\u30FB\u8CBB\u7528 -15%\u30FB\u30DE\u30B7\u30F3\u306E\u8A2D\u7F6E\u67A0
+      +1"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []

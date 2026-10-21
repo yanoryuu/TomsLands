@@ -10,28 +10,31 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c56b9e25a1345f94e965d826d74278dd, type: 3}
-  m_Name: Village_warehouse
+  m_Name: Village_plaza
   m_EditorClassIdentifier: 
-  facilityId: warehouse
-  facilityName: "\u5009\u5EAB"
-  description: "\u6301\u3066\u308B\u3060\u3051\u6301\u3063\u3066\u3044\u3051\u3002"
+  facilityId: plaza
+  facilityName: "\u5E83\u5834"
+  description: "\u4EBA\u304C\u96C6\u307E\u308B\u5834\u6240\u306B\u306F\u3001\u5642\u3068\u5BA2\u304C\u96C6\u307E\u308B\u3002"
   icon: {fileID: 0}
   requiredHallLevel: 0
   levels:
-  - cost: 6000
-    effectText: "\u6301\u3061\u8FBC\u307F\u67A0 +1\uFF08\u8A083\uFF09"
+  - cost: 400000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
+      +10"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 14000
-    effectText: "\u6301\u3061\u8FBC\u307F\u67A0 +1\uFF08\u8A084\uFF09"
+  - cost: 1000000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
+      +10\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +5%"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 24000
-    effectText: "\u6301\u3061\u8FBC\u307F\u67A0 +1\uFF08\u8A085\uFF09"
+  - cost: 2200000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +1,000\u30FB\u6CE8\u76EE
+      +20\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +10%"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []

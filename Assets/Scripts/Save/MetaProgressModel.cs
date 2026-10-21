@@ -5,9 +5,9 @@ using UnityEngine;
 
 /// <summary>
 /// ラン間で持ち越すメタ進行（スロット=プロフィール単位、slot_N/metaData.json）。
-/// - 村資金 VillageFunds: ランクリア時に持ち帰った手元Gがそのまま貯まる唯一のメタ通貨。
+/// - 村資金 VillageFunds: ラン終了時に「儲け」から変換されて貯まる唯一のメタ通貨（ConvertRunToVillageFunds）。
 ///   村の施設投資・次の出店への持ち込み（上限=銀行レベル）・スタートダッシュ購入すべてに使う
-/// - 周回統計（総ラン数・クリア数・ベスト記録）
+/// - 周回統計（総ラン数・クリア数・ベスト記録・直近のラン履歴）
 /// - MetaCurrency/CreditLineLevel/bankedGold は旧仕組みの残置。現在は未使用
 /// ※ RunSaveCleaner の削除対象に含めないこと（ラン内データではない）。
 /// スロット削除（プロフィール削除）でのみ消える。
@@ -24,6 +24,16 @@ public class MetaProgressModel
     public int ClearedRuns { get; private set; }
     public int BestNetWorth { get; private set; }
     public string BestRank { get; private set; } = "";
+
+    /// <summary>直近のラン履歴の保存件数。</summary>
+    public const int MaxRunRecords = 20;
+
+    /// <summary>難易度ごとの最高の儲け（index = GameModeId。クリアしたランのみ。未記録は int.MinValue）。</summary>
+    private readonly List<int> bestProfits = new();
+
+    /// <summary>直近のラン履歴（古い順。最大 MaxRunRecords 件）。</summary>
+    private readonly List<RunRecordPlain> runRecords = new();
+    public IReadOnlyList<RunRecordPlain> RunRecords => runRecords;
 
     /// <summary>村資金(G)。ラン終了時に純資産から変換されて貯まり、村の施設投資に使う。</summary>
     public int VillageFunds { get; private set; }
@@ -141,48 +151,106 @@ public class MetaProgressModel
     }
 
     /// <summary>
-    /// ラン終了時、持ち帰ったお金を村資金へ入れる（村と店の経営を繋ぐ唯一の橋・一方向）。
-    /// クリア時: 手元現金がそのまま全額 / 破産時: 手元現金 × bankruptcyConversionRate。
+    /// ラン終了時、そのランの儲けを村資金へ入れる（村と店の経営を繋ぐ唯一の橋・一方向）。
+    /// 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え（RunProfit.Compute）。
+    /// クリア時: 持ち込み（儲けが赤字ならその分を引く）+ 完走ボーナス + max(0, 儲け) × 変換率 × 難易度倍率。
+    /// 破産時: 持ち込みは戻らない。そのランの最高の儲け × 変換率 × 難易度倍率 × bankruptcyConversionRate。
     /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
     /// </summary>
-    public int ConvertRunToVillageFunds(bool cleared, int netWorth, int finalCash)
+    public int ConvertRunToVillageFunds(bool cleared, int profit, int carried, GameModeId mode)
     {
-        var settings = GameConst.Village;
-        int converted = cleared
-            ? Mathf.Max(0, finalCash)
-            : Mathf.FloorToInt(Mathf.Max(0, finalCash) * settings.bankruptcyConversionRate);
-
+        int converted = CalculateVillageFunds(cleared, profit, carried, mode);
         if (converted > 0) AddVillageFunds(converted);
         SaveData();
-        Debug.Log($"[Meta] 村資金へ: +{converted}G (cleared={cleared}, 合計 {VillageFunds}G)");
+        Debug.Log($"[Meta] 村資金へ: +{converted}G (cleared={cleared}, 儲け={profit}G, 持ち込み={carried}G, {mode}, 合計 {VillageFunds}G)");
         return converted;
     }
 
-    /// <summary>
-    /// ラン終了時の記録とメタ通貨の精算。
-    /// 獲得式: floor(NetWorth/divisor) + ランクボーナス + 到達ターン×係数（破産時はターン分のみ）。
-    /// </summary>
-    public int RecordRunEnd(bool cleared, int netWorth, string rank, int totalTurns)
+    /// <summary>変換額の計算だけ（表示・自動プレイの見積もり用）。</summary>
+    public static int CalculateVillageFunds(bool cleared, int profit, int carried, GameModeId mode)
     {
+        var settings = GameConst.Village;
+        float rate = Mathf.Max(0f, settings.conversionRate) * DifficultyMultiplier(settings, mode);
+        carried = Mathf.Max(0, carried);
+        if (!cleared)
+        {
+            float bankruptRate = Mathf.Max(0f, settings.bankruptcyConversionRate);
+            return Mathf.FloorToInt(Mathf.Max(0, profit) * rate * bankruptRate);
+        }
+
+        long total = Mathf.Max(0, carried + Mathf.Min(0, profit))
+                     + (long)ClearBase(settings, mode)
+                     + (long)Mathf.FloorToInt(Mathf.Max(0, profit) * rate);
+        return (int)System.Math.Min(total, int.MaxValue);
+    }
+
+    private static float DifficultyMultiplier(VillageSettingsData settings, GameModeId mode)
+    {
+        var table = settings.difficultyConversionMultipliers;
+        int i = (int)mode;
+        return table != null && i >= 0 && i < table.Length ? Mathf.Max(0f, table[i]) : 1f;
+    }
+
+    private static int ClearBase(VillageSettingsData settings, GameModeId mode)
+    {
+        var table = settings.clearBaseFunds;
+        int i = (int)mode;
+        return table != null && i >= 0 && i < table.Length ? Mathf.Max(0, table[i]) : 0;
+    }
+
+    /// <summary>この難易度で記録した最高の儲け（クリアしたランのみ）。未記録なら false。</summary>
+    public bool TryGetBestProfit(GameModeId mode, out int best)
+    {
+        int i = (int)mode;
+        best = 0;
+        if (i < 0 || i >= bestProfits.Count || bestProfits[i] == int.MinValue) return false;
+        best = bestProfits[i];
+        return true;
+    }
+
+    /// <summary>
+    /// ラン終了時の記録（総ラン数・クリア数・ベスト・ラン履歴）。
+    /// 旧仕組みのメタ通貨「信用」も従来どおり加算する（現在は未使用）。
+    /// 自己ベスト（その難易度の最高の儲け）を更新したら true を返す（その難易度の初クリアは false）。
+    /// </summary>
+    public bool RecordRunEnd(RunRecordPlain record)
+    {
+        if (record == null) return false;
         var settings = GameConst.Preparation;
 
         TotalRuns++;
-        if (cleared) ClearedRuns++;
-        if (netWorth > BestNetWorth) BestNetWorth = netWorth;
-        if (cleared && !string.IsNullOrEmpty(rank) && IsBetterRank(rank, BestRank))
-            BestRank = rank;
+        if (record.cleared) ClearedRuns++;
+        if (record.netWorth > BestNetWorth) BestNetWorth = record.netWorth;
+        if (record.cleared && !string.IsNullOrEmpty(record.rank) && IsBetterRank(record.rank, BestRank))
+            BestRank = record.rank;
 
-        int earned = Mathf.Max(0, totalTurns) * settings.metaCurrencyPerTurn;
-        if (cleared)
+        bool newBest = false;
+        if (record.cleared)
         {
-            earned += Mathf.Max(0, netWorth) / Mathf.Max(1, settings.metaCurrencyDivisor);
-            earned += RankBonus(rank, settings);
+            int i = Mathf.Clamp(record.mode, 0, 2);
+            while (bestProfits.Count <= i) bestProfits.Add(int.MinValue);
+            if (bestProfits[i] == int.MinValue || record.profit > bestProfits[i])
+            {
+                newBest = bestProfits[i] != int.MinValue;
+                bestProfits[i] = record.profit;
+            }
         }
 
+        record.runNo = TotalRuns;
+        runRecords.Add(record);
+        while (runRecords.Count > MaxRunRecords) runRecords.RemoveAt(0);
+
+        int earned = Mathf.Max(0, record.turns) * settings.metaCurrencyPerTurn;
+        if (record.cleared)
+        {
+            earned += Mathf.Max(0, record.netWorth) / Mathf.Max(1, settings.metaCurrencyDivisor);
+            earned += RankBonus(record.rank, settings);
+        }
         AddCurrency(earned);
+
         SaveData();
-        Debug.Log($"[Meta] ラン終了を記録: cleared={cleared}, 獲得メタ通貨={earned} (合計 {MetaCurrency.Value})");
-        return earned;
+        Debug.Log($"[Meta] ラン終了を記録: #{record.runNo} cleared={record.cleared}, 儲け={record.profit}G, ランク={record.rank}, 自己ベスト更新={newBest}");
+        return newBest;
     }
 
     private static bool IsBetterRank(string a, string b)
@@ -225,6 +293,8 @@ public class MetaProgressModel
             bestRank = BestRank,
             villageFunds = VillageFunds,
             facilities = new List<FacilityLevelPlain>(facilityLevels),
+            bestProfits = new List<int>(bestProfits),
+            runRecords = new List<RunRecordPlain>(runRecords),
             tutorials = new List<TutorialFlagPlain>(tutorialFlags),
             firstBattleTurn = FirstBattleTurn,
             saveVersion = SaveVersion.Current,
@@ -249,6 +319,8 @@ public class MetaProgressModel
             VillageFunds = 0;
             facilityLevels.Clear();
             tutorialFlags.Clear();
+            bestProfits.Clear();
+            runRecords.Clear();
             FirstBattleTurn = 0;
             return;
         }
@@ -280,6 +352,15 @@ public class MetaProgressModel
             }
         }
 
+        bestProfits.Clear();
+        if (data.bestProfits != null) bestProfits.AddRange(data.bestProfits);
+        runRecords.Clear();
+        if (data.runRecords != null)
+        {
+            foreach (var r in data.runRecords)
+                if (r != null) runRecords.Add(r);
+        }
+
         tutorialFlags.Clear();
         if (data.tutorials != null)
         {
@@ -290,6 +371,14 @@ public class MetaProgressModel
             }
         }
         FirstBattleTurn = Mathf.Max(0, data.firstBattleTurn);
+
+        // 村の施設を6つに統合した（2026-10）。削除した施設の分は統合先へ読み替え、読み替えられない分は返金する
+        if (VillageFacilityMigration.Apply(facilityLevels, out int refund, out string log))
+        {
+            if (refund > 0) VillageFunds += refund;
+            Debug.Log($"[Meta] 村の施設の統合: {log}（返金 {refund:N0}G、村資金 {VillageFunds:N0}G）");
+            SaveData();
+        }
     }
 }
 
@@ -313,6 +402,12 @@ public class MetaProgressData
     public List<TutorialFlagPlain> tutorials = new();
     public int firstBattleTurn;
 
+    // --- 記録（2026-10 追加）。旧セーブは欠損→空 ---
+    /// <summary>難易度ごとの最高の儲け（index = GameModeId。int.MinValue = 未記録）。</summary>
+    public List<int> bestProfits = new();
+    /// <summary>直近のラン履歴（古い順）。</summary>
+    public List<RunRecordPlain> runRecords = new();
+
     // --- セーブの版（SaveVersion.Current）。旧セーブは欠損→0 ---
     public int saveVersion;
 }
@@ -331,4 +426,28 @@ public class FacilityLevelPlain
 {
     public string facilityId;
     public int level;
+}
+
+/// <summary>ラン1回ぶんの記録（metaData.json の runRecords。JsonUtility 対応）。</summary>
+[Serializable]
+public class RunRecordPlain
+{
+    /// <summary>何周目か（RecordRunEnd が振る）。</summary>
+    public int runNo;
+    /// <summary>GameModeId を int で。</summary>
+    public int mode;
+    public bool cleared;
+    /// <summary>儲け（純資産 − 初期資金 − 持ち込み − 立て替え）。破産時はそのランの最高の儲け。</summary>
+    public int profit;
+    public int netWorth;
+    public string rank = "";
+    public int turns;
+    public int streamWins;
+    public int streamLosses;
+    /// <summary>配信の収支の合計（G）。</summary>
+    public int streamEarnings;
+    /// <summary>村資金へ入った額。</summary>
+    public int villageFunds;
+    /// <summary>終了日時（ローカル、yyyy/MM/dd HH:mm）。</summary>
+    public string endedAt = "";
 }

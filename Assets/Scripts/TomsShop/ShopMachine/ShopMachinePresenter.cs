@@ -14,7 +14,6 @@ using VContainer.Unity;
 /// </summary>
 public class ShopMachinePresenter : IStartable, IDisposable
 {
-    private const float RemoveRefundRate = 0.5f;
 
     private readonly ShopMachineView view;
     private readonly ShopMachineModel machineModel;
@@ -32,9 +31,9 @@ public class ShopMachinePresenter : IStartable, IDisposable
     /// <summary>生産アイテムドロップダウンの候補（表示順と同じ itemId 列）。</summary>
     private readonly List<string> producedCandidates = new();
 
-    private int MaxSlots => shopLevelSettings != null
+    private int MaxSlots => (shopLevelSettings != null
         ? shopLevelSettings.GetEntry(tomsModel.ShopLevel.Value).machineSlots
-        : 3;
+        : 3) + machineModel.ExtraSlots;
 
     public ShopMachinePresenter(
         ShopMachineView view,
@@ -102,7 +101,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
             var machine = machines[i];
             var slot = slots[i];
             bool levelLocked = machine.requiredShopLevel > tomsModel.ShopLevel.Value;
-            slot.Setup(machine, machineModel.CountOf(machine.machineId), levelLocked);
+            slot.Setup(machine, machineModel.CountOf(machine.machineId), levelLocked, machineModel.GetPurchaseCost(machine));
 
             slot.OnSelected
                 .Subscribe(SelectMachine)
@@ -139,10 +138,10 @@ public class ShopMachinePresenter : IStartable, IDisposable
 
         bool canPurchase = machineModel.PlacedCount < MaxSlots
             && machine.requiredShopLevel <= tomsModel.ShopLevel.Value
-            && tomsModel.PlayerMoney.Value >= machine.cost;
-        int refund = Mathf.RoundToInt(machine.cost * RemoveRefundRate);
+            && tomsModel.PlayerMoney.Value >= machineModel.GetPurchaseCost(machine);
+        int refund = machineModel.GetRemoveRefund(machine);
 
-        view.ShowDetail(machine, placedCount, canPurchase, refund);
+        view.ShowDetail(machine, placedCount, canPurchase, refund, machineModel.GetPurchaseCost(machine));
         RefreshPlacementList(machine);
         RefreshProducedItemSelector(machine);
     }
@@ -290,7 +289,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
 
         if (machineModel.RemovePlacement(targetId, tomsModel))
         {
-            view?.ShowMessage($"{machine.machineName} を1台撤去した（{Mathf.RoundToInt(machine.cost * RemoveRefundRate):N0}G 返金）。");
+            view?.ShowMessage($"{machine.machineName} を1台撤去した（{machineModel.GetRemoveRefund(machine):N0}G 返金）。");
             selectedPlacementId = machineModel.PlacementsOf(machine.machineId).LastOrDefault()?.PlacementId;
             RefreshCatalog();
         }

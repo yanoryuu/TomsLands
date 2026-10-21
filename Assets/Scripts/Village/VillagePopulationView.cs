@@ -49,6 +49,17 @@ public class VillagePopulationView : MonoBehaviour
         SetVisibleCount(CountFor(villageLevel), animate);
     }
 
+    /// <summary>
+    /// 総合Lv を最大Lv に対する割合で町人の枠に割り当てて表示する（施設が全部建ちきったら全員そろう）。
+    /// maxVillageLevel が0以下なら Apply と同じ。
+    /// </summary>
+    public void ApplyScaled(int villageLevel, int maxVillageLevel, bool animate)
+    {
+        if (maxVillageLevel <= 0) { Apply(villageLevel, animate); return; }
+        int count = Mathf.CeilToInt(Mathf.Clamp01(villageLevel / (float)maxVillageLevel) * SlotCount);
+        SetVisibleCount(count, animate);
+    }
+
     private void SetVisibleCount(int count, bool animate)
     {
         int appeared = 0;

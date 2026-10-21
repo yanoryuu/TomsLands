@@ -81,12 +81,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - TextAsset
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 15473ddc087f3d940ba1e655dc829286
-    m_Address: Village/Village_antique
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 15cb917b5f703084eb125b14be226f92
     m_Address: ShopMachine/machine_maker_l
     m_ReadOnly: 0
@@ -122,12 +116,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - FinancialProductData
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 1ddb2ef4ad79fd84e92f1f6d337674a7
-    m_Address: Village/Village_workshop
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 1ea3352562f0d484b9ba24971a032672
     m_Address: EnemyData/New EnemyData
@@ -243,6 +231,11 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - ItemData
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 34753211a6da4c4eb3f6b1d1b43b3a36
+    m_Address: "\u6226\u95D8/SE_\u52C7\u8005\u653B\u6483"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 35b924f34c8891445b04b4a018529ba6
     m_Address: "\u5171\u901ASE/SE_\u9078\u629E_\u6C7A\u5B9A"
@@ -402,12 +395,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - FinancialProductData
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 59e29e358f3642042b87ad9ed3d9b452
-    m_Address: Village/Village_shrine
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 5d4515d7513ce5b4ba4bb71ac61a0395
     m_Address: ItemData/HE6
     m_ReadOnly: 0
@@ -458,24 +445,8 @@ MonoBehaviour:
     - RelicData
     - RelicDefinition
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 6f0b51b94ff24f747b269c6889727cf9
-    m_Address: Village/Village_training
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 73ab81786dc5a7b49bcda97fc313c602
     m_Address: "\u6226\u95D8/SE_\u30DC\u30B9\u8B66\u544A"
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 34753211a6da4c4eb3f6b1d1b43b3a36
-    m_Address: "\u6226\u95D8/SE_\u52C7\u8005\u653B\u6483"
-    m_ReadOnly: 0
-    m_SerializedLabels: []
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: e67a1b3124aa4dfe84ca36fc44b89191
-    m_Address: "\u6226\u95D8/SE_\u6575\u653B\u6483"
     m_ReadOnly: 0
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
@@ -489,12 +460,6 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - ItemData
-    FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: 7cbe6f0d78baf67449d719962363a2b0
-    m_Address: Village/Village_farm
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 7d01d935baa395441a6a5ea96779f858
     m_Address: Marketing/Milestone_04_50000
@@ -772,12 +737,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - RunSetupData
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: bdb59af2a5634c641bc09481088c1ea3
-    m_Address: Village/Village_warehouse
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: bdc946c6475cbd746aa5d92974ef21ce
     m_Address: ItemData/BO1
     m_ReadOnly: 0
@@ -865,12 +824,6 @@ MonoBehaviour:
     m_SerializedLabels:
     - GameFlow
     FlaggedDuringContentUpdateRestriction: 0
-  - m_GUID: d1d593aa1464158458871543a14b0bc5
-    m_Address: Village/Village_road
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - VillageFacilityData
-    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: d5db8b5d2971f15418a94fffa4a6594c
     m_Address: Finance/fund_wind
     m_ReadOnly: 0
@@ -937,6 +890,11 @@ MonoBehaviour:
     m_SerializedLabels:
     - ItemData
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: e67a1b3124aa4dfe84ca36fc44b89191
+    m_Address: "\u6226\u95D8/SE_\u6575\u653B\u6483"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: e6aa7ccacbaa4577a9c38979da0af3f9
     m_Address: InfoBrokerDialogues
     m_ReadOnly: 0
@@ -1001,7 +959,7 @@ MonoBehaviour:
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: f81a445390548254eb643210142e254f
-    m_Address: Village/Village_press
+    m_Address: Village/Village_plaza
     m_ReadOnly: 0
     m_SerializedLabels:
     - VillageFacilityData

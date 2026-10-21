@@ -14,6 +14,36 @@ public class GameOverPresenter : IDisposable, IStartable
 
     private bool metaAwarded;
 
+    /// <summary>破産画面の振り返り（このランの記録・最高の儲け・村へ入る額の見込み）。</summary>
+    private struct BankruptReview
+    {
+        public RunHistoryData History;
+        public int PeakProfit;
+        public int Carried;
+        public int VillageFunds;
+    }
+
+    private BankruptReview? review;
+
+    private BankruptReview Review
+    {
+        get
+        {
+            if (review.HasValue) return review.Value;
+            var history = RunHistory.Load();
+            var peak = RunProfit.ComputePeak(history, metaProgress, tomsModel.PlayerMoney.Value);
+            var r = new BankruptReview
+            {
+                History = history,
+                PeakProfit = peak.Profit,
+                Carried = peak.Carried,
+                VillageFunds = MetaProgressModel.CalculateVillageFunds(false, peak.Profit, peak.Carried, tomsModel.GameMode),
+            };
+            review = r;
+            return r;
+        }
+    }
+
     // 破産を受け止めるトコの会話。再生中は村へ戻るボタンを受け付けない（会話を途中で切らないため）
     private readonly CancellationTokenSource cts = new();
     private bool isTalking;
@@ -32,9 +62,12 @@ public class GameOverPresenter : IDisposable, IStartable
 
     public void Start()
     {
+        var r = Review;
         gameOverView.Setup(tomsModel.CurrentTurn.Value);
+        gameOverView.ShowReview(r.History.moneyValues, r.History.streamWins, r.History.streamLosses,
+            r.History.streamEarningsTotal, r.Carried, r.VillageFunds);
 
-        // もう一度 / タイトルへ: いずれも村へ帰還する（村に[タイトルへ]ボタンがある）
+        // 村へ戻る（村に[タイトルへ]ボタンがある）。旧「タイトル」ボタンも同じ行き先
         gameOverView.OnRetryClicked
             .Subscribe(_ => FinishRunAndGoVillage())
             .AddTo(disposables);
@@ -76,15 +109,27 @@ public class GameOverPresenter : IDisposable, IStartable
         if (!metaAwarded && metaProgress != null)
         {
             metaAwarded = true;
-            int earned = metaProgress.RecordRunEnd(
-                cleared: false, netWorth: 0, rank: "", totalTurns: tomsModel.CurrentTurn.Value);
-
-            int finalCash = tomsModel.PlayerMoney.Value;
+            var review = Review;
             int converted = metaProgress.ConvertRunToVillageFunds(
-                cleared: false, netWorth: 0, finalCash: finalCash);
-            VillageArrivalReport.Set(cleared: false, earned: finalCash, converted: converted);
+                cleared: false, profit: review.PeakProfit, carried: review.Carried, mode: tomsModel.GameMode);
 
-            UnityEngine.Debug.Log($"[GameOverPresenter] 破産: 村資金+{converted}G（救済レート適用）");
+            metaProgress.RecordRunEnd(new RunRecordPlain
+            {
+                mode = (int)tomsModel.GameMode,
+                cleared = false,
+                profit = review.PeakProfit,
+                netWorth = tomsModel.PlayerMoney.Value,
+                rank = "",
+                turns = tomsModel.CurrentTurn.Value,
+                streamWins = review.History.streamWins,
+                streamLosses = review.History.streamLosses,
+                streamEarnings = review.History.streamEarningsTotal,
+                villageFunds = converted,
+                endedAt = DateTime.Now.ToString("yyyy/MM/dd HH:mm"),
+            });
+            VillageArrivalReport.Set(cleared: false, earned: review.PeakProfit, converted: converted);
+
+            UnityEngine.Debug.Log($"[GameOverPresenter] 破産: 村資金+{converted}G（最高の儲け {review.PeakProfit}G から）");
         }
         RunSaveCleaner.DeleteRunFiles();
         sceneTransitionService.GoToVillage();
