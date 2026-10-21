@@ -29,9 +29,10 @@ public class BootLifetimeScope : LifetimeScope
     {
         bool enabled = enableRemoteConfig;
         int timeout = remoteConfigTimeoutSec;
-        string gcUrl = remoteConfigUrl;
-        string itemUrl = itemMasterUrl;
-        string balUrl = balanceUrl;
+        // 体験版は DemoBuild.DemoRemoteConfigEnvironment の配信を読む（今は製品版と同じ production）
+        string gcUrl = DemoBuild.RemoteConfigUrl(remoteConfigUrl);
+        string itemUrl = DemoBuild.RemoteConfigUrl(itemMasterUrl);
+        string balUrl = DemoBuild.RemoteConfigUrl(balanceUrl);
 
         if (!enabled)
             Debug.Log("[BootLifetimeScope] リモートコンフィグ無効。キャッシュ/デフォルトで起動します。");
@@ -70,8 +71,8 @@ public class BootLifetimeScope : LifetimeScope
         builder.RegisterBuildCallback(container =>
         {
             container.Resolve<SteamManager>();
-            // 実績サービスを先に作り、Steam が使えれば手元の記録とそろえる
-            _ = AchievementService.Shared;
+            // 実績サービスを先に作り、Steam が使えれば手元の記録とそろえる（体験版は本編の実績を入れないので作らない）
+            if (!DemoBuild.IsDemo) _ = AchievementService.Shared;
         });
 
         Debug.Log("[BootLifetimeScope] Configured.");

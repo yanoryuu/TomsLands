@@ -20,6 +20,9 @@ public class GameOverLifetimeScope : LifetimeScope
         builder.Register<TomsModel>(Lifetime.Singleton);
         builder.Register<MetaProgressModel>(Lifetime.Singleton);
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
+        // ポップアップ（体験版の「製品版へ」で使う。製品版では呼ばない）
+        builder.Register<PopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
 
         if (gameOverView != null)
             builder.RegisterComponent(gameOverView);

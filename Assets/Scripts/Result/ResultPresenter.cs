@@ -16,6 +16,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     private readonly ResultModel _resultModel;
     private readonly SceneTransitionService _sceneTransition;
     private readonly MetaProgressModel _metaProgress;
+    private readonly PopUpManager _popUpManager;
     private readonly CompositeDisposable _disposables = new();
 
     private ResultStatisticsData _lastStatistics;
@@ -25,6 +26,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
     private readonly CancellationTokenSource _cts = new();
     private bool _isTalking;
     private bool _sequenceDone;
+    private bool _demoUpsellShown;
 
 #if UNITY_EDITOR
     // ResultScene 単体再生の確認用（進行中のランが無いスロットで再生したとき）。精算・削除・遷移は行わない
@@ -35,16 +37,19 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
         ResultView resultView,
         ResultModel resultModel,
         SceneTransitionService sceneTransition,
-        MetaProgressModel metaProgress)
+        MetaProgressModel metaProgress,
+        PopUpManager popUpManager = null)
     {
         _resultView = resultView;
         _resultModel = resultModel;
         _sceneTransition = sceneTransition;
         _metaProgress = metaProgress;
+        _popUpManager = popUpManager;
     }
 
     public void Start()
     {
+        if (DemoBuild.IsDemo && _resultView != null) _resultView.ApplyDemoLabels();
         Bind();
         // 統計を集計し、すべて隠した状態で待機
         Entry();
@@ -179,6 +184,19 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             return;
         }
 #endif
+        if (DemoBuild.IsDemo)
+        {
+            // 体験版: 村は無いので精算（村資金・ランの記録）はせず、ラン内セーブを消して「製品版へ」→ タイトルへ。
+            // ランの記録を残さないので、次のランも「1周目」のまま（2周目の会話は流れない）
+            if (_demoUpsellShown) return;
+            _demoUpsellShown = true;
+            Debug.Log("[ResultPresenter] 体験版: ラン内セーブを消して「製品版へ」を出します。");
+            RunSaveCleaner.DeleteRunFiles();
+            var s = _lastStatistics;
+            DemoUpsell.Show(_popUpManager, cleared: true, profit: s != null ? s.Profit : 0, rank: s != null ? s.Rank : "",
+                goToTitle: _sceneTransition.GoToTitle);
+            return;
+        }
         Debug.Log("[ResultPresenter] Finishing run. Deleting run save data → Village.");
         AwardMetaCurrencyOnce();
         RunSaveCleaner.DeleteRunFiles();

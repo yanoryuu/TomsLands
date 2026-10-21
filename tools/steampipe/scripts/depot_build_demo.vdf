@@ -1,0 +1,17 @@
+"DepotBuild"
+{
+	"DepotID" "0" // 【仮】体験版の Windows depot。Steamworks の管理画面の「SteamPipe > Depots」の番号にする
+
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+
+	// 製品に入れないもの（本編の depot_build_4535811.vdf と同じ）
+	"FileExclusion" "*.pdb"
+	"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
+	"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"
+	"FileExclusion" "steam_appid.txt"
+}

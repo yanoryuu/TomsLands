@@ -12,6 +12,9 @@ public sealed class TitlePresenter : IStartable, IDisposable
 {
     private const string GameSceneName = "TomsShop";
 
+    /// <summary>体験版が使うスロット（画面のスロット1）。2つ目以降は使わない。</summary>
+    private const int DemoSlot = 0;
+
     private readonly TitleView _view;
     private readonly TitleModel _model;
     private readonly StartModeData _startModeData;
@@ -35,7 +38,8 @@ public sealed class TitlePresenter : IStartable, IDisposable
         var soundManager = SoundManager.Instance;
         if (soundManager != null)
             soundManager.PlayBGM("OP");
-        _view.SetSaveDataAvailable(SaveSlotManager.AnyProfileExists());
+        _view.SetSaveDataAvailable(HasContinuableData());
+        if (DemoBuild.IsDemo) _view.ShowDemoBadge();
         TransitionTo(TitleType.Start);
         Bind();
     }
@@ -54,13 +58,25 @@ public sealed class TitlePresenter : IStartable, IDisposable
         _view.OnNewGameSelected
             .Subscribe(_ =>
             {
+                // 体験版はスロット1だけ（スロット選択は出さない）。進行中のランがあれば上書きを確かめる
+                if (DemoBuild.IsDemo)
+                {
+                    if (SaveSlotManager.Exists(DemoSlot)) ShowOverwriteConfirmation(DemoSlot);
+                    else StartNewGame(DemoSlot);
+                    return;
+                }
                 if (!SaveSlotManager.AnyProfileExists()) StartNewGame(0);
                 else OpenSaveDataPanel(SaveDataPanelMode.NewGameSlot);
             })
             .AddTo(_disposables);
 
         _view.OnContinueSelected
-            .Subscribe(_ => OpenSaveDataPanel(SaveDataPanelMode.Load))
+            .Subscribe(_ =>
+            {
+                // 体験版はスロット1の進行中のランだけ続きから遊べる（村の進行は無い）
+                if (DemoBuild.IsDemo) ContinueGame(DemoSlot);
+                else OpenSaveDataPanel(SaveDataPanelMode.Load);
+            })
             .AddTo(_disposables);
 
         // オプション画面（加算シーン。プレイ中メニューと同じ Setting シーンを共用）
@@ -208,15 +224,33 @@ public sealed class TitlePresenter : IStartable, IDisposable
                 SaveSlotManager.DeleteSlot(slot);
                 Debug.Log($"[TitlePresenter] Deleted save slot {slot + 1}");
                 RefreshSaveSlots();
-                _view.SetSaveDataAvailable(SaveSlotManager.AnyProfileExists());
+                _view.SetSaveDataAvailable(HasContinuableData());
             }
         });
     }
+
+    /// <summary>「続きから」を押せるか。体験版はスロット1に進行中のランがあるときだけ（村の進行だけでは続けられない）。</summary>
+    private static bool HasContinuableData() =>
+        DemoBuild.IsDemo ? SaveSlotManager.Exists(DemoSlot) : SaveSlotManager.AnyProfileExists();
 
     private void ShowOverwriteConfirmation(int slot)
     {
         // 進行中のランは村に精算されずに消える（持ち込んだお金も戻らない）ことを先に伝える。村の進行は残る
         var info = SaveSlotManager.GetSlotInfo(slot);
+        if (DemoBuild.IsDemo)
+        {
+            // 体験版は村が無いので、村の話はしない
+            _popUpManager.Show(new PopUpData
+            {
+                Title = "上書きの確認",
+                Message = $"進行中のラン（{DayText.DayOf(info.Day)}・所持金 {info.Gold:N0}G）は消えます。\n上書きして新しく始めますか？",
+                ConfirmButtonText = "上書きする",
+                CancelButtonText = "戻る",
+                Size = PopupSizeEnum.Medium,
+                OnConfirm = () => StartNewGame(slot)
+            });
+            return;
+        }
         string runLine = info.Exists
             ? $"進行中のラン（{SaveSlotView.GetModeLabel(info.Mode)} {DayText.DayOf(info.Day)}・所持金 {info.Gold:N0}G）は村に戻らずに消えます。\n村から持ち込んだお金も戻りません。"
             : "進行中のランのデータは消えます。";
@@ -242,7 +276,8 @@ public sealed class TitlePresenter : IStartable, IDisposable
         // 難易度は上の既定値（ふつう）、スターターレリック等の準備設定は無し（RunSetupData 未設定）で
         // GameLifecycleHandler.InitializeNewGame が初期化する。
         // メタ進行はスロットごとのファイルなので、CurrentSlot を決めた後に読み込んで判定する
-        if (TutorialSteps.ShouldStartDirectlyInShop(new MetaProgressModel()))
+        // 体験版は村・準備シーンに行かない（2回目以降のランも、かんたんで店から直接始める）
+        if (DemoBuild.IsDemo || TutorialSteps.ShouldStartDirectlyInShop(new MetaProgressModel()))
         {
             // 準備シーンを通らないので、前回の準備設定が残っていても使わないよう消しておく
             var runSetup = AddressableLoader.Load<RunSetupData>("SceneData/RunSetupData");
@@ -273,7 +308,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
             return;
         }
 
-        if (info.HasProfile)
+        if (info.HasProfile && !DemoBuild.IsDemo)
         {
             // ラン終了後で村の進行だけが残っているスロット → 村へ（ラン終了時と同じ行き先）。
             // 新しいランは村 → 準備シーンの出店で始まる（StartModeData.SetNewGame は準備シーンが立てる）
@@ -285,7 +320,7 @@ public sealed class TitlePresenter : IStartable, IDisposable
 
         // 読み直して空きスロット表示を更新（連打などで状態がずれた場合の保険）
         RefreshSaveSlots();
-        _view.SetSaveDataAvailable(SaveSlotManager.AnyProfileExists());
+        _view.SetSaveDataAvailable(HasContinuableData());
     }
 
     private void TransitionTo(TitleType screen)

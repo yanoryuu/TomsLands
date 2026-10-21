@@ -97,7 +97,7 @@
    - 22個 × 2 = 44枚
 4. **公開**: 「Publish」タブ →「Prepare for Publishing」→「Publish to Steam」。公開するまでゲームからは解除できない（SetAchievement が false を返し、ログに警告が出る）。
 5. **確かめる**: 開発用アカウント（このアプリを持っているアカウント）で Steam を起動したまま、エディタで Boot シーンから再生するか、開発ビルドの exe を起動する。条件を満たすと Steam の通知が出る。F11 の「実績」タブで状態を見られ、「全部リセット」でやり直せる。
-6. **体験版**（Steam の別アプリ）を作るときは、体験版の App ID の実績を空にしておく（本編の実績は体験版では解除されない。SetAchievement は失敗するがゲームは止まらない）。
+6. **体験版**（Steam の別アプリ、`DEMO_BUILD`）は本編の実績を入れない。体験版では AchievementTracker を登録せず、AchievementService の解除・Stats の更新も何もしない（SetAchievement も呼ばない）。体験版の App には実績を作らない（Docs/Demo_Build.md）。
 
 ## 起動と steam_appid.txt
 

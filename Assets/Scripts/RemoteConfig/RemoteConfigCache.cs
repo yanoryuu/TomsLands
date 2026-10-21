@@ -10,7 +10,7 @@ public sealed class RemoteConfigCache
 
     public RemoteConfigCache(string fileBaseName = "gameconst")
     {
-        var dir = Path.Combine(Application.persistentDataPath, "remoteconfig");
+        var dir = Path.Combine(DemoBuild.DataRoot, "remoteconfig"); // 体験版は製品版と別のフォルダ
         Directory.CreateDirectory(dir);
         _jsonPath = Path.Combine(dir, $"{fileBaseName}.json");
         _versionPath = Path.Combine(dir, $"{fileBaseName}.version");

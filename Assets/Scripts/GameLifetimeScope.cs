@@ -381,8 +381,9 @@ public class GameLifetimeScope : LifetimeScope
         // マーケティングシステムのファサード（統合窓口）
         builder.RegisterEntryPoint<MarketingFacade>().AsSelf();
 
-        // Steam 実績の判定（各 Model を購読するだけ。どの処理の順番にも関わらない）
-        builder.RegisterEntryPoint<AchievementTracker>();
+        // Steam 実績の判定（各 Model を購読するだけ。どの処理の順番にも関わらない）。体験版は本編の実績を入れない
+        if (!DemoBuild.IsDemo)
+            builder.RegisterEntryPoint<AchievementTracker>();
 
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         // --- 6. デバッグメニュー（F12で開閉、リリースビルドには含まれない） ---

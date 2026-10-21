@@ -41,7 +41,12 @@ public class Popup : MonoBehaviour
             if (cancelButtonText != null) cancelButtonText.text = data.CancelButtonText ?? "キャンセル";
             if (confirmButton != null)
             {
-                confirmButton.onClick.AddListener(() => { LockButtons(); data.OnConfirm?.Invoke(); });
+                confirmButton.onClick.AddListener(() =>
+                {
+                    // 閉じない確定（体験版の「ストアページへ」）はボタンを止めない
+                    if (!data.KeepOpenOnConfirm) LockButtons();
+                    data.OnConfirm?.Invoke();
+                });
             }
             if (cancelButton != null)
             {

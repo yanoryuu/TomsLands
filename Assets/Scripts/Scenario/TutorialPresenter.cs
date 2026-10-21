@@ -394,6 +394,10 @@ public class TutorialPresenter : IStartable, IDisposable
     /// <summary>開始会話のラベルを選ぶ。</summary>
     private string SelectRunOpeningLabel(bool firstRun)
     {
+        // 体験版は「2周目」が無い（村に進めない）。やり直しのランでも巻き戻りの会話は流さず、
+        // 既読のプロローグ（一度きり）を選んで何も流さずに幕を開ける
+        if (DemoBuild.IsDemo) return Opening;
+
         if (firstRun && !_scenario.HasSeen(Opening)) return Opening;
 
         // TotalRuns は終えたランの数。1 なら2周目。

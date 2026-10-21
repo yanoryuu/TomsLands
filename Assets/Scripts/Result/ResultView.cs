@@ -135,6 +135,22 @@ public class ResultView : MonoBehaviour
         if (skipCatcher != null) skipCatcher.Clicked -= Skip;
     }
 
+    /// <summary>体験版: どちらのボタンも「次へ」にする（押すと「製品版へ」を出す。村へは戻らない）。</summary>
+    private bool _hideVillageRow;
+
+    public void ApplyDemoLabels()
+    {
+        // 体験版には村が無いので「村へ +○G」の行は出さない
+        _hideVillageRow = true;
+        if (infoBrokerLevelText != null) RowOf(infoBrokerLevelText).gameObject.SetActive(false);
+        foreach (var b in new[] { goToTitleButton, retryButton })
+        {
+            if (b == null) continue;
+            var label = b.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null) label.text = "次へ";
+        }
+    }
+
     // =====================================================
     // 準備
     // =====================================================
@@ -315,7 +331,8 @@ public class ResultView : MonoBehaviour
         InsertRow(seq, ref t, rowStep + 0.12f, netWorthText, v => FormatGold(v), data.NetWorth, 0.8f, punch: true);
         InsertRow(seq, ref t, rowStep, totalTurnsText, v => FormatRunTurns(data, v), data.TotalTurns, 0.3f);
         InsertRow(seq, ref t, rowStep, blacksmithLevelText, _ => FormatBest(data), 0, 0.01f, punch: data.IsNewBest);
-        InsertRow(seq, ref t, rowStep, infoBrokerLevelText, v => FormatSigned(v), data.VillageFunds, 0.5f);
+        if (!_hideVillageRow)
+            InsertRow(seq, ref t, rowStep, infoBrokerLevelText, v => FormatSigned(v), data.VillageFunds, 0.5f);
 
         // 所持金グラフを左から描く（統計と並行）
         const float chartStart = 0.6f, chartDur = 1.6f;
@@ -533,7 +550,7 @@ public class ResultView : MonoBehaviour
     private IEnumerable<RectTransform> Rows()
     {
         foreach (var t in new[] { finalMoneyText, moneyDifferenceText, stockValueText, netWorthText,
-                     totalTurnsText, blacksmithLevelText, infoBrokerLevelText })
+                     totalTurnsText, blacksmithLevelText, _hideVillageRow ? null : infoBrokerLevelText })
             if (t != null) yield return RowOf(t);
     }
 

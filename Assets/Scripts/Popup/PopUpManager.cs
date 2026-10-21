@@ -19,6 +19,11 @@ public class PopUpData
     /// true のとき「閉じる」ボタンのみ表示し、キャンセルボタンを非表示にする。
     /// </summary>
     public bool IsCloseOnly;
+    /// <summary>
+    /// true のとき、確定ボタンを押しても閉じない（何度でも押せる）。キャンセルで閉じる。
+    /// 体験版の「製品版へ」（ストアページを開いたあと、戻ってきてタイトルへ）で使う。
+    /// </summary>
+    public bool KeepOpenOnConfirm;
 }
 
 public class PopUpManager
@@ -60,6 +65,11 @@ public class PopUpManager
         data.OnConfirm = () =>
         {
             if (handled) return;
+            if (data.KeepOpenOnConfirm)
+            {
+                originalOnConfirm?.Invoke();
+                return;
+            }
             handled = true;
             originalOnConfirm?.Invoke();
             Close();

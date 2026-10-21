@@ -39,6 +39,21 @@ public sealed class SteamAppIdPostBuild : IPostprocessBuildWithReport
             return;
         }
 
+        // 体験版: 体験版の App ID（DemoBuild.DemoSteamAppId）を書く。未取得（0）の間は入れない
+        // （本編の 4535810 を入れると体験版が本編として Steam につながってしまう）
+        if (DemoBuildMenu.IsDemoBuild(report))
+        {
+            if (!DemoBuild.HasDemoSteamAppId)
+            {
+                if (File.Exists(dest)) File.Delete(dest);
+                Debug.Log("[SteamAppId] 体験版の App ID が未取得（DemoBuild.DemoSteamAppId = 0）なので steam_appid.txt は入れません");
+                return;
+            }
+            File.WriteAllText(dest, DemoBuild.DemoSteamAppId.ToString());
+            Debug.Log($"[SteamAppId] 体験版の開発ビルドに {FileName}（{DemoBuild.DemoSteamAppId}）を書きました: {dest}");
+            return;
+        }
+
         string src = Path.Combine(Directory.GetCurrentDirectory(), FileName);
         if (!File.Exists(src))
         {

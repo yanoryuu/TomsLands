@@ -54,7 +54,8 @@ public static class SaveSlotManager
         // 開発専用フック（Jev AutoPlay のヘッドレス試走）。null の間は従来どおり。
         if (!string.IsNullOrEmpty(DevRootOverride)) return DevRootOverride;
 #endif
-        return Path.Combine(Application.persistentDataPath, $"slot_{Mathf.Clamp(slot, 0, MaxSlots - 1)}");
+        // 体験版は製品版と別のフォルダ（DemoBuild.DataRoot。製品版は persistentDataPath のまま）
+        return Path.Combine(DemoBuild.DataRoot, $"slot_{Mathf.Clamp(slot, 0, MaxSlots - 1)}");
     }
 
 #if UNITY_EDITOR

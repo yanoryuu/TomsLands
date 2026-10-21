@@ -10,7 +10,9 @@ public class GameOverPresenter : IDisposable, IStartable
     private readonly TomsModel tomsModel;
     private readonly SceneTransitionService sceneTransitionService;
     private readonly MetaProgressModel metaProgress;
+    private readonly PopUpManager popUpManager;
     private readonly CompositeDisposable disposables = new();
+    private bool demoUpsellShown;
 
     private bool metaAwarded;
 
@@ -52,8 +54,10 @@ public class GameOverPresenter : IDisposable, IStartable
         GameOverView gameOverView,
         TomsModel tomsModel,
         SceneTransitionService sceneTransitionService,
-        MetaProgressModel metaProgress)
+        MetaProgressModel metaProgress,
+        PopUpManager popUpManager = null)
     {
+        this.popUpManager = popUpManager;
         this.gameOverView = gameOverView;
         this.tomsModel = tomsModel;
         this.sceneTransitionService = sceneTransitionService;
@@ -64,8 +68,10 @@ public class GameOverPresenter : IDisposable, IStartable
     {
         var r = Review;
         gameOverView.Setup(tomsModel.CurrentTurn.Value);
+        // 体験版は村が無いので「村へ +○G」の行を出さない（-1）。ボタンも「次へ」
+        if (DemoBuild.IsDemo) gameOverView.ApplyDemoLabels();
         gameOverView.ShowReview(r.History.moneyValues, r.History.streamWins, r.History.streamLosses,
-            r.History.streamEarningsTotal, r.Carried, r.VillageFunds);
+            r.History.streamEarningsTotal, r.Carried, DemoBuild.IsDemo ? -1 : r.VillageFunds);
 
         // 村へ戻る（村に[タイトルへ]ボタンがある）。旧「タイトル」ボタンも同じ行き先
         gameOverView.OnRetryClicked
@@ -106,6 +112,16 @@ public class GameOverPresenter : IDisposable, IStartable
     private void FinishRunAndGoVillage()
     {
         if (isTalking) return;
+        if (DemoBuild.IsDemo)
+        {
+            // 体験版: 村資金・ランの記録は付けず、ラン内セーブを消して「製品版へ」→ タイトルへ
+            if (demoUpsellShown) return;
+            demoUpsellShown = true;
+            RunSaveCleaner.DeleteRunFiles();
+            DemoUpsell.Show(popUpManager, cleared: false, profit: Review.PeakProfit, rank: "",
+                goToTitle: sceneTransitionService.GoToTitle);
+            return;
+        }
         if (!metaAwarded && metaProgress != null)
         {
             metaAwarded = true;
