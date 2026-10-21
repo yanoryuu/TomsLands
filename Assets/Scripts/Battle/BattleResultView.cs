@@ -145,7 +145,7 @@ public class BattleResultView : MonoBehaviour
     private List<string> BuildLedgerRows(BattleSettlement s)
     {
         // 行は勝ち負けに関係なく同じ5行で揃える（0 の行も薄く出す。毎回同じ位置で読めるように）
-        return new List<string>
+        var rows = new List<string>
         {
             Row("売上", s.Sales > 0 ? Plus(s.Sales) : Zero()),
             Row("補充", s.RestockCost > 0 ? Minus(s.RestockCost) : Zero()),
@@ -155,6 +155,28 @@ public class BattleResultView : MonoBehaviour
                 ? Row($"<color={demonColor}>防衛報酬</color>", $"<color={demonColor}>+{s.DefenseReward:N0} G</color>")
                 : Row("防衛報酬", Zero()),
         };
+        // 村の広場 Lv5「勝負配信の宣言」をした配信だけ6行目を出す
+        string declaration = DeclarationRow(s);
+        if (declaration != null) rows.Add(declaration);
+        return rows;
+    }
+
+    private string DeclarationRow(BattleSettlement s)
+    {
+        switch (s.DeclarationOutcome)
+        {
+            case StreamDeclarationOutcome.Hit:
+                string col = s.DeclarationSide == StreamDeclarationSide.Demon ? demonColor : upColor;
+                return Row($"<color={col}>宣言的中 ×{VillageEffects.DeclarationMultiplier:0.##}</color>",
+                    $"<color={col}>+{s.DeclarationBonus:N0} G</color>");
+            case StreamDeclarationOutcome.Miss:
+                return Row("宣言 外れ", $"<color={minusColor}>フォロワー -{StreamDeclaration.MissFollowers:N0}</color>");
+            case StreamDeclarationOutcome.Void:
+            case StreamDeclarationOutcome.Returned:
+                return Row("宣言", $"<color={zeroColor}>無効</color>");
+            default:
+                return null;
+        }
     }
 
     private string Zero() => $"<color={zeroColor}>0 G</color>";

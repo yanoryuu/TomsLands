@@ -224,16 +224,13 @@ public class DebtPresenter : IDisposable, IStartable
         string where = string.IsNullOrEmpty(dungeon) ? "" : $"（{dungeon}）";
         string repayLine = final
             ? $"最後の配信なので、決算で {owed:N0}G を差し引きます。"
-            : $"配信の次の日（{DayText.DayOf(due)}）に利息をつけて {owed:N0}G を返します。
-返せないときは納付と同じく、手持ちを売って返します。";
+            : $"配信の次の日（{DayText.DayOf(due)}）に利息をつけて {owed:N0}G を返します。\n返せないときは納付と同じく、手持ちを売って返します。";
 
         bankLoanOfferShowing = true;
         popUpManager.Show(new PopUpData
         {
             Title = BankLoan.OfferTitle,
-            Message = $"明日は配信{where}。
-銀行から {principal:N0}G を借りますか？（1ランに1回）
-{repayLine}",
+            Message = $"明日は配信{where}。\n銀行から {principal:N0}G を借りますか？（1ランに1回）\n{repayLine}",
             ConfirmButtonText = BankLoan.BorrowButton,
             CancelButtonText = BankLoan.SkipButton,
             Size = PopupSizeEnum.Medium,

@@ -175,7 +175,44 @@ public class BattleWaveFxView : MonoBehaviour
 
     [ContextMenu("Debug: 決着（配当確定）")]
     private void DebugFinaleDemon() => PlayFinaleAsync(false, "配当確定", destroyCancellationToken).Forget();
+
+    [ContextMenu("Debug: 宣言的中（勇者側）")]
+    private void DebugDeclarationHero() => PlayBannerAsync("宣言的中！", false, destroyCancellationToken).Forget();
+
+    [ContextMenu("Debug: 宣言的中（魔王側）")]
+    private void DebugDeclarationDemon() => PlayBannerAsync("宣言的中！", true, destroyCancellationToken).Forget();
 #endif
+
+    /// <summary>
+    /// 決着の帯だけをもう一度出す（村の広場 Lv5「勝負配信の宣言」が当たったときの「宣言的中！」）。
+    /// demonSide=false は金の帯（決着「CLEAR!」と同じ色）、true は紫の帯（「配当確定」と同じ色）。
+    /// 決着の溜めを飛ばした入力で一緒に飛ばないよう、1フレーム待ってから飛ばしの入力を見る。
+    /// </summary>
+    public async UniTask PlayBannerAsync(string label, bool demonSide, CancellationToken token, System.Func<bool> skipRequested = null)
+    {
+        if (!Prepare()) return;
+        var seq = demonSide
+            ? BuildBannerSequence(label, finaleHoldSeconds, finaleDemonBannerColor, finaleDemonEdgeColor, finaleDemonTextColor)
+            : BuildBannerSequence(label, finaleHoldSeconds, bannerColor, bannerEdgeColor, finaleHeroTextColor);
+        _current = seq;
+        seq.timeScale = 1f / Mathf.Max(0.1f, GameSettings.EffectDurationScale);
+        seq.SetLink(gameObject);
+        seq.OnKill(HideAll);
+        try
+        {
+            await UniTask.Yield(PlayerLoopTiming.Update, token);
+            while (seq.IsActive() && !seq.IsComplete())
+            {
+                if (skipRequested != null && skipRequested()) break;
+                await UniTask.Yield(PlayerLoopTiming.Update, token);
+            }
+        }
+        finally
+        {
+            if (seq.IsActive()) seq.Kill();
+            if (_current == seq) _current = null;
+        }
+    }
 
     /// <summary>紫の全面ティントとビネットを2回明滅させる（魔王側の決着）。</summary>
     private Sequence BuildDemonTintSequence()

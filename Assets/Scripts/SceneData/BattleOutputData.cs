@@ -48,8 +48,24 @@ public class BattleOutputData : ScriptableObject
     /// <summary>魔王側に張って当たった（勇者が負け、防衛報酬を受け取った）か。</summary>
     public bool IsDemonPayout => Result == BattleResult.Defeat && DefenseReward > 0;
 
+    [Header("村の広場 Lv5「勝負配信の宣言」")]
+    [Tooltip("この配信で宣言した側（None = 宣言なし）")]
+    public StreamDeclarationSide DeclarationSide;
+    [Tooltip("宣言の決着（帰還処理がフォロワー・注目と回数に反映する）")]
+    public StreamDeclarationOutcome DeclarationOutcome;
+    [Tooltip("宣言が当たって上乗せした額。純利益（TotalEarnings）には反映済み")]
+    public int DeclarationBonus;
+
     [Header("フラグ")]
     public bool HasResult;
+
+    /// <summary>勝負配信の宣言の決着を書き込む。SetResult の後に呼ぶ。</summary>
+    public void SetDeclaration(StreamDeclarationSide side, StreamDeclarationOutcome outcome, int bonus)
+    {
+        DeclarationSide = side;
+        DeclarationOutcome = outcome;
+        DeclarationBonus = Mathf.Max(0, bonus);
+    }
 
     /// <summary>
     /// 戦闘終了時に結果を書き込む
@@ -70,6 +86,7 @@ public class BattleOutputData : ScriptableObject
         ViewerSuperChatCount = 0;
         SpecialMoveCount = 0;
         DefenseReward = 0;
+        SetDeclaration(StreamDeclarationSide.None, StreamDeclarationOutcome.None, 0);
         HasResult = true;
         Debug.Log($"[BattleOutputData] SetResult: result={result}, weapon={weaponId}, armor={armorId}, soldItems={soldItems.Count}, totalEarnings={totalEarnings}, mobs={DefeatedMobCount}, bosses={DefeatedBossCount}");
     }
@@ -107,6 +124,7 @@ public class BattleOutputData : ScriptableObject
         ViewerSuperChatCount = 0;
         SpecialMoveCount = 0;
         DefenseReward = 0;
+        SetDeclaration(StreamDeclarationSide.None, StreamDeclarationOutcome.None, 0);
         HasResult = false;
     }
 }
