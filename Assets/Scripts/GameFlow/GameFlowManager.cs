@@ -771,6 +771,8 @@ public class GameFlowManager : IDisposable, IStartable
 
         var dungeonData = _dungeonRepository.GetById(node.BattleDungeon);
         int dungeonLevel = dungeonData?.currentDungeonLevel ?? DungeonLevels.Unfunded; // Lv0 は戦闘は Lv1 と同じ・配当なし
+        // 職人組合 Lv5「細工」: この配信に効く細工を確定する（業物ならこの配信先の弱点の属性が付く）
+        ArtisanCraft.PrepareBattle(_tomsModel.FlowSeed, GetStreamNumberAt(_currentIndex), dungeonData?.requiredAttribute);
         _battleInputData.Setup(
             node.BattleDungeon,
             dungeonLevel,
@@ -839,6 +841,16 @@ public class GameFlowManager : IDisposable, IStartable
 
         Debug.Log($"[GameFlowManager] Saving data and transitioning to ResultScene. Turn={CurrentTurn.Value}");
         _sceneTransition.GoToResult();
+    }
+
+    /// <summary>その位置（フローの index）までの配信の回数（その位置が配信ならそれが何回目か）。職人組合 Lv5「細工」の配信の見分けに使う。</summary>
+    public int GetStreamNumberAt(int index)
+    {
+        if (_gameFlow == null) return 0;
+        int n = 0;
+        for (int i = 0; i <= index && i < _gameFlow.GameFlowStack.Count; i++)
+            if (_gameFlow.GameFlowStack[i].EventType == GameEvent.Battle) n++;
+        return n;
     }
 
     public void Dispose()

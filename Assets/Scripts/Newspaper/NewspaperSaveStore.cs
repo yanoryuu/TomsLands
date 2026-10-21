@@ -23,6 +23,8 @@ public static class NewspaperSaveStore
         public List<ScrapbookModel.Scrap> archive = new();
         public List<ScrapbookModel.CompanyRecord> records = new();
         public List<string> readIds = new();
+        /// <summary>裏取り（酒場 Lv5）の結果。古いセーブには無い（空のまま読む）。</summary>
+        public List<ScrapbookModel.Vet> vetted = new();
     }
 
     public static void Save(int runSeed, NewspaperSubscriptionModel subscriptions,
@@ -38,6 +40,7 @@ public static class NewspaperSaveStore
                 archive = scrapbook?.ArchiveToPlain() ?? new(),
                 records = scrapbook?.RecordsToPlain() ?? new(),
                 readIds = news?.ReadIdsToPlain() ?? new(),
+                vetted = scrapbook?.VettedToPlain() ?? new(),
             };
             SaveFile.WriteAtomic(SaveSlotManager.GetPath(FileName), JsonUtility.ToJson(data, true));
         }
@@ -85,6 +88,7 @@ public static class NewspaperSaveStore
 
         subscriptions?.FromPlain(data.contracts);
         scrapbook?.FromPlain(data.pinned, data.archive, data.records);
+        scrapbook?.VettedFromPlain(data.vetted);
         news?.ReadIdsFromPlain(data.readIds);
     }
 }

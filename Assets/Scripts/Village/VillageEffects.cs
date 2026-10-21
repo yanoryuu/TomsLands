@@ -139,6 +139,9 @@ public sealed class VillageEffects
         return price > 0 && price < basePrice ? price : basePrice;
     }
 
+    /// <summary>酒場 Lv5「裏取り」: 配信の間に1回、新聞の記事1本の真偽（本物／誇張／誤報）を確かめられる（NewspaperPresenter）。</summary>
+    public bool CanVetArticles => IsMaxLevel(TavernId);
+
     // ───────── 職人組合 ─────────
 
     /// <summary>ラン開始時の鍛冶屋のレベル（0 = 変えない）。</summary>
@@ -150,6 +153,9 @@ public sealed class VillageEffects
         cost <= 0 ? cost : Mathf.RoundToInt(cost * (1f - CostDiscount));
 
     public int MachineSlotAdd => Mathf.Max(0, At(Settings.artisanMachineSlotAdds, ArtisanLevel));
+
+    /// <summary>職人組合 Lv5「細工」: 配信の間に1回、勇者の武器を業物／なまくらにできる（ArtisanCraft・勇者画面）。</summary>
+    public bool CanCraftHeroWeapon => IsMaxLevel(ArtisanId);
 
     // ───────── 広場 ─────────
 
