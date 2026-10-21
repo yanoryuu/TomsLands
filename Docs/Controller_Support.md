@@ -24,7 +24,7 @@
 
 ### デバイス判定
 - パッド: いずれかのボタン押下 / スティック 0.5 超 → `Gamepad`
-- キーボード: 矢印・Enter・Esc・Tab の押下 → `Keyboard`（入力欄フォーカス中は除外）
+- キーボード: 矢印・Enter・Esc・Tab・F・R の押下 → `Keyboard`（入力欄フォーカス中は除外）
 - マウス: 移動(4px超)・クリック・ホイール、タッチ → `Mouse`
 - `IsNavigating`（Keyboard or Gamepad）のとき: 選択枠を出す・何も選ばれていなければ自動選択する
 - `Mouse` に切り替わった瞬間に選択を外す（ハイライト残り防止。入力欄の入力中は外さない）
@@ -48,8 +48,8 @@
 | Submit | A（South）| Enter/Space | 決定（EventSystem）|
 | Cancel | B（East）| Esc | 最前面スコープの Cancel |
 | TabLeft / TabRight | LB / RB | Q / E | スコープの onTabLeft/Right |
-| ButtonX / ButtonY | X（West）/ Y（North）| — | スコープの onButtonX/Y |
-| Menu | Start | — | スコープの onMenu |
+| ButtonX / ButtonY | X（West）/ Y（North）| F / R | スコープの onButtonX/Y |
+| Menu | Start | —（Esc は各画面の Cancel で扱う）| スコープの onMenu |
 | Point/Click/RightClick/MiddleClick/ScrollWheel | — | マウス | 従来どおり |
 
 ---
@@ -97,6 +97,7 @@ var block = UIFocusManager.BlockScopeInput();  // 終わったら block.Dispose(
 | priority | 大きいほど前面。同値なら後から有効化された方が前面 |
 | dpadOnlyNavigation | ON のスコープが最前面の間、UI/Navigate のスティック・WASD バインドを無効化（空パスのオーバーライド）し、選択移動を十字キー・矢印キーだけにする。最前面でなくなると元に戻す（`UIFocusManager.Tick`）|
 | cancelMode / cancelButton / onCancel | None / ClickButton（押下アニメ付きで Submit を送る）/ InvokeEvent |
+| SetCancelFallback(action)（コード）| Cancel を誰も処理しなかったとき（cancelButton が非表示・押せない、None）に呼ぶ |
 | onTabLeft/onTabRight/onButtonX/onButtonY/onMenu | 最前面のときだけ呼ばれる |
 
 API: `GetOrAdd(go)`, `SetCancelButton(btn)`, `SetCancelAction(action)`, `Select(selectable)`, `Refocus(resetToFirst)`, `OnButton`(Observable), `IsTop`, `Modal/Priority/AutoSelect/FirstSelected` プロパティ。
@@ -134,6 +135,8 @@ Overlay Canvas（sortingOrder 32000、GraphicRaycaster なし＝クリックを�
 
 ## 6. 実装済みの画面
 - 店ホーム `TomsShop.prefab`: ルートスコープの first をフェーズで切替（**ルートスコープ dpadOnlyNavigation=ON**: 左スティック・WASD=トム移動のみ、十字・矢印=UI 選択のみ。トムの `PlayerMove` は ignoreArrowKeysAndDpad=ON＝矢印・十字を無視、walkOnlyWhileParentScopeTop=ON＝施設/陳列/ポップアップ等の別スコープが最前面の間は歩かない。別スコープが前面ならスティックでも UI 選択できる）（`TurnPhaseView`: 仕入れ=鍛冶屋 / 陳列=商品陳列 / 営業=戻る。営業開始は first にしない・演出中は自動選択停止）。Cancel=戻る（陳列・営業）。施設から B で戻ると入った施設ボタンへ復帰
+  - 近道（ルートスコープが最前面のとき）: **Start＝設定画面**、**キーボード Esc＝「戻る」が無い仕入れ中は設定画面**（`SetCancelFallback`。パッドの B では開かない＝配信画面と同じ規則）、**Y / R＝「次へ」「営業開始 →」を押す**（押下アニメ・音つき）。Tab と Space は使わない（Tab は入力機器の判定、Space は Submit と重なる）
+  - 陳列フェーズの「次へ」は「営業開始 →」になり、押すとそのまま営業（暗転→サマリー）へ進む（営業フェーズの画面を挟まない。`TurnPhasePresenter`）。品出しゼロのときだけ確認「品出しゼロで営業します」
   - 陳列 `ItemSelectionView`: modal(10), first=先頭行の「並べる」, LB/RB=武器/防具, 行内フォーカスで説明表示（`PadSelectRelay`）。税金(Debt)=modal(20) first=×、破産=modal(30)。朝レポート/レリック3択=コードで modal(20)（レリックは B 無し）
 - 鍛冶屋 `BlackSmithView`（コード）: first=一覧先頭行（`ItemShopSlot` に `PointerEventBridge`＝選択で説明・A で銘柄選択）, B=もどる, LB/RB=武器/防具/開発（切替後は新タブの先頭行へフォーカス移動。開発タブは first=タブ自身）, X=行を選択して個数設定（詳細パネルのスライダー）へ移動、個数設定で B=一覧の同じ行へ戻る（一覧上の B は従来どおりもどる）。数量はスライダーで左右。オート購入=modal(10) first=全額・明示ナビ
 - マシンショップ/店の改装（コード）: B=閉じる, first=カタログ先頭 / 閉じる（支払いボタンは first にしない）。ターン終了サマリー: first=次のターンへ。イベント: modal(20) first=はい
@@ -174,4 +177,13 @@ Overlay Canvas（sortingOrder 32000、GraphicRaycaster なし＝クリックを�
 - 検証で直した点: Utage の入力戦略が Utage 側（InputSystemStrategy）に上書きされパッドが効かなかった → 会話開始ごとに再登録・基底を InputSystemStrategy に／B で隠したウィンドウを A で戻せなかった／介入カードのボタンが Navigation=None で十字移動できなかった／各施設の立ち絵ボタン（画面より大きい枠）を選ばない／占い師の行・配信設定カードの枠を見た目に合わせた／配信設定の一覧スクロールバーで十字が止まる／所持品ゼロ時の初期フォーカスが「配信開始」だった／タイトルの「戻る」から上が先頭スロットへ飛ぶ
 - 店ホームのスティック/十字分離（2026-10-11 仮想パッド）: 店ホームで 十字・矢印=選択移動のみ（トム不動）、スティック・WASD=トム移動のみ（選択不変）。鍛冶屋内ではスティックでも選択移動、B で戻ると再び分離。別スコープ前面中はトム停止
 - 未確認: Utage の選択肢（現シナリオに選択肢が無い）、青/赤スパ直後の自動敵選択（敵 2 体以上の場面を作れず）、EventScene（ビルド未登録で到達不可。コードのみ確認）
-- 既知: 敵選択枠はスプライトの透明余白込みのためやや上に大きい。配信中の補充ポップアップの上に HP 表示・進行バーが重なる（描画順。パッド対応とは別件）。村の吹き出しは「[E] しらべる」表記のまま
+- 既知: 敵選択枠はスプライトの透明余白込みのためやや上に大きい。配信中の補充ポップアップの上に HP 表示・進行バーが重なる（描画順。パッド対応とは別件）
+- 村の吹き出し「[E] しらべる」は `InputPromptText` で、パッド使用中は決定ボタンの表記（Xbox「[A]」/ PlayStation「[×]」/ Nintendo「[B]」）に替わる
+
+## 9. 手触り・音（2026-10 追加）
+- ホバー: ColorTint のボタンは `colorMultiplier=1.2` で、ホバー時だけ少し明るい暖色（実効 1.2/1.14/1.02）。通常・押下（約78%）・選択・無効の見え方は従来と同じ（各色を 1.2 で割って保存）。押下で大きさは変えない（PR #77 の方針）
+- `-1` 版の素材がある施設ボタン（鍛冶屋・情報屋・マップ・広告・商品陳列・営業開始・メニュー・閉じる・もどる）は `ButtonHoverSprite` でホバー中とパッド選択中だけ `-1` の絵に差し替える（RectTransform は動かさないので選択枠とずれない。押下は ColorTint のまま）
+- 飾りに付いていた Button（陳列のアイコン枠・説明欄、鍛冶屋の罫線）は外した
+- 操作音: `ButtonSoundHandler` が閉じる/戻る/キャンセル系（名前・ラベル・絵で判定）に「戻る」音、それ以外に決定音を付ける。後から生成される行も拾い、同じボタンへは一度だけ登録（入れ子の Canvas で二重に鳴らない）。ハンドラの無いシーンの Canvas にはロード時に自動で付く（ポップアップ・設定・村・準備・リザルト・配信）。宴のボタン（`UguiButtonSe`）は対象外。B/Esc でポップアップ・設定を閉じたときも戻る音（`AttachSceneScope`）。同じフレームの UI 音は1回（`UISound`）
+- 介入ボタンなどのホバー説明（`HoverTooltipTrigger`）はパッド/キーで選択しても出る（要素の右上）
+- 開く演出: 確認ポップアップ・税金・陳列・朝レポート・タイトルの画面切替もフェード（モーダルは小さなポップ付き）。全画面の切替は alpha 0.35 から（背景が一瞬抜けるのを抑える）。HUD は新しく出るときだけ本体と同じフェード

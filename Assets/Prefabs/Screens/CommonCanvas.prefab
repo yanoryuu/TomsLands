@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 3297370261561341120}
   - component: {fileID: 9166084055044110924}
   - component: {fileID: 7771884819021777759}
+  - component: {fileID: 8380336241445505895}
   m_Layer: 5
   m_Name: Menu
   m_TagString: Untagged
@@ -233,12 +234,12 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
+    m_NormalColor: {r: 0.8333333, g: 0.8333333, b: 0.8333333, a: 0.8333333}
+    m_HighlightedColor: {r: 0.8333333, g: 0.8333333, b: 0.8333333, a: 0.8333333}
+    m_PressedColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.8333333}
+    m_SelectedColor: {r: 0.8006536, g: 0.8006536, b: 0.8006536, a: 0.8333333}
+    m_DisabledColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.41830066}
+    m_ColorMultiplier: 1.2
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
@@ -256,6 +257,20 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8380336241445505895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079206625585109939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5518035fdc66d849a5e5141e8f80135, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 9166084055044110924}
+  hoverSprite: {fileID: -6728863202283510383, guid: b7224559cbbd842888e38adb93422889, type: 3}
 --- !u!1 &4066572017401538168
 GameObject:
   m_ObjectHideFlags: 0
@@ -626,7 +641,7 @@ MonoBehaviour:
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}
-  m_ScreenMatchMode: 0
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
@@ -664,6 +679,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerMoneyText: {fileID: 443774254778383926}
   currentTurnText: {fileID: 7886952230058652718}
+  pendingIncomeText: {fileID: 0}
   menuButton: {fileID: 7771884819021777759}
   moneyCountDuration: 0.5
 --- !u!114 &5602030811822597888
@@ -679,3 +695,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   seKey: "\u5171\u901ASE/SE_\u9078\u629E_\u6C7A\u5B9A"
+  backSeKey: "\u5171\u901ASE/SE_\u9078\u629E_\u623B\u308B\u30FB\u30AD\u30E3\u30F3\u30BB\u30EB"

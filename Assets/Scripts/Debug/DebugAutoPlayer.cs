@@ -491,6 +491,14 @@ public class DebugAutoPlayer : MonoBehaviour
             data.OnConfirm?.Invoke();
             return true;
         }
+        if (title == TurnPhasePresenter.EmptyDisplayConfirmTitle)
+        {
+            // 陳列の「営業開始 →」を品出しゼロで押したときの確認（以前は営業フェーズの画面を挟むだけで確認は無かった）
+            AddLog("品出しゼロで営業（確認を承認）");
+            SetStatus("品出しゼロの営業を承認");
+            data.OnConfirm?.Invoke();
+            return true;
+        }
         if (title == "品出しゼロで配信します")
         {
             AddLog("品出しゼロで配信（確認を承認）");

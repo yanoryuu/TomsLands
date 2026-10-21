@@ -61,6 +61,7 @@ public class UIFocusScope : MonoBehaviour
 
     private readonly Subject<ControllerButton> buttonSubject = new();
     private Action codeCancel;
+    private Action cancelFallback;
 
     public bool Modal { get => modal; set => modal = value; }
     public int Priority { get => priority; set => priority = value; }
@@ -114,6 +115,16 @@ public class UIFocusScope : MonoBehaviour
         return this;
     }
 
+    /// <summary>
+    /// Cancel を誰も処理しなかったとき（cancelButton が非表示・押せない、cancelMode=None）に呼ぶ処理。null で解除。
+    /// 例: 店ホームで「戻る」が出ていないときのキーボード Esc を設定画面に振る。
+    /// </summary>
+    public UIFocusScope SetCancelFallback(Action action)
+    {
+        cancelFallback = action;
+        return this;
+    }
+
     /// <summary>指定要素を選択する（パッド/キー使用中のみ。マウス中は記憶だけ）。</summary>
     public void Select(Selectable target)
     {
@@ -133,6 +144,7 @@ public class UIFocusScope : MonoBehaviour
     /// <summary>Cancel が何かしら設定されているか。</summary>
     public bool HasCancel =>
         codeCancel != null
+        || cancelFallback != null
         || (cancelMode == CancelMode.ClickButton && cancelButton != null)
         || (cancelMode == CancelMode.InvokeEvent);
 
@@ -183,13 +195,20 @@ public class UIFocusScope : MonoBehaviour
                         cancelButton.onClick.Invoke();
                     return true;
                 }
-                return false;
+                return InvokeCancelFallback();
             case CancelMode.InvokeEvent:
                 onCancel?.Invoke();
                 return true;
             default:
-                return false;
+                return InvokeCancelFallback();
         }
+    }
+
+    private bool InvokeCancelFallback()
+    {
+        if (cancelFallback == null) return false;
+        cancelFallback.Invoke();
+        return true;
     }
 
     internal void HandleButton(ControllerButton button)

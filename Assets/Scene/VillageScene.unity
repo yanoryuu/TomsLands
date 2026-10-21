@@ -1181,6 +1181,7 @@ GameObject:
   - component: {fileID: 62102172}
   - component: {fileID: 62102174}
   - component: {fileID: 62102173}
+  - component: {fileID: 62102175}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -1346,6 +1347,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &62102175
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62102171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1001 &63017233
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2860,6 +2874,7 @@ GameObject:
   - component: {fileID: 126189428}
   - component: {fileID: 126189430}
   - component: {fileID: 126189429}
+  - component: {fileID: 126189431}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -3025,6 +3040,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &126189431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 126189427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &126349355
 GameObject:
   m_ObjectHideFlags: 0
@@ -3415,6 +3443,7 @@ GameObject:
   - component: {fileID: 160824226}
   - component: {fileID: 160824228}
   - component: {fileID: 160824227}
+  - component: {fileID: 160824229}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -3580,6 +3609,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &160824229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 160824225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &165632308
 GameObject:
   m_ObjectHideFlags: 0
@@ -7478,6 +7520,7 @@ GameObject:
   - component: {fileID: 287395087}
   - component: {fileID: 287395089}
   - component: {fileID: 287395088}
+  - component: {fileID: 287395090}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -7643,6 +7686,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &287395090
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 287395086}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1001 &293288185
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7772,6 +7828,7 @@ GameObject:
   - component: {fileID: 299096365}
   - component: {fileID: 299096367}
   - component: {fileID: 299096366}
+  - component: {fileID: 299096368}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -7937,6 +7994,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &299096368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 299096364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &300631039
 GameObject:
   m_ObjectHideFlags: 0
@@ -8379,6 +8449,7 @@ GameObject:
   - component: {fileID: 322145128}
   - component: {fileID: 322145130}
   - component: {fileID: 322145129}
+  - component: {fileID: 322145131}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -8544,6 +8615,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &322145131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 322145127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1001 &327222011
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16295,7 +16379,7 @@ MonoBehaviour:
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 1920, y: 1080}
-  m_ScreenMatchMode: 0
+  m_ScreenMatchMode: 1
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
@@ -19176,12 +19260,12 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
+    m_NormalColor: {r: 0.8333333, g: 0.8333333, b: 0.8333333, a: 0.8333333}
+    m_HighlightedColor: {r: 1, g: 0.9499999, b: 0.84999996, a: 0.8333333}
+    m_PressedColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.8333333}
+    m_SelectedColor: {r: 0.8006536, g: 0.8006536, b: 0.8006536, a: 0.8333333}
+    m_DisabledColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.41830066}
+    m_ColorMultiplier: 1.2
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
@@ -23006,6 +23090,7 @@ GameObject:
   - component: {fileID: 793173875}
   - component: {fileID: 793173877}
   - component: {fileID: 793173876}
+  - component: {fileID: 793173878}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -23171,6 +23256,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &793173878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 793173874}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1001 &796570067
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -24844,6 +24942,7 @@ GameObject:
   - component: {fileID: 831412130}
   - component: {fileID: 831412132}
   - component: {fileID: 831412131}
+  - component: {fileID: 831412133}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -25009,6 +25108,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &831412133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 831412129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &832862175
 GameObject:
   m_ObjectHideFlags: 0
@@ -25604,12 +25716,12 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
+    m_NormalColor: {r: 0.8333333, g: 0.8333333, b: 0.8333333, a: 0.8333333}
+    m_HighlightedColor: {r: 1, g: 0.9499999, b: 0.84999996, a: 0.8333333}
+    m_PressedColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.8333333}
+    m_SelectedColor: {r: 0.8006536, g: 0.8006536, b: 0.8006536, a: 0.8333333}
+    m_DisabledColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.41830066}
+    m_ColorMultiplier: 1.2
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
@@ -33048,6 +33160,7 @@ GameObject:
   - component: {fileID: 1128699489}
   - component: {fileID: 1128699491}
   - component: {fileID: 1128699490}
+  - component: {fileID: 1128699492}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -33213,6 +33326,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1128699492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1128699488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1001 &1131394427
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -44600,6 +44726,7 @@ GameObject:
   - component: {fileID: 1569886818}
   - component: {fileID: 1569886820}
   - component: {fileID: 1569886819}
+  - component: {fileID: 1569886821}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -44765,6 +44892,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1569886821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1569886817}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1001 &1572479764
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -48187,12 +48327,12 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
+    m_NormalColor: {r: 0.8333333, g: 0.8333333, b: 0.8333333, a: 0.8333333}
+    m_HighlightedColor: {r: 1, g: 0.9499999, b: 0.84999996, a: 0.8333333}
+    m_PressedColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.8333333}
+    m_SelectedColor: {r: 0.8006536, g: 0.8006536, b: 0.8006536, a: 0.8333333}
+    m_DisabledColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.41830066}
+    m_ColorMultiplier: 1.2
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
@@ -87151,12 +87291,12 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
+    m_NormalColor: {r: 0.8333333, g: 0.8333333, b: 0.8333333, a: 0.8333333}
+    m_HighlightedColor: {r: 1, g: 0.9499999, b: 0.84999996, a: 0.8333333}
+    m_PressedColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.8333333}
+    m_SelectedColor: {r: 0.8006536, g: 0.8006536, b: 0.8006536, a: 0.8333333}
+    m_DisabledColor: {r: 0.65359473, g: 0.65359473, b: 0.65359473, a: 0.41830066}
+    m_ColorMultiplier: 1.2
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
@@ -87627,6 +87767,8 @@ MonoBehaviour:
   rb: {fileID: 1889480273}
   playerInput: {fileID: 1889480274}
   animator: {fileID: 258184864}
+  ignoreArrowKeysAndDpad: 0
+  walkOnlyWhileParentScopeTop: 0
 --- !u!114 &1889480276
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92526,6 +92668,7 @@ GameObject:
   - component: {fileID: 1940158265}
   - component: {fileID: 1940158267}
   - component: {fileID: 1940158266}
+  - component: {fileID: 1940158268}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -92691,6 +92834,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &1940158268
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1940158264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &1944059380
 GameObject:
   m_ObjectHideFlags: 0
@@ -96954,6 +97110,7 @@ GameObject:
   - component: {fileID: 2097632783}
   - component: {fileID: 2097632785}
   - component: {fileID: 2097632784}
+  - component: {fileID: 2097632786}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -97119,6 +97276,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2097632786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2097632782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &2097785998
 GameObject:
   m_ObjectHideFlags: 0
@@ -98204,6 +98374,7 @@ GameObject:
   - component: {fileID: 2129004076}
   - component: {fileID: 2129004078}
   - component: {fileID: 2129004077}
+  - component: {fileID: 2129004079}
   m_Layer: 0
   m_Name: Hint
   m_TagString: Untagged
@@ -98369,6 +98540,19 @@ MeshRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 20
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2129004079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2129004075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5fd3776872f146e4b9ad0aa0cc01819f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  keyboardKey: '[E]'
 --- !u!1 &2134342578
 GameObject:
   m_ObjectHideFlags: 0
