@@ -4753,7 +4753,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3134297796645566653, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 32
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 3929489457845160971, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.x
@@ -4765,15 +4765,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5540483110960072185, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 30
+      value: 38
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMax
-      value: 18
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 12
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -4809,11 +4809,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 160
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 30
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4865,11 +4865,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMax
-      value: 20
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 14
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -4918,11 +4918,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMax
-      value: 18
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 12
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -4958,11 +4958,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 160
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 30
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5014,7 +5014,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 14
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -5063,7 +5063,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3134297796645566653, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 32
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 3929489457845160971, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.x
@@ -5075,15 +5075,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5540483110960072185, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 30
+      value: 38
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMax
-      value: 18
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 12
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 5991633047808735140, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
@@ -5119,11 +5119,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 160
+      value: 200
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 30
+      value: 44
       objectReference: {fileID: 0}
     - target: {fileID: 6346540932766398739, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5175,11 +5175,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMax
-      value: 20
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_fontSizeMin
-      value: 14
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 6586533246522290394, guid: 42084ae0ed701854a819e75adcad5172, type: 3}
       propertyPath: m_overflowMode
