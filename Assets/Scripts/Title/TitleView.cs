@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using R3;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -126,6 +127,47 @@ public sealed class TitleView : MonoBehaviour
         OnSaveSlotSelected.Dispose();
         OnSaveSlotDeleteRequested.Dispose();
         OnBackRequested.Dispose();
+    }
+
+    private GameObject _demoBadge;
+
+    /// <summary>
+    /// 体験版の印「体験版」を画面の右上に出す（DemoBuild）。新しい素材は使わず、
+    /// タイトルのボタンの文字と同じフォント・マテリアルで1行だけ作る。フォントの元が見つからなければ出さない。
+    /// </summary>
+    public void ShowDemoBadge()
+    {
+        if (_demoBadge != null) return;
+        var canvas = GetComponentInParent<Canvas>();
+        if (canvas != null) canvas = canvas.rootCanvas;
+        if (canvas == null) return;
+
+        TMP_Text source = null;
+        foreach (var b in new[] { newGameButton, continueButton, startButton, optionButton })
+        {
+            if (b == null) continue;
+            source = b.GetComponentInChildren<TMP_Text>(true);
+            if (source != null) break;
+        }
+        if (source == null) source = canvas.GetComponentInChildren<TMP_Text>(true);
+        if (source == null || source.font == null) return;
+
+        _demoBadge = new GameObject("DemoBadge", typeof(RectTransform));
+        var rt = (RectTransform)_demoBadge.transform;
+        rt.SetParent(canvas.transform, false);
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(1f, 1f);
+        rt.anchoredPosition = new Vector2(-48f, -36f);
+        rt.sizeDelta = new Vector2(360f, 90f);
+        rt.SetAsLastSibling();
+
+        var text = _demoBadge.AddComponent<TextMeshProUGUI>();
+        text.font = source.font;
+        text.fontSharedMaterial = source.fontSharedMaterial;
+        text.text = "体験版";
+        text.fontSize = 56f;
+        text.alignment = TextAlignmentOptions.TopRight;
+        text.color = new Color(1f, 0.86f, 0.42f); // 金縁に合わせた金色
+        text.raycastTarget = false;
     }
 
     /// <summary>「続きから」ボタンの有効/無効を切り替える（いずれかのスロットにデータがあるか）。</summary>

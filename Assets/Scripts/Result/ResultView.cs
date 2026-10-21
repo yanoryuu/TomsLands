@@ -135,6 +135,17 @@ public class ResultView : MonoBehaviour
         if (skipCatcher != null) skipCatcher.Clicked -= Skip;
     }
 
+    /// <summary>体験版: どちらのボタンも「次へ」にする（押すと「製品版へ」を出す。村へは戻らない）。</summary>
+    public void ApplyDemoLabels()
+    {
+        foreach (var b in new[] { goToTitleButton, retryButton })
+        {
+            if (b == null) continue;
+            var label = b.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (label != null) label.text = "次へ";
+        }
+    }
+
     // =====================================================
     // 準備
     // =====================================================

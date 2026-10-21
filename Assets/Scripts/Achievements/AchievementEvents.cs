@@ -42,7 +42,7 @@ public static class AchievementEvents
 
     public static void ReportStreamSettled(BattleOutputData output, BattleInputData input, int turn)
     {
-        if (output == null) return;
+        if (output == null || DemoBuild.IsDemo) return; // 体験版は本編の実績を判定しない
         int gross = 0;
         if (output.SoldItems != null)
             foreach (var s in output.SoldItems)
@@ -64,7 +64,7 @@ public static class AchievementEvents
 
     public static void ReportRunCleared(TomsModel toms, string rank)
     {
-        if (toms == null) return;
+        if (toms == null || DemoBuild.IsDemo) return;
         var info = new RunClearedInfo
         {
             Mode = toms.GameMode,

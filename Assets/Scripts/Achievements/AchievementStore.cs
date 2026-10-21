@@ -98,7 +98,7 @@ public static class AchievementStore
 #if UNITY_EDITOR
             if (IsSandboxed) return Path.Combine(SaveSlotManager.DevRootOverride, GlobalFileName);
 #endif
-            return Path.Combine(Application.persistentDataPath, GlobalFileName);
+            return Path.Combine(DemoBuild.DataRoot, GlobalFileName); // 体験版は製品版と別のフォルダ
         }
     }
 

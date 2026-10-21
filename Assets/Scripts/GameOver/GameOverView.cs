@@ -74,7 +74,13 @@ public class GameOverView : MonoBehaviour
             $"配信　討伐 {heroWins}・防衛 {heroLosses}　収支 {sign}{Mathf.Abs(streamEarnings):N0}G",
         };
         if (carried > 0) lines.Add($"持ち込んだ {carried:N0}G は戻らない");
-        lines.Add($"村へ +{villageFunds:N0}G");
+        if (villageFunds >= 0) lines.Add($"村へ +{villageFunds:N0}G"); // 体験版は -1（村が無い）
         reviewText.text = string.Join("\n", lines);
+    }
+
+    /// <summary>体験版: ボタンを「次へ」にする（押すと「製品版へ」を出す。村へは戻らない）。</summary>
+    public void ApplyDemoLabels()
+    {
+        SetButtonLabel(retryButton, "次へ");
     }
 }

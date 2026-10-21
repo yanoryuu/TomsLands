@@ -83,6 +83,7 @@ public sealed class SteamManager : MonoBehaviour
             if (result != ESteamAPIInitResult.k_ESteamAPIInitResult_OK)
             {
                 // Steam 外の起動では普通に起きる。ゲームはそのまま続ける
+                // 体験版は App ID が未取得（DemoBuild.DemoSteamAppId = 0）の間もここに来る。ゲームは止めない
                 StatusMessage = $"無効（{result}: {errorMessage}）";
                 Debug.Log($"[Steam] Steam を使わずに起動します: {result} {errorMessage}");
                 return;
@@ -90,7 +91,7 @@ public sealed class SteamManager : MonoBehaviour
 
             Initialized = true;
             StatusMessage = "有効";
-            Debug.Log($"[Steam] 初期化しました (AppId={SteamUtils.GetAppID()})");
+            Debug.Log($"[Steam] 初期化しました (AppId={SteamUtils.GetAppID()}{(DemoBuild.IsDemo ? $"、体験版。想定の App ID={DemoBuild.DemoSteamAppId}（0 = 未取得）" : "")})");
         }
         catch (DllNotFoundException e)
         {

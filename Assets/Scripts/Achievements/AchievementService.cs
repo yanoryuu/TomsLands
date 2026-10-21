@@ -49,7 +49,8 @@ public sealed class AchievementService
     }
 
     /// <summary>Steam へ送れる状態か（隔離中は常に false）。</summary>
-    public static bool SteamAvailable => SteamManager.Initialized && !AchievementStore.IsSandboxed;
+    /// 体験版（DemoBuild）は本編の実績を入れないので常に false。
+    public static bool SteamAvailable => !DemoBuild.IsDemo && SteamManager.Initialized && !AchievementStore.IsSandboxed;
 
     private AchievementGlobalData Data
     {
@@ -85,6 +86,7 @@ public sealed class AchievementService
     /// <summary>実績を解除する。解除済みなら何もしない。</summary>
     public void Unlock(AchievementId id, string reason = null)
     {
+        if (DemoBuild.IsDemo) return; // 体験版は本編の実績を解除しない
         var def = AchievementDefinitions.Get(id);
         var d = Data;
         if (d.unlocked.Contains(def.ApiName)) return;
@@ -110,6 +112,7 @@ public sealed class AchievementService
     /// <summary>Stat をこれまでの最大値として更新する（小さい値では下げない）。</summary>
     public void ReportMax(AchievementStat stat, int value)
     {
+        if (DemoBuild.IsDemo) return;
         var name = AchievementDefinitions.StatApiName(stat);
         var d = Data;
         if (value <= d.GetStat(name)) return;
@@ -136,6 +139,7 @@ public sealed class AchievementService
     /// <summary>購読した社を覚える。新しい社なら true。</summary>
     public bool AddSubscribedCompany(string companyId)
     {
+        if (DemoBuild.IsDemo) return false;
         if (string.IsNullOrEmpty(companyId)) return false;
         var d = Data;
         if (d.subscribedCompanies.Contains(companyId)) return false;
@@ -150,6 +154,7 @@ public sealed class AchievementService
     /// </summary>
     public void HandleRunCleared(RunClearedInfo info)
     {
+        if (DemoBuild.IsDemo) return;
         if (info == null) return;
         var run = AchievementStore.LoadRun();
         if (run.clearReported) return;

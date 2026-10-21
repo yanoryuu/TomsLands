@@ -56,6 +56,9 @@ public class ResultLifetimeScope : LifetimeScope
 
         // --- 3. Services ---
         builder.Register<SceneTransitionService>(Lifetime.Singleton);
+        // ポップアップ（体験版の「製品版へ」で使う。製品版では呼ばない）
+        builder.Register<PopUpManager>(Lifetime.Singleton)
+            .WithParameter(typeof(LifetimeScope), this);
 
         // --- 4. Views ---
         if (resultView != null)

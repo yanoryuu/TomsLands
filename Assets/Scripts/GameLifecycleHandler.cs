@@ -192,6 +192,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         // 1周目（準備シーンを通らずに店で直接開店する初回）は短いラン（かんたん）にして、早く決着と村に届かせる
         if (!hadSetup && TutorialSteps.ShouldStartDirectlyInShop(_metaProgress))
             mode = GameModeId.Short;
+        // 体験版は かんたん（Short）だけ（ふつう・長いランは製品版）
+        if (DemoBuild.IsDemo)
+            mode = GameModeId.Short;
         int seed = GameConst.FlowGeneration.randomSeed != 0
             ? GameConst.FlowGeneration.randomSeed
             : unchecked((int)DateTime.Now.Ticks);
