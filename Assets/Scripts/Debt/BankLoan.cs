@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 村の銀行 Lv5「勝負の融資」（Docs/Village_Meta_Design.md §11-4）。
+/// 村の銀行 Lv5「勝負の融資」（Docs/Village_Meta_Design.md §0-6）。
 /// 1ランに1回、配信の前日の朝に、持ち込み上限と同じ額（bankCarryLimits の最後の値。今は 70万G）を借りられる。
 /// 配信の次の日の朝に1割の利息をつけて返す。返せなければ通常の納付と同じ（売上の前倒し → 金融資産 → 在庫の投げ売り → 破産。DebtPresenter）。
 /// 最後の配信の前に借りて返す日が来ないまま終わったら、決算の純資産から返す額を差し引く（ResultModel）。

@@ -24,7 +24,7 @@ public enum StreamDeclarationOutcome
 }
 
 /// <summary>
-/// 村の広場 Lv5「勝負配信の宣言」（Docs/Village_Meta_Design.md §11-5）。
+/// 村の広場 Lv5「勝負配信の宣言」（Docs/Village_Meta_Design.md §0-6）。
 /// 1ランに1回、配信の前（配信前の寄り道 PreStreamPresenter）に「勇者が勝つ／魔王が勝つ」を宣言できる。
 /// 当たれば配信の売上と防衛報酬が ×1.5（BattleSceneStarter が配信の純利益に足す）、フォロワーと注目が大きく増える。
 /// 外れればフォロワーと注目が減る（帰還処理 BattleResultHandler が反映する）。
