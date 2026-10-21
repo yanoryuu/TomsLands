@@ -13,7 +13,7 @@ public class ProcurementHeaderView : MonoBehaviour
     [SerializeField] private Image dungeonIcon;
     [SerializeField] private TextMeshProUGUI dungeonNameText;
     [SerializeField] private TextMeshProUGUI weaknessText;   // 弱点:火 など
-    [SerializeField] private TextMeshProUGUI turnsUntilText; // あと2ターン
+    [SerializeField] private TextMeshProUGUI turnsUntilText; // あと2日 / 本日配信
 
     [Header("勇者の現装備")]
     [SerializeField] private TextMeshProUGUI heroEquipText;  // 勇者Lv.5 ⚔鉄剣 / 🛡革鎧
@@ -30,7 +30,7 @@ public class ProcurementHeaderView : MonoBehaviour
         if (dungeonNameText) dungeonNameText.text = dungeonName;
         if (weaknessText) weaknessText.text = weakness;
         if (turnsUntilText)
-            turnsUntilText.text = turnsUntil == 0 ? "本日配信" : turnsUntil > 0 ? $"あと{turnsUntil}ターン" : "—";
+            turnsUntilText.text = DayText.UntilStream(turnsUntil);
 
         ShowHeroEquip(heroLevel, weaponName, armorName);
     }
@@ -39,7 +39,7 @@ public class ProcurementHeaderView : MonoBehaviour
     public void ShowNoBattle(int heroLevel, string weaponName, string armorName)
     {
         if (dungeonIcon) dungeonIcon.enabled = false;
-        if (dungeonNameText) dungeonNameText.text = "次の戦闘なし";
+        if (dungeonNameText) dungeonNameText.text = "次の配信なし";
         if (weaknessText) weaknessText.text = "—";
         if (turnsUntilText) turnsUntilText.text = "—";
         ShowHeroEquip(heroLevel, weaponName, armorName);

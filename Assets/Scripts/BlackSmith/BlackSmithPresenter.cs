@@ -195,7 +195,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         nextDungeonAttr = known ? dungeon.requiredAttribute : (ItemTypeData.ItemAttribute?)null;
         // 表示用の日数（今日 0・明日 1）。GetTurnsUntilNextBattle は前日に 0 になるので使わない
         int turnsUntil = gameFlowManager.GetDaysUntilNextStream();
-        string weakness = known ? $"弱点:{AttributeToJapanese(dungeon.requiredAttribute)}" : "弱点:?";
+        string weakness = ItemAttributeText.Weakness(dungeon.requiredAttribute, known);
         if (header != null) header.Show(dungeon.dungeonIcon, dungeon.dungeonName, weakness, turnsUntil, heroLevel, weaponName, armorName);
     }
 
@@ -244,14 +244,14 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
     {
         switch (ScrapbookModel.StateOf(s, entry, turn))
         {
-            case ScrapState.ConfirmedHit: return "<color=#3E8E3A>○ 本物</color>";
-            case ScrapState.ConfirmedPartial: return "<color=#C8731E>△ 誇張</color>";
-            case ScrapState.ConfirmedMiss: return "<color=#B83A2C>× 誤報</color>";
+            case ScrapState.ConfirmedHit: return "<color=#2F6E2B>○ 本物</color>";
+            case ScrapState.ConfirmedPartial: return "<color=#A4500E>△ 誇張</color>";
+            case ScrapState.ConfirmedMiss: return "<color=#A0281C>× 誤報</color>";
             case ScrapState.Unconfirmed:
-                return entry != null && turn >= entry.SettleTurn ? "<color=#8A5A2B>決着した</color>" : "<color=#3E8E3A>効いている</color>";
+                return entry != null && turn >= entry.SettleTurn ? "<color=#7A4A20>決着した</color>" : "<color=#2F6E2B>効いている</color>";
             default:
                 int days = entry != null ? ScrapbookModel.ConfirmableTurn(entry) - turn : -1;
-                return days > 0 ? $"<color=#8A5A2B>あと{days}日で効く</color>" : "<color=#8A5A2B>結果待ち</color>";
+                return days > 0 ? $"<color=#7A4A20>あと{days}日で効く</color>" : "<color=#7A4A20>結果待ち</color>";
         }
     }
 
@@ -271,16 +271,6 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         if (string.IsNullOrEmpty(itemId)) return null;
         return itemModel.GetRuntimeItem(itemId)?.ItemName;
     }
-
-    private static string AttributeToJapanese(ItemTypeData.ItemAttribute attr) => attr switch
-    {
-        ItemTypeData.ItemAttribute.Fire  => "火",
-        ItemTypeData.ItemAttribute.Water => "水",
-        ItemTypeData.ItemAttribute.Wood  => "木",
-        ItemTypeData.ItemAttribute.Light => "光",
-        ItemTypeData.ItemAttribute.Dark  => "闇",
-        _ => attr.ToString()
-    };
 
     private void Bind()
     {
@@ -780,7 +770,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
                 {
                     Icon = r.ItemIcon,
                     Name = r.ItemName,
-                    Info = $"{TypeToJapanese(r.ItemType)}・{AttributeToJapanese(r.ItemAttribute)}属性・{r.CurrentPrice.Value:N0}G",
+                    Info = $"{TypeToJapanese(r.ItemType)}・{ItemAttributeText.WithSuffix(r.ItemAttribute)}・{r.CurrentPrice.Value:N0}G",
                     Description = r.ItemDescription
                 });
             }

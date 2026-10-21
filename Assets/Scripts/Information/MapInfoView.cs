@@ -211,11 +211,11 @@ public class MapInfoView : MonoBehaviour
         }
 
         if (weaknessText != null)
-            weaknessText.text = purchased ? $"弱点: {ItemAttributeText.WithSuffix(data.requiredAttribute)}" : "弱点: ???";
+            weaknessText.text = purchased ? $"弱点: {ItemAttributeText.WithSuffix(data.requiredAttribute)}" : "弱点: ？";
         if (recommendText != null)
-            recommendText.text = purchased ? $"推奨Lv: {data.recommendedLevel}" : "推奨Lv: ???";
+            recommendText.text = purchased ? $"推奨Lv: {data.recommendedLevel}" : "推奨Lv: ？";
         if (difficultyText != null)
-            difficultyText.text = purchased ? $"難易度: {new string('★', Mathf.Clamp(data.difficulty, 1, 10))}" : "難易度: ???";
+            difficultyText.text = purchased ? $"難易度: {new string('★', Mathf.Clamp(data.difficulty, 1, 10))}" : "難易度: ？";
 
         int cost = GetCost(data.key);
         if (costText != null)

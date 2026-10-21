@@ -7284,10 +7284,6 @@ PrefabInstance:
       propertyPath: backButton
       value: 
       objectReference: {fileID: 1154994632}
-    - target: {fileID: 2464462683530780066, guid: 647b504877aecf049a2e9c156daac854, type: 3}
-      propertyPath: m_text
-      value: "\u7A0E\u91D1"
-      objectReference: {fileID: 0}
     - target: {fileID: 2913342981888754755, guid: 647b504877aecf049a2e9c156daac854, type: 3}
       propertyPath: m_SizeDelta.x
       value: 24
@@ -7303,10 +7299,6 @@ PrefabInstance:
     - target: {fileID: 2913342981888754755, guid: 647b504877aecf049a2e9c156daac854, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3150247709828107697, guid: 647b504877aecf049a2e9c156daac854, type: 3}
-      propertyPath: m_text
-      value: "\u7B2C1\u56DE\u3000\u7A0E\u91D1\u7D0D\u4ED8\u65E5"
       objectReference: {fileID: 0}
     - target: {fileID: 4031291377318273702, guid: 647b504877aecf049a2e9c156daac854, type: 3}
       propertyPath: relicBarText
@@ -7420,10 +7412,6 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6901966505159551927, guid: 647b504877aecf049a2e9c156daac854, type: 3}
-      propertyPath: m_text
-      value: "\u7B2C1\u56DE\u3000\u7A0E\u91D1\u7D0D\u4ED8\u65E5"
-      objectReference: {fileID: 0}
     - target: {fileID: 7008396103817808464, guid: 647b504877aecf049a2e9c156daac854, type: 3}
       propertyPath: slotCounterText
       value: 
@@ -7451,10 +7439,6 @@ PrefabInstance:
     - target: {fileID: 8471987745391407597, guid: 647b504877aecf049a2e9c156daac854, type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8998782548194098678, guid: 647b504877aecf049a2e9c156daac854, type: 3}
-      propertyPath: m_text
-      value: "\u7A0E\u91D1"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

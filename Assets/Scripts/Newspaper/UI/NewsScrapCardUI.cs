@@ -100,7 +100,7 @@ public class NewsScrapCardUI : MonoBehaviour
         partialMark.text = "△";
         partialMark.alignment = TextAlignmentOptions.Center;
         partialMark.fontSize = 40;
-        partialMark.color = new Color32(0xC8, 0x73, 0x1E, 0xFF);
+        partialMark.color = new Color32(0xA4, 0x50, 0x0E, 0xFF); // 付箋・記事ポップアップの「△ 誇張」と同じ濃さ
         partialMark.raycastTarget = false;
         return partialMark;
     }
