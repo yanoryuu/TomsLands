@@ -13,6 +13,9 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     /// <summary>配信前日の営業開始で一度だけ出す確認の見出し（G-3。Debug/DebugAutoPlayer が見出しで承認する）。</summary>
     public const string StreamEveConfirmTitle = "明日は配信です";
 
+    /// <summary>品出しゼロで営業開始を押したときの確認の見出し（Debug/DebugAutoPlayer が見出しで承認する）。</summary>
+    public const string EmptyDisplayConfirmTitle = "品出しゼロで営業します";
+
     /// <summary>最初のレリック3択の前に流す説明（K-10。Assets/TomsScenario/Scenarios/Tutorial.csv）。</summary>
     private const string RelicIntroLabel = "Tutorial_RelicFirst";
 
@@ -549,8 +552,41 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         if (turnPhaseManager.CurrentTurnPhase.Value != TurnPhase.Sales) return;
         if (_salesStarting) return; // 演出中の連打防止
 
+        if (TryShowEmptyDisplayConfirm()) return;
+        ContinueStartSales();
+    }
+
+    /// <summary>品出しの確認のあと: 配信前日なら一度だけ装備の確認、それ以外はそのまま営業。</summary>
+    private void ContinueStartSales()
+    {
         if (TryShowStreamEveConfirm()) return;
         StartSales();
+    }
+
+    /// <summary>
+    /// 何も並べずに「営業開始」を押したときだけ確認を出す（M-7）。出したら true。
+    /// 「陳列にもどる」で陳列フェーズへ戻す。
+    /// </summary>
+    private bool TryShowEmptyDisplayConfirm()
+    {
+        if (popUpManager == null) return false;
+        if (itemModel.RuntimeItems.Any(r => r.IsDisplay.Value && r.DisplayStock.Value > 0)) return false;
+
+        popUpManager.Show(new PopUpData
+        {
+            Title = EmptyDisplayConfirmTitle,
+            Message = "まだ何も並べていません。
+このまま営業すると、今日の売上はありません。",
+            ConfirmButtonText = "営業する",
+            CancelButtonText = "陳列にもどる",
+            Size = PopupSizeEnum.Medium,
+            OnConfirm = ContinueStartSales,
+            OnCancel = () =>
+            {
+                if (turnPhaseManager.CurrentTurnPhase.Value == TurnPhase.Sales) turnPhaseManager.GoBackTurnPhase();
+            },
+        });
+        return true;
     }
 
     /// <summary>

@@ -135,8 +135,8 @@ Overlay Canvas（sortingOrder 32000、GraphicRaycaster なし＝クリックを�
 
 ## 6. 実装済みの画面
 - 店ホーム `TomsShop.prefab`: ルートスコープの first をフェーズで切替（**ルートスコープ dpadOnlyNavigation=ON**: 左スティック・WASD=トム移動のみ、十字・矢印=UI 選択のみ。トムの `PlayerMove` は ignoreArrowKeysAndDpad=ON＝矢印・十字を無視、walkOnlyWhileParentScopeTop=ON＝施設/陳列/ポップアップ等の別スコープが最前面の間は歩かない。別スコープが前面ならスティックでも UI 選択できる）（`TurnPhaseView`: 仕入れ=鍛冶屋 / 陳列=商品陳列 / 営業=戻る。営業開始は first にしない・演出中は自動選択停止）。Cancel=戻る（陳列・営業）。施設から B で戻ると入った施設ボタンへ復帰
-  - 近道（ルートスコープが最前面のとき）: **Start＝設定画面**、**キーボード Esc＝「戻る」が無い仕入れ中は設定画面**（`SetCancelFallback`。パッドの B では開かない＝配信画面と同じ規則）、**Y / R＝「次へ」「営業開始 →」を押す**（押下アニメ・音つき）。Tab と Space は使わない（Tab は入力機器の判定、Space は Submit と重なる）
-  - 陳列フェーズの「次へ」は「営業開始 →」になり、押すとそのまま営業（暗転→サマリー）へ進む（営業フェーズの画面を挟まない。`TurnPhasePresenter`）。品出しゼロのときだけ確認「品出しゼロで営業します」
+  - 近道（ルートスコープが最前面のとき）: **Start＝設定画面**、**キーボード Esc＝「戻る」が無い仕入れ中は設定画面**（`SetCancelFallback`。パッドの B では開かない＝配信画面と同じ規則）、**Y / R＝「次へ」を押す**（押下アニメ・音つき。営業フェーズの「営業開始」は誤爆防止のため近道にしない）。Tab と Space は使わない（Tab は入力機器の判定、Space は Submit と重なる）
+  - 流れは「陳列 →『次へ』→ 営業フェーズ →『営業開始』ボタン」。営業開始を押したとき、品出しゼロなら確認「品出しゼロで営業します」（「陳列にもどる」で陳列へ）、配信前日なら一度だけ装備の確認（G-3）を出してから営業ダイジェスト（F-7）へ進む（`TomsShopPresenter.RequestStartSales`）
   - 陳列 `ItemSelectionView`: modal(10), first=先頭行の「並べる」, LB/RB=武器/防具, 行内フォーカスで説明表示（`PadSelectRelay`）。税金(Debt)=modal(20) first=×、破産=modal(30)。朝レポート/レリック3択=コードで modal(20)（レリックは B 無し）
 - 鍛冶屋 `BlackSmithView`（コード）: first=一覧先頭行（`ItemShopSlot` に `PointerEventBridge`＝選択で説明・A で銘柄選択）, B=もどる, LB/RB=武器/防具/開発（切替後は新タブの先頭行へフォーカス移動。開発タブは first=タブ自身）, X=行を選択して個数設定（詳細パネルのスライダー）へ移動、個数設定で B=一覧の同じ行へ戻る（一覧上の B は従来どおりもどる）。数量はスライダーで左右。オート購入=modal(10) first=全額・明示ナビ
 - マシンショップ/店の改装（コード）: B=閉じる, first=カタログ先頭 / 閉じる（支払いボタンは first にしない）。ターン終了サマリー: first=次のターンへ。イベント: modal(20) first=はい

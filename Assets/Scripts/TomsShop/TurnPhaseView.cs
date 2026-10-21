@@ -11,7 +11,7 @@ using UnityEngine.UI;
 ///
 /// パッド/キーの近道（店ホームのルートスコープが最前面のとき）:
 ///   Start / キーボード Esc（「戻る」が無いとき）= 設定画面（パッドの B では開かない。配信画面と同じ規則）
-///   Y / キーボード R = 「次へ」「営業開始」ボタンを押す
+///   Y / キーボード R = 「次へ」ボタンを押す（営業フェーズの「営業開始」は誤爆防止のため近道にしない）
 /// </summary>
 public class TurnPhaseView : MonoBehaviour
 {
@@ -42,10 +42,6 @@ public class TurnPhaseView : MonoBehaviour
     [Tooltip("営業フェーズ。誤爆防止のため営業開始ボタンは指定しない。未指定なら戻るボタン")]
     [SerializeField] private Selectable salesFocus;
 
-    [Header("「次へ」ボタンの文字（陳列フェーズは押すとそのまま営業を始める）")]
-    [SerializeField] private string advanceLabel = "次へ →";
-    [SerializeField] private string startSalesLabel = "営業開始 →";
-
     public Subject<Unit> OnAdvanceClicked { get; } = new();
     public Subject<Unit> OnBackClicked { get; } = new();
 
@@ -53,7 +49,6 @@ public class TurnPhaseView : MonoBehaviour
     private Vector2 _backButtonBasePos;
     private readonly Dictionary<GameObject, Vector2> _groupBasePos = new();
     private UIFocusScope _focusScope;
-    private TMP_Text _advanceText;
 
     private void Awake()
     {
@@ -80,7 +75,6 @@ public class TurnPhaseView : MonoBehaviour
                 .Subscribe(OnScopeButton)
                 .AddTo(this);
         }
-        if (advanceButton != null) _advanceText = advanceButton.GetComponentInChildren<TMP_Text>(true);
 
         // グループ入場演出のために初期位置を記録しておく（Tween中断後の位置ずれ防止）
         foreach (var g in new[] { procurementGroup, displayGroup, salesGroup })
@@ -104,8 +98,6 @@ public class TurnPhaseView : MonoBehaviour
         // 「次へ」は仕入れ・陳列のみ。営業は salesGroup の「営業開始」で進み、イベントはポップアップ任せ。
         bool showAdvance = phase == TurnPhase.Procurement || phase == TurnPhase.Display;
         if (advanceButton != null) advanceButton.gameObject.SetActive(showAdvance);
-        // 陳列フェーズの「次へ」は営業フェーズを飛ばしてそのまま営業を始める（TurnPhasePresenter）
-        if (_advanceText != null) _advanceText.text = phase == TurnPhase.Display ? startSalesLabel : advanceLabel;
 
         // 「戻る」は陳列・営業のみ（仕入れが下限。イベントへは戻らない）
         bool showBack = phase == TurnPhase.Display || phase == TurnPhase.Sales;
@@ -184,7 +176,7 @@ public class TurnPhaseView : MonoBehaviour
         if (SettingSceneOpener.Open()) UISound.PlayDecide();
     }
 
-    /// <summary>「次へ」（陳列中は「営業開始」）を押したことにする（押下アニメ・音つき）。</summary>
+    /// <summary>「次へ」を押したことにする（押下アニメ・音つき）。</summary>
     private void PressAdvance()
     {
         if (advanceButton == null || !advanceButton.isActiveAndEnabled || !advanceButton.IsInteractable()) return;
