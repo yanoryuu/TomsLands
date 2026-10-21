@@ -39,7 +39,7 @@
 - 体験版のセーブは製品版へ引き継がない。
 
 ## Steam
-- 体験版の App ID は `DemoBuild.DemoSteamAppId` = **5186790**（2026-10-22 取得）。Windows の depot は 5186791 と仮定（Steamworks の depot の番号を確かめる）。
+- 体験版の App ID は `DemoBuild.DemoSteamAppId` = **5186790**（2026-10-22 取得）。Windows の depot は 5186791（Steamworks で確認済み）。
 - `steam_appid.txt`: 体験版の開発ビルドには `DemoSteamAppId`（5186790）を書く。0 にすると入れない（本編の 4535810 を入れると体験版が本編として Steam につながる）。製品ビルドには入れない（`Editor/SteamAppIdPostBuild.cs`）。
 - App ID が未取得の間や Steam 外の起動では Steam の初期化に失敗するが、そのまま遊べる（`SteamManager` はゲームを止めない）。このとき「ストアページへ」はブラウザで開く。
 - 実績: `AchievementTracker` を登録しない、`AchievementService` の Unlock・ReportMax・HandleRunCleared などは何もしない、`AchievementEvents` も何もしない。体験版の App には実績を作らない。

@@ -12,6 +12,6 @@
 
 	"Depots"
 	{
-		"5186791" "depot_build_demo.vdf" // 【要確認】体験版の Windows depot。App ID + 1 と仮定。Steamworks の「SteamPipe > Depots」の番号と違えば直す
+		"5186791" "depot_build_demo.vdf" // 体験版の Windows depot（Steamworks で確認済み）
 	}
 }
