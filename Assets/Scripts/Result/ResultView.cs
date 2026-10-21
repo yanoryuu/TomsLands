@@ -19,6 +19,8 @@ public class ResultView : MonoBehaviour
     [Header("=== ランク表示 ===")]
     [Tooltip("ランク文字のフォールバック（rankLetterImage にスプライトが無いとき使う）")]
     [SerializeField] private TextMeshProUGUI rankText;
+    [Tooltip("任意: 称号（村が王都なら「王都の商人」）。称号が無いランでは隠す")]
+    [SerializeField] private TextMeshProUGUI merchantTitleText;
 
     [Header("=== 資産情報 ===")]
     [SerializeField] private TextMeshProUGUI finalMoneyText;
@@ -213,6 +215,14 @@ public class ResultView : MonoBehaviour
         }
         SetText(streamRecordText, FormatStreamRecord(data));
         SetText(buzzCountText, $"{data.BuzzCount}回");
+
+        // --- 称号（村が王都） ---
+        if (merchantTitleText != null)
+        {
+            bool hasTitle = !string.IsNullOrEmpty(data.MerchantTitle);
+            merchantTitleText.gameObject.SetActive(hasTitle);
+            if (hasTitle) merchantTitleText.text = $"称号「{data.MerchantTitle}」";
+        }
     }
 
     /// <summary>演出が失敗したときの保険: すべてを演出なしで表示する。</summary>

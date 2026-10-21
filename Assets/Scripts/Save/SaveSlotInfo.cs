@@ -38,4 +38,7 @@ public sealed class SaveSlotInfo
 
     /// <summary>クリア時のベストランク（未クリアなら空文字）。</summary>
     public string BestRank = "";
+
+    /// <summary>村の格（施設レベルから求める。VillageRank。王都なら称号「王都の商人」を出す）。</summary>
+    public int VillageRank;
 }

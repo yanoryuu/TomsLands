@@ -170,6 +170,7 @@ public static class SaveSlotManager
                 info.VillageFunds = meta.villageFunds;
                 info.TotalRuns = meta.totalRuns;
                 info.BestRank = meta.bestRank ?? "";
+                info.VillageRank = global::VillageRank.Compute(meta.facilities);
             }
             else
             {

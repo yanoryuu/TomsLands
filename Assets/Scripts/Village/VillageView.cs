@@ -17,6 +17,8 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI villageFundsText;
     [SerializeField] private TextMeshProUGUI metaCurrencyText;
     [SerializeField] private TextMeshProUGUI villageLevelText;
+    [Tooltip("任意: 次の村の格の条件（未配線なら villageLevelText の2行目に小さく出す）")]
+    [SerializeField] private TextMeshProUGUI rankNextText;
     [SerializeField] private Button departButton;     // 出店準備へ（必須。未配線なら素通り）
     [SerializeField] private Button titleButton;      // タイトルへ
     [SerializeField] private TextMeshProUGUI messageText;
@@ -46,6 +48,12 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI conversionEarnedText;
     [SerializeField] private TextMeshProUGUI conversionConvertedText;
     [SerializeField] private Button conversionCloseButton;
+
+    [Header("自己ベストの掲示板（任意。王都の広場の看板を調べると開く）")]
+    [SerializeField] private GameObject recordBoardPopup;
+    [SerializeField] private TextMeshProUGUI recordBoardTitleText;
+    [SerializeField] private TextMeshProUGUI recordBoardBodyText;
+    [SerializeField] private Button recordBoardCloseButton;
 
     [Header("帰還到着演出（任意。未設定なら子→シーンから自動検索。無ければ上の収支ポップ）")]
     [SerializeField] private VillageArrivalFx arrivalFx;
@@ -111,6 +119,8 @@ public class VillageView : MonoBehaviour
                 if (conversionPopup != null) conversionPopup.SetActive(false);
                 OnConversionClosed.OnNext(Unit.Default);
             });
+        if (recordBoardCloseButton != null)
+            recordBoardCloseButton.onClick.AddListener(HideRecordBoard);
 
         if (nextCaptionText != null)
         {
@@ -123,6 +133,7 @@ public class VillageView : MonoBehaviour
 
         if (investPanel != null) investPanel.SetActive(false);
         if (conversionPopup != null) conversionPopup.SetActive(false);
+        if (recordBoardPopup != null) recordBoardPopup.SetActive(false);
     }
 
     private void SetupFocusScopes()
@@ -149,6 +160,14 @@ public class VillageView : MonoBehaviour
             conversionScope.Priority = 10;
             conversionScope.SetCancelButton(conversionCloseButton);
             conversionScope.FirstSelected = conversionCloseButton;
+        }
+        if (recordBoardPopup != null)
+        {
+            var recordScope = UIFocusScope.GetOrAdd(recordBoardPopup);
+            recordScope.Modal = true;
+            recordScope.Priority = 10;
+            recordScope.SetCancelButton(recordBoardCloseButton);
+            recordScope.FirstSelected = recordBoardCloseButton;
         }
     }
 
@@ -217,13 +236,77 @@ public class VillageView : MonoBehaviour
         OnConversionClosed.Dispose();
     }
 
-    public void UpdateHud(int villageFunds, int villageLevel)
+    /// <summary>
+    /// HUD を更新する。村の名前に格を添え（「トコの村（町・総合Lv12）」）、次の格の条件を出す（nextRankLine が空なら出さない）。
+    /// </summary>
+    public void UpdateHud(int villageFunds, int villageLevel, string rankName = null, string nextRankLine = null)
     {
         SetFundsDisplay(villageFunds);
         // metaCurrencyText（旧・銀行預金/のれん表示）は村資金へ統合したため使わない
         if (metaCurrencyText != null) metaCurrencyText.gameObject.SetActive(false);
-        if (villageLevelText != null) villageLevelText.text = $"トコの村（総合Lv{villageLevel}）";
+        string head = string.IsNullOrEmpty(rankName)
+            ? $"トコの村（総合Lv{villageLevel}）"
+            : $"トコの村（{rankName}・総合Lv{villageLevel}）";
+        if (rankNextText != null)
+        {
+            rankNextText.text = nextRankLine ?? "";
+            rankNextText.gameObject.SetActive(!string.IsNullOrEmpty(nextRankLine));
+            if (villageLevelText != null) villageLevelText.text = head;
+        }
+        else if (villageLevelText != null)
+        {
+            villageLevelText.text = string.IsNullOrEmpty(nextRankLine)
+                ? head
+                : $"{head}\n<size=62%>{nextRankLine}</size>";
+        }
     }
+
+    /// <summary>村の格が上がったことを帰還収支ポップの枠で出す（格の名前を大きく。閉じると OnConversionClosed）。</summary>
+    public bool ShowRankUpPopup(string title, string rankLine, string unlockLine)
+    {
+        if (conversionPopup == null) return false;
+        conversionPopup.SetActive(true);
+        UIFx.PanelOpen(conversionPopup);
+        if (conversionTitleText != null) conversionTitleText.text = title;
+        if (conversionEarnedText != null)
+        {
+            conversionEarnedText.text = rankLine;
+            conversionEarnedText.transform.DOKill();
+            conversionEarnedText.transform.localScale = Vector3.one * 0.6f;
+            conversionEarnedText.transform.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.15f)
+                .SetLink(conversionEarnedText.gameObject);
+        }
+        if (conversionConvertedText != null)
+        {
+            conversionConvertedText.DOKill();
+            conversionConvertedText.text = unlockLine ?? "";
+        }
+        if (conversionCloseButton != null) UIFx.Pop(conversionCloseButton.transform);
+        return true;
+    }
+
+    public bool IsConversionPopupOpen => conversionPopup != null && conversionPopup.activeSelf;
+
+    /// <summary>自己ベストの掲示板を開く（未配線ならメッセージ欄に出す）。</summary>
+    public void ShowRecordBoard(string title, string body)
+    {
+        if (recordBoardPopup == null)
+        {
+            ShowMessage($"{title}\n{body}");
+            return;
+        }
+        recordBoardPopup.SetActive(true);
+        UIFx.PanelOpen(recordBoardPopup);
+        if (recordBoardTitleText != null) recordBoardTitleText.text = title;
+        if (recordBoardBodyText != null) recordBoardBodyText.text = body;
+    }
+
+    public void HideRecordBoard()
+    {
+        if (recordBoardPopup != null) recordBoardPopup.SetActive(false);
+    }
+
+    public bool IsRecordBoardOpen => recordBoardPopup != null && recordBoardPopup.activeSelf;
 
     /// <summary>村資金HUDの数値だけ更新する（到着演出のカウントアップ用）。</summary>
     public void SetFundsDisplay(int villageFunds)

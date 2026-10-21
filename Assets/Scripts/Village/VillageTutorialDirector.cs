@@ -91,6 +91,26 @@ public class VillageTutorialDirector
         }
     }
 
+    /// <summary>
+    /// 村の格が上がったときの短い会話（VillagePresenter.RankUpLabelPrefix + 格）。未読のときだけ流し、会話中はプレイヤー移動を止める。
+    /// ラベルが無ければ何もしない。
+    /// </summary>
+    public async UniTask PlayRankUpAsync(string label, CancellationToken ct)
+    {
+        if (scenario == null || scenario.HasSeen(label)) return;
+        LockInput();
+        try
+        {
+            await scenario.PlayOnceAsync(label, ct);
+            // 会話を閉じた決定キーが区画の「調べる」に漏れないよう少し待つ
+            await UniTask.DelayFrame(2, cancellationToken: ct);
+        }
+        finally
+        {
+            UnlockInput();
+        }
+    }
+
     private static async UniTask<bool> HasLabelAsync(string label, CancellationToken ct)
     {
         var player = UnityEngine.Object.FindFirstObjectByType<ScenarioPlayer>();

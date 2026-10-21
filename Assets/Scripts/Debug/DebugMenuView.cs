@@ -308,11 +308,11 @@ public partial class DebugMenuView : MonoBehaviour
             int lv = Meta.GetFacilityLevel(id);
             GUILayout.BeginHorizontal();
             GUILayout.Label($"{label}: Lv{lv}", GUILayout.Width(160));
-            if (GUILayout.Button("-1")) { Meta.SetFacilityLevel(id, Mathf.Max(0, lv - 1)); Meta.SaveData(); }
-            if (GUILayout.Button("+1")) { Meta.SetFacilityLevel(id, Mathf.Min(VillageFacilityMigration.MaxFacilityLevel, lv + 1)); Meta.SaveData(); }
+            if (GUILayout.Button("-1")) { Meta.SetFacilityLevel(id, Mathf.Max(0, lv - 1)); Meta.SaveData(); VillagePresenter.NotifyDebugFacilityLevelsChanged(); }
+            if (GUILayout.Button("+1")) { Meta.SetFacilityLevel(id, Mathf.Min(VillageFacilityMigration.MaxFacilityLevel, lv + 1)); Meta.SaveData(); VillagePresenter.NotifyDebugFacilityLevelsChanged(); }
             GUILayout.EndHorizontal();
         }
-        GUILayout.Label("※村シーンの見た目はシーン再入で反映");
+        GUILayout.Label("※村シーンにいればすぐ反映（村の格が上がれば演出も出る）");
 
         GUILayout.Space(8);
     }

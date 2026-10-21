@@ -152,6 +152,10 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             Debug.LogWarning($"[ResultPresenter] 確認用のダミー統計で表示します（進行中のラン無し or ResultDebugDummy.Force）（Rank={statistics.Rank}）。");
         }
 #endif
+        // 村が王都なら称号を出す（村の格は施設レベルから求める）
+        statistics.MerchantTitle = _metaProgress != null && VillageRank.IsTop(VillageRank.Compute(_metaProgress))
+            ? VillageRank.TopTitle
+            : "";
         _lastStatistics = statistics;
 
         if (_resultView != null)

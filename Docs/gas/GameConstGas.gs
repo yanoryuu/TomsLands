@@ -15,6 +15,10 @@
  * 2026-08 更新:
  *   - villageFacilities を専用リーダーに変更（1行=1施設×1レベル → levels[] にグループ化）
  *   ※ レリックは配信しない（Unity上のScriptableObjectで管理する方針・2026-08-31決定）
+ * 2026-10-21 更新:
+ *   - data シートのキーに「.」があれば入れ子のオブジェクトにする（例: village.conversionRate → { village: { conversionRate } }）。
+ *     GameConstData の入れ子の設定（village など）を配信するため。Unity 側は JSON に無い項目を同梱の値のまま残す。
+ *   - type に float[] と string[] を足す（カンマ区切り）。
  */
 
 // ============================================================
@@ -115,7 +119,26 @@ function buildEnvelopeJson() {
 }
 
 function readDataSheet_() {
-  return readKeyValueTypeSheet_(DATA_SHEET);
+  return nestDottedKeys_(readKeyValueTypeSheet_(DATA_SHEET));
+}
+
+/** { "village.conversionRate": 12.5 } → { village: { conversionRate: 12.5 } }。「.」の無いキーはそのまま。 */
+function nestDottedKeys_(flat) {
+  const out = {};
+  Object.keys(flat).forEach(function (key) {
+    const parts = key.split('.');
+    let node = out;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const name = parts[i].trim();
+      if (node[name] === undefined) node[name] = {};
+      if (typeof node[name] !== 'object' || Array.isArray(node[name])) {
+        throw new Error('キー "' + key + '" の "' + name + '" はオブジェクトではありません。');
+      }
+      node = node[name];
+    }
+    node[parts[parts.length - 1].trim()] = flat[key];
+  });
+  return out;
 }
 
 // ============================================================
@@ -402,7 +425,7 @@ function readMetaSheet_(sheetName) {
   };
 }
 
-/** type（int/float/string/bool/int[]）に応じて値変換。 */
+/** type（int/float/string/bool/int[]/float[]/string[]）に応じて値変換。 */
 function convertValue_(key, rawValue, type) {
   switch (type) {
     case 'int': return toInt_(key, rawValue);
@@ -414,8 +437,17 @@ function convertValue_(key, rawValue, type) {
         .map(function (s) { return s.trim(); })
         .filter(function (s) { return s !== ''; })
         .map(function (s) { return toInt_(key + '[]', s); });
+    case 'float[]':
+      return String(rawValue).split(',')
+        .map(function (s) { return s.trim(); })
+        .filter(function (s) { return s !== ''; })
+        .map(function (s) { return toFloat_(key + '[]', s); });
+    case 'string[]':
+      return String(rawValue).split(',')
+        .map(function (s) { return cleanText_(s.trim()); })
+        .filter(function (s) { return s !== ''; });
     default:
-      throw new Error('未知の type "' + type + '"（key=' + key + '）。int/float/string/bool/int[] のいずれかに。');
+      throw new Error('未知の type "' + type + '"（key=' + key + '）。int/float/string/bool/int[]/float[]/string[] のいずれかに。');
   }
 }
 
