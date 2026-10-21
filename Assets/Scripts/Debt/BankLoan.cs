@@ -11,7 +11,7 @@ public static class BankLoan
 {
     public const string OfferTitle = "勝負の融資";
     public const string BorrowButton = "借りる";
-    public const string SkipButton = "今回は使わない";
+    public const string SkipButton = "今回は\n使わない";
     public const string RepayTitle = "融資の返済日！";
 
     /// <summary>

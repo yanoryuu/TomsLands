@@ -159,12 +159,10 @@ public class PreStreamPresenter : IStartable, IDisposable
     /// <summary>宣言するか → どちらが勝つか → 確認、の順に出す。どこで「使わない」を選んでも「今日は配信日」へ進む。</summary>
     private void ShowDeclarationOffer()
     {
-        string dungeonName = PendingDungeonName();
-        string where = string.IsNullOrEmpty(dungeonName) ? "" : $"（{dungeonName}）";
         popUpManager.Show(new PopUpData
         {
             Title = StreamDeclaration.OfferTitle,
-            Message = $"今日の配信{where}の勝ち側を宣言しますか？（1ランに1回）\n{StreamDeclaration.EffectLines()}",
+            Message = $"勝つ側を宣言しますか？（1ランに1回）\n{StreamDeclaration.EffectLines()}",
             ConfirmButtonText = StreamDeclaration.UseButton,
             CancelButtonText = StreamDeclaration.SkipButton,
             Size = PopupSizeEnum.Medium,
@@ -178,7 +176,7 @@ public class PreStreamPresenter : IStartable, IDisposable
         popUpManager.Show(new PopUpData
         {
             Title = StreamDeclaration.ChooseSideTitle,
-            Message = "勝つと思う側を選んでください。",
+            Message = string.IsNullOrEmpty(PendingDungeonName()) ? "" : $"今日の配信: {PendingDungeonName()}",
             ConfirmButtonText = StreamDeclaration.HeroButton,
             CancelButtonText = StreamDeclaration.DemonButton,
             Size = PopupSizeEnum.Medium,

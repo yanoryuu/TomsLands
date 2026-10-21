@@ -155,11 +155,18 @@ public class BattleResultView : MonoBehaviour
                 ? Row($"<color={demonColor}>防衛報酬</color>", $"<color={demonColor}>+{s.DefenseReward:N0} G</color>")
                 : Row("防衛報酬", Zero()),
         };
-        // 村の広場 Lv5「勝負配信の宣言」をした配信だけ6行目を出す
+        // 村の広場 Lv5「勝負配信の宣言」をした配信だけ6行目を出す（5行ぶんの高さに収まるよう行の間を詰める）
         string declaration = DeclarationRow(s);
-        if (declaration != null) rows.Add(declaration);
+        if (declaration != null)
+        {
+            rows.Add(declaration);
+            for (int i = 0; i < rows.Count; i++) rows[i] = rows[i].Replace(RowLineHeight, CompactRowLineHeight);
+        }
         return rows;
     }
+
+    private const string RowLineHeight = "<line-height=1em>";
+    private const string CompactRowLineHeight = "<line-height=0.83em>";
 
     private string DeclarationRow(BattleSettlement s)
     {

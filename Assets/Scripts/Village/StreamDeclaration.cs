@@ -35,7 +35,7 @@ public static class StreamDeclaration
     public const string OfferTitle = "勝負配信の宣言";
     public const string ChooseSideTitle = "どちらが勝つ？";
     public const string UseButton = "宣言する";
-    public const string SkipButton = "今回は使わない";
+    public const string SkipButton = "今回は\n使わない";
     public const string HeroButton = "勇者が勝つ";
     public const string DemonButton = "魔王が勝つ";
     public const string CancelButton = "やめる";
@@ -124,7 +124,7 @@ public static class StreamDeclaration
     public static string EffectLines()
     {
         float mult = VillageEffects.DeclarationMultiplier;
-        return $"当たり: 売上と防衛報酬 ×{mult:0.##}・フォロワー +{HitFollowers:N0}・注目 +{HitAttention:N0}\n"
+        return $"当たり: 売上と防衛報酬 ×{mult:0.##}\nフォロワー +{HitFollowers:N0}・注目 +{HitAttention:N0}\n"
                + $"外れ: フォロワー -{MissFollowers:N0}・注目 -{MissAttention:N0}";
     }
 }
