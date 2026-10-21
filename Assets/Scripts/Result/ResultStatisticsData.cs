@@ -39,6 +39,9 @@ public class ResultStatisticsData
     /// <summary>評価に応じたコメント</summary>
     public string Comment;
 
+    /// <summary>称号（村が王都なら「王都の商人」。無ければ空）</summary>
+    public string MerchantTitle = "";
+
     /// <summary>各アイテムの最終状態リスト</summary>
     public List<ResultItemSummary> ItemSummaries;
 

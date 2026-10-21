@@ -122,7 +122,10 @@
   `{ "id": "guild", "facilityName": "冒険者ギルド", "requiredHallLevel": 0, "levels": [ { "cost": 4000, "effectText": "..." }, ... ] }`
 - `levels` を載せる場合は**その施設の全レベルぶんを載せる**こと（JsonUtilityの配列上書きは全置換のため、部分だけ書くと段数が縮む）。
 - 村のスカラー設定（純資産→村資金の変換率など）はこの区画ではなく **gameconst.json の `village` オブジェクト**
-  （`conversionRate` / `bankruptcyConversionRate` / `debtScalePerVillageLevel`）で配信する。
+  （`conversionRate` / `bankruptcyConversionRate` / `debtScalePerVillageLevel`、村の格の `rankRequiredTotalLevels` / `rankRequiredHallLevels` / `modeRequiredRanks` など）で配信する。
+  定数シート `data` に `village.conversionRate`（float）・`village.rankRequiredTotalLevels`（int[]）のように「village.」付きのキーで書くと、
+  GAS（2026-10-21 版の `nestDottedKeys_`）が `{ "village": { ... } }` に入れ子にして出す。書いていない項目は同梱の値のまま。
+  type は float[]・string[] も使える（2026-10-21 版から。古い GAS では「未知の type」で止まるので、使う前にスクリプトを差し替える）。
 - ⚠️ **汎用の行シートリーダー（readListSheet_）では処理できない**（同一idが複数行になり後勝ちで潰れる＋
   `level/cost/effectText` はフラットフィールドとして存在しないため無視される）。
   **専用リーダー `readVillageFacilities_()` で id ごとに levels[] へグループ化する**（§8のコード参照）。

@@ -72,14 +72,20 @@ public class PreparationPresenter : IStartable, IDisposable
         if (soundManager != null) soundManager.PlayBGM("OP");
         runSetupData.Clear();
 
-        // 難易度の初期値はタイトルが入れた既定値（ふつう）を引き継ぐ
-        model.SelectDifficulty(startModeData.SelectedMode);
+        // 難易度の初期値はタイトルが入れた既定値（ふつう）か前回の選択を引き継ぐ。村の格で未解放なら選べる長さに丸める
+        model.SelectDifficulty(VillageRank.ClampToUnlocked(startModeData.SelectedMode, metaProgress));
 
         // 難易度ボタンに配信の回数と日数を添える（ランの長さ＝賭けの回数を分かって選べるように）
         view.SetDifficultyDetails(
             PreparationModel.DescribeModeShort(GameModeId.Short),
             PreparationModel.DescribeModeShort(GameModeId.Medium),
             PreparationModel.DescribeModeShort(GameModeId.Long));
+        // 村の格が足りないランは鍵つきで見せ、解放の条件を出す
+        foreach (var mode in AllModes)
+        {
+            bool locked = !VillageRank.IsModeUnlocked(mode, metaProgress);
+            view.SetDifficultyLock(mode, locked, PreparationModel.DescribeModeShort(mode), LockButtonText(mode));
+        }
 
         Bind();
         BuildCatalogs();
@@ -131,6 +137,11 @@ public class PreparationPresenter : IStartable, IDisposable
 
         view.OnDifficultySelected.Subscribe(difficulty =>
         {
+            if (!VillageRank.IsModeUnlocked(difficulty, metaProgress))
+            {
+                view.ShowMessage($"「{DifficultyLabel(difficulty)}」はまだ選べない。{VillageRank.ModeUnlockText(difficulty)}。");
+                return;
+            }
             model.SelectDifficulty(difficulty);
             string detail = PreparationModel.DescribeModeShort(difficulty);
             view.ShowMessage(string.IsNullOrEmpty(detail)
@@ -255,6 +266,10 @@ public class PreparationPresenter : IStartable, IDisposable
     /// <summary>出店: 持ち込み＋スタートダッシュ代を村資金から精算し、RunSetupData に書き出して TomsShop へ。</summary>
     private void Depart()
     {
+        // 念のため: 未解放のランでは出店しない（選べる長さに丸める）
+        if (!VillageRank.IsModeUnlocked(model.Difficulty, metaProgress))
+            model.SelectDifficulty(VillageRank.ClampToUnlocked(model.Difficulty, metaProgress));
+
         int totalCost = model.CarryAmount + model.StartDashTotalCost;
         if (totalCost > metaProgress.VillageFunds)
         {
@@ -303,6 +318,15 @@ public class PreparationPresenter : IStartable, IDisposable
             : $"「{name}」をやめた\n効果: {effect}");
 
     private static string Percent(float rate) => $"{Mathf.RoundToInt(rate * 100f)}%";
+
+    private static readonly GameModeId[] AllModes = { GameModeId.Short, GameModeId.Medium, GameModeId.Long };
+
+    /// <summary>未解放のボタンの2行目（「村が『町』になると解放」＋改行＋「総合Lv10・領主館Lv1」）。</summary>
+    private static string LockButtonText(GameModeId mode)
+    {
+        int rank = VillageRank.RequiredRank(mode);
+        return $"村が『{VillageRank.Name(rank)}』になると解放\n{VillageRank.ConditionText(rank)}";
+    }
 
     private static string DifficultyLabel(GameModeId mode) => mode switch
     {

@@ -27,9 +27,22 @@ public class VillagePresenter : IStartable, IDisposable
     private string selectedFacilityId;
     private bool arrivalPlaying; // 帰還到着演出の再生中
     private bool tutorialPlaying; // 村チュートリアル会話の再生中
+    private bool rankUpPlaying; // 村の格が上がった演出（ポップ→会話）の再生中
+    private int shownRank; // 画面に出している村の格（上がった瞬間を見つける）
 
     /// <summary>演出・会話中で村の操作を受け付けない状態か。</summary>
-    private bool IsBusy => arrivalPlaying || tutorialPlaying;
+    private bool IsBusy => arrivalPlaying || tutorialPlaying || rankUpPlaying;
+
+    /// <summary>王都の広場に立つ自己ベストの掲示板の区画ID（FacilityPlot.facilityId。施設データには無い）。</summary>
+    public const string RecordBoardId = "records";
+
+    /// <summary>村の格が上がったときの会話のラベル（VillageTutorial.csv。末尾の数字 = 上がった先の格）。</summary>
+    public const string RankUpLabelPrefix = "Village_RankUp_";
+
+    /// <summary>デバッグメニューで施設レベルを変えたとき（村シーンにいれば読み直して格の上がりを確かめる）。</summary>
+    public static event Action DebugFacilityLevelsChanged;
+
+    public static void NotifyDebugFacilityLevelsChanged() => DebugFacilityLevelsChanged?.Invoke();
 
     private const string DefaultMessage = "稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。";
 
@@ -55,6 +68,7 @@ public class VillagePresenter : IStartable, IDisposable
         if (soundManager != null) soundManager.PlayBGM("OP");
 
         Bind();
+        shownRank = VillageRank.Compute(metaProgress);
         RefreshAll();
 
         // ラン終了からの帰還なら収支報告を表示（初回は村チュートリアル会話のあと）
@@ -142,8 +156,19 @@ public class VillagePresenter : IStartable, IDisposable
             HandleInvest();
         }).AddTo(disposables);
         view.OnConversionClosed
-            .Subscribe(_ => view.ShowMessage(DefaultMessage))
+            .Subscribe(_ => { if (!rankUpPlaying) view.ShowMessage(DefaultMessage); })
             .AddTo(disposables);
+
+        DebugFacilityLevelsChanged += OnDebugFacilityLevelsChanged;
+    }
+
+    private void OnDebugFacilityLevelsChanged()
+    {
+        if (metaProgress == null) return;
+        metaProgress.LoadData(); // デバッグメニューは別の MetaProgressModel で書き込むので読み直す
+        RefreshAll(animatePopulation: true);
+        if (selectedFacilityId != null && view.IsInvestPanelOpen) RefreshInvestPanel();
+        CheckRankUp();
     }
 
     /// <summary>
@@ -192,6 +217,11 @@ public class VillagePresenter : IStartable, IDisposable
     private void SelectFacility(string facilityId)
     {
         if (IsBusy) return;
+        if (facilityId == RecordBoardId)
+        {
+            ShowRecordBoard();
+            return;
+        }
         var facility = model.GetFacility(facilityId);
         if (facility == null)
         {
@@ -252,6 +282,7 @@ public class VillagePresenter : IStartable, IDisposable
             }
             RefreshAll(animatePopulation: true); // 総合Lvが上がったら町人が引っ越してくる
             RefreshInvestPanel(); // 連続投資できるよう次Lv表示に更新
+            CheckRankUp();
         }
         else
         {
@@ -264,7 +295,8 @@ public class VillagePresenter : IStartable, IDisposable
     private void RefreshAll(bool animatePopulation = false)
     {
         int villageLevel = model.VillageLevel;
-        view.UpdateHud(model.VillageFunds, villageLevel);
+        int rank = VillageRank.Compute(metaProgress);
+        view.UpdateHud(model.VillageFunds, villageLevel, VillageRank.Name(rank), NextRankLine(rank));
 
         var population = view.Population;
         if (population != null) population.ApplyScaled(villageLevel, model.MaxVillageLevel, animatePopulation);
@@ -272,6 +304,13 @@ public class VillagePresenter : IStartable, IDisposable
         foreach (var plot in view.Plots)
         {
             if (plot == null) continue;
+            if (plot.FacilityId == RecordBoardId)
+            {
+                // 自己ベストの掲示板は王都になってから広場に立つ
+                plot.gameObject.SetActive(VillageRank.IsTop(rank));
+                plot.SetState(0, false, null, "自己ベストの掲示板");
+                continue;
+            }
             var facility = model.GetFacility(plot.FacilityId);
             if (facility == null) continue;
 
@@ -284,8 +323,124 @@ public class VillagePresenter : IStartable, IDisposable
         }
     }
 
+    // ───────── 村の格 ─────────
+
+    /// <summary>次の格の条件（「次は『町』: 総合Lv10・領主館Lv1」）。王都なら称号。</summary>
+    private static string NextRankLine(int rank)
+    {
+        if (VillageRank.IsTop(rank)) return $"称号「{VillageRank.TopTitle}」";
+        int next = rank + 1;
+        return $"次は『{VillageRank.Name(next)}』: {VillageRank.ConditionText(next)}";
+    }
+
+    /// <summary>格が上がっていれば、格の名前のポップ→短い会話を流す（会話は上がった先の格の1本。既読管理）。</summary>
+    private void CheckRankUp()
+    {
+        int rank = VillageRank.Compute(metaProgress);
+        if (rank <= shownRank)
+        {
+            shownRank = rank; // デバッグで下げたときに合わせる
+            return;
+        }
+        shownRank = rank;
+        PlayRankUpAsync(rank, cts.Token).Forget();
+    }
+
+    private async UniTaskVoid PlayRankUpAsync(int to, CancellationToken ct)
+    {
+        rankUpPlaying = true;
+        view.HideInvestPanel();
+        try
+        {
+            string name = VillageRank.Name(to);
+            string unlock = VillageRank.IsTop(to)
+                ? $"称号「{VillageRank.TopTitle}」と、広場に自己ベストの掲示板"
+                : VillageRank.TryGetUnlockedMode(to, out var mode)
+                    ? $"「{ModeLabel(mode)}」のランが選べるようになった"
+                    : "";
+            view.ShowMessage($"トコの村が『{name}』になった！");
+
+            if (view.ShowRankUpPopup("村の格が上がった！", $"トコの村は『{name}』に", unlock))
+            {
+                var closed = new UniTaskCompletionSource();
+                using (view.OnConversionClosed.Subscribe(_ => closed.TrySetResult()))
+                {
+                    await closed.Task.AttachExternalCancellation(ct);
+                }
+            }
+
+            // 上がった先の格の会話（一度に2段上がったら上の段だけ。ラベルが無ければ何もしない）
+            if (tutorial != null)
+            {
+                view.SetUiInputLocked(true);
+                try
+                {
+                    await tutorial.PlayRankUpAsync(RankUpLabelPrefix + to, ct);
+                }
+                finally
+                {
+                    view.SetUiInputLocked(false);
+                }
+            }
+            view.ShowMessage(VillageRank.IsTop(to)
+                ? "広場に自己ベストの掲示板が立った。調べると、ランの長さごとの最高の儲けが見られる。"
+                : $"トコの村が『{name}』になった！　{unlock}。");
+        }
+        catch (OperationCanceledException)
+        {
+            // シーン遷移などで破棄された
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+        }
+        finally
+        {
+            rankUpPlaying = false;
+        }
+    }
+
+    /// <summary>自己ベストの掲示板（ランの長さごとの最高の儲けとランク）。</summary>
+    private void ShowRecordBoard()
+    {
+        view.HideInvestPanel();
+        var lines = new System.Text.StringBuilder();
+        foreach (var mode in new[] { GameModeId.Short, GameModeId.Medium, GameModeId.Long })
+        {
+            if (lines.Length > 0) lines.Append('\n');
+            lines.Append(ModeLabel(mode)).Append('\u3000');
+            if (metaProgress != null && metaProgress.TryGetBestProfit(mode, out int best))
+            {
+                string rank = BestRankOf(mode, best);
+                lines.Append(best >= 0 ? "+" : "\u2212").Append(Mathf.Abs(best).ToString("N0")).Append("G\u3000ランク ").Append(rank);
+            }
+            else
+            {
+                lines.Append("まだ記録なし");
+            }
+        }
+        view.ShowRecordBoard("自己ベスト", lines.ToString());
+    }
+
+    /// <summary>その長さでいちばん良かったランク（ラン履歴にあればその中の最高。無ければ最高の儲けから求める）。</summary>
+    private string BestRankOf(GameModeId mode, int bestProfit)
+    {
+        string best = ResultModel.EvaluateRank(bestProfit, mode);
+        foreach (var r in metaProgress.RunRecords)
+        {
+            if (r == null || !r.cleared || r.mode != (int)mode || string.IsNullOrEmpty(r.rank)) continue;
+            if (RankOrder(r.rank) < RankOrder(best)) best = r.rank;
+        }
+        return best;
+    }
+
+    private static int RankOrder(string r) => r switch { "S" => 0, "A" => 1, "B" => 2, "C" => 3, "D" => 4, _ => 5 };
+
+    private static string ModeLabel(GameModeId mode) => SaveSlotView.GetModeLabel(mode);
+
     public void Dispose()
     {
+        DebugFacilityLevelsChanged -= OnDebugFacilityLevelsChanged;
         cts.Cancel();
         cts.Dispose();
         disposables.Dispose();

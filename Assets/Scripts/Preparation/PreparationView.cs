@@ -278,7 +278,7 @@ public class PreparationView : MonoBehaviour
         SetDifficultyDetail(hardButton, hard);
     }
 
-    private static void SetDifficultyDetail(Button button, string detail)
+    private static void SetDifficultyDetail(Button button, string detail, int sizePercent = 55)
     {
         if (button == null || string.IsNullOrEmpty(detail)) return;
         var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
@@ -287,8 +287,43 @@ public class PreparationView : MonoBehaviour
         int nl = name.IndexOf('\n');
         if (nl >= 0) name = name.Substring(0, nl);
         label.textWrappingMode = TextWrappingModes.NoWrap;
-        label.text = $"{name}\n<size=55%>{detail}</size>";
+        label.text = $"{name}\n<size={sizePercent}%>{detail}</size>";
     }
+
+    /// <summary>
+    /// 未解放のランのボタンを鍵つきで見せる（ボタンを暗くして鍵の印を付け、配信の回数の行を解放の条件に替える）。
+    /// 押すことはできる（Presenter が条件をメッセージに出す）。lockText は改行で2行にしてよい。
+    /// </summary>
+    public void SetDifficultyLock(GameModeId mode, bool locked, string detail, string lockText)
+    {
+        var button = mode switch
+        {
+            GameModeId.Short => easyButton,
+            GameModeId.Medium => normalButton,
+            GameModeId.Long => hardButton,
+            _ => null,
+        };
+        if (button == null) return;
+
+        if (locked) SetDifficultyDetail(button, lockText, 50);
+        else if (!string.IsNullOrEmpty(detail)) SetDifficultyDetail(button, detail);
+
+        if (button.targetGraphic != null)
+            button.targetGraphic.color = locked ? LockedTint : Color.white;
+        var label = button.GetComponentInChildren<TextMeshProUGUI>(true);
+        if (label != null)
+        {
+            if (!labelColors.ContainsKey(label)) labelColors[label] = label.color;
+            var baseColor = labelColors[label];
+            label.color = locked ? new Color(baseColor.r, baseColor.g, baseColor.b, baseColor.a * 0.75f) : baseColor;
+        }
+
+        float size = Mathf.Clamp(((RectTransform)button.transform).rect.height * 0.5f, 32f, 60f);
+        UILockIcon.Attach(button.transform, locked, size);
+    }
+
+    private static readonly Color LockedTint = new(0.8f, 0.8f, 0.8f, 1f);
+    private readonly Dictionary<TextMeshProUGUI, Color> labelColors = new();
 
     /// <summary>難易度の選択ハイライトを更新する。</summary>
     public void UpdateDifficultySelection(GameModeId selected)

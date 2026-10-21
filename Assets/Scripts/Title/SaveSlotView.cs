@@ -76,12 +76,16 @@ public sealed class SaveSlotView : MonoBehaviour
 
     private static string BuildSummary(SaveSlotInfo info)
     {
+        // 村が王都になったスロットは、行の頭に称号を付ける
+        string title = global::VillageRank.IsTop(info.VillageRank) ? global::VillageRank.TopTitle + "　" : "";
         if (info.Exists)
-            return $"{GetModeLabel(info.Mode)}　{DayText.DayOf(info.Day)}　{info.Gold:N0}G";
+            return $"{title}{GetModeLabel(info.Mode)}　{DayText.DayOf(info.Day)}　{info.Gold:N0}G";
         if (info.HasProfile)
         {
             // 進行中のランの行（難易度・日数・所持金）と同じくらいの長さに収める
-            return $"村の進行あり　村資金 {info.VillageFunds:N0}G　{info.TotalRuns}周";
+            return string.IsNullOrEmpty(title)
+                ? $"村の進行あり　村資金 {info.VillageFunds:N0}G　{info.TotalRuns}周"
+                : $"{title}村資金 {info.VillageFunds:N0}G　{info.TotalRuns}周";
         }
         if (info.IsCorrupted)
             return "データが壊れています（削除できます）";

@@ -234,13 +234,13 @@ public class VillageSettingsData
     // --- ラン終了 → 村資金の変換（Docs/Village_Meta_Design.md §4） ---
     // 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え。クリア時は「持ち込み + 儲け × 率 × 難易度倍率」が村資金に入る
     /// <summary>ランクリア時: 儲け → 村資金への変換率。</summary>
-    public float conversionRate = 25f;
+    public float conversionRate = 12.5f;
     /// <summary>破産時: そのランの最高の儲け（所持金の最高値から求める）× 変換率 × この値。持ち込みは戻らない。</summary>
     public float bankruptcyConversionRate = 0.2f;
     /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>
     public float debtScalePerVillageLevel = 0f;
     /// <summary>変換率に掛ける難易度ごとの倍率（index = GameModeId: Short / Medium / Long）。</summary>
-    public float[] difficultyConversionMultipliers = { 1f, 1.2f, 1.4f };
+    public float[] difficultyConversionMultipliers = { 1f, 1f, 1f };
     /// <summary>クリアしたら儲けに関係なく入る完走ボーナス（index = GameModeId）。赤字のクリアでも Lv1 を1つ建てられる額。</summary>
     public int[] clearBaseFunds = { 300000, 450000, 600000 };
 
@@ -298,6 +298,16 @@ public class VillageSettingsData
     public int plazaDeclarationMissFollowers = 2000;
     public int plazaDeclarationMissAttention = 60;
 
+    // --- 村の格（index = 格。0 = 開拓地。Docs/Village_Meta_Design.md §0-2。セーブせず施設レベルから毎回求める） ---
+    /// <summary>村の格の名前（仮）。開拓地 → 村 → 町 → 王都。最後の格が「王都」（ご褒美: 会話・称号・自己ベストの掲示板）。</summary>
+    public string[] rankNames = { "開拓地", "村", "町", "王都" };
+    /// <summary>その格になるのに要る総合Lv（6施設のレベルの合計。最大30）。</summary>
+    public int[] rankRequiredTotalLevels = { 0, 2, 10, 30 };
+    /// <summary>その格になるのに要る領主館のレベル（0 = 条件なし）。</summary>
+    public int[] rankRequiredHallLevels = { 0, 0, 1, 0 };
+    /// <summary>ランの長さを選べるようになる村の格（index = GameModeId: かんたん / ふつう / むずかしい）。</summary>
+    public int[] modeRequiredRanks = { 0, 1, 2 };
+
     public VillageSettingsData Clone()
     {
         var clone = (VillageSettingsData)MemberwiseClone();
@@ -317,6 +327,10 @@ public class VillageSettingsData
         clone.plazaStartFollowers = CopyOf(plazaStartFollowers);
         clone.plazaStartAttention = CopyOf(plazaStartAttention);
         clone.plazaStreamSalesBonuses = CopyOf(plazaStreamSalesBonuses);
+        clone.rankNames = CopyOf(rankNames);
+        clone.rankRequiredTotalLevels = CopyOf(rankRequiredTotalLevels);
+        clone.rankRequiredHallLevels = CopyOf(rankRequiredHallLevels);
+        clone.modeRequiredRanks = CopyOf(modeRequiredRanks);
         return clone;
     }
 

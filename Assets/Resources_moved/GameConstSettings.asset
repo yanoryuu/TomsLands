@@ -87,13 +87,13 @@ MonoBehaviour:
       graceCost: 700000
       graceDiscountRate: 0.3
     village:
-      conversionRate: 25
+      conversionRate: 12.5
       bankruptcyConversionRate: 0.2
       debtScalePerVillageLevel: 0
       difficultyConversionMultipliers:
       - 1
-      - 1.2
-      - 1.4
+      - 1
+      - 1
       clearBaseFunds: e0930400d0dd0600c0270900
       rankBaseProfits: 60ea0000d0fb0100605b0300
       rankSRatio: 2
@@ -150,6 +150,14 @@ MonoBehaviour:
       - 0.1
       - 0.15
       - 0.15
+      rankNames:
+      - "開拓地"
+      - "村"
+      - "町"
+      - "王都"
+      rankRequiredTotalLevels: 00000000020000000a0000001e000000
+      rankRequiredHallLevels: 00000000000000000100000000000000
+      modeRequiredRanks: 000000000100000002000000
     battleTempo:
       speedMultiplier: 1
       logSeconds: 0.4
