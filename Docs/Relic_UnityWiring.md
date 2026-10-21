@@ -14,7 +14,7 @@ feature/relics ブランチで実装した「レリック（ローグライト�
   enum には将来用（ProcurementCostMul / BuzzChanceAdd / DividendMul）も予約済みだが未配線。
 - 入手経路: **イベント報酬**（コマンド `GrantRelic` relicId= / `GrantRandomRelic`）+ **配信勝利の3択**
   （BattleResultHandler が保留→ホーム復帰時に3択UI）。準備画面スターターは Phase 6（メタ進行）で追加。
-- レア度 Common/Rare/Epic の重み抽選（GameConst で調整可）・重複所持不可・呪いフラグ（isCurse=抽選除外、イベント付与専用）。
+- レア度 Common/Rare/Epic の重み抽選（GameConst で調整可）・重複所持不可・呪いフラグ（isCurse=ふだんの抽選から除外、イベント付与。村の冒険者ギルド Lv5 では配信報酬の最後の1枠に出る: `RelicRewardService.PickCurseChoice`）。
 - セーブ: `slot_N/relics.json`（獲得順+汎用カウンタ+選ぶ前の3択 `pendingChoices`）。ニューゲームで消滅。
   3択の保留も保存するので、選ぶ前に終了しても続きからで同じ3択が出る（RelicRewardService.PendingChoices の名前と型は AutoPlay が使うので変えない）。
 - 配信: `balance.json` の `relics` リスト区画（relicIdキー）。数値だけ上書き可能。

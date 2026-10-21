@@ -55,4 +55,26 @@ public class MapDungeonLabel : MonoBehaviour
         }
         if (nextText) nextText.text = afterNext ? "その次" : $"<color=#E8A33D>次</color>  {d.NextText}";
     }
+
+    /// <summary>
+    /// 配信の予定表（領主館 Lv5）の1行として使う。1行目: ダンジョン名と「5日目」、2行目: 「あと3日」「本日配信」「済」。
+    /// 済んだ配信は減光し、リボン・スタンプ・バッジは出さない。
+    /// </summary>
+    public void SetScheduleRow(string dungeonName, string dayText, string statusText, bool past)
+    {
+        if (nameText)
+        {
+            // 長い名前（古代機構城メタリオン）でも日付に重ならないよう、予定表では名前を小さめまで縮める
+            nameText.enableAutoSizing = true;
+            nameText.fontSizeMin = Mathf.Min(nameText.fontSizeMin, 18f);
+            nameText.text = dungeonName;
+        }
+        if (levelText) levelText.text = dayText;
+        if (weaknessText) weaknessText.text = statusText;
+        if (probabilityText) probabilityText.text = string.Empty;
+        if (plateGroup) plateGroup.alpha = past ? clearedAlpha : 1f;
+        if (clearStamp) clearStamp.SetActive(false);
+        if (failBadge) failBadge.SetActive(false);
+        if (nextRibbon) nextRibbon.SetActive(false);
+    }
 }
