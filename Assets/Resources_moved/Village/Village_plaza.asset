@@ -18,23 +18,32 @@ MonoBehaviour:
   icon: {fileID: 0}
   requiredHallLevel: 0
   levels:
-  - cost: 400000
-    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
-      +10"
+  - cost: 500000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE +10"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 1000000
-    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE
-      +10\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +5%"
+  - cost: 1200000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +500\u30FB\u6CE8\u76EE +10\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +5%"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
     unlockRelicTier: 0
-  - cost: 2200000
-    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +1,000\u30FB\u6CE8\u76EE
-      +20\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +10%"
+  - cost: 2800000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +1,000\u30FB\u6CE8\u76EE +20\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +10%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 5800000
+    effectText: "\u958B\u59CB\u6642\u30D5\u30A9\u30ED\u30EF\u30FC +2,000\u30FB\u6CE8\u76EE +40\u30FB\u914D\u4FE1\u306E\u58F2\u4E0A +15%"
+    startBonusKey: 
+    startBonusValue: 0
+    modifiers: []
+    unlockRelicTier: 0
+  - cost: 10000000
+    effectText: "\u52DD\u8CA0\u914D\u4FE1\u306E\u5BA3\u8A00: 1\u30E9\u30F3\u306B1\u56DE\u3001\u914D\u4FE1\u306E\u524D\u306B\u3069\u3061\u3089\u304C\u52DD\u3064\u304B\u3092\u5BA3\u8A00\u3067\u304D\u308B\u3002\u5F53\u305F\u308C\u3070\u914D\u4FE1\u306E\u58F2\u4E0A\u3068\u5831\u916C \u00D71.5\u3001\u5916\u308C\u308C\u3070\u6CE8\u76EE\u3068\u30D5\u30A9\u30ED\u30EF\u30FC\u304C\u6E1B\u308B"
     startBonusKey: 
     startBonusValue: 0
     modifiers: []
