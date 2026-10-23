@@ -48,6 +48,7 @@ public class DungeonInfoView : MonoBehaviour
 
         dungeonNameImage.sprite = d.dungeonNameImage;
         if (dungeonIconImage) dungeonIconImage.sprite = d.dungeonIcon;
+        if (dungeonIconImage) dungeonIconImage.preserveAspect = true;
 
         if (d.isShowedInfo)
         {

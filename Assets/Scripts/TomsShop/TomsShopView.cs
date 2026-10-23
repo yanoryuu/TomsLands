@@ -316,6 +316,7 @@ public class TomsShopView : MonoBehaviour
             if (relic.icon != null)
             {
                 img.sprite = relic.icon;
+                img.preserveAspect = true;
                 img.color = Color.white;
             }
             else

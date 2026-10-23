@@ -54,6 +54,7 @@ public class StreamingView : MonoBehaviour
         for (int i = 0; i < itemDates.Count; i++)
         {
             sellingItemIcons[i].sprite = itemDates[i].icon;
+            sellingItemIcons[i].preserveAspect = true;
             sellingItemToggles[i].gameObject.SetActive(true);
             sellingItemIds[i] = itemDates[i].itemId;
         }

@@ -15,6 +15,7 @@ public class DungeonMonsterSlot : MonoBehaviour
         monsterNameText.text = $"{enemyData.enemyName}";
         monsterElementText.text = $"属性:{ElementTypeToJapanese(enemyData.elementType)}";
         monsterIconImage.sprite = enemyData.enemySprite;
+        monsterIconImage.preserveAspect = true;
         isBoss = enemyData.isBoss;
 
         if (isBoss) isBossImage.gameObject.SetActive(true);

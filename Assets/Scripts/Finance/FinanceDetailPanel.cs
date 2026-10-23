@@ -81,6 +81,7 @@ public class FinanceDetailPanel : MonoBehaviour
         if (iconImage != null)
         {
             iconImage.sprite = product.icon;
+            iconImage.preserveAspect = true;
             iconImage.enabled = product.icon != null;
         }
         if (nameText != null) nameText.text = product.productName;

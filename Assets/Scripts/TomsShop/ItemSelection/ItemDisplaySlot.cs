@@ -16,6 +16,7 @@ public class ItemDisplaySlot : MonoBehaviour
     {
         ItemId = itemId;
         itemIconImage.sprite = icon;
+        itemIconImage.preserveAspect = true;
         SetQuantity(quantity);
 
         if (removeButton != null)

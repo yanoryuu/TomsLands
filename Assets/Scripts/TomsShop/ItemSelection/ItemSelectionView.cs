@@ -98,6 +98,7 @@ public class ItemSelectionView : MonoBehaviour
     {
         itemDescriptionText.text = description;
         itemIcon.sprite = icon;
+        itemIcon.preserveAspect = true;
     }
 
     public void Initialize() => Hide();

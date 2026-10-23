@@ -58,6 +58,7 @@ public class PreparationChoiceSlot : MonoBehaviour
         if (iconImage != null)
         {
             iconImage.sprite = icon;
+            iconImage.preserveAspect = true;
             iconImage.enabled = icon != null;
         }
         if (minusButton != null) minusButton.gameObject.SetActive(showMinus);

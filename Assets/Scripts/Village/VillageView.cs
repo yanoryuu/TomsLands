@@ -422,6 +422,7 @@ public class VillageView : MonoBehaviour
         if (detailIcon != null)
         {
             detailIcon.sprite = facility.icon;
+            detailIcon.preserveAspect = true;
             detailIcon.enabled = facility.icon != null;
         }
         if (detailNameText != null) detailNameText.text = facility.facilityName;

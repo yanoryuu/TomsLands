@@ -582,6 +582,7 @@ public class BlackSmithView : MonoBehaviour
             if (icon)
             {
                 icon.sprite = item.Icon;
+                icon.preserveAspect = true;
                 icon.enabled = item.Icon != null;
             }
             if (nameText) nameText.text = item.Name;
@@ -617,6 +618,7 @@ public class BlackSmithView : MonoBehaviour
         if (unlockDetailIcon)
         {
             unlockDetailIcon.sprite = item.Icon;
+            unlockDetailIcon.preserveAspect = true;
             unlockDetailIcon.enabled = item.Icon != null;
         }
         if (unlockDetailName) unlockDetailName.text = item.Name;

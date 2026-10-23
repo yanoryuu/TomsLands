@@ -155,6 +155,7 @@ public class ProphetView : MonoBehaviour
         dungeonDifficultyText.text = difficulty > 0 ? $"難易度: {new string('★', Mathf.Clamp(difficulty, 1, 10))}" : "難易度: —";
         turnsUntilBattleText.text = DayText.UntilStream(turnsUntil);
         if (dungeonIconImage != null) dungeonIconImage.sprite = icon;
+        if (dungeonIconImage != null) dungeonIconImage.preserveAspect = true;
     }
 
     public void ShowRecommendedRows(List<(Sprite icon, string name, float trend, float demand)> items)

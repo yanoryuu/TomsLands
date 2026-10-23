@@ -59,6 +59,7 @@ public class ItemSelectionSlot : MonoBehaviour
     {
         this.itemId = itemId;
         itemIconImage.sprite = icon;
+        itemIconImage.preserveAspect = true;
         if (backgroundImage)
         {
             if (background != null)

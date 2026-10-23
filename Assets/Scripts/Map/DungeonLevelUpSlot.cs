@@ -47,6 +47,7 @@ public class DungeonLevelUpSlot : MonoBehaviour
         DungeonKey = data.DungeonKey;
 
         if (dungeonIconImage) dungeonIconImage.sprite = data.Icon;
+        if (dungeonIconImage) dungeonIconImage.preserveAspect = true;
         if (nextBadge) nextBadge.SetActive(data.IsNext);
         if (dungeonNameText)
             dungeonNameText.text = data.IsNext && nextBadge == null

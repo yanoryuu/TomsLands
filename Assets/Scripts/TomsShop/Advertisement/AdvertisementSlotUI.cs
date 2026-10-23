@@ -47,6 +47,7 @@ public class AdvertisementSlotUI : MonoBehaviour
         // アイコン
         if (adIcon != null && adData.icon != null)
             adIcon.sprite = adData.icon;
+            adIcon.preserveAspect = true;
 
         // コスト表示（割引がある場合は取り消し線風に元値も表示）
         UpdateCost(discountedCost);

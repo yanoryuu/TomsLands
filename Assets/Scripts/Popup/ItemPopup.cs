@@ -76,6 +76,7 @@ public class ItemPopup : MonoBehaviour
     {
         if (titleText) titleText.text = data.ItemName ?? "";
         if (iconImage && data.Icon != null) iconImage.sprite = data.Icon;
+        if (iconImage && data.Icon != null) iconImage.preserveAspect = true;
         if (descriptionText) descriptionText.text = data.Description ?? "";
     }
 
