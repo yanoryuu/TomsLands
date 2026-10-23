@@ -22,6 +22,8 @@ public static class RemoteBalance
     private static List<HeroLevelData> _heroLevels;
     // events はCSVマスター由来（Dictionaryを含むためJsonUtility不可、JObjectから手動変換）。あれば全置換。
     private static List<TomsEvent> _events;
+    // 上書き済みの複製（元のアセット1つにつき1つ。シーンをまたいで使い回す）
+    private static readonly OverrideCloneCache _clones = new();
 
     private static readonly string[] SingleSections = { "shopEconomy", "gameBalance", "battlePrice", "shopLevel", "finance" };
     // ※ HeroData(SO) は Inspector 割当のフォールバックで、実バトル値は heroLevels(CSV由来) なので
@@ -54,6 +56,7 @@ public static class RemoteBalance
 
         _sections.Clear();
         _lists.Clear();
+        _clones.Clear();
         _heroLevels = null;
         _events = null;
 
@@ -165,10 +168,11 @@ public static class RemoteBalance
         if (baked == null) return baked;
         if (!_sections.TryGetValue(key, out var raw) || string.IsNullOrEmpty(raw)) return baked;
 
-        var clone = UnityEngine.Object.Instantiate(baked);
-        clone.name = baked.name;
-        JsonUtility.FromJsonOverwrite(raw, clone); // 区画に無いフィールド＝baked保持、Sprite等も保持
-        return clone;
+        return _clones.GetOrCreate(key, baked, clone =>
+        {
+            JsonUtility.FromJsonOverwrite(raw, clone); // 区画に無いフィールド＝baked保持、Sprite等も保持
+            return true;
+        });
     }
 
     /// <summary>
@@ -186,18 +190,15 @@ public static class RemoteBalance
             var id = idSelector(item);
             if (!string.IsNullOrEmpty(id) && map.TryGetValue(id, out var raw))
             {
-                var clone = UnityEngine.Object.Instantiate(item);
-                clone.name = item.name;
-                JsonUtility.FromJsonOverwrite(raw, clone);
-                // 突合キー（ダンジョンの key など）まで書き換わると、ゲーム側の検索で見つからなくなる。
-                // その要素は配信値を諦めてベイク済みを使う
-                if (idSelector(clone) != id)
+                result.Add(_clones.GetOrCreate(section, item, clone =>
                 {
+                    JsonUtility.FromJsonOverwrite(raw, clone);
+                    // 突合キー（ダンジョンの key など）まで書き換わると、ゲーム側の検索で見つからなくなる。
+                    // その要素は配信値を諦めてベイク済みを使う
+                    if (idSelector(clone) == id) return true;
                     Debug.LogWarning($"[RemoteBalance] '{section}' の '{id}' が配信で識別キーを '{idSelector(clone)}' に変えようとしたため、この要素の配信値は使いません。");
-                    result.Add(item);
-                    continue;
-                }
-                result.Add(clone);
+                    return false;
+                }));
             }
             else
             {
@@ -219,6 +220,7 @@ public static class RemoteBalance
     {
         _sections.Clear();
         _lists.Clear();
+        _clones.Clear();
         _heroLevels = null;
         _events = null;
     }

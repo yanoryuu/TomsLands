@@ -880,8 +880,9 @@ public class ItemModel
             })
             .ToList();
 
-        // 開発ビルドの配信シーンで全29銘柄が「Master item not found」になった記録がある（原因未特定・2026-10 の Player-prev.log）。
-        // 次に起きたとき原因を追えるよう、1件ずつではなくまとめて、マスター側の件数と ID も出す
+        // ビルドの配信シーンで全29銘柄が「Master item not found」になっていたのは、配信値で上書きした複製が
+        // シーン読み込み時のアセット破棄で消えていたため（OverrideCloneCache で対処済み）。
+        // また起きたとき追えるよう、1件ずつではなくまとめて、マスター側の件数と ID も出す
         if (missing.Count > 0)
         {
             string masterIds = masterItems == null ? "null" : string.Join(",", masterItems.Where(m => m != null).Select(m => m.itemId).Take(8));
