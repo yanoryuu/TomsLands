@@ -45,11 +45,13 @@
 - 実績: `AchievementTracker` を登録しない、`AchievementService` の Unlock・ReportMax・HandleRunCleared などは何もしない、`AchievementEvents` も何もしない。体験版の App には実績を作らない。
 
 ## ビルド
-- メニュー **Tools/TomsLands/体験版/体験版をビルド**（開発ビルドは「体験版をビルド（開発ビルド）」）。出力先 `D:\UnityGame\TomsShop_Demo\TomSLand_Demo.exe`。
+- メニュー **Tools/TomsLands/体験版/体験版をビルド**（開発ビルドは「体験版をビルド（開発ビルド）」）。保存の画面が開き、出力先のフォルダと exe の名前を選ぶ。前回ビルドできた場所を覚えている（EditorPrefs。初めは `D:\UnityGame\TomsShop_Demo\TomSLand_Demo.exe`）。
+  - exe の名前を `TomSLand_Demo.exe` から変えると確認が出る。Steam に上げるなら、Steamworks の起動の設定と `app_build_demo.vdf` の ContentRoot も合わせる。
+  - セーブの保存先（`TomSLand_Demo\`）と productName は exe の名前では変わらない。
   - `DEMO_BUILD` はそのビルドにだけ足す（`BuildPlayerOptions.extraScriptingDefines`）。Player Settings の定義は変えない。
   - productName はビルドの間だけ `TomSLand_Demo` にし、終わったら（失敗しても）元に戻す。
   - ビルド前チェック（`BuildPreflight`）は製品版と同じく走る。
-- バッチモード: `Unity.exe -batchmode -nographics -quit -projectPath <プロジェクト> -executeMethod DemoBuildMenu.BuildBatch -logFile <ログ>`（失敗は終了コード 1）。
+- バッチモード: `Unity.exe -batchmode -nographics -quit -projectPath <プロジェクト> -executeMethod DemoBuildMenu.BuildBatch -logFile <ログ>`（失敗は終了コード 1）。出力先は `-demoOutput <exe のフルパス>` で指定する（無ければ前回の場所）。
 - エディタで体験版を試す: **Tools/TomsLands/体験版/エディタで体験版を試す（DEMO_BUILD を入れる）** で Player Settings（Standalone）に定義を足す／外す（チェックが付いている間は体験版）。**入れたまま製品版をビルドしようとすると、ビルド前に止まる**（`DemoBuildMenu.OnPreprocessBuild`）。
 
 ## SteamPipe（アップロードはまだしない）
