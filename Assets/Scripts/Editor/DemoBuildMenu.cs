@@ -10,17 +10,28 @@ using UnityEngine;
 /// 体験版（スクリプト定義 DEMO_BUILD）のビルドと、エディタで体験版を試すための定義の切り替え（Docs/Demo_Build.md）。
 ///
 /// ・「体験版をビルド」は DEMO_BUILD をこのビルドにだけ足し（BuildPlayerOptions.extraScriptingDefines）、
-///   productName を一時的に <see cref="DemoBuild.DemoProductName"/> にして D:\UnityGame\TomsShop_Demo\ へ出す。
+///   productName を一時的に <see cref="DemoBuild.DemoProductName"/> にしてビルドする。
+///   出力先と exe の名前は、メニューからなら保存の画面で選ぶ（前回の場所を覚える。初めは D:\UnityGame\TomsShop_Demo\TomSLand_Demo.exe）。
 ///   終わったら（失敗しても）productName を元に戻す。Player Settings の定義は触らないので、本編のビルド設定は変わらない。
 /// ・「エディタで体験版を試す」は Player Settings（Standalone）の定義に DEMO_BUILD を足す／外す。
 ///   入れたまま本編をビルドしようとすると、ビルド前に止める（<see cref="OnPreprocessBuild"/>）。
 /// ・バッチモード: -executeMethod DemoBuildMenu.BuildBatch（開発ビルドは DemoBuildMenu.BuildBatchDevelopment）。失敗は終了コード 1。
+///   出力先は -demoOutput &lt;exe のフルパス&gt; で変えられる（無ければ前回の場所）。
 /// </summary>
 public sealed class DemoBuildMenu : IPreprocessBuildWithReport
 {
     public const string Define = "DEMO_BUILD";
-    public const string OutputDir = @"D:\UnityGame\TomsShop_Demo";
-    public const string ExeName = "TomSLand_Demo.exe";
+    public const string DefaultOutputDir = @"D:\UnityGame\TomsShop_Demo";
+    public const string DefaultExeName = "TomSLand_Demo.exe";
+    private const string OutputPathPrefKey = "TomsLands.DemoBuild.OutputPath";
+    private const string OutputArg = "-demoOutput";
+
+    /// <summary>前回ビルドした exe のパス（初めは既定の場所）。</summary>
+    public static string LastOutputPath
+    {
+        get => EditorPrefs.GetString(OutputPathPrefKey, Path.Combine(DefaultOutputDir, DefaultExeName));
+        private set => EditorPrefs.SetString(OutputPathPrefKey, value);
+    }
 
     private const string MenuRoot = "Tools/TomsLands/体験版/";
     private const string MenuToggle = MenuRoot + "エディタで体験版を試す（DEMO_BUILD を入れる）";
@@ -56,10 +67,18 @@ public sealed class DemoBuildMenu : IPreprocessBuildWithReport
     }
 
     /// <summary>バッチモード用（製品ビルド＝Development Build なし）。</summary>
-    public static void BuildBatch() => ExitWith(Build(development: false));
+    public static void BuildBatch() => ExitWith(Build(development: false, BatchOutputPath()));
 
     /// <summary>バッチモード用（開発ビルド。体験版の App ID が決まっていれば steam_appid.txt が入る）。</summary>
-    public static void BuildBatchDevelopment() => ExitWith(Build(development: true));
+    public static void BuildBatchDevelopment() => ExitWith(Build(development: true, BatchOutputPath()));
+
+    /// <summary>コマンドラインの -demoOutput の次の引数。無ければ前回の場所。</summary>
+    private static string BatchOutputPath()
+    {
+        var args = Environment.GetCommandLineArgs();
+        int i = Array.IndexOf(args, OutputArg);
+        return i >= 0 && i + 1 < args.Length ? args[i + 1] : LastOutputPath;
+    }
 
     /// <summary>バッチモード用: Player Settings に DEMO_BUILD を入れる／外す（コンパイルの確認用）。</summary>
     public static void AddDefineBatch() { SetDefineInPlayerSettings(true); AssetDatabase.SaveAssets(); EditorApplication.Exit(0); }
@@ -73,21 +92,34 @@ public sealed class DemoBuildMenu : IPreprocessBuildWithReport
 
     private static void BuildInteractive(bool development)
     {
-        if (!Application.isBatchMode && !EditorUtility.DisplayDialog("体験版をビルド",
-                $"体験版（{Define}）を{(development ? "開発ビルドで" : "")}\n{OutputDir}\\{ExeName}\nへビルドします。", "ビルドする", "やめる"))
-            return;
-        var report = Build(development);
+        string exePath = LastOutputPath;
+        if (!Application.isBatchMode)
+        {
+            exePath = EditorUtility.SaveFilePanel($"体験版{(development ? "（開発ビルド）" : "")}の保存先と名前",
+                Path.GetDirectoryName(exePath), Path.GetFileNameWithoutExtension(exePath), "exe");
+            if (string.IsNullOrEmpty(exePath)) return; // やめた
+            exePath = Path.GetFullPath(exePath);
+            if (!string.Equals(Path.GetFileName(exePath), DefaultExeName, StringComparison.OrdinalIgnoreCase)
+                && !EditorUtility.DisplayDialog("体験版をビルド",
+                    $"exe の名前が {DefaultExeName} ではありません。\nSteam に上げるなら、Steamworks の起動の設定と SteamPipe の設定（app_build_demo.vdf の ContentRoot）もこの名前・場所に合わせてください。",
+                    "このままビルドする", "やめる"))
+                return;
+        }
+        var report = Build(development, exePath);
         if (Application.isBatchMode || report == null) return;
         bool ok = report.summary.result == BuildResult.Succeeded;
         EditorUtility.DisplayDialog("体験版をビルド",
-            ok ? $"できました（{report.summary.totalSize / (1024 * 1024)} MB）。\n{OutputDir}" : $"失敗しました（{report.summary.result}）。コンソールを見てください。",
+            ok ? $"できました（{report.summary.totalSize / (1024 * 1024)} MB）。\n{exePath}" : $"失敗しました（{report.summary.result}）。コンソールを見てください。",
             "OK");
-        if (ok) EditorUtility.RevealInFinder(Path.Combine(OutputDir, ExeName));
+        if (ok) EditorUtility.RevealInFinder(exePath);
     }
 
-    /// <summary>体験版をビルドする。productName は必ず元に戻す。</summary>
-    public static BuildReport Build(bool development)
+    /// <summary>体験版を exePath へビルドする。productName は必ず元に戻す。</summary>
+    public static BuildReport Build(bool development, string exePath)
     {
+        if (string.IsNullOrEmpty(exePath)) exePath = LastOutputPath;
+        if (!exePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) exePath += ".exe";
+        exePath = Path.GetFullPath(exePath);
         var scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
         if (scenes.Length == 0)
         {
@@ -95,11 +127,11 @@ public sealed class DemoBuildMenu : IPreprocessBuildWithReport
             return null;
         }
 
-        Directory.CreateDirectory(OutputDir);
+        Directory.CreateDirectory(Path.GetDirectoryName(exePath));
         var options = new BuildPlayerOptions
         {
             scenes = scenes,
-            locationPathName = Path.Combine(OutputDir, ExeName),
+            locationPathName = exePath,
             target = BuildTarget.StandaloneWindows64,
             targetGroup = BuildTargetGroup.Standalone,
             options = development ? BuildOptions.Development : BuildOptions.None,
@@ -116,7 +148,12 @@ public sealed class DemoBuildMenu : IPreprocessBuildWithReport
             report = BuildPipeline.BuildPlayer(options);
             var s = report.summary;
             string msg = $"[DemoBuild] 結果: {s.result} / {s.totalSize / (1024 * 1024)} MB / {s.totalTime} / エラー {s.totalErrors} / 注意 {s.totalWarnings}";
-            if (s.result == BuildResult.Succeeded) Debug.Log(msg); else Debug.LogError(msg);
+            if (s.result == BuildResult.Succeeded)
+            {
+                Debug.Log(msg);
+                LastOutputPath = exePath;
+            }
+            else Debug.LogError(msg);
         }
         catch (Exception e)
         {
