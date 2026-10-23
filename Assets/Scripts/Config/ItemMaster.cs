@@ -13,6 +13,8 @@ public static class ItemMaster
     public const int ExpectedSchemaVersion = 1;
 
     private static readonly Dictionary<string, ItemOverride> _overrides = new();
+    // 上書き済みの複製（銘柄の SO 1つにつき1つ。シーンをまたいで使い回す）
+    private static readonly OverrideCloneCache _clones = new();
 
     public static int OverrideCount => _overrides.Count;
 
@@ -44,6 +46,7 @@ public static class ItemMaster
         }
 
         _overrides.Clear();
+        _clones.Clear();
         if (envelope.items != null)
         {
             foreach (var ov in envelope.items)
@@ -77,10 +80,12 @@ public static class ItemMaster
 
             if (_overrides.TryGetValue(master.itemId, out var ov))
             {
-                var clone = Object.Instantiate(master); // 実行時コピー（アセット非汚染）
-                clone.name = master.name;                // (Clone) サフィックス回避
-                ov.ApplyTo(clone);
-                result.Add(clone);
+                // 実行時コピー（アセット非汚染）。銘柄ごとに1つを使い回す
+                result.Add(_clones.GetOrCreate(nameof(ItemData), master, clone =>
+                {
+                    ov.ApplyTo(clone);
+                    return true;
+                }));
                 applied++;
             }
             else
@@ -93,5 +98,9 @@ public static class ItemMaster
     }
 
     /// <summary>上書きを破棄して SO 既定値に戻す（フォールバック用）。</summary>
-    public static void ResetToDefault() => _overrides.Clear();
+    public static void ResetToDefault()
+    {
+        _overrides.Clear();
+        _clones.Clear();
+    }
 }
