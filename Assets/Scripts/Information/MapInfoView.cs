@@ -191,6 +191,7 @@ public class MapInfoView : MonoBehaviour
         if (detailIcon != null)
         {
             detailIcon.sprite = data.dungeonIcon;
+            detailIcon.preserveAspect = true;
             detailIcon.enabled = data.dungeonIcon != null;
         }
         if (detailNameText != null) detailNameText.text = data.dungeonName;

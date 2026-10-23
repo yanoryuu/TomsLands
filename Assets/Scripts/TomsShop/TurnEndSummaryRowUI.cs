@@ -35,6 +35,7 @@ public class TurnEndSummaryRowUI : MonoBehaviour
         
         if (itemIcon != null)
             itemIcon.sprite = data.ItemIcon;
+            itemIcon.preserveAspect = true;
 
         if (trendIcon != null)
         {

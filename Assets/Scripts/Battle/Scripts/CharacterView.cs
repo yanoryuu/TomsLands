@@ -94,6 +94,16 @@ public class CharacterView : MonoBehaviour
     public void PlayDamageEffect(int damageAmount) => statusView.PlayDamageEffects(damageAmount);
 
     /// <summary>
+    /// 画面に重ねて出す HP/MP（勇者の StatusCanvas。ScreenSpaceOverlay）の表示を切り替える。
+    /// キャラはシーン直下に生成され配信中パネルの外にいるので、リザルトへ切り替えるときにこれで隠す。
+    /// </summary>
+    public void SetOverlayStatusVisible(bool visible)
+    {
+        foreach (var canvas in GetComponentsInChildren<Canvas>(true))
+            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay) canvas.enabled = visible;
+    }
+
+    /// <summary>
     /// 死亡時の点滅演出を再生し、最後に非表示にする。
     /// </summary>
     public async UniTask PlayDeathEffectAsync(CancellationToken token, int blinkCount = 5, float blinkInterval = 0.15f)

@@ -24,6 +24,7 @@ public class ItemUI : MonoBehaviour
         UpdateStock(stock);
         popularIcon.gameObject.SetActive(isPopular);
         itemIconImage.sprite = icon;
+        itemIconImage.preserveAspect = true;
     }
 
     public void BindPrice(ReactiveProperty<int> price)

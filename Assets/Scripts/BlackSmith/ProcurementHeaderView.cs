@@ -25,6 +25,7 @@ public class ProcurementHeaderView : MonoBehaviour
         if (dungeonIcon)
         {
             dungeonIcon.sprite = icon;
+            dungeonIcon.preserveAspect = true;
             dungeonIcon.enabled = icon != null;
         }
         if (dungeonNameText) dungeonNameText.text = dungeonName;

@@ -29,6 +29,7 @@ public class ProphetRankingRowUI : MonoBehaviour, IPointerEnterHandler, IPointer
     {
         rankText.text = rank.ToString();
         if (itemIcon != null && icon != null) itemIcon.sprite = icon;
+        if (itemIcon != null && icon != null) itemIcon.preserveAspect = true;
         itemNameText.text = itemName;
         priceText.text = $"{price:N0}G";
         this.dialogueId = dialogueId;

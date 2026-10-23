@@ -194,6 +194,7 @@ public class ShopMachineView : MonoBehaviour
         if (detailIcon != null)
         {
             detailIcon.sprite = machine.icon;
+            detailIcon.preserveAspect = true;
             detailIcon.enabled = machine.icon != null;
         }
         if (detailNameText != null) detailNameText.text = machine.machineName;

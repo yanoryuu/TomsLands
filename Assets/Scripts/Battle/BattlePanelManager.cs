@@ -55,6 +55,11 @@ public class BattlePanelManager : MonoBehaviour
                 break;
         }
 
+        // 勇者の HP/MP は配信中パネルの外（シーン直下に生成）の重ね描き Canvas なので、配信中以外は隠す
+        bool streaming = phase == StreamingGamePhase.Streaming;
+        foreach (var character in FindObjectsByType<CharacterView>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            character.SetOverlayStatusVisible(streaming);
+
         // パッド/キー操作中なら、新しく出たパネルへフォーカスを移す（マウス中は何もしない）
         var shown = phase switch
         {

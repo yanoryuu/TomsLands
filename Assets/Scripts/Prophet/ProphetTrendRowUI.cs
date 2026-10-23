@@ -38,6 +38,7 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public void SetData(Sprite icon, string itemName, float heat, float demand, string dialogueId = "")
     {
         if (itemIcon != null && icon != null) itemIcon.sprite = icon;
+        if (itemIcon != null && icon != null) itemIcon.preserveAspect = true;
         itemNameText.text = itemName;
         trendText.text = $"相場: {MarketHeat.Describe(heat)}";
         trendText.color = MarketHeat.ToColor(heat);
@@ -49,6 +50,7 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
     public void SetFortune(Sprite icon, string itemName, int direction, bool strong, string dialogueId = "")
     {
         if (itemIcon != null && icon != null) itemIcon.sprite = icon;
+        if (itemIcon != null && icon != null) itemIcon.preserveAspect = true;
         bool up = direction > 0;
         // 向きは品名の前に矢印で出す（右側の小さな欄は狭く、行によって切れるため）
         string arrow = up ? "<color=#C8731E>↑</color>" : "<color=#4F6F8F>↓</color>";

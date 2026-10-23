@@ -14,6 +14,7 @@ public class BattleResultSoldItemSlot : MonoBehaviour
     {
         if (itemIcon != null)
             itemIcon.sprite = icon;
+            itemIcon.preserveAspect = true;
 
         if (countText == null) return;
         if (revenue <= 0)

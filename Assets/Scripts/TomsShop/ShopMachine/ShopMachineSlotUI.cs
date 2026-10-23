@@ -38,6 +38,7 @@ public class ShopMachineSlotUI : MonoBehaviour
         if (iconImage != null)
         {
             iconImage.sprite = machine.icon;
+            iconImage.preserveAspect = true;
             iconImage.enabled = machine.icon != null;
         }
         if (nameText != null) nameText.text = machine.machineName;

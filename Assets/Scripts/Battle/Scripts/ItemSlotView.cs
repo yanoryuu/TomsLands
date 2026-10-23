@@ -79,6 +79,7 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
             {
                 itemIcon.enabled = true;
                 itemIcon.sprite = item.ItemIcon;
+                itemIcon.preserveAspect = true;
                 // 色も確実にリセット
                 var color = itemIcon.color;
                 color.a = 1.0f;

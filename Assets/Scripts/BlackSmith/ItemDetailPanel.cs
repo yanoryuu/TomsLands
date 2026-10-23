@@ -119,6 +119,7 @@ public class ItemDetailPanel : MonoBehaviour
         }
 
         if (icon) icon.sprite = runtime.ItemIcon;
+        if (icon) icon.preserveAspect = true;
         if (nameText) nameText.text = runtime.ItemName;
         if (attributeText) attributeText.text = ItemAttributeText.WithSuffix(runtime.ItemAttribute);
 
