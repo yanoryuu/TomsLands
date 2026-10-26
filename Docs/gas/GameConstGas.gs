@@ -45,7 +45,8 @@ const BALANCE_SINGLE = {
   shopEconomy: 'bal_shopEconomy',
   gameBalance: 'bal_gameBalance',
   battlePrice: 'bal_battlePrice',
-  finance: 'bal_finance'
+  finance: 'bal_finance',
+  streamingInteraction: 'bal_streamingInteraction' // 配信中の介入・スパチャ（熱の量など）。2026-10-26
 };
 const BALANCE_LISTS = {
   advertisements: 'bal_advertisements',

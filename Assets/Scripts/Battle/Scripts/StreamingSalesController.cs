@@ -69,6 +69,16 @@ public class StreamingSalesController : MonoBehaviour
     }
 
     /// <summary>
+    /// このターンに見せ場があったことを知らせる（プレイヤーの介入用。視聴者スパチャでは呼ばない）。
+    /// 見せ場のあったターンは、ターン終わりに配信熱が冷めない。販売停止後は何もしない。
+    /// </summary>
+    public void MarkHighlight()
+    {
+        if (!_salesActive) return;
+        _heatModel?.MarkHighlight();
+    }
+
+    /// <summary>
     /// 指定種別（武器など）の需要と価格を動かす（介入: 青・赤スパの「その剣なに？」）。販売停止後は何もしない。
     /// demandDelta=0・priceMultiplier=1 なら何もしない。
     /// </summary>
@@ -394,43 +404,104 @@ public class StreamingSalesController : MonoBehaviour
     }
 
     /// <summary>
-    /// 配信熱イベントを購読し、戦闘状況に応じて Heat を変動させる。
+    /// 配信熱イベントを購読し、戦闘の「見せ場」（ピンチ・逆転・山場）で Heat を上げる。
+    /// 勇者の優勢・劣勢そのものでは上下させない（魔王側に張っていても配信が盛り上がるように）。
     /// </summary>
     private void SubscribeToHeatEvents()
     {
+        _heatHero = null;
+        _heroPinchFired = false;
+        _heroCriticalPinchFired = false;
+        _heroDownFired = false;
         if (battleSequencer == null) return;
 
-        // 敵撃破 → +15
+        // 敵撃破 → ピンチ中なら逆転（見せ場）、そうでなければ楽勝（見せ場に数えない）
         battleSequencer.OnEnemyDefeated
-            .Subscribe(_ => AddTacticsAdjustedHeat(15f))
+            .Subscribe(_ =>
+            {
+                TryBindHeroHp();
+                if (IsHeroInPinch()) AddHighlightHeat(PriceSettings.comebackKillHeat);
+                else AddTacticsAdjustedHeat(PriceSettings.easyKillHeat);
+            })
             .AddTo(_battleDisposables);
 
-        // ボス出現 → +40
+        // ボス出現（見せ場）
         battleSequencer.OnBossAppeared
-            .Subscribe(_ => AddTacticsAdjustedHeat(40f))
+            .Subscribe(_ => AddHighlightHeat(PriceSettings.bossAppearHeat))
             .AddTo(_battleDisposables);
 
-        // 戦闘ダメージから細かい Heat 変動
+        // 勇者が攻撃に関わった時点で勇者の HP を見始める（勇者はバトル開始後に生まれるため、ここで遅れて購読する）。
+        // 勇者の HP が減るのは攻撃（CharacterPresenter.PerformAttack → OnCharacterDamaged）だけなので取りこぼさない
         battleSequencer.OnCharacterDamaged
             .Subscribe(pair =>
             {
                 var (attacker, target) = pair;
-
-                // Hero が攻撃を当てたが倒せなかった → +3
-                if (attacker.Type == CharacterType.Hero && !target.IsDead)
-                    AddTacticsAdjustedHeat(3f);
-
-                // Hero がダメージを受けた
-                if (target.Type == CharacterType.Hero)
-                {
-                    int rawDamage = attacker.AttackPower;
-                    if (rawDamage <= target.DefensePower)
-                        AddTacticsAdjustedHeat(5f);   // 防御成功 → +5
-                    else
-                        AddTacticsAdjustedHeat(-8f);  // 被弾 → -8
-                }
+                if (attacker.Type == CharacterType.Hero || target.Type == CharacterType.Hero) TryBindHeroHp();
             })
             .AddTo(_battleDisposables);
+    }
+
+    // 配信熱で見ている勇者（未購読なら null）と、ピンチ・大ピンチ・倒れたを出したか
+    private CharacterModel _heatHero;
+    private bool _heroPinchFired;
+    private bool _heroCriticalPinchFired;
+    private bool _heroDownFired;
+
+    /// <summary>勇者が生まれていれば、HP の変化（被弾・回復）を購読する。1回だけ。</summary>
+    private void TryBindHeroHp()
+    {
+        if (_heatHero != null || battleSequencer == null) return;
+        var hero = battleSequencer.Context?.HeroPresenter?.GetModel();
+        if (hero == null) return;
+        _heatHero = hero;
+        // ReactiveProperty は購読時に今の値を流すので、購読前に境目を下回っていてもここで拾える
+        hero.CurrentHp
+            .Subscribe(OnHeroHpChanged)
+            .AddTo(_battleDisposables);
+    }
+
+    /// <summary>
+    /// 勇者の HP が境目を下回った瞬間にピンチ（+10）・大ピンチ（+15）、倒れたら +20。
+    /// 回復で境目以上に戻ったら、また下回ったときに再び出す。
+    /// </summary>
+    private void OnHeroHpChanged(int hp)
+    {
+        if (_heatHero == null || _heatHero.MaxHp <= 0) return;
+        float ratio = hp / (float)_heatHero.MaxHp;
+
+        if (ratio < PriceSettings.pinchHpRatio)
+        {
+            if (!_heroPinchFired)
+            {
+                _heroPinchFired = true;
+                AddHighlightHeat(PriceSettings.pinchHeat);
+            }
+        }
+        else _heroPinchFired = false;
+
+        if (ratio < PriceSettings.criticalPinchHpRatio)
+        {
+            if (!_heroCriticalPinchFired)
+            {
+                _heroCriticalPinchFired = true;
+                AddHighlightHeat(PriceSettings.criticalPinchHeat);
+            }
+        }
+        else _heroCriticalPinchFired = false;
+
+        if (hp <= 0 && !_heroDownFired)
+        {
+            _heroDownFired = true;
+            AddHighlightHeat(PriceSettings.heroDownHeat);
+        }
+    }
+
+    /// <summary>勇者がピンチ中か（生きていて HP が pinchHpRatio 未満）。</summary>
+    private bool IsHeroInPinch()
+    {
+        var hero = _heatHero ?? battleSequencer?.Context?.HeroPresenter?.GetModel();
+        if (hero == null || hero.MaxHp <= 0 || hero.IsDead) return false;
+        return hero.CurrentHp.CurrentValue / (float)hero.MaxHp < PriceSettings.pinchHpRatio;
     }
 
     /// <summary>
@@ -460,7 +531,7 @@ public class StreamingSalesController : MonoBehaviour
             _demandTracker.ProcessEndOfTurn(_model.ItemsForSale);
         }
 
-        // 配信熱：自然減衰 → 複利価格変動
+        // 配信熱：見せ場がなければ冷める → 複利価格変動
         if (_heatModel != null)
         {
             _heatModel.ApplyTurnDecay();
@@ -714,6 +785,13 @@ public class StreamingSalesController : MonoBehaviour
 
     private void AddTacticsAdjustedHeat(float baseDelta)
         => _heatModel?.AddHeat(baseDelta * HeroBattleInfluence.GetHeatMultiplier(_heroTactics));
+
+    /// <summary>戦闘の見せ場の熱（作戦倍率を掛ける）を足し、このターンを「見せ場あり」にする。</summary>
+    private void AddHighlightHeat(float baseDelta)
+    {
+        AddTacticsAdjustedHeat(baseDelta);
+        _heatModel?.MarkHighlight();
+    }
 
     private float GetWeaponPriceUpOnHit() => HeroBattleInfluence.GetWeaponPriceUpOnKill(PriceSettings, _heroTactics);
     private float GetWeaponPriceDownOnNonKill() => HeroBattleInfluence.GetWeaponPriceDownOnNonKill(PriceSettings, _heroTactics);

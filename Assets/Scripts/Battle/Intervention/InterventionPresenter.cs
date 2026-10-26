@@ -361,13 +361,17 @@ public sealed class InterventionPresenter : IDisposable
     {
         if (cmd.IsPlayer && !Queue.HasPending) View?.SetPending(false);
 
+        // プレイヤーの介入は勇者側・ダンジョン側とも「見せ場」（ターン終わりに配信熱が冷めない）。
+        // 視聴者の赤スパで自動で出る必殺技（IsPlayer=false）は数えない
+        if (cmd.IsPlayer && _sales != null) _sales.MarkHighlight();
+
         switch (cmd)
         {
             case HeroInterventionCommand hero:
                 switch (hero.Type)
                 {
                     case HeroInterventionType.Heal:
-                        if (_sales != null) _sales.AddHeat(_settings.healHeat);
+                        if (_sales != null) _sales.AddHeat(GetHealHeat(cmd as HealCommand));
                         Feed?.Push(StreamingCommentTrigger.InterventionHeal, Vars());
                         break;
                     case HeroInterventionType.Skill:
@@ -395,6 +399,21 @@ public sealed class InterventionPresenter : IDisposable
                 break;
         }
         RefreshButtons();
+    }
+
+    /// <summary>
+    /// 緑スパ（回復）の配信熱。回復する直前の勇者の HP が低いほど大きい（ピンチを救う見せ場）。
+    /// 実行後に呼ばれるので、今の HP から回復量を引いて直前の HP を出す。
+    /// </summary>
+    private float GetHealHeat(HealCommand heal)
+    {
+        var hero = _sequencer != null ? _sequencer.Context?.HeroPresenter?.GetModel() : null;
+        if (hero == null || hero.MaxHp <= 0) return _settings.healHeat;
+        int healed = heal != null ? heal.HealedAmount : 0;
+        float ratioBefore = (hero.CurrentHp.CurrentValue - healed) / (float)hero.MaxHp;
+        if (ratioBefore <= _settings.healCriticalPinchHpRatio) return _settings.healCriticalPinchHeat;
+        if (ratioBefore <= _settings.healPinchHpRatio) return _settings.healPinchHeat;
+        return _settings.healHeat;
     }
 
     // ─────────────────────────────────────────

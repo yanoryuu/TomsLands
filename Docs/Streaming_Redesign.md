@@ -269,7 +269,7 @@ SpecialMoveCutInView (MB)           … 勇者立ち絵＋赤帯
 
 | 介入 | 実行タイミング | 効果 |
 |---|---|---|
-| 緑 回復 10,000G | 勇者の手番の頭 | 勇者 HP +最大HP×30%（その手番は通常どおり攻撃） |
+| 緑 回復 10,000G | 勇者の手番の頭 | 勇者 HP +最大HP×30%（その手番は通常どおり攻撃）。熱は回復直前の HP が25%以下で+15・50%以下で+8・それ以外+3 |
 | 青 スキル 50,000G | 勇者の手番の頭 | 次の勇者の攻撃の攻撃力×1.5。タップ指定の敵が生きていればその敵を狙う。熱+10・武器需要+0.10 |
 | 赤 必殺技 100,000G | 勇者の手番の頭 | カットイン（無ければ省略）→ 次の攻撃×3（同上の対象指定）。熱+20・武器需要+0.20・武器価格×1.05 |
 | 罠 10,000G | 魔物の手番の頭 | 勇者の次の被弾に 最大HP×30%（`trapBonusDamageRatio`）の防御無視ダメージ |
@@ -280,6 +280,7 @@ SpecialMoveCutInView (MB)           … 勇者立ち絵＋赤帯
 - 倍率は攻撃力に掛け、その後に従来どおり防御を引く（`CharacterPresenter.PerformAttack(target, multiplier, bonusDamage)`、既定値 1/0 なら従来と同じ式）
 - 防御を削る効果（呪い・ボス強化の貫通）は `ResolveAttack` が「防御を下げた場合のダメージ − 通常ダメージ」を防御無視の追加ダメージ（`bonusDamage`）として返す方式（`CharacterModel`/`CharacterPresenter` は変更しない）。罠の追加ダメージも同じ枠に足す
 - 上限: 必殺技 2回（プレイヤー＋視聴者赤スパの予約で数える）・ボス強化 1回・同時に有効な指示 1件・指示後クールダウン 6秒（一時停止中は進まない）
+- 配信熱は「見せ場」で上がる（勇者の優勢・劣勢では上下しない）: ボス出現+40、勇者の HP が50%/25%を下回った瞬間+10/+15（回復で戻れば再び出る）、ピンチ中（50%未満）の撃破+25（それ以外の撃破+3）、勇者が倒れた+20。いずれも作戦の話題性倍率を掛ける。見せ場（上記と、プレイヤーの介入。視聴者スパチャ・楽勝の撃破は除く）があったターンは冷めない。見せ場なし1〜2ターン目は熱30へ差の10%戻すだけ、3ターン目以降は毎ターン−5。調整値は `BattlePriceSettings`
 - 視聴者スパチャ: 1分あたりの期待件数 = 同接/100 ×(0.5+熱/100)（上限8件）。色の重み 青30/水25/緑18/黄12/橙8/桃5/赤2、赤は ×(1+同接/400)・超バズ中×3。受信で熱 +0.5×段階・同接 +0.4%×段階。赤スパは上限内なら必殺技を予約、上限後は熱+8＋大弾幕
 - コメント: トリガー `SuperChat` / `RedSuperChat` / `InterventionHeal` / `InterventionSkill` / `SpecialMove` / `DungeonTrap` / `DungeonCurse` / `DungeonReinforce` / `DungeonBossBuff` を追加（CSV に文言）。スパチャ本文は `StreamingCommentFeed.PushText` で同色の上固定コメ
 - 精算: `BattleSceneStarter` で決着 → Resume → `battleCts.Cancel()` → `InterventionPresenter.Stop()`（未実行の指示を返金）→ `SuperChatGenerator.Stop()` → `StopSales()` → スナップショット。補充ポップアップの利用可能残高にも介入の純支出を含める。`BattleOutputData` に `InterventionSpending` / `InterventionRefund` / `PeakViewers` / `ViewerSuperChatCount` / `SpecialMoveCount`（`SetStreamingStats`）
