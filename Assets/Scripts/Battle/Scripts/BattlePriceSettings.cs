@@ -41,7 +41,7 @@ public class BattlePriceSettings : ScriptableObject
     [Tooltip("Battle開始時の配信熱。0〜100で指定する。")]
     [Range(0f, 100f)]
     public float initialHeat = 30f;
-    [Tooltip("ターン終了時に減少する配信熱の量。")]
+    [Tooltip("見せ場のないターンが coolDownStartTurns 続いた後、ターン終了ごとに減る配信熱の量（heatRestingPoint より下にも下がる）。")]
     [Min(0f)]
     public float heatTurnDecay = 5f;
     [Tooltip("冷め気味ティアの上限値。この値未満なら coldPriceMultiplier を使う。")]
@@ -53,6 +53,37 @@ public class BattlePriceSettings : ScriptableObject
     [Tooltip("盛り上がり中ティアの上限値。この値未満なら hotPriceMultiplier を使う。これ以上は超人気扱い。")]
     [Range(0f, 100f)]
     public float hotTierMax = 75f;
+
+    [Header("配信熱: 見せ場（勇者の作戦の話題性倍率を掛ける）")]
+    [Tooltip("勇者の HP がこの割合を下回った瞬間を「ピンチ」とする。例: 0.5 = 最大HPの50%。")]
+    [Range(0f, 1f)]
+    public float pinchHpRatio = 0.5f;
+    [Tooltip("勇者の HP がこの割合を下回った瞬間を「大ピンチ」とする。例: 0.25 = 最大HPの25%。")]
+    [Range(0f, 1f)]
+    public float criticalPinchHpRatio = 0.25f;
+    [Tooltip("ピンチ（pinchHpRatio を下回った瞬間）の配信熱。")]
+    public float pinchHeat = 10f;
+    [Tooltip("大ピンチ（criticalPinchHpRatio を下回った瞬間）の配信熱。")]
+    public float criticalPinchHeat = 15f;
+    [Tooltip("ピンチ中（HP が pinchHpRatio 未満）に敵を倒した「逆転」の配信熱。")]
+    public float comebackKillHeat = 25f;
+    [Tooltip("ピンチでないとき（HP が pinchHpRatio 以上）に敵を倒した「楽勝」の配信熱。見せ場には数えない。")]
+    public float easyKillHeat = 3f;
+    [Tooltip("ボス出現の配信熱。")]
+    public float bossAppearHeat = 40f;
+    [Tooltip("勇者が倒れたときの配信熱。")]
+    public float heroDownHeat = 20f;
+
+    [Header("配信熱: 見せ場のないターンの冷め方")]
+    [Tooltip("見せ場のないターンが続き始めたとき、配信熱が戻っていく先。")]
+    [Range(0f, 100f)]
+    public float heatRestingPoint = 30f;
+    [Tooltip("見せ場のないターン（冷め始める前）に、heatRestingPoint との差のうち戻す割合。例: 0.1 = 差の10%。")]
+    [Range(0f, 1f)]
+    public float heatReturnRate = 0.1f;
+    [Tooltip("見せ場のないターンがこの数だけ続いたターンから、毎ターン heatTurnDecay ずつ冷める。")]
+    [Min(1)]
+    public int coolDownStartTurns = 3;
 
     [Header("配信熱による価格倍率")]
     [Tooltip("配信熱が coldTierMax 未満の時、ターン終了時に適用する価格倍率。例: 0.97 = 3%下落。")]
@@ -110,5 +141,6 @@ public class BattlePriceSettings : ScriptableObject
 
         normalTierMax = Mathf.Max(normalTierMax, coldTierMax);
         hotTierMax = Mathf.Max(hotTierMax, normalTierMax);
+        criticalPinchHpRatio = Mathf.Min(criticalPinchHpRatio, pinchHpRatio);
     }
 }

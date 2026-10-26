@@ -19,8 +19,16 @@ public class StreamingInteractionSettings : ScriptableObject
     [Min(0)] public int healPrice = 10000;
     [Tooltip("勇者の最大HPに対する回復割合。0.3 = +30%")]
     [Range(0f, 1f)] public float healRatio = 0.30f;
-    [Tooltip("実行時の配信熱")]
-    public float healHeat = 0f;
+    [Tooltip("実行時の配信熱（回復の直前の勇者の HP が healPinchHpRatio より上のとき）")]
+    public float healHeat = 3f;
+    [Tooltip("回復の直前の勇者の HP がこの割合以下なら healPinchHeat。例: 0.5 = 最大HPの50%")]
+    [Range(0f, 1f)] public float healPinchHpRatio = 0.5f;
+    [Tooltip("ピンチの回復（直前の HP が healPinchHpRatio 以下）の配信熱")]
+    public float healPinchHeat = 8f;
+    [Tooltip("回復の直前の勇者の HP がこの割合以下なら healCriticalPinchHeat。例: 0.25 = 最大HPの25%")]
+    [Range(0f, 1f)] public float healCriticalPinchHpRatio = 0.25f;
+    [Tooltip("大ピンチの回復（直前の HP が healCriticalPinchHpRatio 以下）の配信熱")]
+    public float healCriticalPinchHeat = 15f;
 
     [Header("青スパ: スキル")]
     [Min(0)] public int skillPrice = 50000;

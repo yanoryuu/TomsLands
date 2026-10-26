@@ -25,7 +25,7 @@ public static class RemoteBalance
     // 上書き済みの複製（元のアセット1つにつき1つ。シーンをまたいで使い回す）
     private static readonly OverrideCloneCache _clones = new();
 
-    private static readonly string[] SingleSections = { "shopEconomy", "gameBalance", "battlePrice", "shopLevel", "finance" };
+    private static readonly string[] SingleSections = { "shopEconomy", "gameBalance", "battlePrice", "shopLevel", "finance", StreamingInteractionSettings.RemoteKey };
     // ※ HeroData(SO) は Inspector 割当のフォールバックで、実バトル値は heroLevels(CSV由来) なので
     //   "heroes" 区画は設けない（hero バランスは heroLevels で配信する）。
     private static readonly string[] ListSections =

@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healPrice: 10000
   healRatio: 0.3
-  healHeat: 0
+  healHeat: 3
+  healPinchHpRatio: 0.5
+  healPinchHeat: 8
+  healCriticalPinchHpRatio: 0.25
+  healCriticalPinchHeat: 15
   skillPrice: 50000
   skillMultiplier: 1.5
   skillHeat: 10

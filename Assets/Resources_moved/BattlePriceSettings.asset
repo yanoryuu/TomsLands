@@ -25,6 +25,17 @@ MonoBehaviour:
   coldTierMax: 25
   normalTierMax: 50
   hotTierMax: 75
+  pinchHpRatio: 0.5
+  criticalPinchHpRatio: 0.25
+  pinchHeat: 10
+  criticalPinchHeat: 15
+  comebackKillHeat: 25
+  easyKillHeat: 3
+  bossAppearHeat: 40
+  heroDownHeat: 20
+  heatRestingPoint: 30
+  heatReturnRate: 0.1
+  coolDownStartTurns: 3
   coldPriceMultiplier: 0.9
   normalPriceMultiplier: 1
   hotPriceMultiplier: 1.1

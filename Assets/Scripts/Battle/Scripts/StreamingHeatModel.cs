@@ -36,8 +36,40 @@ public class StreamingHeatModel
     /// <summary>熱量を加算する（負値で減算）。自動的に [0, 100] にクランプ。</summary>
     public void AddHeat(float delta) => Heat.Value = Mathf.Clamp(Heat.Value + delta, MinHeat, MaxHeat);
 
-    /// <summary>ターン終了時の自然減衰。毎ターン呼ぶ。</summary>
-    public void ApplyTurnDecay() => AddHeat(-GetHeatTurnDecay());
+    /// <summary>見せ場（ピンチ・逆転・ボス出現・勇者が倒れた・プレイヤーの介入）のないターンが続いている数。</summary>
+    public int QuietTurns { get; private set; }
+
+    // このターンに見せ場があったか（ApplyTurnDecay で消す）
+    private bool _hadHighlightThisTurn;
+
+    /// <summary>このターンに見せ場があったことを記録する。ターン終わりの冷め方が止まる。</summary>
+    public void MarkHighlight() => _hadHighlightThisTurn = true;
+
+    /// <summary>
+    /// ターン終了時の冷め方。毎ターン呼ぶ。
+    /// 見せ場があったターンは減らさない。見せ場なしが coolDownStartTurns 未満のうちは heatRestingPoint へ
+    /// 差の heatReturnRate だけ戻す（それより下なら減らさない）。それ以降は毎ターン heatTurnDecay ずつ冷める。
+    /// </summary>
+    public void ApplyTurnDecay()
+    {
+        if (_hadHighlightThisTurn)
+        {
+            _hadHighlightThisTurn = false;
+            QuietTurns = 0;
+            return;
+        }
+
+        QuietTurns++;
+        if (QuietTurns >= GetCoolDownStartTurns())
+        {
+            AddHeat(-GetHeatTurnDecay());
+            return;
+        }
+
+        float rest = GetHeatRestingPoint();
+        float h = Heat.Value;
+        if (h > rest) AddHeat(-(h - rest) * GetHeatReturnRate());
+    }
 
     // ─────────────────────────────────────────
     //  価格倍率
@@ -114,6 +146,9 @@ public class StreamingHeatModel
 
     private float GetInitialHeat() => _settings != null ? _settings.initialHeat : 30f;
     private float GetHeatTurnDecay() => _settings != null ? _settings.heatTurnDecay : 5f;
+    private float GetHeatRestingPoint() => _settings != null ? _settings.heatRestingPoint : 30f;
+    private float GetHeatReturnRate() => _settings != null ? _settings.heatReturnRate : 0.1f;
+    private int GetCoolDownStartTurns() => _settings != null ? Mathf.Max(1, _settings.coolDownStartTurns) : 3;
     private float GetColdTierMax() => _settings != null ? _settings.coldTierMax : 25f;
     private float GetNormalTierMax() => _settings != null ? _settings.normalTierMax : 50f;
     private float GetHotTierMax() => _settings != null ? _settings.hotTierMax : 75f;
