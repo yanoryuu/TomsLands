@@ -203,6 +203,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _tomsModel.GameMode = mode;
         _tomsModel.FlowSeed = seed;
 
+        // ダンジョンの弱点はランごとにシャッフル（見た目や名前から属性を推測できないようにし、情報屋の価値を保つ）
+        _dungeonRepository.ApplyWeaknessSeed(seed);
+
         // フローを構築してからインデックスを先頭へ
         _gameFlowManager.InitializeFlow(useAuto, mode, seed);
         _gameFlowManager.RestoreIndex(0);
@@ -307,6 +310,9 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _portfolioModel.LoadData();
         _shopMachineModel.LoadData();
         _relicInventory.LoadData();
+
+        // 保存済みの seed から弱点の割り当ても同じに戻す
+        _dungeonRepository.ApplyWeaknessSeed(_tomsModel.FlowSeed);
 
         // 保存済みの seed / mode から同一フローを再生成してからインデックス復元
         _gameFlowManager.InitializeFlow(_tomsModel.UseAutoFlow, _tomsModel.GameMode, _tomsModel.FlowSeed);

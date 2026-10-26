@@ -57,6 +57,38 @@ public class DungeonRepository : MonoBehaviour
         }
     }
 
+    // 弱点属性を決めるラン固有のシード。ダンジョンの再構築（シーン読み込み・ニューゲーム）後も同じ弱点に揃えるため覚えておく
+    private int? weaknessSeed;
+
+    /// <summary>
+    /// ランのシードから各ダンジョンの弱点属性を決め直す。見た目や名前と属性が結びつかないよう、
+    /// ランごとに属性の割り当てをシャッフルする（同じシードなら同じ割り当て。続きからでも変わらない）。
+    /// </summary>
+    public void ApplyWeaknessSeed(int seed)
+    {
+        weaknessSeed = seed;
+        ApplyWeaknessShuffle();
+    }
+
+    private void ApplyWeaknessShuffle()
+    {
+        if (weaknessSeed == null || availableDungeons == null || availableDungeons.Count == 0) return;
+
+        var attributes = new List<ItemTypeData.ItemAttribute>(
+            (ItemTypeData.ItemAttribute[])Enum.GetValues(typeof(ItemTypeData.ItemAttribute)));
+        var rng = new System.Random(weaknessSeed.Value ^ 0x5EED_0A77);
+        for (int i = attributes.Count - 1; i > 0; i--)
+        {
+            int j = rng.Next(i + 1);
+            (attributes[i], attributes[j]) = (attributes[j], attributes[i]);
+        }
+
+        // 並び順がセーブ状況で変わっても結果が変わらないよう、ダンジョンのキー順に割り当てる
+        var ordered = availableDungeons.OrderBy(d => (int)d.key).ToList();
+        for (int i = 0; i < ordered.Count; i++)
+            ordered[i].requiredAttribute = attributes[i % attributes.Count];
+    }
+
     // ランタイム → 保存
     public void Save() => SaveSystem.Save(availableDungeons);
 
@@ -67,6 +99,7 @@ public class DungeonRepository : MonoBehaviour
     public void ResetToInitial()
     {
         InitializeFromScriptables(dungeonInfos);
+        ApplyWeaknessShuffle();
         Save();
     }
 
@@ -123,6 +156,7 @@ public class DungeonRepository : MonoBehaviour
         }
 
         availableDungeons = rebuilt;
+        ApplyWeaknessShuffle();
         return true;
     }
 
