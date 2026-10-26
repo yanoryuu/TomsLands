@@ -50,7 +50,7 @@ public static class InterventionPrefabBuilder
                  {
                      "Btn_Mask", "Circle", "Ring_Gold", "Ring_Plain", "White", "CutIn_Band", "CutIn_SpeedLines",
                      "Icon_Heal", "Icon_Skill", "Icon_Special", "Icon_Trap", "Icon_Curse", "Icon_Reinforce", "Icon_BossBuff",
-                     "Tab_Hero", "Tab_Dungeon",
+                     "Tab_Hero_Portrait", "Tab_Dungeon_Portrait",
                  })
             Import(n, Vector4.zero);
     }
@@ -234,7 +234,7 @@ public static class InterventionPrefabBuilder
         SetupTint(tabBtn);
         var tabIcon = NewRT("Icon", tab);
         Stretch(tabIcon, 9, 9, 9, 9);
-        var tabIconImg = Img(tabIcon, S("Tab_Dungeon"), Color.white);
+        var tabIconImg = Img(tabIcon, S("Tab_Dungeon_Portrait"), Color.white);
         tabIconImg.preserveAspect = true;
         var tabRing = NewRT("Ring", tab);
         Stretch(tabRing);
@@ -256,8 +256,8 @@ public static class InterventionPrefabBuilder
         Set(view, "tabButton", tabBtn);
         Set(view, "tabRoot", tab);
         Set(view, "tabIcon", tabIconImg);
-        Set(view, "tabIconOnHeroFace", S("Tab_Dungeon"));
-        Set(view, "tabIconOnDungeonFace", S("Tab_Hero"));
+        Set(view, "tabIconOnHeroFace", S("Tab_Dungeon_Portrait"));
+        Set(view, "tabIconOnDungeonFace", S("Tab_Hero_Portrait"));
         Set(view, "tabNotifyDot", dot.gameObject);
         Set(view, "healButton", heal);
         Set(view, "skillButton", skill);

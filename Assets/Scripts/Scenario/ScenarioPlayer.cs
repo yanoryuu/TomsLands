@@ -256,6 +256,9 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
         if (engine == null) engine = GetComponentInChildren<AdvEngine>(true);
         // 宴のカメラを各シーンの Base カメラへ Overlay として積む（Base のままだと URP が画面を黄色でクリアする）
         if (!TryGetComponent<UtageCameraStacker>(out _)) gameObject.AddComponent<UtageCameraStacker>();
+        // 会話 UI 上のクリックを文字送りへ渡す（全面の DarkOverlay 等が宴の背景レイを遮っているため）
+        var uiManager = GetComponentInChildren<AdvUguiManager>(true);
+        if (uiManager != null && !uiManager.TryGetComponent<UtageClickForwarder>(out _)) uiManager.gameObject.AddComponent<UtageClickForwarder>();
         GameSettings.Changed += OnGameSettingsChanged;
     }
 
