@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: e57d9db94ebabba46ad7a92d972c968e
+guid: 465c36c498fd4bf2a0dfe88b50c96ff8
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -888450062115493188
-    second: Tab_Hero_0
+      213: 2104916643329723749
+    second: Tab_Dungeon_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -139,13 +139,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Tab_Hero_0
+      name: Tab_Dungeon_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 10
         width: 256
-        height: 256
+        height: 236
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -154,8 +154,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cbaaeee20679ba3f0800000000000000
-      internalID: -888450062115493188
+      spriteID: 56dc977e88a263d10800000000000000
+      internalID: 2104916643329723749
       vertices: []
       indices: 
       edges: []
@@ -174,7 +174,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Tab_Hero_0: -888450062115493188
+      Tab_Dungeon_0: 2104916643329723749
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
