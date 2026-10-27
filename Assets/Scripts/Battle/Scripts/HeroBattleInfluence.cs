@@ -61,6 +61,7 @@ public static class HeroBattleInfluence
 
         HeroTactics tactics = hero.tactics.Value;
         float weaponKill = GetWeaponPriceUpOnKill(settings, tactics);
+        float weaponEffective = GetWeaponPriceUpOnEffectiveHit(settings, tactics);
         float weaponNonKill = GetWeaponPriceDownOnNonKill(settings, tactics);
         float armorBlock = GetArmorPriceUpOnBlock(settings, tactics);
         float armorHit = GetArmorPriceDownOnHit(settings, tactics);
@@ -73,7 +74,7 @@ public static class HeroBattleInfluence
         return
             $"装備: 武器 {weapon} / 防具 {armor}\n" +
             "戦闘後: 勝利で装備品の評価が上がり、敗北で下がります。\n" +
-            $"戦闘中: 撃破 -> 武器 {FormatRate(weaponKill)} / 撃破できず -> 武器 {FormatRate(weaponNonKill)}\n" +
+            $"戦闘中: 撃破 -> 武器 {FormatRate(weaponKill)} / 撃破できず -> 効いた 武器 {FormatRate(weaponEffective)}・効かず 武器 {FormatRate(weaponNonKill)}\n" +
             $"戦闘中: 防御成功 -> 防具 {FormatRate(armorBlock)} / 被弾 -> 防具 {FormatRate(armorHit)}\n" +
             $"属性: 有利 {FormatRate(effective)} / 不利 {FormatRate(weak)}\n" +
             $"作戦: {GetDisplayName(tactics)}（{BuildTacticsMultiplierText(tactics)}）";
@@ -104,8 +105,47 @@ public static class HeroBattleInfluence
         return "話題性↑";
     }
 
+    /// <summary>
+    /// 勇者が受けた攻撃を防具で「防いだ」確率。防御力 ÷ 敵の攻撃力 を [armorBlockChanceMin, armorBlockChanceMax] に収める。
+    /// 「攻撃 ≦ 防御」だけで決めると実際の敵の攻撃力では一度も満たされず、防具は配信中に下がる一方だった。
+    /// </summary>
+    public static float GetArmorBlockChance(int attack, int defense, BattlePriceSettings settings)
+    {
+        float min = settings != null ? settings.armorBlockChanceMin : 0.05f;
+        float max = settings != null ? Mathf.Max(min, settings.armorBlockChanceMax) : 0.9f;
+        float ratio = attack > 0 ? defense / (float)attack : 1f;
+        return Mathf.Clamp(ratio, min, max);
+    }
+
+    /// <summary>
+    /// 勇者が受けた攻撃を防具で「防いだ」か（防具の値が上がる）。防げなければ被弾（防具の値が下がる）。
+    /// roll は 0〜1 の乱数（省略時は UnityEngine.Random.value）。
+    /// </summary>
+    public static bool IsArmorBlock(int attack, int defense, BattlePriceSettings settings, float? roll = null)
+        => (roll ?? Random.value) < GetArmorBlockChance(attack, defense, settings);
+
     public static float GetWeaponPriceUpOnKill(BattlePriceSettings settings, HeroTactics tactics)
         => ApplyPositiveMultiplier(settings != null ? settings.weaponPriceUpOnHit : 1.10f, GetWeaponPerformanceMultiplier(tactics));
+
+    /// <summary>
+    /// 倒しきれなかった一撃が「効いた」確率。与えたダメージ ÷ 敵の最大HP × weaponEffectiveHitChanceScale を
+    /// [weaponEffectiveHitChanceMin, weaponEffectiveHitChanceMax] に収める（大きく削るほど効いた扱いになりやすい）。
+    /// </summary>
+    public static float GetWeaponEffectiveHitChance(int damage, int targetMaxHp, BattlePriceSettings settings)
+    {
+        float scale = settings != null ? settings.weaponEffectiveHitChanceScale : 2f;
+        float min = settings != null ? settings.weaponEffectiveHitChanceMin : 0.05f;
+        float max = settings != null ? Mathf.Max(min, settings.weaponEffectiveHitChanceMax) : 0.9f;
+        float share = targetMaxHp > 0 ? damage / (float)targetMaxHp : 1f;
+        return Mathf.Clamp(share * scale, min, max);
+    }
+
+    /// <summary>倒しきれなかった一撃が「効いた」か（武器の値が上がる）。効かなければ武器の値が下がる。roll は 0〜1 の乱数（省略時は UnityEngine.Random.value）。</summary>
+    public static bool IsWeaponEffectiveHit(int damage, int targetMaxHp, BattlePriceSettings settings, float? roll = null)
+        => (roll ?? Random.value) < GetWeaponEffectiveHitChance(damage, targetMaxHp, settings);
+
+    public static float GetWeaponPriceUpOnEffectiveHit(BattlePriceSettings settings, HeroTactics tactics)
+        => ApplyPositiveMultiplier(settings != null ? settings.weaponPriceUpOnEffectiveHit : 1.05f, GetWeaponPerformanceMultiplier(tactics));
 
     public static float GetWeaponPriceDownOnNonKill(BattlePriceSettings settings, HeroTactics tactics)
         => ApplyNegativeMultiplier(settings != null ? settings.weaponPriceDownOnNonKill : 0.95f, GetWeaponPerformanceMultiplier(tactics));
