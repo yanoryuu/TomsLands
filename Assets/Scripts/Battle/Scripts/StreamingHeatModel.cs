@@ -45,13 +45,28 @@ public class StreamingHeatModel
     /// <summary>このターンに見せ場があったことを記録する。ターン終わりの冷め方が止まる。</summary>
     public void MarkHighlight() => _hadHighlightThisTurn = true;
 
+    // このターンに楽勝の撃破があったか（ApplyTurnDecay で消す）
+    private bool _hadKillThisTurn;
+
+    /// <summary>
+    /// ピンチでないときに敵を倒した（楽勝の撃破）。熱を少し足す。見せ場には数えないが、
+    /// 敵を倒し続けている配信は「冷める」側には入れない（冷め始めまでのターン数を数え直す）。
+    /// </summary>
+    public void AddEasyKillHeat(float delta)
+    {
+        AddHeat(delta);
+        _hadKillThisTurn = true;
+    }
+
     /// <summary>
     /// ターン終了時の冷め方。毎ターン呼ぶ。
-    /// 見せ場があったターンは減らさない。見せ場なしが coolDownStartTurns 未満のうちは heatRestingPoint へ
-    /// 差の heatReturnRate だけ戻す（それより下なら減らさない）。それ以降は毎ターン heatTurnDecay ずつ冷める。
+    /// 見せ場があったターンは減らさない。見せ場も撃破もないターンが coolDownStartTurns 未満のうち（撃破のあったターンを含む）は
+    /// heatRestingPoint へ差の heatReturnRate だけ戻す（それより下なら減らさない）。それ以降は毎ターン heatTurnDecay ずつ冷める。
     /// </summary>
     public void ApplyTurnDecay()
     {
+        bool hadKill = _hadKillThisTurn;
+        _hadKillThisTurn = false;
         if (_hadHighlightThisTurn)
         {
             _hadHighlightThisTurn = false;
@@ -59,7 +74,8 @@ public class StreamingHeatModel
             return;
         }
 
-        QuietTurns++;
+        // 楽勝の撃破だけのターンは見せ場ではないので熱は戻すが、冷め始めまでは数え直す
+        QuietTurns = hadKill ? 0 : QuietTurns + 1;
         if (QuietTurns >= GetCoolDownStartTurns())
         {
             AddHeat(-GetHeatTurnDecay());

@@ -14,8 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponPriceUpOnHit: 1.1
   weaponPriceDownOnNonKill: 0.95
+  weaponPriceUpOnEffectiveHit: 1.05
+  weaponEffectiveHitChanceScale: 2
+  weaponEffectiveHitChanceMin: 0.05
+  weaponEffectiveHitChanceMax: 0.9
   armorPriceDownOnHit: 0.98
   armorPriceUpOnBlock: 1.05
+  armorBlockChanceMin: 0.05
+  armorBlockChanceMax: 0.9
   effectiveAttributeRate: 1.1
   weakAttributeRate: 1
   priceFloorRate: 0.2

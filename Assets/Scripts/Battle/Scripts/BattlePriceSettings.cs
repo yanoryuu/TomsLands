@@ -11,15 +11,33 @@ public class BattlePriceSettings : ScriptableObject
     [Tooltip("Heroが敵を撃破した時の武器価格倍率。例: 1.10 = 10%上昇。")]
     [Min(0f)]
     public float weaponPriceUpOnHit = 1.10f;
-    [Tooltip("Heroが攻撃を当てたが敵を倒せなかった時の武器価格倍率。例: 0.95 = 5%下落。")]
+    [Tooltip("Heroが攻撃を当てたが敵を倒せず、その一撃が「効かなかった」時の武器価格倍率。例: 0.95 = 5%下落。")]
     [Min(0f)]
     public float weaponPriceDownOnNonKill = 0.95f;
+    [Tooltip("Heroが攻撃を当てたが敵を倒せず、その一撃が「効いた」時の武器価格倍率。例: 1.05 = 5%上昇。")]
+    [Min(0f)]
+    public float weaponPriceUpOnEffectiveHit = 1.05f;
+    [Tooltip("倒しきれなかった一撃が「効いた」確率 = 与えたダメージ ÷ 敵の最大HP × この値（下限・上限で収める）。例: 2 = 最大HPの25%を削れば50%。")]
+    [Min(0f)]
+    public float weaponEffectiveHitChanceScale = 2f;
+    [Tooltip("「効いた」確率の下限。例: 0.05 = どんなに硬い敵でも5%は効く。")]
+    [Range(0f, 1f)]
+    public float weaponEffectiveHitChanceMin = 0.05f;
+    [Tooltip("「効いた」確率の上限。例: 0.9 = 大きく削っても10%は効かなかった扱い。")]
+    [Range(0f, 1f)]
+    public float weaponEffectiveHitChanceMax = 0.9f;
     [Tooltip("Heroがダメージを受けた時の防具価格倍率。例: 0.90 = 10%下落。")]
     [Min(0f)]
     public float armorPriceDownOnHit = 0.90f;
     [Tooltip("Heroが攻撃を防いだ時の防具価格倍率。例: 1.10 = 10%上昇。")]
     [Min(0f)]
     public float armorPriceUpOnBlock = 1.10f;
+    [Tooltip("防御成功の確率の下限。確率は 勇者の防御力 ÷ 敵の攻撃力 をこの下限と上限の間に収めたもの。例: 0.05 = どんな強敵でも5%は防げる。")]
+    [Range(0f, 1f)]
+    public float armorBlockChanceMin = 0.05f;
+    [Tooltip("防御成功の確率の上限。例: 0.9 = どんな弱い敵でも10%は被弾する。")]
+    [Range(0f, 1f)]
+    public float armorBlockChanceMax = 0.9f;
 
     [Header("属性相性による価格変動")]
     [Tooltip("敵撃破時、有利属性の装備に適用する価格倍率。例: 1.30 = 30%上昇。")]
@@ -41,7 +59,7 @@ public class BattlePriceSettings : ScriptableObject
     [Tooltip("Battle開始時の配信熱。0〜100で指定する。")]
     [Range(0f, 100f)]
     public float initialHeat = 30f;
-    [Tooltip("見せ場のないターンが coolDownStartTurns 続いた後、ターン終了ごとに減る配信熱の量（heatRestingPoint より下にも下がる）。")]
+    [Tooltip("見せ場も撃破もないターンが coolDownStartTurns 続いた後、ターン終了ごとに減る配信熱の量（heatRestingPoint より下にも下がる）。")]
     [Min(0f)]
     public float heatTurnDecay = 5f;
     [Tooltip("冷め気味ティアの上限値。この値未満なら coldPriceMultiplier を使う。")]
@@ -81,7 +99,7 @@ public class BattlePriceSettings : ScriptableObject
     [Tooltip("見せ場のないターン（冷め始める前）に、heatRestingPoint との差のうち戻す割合。例: 0.1 = 差の10%。")]
     [Range(0f, 1f)]
     public float heatReturnRate = 0.1f;
-    [Tooltip("見せ場のないターンがこの数だけ続いたターンから、毎ターン heatTurnDecay ずつ冷める。")]
+    [Tooltip("見せ場も撃破もないターンがこの数だけ続いたターンから、毎ターン heatTurnDecay ずつ冷める（楽勝の撃破があったターンで数え直す）。")]
     [Min(1)]
     public int coolDownStartTurns = 3;
 
@@ -142,5 +160,7 @@ public class BattlePriceSettings : ScriptableObject
         normalTierMax = Mathf.Max(normalTierMax, coldTierMax);
         hotTierMax = Mathf.Max(hotTierMax, normalTierMax);
         criticalPinchHpRatio = Mathf.Min(criticalPinchHpRatio, pinchHpRatio);
+        armorBlockChanceMax = Mathf.Max(armorBlockChanceMax, armorBlockChanceMin);
+        weaponEffectiveHitChanceMax = Mathf.Max(weaponEffectiveHitChanceMax, weaponEffectiveHitChanceMin);
     }
 }

@@ -325,9 +325,16 @@ public class StreamingSalesController : MonoBehaviour
                             GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
                         Debug.Log($"[案1] Heroが敵を撃破！武器価格 {GetWeaponPriceUpOnHit():P0} 上昇");
                     }
+                    else if (HeroBattleInfluence.IsWeaponEffectiveHit(target.LastDamageTaken, target.MaxHp, PriceSettings))
+                    {
+                        // 倒せなかったが大きく削った（確率）→ 武器価格UP
+                        _model.AdjustPricesByType(ItemTypeData.ItemType.Weapon, GetWeaponPriceUpOnEffectiveHit(), inventorySlotItemRefs,
+                            GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+                        Debug.Log($"[案1] Heroの攻撃が効いた！武器価格 {GetWeaponPriceUpOnEffectiveHit():P0}");
+                    }
                     else
                     {
-                        // 敵を倒せなかった → 武器価格DOWN
+                        // 倒せず、効かなかった → 武器価格DOWN
                         _model.AdjustPricesByType(ItemTypeData.ItemType.Weapon, GetWeaponPriceDownOnNonKill(), inventorySlotItemRefs,
                             GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
                         Debug.Log($"[案1] Heroが攻撃したが倒せず！武器価格 {GetWeaponPriceDownOnNonKill():P0} 下落");
@@ -338,10 +345,7 @@ public class StreamingSalesController : MonoBehaviour
                 // --- Heroがダメージを受けた ---
                 if (target.Type == CharacterType.Hero)
                 {
-                    // ApplyDamage の戻り値が1以上（最低保証ダメージ）なので、
-                    // 防御力がattackPower以上なら実質「防いだ」と判定
-                    int rawDamage = attacker.AttackPower;
-                    if (rawDamage <= target.DefensePower)
+                    if (HeroBattleInfluence.IsArmorBlock(attacker.AttackPower, target.DefensePower, PriceSettings))
                     {
                         // 攻撃力 ≤ 防御力 → 防御成功 → 防具価格UP
                         _model.AdjustPricesByType(ItemTypeData.ItemType.Armor, GetArmorPriceUpOnBlock(), inventorySlotItemRefs,
@@ -421,7 +425,7 @@ public class StreamingSalesController : MonoBehaviour
             {
                 TryBindHeroHp();
                 if (IsHeroInPinch()) AddHighlightHeat(PriceSettings.comebackKillHeat);
-                else AddTacticsAdjustedHeat(PriceSettings.easyKillHeat);
+                else _heatModel?.AddEasyKillHeat(PriceSettings.easyKillHeat * HeroBattleInfluence.GetHeatMultiplier(_heroTactics));
             })
             .AddTo(_battleDisposables);
 
@@ -794,6 +798,7 @@ public class StreamingSalesController : MonoBehaviour
     }
 
     private float GetWeaponPriceUpOnHit() => HeroBattleInfluence.GetWeaponPriceUpOnKill(PriceSettings, _heroTactics);
+    private float GetWeaponPriceUpOnEffectiveHit() => HeroBattleInfluence.GetWeaponPriceUpOnEffectiveHit(PriceSettings, _heroTactics);
     private float GetWeaponPriceDownOnNonKill() => HeroBattleInfluence.GetWeaponPriceDownOnNonKill(PriceSettings, _heroTactics);
     private float GetArmorPriceDownOnHit() => HeroBattleInfluence.GetArmorPriceDownOnHit(PriceSettings, _heroTactics);
     private float GetArmorPriceUpOnBlock() => HeroBattleInfluence.GetArmorPriceUpOnBlock(PriceSettings, _heroTactics);

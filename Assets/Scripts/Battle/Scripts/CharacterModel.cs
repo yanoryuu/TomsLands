@@ -108,15 +108,20 @@ public class CharacterModel
         if (IsDead || damage <= 0) return 0;
         int before = CurrentHp.Value;
         CurrentHp.Value = before - damage;
+        LastDamageTaken += before - CurrentHp.Value;
         return before - CurrentHp.Value;
     }
+
+    /// <summary>直前に受けた攻撃のダメージ（ApplyDamage で上書き、同じ攻撃の追加ダメージは足す）。配信の武器の値動きに使う。</summary>
+    public int LastDamageTaken { get; private set; }
 
     public int ApplyDamage(int damage)
     {
         if (IsDead) return 0;
-        
+
         int finalDamage = Mathf.Max(1, damage - DefensePower);
         CurrentHp.Value -= finalDamage;
+        LastDamageTaken = finalDamage;
         return finalDamage;
     }
 }
