@@ -214,7 +214,8 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
         var s = _lastStatistics;
         int converted = _metaProgress.ConvertRunToVillageFunds(
-            cleared: true, profit: s.Profit, carried: s.Carried, mode: s.Mode, dueDebtCycles: s.DueDebtCycles);
+            cleared: true, profit: s.Profit, carried: s.Carried, mode: s.Mode, dueDebtCycles: s.DueDebtCycles,
+            out var breakdown);
 
         _metaProgress.RecordRunEnd(new RunRecordPlain
         {
@@ -231,7 +232,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
             endedAt = DateTime.Now.ToString("yyyy/MM/dd HH:mm"),
         });
 
-        VillageArrivalReport.Set(cleared: true, earned: s.Profit, converted: converted);
+        VillageArrivalReport.Set(cleared: true, earned: s.Profit, converted: converted, breakdown: breakdown);
         Debug.Log($"[ResultPresenter] 村資金 +{converted}G（儲け {s.Profit}G）");
     }
 

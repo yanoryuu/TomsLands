@@ -160,8 +160,14 @@ public class MetaProgressModel
     /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
     /// </summary>
     public int ConvertRunToVillageFunds(bool cleared, int profit, int carried, GameModeId mode, int dueDebtCycles)
+        => ConvertRunToVillageFunds(cleared, profit, carried, mode, dueDebtCycles, out _);
+
+    /// <summary>上と同じ。内訳（帰還演出で見せる）も返す。</summary>
+    public int ConvertRunToVillageFunds(bool cleared, int profit, int carried, GameModeId mode, int dueDebtCycles,
+        out VillageFundsBreakdown breakdown)
     {
-        int converted = CalculateVillageFunds(cleared, profit, carried, mode, dueDebtCycles);
+        breakdown = CalculateVillageFundsBreakdown(cleared, profit, carried, mode, dueDebtCycles);
+        int converted = breakdown.Total;
         if (converted > 0) AddVillageFunds(converted);
         SaveData();
         Debug.Log($"[Meta] 村資金へ: +{converted}G (cleared={cleared}, 儲け={profit}G, 持ち込み={carried}G, {mode}, 納付{dueDebtCycles}回, 合計 {VillageFunds}G)");
@@ -174,24 +180,62 @@ public class MetaProgressModel
     /// </summary>
     public static int CalculateVillageFunds(bool cleared, int profit, int carried, GameModeId mode, int dueDebtCycles,
         VillageEffects effects = null)
+        => CalculateVillageFundsBreakdown(cleared, profit, carried, mode, dueDebtCycles, effects).Total;
+
+    /// <summary>
+    /// 変換額の内訳（帰還演出・破産画面で見せる用）。Total が <see cref="CalculateVillageFunds"/> の戻り値。
+    /// </summary>
+    public static VillageFundsBreakdown CalculateVillageFundsBreakdown(bool cleared, int profit, int carried, GameModeId mode,
+        int dueDebtCycles, VillageEffects effects = null)
     {
         var settings = GameConst.Village;
         float rate = Mathf.Max(0f, settings.conversionRate) * DifficultyMultiplier(settings, mode);
         carried = Mathf.Max(0, carried);
+        var b = new VillageFundsBreakdown
+        {
+            Cleared = cleared,
+            Mode = mode,
+            Profit = profit,
+            Carried = carried,
+        };
         if (!cleared)
         {
             float bankruptRate = Mathf.Max(0f, settings.bankruptcyConversionRate);
             int fromProfit = Mathf.FloorToInt(Mathf.Max(0, profit) * rate * bankruptRate);
             // 救済: 序盤で一度も儲からずに破産しても、土台と納めた分は村に残す（予定額で数える。完走ボーナスと同じ数え方）
-            long relief = Mathf.Max(0, settings.bankruptcyBaseFunds)
-                          + (long)(DebtCalculator.GetScheduledTotal(Mathf.Max(0, dueDebtCycles)) * Mathf.Max(0f, settings.bankruptcyPaidDebtRate));
-            return (int)System.Math.Min(System.Math.Max(fromProfit, relief), int.MaxValue);
+            long scheduledPaid = DebtCalculator.GetScheduledTotal(Mathf.Max(0, dueDebtCycles));
+            float paidRate = Mathf.Max(0f, settings.bankruptcyPaidDebtRate);
+            long reliefDebt = (long)(scheduledPaid * paidRate);
+            long relief = Mathf.Max(0, settings.bankruptcyBaseFunds) + reliefDebt;
+
+            b.ReliefBase = Mathf.Max(0, settings.bankruptcyBaseFunds);
+            b.PaidDebtScheduled = scheduledPaid;
+            b.PaidDebtRate = paidRate;
+            b.ReliefDebt = (int)System.Math.Min(reliefDebt, int.MaxValue);
+            b.Relief = relief;
+            b.BankruptProfitRate = rate * bankruptRate;
+            b.BankruptFromProfit = fromProfit;
+            b.UsedProfit = fromProfit > relief;
+            b.Total = (int)System.Math.Min(System.Math.Max(fromProfit, relief), int.MaxValue);
+            return b;
         }
 
-        long total = Mathf.Max(0, carried + Mathf.Min(0, profit))
-                     + (long)(effects ?? VillageEffects.Current).ApplyClearBonus(ClearBonusBase(dueDebtCycles))
-                     + (long)Mathf.FloorToInt(Mathf.Max(0, profit) * rate);
-        return (int)System.Math.Min(total, int.MaxValue);
+        int bonusBase = ClearBonusBase(dueDebtCycles);
+        int bonusWithHall = (effects ?? VillageEffects.Current).ApplyClearBonus(bonusBase);
+        b.CarriedReturn = Mathf.Max(0, carried + Mathf.Min(0, profit));
+        b.ClearBonusBase = bonusBase;
+        b.ClearBonusFlat = Mathf.Min(Mathf.Max(0, settings.clearBaseFlat), bonusBase);
+        b.ClearBonusDebt = bonusBase - b.ClearBonusFlat;
+        b.DebtScheduled = DebtCalculator.GetScheduledTotal(dueDebtCycles);
+        b.DebtMultiplier = Mathf.Max(0f, settings.clearDebtMultiplier);
+        b.HallRate = (effects ?? VillageEffects.Current).ClearBonusRate;
+        b.HallBonus = bonusWithHall - bonusBase;
+        b.ProfitRate = rate;
+        b.ProfitFunds = Mathf.FloorToInt(Mathf.Max(0, profit) * rate);
+
+        long total = b.CarriedReturn + (long)bonusWithHall + b.ProfitFunds;
+        b.Total = (int)System.Math.Min(total, int.MaxValue);
+        return b;
     }
 
     /// <summary>

@@ -157,13 +157,11 @@ public class BattleResultView : MonoBehaviour
                 : Row("防衛報酬", Zero()),
         };
         // 勇者が負けた配信では「返金騒ぎ」の行を必ず出す（武器・防具が売れていなければ 0 G。勇者に張った分だけ引かれる）。
-        // 内訳の欄は幅 680px・42pt で右に金額が入るので、補足は「武器・防具の売上の○%」を縮めた短い形にする
         if (s.Result == BattleResult.Defeat)
         {
-            int percent = Mathf.RoundToInt(s.HeroDefeatRefundRate * 100f);
             rows.Add(s.HeroDefeatRefund > 0
-                ? Row($"<color={minusColor}>返金騒ぎ</color><size=70%>（武器・防具の{percent}%）</size>", Minus(s.HeroDefeatRefund))
-                : Row($"返金騒ぎ<size=70%>（武器・防具の{percent}%）</size>", Zero()));
+                ? Row($"<color={minusColor}>返金騒ぎ</color>", Minus(s.HeroDefeatRefund))
+                : Row("返金騒ぎ", Zero()));
         }
         // 村の広場 Lv5「勝負配信の宣言」をした配信だけ宣言の行を出す
         string declaration = DeclarationRow(s);

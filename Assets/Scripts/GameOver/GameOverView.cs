@@ -58,7 +58,7 @@ public class GameOverView : MonoBehaviour
     /// このランの振り返りを出す（所持金の推移・配信の成績・持ち込みの行方・村へ入る額）。未配線の部品は飛ばす。
     /// </summary>
     public void ShowReview(IReadOnlyList<int> moneyHistory, int heroWins, int heroLosses,
-        int streamEarnings, int carried, int villageFunds)
+        int streamEarnings, int carried, int villageFunds, VillageFundsBreakdown breakdown = null)
     {
         if (moneyChart != null && moneyHistory != null && moneyHistory.Count > 0)
         {
@@ -68,13 +68,20 @@ public class GameOverView : MonoBehaviour
         }
 
         if (reviewText == null) return;
-        string sign = streamEarnings >= 0 ? "+" : "−";
+        string sign = streamEarnings >= 0 ? "+" : "-"; // U+2212 は破産画面のフォントに無い（豆腐になる）
         var lines = new List<string>
         {
             $"配信　討伐 {heroWins}・防衛 {heroLosses}　収支 {sign}{Mathf.Abs(streamEarnings):N0}G",
         };
         if (carried > 0) lines.Add($"持ち込んだ {carried:N0}G は戻らない");
-        if (villageFunds >= 0) lines.Add($"村へ +{villageFunds:N0}G"); // 体験版は -1（村が無い）
+        if (villageFunds >= 0) // 体験版は -1（村が無い）
+        {
+            // 内訳は同じ行に小さく添える（欄は 1000x190 で行を増やすと文字が縮むため）
+            string detail = breakdown != null ? breakdown.BuildInlineText() : "";
+            lines.Add(string.IsNullOrEmpty(detail)
+                ? $"村へ +{villageFunds:N0}G"
+                : $"村へ +{villageFunds:N0}G<size=70%>（{detail}）</size>");
+        }
         reviewText.text = string.Join("\n", lines);
     }
 

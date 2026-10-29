@@ -72,14 +72,15 @@ public class VillagePresenter : IStartable, IDisposable
         RefreshAll();
 
         // ラン終了からの帰還なら収支報告を表示（初回は村チュートリアル会話のあと）
-        bool hasArrival = VillageArrivalReport.TryConsume(out bool cleared, out int earned, out int converted);
+        bool hasArrival = VillageArrivalReport.TryConsume(out bool cleared, out int earned, out int converted,
+            out VillageFundsBreakdown breakdown);
         if (tutorial != null && tutorial.ShouldPlay)
         {
-            PlayTutorialThenArrivalAsync(hasArrival, cleared, earned, converted, cts.Token).Forget();
+            PlayTutorialThenArrivalAsync(hasArrival, cleared, earned, converted, breakdown, cts.Token).Forget();
         }
         else if (hasArrival)
         {
-            PlayArrival(cleared, earned, converted);
+            PlayArrival(cleared, earned, converted, breakdown);
         }
         else
         {
@@ -92,6 +93,7 @@ public class VillagePresenter : IStartable, IDisposable
     /// 帰還報告がある場合は会話のあとに到着演出を出す。
     /// </summary>
     private async UniTaskVoid PlayTutorialThenArrivalAsync(bool hasArrival, bool cleared, int earned, int converted,
+        VillageFundsBreakdown breakdown,
         CancellationToken ct)
     {
         tutorialPlaying = true;
@@ -104,7 +106,7 @@ public class VillagePresenter : IStartable, IDisposable
                     ? async token =>
                     {
                         arrivalShown = true;
-                        await PlayArrivalAsync(cleared, earned, converted, token);
+                        await PlayArrivalAsync(cleared, earned, converted, breakdown, token);
                     }
                     : null,
                 bankrupt: hasArrival && !cleared);
@@ -122,7 +124,7 @@ public class VillagePresenter : IStartable, IDisposable
             tutorialPlaying = false;
         }
 
-        if (hasArrival && !arrivalShown) PlayArrival(cleared, earned, converted);
+        if (hasArrival && !arrivalShown) PlayArrival(cleared, earned, converted, breakdown);
         else view.ShowMessage("まずは立て看板を調べて、最初の施設を建ててみよう。");
     }
 
@@ -175,17 +177,17 @@ public class VillagePresenter : IStartable, IDisposable
     /// 帰還の到着演出（稼ぎ→村資金へコインが飛ぶ）。VillageArrivalFx が無い/素材未設定なら旧・収支ポップ。
     /// 演出中は区画の調べる・出撃・タイトルを受け付けない（Fx側でもプレイヤー入力とUIをブロック）。
     /// </summary>
-    private void PlayArrival(bool cleared, int earned, int converted)
+    private void PlayArrival(bool cleared, int earned, int converted, VillageFundsBreakdown breakdown)
     {
         var fx = view.ArrivalFx;
         if (fx == null || !fx.CanPlay || view.FundsText == null)
         {
-            view.ShowConversionPopup(cleared, earned, converted);
+            view.ShowConversionPopup(cleared, earned, converted, breakdown);
             return;
         }
 
         arrivalPlaying = true;
-        fx.Play(cleared, earned, converted, model.VillageFunds, view.FundsText, view.SetFundsDisplay, () =>
+        fx.Play(cleared, earned, converted, model.VillageFunds, view.FundsText, view.SetFundsDisplay, breakdown, () =>
         {
             arrivalPlaying = false;
             RefreshAll();
@@ -194,18 +196,19 @@ public class VillagePresenter : IStartable, IDisposable
     }
 
     /// <summary>到着演出を流して終わるまで待つ（チュートリアルの前半と後半のあいだ用）。</summary>
-    private async UniTask PlayArrivalAsync(bool cleared, int earned, int converted, CancellationToken ct)
+    private async UniTask PlayArrivalAsync(bool cleared, int earned, int converted, VillageFundsBreakdown breakdown,
+        CancellationToken ct)
     {
         var fx = view.ArrivalFx;
         if (fx == null || !fx.CanPlay || view.FundsText == null)
         {
             // 旧・収支ポップは閉じるボタンを待たない（会話中は村UIのクリックを止めているため）
-            view.ShowConversionPopup(cleared, earned, converted);
+            view.ShowConversionPopup(cleared, earned, converted, breakdown);
             return;
         }
         var done = new UniTaskCompletionSource();
         arrivalPlaying = true;
-        fx.Play(cleared, earned, converted, model.VillageFunds, view.FundsText, view.SetFundsDisplay, () =>
+        fx.Play(cleared, earned, converted, model.VillageFunds, view.FundsText, view.SetFundsDisplay, breakdown, () =>
         {
             arrivalPlaying = false;
             RefreshAll();
