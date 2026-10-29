@@ -158,6 +158,8 @@ public static class PersonaChooser
             case "shop_upgrade":
             case "smith_upgrade":
             case "broker_upgrade":
+            case "machine_upgrade":
+            case "machine_repair":
                 // 元が取れそうか（使ってよい額の 3 割以内・返済が近くて重くない）。めたんは数えてから払う
                 if (s.Plausible == true) Mul("true", 2f);
                 else if (s.Plausible == false) Mul("true", 0.4f);

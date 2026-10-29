@@ -776,6 +776,15 @@ public sealed class PersonaConsult
                 if (f.DebtDaysLeft >= 0 && f.DebtDaysLeft <= 3 && f.DebtAmount > 0) return $"返済まであと{f.DebtDaysLeft}日、{Money(f.DebtAmount)}要るのよ";
                 return f.Cost > 0 ? $"{what}に{Money(f.Cost)}は今は重いわ" : "";
             }
+            case "machine_upgrade":
+                if (mine == "true")
+                    return f.PaybackDays > 0 ? $"{f.FacilityName ?? "それ"}の強化は{f.PaybackDays}日で元が取れるわ" : $"{f.FacilityName ?? "それ"}を強化すれば新品同様よ";
+                if (f.DebtDaysLeft >= 0 && f.DebtDaysLeft <= 3 && f.DebtAmount > 0) return $"返済まであと{f.DebtDaysLeft}日、{Money(f.DebtAmount)}要るのよ";
+                return f.Cost > 0 ? $"強化に{Money(f.Cost)}は元が取れる前にランが終わるわ" : "";
+            case "machine_repair":
+                if (mine == "true")
+                    return f.PaybackDays > 0 ? $"直せば{f.PaybackDays}日で修理代が戻るわ" : "止まったままの設備は置き物よ";
+                return f.Cost > 0 ? $"修理に{Money(f.Cost)}は今は重いわ" : "";
             case "machine":
                 if (mine == "none")
                     return f.DebtDaysLeft >= 0 && f.DebtDaysLeft <= 3 && f.DebtAmount > 0 ? $"返済まであと{f.DebtDaysLeft}日よ" : "設備は置いたら最後まで外せないのと同じよ";
@@ -870,6 +879,8 @@ public sealed class PersonaConsult
         "smith_upgrade" => "developing the blacksmith",
         "broker_upgrade" => "developing the information broker",
         "machine" => "placing a machine",
+        "machine_upgrade" => "upgrading a machine",
+        "machine_repair" => "repairing a machine",
         "finance" => "the exchange",
         "finance_share" => "how much to invest",
         "hero_weapon" => "the hero's weapon",

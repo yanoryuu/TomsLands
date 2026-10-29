@@ -15,6 +15,10 @@ public struct AutoPlayShopInvestPlan
     public bool UpgradeBroker;
     /// <summary>買って置くマシンの ID（null = 置かない）。</summary>
     public string MachineId;
+    /// <summary>強化する（置いてある）マシンの ID（null = しない）。</summary>
+    public string UpgradeMachineId;
+    /// <summary>修理する（置いてある）マシンの ID（null = しない）。</summary>
+    public string RepairMachineId;
     /// <summary>取引所で売買する商品の ID（null = しない）。</summary>
     public string FinanceProductId;
     /// <summary>買う口数（正）/ 売る口数（負。ファンドだけ）。</summary>
@@ -26,8 +30,11 @@ public struct AutoPlayShopInvestPlan
     public string HeroTactics;
     public string Reason;
 
-    public bool Any => UpgradeShop || UpgradeSmith || !string.IsNullOrEmpty(MachineId) || (!string.IsNullOrEmpty(FinanceProductId) && FinanceUnits != 0)
+    public bool Any => UpgradeShop || UpgradeSmith || !string.IsNullOrEmpty(MachineId) || HasMachineCare || (!string.IsNullOrEmpty(FinanceProductId) && FinanceUnits != 0)
                        || HeroWeaponId != null || HeroArmorId != null || HeroTactics != null || UpgradeBroker;
+
+    /// <summary>設備の強化か修理がある。</summary>
+    public bool HasMachineCare => !string.IsNullOrEmpty(UpgradeMachineId) || !string.IsNullOrEmpty(RepairMachineId);
 }
 
 /// <summary>店への投資を実際に押した結果（押せなかったものは false / 0）。</summary>
@@ -37,6 +44,8 @@ public sealed class AutoPlayShopInvestResult
     public bool ShopUpgraded, SmithUpgraded, BrokerUpgraded;
     public int ShopLevelAfter, SmithLevelAfter, BrokerLevelAfter;
     public string MachinePlaced;
+    /// <summary>強化できた / 修理できたマシンの ID（できなければ null）。</summary>
+    public string MachineUpgraded, MachineRepaired;
     public string FinanceProductId;
     /// <summary>実際に動いた口数（買い = 正、売り = 負）。</summary>
     public int FinanceUnits;

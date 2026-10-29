@@ -1,3 +1,4 @@
+using UnityEngine;
 using System.Runtime.Serialization;
 using NUnit.Framework;
 
@@ -64,8 +65,23 @@ public class ClearBonusTests
     }
 
     [Test]
-    public void Bankruptcy_GetsNoClearBonus()
+    public void Bankruptcy_GetsReliefNotClearBonus()
     {
-        Assert.AreEqual(0, MetaProgressModel.CalculateVillageFunds(false, 0, 0, GameModeId.Short, 5, NoFacilities));
+        var v = GameConst.Village;
+        // 一度も儲からずに 1 回も納付せず破産: 土台だけ
+        Assert.AreEqual(v.bankruptcyBaseFunds, MetaProgressModel.CalculateVillageFunds(false, 0, 0, GameModeId.Short, 0, NoFacilities));
+        // 2 回納付してから破産: 土台 + 納付した予定額 × 率（完走ボーナスの clearBaseFlat は入らない）
+        int expected = v.bankruptcyBaseFunds + Mathf.FloorToInt(DebtCalculator.GetScheduledTotal(2) * v.bankruptcyPaidDebtRate);
+        Assert.AreEqual(expected, MetaProgressModel.CalculateVillageFunds(false, 0, 0, GameModeId.Short, 2, NoFacilities));
+        Assert.Less(expected, MetaProgressModel.ClearBonusBase(2), "救済が完走ボーナスより多いと、わざと破産する方が得になる");
+    }
+
+    [Test]
+    public void Bankruptcy_UsesProfitWhenLarger()
+    {
+        var v = GameConst.Village;
+        int bigProfit = 100_000_000;
+        int fromProfit = Mathf.FloorToInt(bigProfit * v.conversionRate * v.difficultyConversionMultipliers[0] * v.bankruptcyConversionRate);
+        Assert.AreEqual(fromProfit, MetaProgressModel.CalculateVillageFunds(false, bigProfit, 0, GameModeId.Short, 1, NoFacilities));
     }
 }

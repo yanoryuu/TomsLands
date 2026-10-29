@@ -17,7 +17,7 @@ MonoBehaviour:
   description: "\u9078\u3093\u3060\u6B66\u5177\u3092\u6BCE\u671D\u30B3\u30C4\u30B3\u30C4\u935B\u3048\u4E0A\u3052\u308B\u9B54\u5C0E\u7089\u3002\u9AD8\u3044\u6B66\u5177\u307B\u3069\u6642\u9593\u304C\u304B\u304B\u308B\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
-  cost: 6000
+  cost: 7000
   placementType: 0
   requiredShopLevel: 2
   effectType: 1
@@ -25,6 +25,27 @@ MonoBehaviour:
   dailyItemId: AX1
   dailyItemCount: 2
   dailyItemSelectable: 1
-  dailyProductionBudget: 1000
+  dailyProductionBudget: 1400
   revenueMultiplierBonus: 0.05
   demandFloorBonus: 0.05
+  levels:
+  - cost: 7000
+    effectValue: 1400
+    safeDays: 4
+    breakChanceStep: 0.15
+  - cost: 4900
+    effectValue: 2800
+    safeDays: 5
+    breakChanceStep: 0.12
+  - cost: 5600
+    effectValue: 4400
+    safeDays: 6
+    breakChanceStep: 0.1
+  - cost: 6300
+    effectValue: 6200
+    safeDays: 7
+    breakChanceStep: 0.08
+  - cost: 7000
+    effectValue: 8200
+    safeDays: 8
+    breakChanceStep: 0.06

@@ -73,7 +73,11 @@ public static class PersonaStyle
             case "shop_upgrade":
             case "smith_upgrade":
             case "broker_upgrade":
+            case "machine_upgrade":
                 return key == "true" ? new Attr(0.6f, 0.4f, 0f) : default;
+            case "machine_repair":
+                // 直さないのは手抜きの賭け（壊れたまま次の朝を迎える）
+                return key == "false" ? new Attr(0.4f, 0.3f, 0f) : default;
             case "machine":
                 return key == "none" ? default
                     : PersonaRequests.FlashyMachines.Contains(key) ? new Attr(1f, 0.6f, 0.5f) : new Attr(0.5f, 0.4f, 0f);

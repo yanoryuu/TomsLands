@@ -1,6 +1,7 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 // =====================================================================
 // 人格プレイで Jev 互換モデルへ送る state と質問を組み立てる（純粋関数。ゲームのモデルには触らない）。
@@ -100,12 +101,24 @@ public sealed class PersonaMachineView
 {
     public string Id;
     public string Name;
+    public string Type;            // ShopMachineEffectType の名前
     public int Cost;
     public string Effect;          // ゲームの表記（毎朝 +800G など）
     public string EffectEn;
     public int DailyGold;          // 毎朝のお金（お金の設備だけ。それ以外は 0）
     public bool Flashy;            // 目立つ（ずんだもんが飛びつく）
-    public int Placed;             // 同じ機種の台数
+    public int Placed;             // 置いているか（同じ機種は 1 台まで。0 / 1）
+    // --- 置いてあるマシンのレベル・壊れやすさ（強化・修理の質問用。2026-10-29） ---
+    public int Level, MaxLevel;
+    public string NextEffect, NextEffectEn;   // 次のレベルの効果（最大なら null）
+    public int UpgradeCost = -1;   // 割引込み。-1 = 最大
+    public float DailyValue;       // 今の 1 日の価値（G の目安。AutoPlayMachineRules.DailyValue）
+    public float AddedDailyValue;  // 強化で増える 1 日の価値
+    public bool Broken;
+    public bool Repairable;        // 故障中か、明朝から壊れる恐れがある
+    public int RepairCost;
+    public int SafeLeft = int.MaxValue;   // あと何回の朝は壊れないか（壊れないマシンは int.MaxValue）
+    public int NextBreakPct;       // 明朝の故障率 %
 }
 
 /// <summary>取引所の商品 1 つ（state・質問用。情報屋Lvで解禁済みのものだけ）。</summary>
@@ -145,6 +158,11 @@ public sealed class PersonaShopView
     public int SlotsUsed, SlotsMax;
     public readonly List<PersonaMachineView> Machines = new();     // いま買って置けるもの
     public readonly List<string> PlacedNames = new();
+    public readonly List<PersonaMachineView> PlacedMachines = new();   // 置いてあるもの（強化・修理）
+    /// <summary>強化を聞くマシン（元が取れる日数が一番短いもの。無ければ null）と、修理を聞くマシン（壊れたお金・製造の設備）。</summary>
+    public string UpgradeTargetId, RepairTargetId;
+    /// <summary>このランで残っている朝の数（日送りの回数）。</summary>
+    public int RemainingMornings;
     // 情報屋・取引所
     public bool BrokerAvailable;   // 店の「情報屋」ボタンが押せる
     public int BrokerLevel, BrokerMaxLevel, BrokerUpgradeCost = -1, BrokerUnlocks;
@@ -377,7 +395,9 @@ public static class PersonaRequests
     {
         var shop = state.TryGetValue("shop", out var o) && o is Dictionary<string, object> d ? d : new Dictionary<string, object>();
         shop["machineSlots"] = $"{v.SlotsUsed}/{v.SlotsMax}";
-        if (v.PlacedNames.Count > 0) shop["machines"] = v.PlacedNames;
+        if (v.PlacedMachines.Count > 0)
+            shop["machines"] = v.PlacedMachines.Select(m => m.Broken ? $"{m.Name} Lv{m.Level} (broken)" : $"{m.Name} Lv{m.Level}").ToList();
+        else if (v.PlacedNames.Count > 0) shop["machines"] = v.PlacedNames;
         shop["infoBrokerLevel"] = v.BrokerLevel;
         state["shop"] = shop;
         if (!string.IsNullOrEmpty(v.HeroWeaponId) || !string.IsNullOrEmpty(v.HeroArmorId))
@@ -448,15 +468,33 @@ public static class PersonaRequests
         if (v.ShopAvailable && v.Machines.Count > 0 && v.SlotsUsed < v.SlotsMax)
         {
             var opts = new List<KeyValuePair<string, string>> { new("none", "Place no machine today.") };
-            foreach (var m in v.Machines.Where(m => m.Cost <= s.Cash).OrderBy(m => m.Cost))
+            foreach (var m in v.Machines.Where(m => m.Placed == 0 && m.Cost <= s.Cash).OrderBy(m => m.Cost))
                 opts.Add(new(m.Id, $"{m.Name}: {m.EffectEn}, costs {m.Cost}G" +
-                                   (m.DailyGold > 0 ? $" (pays back in about {(m.Cost + m.DailyGold - 1) / m.DailyGold} days)" : "") +
-                                   (m.Placed > 0 ? $", you already have {m.Placed}" : "")));
+                                   (m.DailyGold > 0 ? $" (pays back in about {(m.Cost + m.DailyGold - 1) / m.DailyGold} days)" : "")));
             if (opts.Count >= 2)
                 req.Questions["machine"] = PersonaJevQuestion.Choice(
-                    $"Should you buy and place a machine in the shop ({v.SlotsUsed}/{v.SlotsMax} slots used)? Machines work every day until the end of this run; " +
-                    "removing one refunds half its price.", opts);
+                    $"Should you buy and place a machine in the shop ({v.SlotsUsed}/{v.SlotsMax} slots used)? You can own one of each machine. " +
+                    "Machines work every morning until the end of this run, can be upgraded later, and money and maker machines may break after a few days; " +
+                    "removing one refunds half of what you paid.", opts);
         }
+
+        // 設備の強化（置いてあるマシン 1 台。元が取れる日数が一番短いもの）
+        var up = v.PlacedMachines.FirstOrDefault(m => m.Id == v.UpgradeTargetId);
+        if (v.ShopAvailable && up != null && up.UpgradeCost > 0 && up.UpgradeCost <= s.Cash)
+            req.Questions["machine_upgrade"] = PersonaJevQuestion.Noul(
+                $"Should you pay {up.UpgradeCost}G to upgrade {up.Name} from Lv{up.Level} to Lv{up.Level + 1}? " +
+                $"Its effect goes from {up.EffectEn} to {up.NextEffectEn}" +
+                (up.AddedDailyValue > 0 ? $" (about +{Mathf.RoundToInt(up.AddedDailyValue)}G a day, pays back in about {Mathf.CeilToInt(up.UpgradeCost / up.AddedDailyValue)} days)" : "") +
+                $". {v.RemainingMornings} mornings are left in this run. Upgrading also resets its wear, so it will not break for a while.",
+                "Upgrade it now.", "Not now; keep the money.");
+
+        // 設備の修理（壊れたお金・製造の設備。直すまで何も産まない）
+        var rep = v.PlacedMachines.FirstOrDefault(m => m.Id == v.RepairTargetId);
+        if (v.ShopAvailable && rep != null && rep.RepairCost <= s.Cash)
+            req.Questions["machine_repair"] = PersonaJevQuestion.Noul(
+                $"{rep.Name} (Lv{rep.Level}) is broken and makes nothing until repaired. Should you pay {rep.RepairCost}G to repair it? " +
+                $"Working, it is worth about {Mathf.RoundToInt(rep.DailyValue)}G a day; {v.RemainingMornings} mornings are left in this run.",
+                "Repair it now.", "Leave it broken.");
 
         // 情報屋の開発（取引所の商品が増え、債券を持てる口数が増える）
         if (v.BrokerAvailable && v.BrokerUpgradeCost > 0 && v.BrokerLevel < v.BrokerMaxLevel && v.BrokerUpgradeCost <= s.Cash)

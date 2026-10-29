@@ -14,15 +14,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   machineId: machine_fridge
   machineName: "\u9BAE\u5EA6\u4FDD\u6301\u30B1\u30FC\u30B9"
-  description: "\u5546\u54C1\u306E\u9B45\u529B\u3092\u4FDD\u3064\u9B54\u6CD5\u306E\u30B1\u30FC\u30B9\u3002\u5168\u5546\u54C1\u306E\u9700\u8981\u306E\u5E95+8%\u3002"
+  description: "\u5546\u54C1\u306E\u9B45\u529B\u3092\u4FDD\u3064\u9B54\u6CD5\u306E\u30B1\u30FC\u30B9\u3002\u4E26\u3079\u3066\u3044\u306A\u3044\u54C1\u306E\u4EBA\u6C17\u304C\u843D\u3061\u306B\u304F\u304F\u306A\u308B\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
   cost: 5000
   placementType: 0
   requiredShopLevel: 1
-  effectType: 3
+  effectType: 4
   dailyMoney: 800
   dailyItemId: 
   dailyItemCount: 1
+  dailyItemSelectable: 0
+  dailyProductionBudget: 1000
   revenueMultiplierBonus: 0.05
   demandFloorBonus: 0.08
+  levels:
+  - cost: 5000
+    effectValue: 0.3
+    safeDays: 0
+    breakChanceStep: 0
+  - cost: 3000
+    effectValue: 0.4
+    safeDays: 0
+    breakChanceStep: 0
+  - cost: 3500
+    effectValue: 0.5
+    safeDays: 0
+    breakChanceStep: 0
+  - cost: 4000
+    effectValue: 0.6
+    safeDays: 0
+    breakChanceStep: 0
+  - cost: 4500
+    effectValue: 0.7
+    safeDays: 0
+    breakChanceStep: 0

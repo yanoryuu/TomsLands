@@ -192,6 +192,8 @@ public static class PersonaFeatures
             case "smith_upgrade": return choice == "true" ? "develop the blacksmith" : "skip developing the blacksmith";
             case "broker_upgrade": return choice == "true" ? "develop the information broker" : "skip developing the information broker";
             case "machine": return choice == "none" ? "place no machine" : $"place a {choice} machine";
+            case "machine_upgrade": return choice == "true" ? "upgrade a machine" : "skip upgrading a machine";
+            case "machine_repair": return choice == "true" ? "repair a broken machine" : "leave a broken machine broken";
             case "finance":
                 return choice switch
                 {

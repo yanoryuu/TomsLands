@@ -39,8 +39,8 @@ public class GameOverPresenter : IDisposable, IStartable
                 History = history,
                 PeakProfit = peak.Profit,
                 Carried = peak.Carried,
-                // 破産には完走ボーナスが無いので、納付の回数は使わない（0）
-                VillageFunds = MetaProgressModel.CalculateVillageFunds(false, peak.Profit, peak.Carried, tomsModel.GameMode, 0),
+                // 破産の救済は「土台 + 納付を済ませた分」なので、済ませた回数を渡す
+                VillageFunds = MetaProgressModel.CalculateVillageFunds(false, peak.Profit, peak.Carried, tomsModel.GameMode, tomsModel.DebtCycle.Value),
             };
             review = r;
             return r;
@@ -128,7 +128,7 @@ public class GameOverPresenter : IDisposable, IStartable
             metaAwarded = true;
             var review = Review;
             int converted = metaProgress.ConvertRunToVillageFunds(
-                cleared: false, profit: review.PeakProfit, carried: review.Carried, mode: tomsModel.GameMode, dueDebtCycles: 0);
+                cleared: false, profit: review.PeakProfit, carried: review.Carried, mode: tomsModel.GameMode, dueDebtCycles: tomsModel.DebtCycle.Value);
 
             metaProgress.RecordRunEnd(new RunRecordPlain
             {

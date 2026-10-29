@@ -491,11 +491,15 @@ public class ItemModel
     /// </summary>
     /// <param name="turnIndex">現在のターン番号。ABM がターン専用の乱数を作るのに使う（セーブ/ロード後も同じ系列になる）。</param>
     /// <param name="flowSeed">ランのシード。ABM のトレーダー編成に使う。0 なら設定または乱数にフォールバック。</param>
+    /// <param name="notDisplayDropRate">並べていない品の需要の落ち込みに掛ける率（冷蔵ケース。ShopMachineModel.NotDisplayedDemandDropRate）。</param>
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
         float machineDemandFloorBonus = 0f, int turnIndex = 0, int flowSeed = 0,
-        NewsEffectResolver news = null, ItemTypeData.ItemAttribute? anticipationAttribute = null)
+        NewsEffectResolver news = null, ItemTypeData.ItemAttribute? anticipationAttribute = null,
+        float notDisplayDropRate = 1f)
     {
         if (settings == null) return;
+        // 冷蔵ケース（店の設備）: 並べていない品の需要の落ち込みに掛ける率（1 で従来挙動と完全一致）
+        float notDisplayDrop = settings.notDisplayDemandDown * Mathf.Clamp01(notDisplayDropRate);
 
         // ------------------------------------------------
         // Step 0: 広告ステータスの正規化（status==null なら全部 0 → 中性化）
@@ -590,9 +594,9 @@ public class ItemModel
             float convergenceDelta = (naturalDemand - runtime.Demand.Value) * settings.trendConvergenceRate;
             float displayDelta = displaying
                 ? settings.displayDemandUp * spreadFactor
-                : -settings.notDisplayDemandDown * spreadFactor;
+                : -notDisplayDrop * spreadFactor;
 
-            // マシン設置（冷蔵ケース等）の需要下限ボーナスは加算方式（0 で従来挙動と完全一致）
+            // 需要下限ボーナス（レリック DemandFloorAdd・旧マシン効果）は加算方式（0 で従来挙動と完全一致）
             float dynamicDemandFloor = Mathf.Min(
                 settings.demandFloor + demandBias + machineDemandFloorBonus,
                 settings.demandCeiling);

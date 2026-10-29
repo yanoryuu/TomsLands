@@ -46,6 +46,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     // ---- 店への投資（rules 4.2。その日の判断で決め、AutoPlayController が実画面を押す） ----
     private bool _planShopUpgrade, _planSmithUpgrade, _planBrokerUpgrade;
     private string _planMachine, _planFinance, _planWeapon, _planArmor, _planTactics;
+    /// <summary>強化・修理するマシンの ID（null = しない）。</summary>
+    private string _planMachineUpgrade, _planMachineRepair;
     private float _planFinanceShare;
     private PersonaShopView _dayShop;
     private readonly Dictionary<string, PersonaDecisionRecord> _shopRecs = new();
@@ -53,7 +55,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     /// 店への投資の質問。「たいていは見送る」のが自然な質問なので、自由な質問の固まり対策（エントロピーの下限・安全弁）には入れない
     /// （入れると毎日半分の確率で改装・購入してしまう）。代わりに kev の確率に「ときどき試す」の下限を足す（TryFloor）。
     /// </summary>
-    public static readonly HashSet<string> ShopQuestions = new() { "shop_upgrade", "smith_upgrade", "broker_upgrade", "machine", "finance", "finance_share" };
+    public static readonly HashSet<string> ShopQuestions = new() { "shop_upgrade", "smith_upgrade", "broker_upgrade", "machine", "machine_upgrade", "machine_repair", "finance", "finance_share" };
     /// <summary>「ときどき試す」: 真偽の質問は true の確率をこれより下げない、選択肢の質問は一様分布をこの割合だけ混ぜる。</summary>
     public const float TryFloorNoul = 0.12f, TryMixChoice = 0.15f;
 
@@ -362,6 +364,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         _dayChoiceSummary = "";
         _planShopUpgrade = _planSmithUpgrade = _planBrokerUpgrade = false;
         _planMachine = _planFinance = _planWeapon = _planArmor = _planTactics = null;
+        _planMachineUpgrade = _planMachineRepair = null;
         _planFinanceShare = 0f;
         _shopRecs.Clear();
     }
@@ -921,13 +924,41 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 pick != null ? PersonaConsult.Money(pick.Cost) : null, _rng, _memes, _mood.Label);
             var facts = Facts(pick?.Name, pick?.Cost ?? -1, pick != null && pick.DailyGold > 0 ? (pick.Cost + pick.DailyGold - 1) / pick.DailyGold : -1);
             string key = Consult("machine", mach, own, line, adv, sit, facts, "day", day, lat, out var bind);
-            _planMachine = key != "none" && v.Machines.Any(m => m.Id == key) ? key : null;
+            _planMachine = key != "none" && v.Machines.Any(m => m.Id == key && m.Placed == 0) ? key : null;   // 同じ設備は 1 台まで
             var rec = Decide("machine", _planMachine != null ? MachineKind(key) : "none", PersonaFeatures.Day, PersonaFeatures.HorizonRunEnd, f, _dayWorth);
             Bind(rec, bind, PersonaFeatures.HorizonRunEnd);
             if (rec != null) _shopRecs["machine"] = rec;
             Log(day, resp, "machine", key, mach, line, own, rec, _dayRecalled, bind);
             summary.Add("machine=" + key);
         }
+
+        // ---- 設備の強化・修理（ランの終わりまでの資産で学ぶ。元が取れそうか = AutoPlayMachineRules） ----
+        bool MachineCare(string q, PersonaMachineView m, int cost, bool plausible)
+        {
+            if (m == null || !a.TryGetValue(q, out var ans) || cost < 0) return false;
+            var sit = Sit(plausible);
+            var own = PickQuestion(q, ans, sit);
+            string line = PersonaLines.Pick(_p.Id, own.Key == "true" ? q + "_yes" : q + "_no", BandOf(ans), m.Name, PersonaConsult.Money(cost),
+                _rng, _memes, _mood.Label);
+            int payback = q == "machine_upgrade"
+                ? (m.AddedDailyValue > 0 ? Mathf.CeilToInt(cost / m.AddedDailyValue) : -1)
+                : (m.DailyValue > 0 ? Mathf.CeilToInt(cost / m.DailyValue) : -1);
+            string key = Consult(q, ans, own, line, adv, sit, Facts(m.Name, cost, payback), "day", day, lat, out var bind);
+            var rec = Decide(q, key, PersonaFeatures.Day, PersonaFeatures.HorizonRunEnd, f, _dayWorth);
+            Bind(rec, bind, PersonaFeatures.HorizonRunEnd);
+            if (rec != null) _shopRecs[q] = rec;
+            Log(day, resp, q, key, ans, line, own, rec, _dayRecalled, bind);
+            summary.Add(q + "=" + (key == "true" ? m.Id : "no"));
+            return key == "true";
+        }
+        var repairTarget = v.PlacedMachines.FirstOrDefault(m => m.Id == v.RepairTargetId);
+        if (repairTarget != null && MachineCare("machine_repair", repairTarget, repairTarget.RepairCost,
+                !tight && MachineRepairPays(repairTarget, v.RemainingMornings)))
+            _planMachineRepair = repairTarget.Id;
+        var upgradeTarget = v.PlacedMachines.FirstOrDefault(m => m.Id == v.UpgradeTargetId);
+        if (upgradeTarget != null && MachineCare("machine_upgrade", upgradeTarget, upgradeTarget.UpgradeCost,
+                !tight && upgradeTarget.UpgradeCost <= room && MachineUpgradePays(upgradeTarget, v.RemainingMornings)))
+            _planMachineUpgrade = upgradeTarget.Id;
 
         // ---- 取引所（債券・投資信託）と額 ----
         if (a.TryGetValue("finance", out var fin) && fin?.Probabilities != null)
@@ -983,6 +1014,15 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (s.DebtDaysLeft >= 0 && s.DebtDaysLeft <= 3) keep = Mathf.Max(keep, s.DebtAmount + _p.CashFloor);
         return keep;
     }
+
+    /// <summary>強化が元を取れそうか（強化費 ÷ 増える 1 日の価値 ≤ 残りの朝 ÷ 2）。</summary>
+    private static bool MachineUpgradePays(PersonaMachineView m, int remainingMornings) =>
+        m != null && AutoPlayMachineRules.ShouldUpgrade(m.UpgradeCost, m.AddedDailyValue, remainingMornings);
+
+    /// <summary>修理が元を取れそうか（壊れたお金・製造の設備で、修理費 ÷ 1 日の価値 ≤ 残りの朝 ÷ 2）。</summary>
+    private static bool MachineRepairPays(PersonaMachineView m, int remainingMornings) =>
+        m != null && m.Broken && Enum.TryParse<ShopMachineEffectType>(m.Type, out var type)
+        && AutoPlayMachineRules.ShouldRepair(type, m.RepairCost, m.DailyValue, remainingMornings);
 
     private static string MachineKind(string id)
     {
@@ -1050,6 +1090,16 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             var m = v.Machines.FirstOrDefault(x => x.Id == _planMachine);
             if (m != null && Afford(m.Cost, m.Name)) plan.MachineId = m.Id;
         }
+        if (_planMachineRepair != null)
+        {
+            var m = v.PlacedMachines.FirstOrDefault(x => x.Id == _planMachineRepair);
+            if (m != null && Afford(Mathf.Max(1, m.RepairCost), m.Name + "の修理")) plan.RepairMachineId = m.Id;
+        }
+        if (_planMachineUpgrade != null)
+        {
+            var m = v.PlacedMachines.FirstOrDefault(x => x.Id == _planMachineUpgrade);
+            if (m != null && Afford(m.UpgradeCost, m.Name + "の強化")) plan.UpgradeMachineId = m.Id;
+        }
         if (_planBrokerUpgrade) plan.UpgradeBroker = Afford(v.BrokerUpgradeCost, "情報屋の開発");
         if (_planFinance != null)
         {
@@ -1094,6 +1144,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (plan.UpgradeShop) what.Add("店の改装");
         if (plan.UpgradeSmith) what.Add("鍛冶屋の開発");
         if (plan.MachineId != null) what.Add("設備 " + plan.MachineId);
+        if (plan.RepairMachineId != null) what.Add("修理 " + plan.RepairMachineId);
+        if (plan.UpgradeMachineId != null) what.Add("強化 " + plan.UpgradeMachineId);
         if (plan.UpgradeBroker) what.Add("情報屋の開発");
         if (plan.FinanceProductId != null) what.Add($"{plan.FinanceProductId} {(plan.FinanceUnits > 0 ? "買い" : "売り")} {Math.Abs(plan.FinanceUnits)} 口");
         if (what.Count > 0 || reasons.Count > 0)
@@ -1119,6 +1171,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (_planSmithUpgrade) Actual("smith_upgrade", r.SmithUpgraded, "true", "false");
         if (_planBrokerUpgrade) Actual("broker_upgrade", r.BrokerUpgraded, "true", "false");
         if (_planMachine != null) Actual("machine", r.MachinePlaced != null, MachineKind(_planMachine), "none");
+        if (_planMachineUpgrade != null) Actual("machine_upgrade", r.MachineUpgraded != null, "true", "false");
+        if (_planMachineRepair != null) Actual("machine_repair", r.MachineRepaired != null, "true", "false");
         if (_planFinance != null)
         {
             bool moved = r.FinanceUnits != 0;
@@ -1138,6 +1192,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (r.SmithUpgraded) done.Add($"blacksmith Lv{r.SmithLevelAfter}");
         if (r.BrokerUpgraded) done.Add($"broker Lv{r.BrokerLevelAfter}");
         if (r.MachinePlaced != null) done.Add($"machine {r.MachinePlaced}");
+        if (r.MachineRepaired != null) done.Add($"repaired {r.MachineRepaired}");
+        if (r.MachineUpgraded != null) done.Add($"upgraded {r.MachineUpgraded}");
         if (r.FinanceUnits != 0) done.Add($"{r.FinanceProductId} {(r.FinanceUnits > 0 ? "+" : "")}{r.FinanceUnits} units");
         _log?.Write(new PersonaLogEntry
         {
@@ -1219,17 +1275,51 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             if (machines != null)
             {
                 v.SlotsUsed = machines.PlacedCount;
+                v.RemainingMornings = AutoPlayUi.Resolve<GameFlowManager>()?.GetRemainingMornings() ?? 0;
                 foreach (var id in machines.PlacedMachineIds) v.PlacedNames.Add(machines.GetMachine(id)?.machineName ?? id);
                 foreach (var m in machines.AllMachines)
                 {
-                    if (m == null || m.requiredShopLevel > v.ShopLevel) continue;
-                    v.Machines.Add(new PersonaMachineView
+                    if (m == null) continue;
+                    var placed = machines.PlacementOf(m.machineId);
+                    if (placed == null && m.requiredShopLevel > v.ShopLevel) continue;
+                    int lv = placed?.Level ?? 1;
+                    var mv = new PersonaMachineView
                     {
-                        Id = m.machineId, Name = m.machineName, Cost = machines.GetPurchaseCost(m), Effect = m.EffectSummary,
-                        EffectEn = MachineEffectEn(m), DailyGold = m.effectType == ShopMachineEffectType.DailyMoney ? m.dailyMoney : 0,
-                        Flashy = PersonaRequests.FlashyMachines.Contains(m.machineId), Placed = machines.CountOf(m.machineId),
-                    });
+                        Id = m.machineId, Name = m.machineName, Type = m.effectType.ToString(), Cost = machines.GetPurchaseCost(m),
+                        Effect = m.EffectSummaryAt(lv), EffectEn = MachineEffectEn(m, lv),
+                        DailyGold = m.effectType == ShopMachineEffectType.DailyMoney ? m.DailyMoneyAt(lv) : 0,
+                        Flashy = PersonaRequests.FlashyMachines.Contains(m.machineId), Placed = placed != null ? 1 : 0,
+                        Level = placed?.Level ?? 0, MaxLevel = m.MaxLevel,
+                        DailyValue = AutoPlayMachineRules.DailyValue(m.effectType, m.EffectValueAt(lv)),
+                    };
+                    if (placed != null)
+                    {
+                        mv.UpgradeCost = machines.GetUpgradeCost(placed);
+                        if (mv.UpgradeCost >= 0)
+                        {
+                            mv.NextEffect = m.EffectSummaryAt(lv + 1);
+                            mv.NextEffectEn = MachineEffectEn(m, lv + 1);
+                            mv.AddedDailyValue = AutoPlayMachineRules.DailyValue(m.effectType, m.EffectValueAt(lv + 1)) - mv.DailyValue;
+                        }
+                        mv.Broken = placed.Broken;
+                        mv.Repairable = machines.CanRepair(placed);
+                        mv.RepairCost = machines.GetRepairCost(placed);
+                        mv.SafeLeft = machines.SafeMorningsLeft(placed);
+                        mv.NextBreakPct = Mathf.RoundToInt(machines.NextBreakChance(placed) * 100f);
+                        v.PlacedMachines.Add(mv);
+                    }
+                    v.Machines.Add(mv);
                 }
+                // 強化を聞くのは元が取れる日数が一番短いもの（価値が測れない冷蔵ケースは最後）、
+                // 修理を聞くのは 1 日の価値が一番大きい壊れたお金・製造の設備
+                v.UpgradeTargetId = v.PlacedMachines
+                    .Where(x => x.UpgradeCost > 0)
+                    .OrderBy(x => x.AddedDailyValue > 0 ? x.UpgradeCost / x.AddedDailyValue : float.MaxValue)
+                    .FirstOrDefault()?.Id;
+                v.RepairTargetId = v.PlacedMachines
+                    .Where(x => x.Broken && (x.Type == nameof(ShopMachineEffectType.DailyMoney) || x.Type == nameof(ShopMachineEffectType.DailyItem)))
+                    .OrderByDescending(x => x.DailyValue)
+                    .FirstOrDefault()?.Id;
             }
 
             // 鍛冶屋の開発
@@ -1289,14 +1379,16 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         return v;
     }
 
-    private static string MachineEffectEn(ShopMachineData m) => m.effectType switch
+    private static string MachineEffectEn(ShopMachineData m, int level = 1) => m.effectType switch
     {
-        ShopMachineEffectType.DailyMoney => $"+{m.dailyMoney}G every morning",
+        ShopMachineEffectType.DailyMoney => $"+{m.DailyMoneyAt(level)}G every morning",
         ShopMachineEffectType.DailyItem => m.dailyItemSelectable
-            ? $"makes goods worth about {m.dailyProductionBudget}G every morning"
-            : $"makes {m.dailyItemCount} goods every morning",
-        ShopMachineEffectType.RevenueMultiplier => $"shop sales +{Mathf.RoundToInt(m.revenueMultiplierBonus * 100f)}%",
-        _ => $"raises the demand floor of all goods by {Mathf.RoundToInt(m.demandFloorBonus * 100f)}%",
+            ? $"makes goods worth about {m.ProductionBudgetAt(level)}G every morning"
+            : $"makes {m.ItemCountAt(level)} goods every morning",
+        ShopMachineEffectType.RevenueMultiplier => $"shop sales +{Mathf.RoundToInt(m.EffectValueAt(level) * 100f)}%",
+        ShopMachineEffectType.UndisplayedDemandKeep =>
+            $"goods you do not display lose {Mathf.RoundToInt(Mathf.Clamp01(m.EffectValueAt(level)) * 100f)}% less demand each morning",
+        _ => $"raises the demand floor of all goods by {Mathf.RoundToInt(m.EffectValueAt(level) * 100f)}%",
     };
 
     /// <summary>取引所に入れているお金の今の評価額（ファンド = 今の基準価額、債券 = 元本）。資産（学習の結果）に足す。</summary>
@@ -2390,6 +2482,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             case "shop_upgrade":
             case "smith_upgrade":
             case "broker_upgrade":
+            case "machine_upgrade":
+            case "machine_repair":
             {
                 // ときどき試す: kev がほぼ 0 をつけても true の確率を TryFloorNoul より下げない（「絶対しない」を作らない）
                 var probs = NoulProbs(a);
@@ -2540,6 +2634,10 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 return key == "true" ? "情報屋を開発する方" : "開発しない方";
             case "machine":
                 return key == "none" ? "置かない方" : _dayShop?.Machines.FirstOrDefault(m => m.Id == key)?.Name ?? key;
+            case "machine_upgrade":
+                return key == "true" ? "強化する方" : "強化しない方";
+            case "machine_repair":
+                return key == "true" ? "修理する方" : "直さない方";
             case "finance":
                 if (key == "none") return "何もしない方";
                 return key.StartsWith("sell_", StringComparison.Ordinal) ? FinanceNameJa(_dayShop, key) + "を売る方" : FinanceNameJa(_dayShop, key);

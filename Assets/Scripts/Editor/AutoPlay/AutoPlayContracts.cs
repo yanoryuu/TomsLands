@@ -37,6 +37,10 @@ public interface IPlayerActions
     AutoPlayActionResult BuyAdvertisement(string advertisementName);
     /// <summary>マシンを買って設置する（ShopMachinePresenter → ShopMachineModel.TryPurchaseAndPlace と同等）。</summary>
     AutoPlayActionResult PlaceMachine(string machineId);
+    /// <summary>置いてあるマシンを強化する（ShopMachinePresenter → ShopMachineModel.TryUpgrade と同等）。</summary>
+    AutoPlayActionResult UpgradeMachine(string machineId);
+    /// <summary>置いてあるマシンを修理する（故障中か明朝から壊れる恐れがあるときだけ。ShopMachineModel.TryRepair と同等）。</summary>
+    AutoPlayActionResult RepairMachine(string machineId);
     /// <summary>債券を買う（ExchangePanelController → PortfolioModel.BuyBond と同等）。</summary>
     AutoPlayActionResult BuyBond(string productId, int units);
 
@@ -225,7 +229,21 @@ public sealed class AutoPlayMachineView
     public int RequiredShopLevel;
     public int DailyMoney;
     public float RevenueBonus;
-    public bool Purchasable;  // 店レベル・枠・所持金を満たす
+    public bool Purchasable;  // 店レベル・枠・所持金を満たす（置いてあれば false。同じマシンは 1 台まで）
+    // --- レベル・壊れやすさ（2026-10-29） ---
+    public bool Placed;
+    public int Level;             // 置いていなければ 0
+    public int MaxLevel;
+    /// <summary>今のレベルの効果の値（置いていなければ Lv1。DailyMoney なら G、製造機なら製造の進み G、客寄せなら加算倍率）。</summary>
+    public float EffectValue;
+    /// <summary>次のレベルの効果の値（最大なら今と同じ）。</summary>
+    public float NextEffectValue;
+    public int UpgradeCost = -1;  // 割引後。-1 = 最大 / 置いていない
+    public bool Broken;
+    public bool Repairable;       // 故障中か、明朝から壊れる恐れがある
+    public int RepairCost;
+    public int SafeMorningsLeft;  // 壊れないマシンは int.MaxValue
+    public float NextBreakChance;
 }
 
 public sealed class AutoPlayBondView
@@ -334,6 +352,10 @@ public sealed class AutoPlayDayPlan
     public List<string> Advertisements = new();
     /// <summary>買って設置するマシン（上から順。枠・店レベル・資金が足りなければ飛ばす）。</summary>
     public List<string> PlaceMachines = new();
+    /// <summary>強化するマシン（上から順。払えなければ飛ばす）。</summary>
+    public List<string> UpgradeMachines = new();
+    /// <summary>修理するマシン（上から順）。</summary>
+    public List<string> RepairMachines = new();
     /// <summary>買う債券（銘柄・口数。上から順、払える口数に切り詰める）。</summary>
     public List<AutoPlayStreamItem> Bonds = new();
     /// <summary>この日の設備投資を何回まで続けるか（Upgrade を最大まで重ねる用）。</summary>

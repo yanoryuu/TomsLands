@@ -75,6 +75,9 @@ public class GameConstData
     // --- 配信の同時接続数（コメント量の入力。表示のみでゲーム性には影響しない） ---
     public StreamingAudienceData streamingAudience = new StreamingAudienceData();
 
+    // --- 店の設備（マシン）の修理など。配信は data シートの「machine.」付きのキー ---
+    public MachineSettingsData machine = new MachineSettingsData();
+
     /// <summary>
     /// 配列まで含めた深いコピーを返す（ベイク済みアセットを実行時に汚染しないため）。
     /// </summary>
@@ -105,6 +108,9 @@ public class GameConstData
         clone.streamingAudience = streamingAudience != null
             ? streamingAudience.Clone()
             : new StreamingAudienceData();
+        clone.machine = machine != null
+            ? machine.Clone()
+            : new MachineSettingsData();
         return clone;
     }
 }
@@ -186,6 +192,18 @@ public class StreamingAudienceData
     public StreamingAudienceData Clone() => (StreamingAudienceData)MemberwiseClone();
 }
 
+/// <summary>
+/// 店の設備（マシン）の設定。レベルごとの費用・効果・壊れやすさは balance.json の machineLevels（シート machineLevels）。
+/// </summary>
+[Serializable]
+public class MachineSettingsData
+{
+    /// <summary>修理費の率。修理費 = この率 × 今のレベルの行の費用（Lv1 = 購入費）。村の職人組合の割引も掛かる。</summary>
+    public float repairCostRate = 0.5f;
+
+    public MachineSettingsData Clone() => (MachineSettingsData)MemberwiseClone();
+}
+
 /// <summary>準備シーン（メタ進行）関連の設定。</summary>
 [Serializable]
 public class PreparationSettingsData
@@ -242,6 +260,10 @@ public class VillageSettingsData
     public float conversionRate = 1f;
     /// <summary>破産時: そのランの最高の儲け（所持金の最高値から求める）× 変換率 × この値。持ち込みは戻らない。</summary>
     public float bankruptcyConversionRate = 0.2f;
+    /// <summary>破産時の救済: 最低でも「この額 + 納付した額 × bankruptcyPaidDebtRate」は村資金に入る（最高の儲けから出す額の方が多ければそちら）。</summary>
+    public int bankruptcyBaseFunds = 50000;
+    /// <summary>破産時の救済: それまでに納付した額（予定額で数える）に掛ける率。</summary>
+    public float bankruptcyPaidDebtRate = 1f;
     /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>
     public float debtScalePerVillageLevel = 0f;
     /// <summary>変換率に掛ける難易度ごとの倍率（index = GameModeId: Short / Medium / Long）。</summary>

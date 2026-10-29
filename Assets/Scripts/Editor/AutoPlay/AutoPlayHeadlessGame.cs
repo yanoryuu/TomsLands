@@ -67,7 +67,7 @@ public sealed class AutoPlayAssets
             a.FinancialProducts = RemoteBalance.ApplyList("financialProducts",
                 AddressableLoader.LoadAll<FinancialProductData>("FinancialProductData"), p => p.productId);
             a.Relics = RemoteBalance.ApplyList("relics", AddressableLoader.LoadAll<RelicDefinition>("RelicData"), r => r.relicId);
-            a.Machines = RemoteBalance.ApplyList("shopMachines", AddressableLoader.LoadAll<ShopMachineData>("ShopMachineData"), m => m.machineId);
+            a.Machines = ShopMachineData.ApplyRemoteBalance(AddressableLoader.LoadAll<ShopMachineData>("ShopMachineData"));
             a.Balance = RemoteBalance.ApplyOverwrite("gameBalance", Or(AddressableLoader.Load<GameBalanceData>("Marketing/GameBalanceData")));
             a.Advertisements = RemoteBalance.ApplyList("advertisements",
                 AddressableLoader.LoadAll<AdvertisementData>("AdvertisementData"), x => x.advertisementName);
@@ -465,7 +465,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             total += Portfolio.TotalAssetsEstimate.Value;
         }
         if (Machines != null)
-            total += Machines.Placed.Sum(p => (long)Mathf.RoundToInt((Machines.GetMachine(p.MachineId)?.cost ?? 0) * 0.5f));
+            total += Machines.Placed.Sum(p => (long)Machines.GetRemoveRefund(p));
         return total >= int.MaxValue ? int.MaxValue : (int)total;
     }
 
@@ -535,16 +535,30 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         foreach (var m in Machines.AllMachines)
         {
             if (m == null) continue;
+            var placed = Machines.PlacementOf(m.machineId);
+            int lv = placed?.Level ?? 1;
+            int cost = Machines.GetPurchaseCost(m);
             s.Machines.Add(new AutoPlayMachineView
             {
                 Id = m.machineId,
                 Type = m.effectType.ToString(),
-                Cost = m.cost,
+                Cost = cost,
                 RequiredShopLevel = m.requiredShopLevel,
-                DailyMoney = m.effectType == ShopMachineEffectType.DailyMoney ? m.dailyMoney : 0,
-                RevenueBonus = m.effectType == ShopMachineEffectType.RevenueMultiplier ? m.revenueMultiplierBonus : 0f,
-                Purchasable = Machines.PlacedCount < s.MachineSlots && m.requiredShopLevel <= TomsModel.ShopLevel.Value
-                              && TomsModel.PlayerMoney.Value >= m.cost,
+                DailyMoney = m.effectType == ShopMachineEffectType.DailyMoney ? m.DailyMoneyAt(lv) : 0,
+                RevenueBonus = m.effectType == ShopMachineEffectType.RevenueMultiplier ? m.EffectValueAt(lv) : 0f,
+                Purchasable = placed == null && Machines.PlacedCount < s.MachineSlots && m.requiredShopLevel <= TomsModel.ShopLevel.Value
+                              && TomsModel.PlayerMoney.Value >= cost,
+                Placed = placed != null,
+                Level = placed?.Level ?? 0,
+                MaxLevel = m.MaxLevel,
+                EffectValue = m.EffectValueAt(lv),
+                NextEffectValue = m.EffectValueAt(Mathf.Min(lv + 1, m.MaxLevel)),
+                UpgradeCost = placed != null ? Machines.GetUpgradeCost(placed) : -1,
+                Broken = placed != null && placed.Broken,
+                Repairable = Machines.CanRepair(placed),
+                RepairCost = placed != null ? Machines.GetRepairCost(placed) : 0,
+                SafeMorningsLeft = placed != null ? Machines.SafeMorningsLeft(placed) : int.MaxValue,
+                NextBreakChance = Machines.NextBreakChance(placed),
             });
         }
         foreach (var p in Portfolio.AllProducts)
@@ -1068,6 +1082,26 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         if (Machines.TryPurchaseAndPlace(m, TomsModel, MachineSlots) == null) return Reject($"{machineId} を置けない（枠・店レベル・資金）");
         Today.MachineSpend += before - TomsModel.PlayerMoney.Value;
         return AutoPlayActionResult.Success($"マシン {machineId}");
+    }
+
+    public AutoPlayActionResult UpgradeMachine(string machineId)
+    {
+        var placed = Machines.PlacementOf(machineId);
+        if (placed == null) return Reject($"{machineId} を置いていない");
+        int before = TomsModel.PlayerMoney.Value;
+        if (!Machines.TryUpgrade(placed.PlacementId, TomsModel)) return Reject($"{machineId} を強化できない（最大レベル・資金）");
+        Today.MachineSpend += before - TomsModel.PlayerMoney.Value;
+        return AutoPlayActionResult.Success($"マシン強化 {machineId} Lv{placed.Level}");
+    }
+
+    public AutoPlayActionResult RepairMachine(string machineId)
+    {
+        var placed = Machines.PlacementOf(machineId);
+        if (placed == null) return Reject($"{machineId} を置いていない");
+        int before = TomsModel.PlayerMoney.Value;
+        if (!Machines.TryRepair(placed.PlacementId, TomsModel)) return Reject($"{machineId} を修理できない（壊れていない・資金）");
+        Today.MachineSpend += before - TomsModel.PlayerMoney.Value;
+        return AutoPlayActionResult.Success($"マシン修理 {machineId}");
     }
 
     public AutoPlayActionResult BuyBond(string productId, int units)

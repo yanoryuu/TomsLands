@@ -229,9 +229,11 @@
 | J1 | 店の画面を開く | `TomsShopView.ShopUpgradeButton`（:20）→ `TomsShopPresenter` 208-210 | 第1ランは最初の納付のあとか、最初の配信の 2 日あと。陳列のとき | – | 店 Lv と設備のタブ | なし | なし | 0 | 開かない | – | – |
 | J2 | 店 Lv を上げる | `ShopUpgradeView.upgradeButton`（TomsShop/ShopUpgrade/ShopUpgradeView.cs:23）→ `ShopUpgradePresenter.HandleUpgrade` 64 → `TomsModel.UpgradeShop` 362-378 | 最大でなく、お金が足りるとき | Lv2 4,000 / Lv3 10,000 / Lv4 22,000 / Lv5 45,000G（ShopLevelSettings.asset） | 陳列できる種類 3/5/7/9/12、設備の枠 1/2/3/4/6。新聞の購読の枠も増える | なし | なし | **0** | 押していない（優先度 3） | `ShopUpgradeButton` → `upgradeButton`、または `OnUpgradeClicked.OnNext` | あり（`UpgradeShop`） |
 | J3 | 店 Lv ⇄ 設備のタブ | `ShopFacilityTabsView.upgradeTab` / `machineTab`（ShopFacilityTabsView.cs:18-19） | – | – | – | なし | なし | 0 | – | 設備の画面へはタブからしか入れない（`MachineShopButton` は出ない） | – |
-| J4 | 設備を買って置く | 行 `ShopMachineSlotUI.selectButton`（:17）→ `ShopMachineView.purchaseButton`（:27）→ `ShopMachinePresenter.HandlePurchase` 254 → `ShopMachineModel.TryPurchaseAndPlace` 82 | 店 Lv が設備の必要 Lv 以上。枠に空きがある。お金が足りる | 9 種 5,000〜18,000G（注9）。職人組合で値引き、枠も増える。同じ設備をいくつも置ける | 次の朝から効く | なし | なし | **0** | 押していない（優先度 3） | 設備の画面 → 行 → `purchaseButton` | あり（`PlaceMachine`） |
-| J5 | 置いた設備を選ぶ | 置いた一覧の行（ShopMachinePresenter.cs:182-188） | – | – | J6・J7 の相手を決める | なし | なし | 0 | – | – | – |
-| J6 | 設備を外す | `removeButton`（ShopMachineView.cs:28）→ `HandleRemove` 284 | 置いているとき | 買値の 50% が戻る | 枠が空く | なし | なし | **0** | – | – | なし |
+| J4 | 設備を買って置く | 行 `ShopMachineSlotUI.selectButton`（:17）→ `ShopMachineView.purchaseButton`（:27）→ `ShopMachinePresenter.HandlePurchase` → `ShopMachineModel.TryPurchaseAndPlace` | 店 Lv が設備の必要 Lv 以上。枠に空きがある。お金が足りる。**まだ置いていない設備だけ（同じ設備は 1 台まで。2026-10-29）** | 9 種 5,000〜24,000G（注9。Lv1 の行の cost）。職人組合で値引き、枠も増える | 次の朝から効く。置いた朝から寿命を数える | あり（人格 `machine`） | `machine` | – | – | 設備の画面 → 行 → `purchaseButton` | あり（`PlaceMachine`） |
+| J5 | 置いた設備を選ぶ | カタログの行（置いた設備は「設置中 Lv2」「故障中」）。台ごとの一覧（`placementGroup`）は 1 台までになったので出さない | – | – | J6・J7・J13・J14 の相手を決める | – | – | – | – | – | – |
+| J6 | 設備を外す | `removeButton`（ShopMachineView.cs:28）→ `HandleRemove` | 置いているとき | 払った額（購入＋強化、割引込み）の 50% が戻る | 枠が空く。レベルは消える | なし | なし | **0** | – | – | なし |
+| J13 | 設備を強化する（2026-10-29） | 行 → `ShopMachineView.upgradeButton`（ラベル「強化 4,200G」/ 最大は「MAX」）→ `HandleUpgrade` → `ShopMachineModel.TryUpgrade` | 置いていて最大 Lv でなく、お金が足りる | 次の Lv の行の cost（シート `machineLevels`。注9）。職人組合の値引きあり | Lv+1（効果はその Lv の effectValue。次の朝から）。寿命の数えが 0 に戻り、故障中なら直る | あり（人格 `machine_upgrade`） | `machine_upgrade`（真偽） | – | – | 設備の画面 → 行 → `upgradeButton` | あり（`UpgradeMachine`） |
+| J14 | 設備を修理する（2026-10-29） | 行 → `ShopMachineView.repairButton`（ラベル「修理 3,000G」）→ `HandleRepair` → `ShopMachineModel.TryRepair` | **故障中か、明朝から壊れる恐れがある（「そろそろ危ない」）ときだけ出る**。安心な間は出さない | `machine.repairCostRate`（既定 0.5）× 今の Lv の行の cost。職人組合の値引きあり | 故障が直り、寿命の数えが 0 に戻る（Lv はそのまま） | あり（人格 `machine_repair`。壊れたお金・製造の設備だけ） | `machine_repair`（真偽） | – | – | 設備の画面 → 行 → `repairButton` | あり（`RepairMachine`） |
 | J7 | 作る品を変える（自動鍛造炉） | `producedItemDropdown`（:32）→ `HandleProducedItemChanged` 239 | 自動鍛造炉と大型魔導炉だけ。候補は鍛冶屋 Lv 以下 | – | 次の朝から、1 日 1,000G / 2,500G ぶん作る | なし | なし | **0** | – | – | なし |
 | J8 | 広告を選ぶ（1 回目のタップ） | `AdvertisementSlotUI.slotSelectButton`（AdvertisementSlotUI.cs:22）→ `AdvertisementPresenter.OnSlotTapped` 179 | 最初の配信のあと。陳列のとき（`AdvertisementButton` :18） | – | どれだけ上がるかの見込みを出す | なし | なし | 0 | – | – | – |
 | J9 | 広告を打つ（同じものをもう一度タップ） | 同じボタン → `ExecutePurchase` 202 → `MarketingFacade.ExecuteAdvertisement` 141 | お金が足りるとき。回数の制限はない | 10万〜30万G（注10）。フォロワー割引・バズ割引あり | 信頼・注目・拡散・顧客維持・フォロワーが上がる（各 1,000 まで） | なし | なし | **0** | 押していない（優先度 5） | 2 回押す。値段が高いので納付に注意 | あり（`BuyAdvertisement`） |
@@ -408,19 +410,25 @@ AutoPlay が配信中に何をするかは `AutoPlayController.Streaming.cs` の
    | 属性重視 | 0.95 | 0.95 | 1.20 | 1.05 |
 
    配信中の値動きの「1 からのずれ」を大きくしたり小さくしたりする。
-9. **設備**（Assets/Resources_moved/ShopMachine/*.asset）。値段と、必要な店 Lv:
+9. **設備**（Assets/Resources_moved/ShopMachine/*.asset の `levels`。配信はシート `machineLevels`。2026-10-29 から Lv1〜5）。
+   費用は Lv1 = 買値、Lv2〜5 = その Lv へ上げる費用。効果は Lv1 → Lv5:
 
-   | 設備 | 値段 | 店 Lv | 効果 |
+   | 設備 | 店 Lv | 費用 Lv1 / 2 / 3 / 4 / 5 | 効果 Lv1 → Lv5 |
    |---|---|---|---|
-   | 小さな貯金ゴーレム | 5,600G | 1 | 朝 +800G |
-   | 中型貯金ゴーレム | 9,100G | 2 | 朝 +1,300G |
-   | 黄金の貯金ゴーレム | 15,400G | 3 | 朝 +2,200G |
-   | 鮮度保持ケース | 5,000G | 1 | 需要の下限 +0.08 |
-   | 特級鮮度ケース | 12,000G | 3 | 需要の下限 +0.15 |
-   | 呼び込みオルガン | 8,000G | 2 | 売上 +10% |
-   | 大道芸のステージ | 18,000G | 4 | 売上 +20% |
-   | 自動鍛造炉 | 6,000G | 2 | 1 日 1,000G ぶん作る |
-   | 大型魔導炉 | 15,000G | 4 | 1 日 2,500G ぶん作る |
+   | 小さな貯金ゴーレム | 1 | 6,000 / 4,200 / 4,900 / 5,600 / 6,300 | 朝 +1,200 / 2,400 / 3,800 / 5,400 / 7,200G |
+   | 中型貯金ゴーレム | 2 | 10,000 / 7,000 / 8,000 / 9,100 / 10,500 | 朝 +2,000 / 4,000 / 6,300 / 8,900 / 11,900G |
+   | 黄金の貯金ゴーレム | 3 | 16,000 / 11,200 / 12,600 / 14,300 / 16,100 | 朝 +3,200 / 6,400 / 10,000 / 14,100 / 18,700G |
+   | 自動鍛造炉 | 2 | 7,000 / 4,900 / 5,600 / 6,300 / 7,000 | 1 日 1,400 / 2,800 / 4,400 / 6,200 / 8,200G ぶん作る |
+   | 大型魔導炉 | 4 | 17,000 / 11,900 / 13,300 / 15,000 / 16,800 | 1 日 3,400 / 6,800 / 10,600 / 14,900 / 19,700G ぶん作る |
+   | 呼び込みオルガン | 2 | 12,000 / 5,000 / 6,000 / 7,000 / 8,000 | 売上 +6 / 9 / 12 / 15 / 18%（上限なし。足し算） |
+   | 大道芸のステージ | 4 | 24,000 / 7,000 / 8,000 / 9,000 / 10,000 | 売上 +12 / 16 / 20 / 24 / 28% |
+   | 鮮度保持ケース | 1 | 5,000 / 3,000 / 3,500 / 4,000 / 4,500 | 並べていない品の朝の需要の落ち込み -30 / 40 / 50 / 60 / 70% |
+   | 特級鮮度ケース | 3 | 12,000 / 6,000 / 7,000 / 8,000 / 9,000 | 同 -50 / 60 / 70 / 80 / 90%（2 つ置くと (1-a)(1-b) の掛け算） |
+
+   壊れやすさ（お金・製造・客寄せ。冷蔵ケースは壊れない）: 置いて（強化・修理して）から safeDays 回の朝は壊れず、
+   その後は朝ごとに breakChanceStep × (超えた朝の数)。Lv1〜5 の safeDays 4 / 5 / 6 / 7 / 8、step 0.15 / 0.12 / 0.10 / 0.08 / 0.06
+   （Lv1 なら 5 朝目 15%、6 朝目 30%…）。壊れると修理するまで効果が止まり、朝の通知に「○○が故障した（修理 3,000G）」が出る。
+   乱数はランのシード×日×設備 ID（`ShopMachineModel.BreakRoll`）なので、同じシードなら同じ朝に壊れる。
 10. **広告**（Assets/Resources_moved/Marketing/Ad_*.asset）:
 
     | 広告 | 値段 | 上がるもの |
@@ -501,7 +509,7 @@ AutoPlay が配信中に何をするかは `AutoPlayController.Streaming.cs` の
 ### 店・設備・レリック
 
 - **ShopMachine_UnityWiring.md**:
-  - 「同じマシンは 1 台まで」とある。いくつも置ける。
+  - 「同じマシンは 1 台まで」とある。2026-10-29 からはその通り（それまではいくつも置けた）。レベル・故障・修理は書いていない。
   - 自動鍛造炉は「安価な武器×2/朝」とある。実際は作る品を選べて、1 日 1,000G ぶん作る。
   - 表に大型の 3 種がない。
 - **ShopLevel_UnityWiring.md**:
@@ -583,14 +591,17 @@ AutoPlay が配信中に何をするかは `AutoPlayController.Streaming.cs` の
 | 情報屋 Lv | 情報屋の `developmentButton` → `levelUpButton` | `broker_upgrade`（真偽） | 同上 | 同上 |
 | 債券・投資信託 | 情報屋の `exchangeButton` → 商品の行（`ItemShopSlot.itemId`）→ `FinanceDetailPanel.quantitySlider` → `buyButton` / `sellButton` | `finance`（なし・債券・ファンド・持っているファンドを売る）＋ `finance_share`（使ってよい額の 10 / 25 / 50 / 75%） | 同上（資産に取引所の評価額を足した） | ずんだもん: ファンド 1.5 倍・債券 0.7 倍・額は 1 段上。めたん: 債券 1.5 倍・ファンド 0.7 倍・利が乗ったら売る。手持ちの下限と 3 日以内の返済は残す |
 | 店 Lv | **陳列フェーズの頭**で `ShopUpgradeButton` → `upgradeButton` | `shop_upgrade`（真偽） | 同上 | 鍛冶屋 Lv と同じ |
-| 設備 | 改装の画面のタブ（`tabs.machineTab`）→ `ShopMachineSlotUI.selectButton` → `purchaseButton` | `machine`（なし・置けるもの） | 同上（お金・製造・客寄せ・鮮度の種類で学ぶ） | ずんだもん: 派手な設備（客寄せ・大道芸・黄金ゴーレム・大型魔導炉）を FlashyBoost 倍。めたん: 元が取れる日数が短いお金の設備を上げ、高すぎるものを下げる |
+| 設備 | 改装の画面のタブ（`tabs.machineTab`）→ `ShopMachineSlotUI.selectButton` → `purchaseButton` | `machine`（なし・まだ置いていないもの） | 同上（お金・製造・客寄せ・鮮度の種類で学ぶ） | ずんだもん: 派手な設備（客寄せ・大道芸・黄金ゴーレム・大型魔導炉）を FlashyBoost 倍。めたん: 元が取れる日数が短いお金の設備を上げ、高すぎるものを下げる |
+| 設備の強化 | 同じ画面で行 → `upgradeButton`（修理 → 強化 → 購入の順に押す） | `machine_upgrade`（真偽。聞くのは置いた設備のうち、強化費 ÷ 増える 1 日の価値が一番短い 1 台） | 同上 | 元が取れそうか（`AutoPlayMachineRules.ShouldUpgrade`: 強化費 ÷ 増える 1 日の価値 ≤ 残りの朝 ÷ 2、使ってよい額の中、返済が近くて重くない）なら true を 2 倍、でなければ 0.4 倍 |
+| 設備の修理 | 同じ画面で行 → `repairButton` | `machine_repair`（真偽。壊れたお金・製造の設備のうち 1 日の価値が一番大きい 1 台） | 同上 | 元が取れそうか（`ShouldRepair`: 修理費 ÷ 1 日の価値 ≤ 残りの朝 ÷ 2）で同上。直さないのは少し大胆寄り（`PersonaStyle`） |
 | 魔王軍支援（直し） | 陳列フェーズの頭で押すように直した（`DebugAutoPlayer.ExternalBeforeDisplay` → `AutoPlayController.OnBeforeDisplay`） | support（今まで通り） | 今まで通り | 今まで通り |
 
 - 「絶対しない」を作らない: 真偽の質問は true の確率を 0.12 より下げない。選択肢の質問は一様分布を 15% 混ぜる。
 - 「毎日する」も作らない: 店への投資の質問は、自由な質問の固まり対策（エントロピーの下限・安全弁）から外した。
 - 相談プレイでは、2 人とも「しない」のときは黙って決める。
 - 押せなかったもの（お金・解禁・ボタン）は、学習には「しなかった」として付ける。結果はログの `shop_invest_result` の行。
-- 一言は `PersonaLines` の `hero_weapon` / `shop_upgrade_yes` / `machine_yes` / `finance_fund` などのキー（額は G で言う。割合は言わない）。
+- 一言は `PersonaLines` の `hero_weapon` / `shop_upgrade_yes` / `machine_yes` / `machine_upgrade_yes` / `machine_repair_no` / `finance_fund` などのキー（額は G で言う。割合は言わない）。
+- ヘッドレスの戦略ボット（golem・max）も同じ決め方（`AutoPlayStrategyBotBase.PlanMachineCare`。残りの朝は `FlowLength - FlowIndex - 1`）。客寄せの 1 日の価値は売上 30,000G の目安で測る。
 
 ### 次に入れるもの（学習を止めずに書き進め、6 時間ごとの立て直しのときにまとめてコンパイル）
 

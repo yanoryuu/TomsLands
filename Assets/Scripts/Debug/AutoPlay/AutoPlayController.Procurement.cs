@@ -380,8 +380,13 @@ public sealed partial class AutoPlayController
         // （2026-10-28 まで仕入れの前に押そうとしてボタンが押せず、魔王軍支援は一度も払われていなかった）
         _displayDemonLevels = demonPrep != null ? demonLevels : 0;
         _displayDemonPrep = demonPrep;
-        _displayInvest = new AutoPlayShopInvestPlan { UpgradeShop = invest.UpgradeShop, MachineId = invest.MachineId };
-        _displayPending = _displayDemonLevels > 0 || _displayInvest.UpgradeShop || !string.IsNullOrEmpty(_displayInvest.MachineId);
+        _displayInvest = new AutoPlayShopInvestPlan
+        {
+            UpgradeShop = invest.UpgradeShop, MachineId = invest.MachineId,
+            UpgradeMachineId = invest.UpgradeMachineId, RepairMachineId = invest.RepairMachineId,
+        };
+        _displayPending = _displayDemonLevels > 0 || _displayInvest.UpgradeShop || !string.IsNullOrEmpty(_displayInvest.MachineId)
+                          || _displayInvest.HasMachineCare;
         _displayDoneKey = null;
 
         if (!buyIntel && newspaperSeconds <= 0f && mapSeconds <= 0f && !sideInvest)
@@ -394,6 +399,8 @@ public sealed partial class AutoPlayController
         var procInvest = invest;
         procInvest.UpgradeShop = false;
         procInvest.MachineId = null;
+        procInvest.UpgradeMachineId = null;
+        procInvest.RepairMachineId = null;
         procInvest.UpgradeSmith = false;
         RunSideTripsAsync(buyIntel ? prep : null, newspaperSeconds, mapSeconds, 0, null, sideInvest ? procInvest : default, _cts.Token).Forget();
         return true;
@@ -418,7 +425,7 @@ public sealed partial class AutoPlayController
         try
         {
             if (_displayDemonLevels > 0 && _displayDemonPrep != null) await SupportDemonArmyAsync(_displayDemonPrep, _displayDemonLevels, ct);
-            if (_investResult != null && (_displayInvest.UpgradeShop || !string.IsNullOrEmpty(_displayInvest.MachineId)))
+            if (_investResult != null && (_displayInvest.UpgradeShop || !string.IsNullOrEmpty(_displayInvest.MachineId) || _displayInvest.HasMachineCare))
             {
                 var toms = AutoPlayUi.Resolve<TomsModel>();
                 if (toms != null)
@@ -667,7 +674,8 @@ public sealed partial class AutoPlayController
     // 店への投資（IAutoPlayShopInvestor）: 勇者の装備・店の改装・設備・情報屋の開発・取引所。鍛冶屋の開発は鍛冶屋の画面で
     // 画面のボタンを実際に押す（リフレクション名: TomsShopView の HeroButton / ShopUpgradeButton / InfoButton、
     // HeroPanelView の weaponDropdown / armorDropdown / tacticsDropdown / weaponIds / armorIds / tacticsValues / closeButton、
-    // ShopUpgradeView の upgradeButton / closeButton / tabs、ShopFacilityTabsView の machineTab、ShopMachineView の purchaseButton / closeButton、
+    // ShopUpgradeView の upgradeButton / closeButton / tabs、ShopFacilityTabsView の machineTab、
+    // ShopMachineView の purchaseButton / upgradeButton / repairButton / closeButton、
     // ShopMachineSlotUI の selectButton、InfoBrokerView の developmentButton / levelUpButton / exchangeButton / closeButton、
     // FinanceDetailPanel の quantitySlider / buyButton / sellButton、BlackSmithView の developButton / levelUpButton / weaponButton）
     // =====================================================
@@ -681,7 +689,7 @@ public sealed partial class AutoPlayController
         {
             if (plan.HeroWeaponId != null || plan.HeroArmorId != null || plan.HeroTactics != null)
                 await EquipHeroAsync(plan, result, ct);
-            if (plan.UpgradeShop || !string.IsNullOrEmpty(plan.MachineId))
+            if (plan.UpgradeShop || !string.IsNullOrEmpty(plan.MachineId) || plan.HasMachineCare)
                 await ShopFacilityAsync(plan, result, toms, ct);
             if (plan.UpgradeBroker || (!string.IsNullOrEmpty(plan.FinanceProductId) && plan.FinanceUnits != 0))
                 await BrokerInvestAsync(plan, result, toms, ct);
@@ -701,6 +709,8 @@ public sealed partial class AutoPlayController
         if (r.HeroTacticsSet != null) parts.Add($"作戦 {r.HeroTacticsSet}");
         if (r.ShopUpgraded) parts.Add($"店 Lv{r.ShopLevelAfter}");
         if (!string.IsNullOrEmpty(r.MachinePlaced)) parts.Add($"設備 {r.MachinePlaced}");
+        if (!string.IsNullOrEmpty(r.MachineRepaired)) parts.Add($"修理 {r.MachineRepaired}");
+        if (!string.IsNullOrEmpty(r.MachineUpgraded)) parts.Add($"強化 {r.MachineUpgraded}");
         if (r.BrokerUpgraded) parts.Add($"情報屋 Lv{r.BrokerLevelAfter}");
         if (r.SmithUpgraded) parts.Add($"鍛冶屋 Lv{r.SmithLevelAfter}");
         if (r.FinanceUnits != 0) parts.Add($"{r.FinanceProductId} {(r.FinanceUnits > 0 ? "買い" : "売り")} {Math.Abs(r.FinanceUnits)} 口");
@@ -815,7 +825,7 @@ public sealed partial class AutoPlayController
             if (!result.ShopUpgraded) result.Notes.Add("改装のボタンが押せなかった（お金か最大レベル）");
         }
 
-        if (!string.IsNullOrEmpty(plan.MachineId) && upgradeView != null)
+        if ((!string.IsNullOrEmpty(plan.MachineId) || plan.HasMachineCare) && upgradeView != null)
         {
             var tabs = AutoPlayUi.GetField<ShopFacilityTabsView>(upgradeView, "tabs");
             var tab = tabs != null ? AutoPlayUi.GetField<Button>(tabs, "machineTab") : null;
@@ -826,25 +836,54 @@ public sealed partial class AutoPlayController
                 var machineView = ViewOf<ShopMachineView>();
                 var model = AutoPlayUi.Resolve<ShopMachineModel>();
                 lastView = machineView;
-                var slot = FindObjectsByType<ShopMachineSlotUI>(FindObjectsSortMode.None)
-                    .FirstOrDefault(s => s != null && s.MachineId == plan.MachineId && s.gameObject.activeInHierarchy);
-                string name = model?.GetMachine(plan.MachineId)?.machineName ?? plan.MachineId;
-                int before = model != null ? model.CountOf(plan.MachineId) : 0;
-                if (slot != null && await PressFieldAsync(slot, "selectButton", $"設備: 「{name}」を選ぶ", ct))
+                // 修理 → 強化 → 購入の順（壊れたものを先に直す）
+                if (!string.IsNullOrEmpty(plan.RepairMachineId))
                 {
-                    await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds * 2f), DelayType.UnscaledDeltaTime, cancellationToken: ct);
-                    if (await PressFieldAsync(machineView, "purchaseButton", $"設備: 「{name}」を買って置く", ct))
-                    {
-                        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds * 2f), DelayType.UnscaledDeltaTime, cancellationToken: ct);
-                        if (model != null && model.CountOf(plan.MachineId) > before) result.MachinePlaced = plan.MachineId;
-                    }
+                    var placed = model?.PlacementOf(plan.RepairMachineId);
+                    bool wasBroken = placed != null && placed.Broken;
+                    int days = placed?.DaysSinceService ?? -1;
+                    if (await PressMachineButtonAsync(machineView, plan.RepairMachineId, "repairButton", "修理する", model, ct)
+                        && placed != null && (wasBroken ? !placed.Broken : placed.DaysSinceService < days))
+                        result.MachineRepaired = plan.RepairMachineId;
+                    if (result.MachineRepaired == null) result.Notes.Add($"設備「{MachineName(model, plan.RepairMachineId)}」を修理できなかった");
                 }
-                if (result.MachinePlaced == null) result.Notes.Add($"設備「{name}」を置けなかった");
+                if (!string.IsNullOrEmpty(plan.UpgradeMachineId))
+                {
+                    int lvBefore = model != null ? model.LevelOf(plan.UpgradeMachineId) : 0;
+                    if (await PressMachineButtonAsync(machineView, plan.UpgradeMachineId, "upgradeButton", "強化する", model, ct)
+                        && model != null && model.LevelOf(plan.UpgradeMachineId) > lvBefore)
+                        result.MachineUpgraded = plan.UpgradeMachineId;
+                    if (result.MachineUpgraded == null) result.Notes.Add($"設備「{MachineName(model, plan.UpgradeMachineId)}」を強化できなかった");
+                }
+                if (!string.IsNullOrEmpty(plan.MachineId))
+                {
+                    int before = model != null ? model.CountOf(plan.MachineId) : 0;
+                    if (await PressMachineButtonAsync(machineView, plan.MachineId, "purchaseButton", "買って置く", model, ct)
+                        && model != null && model.CountOf(plan.MachineId) > before)
+                        result.MachinePlaced = plan.MachineId;
+                    if (result.MachinePlaced == null) result.Notes.Add($"設備「{MachineName(model, plan.MachineId)}」を置けなかった");
+                }
             }
             else result.Notes.Add("設備のタブが開かなかった");
         }
         await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
         await CloseToShopAsync(lastView, "closeButton", "店の画面", ct);
+    }
+
+    private static string MachineName(ShopMachineModel model, string machineId) => model?.GetMachine(machineId)?.machineName ?? machineId;
+
+    /// <summary>設備の画面でマシンを選び（ShopMachineSlotUI の selectButton）、詳細のボタン（ShopMachineView の buttonField）を押す。</summary>
+    private async UniTask<bool> PressMachineButtonAsync(ShopMachineView machineView, string machineId, string buttonField, string verb,
+        ShopMachineModel model, CancellationToken ct)
+    {
+        string name = MachineName(model, machineId);
+        var slot = FindObjectsByType<ShopMachineSlotUI>(FindObjectsSortMode.None)
+            .FirstOrDefault(s => s != null && s.MachineId == machineId && s.gameObject.activeInHierarchy);
+        if (slot == null || !await PressFieldAsync(slot, "selectButton", $"設備: 「{name}」を選ぶ", ct)) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds * 2f), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        if (!await PressFieldAsync(machineView, buttonField, $"設備: 「{name}」を{verb}", ct)) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds * 2f), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        return true;
     }
 
     // ---------------- 情報屋の開発・取引所 ----------------

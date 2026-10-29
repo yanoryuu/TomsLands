@@ -154,8 +154,9 @@ public class MetaProgressModel
     /// ラン終了時、そのランの儲けを村資金へ入れる（村と店の経営を繋ぐ唯一の橋・一方向）。
     /// 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え（RunProfit.Compute）。
     /// クリア時: 持ち込み（儲けが赤字ならその分を引く）+ 完走ボーナス（<see cref="ClearBonusBase"/>。領主館 Lv4 で +15%）+ max(0, 儲け) × 変換率 × 難易度倍率。
-    /// 破産時: 持ち込みは戻らない。そのランの最高の儲け × 変換率 × 難易度倍率 × bankruptcyConversionRate。完走ボーナスは無い。
-    /// dueDebtCycles はそのランで期日が来た納付の回数（DebtCalculator.CountDueCyclesOfClearedRun）。破産時は使わない。
+    /// 破産時: 持ち込みは戻らない。完走ボーナスは無い。
+    /// 「最高の儲け × 変換率 × 難易度倍率 × bankruptcyConversionRate」と救済「bankruptcyBaseFunds + 納付した額 × bankruptcyPaidDebtRate」の多い方。
+    /// dueDebtCycles: クリア時はそのランで期日が来た納付の回数（DebtCalculator.CountDueCyclesOfClearedRun）、破産時は納付を済ませた回数。
     /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
     /// </summary>
     public int ConvertRunToVillageFunds(bool cleared, int profit, int carried, GameModeId mode, int dueDebtCycles)
@@ -180,7 +181,11 @@ public class MetaProgressModel
         if (!cleared)
         {
             float bankruptRate = Mathf.Max(0f, settings.bankruptcyConversionRate);
-            return Mathf.FloorToInt(Mathf.Max(0, profit) * rate * bankruptRate);
+            int fromProfit = Mathf.FloorToInt(Mathf.Max(0, profit) * rate * bankruptRate);
+            // 救済: 序盤で一度も儲からずに破産しても、土台と納めた分は村に残す（予定額で数える。完走ボーナスと同じ数え方）
+            long relief = Mathf.Max(0, settings.bankruptcyBaseFunds)
+                          + (long)(DebtCalculator.GetScheduledTotal(Mathf.Max(0, dueDebtCycles)) * Mathf.Max(0f, settings.bankruptcyPaidDebtRate));
+            return (int)System.Math.Min(System.Math.Max(fromProfit, relief), int.MaxValue);
         }
 
         long total = Mathf.Max(0, carried + Mathf.Min(0, profit))

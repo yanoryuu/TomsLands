@@ -377,6 +377,31 @@ public static class PersonaLines
             "情報屋はこのままでいいのだ",
             "開発はまた今度なのだ",
         },
+        ["zundamon|machine_upgrade_yes"] = new[]
+        {
+            "{choice}を強化するのだ！ ピカピカになるのだ",
+            "{pct}で{choice}をレベルアップなのだ。稼ぎが増えるのだ",
+            "{choice}、もっと強くなるのだ！",
+            "強化なのだ。{choice}は相棒なのだ",
+        },
+        ["zundamon|machine_upgrade_no"] = new[]
+        {
+            "{choice}の強化はまた今度なのだ",
+            "今のままでも{choice}はがんばってるのだ",
+            "強化は見送りなのだ。{pct}は大金なのだ",
+        },
+        ["zundamon|machine_repair_yes"] = new[]
+        {
+            "{choice}を直すのだ！ また働いてもらうのだ",
+            "修理なのだ。{choice}、元気になるのだ",
+            "{pct}で修理なのだ。止まったままはかわいそうなのだ",
+        },
+        ["zundamon|machine_repair_no"] = new[]
+        {
+            "{choice}はしばらく休ませるのだ",
+            "修理はあとなのだ。今日はお金を使いたくないのだ",
+            "壊れた{choice}もかわいいのだ",
+        },
         ["zundamon|machine_yes"] = new[]
         {
             "{choice}を置くのだ！ キラキラしてるのだ",
@@ -777,6 +802,29 @@ public static class PersonaLines
         {
             "情報屋は今のままで足りてるわ",
             "開発は見送り。それだけ。",
+        },
+        ["metan|machine_upgrade_yes"] = new[]
+        {
+            "{choice}を強化するわ。増える分で{pct}は取り返せるもの",
+            "{choice}を強化。寿命も新品に戻るわ",
+            "強化するわ。数えたうえでよ",
+        },
+        ["metan|machine_upgrade_no"] = new[]
+        {
+            "{choice}の強化は見送るわ。元が取れる前にランが終わるもの",
+            "強化は今じゃないわ。それだけ。",
+            "{pct}は今の手持ちには重いの",
+        },
+        ["metan|machine_repair_yes"] = new[]
+        {
+            "{choice}を直すわ。止まった設備は1Gも産まないもの",
+            "修理するわ。{pct}なら数日で戻るの",
+            "{choice}は直しておくわ",
+        },
+        ["metan|machine_repair_no"] = new[]
+        {
+            "{choice}は直さないわ。もう元が取れないもの",
+            "修理は見送り。それだけ。",
         },
         ["metan|machine_yes"] = new[]
         {

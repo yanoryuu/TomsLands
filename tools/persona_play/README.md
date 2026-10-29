@@ -99,7 +99,7 @@ Editor のデバッグ用ボット `AutoPlayJevBot`（ヘッドレス）は使�
 - **rules 4.1（2026-10-28 午後）**: 村の予算（めたんは「村資金の 1/4 は残す」を「25% 使う」と取り違えて何も買えなかった → 段階は「使う割合」。残す割合を割らない範囲で、元が取れそうな施設に足りる段階まで上げる。決めた施設が予算に入らないときは `budget_short` をログに出し、ずんだもんは予算を上げ、めたんは元が取れて買える 1 つを選ぶ）。押し切りの「大丈夫なのだ、問題ないのだ」を 6 通りに、一言の数えはマラソンの 1 ラン（2 周）・話し手ごと（24 行あける）。条件つきの助言を聞く確率 +0.25 → +0.20。支援（4 段）は「抽選してから +1」をやめて傾き exp(0.8·段)。取り返し: 負けの後 8 判断は sad + 0.4、β_break 1.5 → 4。気分の記録に `lossStreak`・`last`。指標 M4（気分で分ける・hard は同じ質問どうし）・M6（`priorProbabilities`）・M8（同じ気分帯・偶然の JS を引く）の数え方を変えた。
 
 - **rules 4.2（2026-10-28 夜）**: 店への投資と勇者の装備を判断に足した（洗い出しは `Docs/Player_Actions_Inventory.md`）。
-  質問 `hero_weapon` / `hero_armor` / `hero_tactics`（配信の前の営業日）、`shop_upgrade` / `smith_upgrade` / `broker_upgrade`（真偽）、`machine`、`finance` ＋ `finance_share`。
+  質問 `hero_weapon` / `hero_armor` / `hero_tactics`（配信の前の営業日）、`shop_upgrade` / `smith_upgrade` / `broker_upgrade`（真偽）、`machine`、`machine_upgrade` / `machine_repair`（真偽。2026-10-29）、`finance` ＋ `finance_share`。
   押すのは AutoPlayController（勇者・情報屋・取引所は仕入れの前、鍛冶屋の開発はお任せ購入の前、店の改装・設備・魔王軍支援は陳列フェーズの頭 = `DebugAutoPlayer.ExternalBeforeDisplay`）。
   魔王軍支援は、ボタンが陳列フェーズにしか無いのに仕入れの前に押そうとしていて、それまで一度も払われていなかった（直した）。
   結果: 装備は配信の翌朝までの資産、それ以外はランの終わりまでの資産（horizon `runEnd`。資産に取引所の評価額を足した）。押せなかったものは「しなかった」として学ぶ（ログ `shop_invest_result`）。
