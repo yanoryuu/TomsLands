@@ -22,6 +22,8 @@ public static class RemoteBalance
     private static List<HeroLevelData> _heroLevels;
     // events はCSVマスター由来（Dictionaryを含むためJsonUtility不可、JObjectから手動変換）。あれば全置換。
     private static List<TomsEvent> _events;
+    // dungeonLevels（ダンジョンのレベルの表の費用・配当。"*" = 全ダンジョン共通）。あれば項目ごとに上書き。
+    private static List<DungeonLevelRow> _dungeonLevels;
     // 上書き済みの複製（元のアセット1つにつき1つ。シーンをまたいで使い回す）
     private static readonly OverrideCloneCache _clones = new();
 
@@ -31,7 +33,7 @@ public static class RemoteBalance
     private static readonly string[] ListSections =
         { "advertisements", "buzzEffects", "followerMilestones", "enemies", "dungeons", "financialProducts", "shopMachines", "machineLevels", "relics", "villageFacilities" };
 
-    public static bool HasAny => _sections.Count > 0 || _lists.Count > 0 || _heroLevels != null || _events != null;
+    public static bool HasAny => _sections.Count > 0 || _lists.Count > 0 || _heroLevels != null || _events != null || _dungeonLevels != null;
 
     /// <summary>
     /// balance.json を取り込む。schemaVersion 不一致/解析失敗時は -1（不採用）。
@@ -59,6 +61,7 @@ public static class RemoteBalance
         _clones.Clear();
         _heroLevels = null;
         _events = null;
+        _dungeonLevels = null;
 
         // 単一区画
         foreach (var key in SingleSections)
@@ -136,7 +139,10 @@ public static class RemoteBalance
             if (list.Count > 0) _events = list;
         }
 
-        Debug.Log($"[RemoteBalance] version {version} を適用（single={_sections.Count}, list={_lists.Count}, heroLevels={(_heroLevels?.Count ?? 0)}, events={(_events?.Count ?? 0)}）");
+        // dungeonLevels（行ごと。不正な行は読み飛ばす）
+        _dungeonLevels = ParseDungeonLevels(root["dungeonLevels"]);
+
+        Debug.Log($"[RemoteBalance] version {version} を適用（single={_sections.Count}, list={_lists.Count}, heroLevels={(_heroLevels?.Count ?? 0)}, events={(_events?.Count ?? 0)}, dungeonLevels={(_dungeonLevels?.Count ?? 0)}）");
         return version;
     }
 
@@ -216,6 +222,124 @@ public static class RemoteBalance
     public static List<TomsEvent> ApplyEvents(List<TomsEvent> baked)
         => _events != null ? new List<TomsEvent>(_events) : baked;
 
+    // ---- dungeonLevels（シート dungeonLevels。魔王軍支援の費用と防衛の配当） ----
+
+    /// <summary>dungeonLevels の 1 行。dungeonId "*" は全ダンジョン共通。値が無い項目は null（同梱の値のまま）。</summary>
+    public readonly struct DungeonLevelRow
+    {
+        public readonly string DungeonId;
+        public readonly int Level;
+        public readonly int? LevelUpCost;
+        public readonly int? RewardGold;
+
+        public DungeonLevelRow(string dungeonId, int level, int? levelUpCost, int? rewardGold)
+        {
+            DungeonId = dungeonId;
+            Level = level;
+            LevelUpCost = levelUpCost;
+            RewardGold = rewardGold;
+        }
+    }
+
+    public const string AllDungeons = "*";
+
+    private static List<DungeonLevelRow> ParseDungeonLevels(JToken token)
+    {
+        if (token is not JArray arr || arr.Count == 0) return null;
+        var list = new List<DungeonLevelRow>();
+        foreach (var el in arr)
+        {
+            if (el is not JObject eo) continue;
+            string id = (eo.Value<string>("dungeonId") ?? eo.Value<string>("id"))?.Trim();
+            int? level = ReadNonNegativeInt(eo["level"]);
+            if (string.IsNullOrEmpty(id) || level == null || level < 1)
+            {
+                Debug.LogWarning($"[RemoteBalance] dungeonLevels の行を読み飛ばします（dungeonId / level が不正）: {eo.ToString(Newtonsoft.Json.Formatting.None)}");
+                continue;
+            }
+            var cost = ReadNonNegativeInt(eo["levelUpCost"]);
+            var reward = ReadNonNegativeInt(eo["rewardGold"]);
+            if (cost == null && reward == null) continue;
+            list.Add(new DungeonLevelRow(id, level.Value, cost, reward));
+        }
+        return list.Count > 0 ? list : null;
+    }
+
+    // 整数（0 以上）として読めれば値、空・文字・負・小数は null
+    private static int? ReadNonNegativeInt(JToken t)
+    {
+        if (t == null || t.Type == JTokenType.Null) return null;
+        if (t.Type == JTokenType.Integer)
+        {
+            long v = t.Value<long>();
+            return v >= 0 && v <= int.MaxValue ? (int)v : null;
+        }
+        if (t.Type == JTokenType.Float)
+        {
+            double d = t.Value<double>();
+            return d >= 0 && d <= int.MaxValue && Math.Abs(d - Math.Round(d)) < 1e-9 ? (int)Math.Round(d) : null;
+        }
+        if (t.Type == JTokenType.String && int.TryParse(((string)t).Trim(), out var s) && s >= 0) return s;
+        return null;
+    }
+
+    /// <summary>
+    /// ダンジョンの levelUpCost / rewardGold を dungeonLevels で上書きする（"dungeons" 区画を当てた後に呼ぶ）。
+    /// 項目ごとに「そのダンジョンの行 → "*" の行 → 同梱の値」の順で決める。当てる行が無いダンジョンは元のまま。
+    /// 敵・フェーズ・ボス名などほかの項目は触らない（アセットのまま）。
+    /// </summary>
+    public static List<DungeonInfoScriptableObj> ApplyDungeonLevels(List<DungeonInfoScriptableObj> baked)
+    {
+        if (baked == null || _dungeonLevels == null) return baked;
+
+        var result = new List<DungeonInfoScriptableObj>(baked.Count);
+        foreach (var item in baked)
+        {
+            if (item == null) continue;
+            string id = item.key.ToString();
+            if (!_dungeonLevels.Exists(r => r.DungeonId == AllDungeons || r.DungeonId == id))
+            {
+                result.Add(item);
+                continue;
+            }
+            result.Add(_clones.GetOrCreate("dungeonLevels", item, clone =>
+            {
+                ApplyDungeonLevelRows(clone, id);
+                return true;
+            }));
+        }
+        return result;
+    }
+
+    private static void ApplyDungeonLevelRows(DungeonInfoScriptableObj so, string id)
+    {
+        if (so.levelDataList == null) return;
+        for (int i = 0; i < so.levelDataList.Length; i++)
+        {
+            var data = so.levelDataList[i];
+            if (data == null) continue;
+            int level = i + 1;
+            int? cost = null, reward = null, sharedCost = null, sharedReward = null;
+            // 同じキーの行が 2 つあれば下の行
+            foreach (var r in _dungeonLevels)
+            {
+                if (r.Level != level) continue;
+                if (r.DungeonId == id)
+                {
+                    if (r.LevelUpCost != null) cost = r.LevelUpCost;
+                    if (r.RewardGold != null) reward = r.RewardGold;
+                }
+                else if (r.DungeonId == AllDungeons)
+                {
+                    if (r.LevelUpCost != null) sharedCost = r.LevelUpCost;
+                    if (r.RewardGold != null) sharedReward = r.RewardGold;
+                }
+            }
+            data.levelUpCost = cost ?? sharedCost ?? data.levelUpCost;
+            data.rewardGold = reward ?? sharedReward ?? data.rewardGold;
+        }
+    }
+
     public static void ResetToDefault()
     {
         _sections.Clear();
@@ -223,5 +347,6 @@ public static class RemoteBalance
         _clones.Clear();
         _heroLevels = null;
         _events = null;
+        _dungeonLevels = null;
     }
 }

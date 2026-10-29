@@ -82,6 +82,17 @@ public class DungeonInfoScriptableObj : ScriptableObject
     /// Lv0 の戦闘（敵の出方）は Lv1 と同じ（GetLevelData がクランプする）。
     /// </summary>
     public int GetDefenseReward(int level) => DungeonLevels.DefenseReward(GetLevelData(level), level);
+
+    /// <summary>
+    /// 配信値を当てる（"dungeons" の部分上書き → "dungeonLevels" のレベルごとの費用・配当の順）。
+    /// マップ（DungeonRepository）・戦闘（BattleLifetimeScope）・自動プレイのヘッドレスで同じものを使う。
+    /// </summary>
+    public static System.Collections.Generic.List<DungeonInfoScriptableObj> ApplyRemoteBalance(
+        System.Collections.Generic.List<DungeonInfoScriptableObj> baked)
+    {
+        var list = RemoteBalance.ApplyList("dungeons", baked, d => d.key.ToString());
+        return RemoteBalance.ApplyDungeonLevels(list);
+    }
 }
 
 /// <summary>

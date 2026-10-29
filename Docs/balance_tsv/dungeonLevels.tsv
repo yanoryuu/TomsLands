@@ -1,0 +1,6 @@
+dungeonId	level	levelUpCost	rewardGold
+*	1	10000	30000
+*	2	30000	60000
+*	3	40000	150000
+*	4	70000	250000
+*	5	0	450000

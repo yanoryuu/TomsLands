@@ -74,7 +74,7 @@ public class BattleLifetimeScope : LifetimeScope
 
         // ダンジョンカタログを構築して登録
         // Inspector リストが空/不足なら、プロジェクト内の全 DungeonInfoScriptableObj を自動収集
-        var allDungeons = RemoteBalance.ApplyList("dungeons", CollectAllDungeonInfos(), d => d.key.ToString());
+        var allDungeons = DungeonInfoScriptableObj.ApplyRemoteBalance(CollectAllDungeonInfos());
         var catalog = new DungeonCatalog(allDungeons);
         builder.RegisterInstance<IDungeonCatalog>(catalog);
 
