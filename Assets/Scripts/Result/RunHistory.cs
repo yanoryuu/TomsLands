@@ -42,6 +42,8 @@ public class RunHistoryData
     public bool hasBestStream;
     /// <summary>村の広場の効果で配信の売上に上乗せされた額の合計。</summary>
     public int streamBonusTotal;
+    /// <summary>勇者敗北の返金騒ぎで返した額の合計（streamEarningsTotal からは引いてある）。</summary>
+    public int heroDefeatRefundTotal;
 
     // --- 村の銀行 Lv5「勝負の融資」（破産時の最高の儲けから借りた分を引くため）。旧セーブは欠損→0 = 借りていない ---
     /// <summary>融資を受けた日（ターン）。0 = 借りていない。</summary>
@@ -162,13 +164,17 @@ public static class RunHistory
         });
     }
 
-    /// <summary>配信1回ぶんの収支を記録する（途中終了も含む）。bonus は村の広場による上乗せ分。</summary>
-    public static void RecordStreamEarnings(int totalEarnings, string dungeonName, int bonus)
+    /// <summary>
+    /// 配信1回ぶんの収支を記録する（途中終了も含む）。bonus は村の広場による上乗せ分。
+    /// heroDefeatRefund は返金騒ぎの額（totalEarnings からは引いてあるので、内訳として足すだけ）。
+    /// </summary>
+    public static void RecordStreamEarnings(int totalEarnings, string dungeonName, int bonus, int heroDefeatRefund = 0)
     {
         Modify(d =>
         {
             d.streamEarningsTotal += totalEarnings + bonus;
             d.streamBonusTotal += bonus;
+            d.heroDefeatRefundTotal += UnityEngine.Mathf.Max(0, heroDefeatRefund);
             int net = totalEarnings + bonus;
             if (!d.hasBestStream || net > d.bestStreamEarnings)
             {

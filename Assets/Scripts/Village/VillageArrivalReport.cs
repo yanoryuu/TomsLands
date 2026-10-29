@@ -11,22 +11,30 @@ public static class VillageArrivalReport
     public static int Earned { get; private set; }
     /// <summary>村資金へ変換された額。</summary>
     public static int Converted { get; private set; }
+    /// <summary>村資金へ入った額の内訳（無ければ null。演出は内訳なしで流れる）。</summary>
+    public static VillageFundsBreakdown Breakdown { get; private set; }
 
-    public static void Set(bool cleared, int earned, int converted)
+    public static void Set(bool cleared, int earned, int converted, VillageFundsBreakdown breakdown = null)
     {
         HasReport = true;
         Cleared = cleared;
         Earned = earned;
         Converted = converted;
+        Breakdown = breakdown;
     }
 
     public static bool TryConsume(out bool cleared, out int earned, out int converted)
+        => TryConsume(out cleared, out earned, out converted, out _);
+
+    public static bool TryConsume(out bool cleared, out int earned, out int converted, out VillageFundsBreakdown breakdown)
     {
         cleared = Cleared;
         earned = Earned;
         converted = Converted;
+        breakdown = Breakdown;
         if (!HasReport) return false;
         HasReport = false;
+        Breakdown = null;
         return true;
     }
 }

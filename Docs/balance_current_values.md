@@ -168,11 +168,11 @@ Lv,MaxHp,Attack,Defense
 - enums are int. (buzzEffects.id and dungeons.id are name strings)
 - dungeons.requiredAttribute = ItemAttribute(Fire=0,Water=1,Wood=2,Light=4,Dark=5; 3 unused)
 - enemies excluded (dungeon-embedded enemies are not covered by current override path)
-## data（gameconst.json の data。H で変えた行だけ）
+## data（gameconst.json の data。H で変えた行だけ。納付金は 2026-10-29 に 15000・1.5 → 150000・2 に上げてテスト中：破産率の目標 ふつう 4〜5 割・熟練 1〜2 割）
 ```
 key	value	type
-debtBaseAmount	15000	int
-debtMultiplier	1.5	float
+debtBaseAmount	150000	int
+debtMultiplier	2	float
 debtFireSaleRate	0.6	float
 heroAttributeAttackBonus	1	float
 ```

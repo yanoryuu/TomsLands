@@ -1,0 +1,439 @@
+{
+  "_comment": "章の footage タグ → 素材ファイルと開始秒。end を省くと章の長さだけ使う（足りなければ冒頭からループ）。outcomes は配信の勝ち負け（台本の alt を選ぶ）。撮影後に Recordings/Jikkyo_*.mp4 を見て書き換える。いまは 2026-04 の古い素材（D:/TomsScreenShot）を仮に割り当ててある。",
+  "outcomes": {
+    "stream1": "win",
+    "stream2": "lose"
+  },
+  "sources": {
+    "old_a": "D:/TomsScreenShot/Movie_002.mp4",
+    "old_b": "D:/TomsScreenShot/Movie_003.mp4",
+    "a2": "D:/WorkTree/TomsLands/wt-04/Recordings/JikkyoA_20261026_205705.mp4",
+    "c1": "D:/WorkTree/TomsLands/wt-04/Recordings/JikkyoC_20261026_202218.mp4",
+    "c2": "D:/WorkTree/TomsLands/wt-04/Recordings/JikkyoC_20261026_203528.mp4",
+    "b2": "D:/WorkTree/TomsLands/wt-04/Recordings/JikkyoB_20261026_205704_recon.mp4",
+    "d1": "D:/WorkTree/TomsLands/wt-04/Recordings/JikkyoD_20261027_110513.mp4",
+    "e1": "D:/WorkTree/TomsLands/wt-04/Recordings/MarathonC_20261028_1438_01_c_20261028_143835.mp4",
+    "e2": "D:/WorkTree/TomsLands/wt-04/Recordings/MarathonC_20261028_1537_05_c_20261028_162407.mp4",
+    "e3": "D:/WorkTree/TomsLands/wt-04/Recordings/MarathonC_20261028_1537_10_c_20261028_180428.mp4"
+  },
+  "tags": {
+    "title": {
+      "src": "a2",
+      "start": 8
+    },
+    "prologue": {
+      "src": "old_a",
+      "start": 3
+    },
+    "shop": {
+      "src": "a2",
+      "start": 64
+    },
+    "blacksmith": {
+      "src": "a2",
+      "start": 8
+    },
+    "display": {
+      "src": "old_a",
+      "start": 30
+    },
+    "sales": {
+      "src": "old_a",
+      "start": 40
+    },
+    "summary": {
+      "src": "old_b",
+      "start": 40
+    },
+    "newspaper": {
+      "src": "a2",
+      "start": 16
+    },
+    "info": {
+      "src": "old_b",
+      "start": 12
+    },
+    "prophet": {
+      "src": "old_a",
+      "start": 25
+    },
+    "hero": {
+      "src": "old_b",
+      "start": 28
+    },
+    "demon": {
+      "src": "c2",
+      "start": 400
+    },
+    "stream_prep": {
+      "src": "old_a",
+      "start": 50
+    },
+    "stream": {
+      "src": "a2",
+      "start": 78
+    },
+    "stream_result": {
+      "src": "a2",
+      "start": 88
+    },
+    "tax": {
+      "src": "old_b",
+      "start": 36
+    },
+    "result": {
+      "src": "a2",
+      "start": 176
+    },
+    "map": {
+      "src": "a2",
+      "start": 560
+    },
+    "d1": {
+      "src": "d1",
+      "start": 0
+    }
+  },
+  "per_script": {
+    "A_tantan": {
+      "tags": {
+        "a_overview": {
+          "src": "a2",
+          "start": 8
+        },
+        "a_tax": {
+          "src": "a2",
+          "start": 655
+        },
+        "a_day1": {
+          "src": "a2",
+          "start": 8
+        },
+        "a_day2": {
+          "src": "a2",
+          "start": 32
+        },
+        "a_prep": {
+          "src": "a2",
+          "start": 64
+        },
+        "a_stream1": {
+          "src": "a2",
+          "start": 78
+        },
+        "a_mid": {
+          "src": "a2",
+          "start": 96
+        },
+        "a_stream2": {
+          "src": "a2",
+          "start": 144
+        },
+        "a_result1": {
+          "src": "a2",
+          "start": 176
+        },
+        "a_village": {
+          "src": "a2",
+          "start": 210
+        },
+        "a_prep2": {
+          "src": "a2",
+          "start": 240
+        },
+        "a_run2_start": {
+          "src": "a2",
+          "start": 248
+        },
+        "a_stream3": {
+          "src": "a2",
+          "start": 328
+        },
+        "a_stream4": {
+          "src": "a2",
+          "start": 432
+        },
+        "a_news2": {
+          "src": "a2",
+          "start": 504
+        },
+        "a_info": {
+          "src": "a2",
+          "start": 560
+        },
+        "a_stream5": {
+          "src": "a2",
+          "start": 592
+        },
+        "a_cold": {
+          "src": "a2",
+          "start": 663
+        },
+        "a2": {
+          "src": "a2",
+          "start": 0
+        },
+        "c2_prologue": {
+          "src": "c2",
+          "start": 15
+        }
+      },
+      "outcomes": {}
+    },
+    "C_play": {
+      "tags": {
+        "c_hook": {
+          "src": "c1",
+          "start": 330
+        },
+        "c_try1a": {
+          "src": "c1",
+          "start": 42
+        },
+        "c_try1b": {
+          "src": "c1",
+          "start": 208
+        },
+        "c_try1c": {
+          "src": "c1",
+          "start": 300
+        },
+        "c2_title": {
+          "src": "c2",
+          "start": 15
+        },
+        "c2_prologue": {
+          "src": "c2",
+          "start": 15
+        },
+        "c2_day1": {
+          "src": "c2",
+          "start": 45
+        },
+        "c2_day2": {
+          "src": "c2",
+          "start": 75
+        },
+        "c2_news": {
+          "src": "c2",
+          "start": 150
+        },
+        "c2_prep1": {
+          "src": "c2",
+          "start": 195
+        },
+        "c2_stream1": {
+          "src": "c2",
+          "start": 250
+        },
+        "c2_tax1": {
+          "src": "c2",
+          "start": 358
+        },
+        "c2_stream2": {
+          "src": "c2",
+          "start": 390
+        },
+        "c2_result1": {
+          "src": "c2",
+          "start": 478
+        },
+        "c2_village": {
+          "src": "c2",
+          "start": 525
+        },
+        "c2_prep2": {
+          "src": "c2",
+          "start": 560
+        },
+        "c2_run2_day1": {
+          "src": "c2",
+          "start": 600
+        },
+        "c2_stream3": {
+          "src": "c2",
+          "start": 648
+        },
+        "c2_stream4": {
+          "src": "c2",
+          "start": 735
+        },
+        "c2_result2": {
+          "src": "c2",
+          "start": 780
+        },
+        "c1": {
+          "src": "c1",
+          "start": 0
+        },
+        "c2": {
+          "src": "c2",
+          "start": 0
+        }
+      },
+      "outcomes": {}
+    },
+    "B_kaisetsu": {
+      "tags": {
+        "b_hook": {
+          "src": "b2",
+          "start": 625
+        },
+        "b_intro": {
+          "src": "b2",
+          "start": 10
+        },
+        "b_news": {
+          "src": "b2",
+          "start": 130
+        },
+        "b_blacksmith": {
+          "src": "b2",
+          "start": 300
+        },
+        "b_stream1": {
+          "src": "b2",
+          "start": 60
+        },
+        "b_village1": {
+          "src": "b2",
+          "start": 260
+        },
+        "b_demo_prep": {
+          "src": "b2",
+          "start": 540
+        },
+        "b_demo_news": {
+          "src": "b2",
+          "start": 580
+        },
+        "b_demo_stream": {
+          "src": "b2",
+          "start": 610
+        },
+        "b_demo_buzz": {
+          "src": "b2",
+          "start": 668
+        },
+        "b_demo_stream2": {
+          "src": "b2",
+          "start": 676
+        },
+        "b_demo_result": {
+          "src": "b2",
+          "start": 728
+        },
+        "b_result1": {
+          "src": "b2",
+          "start": 220
+        },
+        "b_village2": {
+          "src": "b2",
+          "start": 760
+        },
+        "b_run4": {
+          "src": "b2",
+          "start": 800
+        },
+        "b_stream4": {
+          "src": "b2",
+          "start": 845
+        },
+        "b2": {
+          "src": "b2",
+          "start": 0
+        }
+      },
+      "outcomes": {}
+    },
+    "D_maou": {
+      "tags": {
+        "d1": {
+          "src": "d1",
+          "start": 0
+        }
+      },
+      "outcomes": {}
+    },
+    "E_soudan": {
+      "tags": {
+        "e1": {
+          "src": "e1",
+          "start": 0
+        },
+        "e2": {
+          "src": "e2",
+          "start": 0
+        },
+        "e3": {
+          "src": "e3",
+          "start": 0
+        },
+        "e_thumb": {
+          "src": "e2",
+          "start": 2636
+        }
+      },
+      "outcomes": {}
+    },
+    "H_soudan_best": {
+      "tags": {
+        "e1": {
+          "src": "e1",
+          "start": 0
+        },
+        "e2": {
+          "src": "e2",
+          "start": 0
+        },
+        "e3": {
+          "src": "e3",
+          "start": 0
+        },
+        "h_thumb": {
+          "src": "e1",
+          "start": 922
+        }
+      },
+      "outcomes": {}
+    },
+    "G_soudan3": {
+      "tags": {
+        "e3": {
+          "src": "e3",
+          "start": 0
+        },
+        "g_thumb": {
+          "src": "e3",
+          "start": 2736
+        },
+        "g_l1": {
+          "src": "e3",
+          "start": 176
+        },
+        "g_l2": {
+          "src": "e3",
+          "start": 1726
+        },
+        "g_big": {
+          "src": "e3",
+          "start": 2598
+        }
+      },
+      "outcomes": {}
+    },
+    "F_soudan2": {
+      "tags": {
+        "f1": {
+          "src": "e1",
+          "start": 0
+        },
+        "f_thumb": {
+          "src": "e1",
+          "start": 1693
+        }
+      },
+      "outcomes": {}
+    }
+  }
+}

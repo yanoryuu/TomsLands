@@ -23,6 +23,7 @@ public class GameOverPresenter : IDisposable, IStartable
         public int PeakProfit;
         public int Carried;
         public int VillageFunds;
+        public VillageFundsBreakdown Breakdown;
     }
 
     private BankruptReview? review;
@@ -39,8 +40,10 @@ public class GameOverPresenter : IDisposable, IStartable
                 History = history,
                 PeakProfit = peak.Profit,
                 Carried = peak.Carried,
-                VillageFunds = MetaProgressModel.CalculateVillageFunds(false, peak.Profit, peak.Carried, tomsModel.GameMode),
+                // 破産の救済は「土台 + 納付を済ませた分」なので、済ませた回数を渡す
+                Breakdown = MetaProgressModel.CalculateVillageFundsBreakdown(false, peak.Profit, peak.Carried, tomsModel.GameMode, tomsModel.DebtCycle.Value),
             };
+            r.VillageFunds = r.Breakdown.Total;
             review = r;
             return r;
         }
@@ -71,7 +74,7 @@ public class GameOverPresenter : IDisposable, IStartable
         // 体験版は村が無いので「村へ +○G」の行を出さない（-1）。ボタンも「次へ」
         if (DemoBuild.IsDemo) gameOverView.ApplyDemoLabels();
         gameOverView.ShowReview(r.History.moneyValues, r.History.streamWins, r.History.streamLosses,
-            r.History.streamEarningsTotal, r.Carried, DemoBuild.IsDemo ? -1 : r.VillageFunds);
+            r.History.streamEarningsTotal, r.Carried, DemoBuild.IsDemo ? -1 : r.VillageFunds, DemoBuild.IsDemo ? null : r.Breakdown);
 
         // 村へ戻る（村に[タイトルへ]ボタンがある）。旧「タイトル」ボタンも同じ行き先
         gameOverView.OnRetryClicked
@@ -127,7 +130,8 @@ public class GameOverPresenter : IDisposable, IStartable
             metaAwarded = true;
             var review = Review;
             int converted = metaProgress.ConvertRunToVillageFunds(
-                cleared: false, profit: review.PeakProfit, carried: review.Carried, mode: tomsModel.GameMode);
+                cleared: false, profit: review.PeakProfit, carried: review.Carried, mode: tomsModel.GameMode, dueDebtCycles: tomsModel.DebtCycle.Value,
+                out var breakdown);
 
             metaProgress.RecordRunEnd(new RunRecordPlain
             {
@@ -143,7 +147,7 @@ public class GameOverPresenter : IDisposable, IStartable
                 villageFunds = converted,
                 endedAt = DateTime.Now.ToString("yyyy/MM/dd HH:mm"),
             });
-            VillageArrivalReport.Set(cleared: false, earned: review.PeakProfit, converted: converted);
+            VillageArrivalReport.Set(cleared: false, earned: review.PeakProfit, converted: converted, breakdown: breakdown);
 
             UnityEngine.Debug.Log($"[GameOverPresenter] 破産: 村資金+{converted}G（最高の儲け {review.PeakProfit}G から）");
         }

@@ -45,6 +45,8 @@ public sealed partial class AutoPlayController
 
     private void ResetStreamState()
     {
+        // 結果パネルを見る前にシーンが変わった場合も、配信が終わったことを人格に伝える
+        if (_streamStarted) (AutoPlay.Strategy as IAutoPlayPrefetchStrategy)?.OnStreamEnded();
         _streamStarted = false;
         _streamSpent = 0;
         _streamActions = 0;
@@ -71,7 +73,11 @@ public sealed partial class AutoPlayController
                          && !AutoPlayUi.IsActive(_battlePanels, "streamingResultPanel");
         if (!streaming)
         {
-            if (_streamStarted) AutoPlay.AddLog($"配信: 自動操作を終了（操作 {_streamActions} 回 / 介入 {_streamSpent:N0}G）");
+            if (_streamStarted)
+            {
+                AutoPlay.AddLog($"配信: 自動操作を終了（操作 {_streamActions} 回 / 介入 {_streamSpent:N0}G）");
+                (AutoPlay.Strategy as IAutoPlayPrefetchStrategy)?.OnStreamEnded();
+            }
             _streamStarted = false;
             return false;
         }
@@ -86,8 +92,11 @@ public sealed partial class AutoPlayController
 
         if (IsBattlePaused()) return false;
 
+        bool firstStep = !_streamStarted;
         var ctx = BuildStreamContext();
         var strategy = AutoPlay.Strategy;
+        // 人格プレイ: 配信の判断を裏でモデルに聞く（戦闘は止めない。答えが来るまで戦略は介入を控える）
+        if (firstStep && strategy is IAutoPlayPrefetchStrategy prefetch) prefetch.OnStreamStarted(ctx);
 
         // 2) 売り場の空き・売り切れを在庫で埋める（ドラッグ）
         if (strategy.ChooseShelfSwap(ctx, out int inventoryIndex, out int sellIndex)

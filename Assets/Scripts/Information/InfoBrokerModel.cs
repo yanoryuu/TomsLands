@@ -72,6 +72,13 @@ public class InfoBrokerModel
     /// <summary>ダンジョンごとの情報料（配信の回ごと）。</summary>
     public Dictionary<DungeonName, int[]> GetDungeonInfoCosts() => dungeonInfoCosts;
 
+    /// <summary>そのダンジョンの情報を売っているか（CSV の情報料テーブルに載っているか）。</summary>
+    public bool IsDungeonInfoSellable(DungeonName dungeonName) =>
+        dungeonInfoCosts.TryGetValue(dungeonName, out var costs) && costs != null && costs.Length > 0;
+
+    /// <summary>その日の地図の値段。納付の期日が来るたびに上がる（GameConst.GetMapInfoCost）。</summary>
+    public int GetDungeonInfoCost(int day) => GameConst.GetMapInfoCost(DebtCalculator.CountDueCycles(day));
+
     /// <summary>ダンジョンの情報を買う（isShowedInfo を true にして保存する）。支払いは呼び出し側。</summary>
     public void PurchaseDungeonInfo(DungeonName dungeonName)
     {

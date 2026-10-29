@@ -32,6 +32,9 @@ public enum AutoPlayRunEndAction
     Stop = 0,
     /// <summary>村 → 出店準備 → 次のランへ進み続ける。</summary>
     StartNextRun = 1,
+    /// <summary>リザルト / ゲームオーバーのボタンを押して精算し（村資金・ランの記録を保存）、村に着いたところで停止する。
+    /// 人格マラソンが同じセーブを次の Play で「続きから」遊ぶため（Stop のままだと精算されずにラン内セーブが残る）。</summary>
+    SettleAndStopAtVillage = 2,
 }
 
 /// <summary>

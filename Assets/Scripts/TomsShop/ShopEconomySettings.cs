@@ -148,7 +148,7 @@ public class ShopEconomySettings : ScriptableObject
     [Header("配信前の期待（次の配信先の弱点属性が買われる）")]
     [Tooltip("次の配信まで何日以内なら、配信先の弱点属性の品に期待の需要が乗るか（1 = 前日だけ）。0 で無効。")]
     public int streamAnticipationDays = 3;
-    [Tooltip("その間、弱点属性の品の需要に毎朝足す量（0.04 = 需要 +0.04/日 ≒ 適正値 +4%/日）。決着で勝てば ×1.8、負ければ半値。")]
+    [Tooltip("その間、弱点属性の品の需要に毎朝足す量（0.04 = 需要 +0.04/日 ≒ 適正値 +4%/日）。決着で勝てば ×1.8（負けても値段は割らない。負けた配信は武器・防具の売上の一部を返金）。")]
     public float streamAnticipationDemandUp = 0.04f;
     [Tooltip("その間、弱点属性の品の値段に毎朝掛ける期待買いの上げ幅（0.03 = +3%/日）。店で普通に売る量（1日30〜40個＝売り圧力 −4〜5%）なら下がり続けない強さ。")]
     public float streamAnticipationPriceUp = 0.03f;

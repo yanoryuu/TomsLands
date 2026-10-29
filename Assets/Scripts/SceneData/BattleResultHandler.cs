@@ -91,7 +91,8 @@ public class BattleResultHandler : IStartable, IDisposable
             _tomsModel.SavePlayerMoney();
             Debug.Log($"[BattleResultHandler] 村の広場: 配信の売上に +{streamBonus}G");
         }
-        RunHistory.RecordStreamEarnings(_outputData.TotalEarnings, _inputData.DungeonKey.ToString(), streamBonus);
+        RunHistory.RecordStreamEarnings(_outputData.TotalEarnings, _inputData.DungeonKey.ToString(), streamBonus,
+            _outputData.HeroDefeatRefund);
 
         // 村の広場 Lv5「勝負配信の宣言」の決着: 当たり=フォロワー・注目が増える／外れ=減る（売上の上乗せは TotalEarnings に入っている）。
         // 途中終了は無効（不具合での途中終了なら回数を戻す）。決着待ちの宣言はここで消す
@@ -101,11 +102,12 @@ public class BattleResultHandler : IStartable, IDisposable
         // 勝敗ボーナス/ペナルティ・経験値・最低保証レベルアップ・属性波及・レリック3択・戦績はすべて付けない
         bool aborted = _outputData.Result == BattleResult.Abort;
 
-        // 勇者の装備の帰還後の値段（配信リザルトの「相場への影響」と同じ計算: 店の値段 × 勝敗の倍率 → ストップ高/安）。
-        // 日送り（NextTurn）の相場の揺れを乗せると配信リザルトの見込みと翌朝の値段がずれるので、日送りのあとにこの値へ揃える
-        var battlePrices = aborted ? null : PreviewBattlePrices(_outputData.Result == BattleResult.Victory
-            ? ItemModel.HeroWinMultiplier(_outputData.DefeatedBossCount)
-            : 1f / ItemModel.HeroDefeatPriceDivisor);
+        // 勇者の装備の帰還後の値段（配信リザルトの「相場への影響」と同じ計算: 店の値段 × 勝ちの倍率 → ストップ高/安）。
+        // 日送り（NextTurn）の相場の揺れを乗せると配信リザルトの見込みと翌朝の値段がずれるので、日送りのあとにこの値へ揃える。
+        // 負けは店の値段を動かさない（負けの痛手は配信の精算の「返金騒ぎ」）ので、相場への影響も出さず揃えもしない
+        var battlePrices = _outputData.Result == BattleResult.Victory
+            ? PreviewBattlePrices(ItemModel.HeroWinMultiplier(_outputData.DefeatedBossCount))
+            : null;
 
         // --- 勝敗ボーナス/ペナルティ ---
         if (aborted)
@@ -128,10 +130,8 @@ public class BattleResultHandler : IStartable, IDisposable
         }
         else
         {
-            if (!string.IsNullOrEmpty(_outputData.WeaponId))
-                _itemModel.BattleDefeatPenalty(_outputData.WeaponId, ItemModel.HeroDefeatPriceDivisor);
-            if (!string.IsNullOrEmpty(_outputData.ArmorId))
-                _itemModel.BattleDefeatPenalty(_outputData.ArmorId, ItemModel.HeroDefeatPriceDivisor);
+            // 勇者が負けても装備の店の値段は割らない（以前の半値は賭けと無関係で手の打ちようがなかった）。
+            // 負けの痛手は配信の精算で武器・防具の売上の一部を返す「返金騒ぎ」で、TotalEarnings から引いてある
 
             // 魔王側に張って当たった（防衛報酬を受け取った）ときも、勝ったときと同じくレリック3択を積む。
             // 防衛報酬の受取累計（配当通知書の回収倍率）もここで記録する（精算と同じタイミング）
@@ -141,7 +141,7 @@ public class BattleResultHandler : IStartable, IDisposable
                 DemonPayoutHistory.Record(_outputData.DungeonKey, _outputData.DefenseReward);
             }
 
-            Debug.Log("[BattleResultHandler] Defeat penalties applied.");
+            Debug.Log($"[BattleResultHandler] Defeat settled (返金騒ぎ -{_outputData.HeroDefeatRefund}G は精算済み).");
         }
 
         // 呪われた帳簿: 配信が外れた（勇者が負けて配当も無い・途中終了）ら、次の朝に所持金の一部を取り立てる。

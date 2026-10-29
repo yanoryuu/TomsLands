@@ -266,9 +266,17 @@ public class GameFlowManager : IDisposable, IStartable
         BattleCount.Value = CalculateBattleCount(_currentIndex);
         if (_tomsModel != null) _tomsModel.CurrentTurn.Value = CurrentTurn.Value;
 
+        // 店の設備の故障（朝いちばん。壊れたマシンは今朝から効果が止まる＝冷蔵ケース・売上・お金・製造のどれも）。
+        // 乱数はランのシード×日×マシンID なので、同じシードなら同じ朝に壊れる（AutoPlay の再現）
+        if (_shopMachineModel != null && _tomsModel != null)
+        {
+            foreach (var broken in _shopMachineModel.AdvanceDurability(_tomsModel.FlowSeed, CurrentTurn.Value))
+                _morningReport?.Add(_shopMachineModel.BreakdownLine(broken));
+        }
+
         if (_itemModel != null && _economySettings != null && _tomsModel != null)
         {
-            // マシン（冷蔵ケース等）+ レリックの需要下限ボーナスを渡す（どちらも無ければ 0 で従来挙動）
+            // 旧マシン効果 + レリックの需要下限ボーナスを渡す（どちらも無ければ 0 で従来挙動）
             float demandFloorBonus = _shopMachineModel?.TotalDemandFloorBonus ?? 0f;
             if (_relicResolver != null)
                 demandFloorBonus = _relicResolver.Modify(RelicStatId.DemandFloorAdd, demandFloorBonus);
@@ -277,7 +285,8 @@ public class GameFlowManager : IDisposable, IStartable
             ResolveNewsArcs();
 
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
-                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects, GetStreamAnticipationAttribute());
+                CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects, GetStreamAnticipationAttribute(),
+                _shopMachineModel?.NotDisplayedDemandDropRate ?? 1f);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
@@ -297,7 +306,7 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.AddRevenue(overdue.TotalIncome);
                 _sellOrderModel.SaveData();
                 _tomsModel.SavePlayerMoney();
-                _morningReport?.Add($"持ち越した売上の入金: +{overdue.TotalIncome:N0}G");
+                _morningReport?.AddIncome("overdueSales", "持ち越した売上", null, overdue.TotalIncome);
                 Debug.Log($"[GameFlowManager] 持ち越し売り注文を精算: +{overdue.TotalIncome}G ({overdue.Settled.Count}件)");
             }
         }
@@ -319,7 +328,7 @@ public class GameFlowManager : IDisposable, IStartable
                     financeIncome += finance.BondPayout;
                     foreach (var bond in finance.MaturedBonds)
                     {
-                        _morningReport?.Add($"債券償還: {bond.productName} 元本{bond.principal:N0}G + 利息{bond.interest:N0}G");
+                        _morningReport?.AddIncome($"bond:{bond.productName}", $"{bond.productName}の償還", null, bond.principal + bond.interest);
                         Debug.Log($"[GameFlowManager] 債券償還: {bond.productName} 元本{bond.principal}G + 利息{bond.interest}G");
                     }
                 }
@@ -332,7 +341,7 @@ public class GameFlowManager : IDisposable, IStartable
                 if (_relicResolver != null)
                     dividend = Mathf.Max(0, _relicResolver.ModifyInt(RelicStatId.DividendMul, dividend));
                 financeIncome += dividend;
-                _morningReport?.Add($"配当収入: +{dividend:N0}G");
+                _morningReport?.AddIncome("dividend", "配当", null, dividend);
                 Debug.Log($"[GameFlowManager] 配当収入: +{dividend}G");
             }
 
@@ -342,6 +351,9 @@ public class GameFlowManager : IDisposable, IStartable
                 var machineResult = _shopMachineModel.ExecuteDailyEffects(_itemModel, _relicResolver);
                 if (machineResult.TotalMoney > 0)
                     financeIncome += machineResult.TotalMoney;
+                // お金を産むマシンはアイコン付きの入金の行にする（壊れているマシンは行を出さない）
+                foreach (var m in machineResult.MoneySources)
+                    _morningReport?.AddIncome($"machine:{m.Machine.machineId}", m.Machine.machineName, m.Machine.icon, m.Amount);
                 _morningReport?.AddRange(machineResult.Lines);
                 if (machineResult.ProducedAnyItem)
                     _itemModel.SaveData();
@@ -350,7 +362,10 @@ public class GameFlowManager : IDisposable, IStartable
             // レリックのターン開始フック（フック型効果。入金はビヘイビア内で行われる）
             if (_relicHooks != null)
             {
-                var relicLines = _relicHooks.OnTurnStart(CurrentTurn.Value, _tomsModel, _itemModel);
+                var relicLines = _relicHooks.OnTurnStart(CurrentTurn.Value, _tomsModel, _itemModel,
+                    _morningReport != null
+                        ? (relic, gained) => _morningReport.AddIncome($"relic:{relic.relicId}", relic.relicName, relic.icon, gained)
+                        : null);
                 _morningReport?.AddRange(relicLines);
             }
 
@@ -645,6 +660,19 @@ public class GameFlowManager : IDisposable, IStartable
             if (t == GameEvent.Shop) days++;
         }
         return days;
+    }
+
+    /// <summary>
+    /// 今日より後に残っている朝の数（日送りで朝の処理が走る回数 = イベント以外のノード。配信日・終わりも数える）。
+    /// 店の設備の強化・修理の「元が取れるか」の目安（AutoPlay）に使う。
+    /// </summary>
+    public int GetRemainingMornings()
+    {
+        if (_gameFlow == null) return 0;
+        int mornings = 0;
+        for (int i = _currentIndex + 1; i < _gameFlow.GameFlowStack.Count; i++)
+            if (_gameFlow.GameFlowStack[i].EventType != GameEvent.Event) mornings++;
+        return mornings;
     }
 
     /// <summary>表示用: 次の配信がこのランの最後の配信か（配信が残っていなければ false）。</summary>

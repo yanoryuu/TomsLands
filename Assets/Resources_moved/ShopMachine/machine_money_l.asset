@@ -17,12 +17,35 @@ MonoBehaviour:
   description: "\u6BCE\u671D\u307E\u3068\u307E\u3063\u305F\u7A3C\u304E\u3092\u6301\u3063\u3066\u304F\u308B\u5927\u578B\u30B4\u30FC\u30EC\u30E0\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
-  cost: 15400
+  cost: 16000
   placementType: 0
   requiredShopLevel: 3
   effectType: 0
-  dailyMoney: 2200
+  dailyMoney: 3200
   dailyItemId: 
   dailyItemCount: 1
+  dailyItemSelectable: 0
+  dailyProductionBudget: 1000
   revenueMultiplierBonus: 0.05
   demandFloorBonus: 0.05
+  levels:
+  - cost: 16000
+    effectValue: 3200
+    safeDays: 4
+    breakChanceStep: 0.15
+  - cost: 11200
+    effectValue: 6400
+    safeDays: 5
+    breakChanceStep: 0.12
+  - cost: 12600
+    effectValue: 10000
+    safeDays: 6
+    breakChanceStep: 0.1
+  - cost: 14300
+    effectValue: 14100
+    safeDays: 7
+    breakChanceStep: 0.08
+  - cost: 16100
+    effectValue: 18700
+    safeDays: 8
+    breakChanceStep: 0.06

@@ -66,24 +66,74 @@ public abstract class AutoPlayStrategyBotBase : IAutoPlayBot
         return spent;
     }
 
-    /// <summary>空き枠を「元が取れる日数が一番短い」お金のマシンで埋める。</summary>
+    /// <summary>
+    /// 空き枠を「元が取れる日数が短い」順のお金のマシンで埋める（同じマシンは 1 台までなので、まだ置いていないものから）。
+    /// 先に壊れたマシンの修理と、元が取れる強化（AutoPlayMachineRules）を積む。
+    /// </summary>
     protected static int PlanGolems(AutoPlaySnapshot s, AutoPlayDayPlan plan, int budget)
     {
+        int spent = PlanMachineCare(s, plan, budget);
         int free = s.MachineSlots - s.PlacedMachines.Count;
-        int spent = 0;
-        var best = s.Machines
-            .Where(m => m.DailyMoney > 0 && m.RequiredShopLevel <= s.ShopLevel)
+        var picks = s.Machines
+            .Where(m => !m.Placed && m.DailyMoney > 0 && m.RequiredShopLevel <= s.ShopLevel)
             .OrderBy(m => m.Cost / (float)m.DailyMoney)
             .ThenByDescending(m => m.DailyMoney)
-            .FirstOrDefault();
-        if (best == null) return 0;
-        for (int i = 0; i < free && spent + best.Cost <= budget; i++)
+            .ToList();
+        int placed = 0;
+        foreach (var m in picks)
         {
-            plan.PlaceMachines.Add(best.Id);
-            spent += best.Cost;
+            if (placed >= free) break;
+            if (spent + m.Cost > budget) continue;
+            plan.PlaceMachines.Add(m.Id);
+            spent += m.Cost;
+            placed++;
         }
-        if (plan.PlaceMachines.Count > 0)
-            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "machines", Chosen = $"{best.Id}x{plan.PlaceMachines.Count}" });
+        if (placed > 0)
+            plan.Decisions.Add(new AutoPlayDecision { Turn = s.RunTurn, Phase = "day", Question = "machines", Chosen = string.Join("+", plan.PlaceMachines) });
+        return spent;
+    }
+
+    /// <summary>このランで残っている朝の数（日送りの回数。イベントも含む目安）。</summary>
+    protected static int RemainingMornings(AutoPlaySnapshot s) => Mathf.Max(0, s.FlowLength - s.FlowIndex - 1);
+
+    /// <summary>
+    /// 置いてあるマシンの修理と強化（AutoPlayMachineRules: 元が取れる日数 ≤ 残りの朝 ÷ 2）。修理を先に、強化は元が取れる日数の短い順。
+    /// </summary>
+    protected static int PlanMachineCare(AutoPlaySnapshot s, AutoPlayDayPlan plan, int budget)
+    {
+        int spent = 0;
+        int left = RemainingMornings(s);
+        foreach (var m in s.Machines.Where(m => m.Placed && m.Broken))
+        {
+            if (!System.Enum.TryParse<ShopMachineEffectType>(m.Type, out var type)) continue;
+            float value = AutoPlayMachineRules.DailyValue(type, m.EffectValue);
+            if (!AutoPlayMachineRules.ShouldRepair(type, m.RepairCost, value, left) || spent + m.RepairCost > budget) continue;
+            plan.RepairMachines.Add(m.Id);
+            spent += m.RepairCost;
+        }
+        var ups = s.Machines
+            .Where(m => m.Placed && m.UpgradeCost > 0 && System.Enum.TryParse<ShopMachineEffectType>(m.Type, out _))
+            .Select(m =>
+            {
+                var type = (ShopMachineEffectType)System.Enum.Parse(typeof(ShopMachineEffectType), m.Type);
+                float added = AutoPlayMachineRules.DailyValue(type, m.NextEffectValue) - AutoPlayMachineRules.DailyValue(type, m.EffectValue);
+                return (m, added);
+            })
+            .Where(x => AutoPlayMachineRules.ShouldUpgrade(x.m.UpgradeCost, x.added, left))
+            .OrderBy(x => x.m.UpgradeCost / x.added)
+            .ToList();
+        foreach (var (m, _) in ups)
+        {
+            if (spent + m.UpgradeCost > budget) continue;
+            plan.UpgradeMachines.Add(m.Id);
+            spent += m.UpgradeCost;
+        }
+        if (plan.RepairMachines.Count > 0 || plan.UpgradeMachines.Count > 0)
+            plan.Decisions.Add(new AutoPlayDecision
+            {
+                Turn = s.RunTurn, Phase = "day", Question = "machine_care",
+                Chosen = $"repair={string.Join("+", plan.RepairMachines)};upgrade={string.Join("+", plan.UpgradeMachines)}",
+            });
         return spent;
     }
 

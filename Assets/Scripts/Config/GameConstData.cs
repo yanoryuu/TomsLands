@@ -22,6 +22,11 @@ public class GameConstData
     // 強制返済で現金と金融資産を足しても届かないとき、在庫を相場のこの割合で投げ売りして充てる（H-8。0 = 投げ売りしない）
     public float debtFireSaleRate = 0.6f;
 
+    // --- 情報屋の地図（ダンジョンの情報料） ---
+    // 情報料 = mapInfoBaseCost × mapInfoDebtMultiplier ^（期日が来た納付の回数）。納付の期日が来るたびに値上がりする
+    public int mapInfoBaseCost = 10000;
+    public float mapInfoDebtMultiplier = 2f;
+
     // --- ヒーロー経験値 ---
     public int heroExpPerMob = 10;
     public int heroExpPerBoss = 100;
@@ -70,6 +75,9 @@ public class GameConstData
     // --- 配信の同時接続数（コメント量の入力。表示のみでゲーム性には影響しない） ---
     public StreamingAudienceData streamingAudience = new StreamingAudienceData();
 
+    // --- 店の設備（マシン）の修理など。配信は data シートの「machine.」付きのキー ---
+    public MachineSettingsData machine = new MachineSettingsData();
+
     /// <summary>
     /// 配列まで含めた深いコピーを返す（ベイク済みアセットを実行時に汚染しないため）。
     /// </summary>
@@ -100,6 +108,9 @@ public class GameConstData
         clone.streamingAudience = streamingAudience != null
             ? streamingAudience.Clone()
             : new StreamingAudienceData();
+        clone.machine = machine != null
+            ? machine.Clone()
+            : new MachineSettingsData();
         return clone;
     }
 }
@@ -181,6 +192,18 @@ public class StreamingAudienceData
     public StreamingAudienceData Clone() => (StreamingAudienceData)MemberwiseClone();
 }
 
+/// <summary>
+/// 店の設備（マシン）の設定。レベルごとの費用・効果・壊れやすさは balance.json の machineLevels（シート machineLevels）。
+/// </summary>
+[Serializable]
+public class MachineSettingsData
+{
+    /// <summary>修理費の率。修理費 = この率 × 今のレベルの行の費用（Lv1 = 購入費）。村の職人組合の割引も掛かる。</summary>
+    public float repairCostRate = 0.5f;
+
+    public MachineSettingsData Clone() => (MachineSettingsData)MemberwiseClone();
+}
+
 /// <summary>準備シーン（メタ進行）関連の設定。</summary>
 [Serializable]
 public class PreparationSettingsData
@@ -234,15 +257,30 @@ public class VillageSettingsData
     // --- ラン終了 → 村資金の変換（Docs/Village_Meta_Design.md §4） ---
     // 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え。クリア時は「持ち込み + 儲け × 率 × 難易度倍率」が村資金に入る
     /// <summary>ランクリア時: 儲け → 村資金への変換率。</summary>
-    public float conversionRate = 12.5f;
+    public float conversionRate = 1f;
     /// <summary>破産時: そのランの最高の儲け（所持金の最高値から求める）× 変換率 × この値。持ち込みは戻らない。</summary>
     public float bankruptcyConversionRate = 0.2f;
+    /// <summary>破産時の救済: 最低でも「この額 + 納付した額 × bankruptcyPaidDebtRate」は村資金に入る（最高の儲けから出す額の方が多ければそちら）。</summary>
+    public int bankruptcyBaseFunds = 50000;
+    /// <summary>破産時の救済: それまでに納付した額（予定額で数える）に掛ける率。</summary>
+    public float bankruptcyPaidDebtRate = 1f;
     /// <summary>村の総合Lvに応じた借金増加率（「発展した村は狙われる」。0=無効・将来用）。</summary>
     public float debtScalePerVillageLevel = 0f;
     /// <summary>変換率に掛ける難易度ごとの倍率（index = GameModeId: Short / Medium / Long）。</summary>
-    public float[] difficultyConversionMultipliers = { 1f, 1f, 1f };
-    /// <summary>クリアしたら儲けに関係なく入る完走ボーナス（index = GameModeId）。赤字のクリアでも Lv1 を1つ建てられる額。</summary>
+    public float[] difficultyConversionMultipliers = { 1f, 1.25f, 1.5f };
+    /// <summary>
+    /// 【旧・未使用（2026-10-28 まで）】難易度ごとの固定の完走ボーナス（index = GameModeId）。
+    /// 今は clearBaseFlat + clearDebtMultiplier × 予定の納付金の合計（MetaProgressModel.ClearBonusBase）。
+    /// 古いリモート JSON との互換のためにデータだけ残している。
+    /// </summary>
     public int[] clearBaseFunds = { 300000, 450000, 600000 };
+    /// <summary>
+    /// 完走ボーナスの土台（クリアしたら儲けに関係なく入る）。赤字のクリアでも Lv1 を1つ建てられる額。
+    /// 完走ボーナス = clearBaseFlat + clearDebtMultiplier × そのランで期日が来た納付金の「予定額」の合計（減免・借入・立て替えは含めない）。
+    /// </summary>
+    public int clearBaseFlat = 300000;
+    /// <summary>完走ボーナス: そのランで期日が来た納付金の予定額の合計に掛ける倍率（長く走って多く納めたランほど多く入る）。</summary>
+    public float clearDebtMultiplier = 2f;
 
     // --- ランク（儲け ÷ 難易度ごとの基準。A = 基準以上） ---
     /// <summary>ランク A の基準となる儲け（index = GameModeId）。S = 基準×rankSRatio、B = ×rankBRatio、C = 0 以上、D = 赤字。</summary>
@@ -254,7 +292,7 @@ public class VillageSettingsData
     // Lv5 は特殊な効果だけで、数値は Lv4 と同じ（配列の Lv5 の値は Lv4 と同じにしておく。足りなければ最後の値を使う）
     /// <summary>この施設レベルで「特殊な効果」が付く（VillageEffects.IsMaxLevel。施設の最大レベル）。</summary>
     public int specialEffectLevel = 5;
-    /// <summary>領主館: クリア時の完走ボーナス（clearBaseFunds）への上乗せ率。</summary>
+    /// <summary>領主館: クリア時の完走ボーナス（clearBaseFlat + 納付金の予定額 × clearDebtMultiplier）への上乗せ率。</summary>
     public float[] hallClearBonusRates = { 0f, 0f, 0f, 0f, 0.15f, 0.15f };
     /// <summary>冒険者ギルド: 報酬の3択を辞退したときの買取額の倍率。</summary>
     public float[] guildDeclineGoldMultipliers = { 1f, 1f, 1.5f, 1.5f, 2f, 2f };

@@ -30,8 +30,10 @@ public class ShopMachineSlotUI : MonoBehaviour
             });
     }
 
-    /// <param name="purchaseCost">実際に払う額（村の割引込み）。負なら定価 machine.cost を出す。</param>
-    public void Setup(ShopMachineData machine, int placedCount, bool levelLocked, int purchaseCost = -1)
+    /// <param name="placedLevel">置いてあればそのレベル（0 = 置いていない）。</param>
+    /// <param name="broken">置いてあるマシンが故障中か。</param>
+    /// <param name="purchaseCost">実際に払う額（村の割引込み）。負なら定価を出す。</param>
+    public void Setup(ShopMachineData machine, int placedLevel, bool broken, bool levelLocked, int purchaseCost = -1)
     {
         MachineId = machine.machineId;
 
@@ -42,11 +44,11 @@ public class ShopMachineSlotUI : MonoBehaviour
             iconImage.enabled = machine.icon != null;
         }
         if (nameText != null) nameText.text = machine.machineName;
-        if (effectText != null) effectText.text = machine.EffectSummary;
-        if (costText != null) costText.text = $"{(purchaseCost >= 0 ? purchaseCost : machine.cost):N0}G";
+        if (effectText != null) effectText.text = machine.EffectSummaryAt(Mathf.Max(1, placedLevel));
+        if (costText != null) costText.text = placedLevel > 0 ? "" : $"{(purchaseCost >= 0 ? purchaseCost : machine.BaseCost):N0}G";
         if (stateText != null)
         {
-            stateText.text = placedCount > 0 ? $"設置中×{placedCount}"
+            stateText.text = placedLevel > 0 ? (broken ? "<color=#E05A4A>故障中</color>" : $"設置中 Lv{placedLevel}")
                 : levelLocked ? $"店Lv{machine.requiredShopLevel}で解禁"
                 : "";
         }

@@ -142,7 +142,8 @@ public class GameLifetimeScope : LifetimeScope
         {
             Debug.LogWarning("[GameLifetimeScope] ShopMachineData が見つかりません。マシンショップには商品が並びません。Create > ScriptableObjects > ShopMachine > ShopMachineData で作成し、ラベル ShopMachineData を付与してください。");
         }
-        shopMachines = RemoteBalance.ApplyList("shopMachines", shopMachines, m => m.machineId);
+        // 配信: shopMachines（部分上書き）→ machineLevels（レベルの表の全置換。シート machineLevels）
+        shopMachines = ShopMachineData.ApplyRemoteBalance(shopMachines);
         builder.RegisterInstance(shopMachines);
 
         // =====================================================

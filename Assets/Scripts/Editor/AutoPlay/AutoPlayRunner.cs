@@ -329,6 +329,8 @@ public sealed class AutoPlayRunner
             };
             if (!ok) break;
         }
+        foreach (var id in plan.RepairMachines ?? new List<string>()) _game.RepairMachine(id);
+        foreach (var id in plan.UpgradeMachines ?? new List<string>()) _game.UpgradeMachine(id);
         foreach (var id in plan.PlaceMachines ?? new List<string>()) _game.PlaceMachine(id);
         foreach (var ad in plan.Advertisements ?? new List<string>()) _game.BuyAdvertisement(ad);
 

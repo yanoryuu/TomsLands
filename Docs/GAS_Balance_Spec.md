@@ -126,11 +126,33 @@
   定数シート `data` に `village.conversionRate`（float）・`village.rankRequiredTotalLevels`（int[]）のように「village.」付きのキーで書くと、
   GAS（2026-10-21 版の `nestDottedKeys_`）が `{ "village": { ... } }` に入れ子にして出す。書いていない項目は同梱の値のまま。
   type は float[]・string[] も使える（2026-10-21 版から。古い GAS では「未知の type」で止まるので、使う前にスクリプトを差し替える）。
+  2026-10-28 から `data` シートに `village.difficultyConversionMultipliers`（float[]、かんたん,ふつう,むずかしい の順で `1,1.25,1.5`）の行がある。`village.conversionRate` は 1。
+  同じく 2026-10-28 から、完走ボーナスの行 `village.clearBaseFlat`（int、300000）と `village.clearDebtMultiplier`（float、2）がある
+  （完走ボーナス = clearBaseFlat + clearDebtMultiplier × そのランで期日が来た納付金の予定額の合計。Docs/Village_Meta_Design.md §0-2）。
+  旧の `clearBaseFunds`（難易度ごとの固定額）はもう使っていないので、シートに行があっても効かない。
 - ⚠️ **汎用の行シートリーダー（readListSheet_）では処理できない**（同一idが複数行になり後勝ちで潰れる＋
   `level/cost/effectText` はフラットフィールドとして存在しないため無視される）。
   **専用リーダー `readVillageFacilities_()` で id ごとに levels[] へグループ化する**（§8のコード参照）。
   シート名は `villageFacilities`、ヘッダは型サフィックス不要（`id / facilityName / requiredHallLevel / level / cost / effectText`。
   V2以降は `startBonusKey / startBonusValue / unlockRelicTier` 列を追加可）。
+
+### machineLevels[]（levels の全置換・`ShopMachineData`、2026-10-29追加）
+店の設備のレベルの表。`id` = machineId（machine_money_s / machine_money_m / machine_money_l / machine_maker / machine_maker_l /
+machine_attract / machine_attract_l / machine_fridge / machine_fridge_l）。
+- **シートは `machineLevels`・1行=1設備×1レベル**（雛形 `Docs/balance_tsv/machineLevels.tsv`。同梱の値と同じ）。ヘッダは型サフィックス不要:
+  `machineId / level / cost / effectValue / safeDays / breakChanceStep`（`machineId` の代わりに `id` でも可）。
+- GAS の専用リーダー `readMachineLevels_()`（villageFacilities と同じ作り）が machineId ごとに level 昇順でまとめ、
+  `{ "id": "machine_money_s", "levels": [ { "cost": 6000, "effectValue": 1200, "safeDays": 4, "breakChanceStep": 0.15 }, ... ] }` にする。
+- 列の意味:
+  - `cost`: Lv1 = 買値、Lv2 以降 = その Lv へ上げる費用（定価。村の職人組合の値引きはゲーム側で掛ける。撤去は払った額の半分が戻る）
+  - `effectValue`: お金のゴーレム = 毎朝の G / 鍛造炉・魔導炉 = 毎朝の製造の進み G / オルガン・ステージ = 売上への足し算（0.06 = +6%。上限なし）/
+    鮮度ケース = 並べていない品の朝の需要の落ち込みを減らす割合（0.3 = 落ち込みが 7 割。2 つ置くと掛け算）
+  - `safeDays`: 置いて（強化・修理して）からこの回数の朝は壊れない
+  - `breakChanceStep`: その後 1 朝ごとに増える故障率（0.15 → 15%, 30%, …。1 で頭打ち）。safeDays・step とも 0 なら壊れない（空欄も 0）
+- **最大レベル = その設備の行の数**。載せる設備は全レベル行を書くこと（配列は全置換。部分だけ書くと段数が縮む）。
+- Unity 側は `RemoteBalance.ListSections` の `"machineLevels"` → `ShopMachineData.ApplyRemoteBalance`（"shopMachines" の後に当てる）。
+- 修理費の率は gameconst.json の `machine.repairCostRate`（data シートに `machine.repairCostRate` / float / 既定 0.5）。
+  修理費 = この率 × 今の Lv の行の cost（職人組合の値引きあり）。
 
 ### finance（単一・`FinanceSettings.cs` 準拠、2026-08追加）
 金融システムのスカラー設定。シートは **`bal_finance`**（key/value/type 形式・雛形 `Docs/balance_tsv/finance.tsv`）。

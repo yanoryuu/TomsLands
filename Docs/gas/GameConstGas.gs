@@ -19,6 +19,9 @@
  *   - data シートのキーに「.」があれば入れ子のオブジェクトにする（例: village.conversionRate → { village: { conversionRate } }）。
  *     GameConstData の入れ子の設定（village など）を配信するため。Unity 側は JSON に無い項目を同梱の値のまま残す。
  *   - type に float[] と string[] を足す（カンマ区切り）。
+ * 2026-10-29 更新:
+ *   - machineLevels を足す（店の設備のレベルの表。1行=1設備×1レベル → levels[] にグループ化。villageFacilities と同じ形）。
+ *     修理費の率は data シートの machine.repairCostRate（float、既定 0.5）。
  */
 
 // ============================================================
@@ -60,6 +63,7 @@ const BALANCE_LISTS = {
 };
 const BALANCE_HEROLEVELS_SHEET = 'bal_heroLevels';
 const VILLAGE_FACILITIES_SHEET = 'villageFacilities';
+const MACHINE_LEVELS_SHEET = 'machineLevels';
 
 // ============================================================
 // メニュー
@@ -257,6 +261,10 @@ function buildBalanceEnvelope() {
   const facilities = readVillageFacilities_();
   if (facilities.length > 0) envelope.villageFacilities = facilities;
 
+  // machineLevels（1行=1設備×1レベル → levels[] にグループ化）
+  const machineLevels = readMachineLevels_();
+  if (machineLevels.length > 0) envelope.machineLevels = machineLevels;
+
   // heroLevels（空なら省略）
   const hero = readHeroLevels_();
   if (hero.length > 0) envelope.heroLevels = hero;
@@ -348,6 +356,62 @@ function readVillageFacilities_() {
     }
     if ('unlockRelicTier' in col && row[col.unlockRelicTier] !== '')
       entry.unlockRelicTier = castCell_(row[col.unlockRelicTier], 'int', ctx + '!unlockRelicTier');
+
+    byId[id].rows.push({ level: castCell_(row[col.level], 'int', ctx + '!level'), entry: entry });
+  }
+
+  return order.map(function (id) {
+    const g = byId[id];
+    g.rows.sort(function (a, b) { return a.level - b.level; });
+    g.obj.levels = g.rows.map(function (x) { return x.entry; });
+    return g.obj;
+  });
+}
+
+/**
+ * machineLevels: 1行=1設備×1レベル（店の設備のレベルの表）。
+ * ヘッダ: machineId（id でも可） / level / cost / effectValue / safeDays / breakChanceStep（型サフィックス不要）
+ *   cost: Lv1 = 購入費、Lv2 以降 = そのレベルへ上げる費用（定価。村の割引はゲーム側）
+ *   effectValue: お金 = 毎朝の G / 製造炉 = 毎朝の製造の進み G / 客寄せ = 売上への加算（0.06 = +6%）/ 冷蔵ケース = 並べていない品の需要の落ち込みを減らす割合
+ *   safeDays / breakChanceStep: 置いて（強化・修理して）から safeDays 回の朝は壊れない。その後は朝ごとに step ずつ故障率が上がる（空欄 = 0 = 壊れない）
+ * machineId ごとに level 昇順でグループ化し、{ id, levels: [ { cost, effectValue, safeDays, breakChanceStep }, ... ] } にする。
+ * ※ levels は Unity 側で全置換されるため、載せる設備は全レベル行を書くこと（行数が最大レベルになる）。
+ */
+function readMachineLevels_() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(MACHINE_LEVELS_SHEET);
+  if (!sheet) return []; // シート未作成なら区画ごと省略
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const header = values[0].map(function (h) { return String(h).trim().split(':')[0]; });
+  const col = {};
+  header.forEach(function (h, i) { if (h !== '' && !(h in col)) col[h] = i; });
+  if (!('machineId' in col) && ('id' in col)) col.machineId = col.id;
+  ['machineId', 'level', 'cost', 'effectValue'].forEach(function (req) {
+    if (!(req in col)) throw new Error(MACHINE_LEVELS_SHEET + ': 列 "' + req + '" がありません。');
+  });
+
+  const byId = {};
+  const order = [];
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+    const id = String(row[col.machineId]).trim();
+    if (id === '') continue;
+    const ctx = MACHINE_LEVELS_SHEET + '(行' + (r + 1) + ')';
+
+    if (!byId[id]) {
+      byId[id] = { obj: { id: id }, rows: [] };
+      order.push(id);
+    }
+
+    const entry = {
+      cost: castCell_(row[col.cost], 'int', ctx + '!cost'),
+      effectValue: castCell_(row[col.effectValue], 'float', ctx + '!effectValue')
+    };
+    if ('safeDays' in col && row[col.safeDays] !== '')
+      entry.safeDays = castCell_(row[col.safeDays], 'int', ctx + '!safeDays');
+    if ('breakChanceStep' in col && row[col.breakChanceStep] !== '')
+      entry.breakChanceStep = castCell_(row[col.breakChanceStep], 'float', ctx + '!breakChanceStep');
 
     byId[id].rows.push({ level: castCell_(row[col.level], 'int', ctx + '!level'), entry: entry });
   }
@@ -554,4 +618,24 @@ function getProp_(name) {
   const v = PropertiesService.getScriptProperties().getProperty(name);
   if (!v) throw new Error('スクリプトプロパティ "' + name + '" が未設定です。');
   return v;
+}
+
+// ============================================================
+// 外から実行する用（clasp run）。ダイアログを出さず、結果を文字列で返す。
+// ============================================================
+function apiUploadGameConst() {
+  uploadJsonToStorage(GAMECONST_OBJECT_PATH, buildEnvelopeJson());
+  return 'gameconst.json をアップロードしました（' + GAMECONST_OBJECT_PATH + '）';
+}
+
+function apiUploadItems() {
+  const envelope = buildItemsEnvelope();
+  uploadJsonToStorage(ITEMS_OBJECT_PATH, JSON.stringify(envelope, null, 2));
+  return 'items.json をアップロードしました（' + envelope.items.length + '件 / version ' + envelope.version + '）';
+}
+
+function apiUploadBalance() {
+  const envelope = buildBalanceEnvelope();
+  uploadJsonToStorage(BALANCE_OBJECT_PATH, JSON.stringify(envelope, null, 2));
+  return 'balance.json をアップロードしました（version ' + envelope.version + '）';
 }

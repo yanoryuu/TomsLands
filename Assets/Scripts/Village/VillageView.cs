@@ -270,6 +270,7 @@ public class VillageView : MonoBehaviour
         if (conversionTitleText != null) conversionTitleText.text = title;
         // 格の名前は大きい金の行（村資金の額を出す行）に出して上へ、解放の説明は小さい行に出して下へ入れ替える
         SwapConversionRows(true);
+        SetConversionBreakdown(null);
         if (conversionConvertedText != null)
         {
             DOTween.Kill(conversionConvertedText.gameObject);
@@ -465,11 +466,12 @@ public class VillageView : MonoBehaviour
     public bool IsInvestPanelOpen => investPanel != null && investPanel.activeSelf;
 
     /// <summary>帰還収支ポップを表示する（村資金のカウントアップ演出付き）。</summary>
-    public void ShowConversionPopup(bool cleared, int earned, int converted)
+    public void ShowConversionPopup(bool cleared, int earned, int converted, VillageFundsBreakdown breakdown = null)
     {
         if (conversionPopup == null) return;
         conversionPopup.SetActive(true);
         SwapConversionRows(false); // 格上げで入れ替えた行を戻す
+        SetConversionBreakdown(breakdown);
         if (conversionConvertedText != null) conversionConvertedText.transform.localScale = Vector3.one;
 
         if (conversionTitleText != null)
@@ -494,5 +496,81 @@ public class VillageView : MonoBehaviour
                 .SetEase(Ease.OutCubic)
                 .SetLink(conversionConvertedText.gameObject);
         }
+    }
+
+    private TextMeshProUGUI conversionBreakdownText;
+
+    /// <summary>
+    /// 帰還収支ポップの下に、村へ入った額の内訳を出す（null なら隠す）。
+    /// ポップの枠（720x380）には空きが無いので、ポップの子として枠のすぐ下に出す（実行時に作る。背景の帯は付けない）。
+    /// </summary>
+    private void SetConversionBreakdown(VillageFundsBreakdown breakdown)
+    {
+        var lines = breakdown?.BuildLines();
+        if (lines == null || lines.Count == 0)
+        {
+            if (conversionBreakdownText != null) conversionBreakdownText.transform.parent.gameObject.SetActive(false);
+            return;
+        }
+
+        if (conversionBreakdownText == null)
+        {
+            var popupRt = (RectTransform)conversionPopup.transform;
+            var bg = new GameObject("Breakdown", typeof(RectTransform), typeof(Image));
+            bg.layer = conversionPopup.layer;
+            var bgRt = (RectTransform)bg.transform;
+            bgRt.SetParent(popupRt, false);
+            bgRt.anchorMin = bgRt.anchorMax = new Vector2(0.5f, 0f);
+            bgRt.pivot = new Vector2(0.5f, 1f);
+            bgRt.anchoredPosition = new Vector2(0f, -8f);
+            var img = bg.GetComponent<Image>();
+            img.color = new Color(0f, 0f, 0f, 0f);   // 背景の帯は出さない（並べる場所としてだけ使う）
+            img.raycastTarget = false;
+
+            var src = conversionEarnedText != null ? conversionEarnedText : conversionTitleText;
+            conversionBreakdownText = CreateBreakdownColumn(bgRt, src, TextAlignmentOptions.Left, new Color(1f, 0.95f, 0.84f, 1f));
+            conversionBreakdownAmounts = CreateBreakdownColumn(bgRt, src, TextAlignmentOptions.Right, new Color(0.91f, 0.64f, 0.24f, 1f));
+        }
+
+        var labels = new System.Text.StringBuilder();
+        var amounts = new System.Text.StringBuilder();
+        foreach (var line in lines)
+        {
+            if (labels.Length > 0) { labels.Append('\n'); amounts.Append('\n'); }
+            labels.Append(line.Label);
+            amounts.Append(line.Amount);
+        }
+        conversionBreakdownText.text = labels.ToString();
+        conversionBreakdownAmounts.text = amounts.ToString();
+        var panel = (RectTransform)conversionBreakdownText.transform.parent;
+        panel.gameObject.SetActive(true);
+        conversionBreakdownText.ForceMeshUpdate();
+        float textHeight = Mathf.Max(conversionBreakdownText.preferredHeight, lines.Count * 40f);
+        panel.sizeDelta = new Vector2(720f, 24f + textHeight);
+        panel.gameObject.SetActive(true);
+    }
+
+    private TextMeshProUGUI conversionBreakdownAmounts;
+
+    private static TextMeshProUGUI CreateBreakdownColumn(RectTransform parent, TMP_Text fontSource,
+        TextAlignmentOptions alignment, Color color)
+    {
+        var go = new GameObject(alignment == TextAlignmentOptions.Right ? "Amounts" : "Labels", typeof(RectTransform));
+        go.layer = parent.gameObject.layer;
+        var trt = (RectTransform)go.transform;
+        trt.SetParent(parent, false);
+        trt.anchorMin = Vector2.zero;
+        trt.anchorMax = Vector2.one;
+        trt.offsetMin = new Vector2(28f, 10f);
+        trt.offsetMax = new Vector2(-28f, -10f);
+        var tmp = go.AddComponent<TextMeshProUGUI>();
+        if (fontSource != null) tmp.font = fontSource.font;
+        tmp.fontSize = 30f;
+        tmp.lineSpacing = 0f;
+        tmp.color = color;
+        tmp.alignment = alignment == TextAlignmentOptions.Right ? TextAlignmentOptions.TopRight : TextAlignmentOptions.TopLeft;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
+        tmp.raycastTarget = false;
+        return tmp;
     }
 }

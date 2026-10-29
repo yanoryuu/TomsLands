@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -11,7 +12,7 @@ using VContainer;
 
 /// <summary>
 /// 配信リザルト画面（精算書。SUMMARY E-2〜E-4）。
-/// 見出し（勝利！／配当確定／敗北...／配信終了）→ 内訳（売上・補充・返金・介入・防衛報酬）を1行ずつ →
+/// 見出し（勝利！／配当確定／敗北...／配信終了）→ 内訳（売上・補充・返金・介入・防衛報酬、負けたら返金騒ぎ）を1行ずつ →
 /// 純利益をカウントアップ → 勇者の装備の「相場への影響」。確認ボタンで次へ進む（演出中に押すと最後まで飛ばす）。
 /// パネルの表示/非表示は BattlePanelManager が管理する。新しい欄は未配線（null）でも動く。
 /// </summary>
@@ -155,18 +156,28 @@ public class BattleResultView : MonoBehaviour
                 ? Row($"<color={demonColor}>防衛報酬</color>", $"<color={demonColor}>+{s.DefenseReward:N0} G</color>")
                 : Row("防衛報酬", Zero()),
         };
-        // 村の広場 Lv5「勝負配信の宣言」をした配信だけ6行目を出す（5行ぶんの高さに収まるよう行の間を詰める）
-        string declaration = DeclarationRow(s);
-        if (declaration != null)
+        // 勇者が負けた配信では「返金騒ぎ」の行を必ず出す（武器・防具が売れていなければ 0 G。勇者に張った分だけ引かれる）。
+        if (s.Result == BattleResult.Defeat)
         {
-            rows.Add(declaration);
-            for (int i = 0; i < rows.Count; i++) rows[i] = rows[i].Replace(RowLineHeight, CompactRowLineHeight);
+            rows.Add(s.HeroDefeatRefund > 0
+                ? Row($"<color={minusColor}>返金騒ぎ</color>", Minus(s.HeroDefeatRefund))
+                : Row("返金騒ぎ", Zero()));
+        }
+        // 村の広場 Lv5「勝負配信の宣言」をした配信だけ宣言の行を出す
+        string declaration = DeclarationRow(s);
+        if (declaration != null) rows.Add(declaration);
+
+        // 5行を超えたら、5行ぶんの高さに収まるよう行の間を詰める（6行 = 0.83em、7行 = 0.71em）
+        if (rows.Count > BaseRowCount)
+        {
+            string compact = $"<line-height={(BaseRowCount / (float)rows.Count).ToString("0.##", CultureInfo.InvariantCulture)}em>";
+            for (int i = 0; i < rows.Count; i++) rows[i] = rows[i].Replace(RowLineHeight, compact);
         }
         return rows;
     }
 
+    private const int BaseRowCount = 5;
     private const string RowLineHeight = "<line-height=1em>";
-    private const string CompactRowLineHeight = "<line-height=0.83em>";
 
     private string DeclarationRow(BattleSettlement s)
     {

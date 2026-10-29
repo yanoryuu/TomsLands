@@ -48,6 +48,10 @@ public class BattleOutputData : ScriptableObject
     /// <summary>魔王側に張って当たった（勇者が負け、防衛報酬を受け取った）か。</summary>
     public bool IsDemonPayout => Result == BattleResult.Defeat && DefenseReward > 0;
 
+    [Header("勇者敗北の返金騒ぎ")]
+    [Tooltip("勇者が負けた配信で、武器・防具の売上から視聴者に返金した額。純利益（TotalEarnings）からは引いてある。0 なら返金なし")]
+    public int HeroDefeatRefund;
+
     [Header("村の広場 Lv5「勝負配信の宣言」")]
     [Tooltip("この配信で宣言した側（None = 宣言なし）")]
     public StreamDeclarationSide DeclarationSide;
@@ -88,6 +92,7 @@ public class BattleOutputData : ScriptableObject
         ViewerSuperChatCount = 0;
         SpecialMoveCount = 0;
         DefenseReward = 0;
+        HeroDefeatRefund = 0;
         SetDeclaration(StreamDeclarationSide.None, StreamDeclarationOutcome.None, 0);
         AbortedByError = false;
         HasResult = true;
@@ -104,6 +109,9 @@ public class BattleOutputData : ScriptableObject
         SpecialMoveCount = Mathf.Max(0, specialMoveCount);
         Debug.Log($"[BattleOutputData] SetStreamingStats: intervention={InterventionSpending} refund={InterventionRefund} peakViewers={PeakViewers} superChats={ViewerSuperChatCount} specials={SpecialMoveCount}");
     }
+
+    /// <summary>返金騒ぎの額を書き込む。SetResult の後に呼ぶ。</summary>
+    public void SetHeroDefeatRefund(int refund) => HeroDefeatRefund = Mathf.Max(0, refund);
 
     /// <summary>防衛報酬と配信先を書き込む。SetResult の後に呼ぶ。</summary>
     public void SetDefenseReward(int defenseReward, DungeonName dungeonKey)
@@ -127,6 +135,7 @@ public class BattleOutputData : ScriptableObject
         ViewerSuperChatCount = 0;
         SpecialMoveCount = 0;
         DefenseReward = 0;
+        HeroDefeatRefund = 0;
         SetDeclaration(StreamDeclarationSide.None, StreamDeclarationOutcome.None, 0);
         AbortedByError = false;
         HasResult = false;

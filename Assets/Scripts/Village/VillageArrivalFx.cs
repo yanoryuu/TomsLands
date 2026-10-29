@@ -12,7 +12,8 @@ using UnityEngine.UI;
 ///
 /// クリア: 金縁プレートに稼ぎ額 → 村への還元額に変わり、コインが村資金HUDへ飛んでカウントアップ。
 /// 破産  : 色を落としたプレート・コインは少しだけ・トコ（悲しい）が画面下から覗く。
-/// 表示する文字は金額のみ。クリック/任意キーでスキップ。演出中はプレイヤー入力とUIをブロックする。
+/// プレートの下に、村へ入った額の内訳（完走ボーナス・納付金のぶん・儲け…）を1行ずつ出してから合計へ切り替える
+/// （儲けより何倍も入る理由が見えるように）。クリック/任意キーでスキップ。演出中はプレイヤー入力とUIをブロックする。
 /// 参照は全て null-safe（coinSprite 未設定なら CanPlay=false で Presenter が旧ポップへフォールバック）。
 /// </summary>
 public class VillageArrivalFx : MonoBehaviour
@@ -52,6 +53,7 @@ public class VillageArrivalFx : MonoBehaviour
     private bool skipping;
     private float startTime;
 
+    private List<VillageFundsBreakdown.Line> lines;
     private Action<int> setFunds;
     private Action onComplete;
     private int fundsAfter;
@@ -72,8 +74,14 @@ public class VillageArrivalFx : MonoBehaviour
     /// <param name="completed">終了（スキップ含む）後に呼ばれる</param>
     public void Play(bool cleared, int earned, int converted, int fundsAfterValue,
         TMP_Text fundsText, Action<int> setFundsDisplay, Action completed)
+        => Play(cleared, earned, converted, fundsAfterValue, fundsText, setFundsDisplay, null, completed);
+
+    /// <param name="breakdown">村へ入った額の内訳（null なら内訳の行を出さない）</param>
+    public void Play(bool cleared, int earned, int converted, int fundsAfterValue,
+        TMP_Text fundsText, Action<int> setFundsDisplay, VillageFundsBreakdown breakdown, Action completed)
     {
         if (IsPlaying) Cleanup(invokeComplete: false);
+        lines = breakdown?.BuildLines();
 
         setFunds = setFundsDisplay;
         onComplete = completed;
@@ -172,8 +180,12 @@ public class VillageArrivalFx : MonoBehaviour
         seq.Insert(0f, plaqueRt.DOScale(1f, 0.4f).SetEase(Ease.OutBack));
         seq.Insert(0.1f, CountTween(v => amount.text = FormatG(v), 0, earned, 0.6f).SetEase(Ease.OutCubic));
 
+        // 内訳の行（完走ボーナス・納付金のぶん…）を1行ずつ出してから、合計へ切り替える
+        float linesEnd = AddBreakdownLines(seq, new Vector2(plaquePos.x, plaquePos.y - plaqueSize.y * 0.5f - 22f),
+            0.8f, font, CreamText, hudColor, 1f);
+
         // 稼ぎ → 村への還元額（数字が縦に潰れて切り替わる）
-        float morphAt = 0.85f;
+        float morphAt = Mathf.Max(0.85f, linesEnd + 0.2f);
         seq.Insert(morphAt, amount.rectTransform.DOScaleY(0f, 0.08f).SetEase(Ease.InQuad));
         seq.InsertCallback(morphAt + 0.08f, () =>
         {
@@ -197,6 +209,7 @@ public class VillageArrivalFx : MonoBehaviour
 
         AddTransferCount(seq, coins, launchAt, Mathf.Min(0.07f, 0.9f / Mathf.Max(1, coins)), 0.6f,
             converted, fundsBefore, amount, hold: 0.6f);
+        if (HasLines) seq.AppendInterval(0.9f); // 内訳を読む間
 
         return seq;
     }
@@ -244,7 +257,10 @@ public class VillageArrivalFx : MonoBehaviour
         seq.Insert(0.15f, plaqueRt.DOScale(1f, 0.35f).SetEase(Ease.OutCubic));
         seq.Insert(0.25f, CountTween(v => amount.text = FormatG(v), 0, earned, 0.5f).SetEase(Ease.OutCubic));
 
-        float morphAt = 0.95f;
+        float linesEnd = AddBreakdownLines(seq, new Vector2(plaquePos.x, plaquePos.y - plaqueSize.y * 0.45f - 22f),
+            0.85f, font, new Color(0.9f, 0.86f, 0.8f, 1f), Color.Lerp(hudColor, new Color(0.8f, 0.76f, 0.72f, 1f), 0.35f), 0.92f);
+
+        float morphAt = Mathf.Max(0.95f, linesEnd + 0.2f);
         seq.Insert(morphAt, amount.rectTransform.DOScaleY(0f, 0.1f).SetEase(Ease.InQuad));
         seq.InsertCallback(morphAt + 0.1f, () =>
         {
@@ -265,8 +281,69 @@ public class VillageArrivalFx : MonoBehaviour
             hudPop: 1.06f, seEvery: 1, sparkleScale: 0f, plaque.coinIcon);
 
         AddTransferCount(seq, coins, launchAt, 0.28f, 0.95f, converted, fundsBefore, amount, hold: 0.8f);
+        if (HasLines) seq.AppendInterval(0.9f); // 内訳を読む間
 
         return seq;
+    }
+
+    private bool HasLines => lines != null && lines.Count > 0;
+
+    private const float LineHeight = 50f;
+    private const float LineFontSize = 34f;
+    private const float LinesWidth = 800f;
+    private const float LineInterval = 0.3f;
+
+    /// <summary>
+    /// プレートの下に内訳の行を1行ずつ出す（左に何の分か、右に額）。top はパネル上端の中央。
+    /// 最後の行が出きる時刻を返す（行が無ければ startAt）。
+    /// </summary>
+    private float AddBreakdownLines(Sequence seq, Vector2 top, float startAt, TMP_FontAsset font,
+        Color labelColor, Color amountColor, float panelAlpha)
+    {
+        if (!HasLines || root == null) return startAt;
+
+        float height = lines.Count * LineHeight + 24f;
+        var panelGo = CreateGroup("Breakdown", root, new Vector2(top.x, top.y - height * 0.5f), new Vector2(LinesWidth, height));
+        var panelGroup = panelGo.GetComponent<CanvasGroup>();
+        panelGroup.alpha = 0f;   // 背景の帯は出さない（文字の縁取りで読ませる。panelAlpha は帯をやめたので使わない）
+        seq.Insert(startAt - 0.1f, panelGroup.DOFade(1f, 0.2f));
+
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var row = CreateGroup("Row", panelGo.transform,
+                new Vector2(0f, height * 0.5f - 12f - LineHeight * (i + 0.5f)), new Vector2(LinesWidth - 48f, LineHeight));
+            var rowGroup = row.GetComponent<CanvasGroup>();
+            rowGroup.alpha = 0f;
+            CreateRowText(row.transform, font, lines[i].Label, labelColor, TextAlignmentOptions.MidlineLeft);
+            CreateRowText(row.transform, font, lines[i].Amount, amountColor, TextAlignmentOptions.MidlineRight);
+
+            float t = startAt + i * LineInterval;
+            var rowRt = (RectTransform)row.transform;
+            Vector2 home = rowRt.anchoredPosition;
+            rowRt.anchoredPosition = home + new Vector2(-24f, 0f);
+            seq.Insert(t, rowGroup.DOFade(1f, 0.18f));
+            seq.Insert(t, rowRt.DOAnchorPos(home, 0.22f).SetEase(Ease.OutCubic));
+            seq.InsertCallback(t, () => { if (!skipping) PlaySE("営業/SE_数の増減"); });
+        }
+        return startAt + (lines.Count - 1) * LineInterval + 0.22f;
+    }
+
+    private static void CreateRowText(Transform parent, TMP_FontAsset font, string text, Color color,
+        TextAlignmentOptions alignment)
+    {
+        var go = new GameObject(alignment == TextAlignmentOptions.MidlineRight ? "Amount" : "Label", typeof(RectTransform));
+        go.layer = parent.gameObject.layer;
+        var rt = (RectTransform)go.transform;
+        rt.SetParent(parent, false);
+        Stretch(rt);
+        var tmp = go.AddComponent<TextMeshProUGUI>();
+        if (font != null) tmp.font = font;
+        tmp.raycastTarget = false;
+        tmp.fontSize = LineFontSize;
+        tmp.color = color;
+        tmp.alignment = alignment;
+        tmp.textWrappingMode = TextWrappingModes.NoWrap;
+        tmp.text = text;
     }
 
     /// <summary>画面を薄く暗くする（ブロッカーの直上・演出部品の下）。</summary>

@@ -1,0 +1,3447 @@
+{
+  "version": "2026-10",
+  "generated": "2026-10-28",
+  "note": "トコのトムトムランドのずんだもん・めたん用ミーム辞書。使い方と更新手順は README.md",
+  "question_keys_ref": "Assets/Scripts/Debug/AutoPlay/Jev/PersonaLines.cs の persona|question(|band|win/lose)",
+  "memes": [
+    {
+      "id": "waho",
+      "phrase": "ワホー！",
+      "meaning": "SEIKIN の 2014 年の動画のアドリブ。意味はなく、テンションが上がった瞬間の掛け声",
+      "usage": [
+        "big_win",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "ワホー！ 黒字なのだ！ ワホー！",
+      "metan_reaction": "……今の何。（知らないふり）",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/waho-seikin/",
+          "date": "2026-10-20"
+        },
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 5,
+      "first_seen_estimate": "2026-05（TikTok で再発掘）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "sugite_metsu",
+      "phrase": "〇〇すぎて滅",
+      "meaning": "M!LK「好きすぎて滅！」から。気持ちが強すぎて滅びそう、という誇張",
+      "usage": [
+        "big_win",
+        "big_loss"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|lose"
+      ],
+      "tone": "hype",
+      "who": "both",
+      "zundamon_line": "儲かりすぎて滅なのだ……！",
+      "metan_reaction": "赤字すぎて滅、の方が近いわよ。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        },
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        },
+        {
+          "url": "https://shibuya-trendresearch.jp/monthlytrendsurvey/4622/",
+          "date": "2026-10-02"
+        }
+      ],
+      "trend_score": 5,
+      "first_seen_estimate": "2026-01",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "meroi",
+      "phrase": "メロい",
+      "meaning": "ギャップにときめく、の意味。本人が狙っていない良さに使う",
+      "usage": [
+        "being_right",
+        "good_deal"
+      ],
+      "question_keys": [
+        "buy_style",
+        "weapon"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "この値札、メロいのだ……",
+      "metan_reaction": "値札にときめかないで。",
+      "sources": [
+        {
+          "url": "https://shibuya-trendresearch.jp/monthlytrendsurvey/4622/",
+          "date": "2026-10-02"
+        },
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 5,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "dopagaki",
+      "phrase": "ドパガキ／ドパい",
+      "meaning": "ドーパミン中毒の子どもの略。「ドパい」は気分が最高潮のとき",
+      "usage": [
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "intensity"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "今のぼく、ドパいのだ！ 全部張るのだ！",
+      "metan_reaction": "それ、褒め言葉じゃないから。",
+      "sources": [
+        {
+          "url": "https://shibuya-trendresearch.jp/monthlytrendsurvey/4622/",
+          "date": "2026-10-02"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "frenemy",
+      "phrase": "フレネミー",
+      "meaning": "友達のふりをした敵",
+      "usage": [
+        "stream_reversal",
+        "support_choice"
+      ],
+      "question_keys": [
+        "stream_side",
+        "support",
+        "stream_result|lose"
+      ],
+      "tone": "deadpan",
+      "who": "both",
+      "zundamon_line": "勇者はフレネミーなのだ。勝つと店が負けるのだ",
+      "metan_reaction": "……それは否定できないわね。",
+      "sources": [
+        {
+          "url": "https://shibuya-trendresearch.jp/monthlytrendsurvey/4622/",
+          "date": "2026-10-02"
+        },
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "reishou",
+      "phrase": "冷笑系",
+      "meaning": "真剣な主張や熱を斜めに見る態度・人",
+      "usage": [
+        "metan_tease",
+        "buying_info"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "めたん、また冷笑系の顔で新聞を読んでるのだ",
+      "metan_reaction": "冷笑じゃない。計算よ。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        },
+        {
+          "url": "https://shibuya-trendresearch.jp/monthlytrendsurvey/4622/",
+          "date": "2026-10-02"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "hakanai",
+      "phrase": "どう見たって儚いだろ！",
+      "meaning": "YouTuber あぞの「儚い女」動画。儚さを大声で主張するほど生命力が出てしまう落差",
+      "usage": [
+        "big_loss",
+        "excuse"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "どう見たって儚いだろ！ ぼくの黒字は儚かったのだ！",
+      "metan_reaction": "声が大きい。儚さゼロ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/hakanai-onna/",
+          "date": "2026-10-13"
+        },
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 5,
+      "first_seen_estimate": "2026-10-08（切り抜きから再拡散）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "uso_tsukanaide",
+      "phrase": "私に嘘はつかないで",
+      "meaning": "ドラマ『VIVANT』の絶叫。見え透いた言い訳への返し",
+      "usage": [
+        "excuse",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "intel_no"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "今回は勘じゃないのだ。根拠があるのだ",
+      "metan_reaction": "……私に嘘はつかないで。（知らないけど）",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/watashi-ni-uso-wa-tsukanaide/",
+          "date": "2026-10-13"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 5,
+      "first_seen_estimate": "2026-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "vs_darkrai",
+      "phrase": "〇〇VS〇〇VSダークライ",
+      "meaning": "二者の対決に毎回ダークライが乱入するお約束（2007 年のポケモン映画題名から）",
+      "usage": [
+        "stream_side",
+        "waiting"
+      ],
+      "question_keys": [
+        "stream_side",
+        "intervene"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "勇者VS魔王VSダークライなのだ！",
+      "metan_reaction": "ダークライは出てこない。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/vs-darkrai/",
+          "date": "2026-10-15"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "doku_maniae",
+      "phrase": "ヤバい！これ毒かも！間に合え間に合え！",
+      "meaning": "ジェラードンのコント。手遅れになる前に慌てる場面",
+      "usage": [
+        "big_loss",
+        "panic_sell"
+      ],
+      "question_keys": [
+        "intervene_now",
+        "run_result|lose"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "ヤバいのだ！これ毒かもなのだ！間に合え間に合えなのだ！",
+      "metan_reaction": "もう間に合ってない。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "ki_ga_kiku",
+      "phrase": "気が利くねぇ",
+      "meaning": "高須幹弥の切り抜き。ゆっくり満足げに感謝する言い方",
+      "usage": [
+        "buying_info",
+        "being_right"
+      ],
+      "question_keys": [
+        "intel_yes",
+        "newspaper_yes"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "この情報、気が利くねぇ、なのだ",
+      "metan_reaction": "情報屋に言いなさい。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "mise_daseru",
+      "phrase": "ジン、これ店出せるよ",
+      "meaning": "ブルーシーのしらすの顔写真と組み合わせる大喜利。最後は必ず褒める",
+      "usage": [
+        "good_deal",
+        "big_win"
+      ],
+      "question_keys": [
+        "buy_style",
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "めたん、これ店出せるのだ！",
+      "metan_reaction": "もう出してるのよ、店。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-08（9〜10 月も派生）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "tagosaku",
+      "phrase": "〇〇します。〇〇だからです（タゴサク構文）",
+      "meaning": "映画『爆弾』のスズキタゴサク。結論を先に言い、妙に落ち着いて理由を足す",
+      "usage": [
+        "overconfident_bet",
+        "skip_info"
+      ],
+      "question_keys": [
+        "intel_no",
+        "newspaper_no",
+        "budget|High"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "今日は情報を買いません。当たるからです、なのだ",
+      "metan_reaction": "理由になってない。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        },
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2025-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "ketsuron",
+      "phrase": "結論から言うね",
+      "meaning": "生成 AI の親切すぎる文体のパロディ（チャッピー構文）",
+      "usage": [
+        "explain",
+        "buying_info"
+      ],
+      "question_keys": [
+        "intel_yes",
+        "newspaper_yes",
+        "fallback"
+      ],
+      "tone": "deadpan",
+      "who": "both",
+      "zundamon_line": "結論から言うね。全部売れるのだ",
+      "metan_reaction": "結論しかない。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "meccha_seikai",
+      "phrase": "それめっちゃ正解",
+      "meaning": "ChatGPT の何でも肯定する口調をまねたネタ",
+      "usage": [
+        "being_right",
+        "self_praise"
+      ],
+      "question_keys": [
+        "budget|Mid",
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "smug",
+      "who": "zundamon",
+      "zundamon_line": "ぼくの判断、それめっちゃ正解なのだ",
+      "metan_reaction": "自分で言うのね。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "crying_dog",
+      "phrase": "（犬の検索履歴）",
+      "meaning": "スマホを見て泣く犬に「犬の検索履歴」を添える遊び。笑えて切ない",
+      "usage": [
+        "big_loss"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "ぼくの検索履歴：「赤字 なかったことにする 方法」なのだ……",
+      "metan_reaction": "検索しても赤字は消えない。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/crying-dog-search/",
+          "date": "2026-10-10"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 5,
+      "first_seen_estimate": "2026-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "nihilist_penguin",
+      "phrase": "（群れを離れて山へ歩くペンギン）",
+      "meaning": "2007 年のドキュメンタリーの一場面。全部投げ出したい気分",
+      "usage": [
+        "big_loss",
+        "giving_up"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "intervene"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "ぼくは群れを離れて山へ行くのだ……",
+      "metan_reaction": "店番してから行って。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/nihilist-penguin/",
+          "date": "2026-10-10"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026-01",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "kankei_nee",
+      "phrase": "そんなの関係ねぇ",
+      "meaning": "小島よしおの持ちネタ。ロックマンの BGM と重ねた動画で再流行",
+      "usage": [
+        "ignore_warning",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "newspaper_no",
+        "intel_no"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "相場？ そんなの関係ねぇなのだ！",
+      "metan_reaction": "関係あるのよ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/kojima-yoshio-rockman/",
+          "date": "2026-10-11"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "mimiuchi",
+      "phrase": "（耳打ちジャイアン）",
+      "meaning": "ジャイアンがのび太に耳打ちする画像に、どうでもいい一言を添える大喜利",
+      "usage": [
+        "secret_plan"
+      ],
+      "question_keys": [
+        "stream_side",
+        "support"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "（耳打ち）……魔王軍に張るのだ",
+      "metan_reaction": "聞こえてる。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026-10-08",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "hito_no_kokoro",
+      "phrase": "人の心とかないんか？",
+      "meaning": "『呪術廻戦』のセリフ。ひどい目にあったとき",
+      "usage": [
+        "big_loss",
+        "metan_tease"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose",
+        "intervene"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "めたん、人の心とかないんか？なのだ",
+      "metan_reaction": "あるわ。お財布の心も。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2023（定番化）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "honmayade",
+      "phrase": "ほんまやで☆なんでやねん☆しらんけど",
+      "meaning": "モナキのデビュー曲名。関西弁をリズムよくつなげた",
+      "usage": [
+        "failed_prediction",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "stream_side|Low",
+        "budget|Low",
+        "support|Low"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "勇者が勝つのだ。ほんまやで、なんでやねん、しらんけどなのだ",
+      "metan_reaction": "最後で全部取り消したわね。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "dundun",
+      "phrase": "頑張って頑張ってドゥンドゥン",
+      "meaning": "TikTok の応援ソングのフレーズ",
+      "usage": [
+        "support_choice",
+        "waiting"
+      ],
+      "question_keys": [
+        "stream_side",
+        "intensity"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "勇者、頑張って頑張ってドゥンドゥンなのだ！",
+      "metan_reaction": "応援しても配当は増えない。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "bakuretsu",
+      "phrase": "ば・く・れ・つ♡",
+      "meaning": "M!LK「爆裂愛してる」の掛け声とポーズ",
+      "usage": [
+        "big_win"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "売上、ば・く・れ・つ♡なのだ！",
+      "metan_reaction": "……ポーズまでいらない。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "e_suki",
+      "phrase": "え、好き。",
+      "meaning": "M!LK ファンの間で広まった一言。急にときめいたとき",
+      "usage": [
+        "good_deal",
+        "being_right"
+      ],
+      "question_keys": [
+        "buy_style",
+        "weapon"
+      ],
+      "tone": "hype",
+      "who": "both",
+      "zundamon_line": "え、好き。……この武器、名前が強そうなのだ",
+      "metan_reaction": "属性で選んで。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "mephilas",
+      "phrase": "〇〇、私の好きな言葉です",
+      "meaning": "映画『シン・ウルトラマン』のメフィラス。好きなものを格言のように紹介する",
+      "usage": [
+        "big_win",
+        "self_praise"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win",
+        "budget|High"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "黒字、ぼくの好きな言葉なのだ",
+      "metan_reaction": "損切り、私の好きな言葉です。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2022（定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "lacus",
+      "phrase": "AだからBなのではありません。BだからAなのです",
+      "meaning": "『ガンダムSEED FREEDOM』のラクス。関係を反転させる",
+      "usage": [
+        "explain"
+      ],
+      "question_keys": [
+        "intel_yes",
+        "newspaper_yes"
+      ],
+      "tone": "smug",
+      "who": "metan_reluctant",
+      "zundamon_line": "めたんはお金がないから慎重なのだ？",
+      "metan_reaction": "お金がないから慎重なのではありません。慎重だからお金が残るのです。……知らないけど。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "alhaitham",
+      "phrase": "君たちは〇〇しないのか？ 俺は〇〇するが",
+      "meaning": "『原神』アルハイゼンの挨拶。相手に聞きつつ自分は勝手に決める",
+      "usage": [
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "stream_side|High",
+        "budget|High",
+        "support|High"
+      ],
+      "tone": "smug",
+      "who": "zundamon",
+      "zundamon_line": "めたんは張らないのか？ ぼくは張るのだが",
+      "metan_reaction": "張らない。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2023",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "kikuchi",
+      "phrase": "〇〇ないようじゃ無理か。〇〇はね、〇〇しないと",
+      "meaning": "菊池風磨の審査コメントの型。ミスを指摘してから当然のことを言う",
+      "usage": [
+        "skip_info",
+        "big_loss"
+      ],
+      "question_keys": [
+        "newspaper_no",
+        "intel_no"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "新聞なんて読まなくていいのだ",
+      "metan_reaction": "新聞読まないようじゃ無理か。新聞はね、読まないと。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "himmel",
+      "phrase": "勇者ヒンメルならそうした",
+      "meaning": "『葬送のフリーレン』。過去の勇者を理由に行動を決める",
+      "usage": [
+        "support_choice",
+        "intervene"
+      ],
+      "question_keys": [
+        "support",
+        "stream_side|Mid",
+        "intervene"
+      ],
+      "tone": "hero",
+      "who": "zundamon",
+      "zundamon_line": "勇者ヒンメルならそうしたのだ。勇者に張るのだ",
+      "metan_reaction": "それ、別の勇者。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2023",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "kasugakage",
+      "phrase": "なんで〇〇やったの!?",
+      "meaning": "『MyGO!!!!!』そよの叫び。してほしくなかった行動を問いただす",
+      "usage": [
+        "big_loss",
+        "zundamon_blunder"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "budget|High"
+      ],
+      "tone": "panic",
+      "who": "metan_reluctant",
+      "zundamon_line": "全部使ったのだ！",
+      "metan_reaction": "なんで全部使ったの!? ……今のは元ネタじゃないから。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2023",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "arinomama",
+      "phrase": "ありのまま今起こった事を話すぜ",
+      "meaning": "『ジョジョ』第3部のポルナレフ。理解が追いつかない体験の説明",
+      "usage": [
+        "failed_prediction",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "stream_result|lose",
+        "run_result|lose"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "ありのまま今起こった事を話すのだ。勝ってたと思ったら赤字だったのだ",
+      "metan_reaction": "帳簿を見れば説明できる。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "okottemasu",
+      "phrase": "私、怒ってます。",
+      "meaning": "土産の羊羹の投稿から広がった。重い書き出しで身近な不満を言う",
+      "usage": [
+        "metan_tease",
+        "big_loss"
+      ],
+      "question_keys": [
+        "run_result|lose"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "めたん、なんで黙ってるのだ？",
+      "metan_reaction": "私、怒ってます。全部使ったことに。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "tanmatsu",
+      "phrase": "お使いの端末から〇〇が検出されました",
+      "meaning": "ウイルス警告風の文面に、ありえない物を入れる",
+      "usage": [
+        "big_loss",
+        "buying_info"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "intel_yes"
+      ],
+      "tone": "deadpan",
+      "who": "both",
+      "zundamon_line": "お使いの帳簿から赤字が検出されましたなのだ",
+      "metan_reaction": "削除はできません。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/3dcdebf2-eb41-4ba6-a7b3-32c5f75a8070",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "maratan",
+      "phrase": "〇〇が好きな奴って、〇〇してる自分が〇〇なだけだろ",
+      "meaning": "「シーシャバーに行ってる自分が麻辣湯なだけだろ」。意味不明なのに真似したくなる構文",
+      "usage": [
+        "skip_info",
+        "metan_tease"
+      ],
+      "question_keys": [
+        "newspaper_no",
+        "intel_no"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "新聞が好きな奴って、新聞読んでる自分が麻辣湯なだけなのだ",
+      "metan_reaction": "意味がわからない。読みなさい。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/afternoon-tea-shisha-maratan/",
+          "date": "2026-10-12"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-10-11",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "anata_32",
+      "phrase": "あなたは〇〇歳の〇〇です。誰を選びますか？",
+      "meaning": "条件付きの候補から究極の選択を迫る投稿の型",
+      "usage": [
+        "buy_choice",
+        "stream_side"
+      ],
+      "question_keys": [
+        "weapon",
+        "buy_style"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "あなたは 32 歳の勇者です。どの武器を選びますか？ なのだ",
+      "metan_reaction": "勝手に年齢を決めないで。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/anata-wa-sai-no/",
+          "date": "2026-10-11"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/meme-matome-2026-10/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026-09",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "sou_ja_nai",
+      "phrase": "違う、そうじゃない",
+      "meaning": "鈴木雅之の曲名から。意図と違う結果へのツッコミ",
+      "usage": [
+        "failed_prediction",
+        "zundamon_blunder"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "buy_style"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "めたん、回復を全部買ったのだ！",
+      "metan_reaction": "違う、そうじゃない。",
+      "sources": [
+        {
+          "url": "https://x.com/itm_nlab/status/2114296169195008458",
+          "date": "2026-10-25"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番（10 月も見出しで使用）",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "kagen",
+      "phrase": "加減って知ってる？",
+      "meaning": "量が多すぎるものへのツッコミ（ねとらぼの見出しから）",
+      "usage": [
+        "overbuy",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "buy_style"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "在庫、棚いっぱいに仕入れたのだ！",
+      "metan_reaction": "加減って知ってる？",
+      "sources": [
+        {
+          "url": "https://x.com/itm_nlab/status/2114311322317750591",
+          "date": "2026-10-25"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "2026-10",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "sono_te",
+      "phrase": "その手があったか",
+      "meaning": "意外な正解を見たときの反応",
+      "usage": [
+        "being_right",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "intervene_now",
+        "weapon",
+        "intervene"
+      ],
+      "tone": "surprise",
+      "who": "both",
+      "zundamon_line": "罠を勇者側に使うのだ！",
+      "metan_reaction": "……その手があったか。",
+      "sources": [
+        {
+          "url": "https://x.com/itm_nlab/status/2114673826097168392",
+          "date": "2026-10-26"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "定番",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_black_clap",
+      "phrase": "（拍手する黒猫）",
+      "meaning": "黒猫が人間のように笑って拍手する AI 加工動画。祝福にも皮肉にも使う",
+      "usage": [
+        "mount",
+        "being_right"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "smug",
+      "who": "zundamon",
+      "zundamon_line": "（にやにや拍手）めたん、おめでとうなのだ。当てたのはぼくだけど",
+      "metan_reaction": "その拍手やめて。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        },
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-09-25",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-27",
+      "weight": 0.977,
+      "asset_hint": "",
+      "match": [
+        "拍手する黒猫",
+        "黒猫"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_huh",
+      "phrase": "（huh？の真顔）",
+      "meaning": "うるさいヤギの早口に、猫が真顔で「huh?（は？）」と返す動画。理解できない話への反応",
+      "usage": [
+        "skip_info",
+        "buying_info"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes",
+        "fallback"
+      ],
+      "tone": "deadpan",
+      "who": "both",
+      "zundamon_line": "（huh？の真顔）……新聞の字が多すぎて、何も入ってこないのだ",
+      "metan_reaction": "三行でいいから読んで。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/neko-meme/",
+          "date": "2026-10-12"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=YiVFB0WH1pQ",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_huh_gb.mp4",
+      "match": [
+        "huh猫",
+        "huhcat"
+      ],
+      "asset_name": "huh？の真顔",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_happy",
+      "phrase": "（ハッピーハッピーハッピー）",
+      "meaning": "「My Happy Song」に合わせて跳ねる猫。浮かれている状態（このあと落ちるフラグにもなる）",
+      "usage": [
+        "big_win",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win",
+        "buy_style|High"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（ハッピーハッピーハッピーで跳ねる）黒字なのだ〜！",
+      "metan_reaction": "跳ねる前に帳簿をつけて。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/neko-meme/",
+          "date": "2026-10-12"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=xcw-37Gy67M",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_happy_gb.mp4",
+      "match": [
+        "ハッピーハッピーハッピー",
+        "happy cat"
+      ],
+      "asset_name": "ハッピーハッピーハッピー",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_chipi",
+      "phrase": "（チピチピチャパチャパ）",
+      "meaning": "チリの歌手の曲に合わせて、ドアップの猫が首をゆらす動画。テンションが最高潮のとき",
+      "usage": [
+        "hype",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "intensity",
+        "stream_side|High"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（チピチピチャパチャパで首ふり）スパチャ、ノリノリでいくのだ〜",
+      "metan_reaction": "首をふる前に残高を見て。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/neko-meme/",
+          "date": "2026-10-12"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=_jtWaGcvJ5c",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_chipi_gb.mp4",
+      "match": [
+        "チピチピ",
+        "チピチャパ"
+      ],
+      "asset_name": "チピチピチャパチャパ",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_smack",
+      "phrase": "（寝ている猫をシバく猫）",
+      "meaning": "猫がもう一匹を叩く（シバく）動画。怒りの矛先を向けるとき",
+      "usage": [
+        "intervene",
+        "hype"
+      ],
+      "question_keys": [
+        "intervene_now",
+        "intervene|High"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（シバく猫）ぺしぺしぺし！ ボタンを連打するのだ！",
+      "metan_reaction": "連打しても一回ぶんよ。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=P7v1YB5sbB8",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_smack_gb.mp4",
+      "match": [
+        "叩く猫",
+        "猫パンチ"
+      ],
+      "asset_name": "寝ている猫をシバく猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_scream_kitten",
+      "phrase": "（頭を抱えて叫ぶ子猫）",
+      "meaning": "頭を抱えるような格好で甲高く鳴く子猫。絶望したとき",
+      "usage": [
+        "big_loss",
+        "failed_prediction"
+      ],
+      "question_keys": [
+        "stream_result|lose",
+        "run_result|lose",
+        "intervene_now"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "（頭を抱えて）ミ゛ャ゛ーッ！ 読みが外れたのだーッ！",
+      "metan_reaction": "叫んでも配当は戻らない。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=jEgKtL3wj8w",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_scream_kitten_gb.mp4",
+      "match": [
+        "頭を抱える猫",
+        "泣き叫ぶ子猫"
+      ],
+      "asset_name": "頭を抱えて叫ぶ子猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_surprised",
+      "phrase": "（口ぽかーんの猫）",
+      "meaning": "口を開けたまま固まる猫。思わぬ展開についていけないとき",
+      "usage": [
+        "waiting",
+        "stream_side"
+      ],
+      "question_keys": [
+        "stream_side|Low",
+        "intervene|Low",
+        "fallback"
+      ],
+      "tone": "surprise",
+      "who": "zundamon",
+      "zundamon_line": "（口ぽかーん）……いま、どっちが勝ってるのだ？",
+      "metan_reaction": "勇者よ。画面の上に出てる。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=aDLC22bSiXY",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_surprised_gb.mp4",
+      "match": [
+        "困惑する猫"
+      ],
+      "asset_name": "口ぽかーんの猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_banana",
+      "phrase": "（立ちつくすバナナ猫）",
+      "meaning": "バナナの着ぐるみを着た猫。立っているだけで、しょんぼり・言葉が出ないときに使う",
+      "usage": [
+        "big_loss",
+        "waiting"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "fallback",
+        "stream_result|lose"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "（バナナ猫の顔で立ちつくす）……言葉が出ないのだ",
+      "metan_reaction": "出なくていい。帳簿は私がつける。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=6Z9XgW3iymo",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_banana_gb.mp4",
+      "match": [
+        "バナナ猫"
+      ],
+      "asset_name": "立ちつくすバナナ猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_typing",
+      "phrase": "（カタカタとパソコンを打つ猫）",
+      "meaning": "机でパソコンを操作する猫。調べ物・デスクワーク中",
+      "usage": [
+        "buying_info"
+      ],
+      "question_keys": [
+        "intel_yes",
+        "newspaper_yes"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "（カタカタカタ）弱点を調べてるのだ。いまのぼくは情報屋なのだ",
+      "metan_reaction": "お金を払って聞いただけでしょ。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=dJU2ykTnfsU",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_typing_gb.mp4",
+      "match": [
+        "タイピング猫"
+      ],
+      "asset_name": "カタカタとパソコンを打つ猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_oiia",
+      "phrase": "（オイイアオイイアと回転する猫）",
+      "meaning": "「ｵｯｲｲｱｰｲ」の音で高速回転する猫。荒ぶっているとき。2025 年に EDM にもなった",
+      "usage": [
+        "overconfident_bet",
+        "hype"
+      ],
+      "question_keys": [
+        "budget|High",
+        "intensity"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（オイイアオイイアで回転）テンションが回ってきたのだ〜！",
+      "metan_reaction": "回るのは在庫だけにして。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=Y2HXjbdcPck",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024（2025-01 に EDM 化で再流行）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_oiia_gb.mp4",
+      "match": [
+        "回転猫",
+        "OIIA",
+        "オイイア"
+      ],
+      "asset_name": "オイイアオイイアと回転する猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_shocked_black",
+      "phrase": "（目を見開く黒猫）",
+      "meaning": "目をまん丸に見開いて驚く黒猫（素材は無音）。声も出ない衝撃",
+      "usage": [
+        "being_right",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "surprise",
+      "who": "zundamon",
+      "zundamon_line": "（目がまん丸）え、当たったのだ……？ ぼくの勘が？",
+      "metan_reaction": "私も驚いてる。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=nuosboIQiKk",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_shocked_black_gb.mp4",
+      "match": [
+        "びっくりする黒猫"
+      ],
+      "asset_name": "目を見開く黒猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_suspicious",
+      "phrase": "（怪しむ猫・どぅ〜んてんてんてん）",
+      "meaning": "こちらを睨む猫に、人狼ゲーム『Among Us』の正体発表の効果音を重ねたもの。誰かを疑うとき",
+      "usage": [
+        "stream_side",
+        "secret_plan"
+      ],
+      "question_keys": [
+        "stream_side",
+        "support"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "（どぅ〜んてんてんてん）……この中に、負ける側がいるのだ",
+      "metan_reaction": "半分はそうよ。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=4jnn70Ed3p4",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_suspicious_gb.mp4",
+      "match": [
+        "怪しむ猫"
+      ],
+      "asset_name": "怪しむ猫・どぅ〜んてんてんてん",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_scream_bath",
+      "phrase": "（入浴前に雄叫びをあげる猫）",
+      "meaning": "お風呂を嫌がって猫とは思えない声で鳴く猫。嫌がるとき・嘆くとき",
+      "usage": [
+        "skip_info"
+      ],
+      "question_keys": [
+        "newspaper_no",
+        "intel_no"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "（お風呂を嫌がる猫の声）ンア゛ーッ！ 字を読むのはイヤなのだーッ！",
+      "metan_reaction": "お風呂と新聞は毎日よ。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=UDaGdYNgpXo",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_scream_bath_gb.mp4",
+      "match": [
+        "咆哮猫"
+      ],
+      "asset_name": "入浴前に雄叫びをあげる猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_space",
+      "phrase": "（宇宙猫の顔）",
+      "meaning": "宇宙を背景に呆然とする猫の画像。理解を超えたものを見たとき",
+      "usage": [
+        "buying_info",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes",
+        "stream_result"
+      ],
+      "tone": "surprise",
+      "who": "zundamon",
+      "zundamon_line": "（宇宙猫の顔）……配当を計算したら宇宙が見えたのだ",
+      "metan_reaction": "割り算よ。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "定番（2010 年代〜）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "",
+      "match": [
+        "宇宙猫"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_genba",
+      "phrase": "（現場猫の指さし確認）ヨシ！",
+      "meaning": "ふたば☆ちゃんねる発の現場猫。根拠なく「ヨシ！」と指さし確認してしまう猫",
+      "usage": [
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "intervene|High",
+        "focus_share"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（指さし確認）ヨシ！ なのだ",
+      "metan_reaction": "何を見てヨシって言ったの。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8F%BE%E5%A0%B4%E7%8C%AB",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "定番（2016 年ごろ〜）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "",
+      "match": [
+        "現場猫",
+        "ヨシ！"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "oten",
+      "phrase": "〇〇すぎて横転",
+      "meaning": "驚きすぎて・面白すぎてひっくり返った、という大げさな言い方",
+      "usage": [
+        "big_win",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win",
+        "intervene_now"
+      ],
+      "tone": "surprise",
+      "who": "both",
+      "zundamon_line": "配当がデカすぎて横転なのだ！",
+      "metan_reaction": "起きて。帳簿をつけて。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/oten/",
+          "date": "2026-10-27"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024（2026 も定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "kimazui",
+      "phrase": "気まずい",
+      "meaning": "不安・照れ・申し訳なさをまとめて言う若者言葉",
+      "usage": [
+        "support_choice",
+        "big_loss"
+      ],
+      "question_keys": [
+        "support",
+        "stream_result|lose"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "勇者を見ながら魔王軍に出資するの、ちょっと気まずいのだ……",
+      "metan_reaction": "顔に出てる。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/kimazui/",
+          "date": "2026-10-21"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "dekasugi",
+      "phrase": "デカすぎんだろ…",
+      "meaning": "『新テニスの王子様』で選手が見開きいっぱいに巨大化した場面のセリフ。大きいものを見たとき",
+      "usage": [
+        "big_win",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win",
+        "focus_share"
+      ],
+      "tone": "surprise",
+      "who": "both",
+      "zundamon_line": "黒字、デカすぎんだろ……なのだ",
+      "metan_reaction": "単位は G よ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/dekasugindaro/",
+          "date": "2026-10-12"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "kouiu_no",
+      "phrase": "こういうのでいいんだよ、こういうので",
+      "meaning": "『孤独のグルメ』井之頭五郎の心の声。シンプルが一番と感じたとき",
+      "usage": [
+        "being_right",
+        "good_deal"
+      ],
+      "question_keys": [
+        "buy_style|Mid",
+        "budget|Mid",
+        "weapon"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "こういうのでいいんだよ、こういうので、なのだ",
+      "metan_reaction": "珍しく正解ね。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/kouiu-node-iindayo/",
+          "date": "2026-10-12"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "ochitsuite",
+      "phrase": "いいですか、落ち着いて聞いてください",
+      "meaning": "『メタルギアソリッドV』冒頭の医者。残酷な事実を告げる前置き",
+      "usage": [
+        "big_loss"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose"
+      ],
+      "tone": "panic",
+      "who": "both",
+      "zundamon_line": "めたん、落ち着いて聞いてほしいのだ。お金がもう無いのだ",
+      "metan_reaction": "知ってる。帳簿は私がつけてるの。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/ochitsuite-kiite-kudasai/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "ore_denakya",
+      "phrase": "オレでなきゃ見逃しちゃうね",
+      "meaning": "『HUNTER×HUNTER』の団長の手刀を見逃さなかった人。自分だけ気づいたと得意になる",
+      "usage": [
+        "being_right",
+        "buying_info",
+        "mount"
+      ],
+      "question_keys": [
+        "intel_yes",
+        "weapon",
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "弱点、ぼくでなきゃ見逃しちゃうのだ",
+      "metan_reaction": "情報屋が教えてくれたのよ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/ore-denakya-minogashichaune/",
+          "date": "2026-10-12"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "dareka_kita",
+      "phrase": "おっと、誰か来たようだ",
+      "meaning": "ヤバい秘密を書きかけたところで口封じが来た、という締めのお約束",
+      "usage": [
+        "buying_info",
+        "secret_plan"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes",
+        "fallback"
+      ],
+      "tone": "deadpan",
+      "who": "both",
+      "zundamon_line": "この相場の秘密は……おっと、誰か来たようなのだ",
+      "metan_reaction": "来てない。続けて。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/dareka-kita-youda/",
+          "date": "2026-10-24"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "mado_ni",
+      "phrase": "窓に！窓に！",
+      "meaning": "ホラー小説の最後の一行から。ピンチを書いて叫んで終わる締め",
+      "usage": [
+        "big_loss",
+        "panic_sell"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "intervene_now"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "赤字の帳簿が追いかけてくるのだ……窓に！ 窓に！",
+      "metan_reaction": "窓の外は在庫よ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/mado-ni-mado-ni/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "konton",
+      "phrase": "〇〇の三つに分かれ、混沌を極めていた",
+      "meaning": "『仮面ライダービルド』OP のナレーション。三つ巴を大げさに語る構文",
+      "usage": [
+        "stream_side",
+        "waiting"
+      ],
+      "question_keys": [
+        "stream_side|Low",
+        "stream_side|Mid",
+        "support|Mid"
+      ],
+      "tone": "deadpan",
+      "who": "both",
+      "zundamon_line": "勇者・魔王軍・ぼくのお財布。三つに分かれ、混沌を極めていたのだ",
+      "metan_reaction": "お財布は勢力じゃない。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/konton-wo-kiwameteita/",
+          "date": "2026-10-22"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番（2026-10 に再流行）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "happy_birthday_ore",
+      "phrase": "ハッピーバースデイトゥー俺",
+      "meaning": "MELOGAPPA の曲。自分の誕生日を自分で祝う逆フラッシュモブ。「それを見せられてるお前〜」までがセット",
+      "usage": [
+        "big_win",
+        "mount",
+        "self_praise"
+      ],
+      "question_keys": [
+        "run_result|win",
+        "stream_result|win"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "ハッピーバースデイトゥーぼく！ 黒字のお祝いなのだ！",
+      "metan_reaction": "それを見せられてる私〜。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/happy-birthday-to-ore/",
+          "date": "2026-10-18"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2025-08（2026-10-17 に再拡散）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "washi_jayo",
+      "phrase": "わしじゃよ",
+      "meaning": "『名探偵コナン』阿笠博士の黒幕説から。まさかの身内が黒幕と名乗り出るセリフ（作中にはない）",
+      "usage": [
+        "support_choice",
+        "mount",
+        "secret_plan"
+      ],
+      "question_keys": [
+        "support",
+        "stream_result|win"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "魔王軍の出資者は……わしじゃよ、なのだ",
+      "metan_reaction": "知ってる。帳簿に書いてある。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/washi-jayo/",
+          "date": "2026-10-17"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "tte_koto",
+      "phrase": "〇〇ってコト!?",
+      "meaning": "『ちいかわ』ハチワレの口ぐせ。驚きながら話をまとめる",
+      "usage": [
+        "buying_info",
+        "being_right"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes",
+        "buy_style|High"
+      ],
+      "tone": "surprise",
+      "who": "both",
+      "zundamon_line": "新聞に値上がりって書いてある……仕入れ時ってコト!? なのだ",
+      "metan_reaction": "そう書いてあるでしょ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/tte-koto/",
+          "date": "2026-10-13"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2021（定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "nigecha",
+      "phrase": "逃げちゃダメだ",
+      "meaning": "『エヴァンゲリオン』碇シンジ。怖いことに自分を奮い立たせる",
+      "usage": [
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "stream_side|High",
+        "intervene|High"
+      ],
+      "tone": "hero",
+      "who": "zundamon",
+      "zundamon_line": "逃げちゃダメだ、逃げちゃダメだ、逃げちゃダメなのだ！",
+      "metan_reaction": "逃げていいのよ、赤字からは。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/nigecha-dame-da/",
+          "date": "2026-10-13"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "tomarun",
+      "phrase": "止まるんじゃねぇぞ…",
+      "meaning": "『鉄血のオルフェンズ』オルガの最後の一言。倒れながら前に進めと言う",
+      "usage": [
+        "big_loss",
+        "comeback"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose"
+      ],
+      "tone": "hero",
+      "who": "zundamon",
+      "zundamon_line": "（倒れながら）止まるんじゃねぇぞ……次は当たるのだ……",
+      "metan_reaction": "止まって。帳簿を見て。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/tomarunjanee-zo/",
+          "date": "2026-10-13"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2017（定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "same_kowagarase",
+      "phrase": "〇〇して〇〇を怖がらせましょう！",
+      "meaning": "サメの着ぐるみ毛布の商品画像の不思議な日本語。物騒な提案を笑顔でする",
+      "usage": [
+        "intervene"
+      ],
+      "question_keys": [
+        "intervene",
+        "intervene_now"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "罠を送って勇者を怖がらせましょう！ なのだ",
+      "metan_reaction": "笑顔で言うことじゃない。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/same-meme-kowagarase/",
+          "date": "2026-10-13"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025-04",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "shinuka_ikiruka",
+      "phrase": "死ぬか生きるか",
+      "meaning": "アニメ『スティール・ボール・ラン』ED 曲。賛否の大騒ぎからネタになった",
+      "usage": [
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "budget|High",
+        "stream_side|High"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "死ぬか生きるかなのだ！ ここで張るのだ！",
+      "metan_reaction": "生きる方にして。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/shinuka-ikiruka/",
+          "date": "2026-10-10"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "yoru_no_odoriko",
+      "phrase": "（船の先で踊る少年）",
+      "meaning": "ボートレースの船首で踊る少年の動画にサカナクション『夜の踊り子』を合わせたもの。動じずに盛り上げる",
+      "usage": [
+        "hype",
+        "support_choice"
+      ],
+      "question_keys": [
+        "intensity",
+        "stream_side|Mid"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（船の先で踊る少年の顔）スパチャで漕ぐのだ〜、勇者〜",
+      "metan_reaction": "漕いでるのは勇者だけよ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/yoru-no-odoriko-meme/",
+          "date": "2026-10-21"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/ryukogo-taisho-2026-yosou/",
+          "date": "2026-10-25"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2025-07（2026 上半期の流行語候補）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "夜の踊り子ミーム（パチュ・ジャルールの船首で踊る少年）",
+      "status": "active"
+    },
+    {
+      "id": "b_an",
+      "phrase": "B案（毒うさぎ）",
+      "meaning": "Suica 新キャラ投票の紫うさぎ候補。じわじわ癖になる見た目でネットのおもちゃになった",
+      "usage": [
+        "buy_choice",
+        "weapon"
+      ],
+      "question_keys": [
+        "weapon",
+        "buy_style|Low"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "ぼくはB案推しなのだ。あとからじわじわ来るのだ",
+      "metan_reaction": "投票はもう終わってる。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/suica-b-an/",
+          "date": "2026-10-10"
+        },
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-09",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "aau",
+      "phrase": "ｱｰｳ",
+      "meaning": "マックのサムライマックの CM で佐々木舞香さんが出した声。おいしそうなものに添える",
+      "usage": [
+        "good_deal"
+      ],
+      "question_keys": [
+        "buy_style",
+        "budget|Low"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "ｱｰｳ……この仕入れ値、おいしそうなのだ",
+      "metan_reaction": "値札は食べられない。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/aau-meme/",
+          "date": "2026-10-23"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/ryukogo-taisho-2026-yosou/",
+          "date": "2026-10-25"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-04-30",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "sakete_ok",
+      "phrase": "〇〇は避けて。〇〇はOK。〇〇ならパーフェクト。",
+      "meaning": "避けたい例・OK な例・パーフェクトな例を 3 段階で比べる動画の型",
+      "usage": [
+        "overconfident_bet",
+        "explain"
+      ],
+      "question_keys": [
+        "budget|High",
+        "budget|Mid",
+        "buy_style"
+      ],
+      "tone": "smug",
+      "who": "both",
+      "zundamon_line": "10% は避けて。50% は OK。100% ならパーフェクトなのだ",
+      "metan_reaction": "逆。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "ehho",
+      "phrase": "エッホエッホ、〇〇って伝えなきゃ",
+      "meaning": "フクロウのヒナが走る動画に付いた擬音。一生懸命何かを伝えに行く",
+      "usage": [
+        "dungeon_focus",
+        "buying_info"
+      ],
+      "question_keys": [
+        "focus_share",
+        "newspaper_yes",
+        "intervene_now"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "エッホエッホ、ダンジョンに在庫を届けなきゃなのだ",
+      "metan_reaction": "届けるのは業者よ。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025（流行語大賞トップ10）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "エッホエッホ（走るメンフクロウのヒナ）",
+      "status": "active"
+    },
+    {
+      "id": "bijuii",
+      "phrase": "ビジュいいじゃん",
+      "meaning": "見た目（ビジュアル）がいい、を褒める若者言葉",
+      "usage": [
+        "good_deal"
+      ],
+      "question_keys": [
+        "weapon",
+        "buy_style|High"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "この武器、ビジュいいじゃん、なのだ",
+      "metan_reaction": "性能を見て。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025（三省堂 今年の新語 2025 大賞）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "kaiwai",
+      "phrase": "〇〇キャンセル界隈",
+      "meaning": "「風呂キャンセル界隈」から。やるべきことを省く人たちを界隈と呼ぶ",
+      "usage": [
+        "skip_info"
+      ],
+      "question_keys": [
+        "newspaper_no",
+        "intel_no"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "今日は新聞キャンセル界隈なのだ",
+      "metan_reaction": "キャンセルしたぶん損するのよ。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024（定番化）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "im_japanese",
+      "phrase": "アイム・ジャパニーズ！",
+      "meaning": "川崎宗則さんが英語のインタビューで言葉に詰まって叫んだ一言。2026-09 に村上宗隆選手が再現",
+      "usage": [
+        "big_win",
+        "hype"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（ヒーローインタビュー風に）アイム・ずんだもん！ 勝ったのだ！",
+      "metan_reaction": "知ってる。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/im-japanese/",
+          "date": "2026-10-10"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2013（2026-09 に再流行）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "onpare_momonga",
+      "phrase": "（音割れモモンガの絶叫）",
+      "meaning": "『ちいかわ』のモモンガに、極端に音割れした絶叫のアフレコを重ねた動画",
+      "usage": [
+        "big_loss",
+        "failed_prediction"
+      ],
+      "question_keys": [
+        "stream_result|lose",
+        "intervene_now"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "（音割れの絶叫）ア゛ーーッ！ 読みが外れたのだーッ！",
+      "metan_reaction": "音量。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "音割れモモンガ（ちいかわ）",
+      "status": "active"
+    },
+    {
+      "id": "koko_wa_haishin",
+      "phrase": "ここはTwitter 正気のやつから〇〇のさ",
+      "meaning": "SNS を終末作品のような過酷な場所として語る大げさな一文",
+      "usage": [
+        "overconfident_bet",
+        "hype"
+      ],
+      "question_keys": [
+        "stream_side|High",
+        "intensity"
+      ],
+      "tone": "smug",
+      "who": "zundamon",
+      "zundamon_line": "ここは配信。正気のやつから赤字になっていくのさ、なのだ",
+      "metan_reaction": "あなたが一番正気じゃない。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "inou_tadataka",
+      "phrase": "伊能忠敬界隈",
+      "meaning": "長い距離を歩く人を伊能忠敬になぞらえる「〇〇界隈」",
+      "usage": [
+        "dungeon_focus"
+      ],
+      "question_keys": [
+        "focus_share"
+      ],
+      "tone": "deadpan",
+      "who": "zundamon",
+      "zundamon_line": "今日のぼくは伊能忠敬界隈なのだ。ダンジョンまで歩いて仕入れるのだ",
+      "metan_reaction": "地図は勇者が持ってる。",
+      "sources": [
+        {
+          "url": "https://memehyakka.com/features/b0620056-1d08-4843-adce-a1d58b66c5d9",
+          "date": "2026"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024（2026 上半期に勢い）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "washira_sukuenu",
+      "phrase": "わしらには救えぬものじゃ",
+      "meaning": "『ハリー・ポッターと死の秘宝』のダンブルドア。どうにもならないものを見たとき",
+      "usage": [
+        "big_loss"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "この帳簿は……わしらには救えぬものじゃ、なのだ",
+      "metan_reaction": "救うのは私よ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/washira-niwa-sukuenu/",
+          "date": "2026-10"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "kanzen_rikai",
+      "phrase": "完全に理解した",
+      "meaning": "分かったつもりの段階を表すネット定番。完全に理解した人ほど分かっていない",
+      "usage": [
+        "buying_info",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes",
+        "focus_share"
+      ],
+      "tone": "smug",
+      "who": "zundamon",
+      "zundamon_line": "新聞、完全に理解したのだ",
+      "metan_reaction": "それ、何も分かってない人の台詞よ。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E5%AE%8C%E5%85%A8%E3%81%AB%E7%90%86%E8%A7%A3%E3%81%97%E3%81%9F",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番（2010 年代〜）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "mikaeri_bug",
+      "phrase": "見返りバグってない？",
+      "meaning": "思っていたよりずっと多く返ってきたときの驚き（ねとらぼの献血記念品の投稿から）",
+      "usage": [
+        "big_win"
+      ],
+      "question_keys": [
+        "run_result|win",
+        "stream_result|win"
+      ],
+      "tone": "surprise",
+      "who": "both",
+      "zundamon_line": "見返りバグってないのだ？ こんなに増えたのだ",
+      "metan_reaction": "バグじゃない。たまたまよ。",
+      "sources": [
+        {
+          "url": "https://x.com/itm_nlab/status/2115005861693174231",
+          "date": "2026-10-27"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "2026-10",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "yusho",
+      "phrase": "優勝すぎる",
+      "meaning": "最高すぎる、の意味の「優勝」。景色や食べ物を手放しでほめる",
+      "usage": [
+        "good_deal"
+      ],
+      "question_keys": [
+        "buy_style",
+        "weapon"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "この仕入れ値、優勝すぎるのだ",
+      "metan_reaction": "まだ売れてない。",
+      "sources": [
+        {
+          "url": "https://x.com/itm_nlab/status/2115021156365320494",
+          "date": "2026-10-27"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "定番（2026-10 も反応で使用）",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "tondemonee",
+      "phrase": "とんでもねーもん出してきやがって",
+      "meaning": "予想を超えたものが出てきたときの驚き（新作スイーツの反応から）",
+      "usage": [
+        "good_deal",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "weapon",
+        "intervene_now"
+      ],
+      "tone": "surprise",
+      "who": "zundamon",
+      "zundamon_line": "とんでもねーもん出してきやがって……なのだ",
+      "metan_reaction": "あなたが買ったのよ。",
+      "sources": [
+        {
+          "url": "https://x.com/itm_nlab/status/2114197788821000432",
+          "date": "2026-10-25"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "2026-10",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "onaji_tetsu",
+      "phrase": "全く同じ轍を踏んだ",
+      "meaning": "人の失敗談に、自分も同じ失敗をしたと名乗り出る返し",
+      "usage": [
+        "big_loss",
+        "failed_prediction"
+      ],
+      "question_keys": [
+        "stream_result|lose",
+        "run_result|lose"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "昨日のぼくと全く同じ轍を踏んだのだ……",
+      "metan_reaction": "轍は踏む前に見て。",
+      "sources": [
+        {
+          "url": "https://x.com/posfie_jp/status/2115005972553121946",
+          "date": "2026-10-27"
+        }
+      ],
+      "trend_score": 2,
+      "first_seen_estimate": "2026-10",
+      "via": "collector",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "uo_w",
+      "phrase": "うおw",
+      "meaning": "驚いたふりをして小馬鹿にする冷笑系の返し。いまはその態度をからかうネタ",
+      "usage": [
+        "metan_tease",
+        "overconfident_bet"
+      ],
+      "question_keys": [
+        "intensity",
+        "stream_side|High"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "スパチャ全開で勇者を応援するのだ！",
+      "metan_reaction": "うおw ……今のは元ネタじゃないから。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/uo-w/",
+          "date": "2026-10-24"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "fukai_tokoro",
+      "phrase": "お前、深いところで舐めてるだろ",
+      "meaning": "表向きはちゃんとしていても、心の奥で物事を甘く見ている状態。イチローの一言が元",
+      "usage": [
+        "skip_info",
+        "metan_tease"
+      ],
+      "question_keys": [
+        "newspaper_yes",
+        "intel_yes",
+        "weapon"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "新聞は見出しだけで十分なのだ",
+      "metan_reaction": "あなた、深いところで舐めてるでしょ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/fukai-tokoro-de-nameteru/",
+          "date": "2026-10-16"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-10",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "life_zero",
+      "phrase": "もうやめて！とっくに〇〇のライフはゼロよ！",
+      "meaning": "『遊☆戯☆王』杏子の叫び。勝負がついているのに攻撃が止まらないとき",
+      "usage": [
+        "intervene",
+        "zundamon_blunder"
+      ],
+      "question_keys": [
+        "intervene_now",
+        "intervene|High"
+      ],
+      "tone": "panic",
+      "who": "metan_reluctant",
+      "zundamon_line": "罠をもう一発送るのだ！",
+      "metan_reaction": "もうやめて！ とっくに勇者のライフはゼロよ！",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/life-wa-zero-yo/",
+          "date": "2026-10-13"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2003（定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "fuku_rip",
+      "phrase": "福リプ",
+      "meaning": "クソリプならぬ福リプ。落ちこんだ投稿に優しい返事だけを送る「晴ガエル」から",
+      "usage": [
+        "big_loss",
+        "comfort"
+      ],
+      "question_keys": [
+        "run_result|lose"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "うわーん、赤字なのだ……",
+      "metan_reaction": "……その分、黒字のありがたみが誰よりも分かるわよ。今のは元ネタじゃないから。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/fuku-rip-harugaeru/",
+          "date": "2026-10-15"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2026-10-12",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "mazuwa_arigatou",
+      "phrase": "まずは、ありがとう",
+      "meaning": "恋愛リアリティーショー「今日好き」で告白を断る前の一言",
+      "usage": [
+        "support_choice",
+        "refuse"
+      ],
+      "question_keys": [
+        "support|Low",
+        "support|Mid"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "めたんも一緒に魔王軍に出資するのだ！",
+      "metan_reaction": "まずは、ありがとう。でも出資はしない。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025（定番化）",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "rubii",
+      "phrase": "ルビィちゃん！何が好き？",
+      "meaning": "AiScReam「愛♡スクリ～ム！」のコール。「チョコミントよりも あ・な・た」と返す",
+      "usage": [
+        "big_win",
+        "metan_tease"
+      ],
+      "question_keys": [
+        "run_result|win",
+        "stream_result|win"
+      ],
+      "tone": "smug",
+      "who": "metan_reluctant",
+      "zundamon_line": "めたんちゃーん！ 何が好きなのだ？",
+      "metan_reaction": "チョコミントよりも……く・ろ・じ。",
+      "sources": [
+        {
+          "url": "https://omcha.jp/wakamono_ryuukougo_2025_zsedai_ranking/",
+          "date": "2026-09-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2025",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "waraeba",
+      "phrase": "笑えばいいと思うよ",
+      "meaning": "『エヴァンゲリオン』のシンジの言葉。返し方に困ったときの万能の返事",
+      "usage": [
+        "big_loss"
+      ],
+      "question_keys": [
+        "stream_result|lose"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "めたん、こういうときどんな顔をすればいいのだ？",
+      "metan_reaction": "笑えばいいと思うよ。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/waraeba-iito-omouyo/",
+          "date": "2026-10-13"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "定番",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "seyayona",
+      "phrase": "せやよな",
+      "meaning": "「ほんとそうだよね」のあいづち。Mrs. GREEN APPLE 大森元貴さんのライブでの一言から",
+      "usage": [
+        "being_right"
+      ],
+      "question_keys": [
+        "budget|Mid",
+        "buy_style|Mid",
+        "focus_share"
+      ],
+      "tone": "deadpan",
+      "who": "metan_reluctant",
+      "zundamon_line": "今日は手堅くいくのが一番なのだ",
+      "metan_reaction": "……せやよな。",
+      "sources": [
+        {
+          "url": "https://buzzneta-kaisetsu.com/seyayona/",
+          "date": "2026-10-21"
+        },
+        {
+          "url": "https://buzzneta-kaisetsu.com/ryukogo-taisho-2026-yosou/",
+          "date": "2026-10-25"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2026-05",
+      "via": "article",
+      "region": "jp",
+      "origin": "jp",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_banana_cry",
+      "phrase": "（噴水みたいに泣くバナナ猫）",
+      "meaning": "バナナ猫が涙を噴水のように流して泣く。大損・大失敗のとき",
+      "usage": [
+        "big_loss"
+      ],
+      "question_keys": [
+        "stream_result|lose",
+        "run_result|lose"
+      ],
+      "tone": "sad",
+      "who": "zundamon",
+      "zundamon_line": "（バナナ猫で噴水みたいに泣く）うえーん、赤字なのだー！",
+      "metan_reaction": "涙で帳簿を濡らさないで。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=xL19d2fLWFU",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 4,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_banana_cry_gb.mp4",
+      "asset_name": "噴水みたいに泣くバナナ猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_banana_cough",
+      "phrase": "（咳き込むバナナ猫）",
+      "meaning": "バナナ猫がゴホッゴホッと咳き込む。値段や数字を見てむせるとき",
+      "usage": [
+        "good_deal",
+        "overbuy"
+      ],
+      "question_keys": [
+        "buy_style|High",
+        "weapon",
+        "budget|High"
+      ],
+      "tone": "surprise",
+      "who": "zundamon",
+      "zundamon_line": "（ゴホッゴホッ）……値札を見てむせたのだ",
+      "metan_reaction": "むせるなら買わないで。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=SOITL_msgKc",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_banana_cough_gb.mp4",
+      "asset_name": "咳き込むバナナ猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_windows_error",
+      "phrase": "（Windows のエラー音で固まる黒猫）",
+      "meaning": "Windows のエラー音に合わせて驚く黒猫。計算が狂った・想定外のとき",
+      "usage": [
+        "failed_prediction"
+      ],
+      "question_keys": [
+        "focus_share",
+        "stream_result|lose",
+        "buy_style|Low"
+      ],
+      "tone": "surprise",
+      "who": "zundamon",
+      "zundamon_line": "（Windows のエラー音）……在庫の数が合わないのだ",
+      "metan_reaction": "合わないのはあなたの勘よ。",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=mVkBksJRZ5U",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_windows_error_gb.mp4",
+      "asset_name": "Windows のエラー音で固まる黒猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_scream",
+      "phrase": "（もがいて絶叫する猫）",
+      "meaning": "怒りと嘆きでもがきながら叫ぶ猫。嫌なことがあったとき",
+      "usage": [
+        "big_loss"
+      ],
+      "question_keys": [
+        "run_result|lose",
+        "stream_result|lose"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "（もがいて絶叫）ンギャーッ！ 帳簿がーッ！",
+      "metan_reaction": "叫ぶ前に数字を見て。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=_mpbZv_1oNE",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_scream_gb.mp4",
+      "asset_name": "もがいて絶叫する猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_apple",
+      "phrase": "（くるくる回るりんご猫）",
+      "meaning": "りんごの体の猫がその場で回る。浮かれているとき",
+      "usage": [
+        "big_win",
+        "hype"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "intensity"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（りんご猫でくるくる）勝ったのだ〜、回るのだ〜",
+      "metan_reaction": "回る前に精算して。",
+      "sources": [
+        {
+          "url": "https://dic.pixiv.net/a/%E7%8C%AB%E3%83%9F%E3%83%BC%E3%83%A0",
+          "date": "2026-10-28"
+        },
+        {
+          "url": "https://www.youtube.com/watch?v=oPNIQELtIHg",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_apple_gb.mp4",
+      "asset_name": "くるくる回るりんご猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_rage",
+      "phrase": "（真っ赤にふくれる白猫）",
+      "meaning": "怒りで真っ赤にふくれ上がる白猫。キレたとき",
+      "usage": [
+        "big_loss",
+        "stream_reversal"
+      ],
+      "question_keys": [
+        "stream_result|lose",
+        "run_result|lose"
+      ],
+      "tone": "panic",
+      "who": "zundamon",
+      "zundamon_line": "（真っ赤にふくれる）ぷくーっ！ 勇者、なんで勝つのだ！",
+      "metan_reaction": "勇者は勝つのが仕事よ。",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=CaqrlI7JBWA",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_rage_gb.mp4",
+      "asset_name": "真っ赤にふくれる白猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_grin",
+      "phrase": "（ニヤける猫）",
+      "meaning": "口角を上げてニヤける猫。読みどおりでほくそ笑むとき",
+      "usage": [
+        "mount",
+        "being_right"
+      ],
+      "question_keys": [
+        "stream_result|win",
+        "run_result|win",
+        "intel_yes"
+      ],
+      "tone": "smug",
+      "who": "zundamon",
+      "zundamon_line": "（ニヤける猫）……ぼくの読みどおりなのだ、ふふ",
+      "metan_reaction": "その顔、次で返ってくるからね。",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=mQWl0N8WwYM",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_grin_gb.mp4",
+      "asset_name": "ニヤける猫",
+      "status": "active"
+    },
+    {
+      "id": "meme_cat_black_dance",
+      "phrase": "（横揺れでノリノリの黒猫）",
+      "meaning": "リズムに合わせて横に揺れる黒猫。盛り上がっている間",
+      "usage": [
+        "hype"
+      ],
+      "question_keys": [
+        "intensity",
+        "stream_side|High"
+      ],
+      "tone": "hype",
+      "who": "zundamon",
+      "zundamon_line": "（横揺れでノリノリ）配信、盛り上がってるのだ〜",
+      "metan_reaction": "揺れてないで在庫を見て。",
+      "sources": [
+        {
+          "url": "https://www.youtube.com/watch?v=BFMLLVVHRiw",
+          "date": "2026-10-28"
+        }
+      ],
+      "trend_score": 3,
+      "first_seen_estimate": "2024-01（日本の猫ミームブーム。いまも X・TikTok で定番）",
+      "via": "article",
+      "region": "jp",
+      "origin": "intl",
+      "last_seen": "2026-10-28",
+      "weight": 1,
+      "asset_hint": "meme_cat_black_dance_gb.mp4",
+      "asset_name": "横揺れでノリノリの黒猫",
+      "status": "active"
+    }
+  ]
+}

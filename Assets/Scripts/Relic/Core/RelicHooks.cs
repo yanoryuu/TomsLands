@@ -65,8 +65,11 @@ public class RelicHookDispatcher
     /// <summary>
     /// ターン開始フックを全所持レリックへ配る。朝レポート用の行を返す。
     /// 効果内でお金を直接触るビヘイビアは TomsModel 経由で行う。
+    /// onIncome を渡すと、所持金を増やしたフック（子豚の貯金箱など）は行にせず (レリック, 増えた額) で知らせる
+    /// （朝レポートがアイコン付きの入金の行にするため）。減らしたフック（呪われた帳簿の取り立て）は今までどおり行で返す。
     /// </summary>
-    public List<string> OnTurnStart(int currentTurn, TomsModel tomsModel, ItemModel itemModel)
+    public List<string> OnTurnStart(int currentTurn, TomsModel tomsModel, ItemModel itemModel,
+        Action<RelicDefinition, int> onIncome = null)
     {
         var lines = new List<string>();
         if (inventory == null || registry == null) return lines;
@@ -94,8 +97,12 @@ public class RelicHookDispatcher
 
                 try
                 {
+                    int moneyBefore = tomsModel != null ? tomsModel.PlayerMoney.Value : 0;
                     string line = behaviour.OnTurnStart(context, behaviourRef.param);
-                    if (!string.IsNullOrEmpty(line))
+                    int gained = tomsModel != null ? tomsModel.PlayerMoney.Value - moneyBefore : 0;
+                    if (onIncome != null && gained > 0)
+                        onIncome(def, gained);
+                    else if (!string.IsNullOrEmpty(line))
                         lines.Add($"{def.relicName}: {line}");
                 }
                 catch (Exception ex)

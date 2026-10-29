@@ -55,6 +55,16 @@ public class BattlePriceSettings : ScriptableObject
     [Min(0f)]
     public float priceCeilingRate = 5.00f;
 
+    [Header("配信中の在庫補充")]
+    [Tooltip("補充の単価 = その時の配信の値段 × この値。元値で補充してその場で高く売る抜け道を塞ぐ。")]
+    [Min(0f)]
+    public float restockPriceRate = 0.75f;
+
+    [Header("勇者敗北の返金騒ぎ")]
+    [Tooltip("勇者が負けた配信で、その配信で売れた武器・防具（勇者側の品）の売上のうち視聴者に返金する割合。例: 0.4 = 40%。道具・魔王側の配当には掛からない。")]
+    [Range(0f, 1f)]
+    public float heroDefeatRefundRate = 0.4f;
+
     [Header("配信熱")]
     [Tooltip("Battle開始時の配信熱。0〜100で指定する。")]
     [Range(0f, 100f)]

@@ -39,7 +39,7 @@ public class MapInfoView : MonoBehaviour
     private readonly List<MapPurchaseSlot> activeSlots = new();
     private List<DungeonData> currentMaps = new();
     private Dictionary<DungeonName, int[]> currentCosts = new();
-    private int currentTurnForCost = 1;
+    private int currentCost;
     private DungeonName? selectedKey;
     private DungeonName? upcomingKey;
 
@@ -57,13 +57,15 @@ public class MapInfoView : MonoBehaviour
         if (detailPanel != null) detailPanel.SetActive(false);
     }
 
+    /// <param name="mapCosts">情報料テーブル（載っているダンジョンの情報だけ売る）</param>
+    /// <param name="cost">今日の地図の値段（どのダンジョンも同じ。納付の期日が来るたびに上がる）</param>
     /// <param name="upcoming">次の配信先（地図の NEXT と同じ）。その行を先頭に置いて NEXT の印を付け、最初に選ぶ</param>
-    public void SetMapSlot(List<DungeonData> maps, Dictionary<DungeonName, int[]> mapCosts, int currentTurn, DungeonName? upcoming = null)
+    public void SetMapSlot(List<DungeonData> maps, Dictionary<DungeonName, int[]> mapCosts, int cost, DungeonName? upcoming = null)
     {
         upcomingKey = upcoming;
         currentMaps = OrderUpcomingFirst(maps, upcoming);
         currentCosts = mapCosts ?? new Dictionary<DungeonName, int[]>();
-        currentTurnForCost = currentTurn;
+        currentCost = cost;
 
         slotDisposables.Clear();
         // パッド/キー: 行を選んだまま作り直した（購入直後など）なら、同じダンジョンの行へフォーカスを戻す
@@ -232,13 +234,7 @@ public class MapInfoView : MonoBehaviour
     private bool IsSellable(DungeonName key) =>
         currentCosts.TryGetValue(key, out var costs) && costs.Length > 0;
 
-    private int GetCost(DungeonName key)
-    {
-        if (!currentCosts.TryGetValue(key, out var costs) || costs.Length == 0) return 0;
-        if (costs.Length >= currentTurnForCost && currentTurnForCost > 0)
-            return costs[currentTurnForCost - 1];
-        return costs[costs.Length - 1];
-    }
+    private int GetCost(DungeonName key) => IsSellable(key) ? currentCost : 0;
 
     private void OnDestroy()
     {

@@ -37,6 +37,8 @@ public sealed class AutoPlayAssets
     public List<DungeonInfoScriptableObj> Dungeons;
     /// <summary>配信中の介入・視聴者スパチャの調整値（Addressable → RemoteBalance → 既定値）。</summary>
     public StreamingInteractionSettings Interaction;
+    /// <summary>配信の値動き・返金騒ぎの割合（Addressable → RemoteBalance「battlePrice」→ 既定値）。</summary>
+    public BattlePriceSettings BattlePrice;
 
     /// <summary>
     /// GameLifetimeScope.Configure と同じ経路（Addressables + RemoteBalance）で読む。
@@ -65,7 +67,7 @@ public sealed class AutoPlayAssets
             a.FinancialProducts = RemoteBalance.ApplyList("financialProducts",
                 AddressableLoader.LoadAll<FinancialProductData>("FinancialProductData"), p => p.productId);
             a.Relics = RemoteBalance.ApplyList("relics", AddressableLoader.LoadAll<RelicDefinition>("RelicData"), r => r.relicId);
-            a.Machines = RemoteBalance.ApplyList("shopMachines", AddressableLoader.LoadAll<ShopMachineData>("ShopMachineData"), m => m.machineId);
+            a.Machines = ShopMachineData.ApplyRemoteBalance(AddressableLoader.LoadAll<ShopMachineData>("ShopMachineData"));
             a.Balance = RemoteBalance.ApplyOverwrite("gameBalance", Or(AddressableLoader.Load<GameBalanceData>("Marketing/GameBalanceData")));
             a.Advertisements = RemoteBalance.ApplyList("advertisements",
                 AddressableLoader.LoadAll<AdvertisementData>("AdvertisementData"), x => x.advertisementName);
@@ -85,6 +87,7 @@ public sealed class AutoPlayAssets
                 .ToList();
             a.Dungeons = RemoteBalance.ApplyList("dungeons", a.Dungeons, d => d.key.ToString());
             a.Interaction = StreamingInteractionSettings.Load();
+            a.BattlePrice = RemoteBalance.ApplyOverwrite("battlePrice", Or(AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings")));
             if (a.Dungeons.Count == 0)
             {
                 error = "DungeonInfoScriptableObj が見つかりませんでした。";
@@ -462,7 +465,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             total += Portfolio.TotalAssetsEstimate.Value;
         }
         if (Machines != null)
-            total += Machines.Placed.Sum(p => (long)Mathf.RoundToInt((Machines.GetMachine(p.MachineId)?.cost ?? 0) * 0.5f));
+            total += Machines.Placed.Sum(p => (long)Machines.GetRemoveRefund(p));
         return total >= int.MaxValue ? int.MaxValue : (int)total;
     }
 
@@ -532,16 +535,30 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         foreach (var m in Machines.AllMachines)
         {
             if (m == null) continue;
+            var placed = Machines.PlacementOf(m.machineId);
+            int lv = placed?.Level ?? 1;
+            int cost = Machines.GetPurchaseCost(m);
             s.Machines.Add(new AutoPlayMachineView
             {
                 Id = m.machineId,
                 Type = m.effectType.ToString(),
-                Cost = m.cost,
+                Cost = cost,
                 RequiredShopLevel = m.requiredShopLevel,
-                DailyMoney = m.effectType == ShopMachineEffectType.DailyMoney ? m.dailyMoney : 0,
-                RevenueBonus = m.effectType == ShopMachineEffectType.RevenueMultiplier ? m.revenueMultiplierBonus : 0f,
-                Purchasable = Machines.PlacedCount < s.MachineSlots && m.requiredShopLevel <= TomsModel.ShopLevel.Value
-                              && TomsModel.PlayerMoney.Value >= m.cost,
+                DailyMoney = m.effectType == ShopMachineEffectType.DailyMoney ? m.DailyMoneyAt(lv) : 0,
+                RevenueBonus = m.effectType == ShopMachineEffectType.RevenueMultiplier ? m.EffectValueAt(lv) : 0f,
+                Purchasable = placed == null && Machines.PlacedCount < s.MachineSlots && m.requiredShopLevel <= TomsModel.ShopLevel.Value
+                              && TomsModel.PlayerMoney.Value >= cost,
+                Placed = placed != null,
+                Level = placed?.Level ?? 0,
+                MaxLevel = m.MaxLevel,
+                EffectValue = m.EffectValueAt(lv),
+                NextEffectValue = m.EffectValueAt(Mathf.Min(lv + 1, m.MaxLevel)),
+                UpgradeCost = placed != null ? Machines.GetUpgradeCost(placed) : -1,
+                Broken = placed != null && placed.Broken,
+                Repairable = Machines.CanRepair(placed),
+                RepairCost = placed != null ? Machines.GetRepairCost(placed) : 0,
+                SafeMorningsLeft = placed != null ? Machines.SafeMorningsLeft(placed) : int.MaxValue,
+                NextBreakChance = Machines.NextBreakChance(placed),
             });
         }
         foreach (var p in Portfolio.AllProducts)
@@ -1067,6 +1084,26 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"マシン {machineId}");
     }
 
+    public AutoPlayActionResult UpgradeMachine(string machineId)
+    {
+        var placed = Machines.PlacementOf(machineId);
+        if (placed == null) return Reject($"{machineId} を置いていない");
+        int before = TomsModel.PlayerMoney.Value;
+        if (!Machines.TryUpgrade(placed.PlacementId, TomsModel)) return Reject($"{machineId} を強化できない（最大レベル・資金）");
+        Today.MachineSpend += before - TomsModel.PlayerMoney.Value;
+        return AutoPlayActionResult.Success($"マシン強化 {machineId} Lv{placed.Level}");
+    }
+
+    public AutoPlayActionResult RepairMachine(string machineId)
+    {
+        var placed = Machines.PlacementOf(machineId);
+        if (placed == null) return Reject($"{machineId} を置いていない");
+        int before = TomsModel.PlayerMoney.Value;
+        if (!Machines.TryRepair(placed.PlacementId, TomsModel)) return Reject($"{machineId} を修理できない（壊れていない・資金）");
+        Today.MachineSpend += before - TomsModel.PlayerMoney.Value;
+        return AutoPlayActionResult.Success($"マシン修理 {machineId}");
+    }
+
     public AutoPlayActionResult BuyBond(string productId, int units)
     {
         var p = Portfolio.GetProduct(productId);
@@ -1223,17 +1260,22 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
         }
 
-        // 純利益 = 売上 − 補充(なし) + 返金(なし) + 防衛報酬 − 介入支出 + 未実行介入の返金（BattleSceneStarter の写し）
-        int totalEarnings = rawSales + defeatReward - outcome.InterventionSpent + outcome.InterventionRefund;
+        // 勇者敗北の返金騒ぎ（BattleSceneStarter の写し）: 負けたら武器・防具の売上の一部を返す
+        var battleResult = outcome.Victory ? BattleResult.Victory : BattleResult.Defeat;
+        float refundRate = Assets.BattlePrice != null ? Assets.BattlePrice.heroDefeatRefundRate : 0f;
+        int heroDefeatRefund = HeroDefeatRefund.Calculate(battleResult, outcome.Sold, HeroDefeatRefund.TypeLookup(ItemModel), refundRate);
+
+        // 純利益 = 売上 − 補充(なし) + 返金(なし) + 防衛報酬 − 介入支出 + 未実行介入の返金 − 返金騒ぎ（BattleSceneStarter の写し）
+        int totalEarnings = rawSales + defeatReward - outcome.InterventionSpent + outcome.InterventionRefund - heroDefeatRefund;
 
         string weaponId = _battleIn.EquippedItemIds.Count > 0 ? _battleIn.EquippedItemIds[0] : "";
         string armorId = _battleIn.EquippedItemIds.Count > 1 ? _battleIn.EquippedItemIds[1] : "";
-        var result = outcome.Victory ? BattleResult.Victory : BattleResult.Defeat;
-        _battleOut.SetResult(result, weaponId, armorId, outcome.Sold, totalEarnings,
+        _battleOut.SetResult(battleResult, weaponId, armorId, outcome.Sold, totalEarnings,
             outcome.MobsDefeated, outcome.BossesDefeated);
         _battleOut.SetStreamingStats(outcome.InterventionSpent, outcome.InterventionRefund, 0, outcome.ViewerSpecials, outcome.SpecialMoves);
+        _battleOut.SetHeroDefeatRefund(heroDefeatRefund);
 
-        Today.StreamEarnings = rawSales;
+        Today.StreamEarnings = rawSales - heroDefeatRefund; // 売上から返金騒ぎを引いた額（レポートの配信収入）
         Today.DefeatReward = defeatReward;
         Today.InterventionSpent = outcome.InterventionSpent;
         Today.InterventionRefund = outcome.InterventionRefund;
@@ -1257,7 +1299,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         News?.SetLastStreamResult(outcome.Victory);
 
         ResolveStageAfterFlow();
-        return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G");
+        return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G"
+                                            + (heroDefeatRefund > 0 ? $" 返金騒ぎ -{heroDefeatRefund}G" : ""));
     }
 
     // =================================================================

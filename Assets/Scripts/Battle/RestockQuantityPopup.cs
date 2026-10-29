@@ -72,7 +72,7 @@ public class RestockQuantityPopup : MonoBehaviour
 
         // 鍛冶屋と同じ表示（アイコン・チャート・市場分析）。チャートは配信中の価格変動を表示
         detailPanel.ShowItem(runtime, unitCost, recommendScore, useBattleHistory: true);
-        // 費用は現在価格ではなく補充単価（基準価格）で計算する
+        // 費用は補充単価（その時の配信の値段 × 補充の率）で計算する
         detailPanel.SetPrice(unitCost);
         detailPanel.SetMaxQuantity(_maxQuantity);
         detailPanel.SetQuantity(_quantity);

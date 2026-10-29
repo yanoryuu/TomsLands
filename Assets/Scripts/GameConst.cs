@@ -181,6 +181,14 @@ public static class GameConst
     /// 指定サイクルの返済額。支払うたびに倍率が掛かる等比級数。
     /// 返済額 = 基準額 × 倍率^(cycle-1)
     /// </summary>
+    /// <summary>地図（ダンジョンの情報）の値段。dueDebtCycles はその日までに期日が来た納付の回数（DebtCalculator.CountDueCycles）。</summary>
+    public static int GetMapInfoCost(int dueDebtCycles)
+    {
+        double cost = Data.mapInfoBaseCost * System.Math.Pow(Data.mapInfoDebtMultiplier, Mathf.Max(0, dueDebtCycles));
+        if (cost >= int.MaxValue) return int.MaxValue;
+        return Mathf.RoundToInt((float)cost);
+    }
+
     public static int GetDebtAmount(int cycle)
     {
         if (cycle <= 0) return 0;

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// マシンショップ（店カスタマイズ）画面の View。
-/// カタログ一覧 + 選択マシンの詳細 + 購入/撤去ボタン + 設置枠カウンタ。
+/// カタログ一覧 + 選択マシンの詳細 + 購入/強化/修理/撤去ボタン + 設置枠カウンタ。
 /// 参照は未配線（null）でも動作する。
 /// </summary>
 public class ShopMachineView : MonoBehaviour
@@ -26,6 +26,12 @@ public class ShopMachineView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailCostText;
     [SerializeField] private Button purchaseButton;
     [SerializeField] private Button removeButton;
+
+    [Header("強化・修理（設置済みのマシン） ※未配線でも動作する")]
+    [SerializeField] private Button upgradeButton;
+    [SerializeField] private TextMeshProUGUI upgradeButtonText;
+    [SerializeField] private Button repairButton;
+    [SerializeField] private TextMeshProUGUI repairButtonText;
 
     [Header("生産アイテム選択（選択式製造機のみ） ※未配線でも動作する")]
     [SerializeField] private GameObject producedItemGroup;
@@ -50,6 +56,8 @@ public class ShopMachineView : MonoBehaviour
 
     public Subject<Unit> OnPurchaseClicked { get; } = new();
     public Subject<Unit> OnRemoveClicked { get; } = new();
+    public Subject<Unit> OnUpgradeClicked { get; } = new();
+    public Subject<Unit> OnRepairClicked { get; } = new();
     public Subject<Unit> OnCloseRequested { get; } = new();
     /// <summary>生産アイテムのドロップダウンで選択が変わった（候補リストのindex）。</summary>
     public Subject<int> OnProducedItemChanged { get; } = new();
@@ -60,6 +68,10 @@ public class ShopMachineView : MonoBehaviour
             purchaseButton.onClick.AddListener(() => OnPurchaseClicked.OnNext(Unit.Default));
         if (removeButton != null)
             removeButton.onClick.AddListener(() => OnRemoveClicked.OnNext(Unit.Default));
+        if (upgradeButton != null)
+            upgradeButton.onClick.AddListener(() => OnUpgradeClicked.OnNext(Unit.Default));
+        if (repairButton != null)
+            repairButton.onClick.AddListener(() => OnRepairClicked.OnNext(Unit.Default));
         if (closeButton != null)
             closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
         if (producedItemDropdown != null)
@@ -187,36 +199,60 @@ public class ShopMachineView : MonoBehaviour
         slotCounterText.color = used >= max ? new Color(1f, 0.55f, 0.35f) : Color.white;
     }
 
-    /// <param name="purchaseCost">実際に払う額（村の割引込み）。負なら定価 machine.cost を出す。</param>
-    public void ShowDetail(ShopMachineData machine, int placedCount, bool canPurchase, int removeRefund, int purchaseCost = -1)
+    private float? upgradeBaseX;
+
+    /// <summary>
+    /// 選択中のマシンの詳細を出す。置いていないマシンは購入ボタン、置いてあるマシンは強化・修理・撤去のボタン
+    /// （同じマシンは 1 台までなので、置いてあれば購入ボタンは出さない）。
+    /// </summary>
+    public void ShowDetail(ShopMachineDetailInfo info)
     {
-        int cost = purchaseCost >= 0 ? purchaseCost : machine.cost;
+        var machine = info.Machine;
         if (detailIcon != null)
         {
             detailIcon.sprite = machine.icon;
             detailIcon.preserveAspect = true;
             detailIcon.enabled = machine.icon != null;
         }
-        if (detailNameText != null) detailNameText.text = machine.machineName;
+        if (detailNameText != null) detailNameText.text = info.Placed ? $"{machine.machineName}  Lv{info.Level}" : machine.machineName;
         if (detailDescriptionText != null) detailDescriptionText.text = machine.description;
-        if (detailEffectText != null) detailEffectText.text = machine.EffectSummary;
+        if (detailEffectText != null) detailEffectText.text = info.EffectLine;
         if (detailCostText != null)
         {
-            // 値段と「設置中・撤去の返金」を1行ずつ、折り返さずに出す（長いときは枠の自動縮小に任せる）
+            // 置く前は値段、置いた後は「強化の次の効果」と「壊れやすさ」を1行ずつ、折り返さずに出す（長いときは枠の自動縮小に任せる）
             detailCostText.textWrappingMode = TextWrappingModes.NoWrap;
-            detailCostText.text = placedCount > 0
-                ? $"{cost:N0}G\n設置中×{placedCount}／撤去で{removeRefund:N0}G"
-                : $"{cost:N0}G";
+            detailCostText.text = info.CostLine;
         }
 
-        // 複数設置可: 購入ボタンは常に表示（枠・資金・店Lvで interactable 制御）
         if (purchaseButton != null)
         {
-            purchaseButton.gameObject.SetActive(true);
-            purchaseButton.interactable = canPurchase;
+            purchaseButton.gameObject.SetActive(!info.Placed);
+            purchaseButton.interactable = info.CanPurchase;
         }
         if (removeButton != null)
-            removeButton.gameObject.SetActive(placedCount > 0);
+            removeButton.gameObject.SetActive(info.Placed);
+
+        if (upgradeButton != null)
+        {
+            upgradeButton.gameObject.SetActive(info.Placed);
+            upgradeButton.interactable = info.CanUpgrade;
+            if (upgradeButtonText != null) upgradeButtonText.text = info.UpgradeLabel;
+        }
+        if (repairButton != null)
+        {
+            repairButton.gameObject.SetActive(info.Placed && info.ShowRepair);
+            repairButton.interactable = info.CanRepair;
+            if (repairButtonText != null) repairButtonText.text = info.RepairLabel;
+        }
+        CenterUpgradeButton(info.Placed && info.ShowRepair && repairButton != null);
+    }
+
+    /// <summary>修理ボタンを出さないときは強化ボタンを中央へ寄せる（並べるときは配置どおりの左側）。</summary>
+    private void CenterUpgradeButton(bool besideRepair)
+    {
+        if (upgradeButton == null || upgradeButton.transform is not RectTransform rt) return;
+        upgradeBaseX ??= rt.anchoredPosition.x;
+        rt.anchoredPosition = new Vector2(besideRepair ? upgradeBaseX.Value : 0f, rt.anchoredPosition.y);
     }
 
     /// <summary>
@@ -261,10 +297,30 @@ public class ShopMachineView : MonoBehaviour
         if (detailIcon != null) detailIcon.enabled = false;
         if (purchaseButton != null) purchaseButton.gameObject.SetActive(false);
         if (removeButton != null) removeButton.gameObject.SetActive(false);
+        if (upgradeButton != null) upgradeButton.gameObject.SetActive(false);
+        if (repairButton != null) repairButton.gameObject.SetActive(false);
     }
 
     public void ShowMessage(string message)
     {
         if (messageText != null) messageText.text = message;
     }
+}
+
+/// <summary>設備画面の詳細に出す中身（Presenter が組む）。</summary>
+public sealed class ShopMachineDetailInfo
+{
+    public ShopMachineData Machine;
+    public bool Placed;
+    public int Level;
+    /// <summary>効果の行（置いてあれば今のレベルの効果）。</summary>
+    public string EffectLine;
+    /// <summary>値段の行（置く前 = 購入費、置いた後 = 次のレベル・壊れやすさ・撤去の返金。リッチテキスト可）。</summary>
+    public string CostLine;
+    public bool CanPurchase;
+    public bool CanUpgrade;
+    public string UpgradeLabel;
+    public bool ShowRepair;
+    public bool CanRepair;
+    public string RepairLabel;
 }

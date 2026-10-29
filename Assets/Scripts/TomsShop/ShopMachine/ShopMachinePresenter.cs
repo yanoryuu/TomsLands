@@ -9,11 +9,15 @@ using VContainer.Unity;
 /// マシンショップ（店カスタマイズ）画面の Presenter。
 /// 仕入れフェーズの「店の設備」ボタンから開き、ゴールドでマシンを購入・設置する。
 /// - 設置枠は店レベル（ShopLevelSettings.machineSlots）が規定
-/// - 同一マシンでも枠が空いていれば複数台設置できる（設置済み一覧から1台ずつ選択・撤去）
-/// - 選択式製造機は設置エントリ（台）ごとに生産アイテムを選べる
+/// - 同じマシンは 1 台まで。置いたマシンは強化（Lv+1）・修理（故障中か、明朝から壊れる恐れがあるとき）・撤去ができる
+/// - 選択式製造機は生産アイテムを選べる
 /// </summary>
 public class ShopMachinePresenter : IStartable, IDisposable
 {
+    // 壊れやすさの色（既存の赤 #A8332B は濃い茶の上で沈むので明るめ）
+    private const string DangerColor = "#E05A4A";
+    private const string SafeColor = "#9BD37A";
+    private const string WarnColor = "#E8A33D";
 
     private readonly ShopMachineView view;
     private readonly ShopMachineModel machineModel;
@@ -23,10 +27,8 @@ public class ShopMachinePresenter : IStartable, IDisposable
     private readonly ShopLevelSettings shopLevelSettings;
     private readonly CompositeDisposable disposables = new();
     private CompositeDisposable slotDisposables = new();
-    private CompositeDisposable placementDisposables = new();
 
     private string selectedMachineId;
-    private string selectedPlacementId;
 
     /// <summary>生産アイテムドロップダウンの候補（表示順と同じ itemId 列）。</summary>
     private readonly List<string> producedCandidates = new();
@@ -74,6 +76,14 @@ public class ShopMachinePresenter : IStartable, IDisposable
             .Subscribe(_ => HandleRemove())
             .AddTo(disposables);
 
+        view.OnUpgradeClicked
+            .Subscribe(_ => HandleUpgrade())
+            .AddTo(disposables);
+
+        view.OnRepairClicked
+            .Subscribe(_ => HandleRepair())
+            .AddTo(disposables);
+
         // 選択式製造機の生産アイテム変更
         view.OnProducedItemChanged
             .Subscribe(HandleProducedItemChanged)
@@ -83,10 +93,10 @@ public class ShopMachinePresenter : IStartable, IDisposable
     public void Entry()
     {
         selectedMachineId = null;
-        selectedPlacementId = null;
-        view?.ShowMessage("設備を置いて店を強化しよう。同じ設備も枠が空いていれば何台でも置ける。");
+        view?.ShowMessage("設備を置いて店を強化しよう。置いた設備はお金を払うと強化できる。");
         view?.ClearDetail();
         view?.HideProducedItemSelector();
+        // 同じマシンは 1 台までになったので、台ごとの「設置済み一覧」は使わない（空にして隠す）
         view?.PopulatePlacements(0);
         RefreshCatalog();
     }
@@ -106,7 +116,8 @@ public class ShopMachinePresenter : IStartable, IDisposable
             var machine = machines[i];
             var slot = slots[i];
             bool levelLocked = machine.requiredShopLevel > tomsModel.ShopLevel.Value;
-            slot.Setup(machine, machineModel.CountOf(machine.machineId), levelLocked, machineModel.GetPurchaseCost(machine));
+            var placed = machineModel.PlacementOf(machine.machineId);
+            slot.Setup(machine, placed?.Level ?? 0, placed != null && placed.Broken, levelLocked, machineModel.GetPurchaseCost(machine));
 
             slot.OnSelected
                 .Subscribe(SelectMachine)
@@ -122,75 +133,80 @@ public class ShopMachinePresenter : IStartable, IDisposable
     private void SelectMachine(string machineId)
     {
         selectedMachineId = machineId;
-        // 既定の選択台 = その機種の最後に置いた1台
-        selectedPlacementId = machineModel.PlacementsOf(machineId).LastOrDefault()?.PlacementId;
         ShowDetail();
     }
+
+    private PlacedMachine SelectedPlacement => machineModel.PlacementOf(selectedMachineId);
 
     private void ShowDetail()
     {
         var machine = machineModel.GetMachine(selectedMachineId);
         if (machine == null || view == null) return;
 
-        int placedCount = machineModel.CountOf(machine.machineId);
-
-        // 選択中の台が撤去済みなどで無効なら最後の台に付け替える
-        if (machineModel.GetPlacement(selectedPlacementId) == null ||
-            machineModel.GetPlacement(selectedPlacementId).MachineId != machine.machineId)
-        {
-            selectedPlacementId = machineModel.PlacementsOf(machine.machineId).LastOrDefault()?.PlacementId;
-        }
-
-        bool canPurchase = machineModel.PlacedCount < MaxSlots
-            && machine.requiredShopLevel <= tomsModel.ShopLevel.Value
-            && tomsModel.PlayerMoney.Value >= machineModel.GetPurchaseCost(machine);
-        int refund = machineModel.GetRemoveRefund(machine);
-
-        view.ShowDetail(machine, placedCount, canPurchase, refund, machineModel.GetPurchaseCost(machine));
-        RefreshPlacementList(machine);
+        var placed = SelectedPlacement;
+        view.ShowDetail(placed != null ? PlacedDetail(machine, placed) : CatalogDetail(machine));
         RefreshProducedItemSelector(machine);
     }
 
-    /// <summary>選択中マシンの設置済み一覧（台ごとの行）を更新する。</summary>
-    private void RefreshPlacementList(ShopMachineData machine)
+    /// <summary>まだ置いていないマシンの詳細（Lv1 の効果と購入費）。</summary>
+    private ShopMachineDetailInfo CatalogDetail(ShopMachineData machine)
     {
-        placementDisposables.Dispose();
-        placementDisposables = new CompositeDisposable();
-
-        var placements = machineModel.PlacementsOf(machine.machineId);
-        var rows = view.PopulatePlacements(placements.Count);
-
-        for (int i = 0; i < rows.Count && i < placements.Count; i++)
+        int cost = machineModel.GetPurchaseCost(machine);
+        bool canPurchase = machineModel.PlacedCount < MaxSlots
+            && machine.requiredShopLevel <= tomsModel.ShopLevel.Value
+            && tomsModel.PlayerMoney.Value >= cost;
+        return new ShopMachineDetailInfo
         {
-            var placement = placements[i];
-            string detail;
-            if (machine.dailyItemSelectable)
-            {
-                var runtime = string.IsNullOrEmpty(placement.SelectedItemId) ? null : itemModel.GetRuntimeItem(placement.SelectedItemId);
-                var master = runtime != null ? itemModel.GetMasterItem(runtime.ItemId) : null;
-                detail = runtime == null
-                    ? "生産: 未選択"
-                    : $"生産: {runtime.ItemName}（{placement.ProductionProgress:N0}/{(master != null ? master.basePrice : 0):N0}G）";
-            }
-            else
-            {
-                detail = machine.EffectSummary;
-            }
+            Machine = machine,
+            Placed = false,
+            Level = 0,
+            EffectLine = machine.EffectSummaryAt(1),
+            CostLine = $"{cost:N0}G",
+            CanPurchase = canPurchase,
+        };
+    }
 
-            rows[i].SetupPlacementRow(placement.PlacementId, $"{i + 1}台目", detail, placement.PlacementId == selectedPlacementId);
+    /// <summary>置いてあるマシンの詳細（今の効果・次のレベル・壊れやすさ・強化と修理のボタン）。</summary>
+    private ShopMachineDetailInfo PlacedDetail(ShopMachineData machine, PlacedMachine placed)
+    {
+        int upgradeCost = machineModel.GetUpgradeCost(placed);
+        bool isMax = upgradeCost < 0;
+        int repairCost = machineModel.GetRepairCost(placed);
+        bool showRepair = machineModel.CanRepair(placed);
 
-            rows[i].OnSelected
-                .Subscribe(pid =>
-                {
-                    selectedPlacementId = pid;
-                    ShowDetail();
-                })
-                .AddTo(placementDisposables);
-        }
+        string next = isMax
+            ? "最大レベル"
+            : $"次 Lv{placed.Level + 1}: {machine.EffectSummaryAt(placed.Level + 1)}";
+        return new ShopMachineDetailInfo
+        {
+            Machine = machine,
+            Placed = true,
+            Level = placed.Level,
+            EffectLine = placed.Broken
+                ? $"<color={DangerColor}>故障中</color>　{machine.EffectSummaryAt(placed.Level)} が止まっている"
+                : machine.EffectSummaryAt(placed.Level),
+            CostLine = $"{next}\n{DurabilityText(placed)}",
+            CanUpgrade = !isMax && tomsModel.PlayerMoney.Value >= upgradeCost,
+            UpgradeLabel = isMax ? "MAX" : $"強化 {upgradeCost:N0}G",
+            ShowRepair = showRepair,
+            CanRepair = showRepair && tomsModel.PlayerMoney.Value >= repairCost,
+            RepairLabel = $"修理 {repairCost:N0}G",
+        };
+    }
+
+    /// <summary>壊れやすさの一言（「あと 2 日は安心」「そろそろ危ない（明朝 30%）」「故障中」）。</summary>
+    private string DurabilityText(PlacedMachine placed)
+    {
+        if (placed.Broken) return $"<color={DangerColor}>修理するまで動かない</color>";
+        int safe = machineModel.SafeMorningsLeft(placed);
+        if (safe == int.MaxValue) return $"<color={SafeColor}>壊れない</color>";
+        if (safe > 0) return $"<color={SafeColor}>あと {safe} 日は安心</color>";
+        float chance = machineModel.NextBreakChance(placed);
+        return $"<color={WarnColor}>そろそろ危ない（明朝 {Mathf.RoundToInt(chance * 100f)}%）</color>";
     }
 
     /// <summary>
-    /// 選択式製造機（選択中の台）の生産アイテムドロップダウンを更新する。
+    /// 選択式製造機（置いてあるもの）の生産アイテムドロップダウンを更新する。
     /// 候補 = 鍛冶屋レベルで解放済みの全アイテム（基準価格の安い順）。
     /// 高い武器ほど製造が遅い（進捗が basePrice に達するごとに1個）のでどれを選んでもよい。
     /// </summary>
@@ -198,7 +214,7 @@ public class ShopMachinePresenter : IStartable, IDisposable
     {
         producedCandidates.Clear();
 
-        var placement = machineModel.GetPlacement(selectedPlacementId);
+        var placement = SelectedPlacement;
         if (placement == null || machine.effectType != ShopMachineEffectType.DailyItem || !machine.dailyItemSelectable)
         {
             view.HideProducedItemSelector();
@@ -240,14 +256,14 @@ public class ShopMachinePresenter : IStartable, IDisposable
     {
         if (index < 0 || index >= producedCandidates.Count) return;
         var machine = machineModel.GetMachine(selectedMachineId);
-        if (machine == null || !machine.dailyItemSelectable) return;
+        var placement = SelectedPlacement;
+        if (machine == null || placement == null || !machine.dailyItemSelectable) return;
 
         string itemId = producedCandidates[index];
-        if (machineModel.SetProducedItem(selectedPlacementId, itemId))
+        if (machineModel.SetProducedItem(placement.PlacementId, itemId))
         {
             var runtime = itemModel.GetRuntimeItem(itemId);
             view?.ShowMessage($"{machine.machineName} の生産を「{runtime?.ItemName}」に切り替えた。明日の朝から製造される。");
-            RefreshPlacementList(machine);
         }
     }
 
@@ -256,6 +272,11 @@ public class ShopMachinePresenter : IStartable, IDisposable
         var machine = machineModel.GetMachine(selectedMachineId);
         if (machine == null) return;
 
+        if (machineModel.IsPlaced(machine.machineId))
+        {
+            view?.ShowMessage("同じ設備は1台までだ。強化して効果を上げよう。");
+            return;
+        }
         if (machine.requiredShopLevel > tomsModel.ShopLevel.Value)
         {
             view?.ShowMessage($"店レベル {machine.requiredShopLevel} が必要だ。改装しよう。");
@@ -271,8 +292,51 @@ public class ShopMachinePresenter : IStartable, IDisposable
         if (placed != null)
         {
             SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
-            selectedPlacementId = placed.PlacementId;
-            view?.ShowMessage($"{machine.machineName}（{machineModel.CountOf(machine.machineId)}台目）を設置した！ 効果は明日の朝から。");
+            view?.ShowMessage($"{machine.machineName}を設置した！ 効果は明日の朝から。");
+            RefreshCatalog();
+        }
+        else
+        {
+            view?.ShowMessage("資金が足りない……。");
+        }
+    }
+
+    private void HandleUpgrade()
+    {
+        var machine = machineModel.GetMachine(selectedMachineId);
+        var placed = SelectedPlacement;
+        if (machine == null || placed == null) return;
+
+        if (machineModel.GetUpgradeCost(placed) < 0)
+        {
+            view?.ShowMessage("これ以上は強化できない。");
+            return;
+        }
+        if (machineModel.TryUpgrade(placed.PlacementId, tomsModel))
+        {
+            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+            view?.ShowMessage($"{machine.machineName}を Lv{placed.Level} に強化した！ 新品同様だ。効果は明日の朝から。");
+            RefreshCatalog();
+        }
+        else
+        {
+            view?.ShowMessage("資金が足りない……。");
+        }
+    }
+
+    private void HandleRepair()
+    {
+        var machine = machineModel.GetMachine(selectedMachineId);
+        var placed = SelectedPlacement;
+        if (machine == null || placed == null || !machineModel.CanRepair(placed)) return;
+
+        bool wasBroken = placed.Broken;
+        if (machineModel.TryRepair(placed.PlacementId, tomsModel))
+        {
+            SoundManager.Instance?.PlaySE("営業/SE_仕入れ完了");
+            view?.ShowMessage(wasBroken
+                ? $"{machine.machineName}を修理した。明日の朝からまた動く。"
+                : $"{machine.machineName}を点検した。しばらくは安心だ。");
             RefreshCatalog();
         }
         else
@@ -284,18 +348,13 @@ public class ShopMachinePresenter : IStartable, IDisposable
     private void HandleRemove()
     {
         var machine = machineModel.GetMachine(selectedMachineId);
-        if (machine == null) return;
+        var placed = SelectedPlacement;
+        if (machine == null || placed == null) return;
 
-        // 選択中の台（無効なら最後の台）を撤去する
-        string targetId = machineModel.GetPlacement(selectedPlacementId) != null
-            ? selectedPlacementId
-            : machineModel.PlacementsOf(machine.machineId).LastOrDefault()?.PlacementId;
-        if (string.IsNullOrEmpty(targetId)) return;
-
-        if (machineModel.RemovePlacement(targetId, tomsModel))
+        int refund = machineModel.GetRemoveRefund(placed);
+        if (machineModel.RemovePlacement(placed.PlacementId, tomsModel))
         {
-            view?.ShowMessage($"{machine.machineName} を1台撤去した（{machineModel.GetRemoveRefund(machine):N0}G 返金）。");
-            selectedPlacementId = machineModel.PlacementsOf(machine.machineId).LastOrDefault()?.PlacementId;
+            view?.ShowMessage($"{machine.machineName} を撤去した（{refund:N0}G 返金）。");
             RefreshCatalog();
         }
     }
@@ -303,7 +362,6 @@ public class ShopMachinePresenter : IStartable, IDisposable
     public void Dispose()
     {
         slotDisposables.Dispose();
-        placementDisposables.Dispose();
         disposables.Dispose();
     }
 }

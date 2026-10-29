@@ -380,8 +380,33 @@ public static class GameplayAutoRecorder
     public static string IsolatedSaveRoot =>
         Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? ".", "Temp", "AutoRecordSaves");
 
+    /// <summary>
+    /// 人格マラソン（PersonaMarathon）がランごとの隔離セーブの置き場所を SessionState に置くキー。
+    /// 設定されていれば録画の有無にかかわらずそのフォルダで遊び、消さない（落ちた後に続きから再開するため）。
+    /// </summary>
+    public const string MarathonSaveRootKey = "TomsLands.PersonaMarathon.SaveRoot";
+
     private static void PrepareIsolatedSaves()
     {
+        var marathonRoot = SessionState.GetString(MarathonSaveRootKey, "");
+        if (!string.IsNullOrEmpty(marathonRoot))
+        {
+            try
+            {
+                Directory.CreateDirectory(marathonRoot);
+                SessionState.SetString(GameplayRecordingSignals.IsolatedSaveRootSessionKey, marathonRoot);
+                Debug.Log($"{LogPrefix} 人格マラソンの隔離セーブで Play: {marathonRoot}");
+            }
+            catch (Exception e)
+            {
+                // ユーザーのセーブに触れないよう、隔離できないときは Play を止める
+                Debug.LogError($"{LogPrefix} 人格マラソンの隔離セーブを用意できないので Play を止めます: {e.Message}");
+                SessionState.EraseString(GameplayRecordingSignals.IsolatedSaveRootSessionKey);
+                EditorApplication.isPlaying = false;
+            }
+            return;
+        }
+
         var s = GameplayAutoRecorderSettings.instance;
         if (!(s.recordOnPlay && s.isolateSaves))
         {
@@ -404,8 +429,11 @@ public static class GameplayAutoRecorder
 
     private static void ClearIsolatedSaves()
     {
+        var root = SessionState.GetString(GameplayRecordingSignals.IsolatedSaveRootSessionKey, "");
         SessionState.EraseString(GameplayRecordingSignals.IsolatedSaveRootSessionKey);
-        if (SaveSlotManager.DevRootOverride == IsolatedSaveRoot) SaveSlotManager.DevRootOverride = null;
+        if (SaveSlotManager.DevRootOverride == IsolatedSaveRoot
+            || (!string.IsNullOrEmpty(root) && SaveSlotManager.DevRootOverride == root))
+            SaveSlotManager.DevRootOverride = null;
     }
 
     // ===================================================================

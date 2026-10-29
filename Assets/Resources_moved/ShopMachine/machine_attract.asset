@@ -14,15 +14,38 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   machineId: machine_attract
   machineName: "\u547C\u3073\u8FBC\u307F\u30AA\u30EB\u30AC\u30F3"
-  description: "\u8EFD\u5FEB\u306A\u97F3\u697D\u3067\u5BA2\u3092\u547C\u3073\u8FBC\u3080\u3002\u55B6\u696D\u58F2\u4E0A+10%\u3002"
+  description: "\u8EFD\u5FEB\u306A\u97F3\u697D\u3067\u5BA2\u3092\u547C\u3073\u8FBC\u3080\u3002\u55B6\u696D\u306E\u58F2\u4E0A\u304C\u4E0A\u304C\u308B\u3002"
   icon: {fileID: 0}
   shopSprite: {fileID: 0}
-  cost: 8000
+  cost: 12000
   placementType: 0
   requiredShopLevel: 2
   effectType: 2
   dailyMoney: 800
   dailyItemId: 
   dailyItemCount: 1
-  revenueMultiplierBonus: 0.1
+  dailyItemSelectable: 0
+  dailyProductionBudget: 1000
+  revenueMultiplierBonus: 0.06
   demandFloorBonus: 0.05
+  levels:
+  - cost: 12000
+    effectValue: 0.06
+    safeDays: 4
+    breakChanceStep: 0.15
+  - cost: 5000
+    effectValue: 0.09
+    safeDays: 5
+    breakChanceStep: 0.12
+  - cost: 6000
+    effectValue: 0.12
+    safeDays: 6
+    breakChanceStep: 0.1
+  - cost: 7000
+    effectValue: 0.15
+    safeDays: 7
+    breakChanceStep: 0.08
+  - cost: 8000
+    effectValue: 0.18
+    safeDays: 8
+    breakChanceStep: 0.06

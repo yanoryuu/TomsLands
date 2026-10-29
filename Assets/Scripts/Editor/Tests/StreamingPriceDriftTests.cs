@@ -92,12 +92,18 @@ public class StreamingPriceDriftTests
             Heat.MarkHighlight();
         }
 
-        /// <summary>ターン終わり（ExecuteTurnSales の配信熱の部分）。</summary>
+        private float _appliedHeatMultiplier = 1f;
+
+        /// <summary>ターン終わり（ExecuteTurnSales の配信熱の部分）。熱の段階が変わったときだけ差の分を掛け直す。</summary>
         public void EndTurn()
         {
             Heat.ApplyTurnDecay();
-            float mult = Heat.GetPriceMultiplier();
-            if (mult != 1f) _model.AdjustAllPrices(mult, null);
+            float target = Heat.GetPriceMultiplier();
+            if (!Mathf.Approximately(target, _appliedHeatMultiplier))
+            {
+                _model.AdjustAllPrices(target / _appliedHeatMultiplier, null);
+                _appliedHeatMultiplier = target;
+            }
             HeatTiers.Add(Heat.GetTierIndex());
         }
 
@@ -215,6 +221,27 @@ public class StreamingPriceDriftTests
         Debug.Log("[Stalemate] " + sim.Describe());
         Assert.AreEqual(0, sim.Heat.GetTierIndex(), "膠着が続いても冷めない: " + sim.Describe());
         Assert.Less(sim.Tool.CurrentPrice.Value, StartPrice);
+    }
+
+    /// <summary>
+    /// 超人気が何ターン続いても、配信熱のぶんは超人気の倍率 1 回分しか乗らない（毎ターン掛けて複利で上がり続けない）。
+    /// 熱が冷めて普通の段階に戻れば、熱のぶんは抜けて元の値段に戻る。
+    /// </summary>
+    [Test]
+    public void SustainedHype_DoesNotCompound_AndFadesBack()
+    {
+        var sim = new StreamSim(_settings);
+        sim.Heat.AddHeat(100f);
+        sim.Heat.MarkHighlight();
+        for (int turn = 1; turn <= 3; turn++) sim.EndTurn();
+        Assert.AreEqual(3, sim.Heat.GetTierIndex(), "超人気になっていない: " + sim.Describe());
+        int expected = Mathf.RoundToInt(StartPrice * _settings.superHotPriceMultiplier);
+        Assert.AreEqual(expected, sim.Tool.CurrentPrice.Value, 2, "超人気の倍率が複利で乗っている: " + sim.Describe());
+
+        for (int turn = 1; turn <= 40 && sim.Heat.GetTierIndex() > 1; turn++) sim.EndTurn();
+        Debug.Log("[Hype] " + sim.Describe());
+        Assert.AreEqual(1, sim.Heat.GetTierIndex(), "見せ場が無いのに普通の段階まで冷めない: " + sim.Describe());
+        Assert.AreEqual(StartPrice, sim.Tool.CurrentPrice.Value, 2, "普通に戻ったのに熱のぶんが残っている: " + sim.Describe());
     }
 
     /// <summary>ピンチから逆転する配信は、盛り上がって全部の品が上がる。</summary>
