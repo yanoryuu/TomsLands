@@ -45,6 +45,10 @@ public sealed partial class AutoPlayController : MonoBehaviour
     private string _sceneName = "";
     private float _sceneEnteredAt;
     private int _sceneStep;
+    /// <summary>出店準備で持ち込みの「＋」を押した回数と、押す前の額の表示（額が増えなくなったら上限）。</summary>
+    private int _carryPresses;
+    private string _lastCarryText;
+    private const int MaxCarryPresses = 120;   // 上限 70 万 G / 1 万 G 刻み より多めの保険
     /// <summary>RunEndAction = SettleAndStopAtVillage でリザルト / ゲームオーバーのボタンを押した（村に着いたら止める）。</summary>
     private bool _stopAtVillage;
     private float _sceneRetryAt;
@@ -245,6 +249,8 @@ public sealed partial class AutoPlayController : MonoBehaviour
             _sceneName = scene.name;
             _sceneEnteredAt = Now;
             _sceneStep = 0;
+            _carryPresses = 0;
+            _lastCarryText = null;
             _sceneRetryAt = 0f;
             _sceneScenarioSeen = false;
             _lastLoggedSceneAction = null;
@@ -776,10 +782,23 @@ public sealed partial class AutoPlayController : MonoBehaviour
         switch (_sceneStep)
         {
             case 0:
-                _sceneStep = 1;
-                if (AutoPlay.Strategy.ShouldCarryMaxFunds(ctx))
-                    return await PressFieldAsync(view, "borrowPlusButton", "出店準備: 村資金を上限まで持ち込む", ct);
-                return false;
+            {
+                // 「＋」は 1 回で 1 万 G しか増えないので、額が増えなくなる（上限）まで押す（以前は 1 回だけで、持ち込みが毎回 1 万 G だった）
+                if (!AutoPlay.Strategy.ShouldCarryMaxFunds(ctx)) { _sceneStep = 1; return false; }
+                string carryText = AutoPlayUi.GetField<TMPro.TMP_Text>(view, "borrowAmountText")?.text;
+                bool reachedMax = _carryPresses > 0 && carryText == _lastCarryText;
+                if (reachedMax || _carryPresses >= MaxCarryPresses || !AutoPlayUi.IsClickable(AutoPlayUi.GetField<Button>(view, "borrowPlusButton")))
+                {
+                    _sceneStep = 1;
+                    _carryPresses = 0;
+                    _lastCarryText = null;
+                    if (carryText != null) AutoPlay.AddLog($"出店準備: 持ち込み {carryText}");
+                    return false;
+                }
+                _carryPresses++;
+                _lastCarryText = carryText;
+                return await PressFieldAsync(view, "borrowPlusButton", "出店準備: 村資金を上限まで持ち込む", ct);
+            }
 
             case 1:
             {

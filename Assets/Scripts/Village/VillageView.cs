@@ -502,7 +502,7 @@ public class VillageView : MonoBehaviour
 
     /// <summary>
     /// 帰還収支ポップの下に、村へ入った額の内訳を出す（null なら隠す）。
-    /// ポップの枠（720x380）には空きが無いので、ポップの子として枠のすぐ下に暗い帯を付けて出す（実行時に作る）。
+    /// ポップの枠（720x380）には空きが無いので、ポップの子として枠のすぐ下に出す（実行時に作る。背景の帯は付けない）。
     /// </summary>
     private void SetConversionBreakdown(VillageFundsBreakdown breakdown)
     {
@@ -524,7 +524,7 @@ public class VillageView : MonoBehaviour
             bgRt.pivot = new Vector2(0.5f, 1f);
             bgRt.anchoredPosition = new Vector2(0f, -8f);
             var img = bg.GetComponent<Image>();
-            img.color = new Color(0.16f, 0.09f, 0.04f, 0.92f);
+            img.color = new Color(0f, 0f, 0f, 0f);   // 背景の帯は出さない（並べる場所としてだけ使う）
             img.raycastTarget = false;
 
             var src = conversionEarnedText != null ? conversionEarnedText : conversionTitleText;

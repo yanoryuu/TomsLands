@@ -305,10 +305,7 @@ public class VillageArrivalFx : MonoBehaviour
         float height = lines.Count * LineHeight + 24f;
         var panelGo = CreateGroup("Breakdown", root, new Vector2(top.x, top.y - height * 0.5f), new Vector2(LinesWidth, height));
         var panelGroup = panelGo.GetComponent<CanvasGroup>();
-        panelGroup.alpha = 0f;
-        var bg = CreateImage("Bg", panelGo.transform, null);
-        Stretch(bg.rectTransform);
-        bg.color = new Color(0.16f, 0.09f, 0.04f, 0.88f * panelAlpha);
+        panelGroup.alpha = 0f;   // 背景の帯は出さない（文字の縁取りで読ませる。panelAlpha は帯をやめたので使わない）
         seq.Insert(startAt - 0.1f, panelGroup.DOFade(1f, 0.2f));
 
         for (int i = 0; i < lines.Count; i++)
