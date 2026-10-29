@@ -329,6 +329,15 @@ public static class PersonaLines
             "今日の勇者は{choice}なのだ",
             "{choice}なのだ。響きが強いのだ",
         },
+        // ---- 出店準備（スターターレリック。{choice} はレリックの名前） ----
+        ["zundamon|starter_relic"] = new[]
+        {
+            "持っていくのは{choice}なのだ！ 名前がもう強いのだ",
+            "{choice}にするのだ。ぼくの勘が光ってるのだ",
+            "今回のランは{choice}で勝つのだ！",
+            "相棒は{choice}なのだ。見た目で決めたのだ",
+            "{choice}なのだ。説明は半分読んだから大丈夫なのだ",
+        },
         ["zundamon|shop_upgrade_yes"] = new[]
         {
             "店を改装するのだ！ {choice}でお店がでっかくなるのだ",
@@ -723,6 +732,15 @@ public static class PersonaLines
             "作戦は{choice}。値動きは荒らさないの",
             "{choice}にするわ。理由は 2 行で言えるわ",
             "{choice}よ。勝ち負けは変わらないもの",
+        },
+        // ---- 出店準備（スターターレリック） ----
+        ["metan|starter_relic"] = new[]
+        {
+            "持っていくのは{choice}。最初の日から最後まで働くもの",
+            "{choice}にするわ。毎日の数字で選んだの",
+            "{choice}よ。ランの間は替えられないから、よく読んだわ",
+            "{choice}。説明は全部読んだわ",
+            "{choice}にするわ。それだけ。",
         },
         ["metan|shop_upgrade_yes"] = new[]
         {

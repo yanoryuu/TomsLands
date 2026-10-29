@@ -106,6 +106,10 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     private int _villageFundsBefore;
     private string _villageBudgetPct = "";
 
+    // ---- 出店準備の判断（PrefetchStarterRelicAsync で決め切る。結果は次のラン 1 周の所持金の増減で学ぶ） ----
+    private List<AutoPlayStarterRelicChoice> _starterChoices = new();
+    private string _starterPick;
+
     // ---- 一言で言う額（割合ではなく、判断時点の G で言う。視聴者が画面の数字と結びつけられるように） ----
     private int _spokenBudgetBase = -1;     // 仕入れに使える額（判断時点。予算の段階 × これ = 仕入れの予算）
     private int _spokenBudgetCap = -1;      // 現金の下限で削られたあとの上限（無ければ -1）
@@ -1447,6 +1451,23 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     public override int ChooseScenarioSelection(AutoPlayContext ctx, int choiceCount) =>
         _p.Sample && choiceCount > 0 ? _rng.Next(choiceCount) : base.ChooseScenarioSelection(ctx, choiceCount);
 
+    /// <summary>
+    /// 出店準備で決めたスターターレリック（PrefetchStarterRelicAsync）を画面の並びの番号にして返す。
+    /// モデルに聞けなかったときは標準: ずんだもんは目についたものを抽選、めたんは標準戦略（いちばん上）。
+    /// </summary>
+    public override int ChooseStarterRelic(AutoPlayContext ctx, int choiceCount)
+    {
+        string pick = _starterPick;
+        _starterPick = null;
+        var list = ctx?.StarterRelics;
+        if (pick != null && list != null)
+        {
+            foreach (var c in list)
+                if (c.Id == pick && c.Index >= 0 && c.Index < choiceCount) return c.Index;
+        }
+        return _p.Sample && choiceCount > 0 ? _rng.Next(choiceCount) : base.ChooseStarterRelic(ctx, choiceCount);
+    }
+
     // ---- 配信中 ----
 
     public override AutoPlayStreamIntervention ChooseStreamIntervention(AutoPlayStreamContext ctx)
@@ -1974,6 +1995,143 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     }
 
     // =====================================================
+    // 先読み: 出店準備の判断（スターターレリック）
+    // =====================================================
+
+    public async UniTask PrefetchStarterRelicAsync(IReadOnlyList<AutoPlayStarterRelicChoice> choices, CancellationToken ct)
+    {
+        EnsureSession();
+        _starterPick = null;
+        _starterChoices = choices?.Where(c => !string.IsNullOrEmpty(c.Id)).ToList() ?? new List<AutoPlayStarterRelicChoice>();
+        if (_advisor != null) _advisor._starterChoices = _starterChoices;
+        var v = BuildStarterSnapshot(out int built);
+        var feats = StarterFeatures(v, built);
+        var req = PersonaRequests.BuildStarterRelicRequest(_p, Model, Lessons(), v, _starterChoices);
+        if (req == null) return;   // 候補が 2 つ未満（選ぶものが無い）
+        var recalled = Recall(PersonaFeatures.Village, feats, req.Questions.Keys);
+        PersonaRequests.AttachSimilarPast(req, recalled);
+        PersonaJevRequest advReq = null;
+        if (_advisor != null)
+        {
+            advReq = PersonaRequests.BuildStarterRelicRequest(_advisor._p, _advisor.Model, _advisor.Lessons(), v, _starterChoices);
+            if (advReq != null)
+                PersonaRequests.AttachSimilarPast(advReq, _advisor.Recall(PersonaFeatures.Village, feats, advReq.Questions.Keys));
+        }
+        IsThinking = true;
+        AutoPlay.Status = _advisor != null ? $"{_p.LabelJa} が出店準備で {_advisor._p.LabelJa} に相談中" : $"{_p.LabelJa} が出店準備で考え中";
+        PersonaJevResponse resp, advResp;
+        try
+        {
+            (resp, advResp) = await AskPairAsync(req, advReq, ct, "prep", AutoPlay.CurrentTurn);
+        }
+        finally
+        {
+            IsThinking = false;
+        }
+        if (resp == null) return;
+        ResolveStarterRelic(v, feats, resp, advResp, recalled);
+    }
+
+    private void ResolveStarterRelic(PersonaVillageSnapshot v, float[] feats, PersonaJevResponse resp, PersonaJevResponse advResp, List<string> recalled)
+    {
+        var a = resp.Answers;
+        var adv = advResp?.Answers;
+        if (a == null || !a.TryGetValue("starter_relic", out var ans) || ans == null) return;
+        int day = AutoPlay.CurrentTurn;
+        var lat = (resp.LatencyMs, advResp?.LatencyMs);
+        bool Valid(string k) => k != null && _starterChoices.Any(c => c.Id == k);
+
+        // めたんの見方（場面の倍率）: 手堅いレリックに寄せ、派手なものは避ける。ずんだもんの好みは Taste で入れる
+        var careful = _p.Careful ? _p : _advisor != null && _advisor._p.Careful ? _advisor._p : null;
+        var sit = new PersonaSituation
+        {
+            Kind = PersonaFeatures.Village, Features = feats, Cash = v?.Funds ?? -1,
+            OptionMult = careful != null ? StarterRelicTaste(careful, _starterChoices) : null,
+        };
+        var own = PickQuestion("starter_relic", ans, sit);
+        if (!Valid(own.Key)) return;   // モデルが候補に無い答えを返した（標準の判断で続ける）
+        string nameJa = Label("starter_relic", own.Key);
+        string line = PersonaLines.Pick(_p.Id, "starter_relic", BandOf(ans), nameJa, null, _rng, _memes, _mood.Label);
+        var facts = new ConsultFacts { Funds = v?.Funds ?? -1, LastProfit = v?.LastRunProfit ?? 0, ItemName = nameJa };
+        string key = Consult("starter_relic", ans, own, line, adv, sit, facts, "village", day, lat, out var bind);
+        if (!Valid(key)) key = own.Key;
+        _starterPick = key;
+        var rec = Decide("starter_relic", key, PersonaFeatures.Village, PersonaFeatures.HorizonNextRun, feats, 0);
+        Bind(rec, bind, PersonaFeatures.HorizonNextRun);
+        Log(day, resp, "starter_relic", key, ans, line, own, rec, recalled, bind);
+        var chosen = _starterChoices.First(c => c.Id == key);
+        AutoPlay.AddLog($"{_p.LabelJa}: 出店準備: スターターレリック {chosen.Name} を選ぶ（{chosen.Rarity}・{own.Why}・{resp.LatencyMs} ms" +
+                        (advResp != null ? $" / {_advisor._p.LabelJa} {advResp.LatencyMs} ms" : "") +
+                        (bind != null && key != own.Key ? $"・{_advisor._p.LabelJa}の案" : "") +
+                        (recalled != null && recalled.Count > 0 ? $"・想起 {recalled.Count} 件" : "") + "）");
+    }
+
+    /// <summary>
+    /// スターターレリックの好み（選択肢 → 倍率）。抽選する人格（ずんだもん）: 派手なもの FlashyBoost 倍・エピック 1.3 倍。
+    /// 慎重な人格（めたん）: 手堅いもの 1.5 倍・派手なもの 0.6 倍（場面の倍率として PersonaChooser に渡す）。
+    /// </summary>
+    public static Dictionary<string, float> StarterRelicTaste(PersonaProfile p, IEnumerable<AutoPlayStarterRelicChoice> choices)
+    {
+        var m = new Dictionary<string, float>();
+        if (p == null || choices == null) return m;
+        foreach (var c in choices)
+        {
+            if (string.IsNullOrEmpty(c.Id) || m.ContainsKey(c.Id)) continue;
+            bool flashy = PersonaRequests.FlashyRelics.Contains(c.Id);
+            bool steady = PersonaRequests.SteadyRelics.Contains(c.Id);
+            float v = 1f;
+            if (p.Sample)
+            {
+                if (flashy) v *= Mathf.Max(1f, p.FlashyBoost);
+                if (c.Rarity == RelicRarity.Epic) v *= 1.3f;
+            }
+            else
+            {
+                if (steady) v *= 1.5f;
+                if (flashy) v *= 0.6f;
+            }
+            m[c.Id] = v;
+        }
+        return m;
+    }
+
+    /// <summary>出店準備の判断材料（MetaProgressModel。村の画面の BuildVillageSnapshot と同じ形で、施設の一覧は無し）。built = 建っている施設の数。</summary>
+    private static PersonaVillageSnapshot BuildStarterSnapshot(out int built)
+    {
+        built = 0;
+        var meta = AutoPlayUi.Resolve<MetaProgressModel>();
+        if (meta == null) return null;
+        var v = new PersonaVillageSnapshot { Runs = meta.TotalRuns, Funds = meta.VillageFunds, MaxVillageLevel = MaxVillageLevelInRun };
+        try
+        {
+            var eff = VillageEffects.From(meta);
+            v.HallLevel = eff.HallLevel;
+            v.VillageLevel = VillageRank.TotalLevel(eff);
+            v.Rank = VillageRank.Compute(eff);
+            v.TopRank = VillageRank.TopRank;
+            v.RankName = VillageRank.Name(v.Rank);
+            built = new[] { eff.HallLevel, eff.GuildLevel, eff.TavernLevel, eff.BankLevel, eff.ArtisanLevel, eff.PlazaLevel }.Count(lv => lv >= 1);
+        }
+        catch (Exception) { /* 村の格が出せなくても判断はできる */ }
+        var last = meta.RunRecords != null && meta.RunRecords.Count > 0 ? meta.RunRecords[meta.RunRecords.Count - 1] : null;
+        if (last != null)
+        {
+            v.LastRunProfit = last.profit;
+            v.LastRunCleared = last.cleared;
+        }
+        return v;
+    }
+
+    /// <summary>出店準備の特徴（村の特徴の形。施設ごとの欄は 0。v が無ければ null で学習しない）。</summary>
+    private static float[] StarterFeatures(PersonaVillageSnapshot v, int built) =>
+        v == null ? null
+            : PersonaFeatures.ForVillage(v.Runs, v.Funds, 0, VillageFacilityCount, v.HallLevel, -1, 0, -1, false, v.LastRunProfit,
+                v.TopRank > 0 ? v.Rank / (float)v.TopRank : 0f, built, v.LevelShare);
+
+    /// <summary>村の施設の数（会館・ギルド・酒場・銀行・職人街・広場）。</summary>
+    private const int VillageFacilityCount = 6;
+
+    // =====================================================
     // 判断材料（ゲームのモデルから。画面で見える情報だけ）
     // =====================================================
 
@@ -2246,6 +2404,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             case "hero_weapon":
             case "hero_armor":
             case "hero_tactics":
+            case "starter_relic":
             {
                 var probs = Taste(q, TryMix(q, a.Probabilities));
                 po.Rw = Reweigh(q, probs, f, St(probs?.Keys));
@@ -2289,12 +2448,14 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
 
     /// <summary>
     /// 人格の好み（kev の確率に掛けて正規化。学習器と流儀はこの後）。ずんだもん: 派手な設備（FlashyBoost 倍）・投資信託（大きく張る）・
-    /// 弱点の属性の武器（名前が強そう）・攻撃重視。めたんの好み（元が取れる設備・債券・弱点の装備）は場面の倍率（PersonaChooser.Situation）で入れる。
+    /// 弱点の属性の武器（名前が強そう）・攻撃重視・派手なスターターレリック（StarterRelicTaste）。
+    /// めたんの好み（元が取れる設備・債券・弱点の装備・手堅いレリック）は場面の倍率（PersonaChooser.Situation）で入れる。
     /// </summary>
     private Dictionary<string, float> Taste(string q, Dictionary<string, float> probs)
     {
         if (probs == null || probs.Count == 0 || !_p.Sample) return probs;
         var shop = _dayShop;
+        Dictionary<string, float> starterTaste = null;
         var w = new Dictionary<string, float>();
         foreach (var kv in probs)
         {
@@ -2313,6 +2474,10 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                     break;
                 case "hero_tactics":
                     if (kv.Key == "Aggressive") m = 1.5f;
+                    break;
+                case "starter_relic":
+                    starterTaste ??= StarterRelicTaste(_p, _starterChoices);
+                    if (starterTaste.TryGetValue(kv.Key, out var sm)) m = sm;
                     break;
             }
             w[kv.Key] = Mathf.Max(1e-4f, kv.Value) * m;
@@ -2385,6 +2550,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 return _dayShop?.Armors.FirstOrDefault(g => g.Id == key)?.Name ?? key;
             case "hero_tactics":
                 return Enum.TryParse<HeroTactics>(key, out var tac) ? HeroBattleInfluence.GetDisplayName(tac) : key;
+            case "starter_relic":
+                return _starterChoices.FirstOrDefault(c => c.Id == key).Name ?? key;
             case "intervene_now":
                 return key == "none" ? "様子見" : PersonaLines.ChoiceJa("intervene", key);
             default:

@@ -592,6 +592,93 @@ public static class PersonaRequests
         return req;
     }
 
+    // =====================================================
+    // 出店準備（スターターレリック）
+    // =====================================================
+
+    /// <summary>派手・当たり外れの大きいレリック（バズ・イベント・値動きの幅・防衛報酬。ずんだもんが飛びつく）。</summary>
+    public static readonly HashSet<string> FlashyRelics = new()
+    {
+        "relic_gossip_notes", "relic_fairy_coin", "relic_trader_creed", "relic_demon_pact", "relic_charisma", "relic_demon_banner", "relic_star_chart",
+    };
+
+    /// <summary>手堅いレリック（毎朝のお金・仕入れ値・売上・需要の底・納付金・利息と配当。めたんの好み）。</summary>
+    public static readonly HashSet<string> SteadyRelics = new()
+    {
+        "relic_piggy", "relic_wholesaler_pass", "relic_signboard", "relic_charm", "relic_collector_secret", "relic_seal", "relic_guild_license",
+        "relic_compound_tome", "relic_dividend_book",
+    };
+
+    /// <summary>
+    /// レリックの効果の英語（Jev は英語の方が精度が高い）。ゲームの数字（RelicDefinition の modifiers）をスプレッドシートで変えたら、ここも直す。
+    /// 載っていないレリックはゲームの表記（日本語）のまま送る。
+    /// </summary>
+    public static readonly Dictionary<string, string> RelicEffectEn = new()
+    {
+        ["relic_piggy"] = "gives 3,000G every morning",
+        ["relic_fairy_coin"] = "+50% gold from events",
+        ["relic_gossip_notes"] = "+5% chance that a stream goes viral",
+        ["relic_showcase"] = "+1 kind of goods on display at once",
+        ["relic_signboard"] = "+10% shop sales",
+        ["relic_wholesaler_pass"] = "-5% purchase prices",
+        ["relic_blueprint"] = "+500G daily production budget for crafting machines",
+        ["relic_charm"] = "+8% demand floor for all goods",
+        ["relic_collector_secret"] = "-10% debt payments",
+        ["relic_compound_tome"] = "+50% bond interest",
+        ["relic_display_manual"] = "+2 kinds of goods on display at once",
+        ["relic_dividend_book"] = "+50% dividend income",
+        ["relic_trader_creed"] = "selling prices swing 15% wider, both up and down",
+        ["relic_demon_pact"] = "+50% defeat reward when the hero loses",
+        ["relic_charisma"] = "+12% chance that a stream goes viral and +5% shop sales",
+        ["relic_demon_banner"] = "+30% defeat reward when the hero loses, but the hero is 15% weaker",
+        ["relic_dept_creed"] = "+3 goods on display at once and +5% shop sales",
+        ["relic_furnace_core"] = "+1,200G daily production budget for crafting machines",
+        ["relic_guild_license"] = "-15% purchase prices",
+        ["relic_seal"] = "-20% debt payments",
+        ["relic_star_chart"] = "doubles the gold from events",
+    };
+
+    public const string StarterContext =
+        "Before each run you pick one starter relic in the preparation screen. It works from the first shop day until the end of the run, " +
+        "and you cannot change it during the run. Goal: finish the run with as much money as possible.";
+
+    /// <summary>
+    /// 出店準備での判断。スターターレリックの choice（質問キー starter_relic、選択肢キーはレリック ID。画面の並び順）。
+    /// 「選ばない」はゲームでは選べるが、レリックはただでもらえるので選択肢に入れない（勇者の装備と同じ）。候補が 2 つ未満なら null。
+    /// </summary>
+    public static PersonaJevRequest BuildStarterRelicRequest(PersonaProfile persona, string model, IList<string> lessons, PersonaVillageSnapshot v,
+        IList<AutoPlayStarterRelicChoice> choices)
+    {
+        var opts = (choices ?? new List<AutoPlayStarterRelicChoice>())
+            .Where(c => !string.IsNullOrEmpty(c.Id))
+            .Select(c => new KeyValuePair<string, string>(c.Id, StarterRelicText(c)))
+            .ToList();
+        if (opts.Count < 2) return null;
+        var state = new Dictionary<string, object>
+        {
+            ["persona"] = persona.Preamble,
+            ["lessonsFromPastRuns"] = lessons ?? new List<string>(),
+            ["context"] = Context + " " + StarterContext,
+            ["runsFinished"] = v?.Runs ?? 0,
+        };
+        if (v != null)
+        {
+            state["lastRun"] = new Dictionary<string, object> { ["profit"] = v.LastRunProfit, ["cleared"] = v.LastRunCleared };
+            if (v.MaxVillageLevel > 0)
+                state["village"] = new Dictionary<string, object> { ["totalFacilityLevel"] = v.VillageLevel, ["maxTotalFacilityLevel"] = v.MaxVillageLevel };
+        }
+        var req = new PersonaJevRequest { Model = model, State = state };
+        req.Questions["starter_relic"] = PersonaJevQuestion.Choice(
+            "Which starter relic do you take into this run?", opts);
+        return req;
+    }
+
+    private static string StarterRelicText(AutoPlayStarterRelicChoice c)
+    {
+        string effect = RelicEffectEn.TryGetValue(c.Id, out var en) ? en : c.Description ?? "";
+        return $"{c.Name} ({c.Rarity.ToString().ToLowerInvariant()}): {effect}";
+    }
+
     /// <summary>
     /// 似た場面の想起（PersonaRecallStore）を state.similarPastSituations に載せる（空なら載せない）。
     /// 質問が決まってから選ぶので、組み立てた後に足す。

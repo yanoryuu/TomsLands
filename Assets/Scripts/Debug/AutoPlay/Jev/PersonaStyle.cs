@@ -83,6 +83,10 @@ public static class PersonaStyle
                 return key.StartsWith("bond", StringComparison.Ordinal) ? new Attr(0.2f, 0.1f, 0f) : new Attr(0.9f, 0.8f, 0.5f);
             case "hero_tactics":
                 return key == "Aggressive" ? new Attr(0.8f, 0.5f, 0f) : default;
+            case "starter_relic":
+                // 派手なもの（バズ・イベント・防衛報酬）は大胆・下振れあり、手堅いもの（毎朝のお金・仕入れ値・納付金）は 0、ほか（陳列・製造）はその間
+                return PersonaRequests.FlashyRelics.Contains(key) ? new Attr(1f, 0.6f, 0.5f)
+                    : PersonaRequests.SteadyRelics.Contains(key) ? default : new Attr(0.4f, 0.3f, 0f);
             case "intervene":
             case "intervene_now":
                 return key is "special" or "bossbuff" ? new Attr(1f, 0.6f, 0.5f) : key == "none" ? default : new Attr(0.5f, 0.4f, 0f);

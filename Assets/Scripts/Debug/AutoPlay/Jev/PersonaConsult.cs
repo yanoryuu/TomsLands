@@ -795,6 +795,14 @@ public sealed class PersonaConsult
                 return !string.IsNullOrEmpty(f.ItemName) ? $"{f.ItemName}なら在庫も値上がりするわ" : "";
             case "hero_tactics":
                 return mine == "Aggressive" ? "攻めるなら武器の値が動くわ" : "値動きは荒らさない方がいいわ";
+            case "starter_relic":
+            {
+                // 手堅いもの（毎朝のお金・仕入れ値・納付金）は最初の日から積み上がる、派手なものは当たれば大きい
+                string name = string.IsNullOrEmpty(r.M?.Label) ? "それ" : r.M.Label;
+                if (PersonaRequests.SteadyRelics.Contains(mine)) return $"{name}なら最初の営業日から毎日積み上がるわ";
+                if (PersonaRequests.FlashyRelics.Contains(mine)) return support ? "当たれば大きいわね" : $"{name}は当たれば大きいわ";
+                return $"{name}は店の地力が上がるもの";
+            }
             case "intervene":
                 return mine is "heal" or "skill" or "special"
                     ? (f.Side == "demon" ? "" : "勇者を助ける方が筋よ")
@@ -867,6 +875,7 @@ public sealed class PersonaConsult
         "hero_weapon" => "the hero's weapon",
         "hero_armor" => "the hero's armor",
         "hero_tactics" => "the hero's tactics",
+        "starter_relic" => "the starter relic",
         _ => q.StartsWith("invest_", StringComparison.Ordinal) ? "investing in the " + q.Substring(7) : q,
     };
 

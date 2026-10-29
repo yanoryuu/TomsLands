@@ -107,6 +107,27 @@ public sealed class AutoPlayStreamContext
     public int Next(int min, int maxExclusive) => Random != null ? Random.Next(min, maxExclusive) : UnityEngine.Random.Range(min, maxExclusive);
 }
 
+/// <summary>出店準備のスターターレリック 1 枠（画面の並び順）。</summary>
+public readonly struct AutoPlayStarterRelicChoice
+{
+    /// <summary>画面の並びの番号（0 始まり。ChooseStarterRelic が返す番号）。</summary>
+    public readonly int Index;
+    public readonly string Id;
+    public readonly string Name;
+    /// <summary>効果の説明（ゲームの表記のまま。無ければ null）。</summary>
+    public readonly string Description;
+    public readonly RelicRarity Rarity;
+
+    public AutoPlayStarterRelicChoice(int index, string id, string name, string description, RelicRarity rarity)
+    {
+        Index = index;
+        Id = id;
+        Name = name;
+        Description = description;
+        Rarity = rarity;
+    }
+}
+
 /// <summary>戦略に渡す判断材料（取れないものは 0 / -1）。</summary>
 public sealed class AutoPlayContext
 {
@@ -122,6 +143,8 @@ public sealed class AutoPlayContext
     public bool AwaitingStream;
     /// <summary>戦略用の乱数（AutoPlaySettings.RandomSeed で初期化）。</summary>
     public System.Random Random;
+    /// <summary>出店準備のスターターレリックの候補（画面の並び順。ChooseStarterRelic を聞くときだけ入る。それ以外は null）。</summary>
+    public IReadOnlyList<AutoPlayStarterRelicChoice> StarterRelics;
 
     /// <summary>納税準備金を除いた、使ってよい所持金。</summary>
     public int Spendable => Mathf.Max(0, Money - TaxReserve);
@@ -160,7 +183,7 @@ public interface IAutoPlayStrategy
     /// <summary>出店準備で村資金を上限まで持ち込むか。</summary>
     bool ShouldCarryMaxFunds(AutoPlayContext ctx);
 
-    /// <summary>出店準備で選ぶスターターレリックの番号（-1 = 選ばない）。</summary>
+    /// <summary>出店準備で選ぶスターターレリックの番号（-1 = 選ばない）。候補は ctx.StarterRelics（画面の並び順）。</summary>
     int ChooseStarterRelic(AutoPlayContext ctx, int choiceCount);
 
     // ---- 配信中（StreamActionInterval ごとに 1 つ聞かれる） ----

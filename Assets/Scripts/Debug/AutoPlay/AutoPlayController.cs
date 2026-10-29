@@ -1,5 +1,6 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -785,10 +786,19 @@ public sealed partial class AutoPlayController : MonoBehaviour
                 _sceneStep = 2;
                 var parent = view.RelicCatalogParent;
                 var slots = parent != null ? parent.GetComponentsInChildren<PreparationChoiceSlot>() : Array.Empty<PreparationChoiceSlot>();
+                var choices = StarterRelicChoices(slots);
+                ctx.StarterRelics = choices;
+                // 人格プレイ: どれを持っていくかを先にモデルに聞く（完了まで出店準備の操作は待つ）
+                if (slots.Length > 0 && AutoPlay.Strategy is IAutoPlayPrefetchStrategy prefetch)
+                {
+                    try { await prefetch.PrefetchStarterRelicAsync(choices, ct); }
+                    catch (OperationCanceledException) { throw; }
+                    catch (Exception e) { Debug.LogException(e); }
+                }
                 int index = AutoPlay.Strategy.ChooseStarterRelic(ctx, slots.Length);
                 if (index < 0 || index >= slots.Length) return false;
                 var button = AutoPlayUi.GetField<Button>(slots[index], "selectButton");
-                return await PressAsync(button, $"出店準備: スターターレリック {index + 1}/{slots.Length} を選択", ct);
+                return await PressAsync(button, $"出店準備: スターターレリック {choices[index].Name}（{index + 1}/{slots.Length}）を選択", ct);
             }
 
             default:
@@ -800,6 +810,25 @@ public sealed partial class AutoPlayController : MonoBehaviour
                 _sceneRetryAt = Now + RetryPressInterval;
                 return await PressAsync(depart, "出店準備: 出店する", ct);
         }
+    }
+
+    /// <summary>
+    /// スターターレリックの候補（画面の並び順）。名前・説明・レア度は出店準備のスコープの RelicDefinition から読む
+    /// （読めなければ名前は ID のまま、レア度は Common）。
+    /// </summary>
+    private static List<AutoPlayStarterRelicChoice> StarterRelicChoices(PreparationChoiceSlot[] slots)
+    {
+        var defs = AutoPlayUi.Resolve<List<RelicDefinition>>();
+        var list = new List<AutoPlayStarterRelicChoice>(slots.Length);
+        for (int i = 0; i < slots.Length; i++)
+        {
+            string id = slots[i] != null ? slots[i].Id : null;
+            var def = defs?.Find(r => r != null && r.relicId == id);
+            list.Add(def != null
+                ? new AutoPlayStarterRelicChoice(i, id, def.relicName, def.description, def.rarity)
+                : new AutoPlayStarterRelicChoice(i, id, id, null, RelicRarity.Common));
+        }
+        return list;
     }
 
     // ---------------- リザルト / ゲームオーバー ----------------

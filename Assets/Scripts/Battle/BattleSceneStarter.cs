@@ -658,10 +658,9 @@ public class BattleSceneStarter : IAsyncStartable
         // （固まると以後の在庫切れでポップアップが二度と出なくなる）
         try
         {
-            // コスト計算（マスターデータの基本価格）
-            var master = _itemModel.GetMasterItem(item.ItemId);
-            int unitCost = master != null ? master.basePrice : item.CurrentPrice.Value;
-            unitCost = Mathf.Max(1, unitCost);
+            // コスト計算: その時の配信の値段 × 補充の率（元値で補充してその場で高く売れないようにする）
+            float restockRate = _salesController != null ? _salesController.RestockPriceRate : 1f;
+            int unitCost = Mathf.Max(1, Mathf.RoundToInt(item.CurrentPrice.Value * restockRate));
 
             // バトル中獲得金額も含めた利用可能残高から購入可能な最大数を算出
             // （UpdateStock が MaxStock で黙ってクランプするため、在庫の空き枠も上限に含める。
@@ -682,7 +681,7 @@ public class BattleSceneStarter : IAsyncStartable
                 item.UpdateStock(item.Stock.Value + quantity);
                 _battleSpending += totalCost; // バトル中売上から充当（PlayerMoneyは戦闘終了時に精算）
                 _restockedQuantities[item.ItemId] = (_restockedQuantities.TryGetValue(item.ItemId, out var prev) ? prev : 0) + quantity;
-                _restockUnitCosts[item.ItemId] = unitCost; // 単価はマスター基準価格で固定
+                _restockUnitCosts[item.ItemId] = unitCost; // 売れ残りの払い戻しも補充した時の単価で
                 Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +{quantity}個, 費用 {totalCost}G (利用可能残高: {availableForPurchase}G → {availableForPurchase - totalCost}G)");
             }
         }

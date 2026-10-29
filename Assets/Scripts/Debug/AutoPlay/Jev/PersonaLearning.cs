@@ -207,6 +207,7 @@ public static class PersonaFeatures
             case "hero_weapon": return choice == "change" ? "change the hero's weapon" : "keep the hero's weapon";
             case "hero_armor": return choice == "change" ? "change the hero's armor" : "keep the hero's armor";
             case "hero_tactics": return $"use {choice} tactics";
+            case "starter_relic": return $"start the run with the {choice?.Replace("relic_", "").Replace('_', ' ')} relic";
             default:
                 if (question != null && question.StartsWith("invest_", StringComparison.Ordinal))
                 {

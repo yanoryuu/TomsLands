@@ -1,4 +1,5 @@
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
@@ -31,6 +32,12 @@ public interface IAutoPlayPrefetchStrategy
 
     /// <summary>村の施設を見て回り終えたとき（投資の結果をログ・学習に残す）。</summary>
     void OnVillageTourEnded();
+
+    /// <summary>
+    /// 出店準備でスターターレリックを選ぶ前に 1 回（候補は画面の並び順）。完了まで出店準備の操作は待つ。
+    /// 判断は IAutoPlayStrategy.ChooseStarterRelic で使う。
+    /// </summary>
+    UniTask PrefetchStarterRelicAsync(IReadOnlyList<AutoPlayStarterRelicChoice> choices, CancellationToken ct);
 
     /// <summary>問い合わせ中か（詰まり検知から外すため）。</summary>
     bool IsThinking { get; }
