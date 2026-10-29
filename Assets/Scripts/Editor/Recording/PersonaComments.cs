@@ -294,6 +294,7 @@ public static class PersonaCommentResponder
     {
         EditorApplication.update -= Update;
         EditorApplication.update += Update;
+        AssemblyReloadEvents.beforeAssemblyReload += () => { _statusTimer?.Dispose(); _statusTimer = null; };
     }
 
     private static void Update()
@@ -307,6 +308,7 @@ public static class PersonaCommentResponder
         {
             if (!File.Exists(LiveFlagPath)) return;   // 配信していない: 何もしない（設定ファイルも読まない）
             string inbox = InboxPath(now);
+            WriteStatus();
             if (!Active(LiveFlagPath, inbox)) return;
             _engine ??= Create();
             _engine.InboxPath = inbox;
@@ -336,9 +338,83 @@ public static class PersonaCommentResponder
         var t = File.GetLastWriteTimeUtc(file);
         if (t == _configTime && _inbox != null) return _inbox;
         _configTime = t;
-        string path = PersonaPlayConfig.Load().CommentInboxPath;
-        if (string.IsNullOrWhiteSpace(path)) return _inbox = null;
-        return _inbox = Path.IsPathRooted(path) ? path : Path.Combine(ProjectRoot, path);
+        var config = PersonaPlayConfig.Load();
+        _statusPath = Rooted(config.LiveStatusPath);
+        return _inbox = Rooted(config.CommentInboxPath);
+    }
+
+    private static string Rooted(string path) =>
+        string.IsNullOrWhiteSpace(path) ? null : Path.IsPathRooted(path) ? path : Path.Combine(ProjectRoot, path);
+
+    // =====================================================
+    // 配信画面の状態（live_status.json。値が変わったとき・変わらなくても 10 秒に 1 回）
+    // =====================================================
+
+    private const long StatusRefreshMs = 10_000;
+    private static string _statusPath;
+    private static string _lastStatusKey;
+    private static long _lastStatusMs;
+
+    private static void WriteStatus()
+    {
+        if (string.IsNullOrEmpty(_statusPath)) return;
+        var f = GatherFacts();
+        var (run, _, phase) = RowContext();
+        if (!EditorApplication.isPlaying) phase = "between";   // ランの合間（Play を抜けている）
+        if (string.IsNullOrEmpty(run)) run = PersonaLog.RunTag ?? "";
+        int day = f.InRun ? f.Day : -1;
+        int gold = f.InRun ? f.Money : -1;
+        string key = $"{run}|{phase}|{day}|{gold}|{f.VillageFunds}";
+        long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        if (key == _lastStatusKey && now - _lastStatusMs < StatusRefreshMs) return;
+
+        var row = new Dictionary<string, object> { ["unixMs"] = now, ["run"] = run, ["phase"] = phase, ["day"] = day };
+        if (gold >= 0) row["gold"] = gold;
+        if (f.VillageFunds >= 0) row["villageFund"] = f.VillageFunds;
+        lock (StatusLock)
+        {
+            WriteStatusFile(_statusPath, row);
+            _lastStatusRow = row;
+            _lastStatusKey = key;
+            _lastStatusMs = now;
+        }
+        _statusLiveFlag = LiveFlagPath;
+        _statusTimer ??= new System.Threading.Timer(_ => RefreshStatus(), null, 5000, 5000);
+    }
+
+    private static readonly object StatusLock = new();
+    private static Dictionary<string, object> _lastStatusRow;
+    private static string _statusLiveFlag;
+    private static System.Threading.Timer _statusTimer;
+
+    /// <summary>
+    /// ランの合間はエディタが裏に回ると update がほとんど来ないので、最後の値の時刻だけを別スレッドで書き直す
+    /// （配信側は 60 秒より古いファイルを使わない）。Unity の API は触らない。
+    /// </summary>
+    private static void RefreshStatus()
+    {
+        try
+        {
+            lock (StatusLock)
+            {
+                if (_lastStatusRow == null || string.IsNullOrEmpty(_statusPath) || !File.Exists(_statusLiveFlag)) return;
+                long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                if (now - _lastStatusMs < StatusRefreshMs) return;
+                _lastStatusRow["unixMs"] = now;
+                WriteStatusFile(_statusPath, _lastStatusRow);
+                _lastStatusMs = now;
+            }
+        }
+        catch (Exception) { /* 次の回に書く */ }
+    }
+
+    private static void WriteStatusFile(string path, Dictionary<string, object> row)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        string tmp = path + ".tmp";
+        File.WriteAllText(tmp, JsonConvert.SerializeObject(row), new UTF8Encoding(false));
+        if (File.Exists(path)) File.Replace(tmp, path, null);
+        else File.Move(tmp, path);
     }
 
     private static PersonaCommentEngine Create() => new()

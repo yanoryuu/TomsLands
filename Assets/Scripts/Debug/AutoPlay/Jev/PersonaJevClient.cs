@@ -139,6 +139,12 @@ public sealed class PersonaPlayConfig
     /// </summary>
     [JsonProperty("commentInboxPath")] public string CommentInboxPath = "";
 
+    /// <summary>
+    /// 配信画面に出す状態（所持金・日・村資金）を書き出す JSON（live.flag があるときだけ書く）。空なら書かない。
+    /// 配信で使うときは D:\Tools\tokotom-live\status\live_status.json を入れる。
+    /// </summary>
+    [JsonProperty("liveStatusPath")] public string LiveStatusPath = "";
+
     [JsonIgnore] public string Endpoint => (BaseUrl ?? "").TrimEnd('/') + "/" + (Path ?? "").TrimStart('/');
 
     public string ModelFor(string personaId) =>
