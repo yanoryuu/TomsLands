@@ -87,6 +87,9 @@ public class ResultStatisticsData
     /// <summary>何周目か（これまでのラン数 + 1）。</summary>
     public int RunNumber;
 
+    /// <summary>このランで期日が来た納付の回数（完走ボーナスの計算用。DebtCalculator.CountDueCyclesOfClearedRun）。</summary>
+    public int DueDebtCycles;
+
     /// <summary>村へ戻ったときに村資金へ入る額（持ち込みの返却 + 完走ボーナス + 儲け×率）。</summary>
     public int VillageFunds;
 }

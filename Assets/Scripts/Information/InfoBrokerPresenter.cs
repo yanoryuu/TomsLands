@@ -125,23 +125,20 @@ public class InfoBrokerPresenter : IDisposable, IPresenter, IStartable
         mapInfoView.SetMapSlot(
             infoBrokerModel.availableDungeons,
             infoBrokerModel.GetDungeonInfoCosts(),
-            gameFlowManager.BattleCount.Value + 1,
+            infoBrokerModel.GetDungeonInfoCost(tomsModel.CurrentTurn.Value),
             gameFlowManager.GetUpcomingStreamDungeon());
     }
 
     private void PurchaseDungeonInfo(DungeonName dungeonName)
     {
-        var costs = infoBrokerModel.GetDungeonInfoCosts();
-        if (!costs.TryGetValue(dungeonName, out var costArray))
+        if (!infoBrokerModel.IsDungeonInfoSellable(dungeonName))
         {
             Debug.LogWarning($"[InfoBrokerPresenter] 情報料が見つかりません: {dungeonName}");
             return;
         }
 
-        int battleCount = gameFlowManager.BattleCount.Value;
-        int cost = costArray.Length > battleCount
-            ? costArray[battleCount]
-            : costArray[costArray.Length - 1];
+        // 地図の値段は納付の期日が来るたびに上がる（GameConst.GetMapInfoCost）
+        int cost = infoBrokerModel.GetDungeonInfoCost(tomsModel.CurrentTurn.Value);
 
         if (tomsModel.PlayerMoney.Value < cost)
         {

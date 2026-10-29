@@ -37,6 +37,11 @@ public static class AutoPlay
         new DefaultAutoPlayStrategy(),
         new RandomAutoPlayStrategy(),
         new PassThroughAutoPlayStrategy(),
+        // 人格プレイ（ローカルの Jev 互換モデルが判断。設定は UserSettings/PersonaPlay.json、tools/persona_play/README.md）
+        new PersonaStrategy(PersonaProfile.Zundamon),
+        new PersonaStrategy(PersonaProfile.Metan),
+        // 相談プレイ（ずんだもんが遊び、判断ごとに四国めたんに相談する。会話は Recordings/consult_log_*.jsonl）
+        new PersonaStrategy(PersonaProfile.Zundamon, PersonaProfile.Metan),
     };
 
     private static IAutoPlayStrategy DefaultStrategy() =>

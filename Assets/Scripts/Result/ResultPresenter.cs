@@ -214,7 +214,7 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
 
         var s = _lastStatistics;
         int converted = _metaProgress.ConvertRunToVillageFunds(
-            cleared: true, profit: s.Profit, carried: s.Carried, mode: s.Mode);
+            cleared: true, profit: s.Profit, carried: s.Carried, mode: s.Mode, dueDebtCycles: s.DueDebtCycles);
 
         _metaProgress.RecordRunEnd(new RunRecordPlain
         {

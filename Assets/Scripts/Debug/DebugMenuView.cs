@@ -79,7 +79,7 @@ public partial class DebugMenuView : MonoBehaviour
     {
         if (!Debug.isDebugBuild) return;
         // F11 だけ。F12 は Steam のスクリーンショットのキーと重なり、撮影するとメニューが写り込むので外した（2026-10-20）
-        if (Input.GetKeyDown(KeyCode.F11))
+        if (!AutoPlayInputGuard.Active && Input.GetKeyDown(KeyCode.F11))   // 無人の自動操作中は人の入力を読まない
         {
             _visible = !_visible;
         }

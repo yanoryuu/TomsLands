@@ -87,14 +87,16 @@ MonoBehaviour:
       graceCost: 700000
       graceDiscountRate: 0.3
     village:
-      conversionRate: 12.5
+      conversionRate: 1
       bankruptcyConversionRate: 0.2
       debtScalePerVillageLevel: 0
       difficultyConversionMultipliers:
       - 1
-      - 1
-      - 1
+      - 1.25
+      - 1.5
       clearBaseFunds: e0930400d0dd0600c0270900
+      clearBaseFlat: 300000
+      clearDebtMultiplier: 2
       rankBaseProfits: 60ea0000d0fb0100605b0300
       rankSRatio: 2
       rankBRatio: 0.4

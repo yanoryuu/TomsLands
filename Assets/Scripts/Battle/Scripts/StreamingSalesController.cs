@@ -131,6 +131,8 @@ public class StreamingSalesController : MonoBehaviour
     private BattleDemandTracker _demandTracker;
     private readonly CompositeDisposable _battleDisposables = new();
     private StreamingHeatModel _heatModel;
+    /// <summary>今の値段に乗っている配信熱の倍率。熱の段階が変わったときだけ差を掛け直す（毎ターン掛けると複利で上がり続けるため）。</summary>
+    private float _appliedHeatMultiplier = 1f;
     private BattlePauseController _pauseController;
     private bool _priceSettingsLoadAttempted;
     private BattlePriceSettings _runtimeDefaultPriceSettings;
@@ -283,6 +285,7 @@ public class StreamingSalesController : MonoBehaviour
 
         // 配信熱モデルを初期化して UI を購読
         _heatModel = new StreamingHeatModel(PriceSettings);
+        _appliedHeatMultiplier = 1f;
         SubscribeToHeatEvents();
         _heatModel.Heat
             .Subscribe(h =>
@@ -535,15 +538,17 @@ public class StreamingSalesController : MonoBehaviour
             _demandTracker.ProcessEndOfTurn(_model.ItemsForSale);
         }
 
-        // 配信熱：見せ場がなければ冷める → 複利価格変動
+        // 配信熱：見せ場がなければ冷める。値段には今の段階の倍率だけを乗せ、段階が変わったら差の分を掛け直す
         if (_heatModel != null)
         {
             _heatModel.ApplyTurnDecay();
-            float mult = _heatModel.GetPriceMultiplier();
-            if (mult != 1f)
+            float target = _heatModel.GetPriceMultiplier();
+            if (!Mathf.Approximately(target, _appliedHeatMultiplier) && _appliedHeatMultiplier > 0f)
             {
-                _model.AdjustAllPrices(mult, inventorySlotItemRefs, GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
-                Debug.Log($"[配信熱] 価格倍率 {mult:F2} 適用 (Heat={_heatModel.Heat.Value:F0})");
+                float ratio = target / _appliedHeatMultiplier;
+                _model.AdjustAllPrices(ratio, inventorySlotItemRefs, GetPriceFloorRate(), GetPriceCeilingRate(), _mainItemModel);
+                Debug.Log($"[配信熱] 価格倍率 {_appliedHeatMultiplier:F2} → {target:F2}（×{ratio:F3} 適用, Heat={_heatModel.Heat.Value:F0}）");
+                _appliedHeatMultiplier = target;
             }
         }
 

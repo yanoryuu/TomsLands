@@ -101,7 +101,9 @@ public class ResultModel
             Advance = profit.Advance,
         };
 
-        Statistics.VillageFunds = MetaProgressModel.CalculateVillageFunds(true, profit.Profit, profit.Carried, mode);
+        // 完走ボーナスは「期日が来た納付の予定額の合計」で決まる（実際に払った額ではない）
+        Statistics.DueDebtCycles = DebtCalculator.CountDueCyclesOfClearedRun(totalTurns);
+        Statistics.VillageFunds = MetaProgressModel.CalculateVillageFunds(true, profit.Profit, profit.Carried, mode, Statistics.DueDebtCycles);
 
         if (_metaProgress != null)
         {

@@ -126,6 +126,10 @@
   定数シート `data` に `village.conversionRate`（float）・`village.rankRequiredTotalLevels`（int[]）のように「village.」付きのキーで書くと、
   GAS（2026-10-21 版の `nestDottedKeys_`）が `{ "village": { ... } }` に入れ子にして出す。書いていない項目は同梱の値のまま。
   type は float[]・string[] も使える（2026-10-21 版から。古い GAS では「未知の type」で止まるので、使う前にスクリプトを差し替える）。
+  2026-10-28 から `data` シートに `village.difficultyConversionMultipliers`（float[]、かんたん,ふつう,むずかしい の順で `1,1.25,1.5`）の行がある。`village.conversionRate` は 1。
+  同じく 2026-10-28 から、完走ボーナスの行 `village.clearBaseFlat`（int、300000）と `village.clearDebtMultiplier`（float、2）がある
+  （完走ボーナス = clearBaseFlat + clearDebtMultiplier × そのランで期日が来た納付金の予定額の合計。Docs/Village_Meta_Design.md §0-2）。
+  旧の `clearBaseFunds`（難易度ごとの固定額）はもう使っていないので、シートに行があっても効かない。
 - ⚠️ **汎用の行シートリーダー（readListSheet_）では処理できない**（同一idが複数行になり後勝ちで潰れる＋
   `level/cost/effectText` はフラットフィールドとして存在しないため無視される）。
   **専用リーダー `readVillageFacilities_()` で id ごとに levels[] へグループ化する**（§8のコード参照）。

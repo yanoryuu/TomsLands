@@ -153,21 +153,26 @@ public class MetaProgressModel
     /// <summary>
     /// ラン終了時、そのランの儲けを村資金へ入れる（村と店の経営を繋ぐ唯一の橋・一方向）。
     /// 儲け = 純資産 − 初期資金 − 持ち込み − 立て替え（RunProfit.Compute）。
-    /// クリア時: 持ち込み（儲けが赤字ならその分を引く）+ 完走ボーナス（領主館 Lv4 で +15%）+ max(0, 儲け) × 変換率 × 難易度倍率。
-    /// 破産時: 持ち込みは戻らない。そのランの最高の儲け × 変換率 × 難易度倍率 × bankruptcyConversionRate。
+    /// クリア時: 持ち込み（儲けが赤字ならその分を引く）+ 完走ボーナス（<see cref="ClearBonusBase"/>。領主館 Lv4 で +15%）+ max(0, 儲け) × 変換率 × 難易度倍率。
+    /// 破産時: 持ち込みは戻らない。そのランの最高の儲け × 変換率 × 難易度倍率 × bankruptcyConversionRate。完走ボーナスは無い。
+    /// dueDebtCycles はそのランで期日が来た納付の回数（DebtCalculator.CountDueCyclesOfClearedRun）。破産時は使わない。
     /// 変換額を返す（呼び出し側が VillageArrivalReport に載せて村の収支ポップに使う）。
     /// </summary>
-    public int ConvertRunToVillageFunds(bool cleared, int profit, int carried, GameModeId mode)
+    public int ConvertRunToVillageFunds(bool cleared, int profit, int carried, GameModeId mode, int dueDebtCycles)
     {
-        int converted = CalculateVillageFunds(cleared, profit, carried, mode);
+        int converted = CalculateVillageFunds(cleared, profit, carried, mode, dueDebtCycles);
         if (converted > 0) AddVillageFunds(converted);
         SaveData();
-        Debug.Log($"[Meta] 村資金へ: +{converted}G (cleared={cleared}, 儲け={profit}G, 持ち込み={carried}G, {mode}, 合計 {VillageFunds}G)");
+        Debug.Log($"[Meta] 村資金へ: +{converted}G (cleared={cleared}, 儲け={profit}G, 持ち込み={carried}G, {mode}, 納付{dueDebtCycles}回, 合計 {VillageFunds}G)");
         return converted;
     }
 
-    /// <summary>変換額の計算だけ（表示・自動プレイの見積もり用）。</summary>
-    public static int CalculateVillageFunds(bool cleared, int profit, int carried, GameModeId mode)
+    /// <summary>
+    /// 変換額の計算だけ（表示・自動プレイの見積もり用）。
+    /// effects は村の施設の効果（領主館の上乗せ）。null なら VillageEffects.Current（テストでは固定のレベルを渡す）。
+    /// </summary>
+    public static int CalculateVillageFunds(bool cleared, int profit, int carried, GameModeId mode, int dueDebtCycles,
+        VillageEffects effects = null)
     {
         var settings = GameConst.Village;
         float rate = Mathf.Max(0f, settings.conversionRate) * DifficultyMultiplier(settings, mode);
@@ -179,9 +184,23 @@ public class MetaProgressModel
         }
 
         long total = Mathf.Max(0, carried + Mathf.Min(0, profit))
-                     + (long)VillageEffects.Current.ApplyClearBonus(ClearBase(settings, mode))
+                     + (long)(effects ?? VillageEffects.Current).ApplyClearBonus(ClearBonusBase(dueDebtCycles))
                      + (long)Mathf.FloorToInt(Mathf.Max(0, profit) * rate);
         return (int)System.Math.Min(total, int.MaxValue);
+    }
+
+    /// <summary>
+    /// 完走ボーナスの土台（領主館の上乗せ前）= clearBaseFlat + clearDebtMultiplier × 1〜dueDebtCycles 回目の納付の予定額の合計。
+    /// 実際に払った額（減免状・初回の割引・借入・立て替え・レリック補正）ではなく、GameConst.GetDebtAmount の予定額で数える。
+    /// 長く走って多く納めたランほど多く入り、納付が1回も無い短いランでも clearBaseFlat（Lv1 を1つ建てられる額）は入る。
+    /// </summary>
+    public static int ClearBonusBase(int dueDebtCycles)
+    {
+        var settings = GameConst.Village;
+        long scheduled = DebtCalculator.GetScheduledTotal(dueDebtCycles);
+        long bonus = Mathf.Max(0, settings.clearBaseFlat)
+                     + (long)System.Math.Round(scheduled * (double)Mathf.Max(0f, settings.clearDebtMultiplier));
+        return (int)System.Math.Min(bonus, int.MaxValue);
     }
 
     private static float DifficultyMultiplier(VillageSettingsData settings, GameModeId mode)
@@ -189,13 +208,6 @@ public class MetaProgressModel
         var table = settings.difficultyConversionMultipliers;
         int i = (int)mode;
         return table != null && i >= 0 && i < table.Length ? Mathf.Max(0f, table[i]) : 1f;
-    }
-
-    private static int ClearBase(VillageSettingsData settings, GameModeId mode)
-    {
-        var table = settings.clearBaseFunds;
-        int i = (int)mode;
-        return table != null && i >= 0 && i < table.Length ? Mathf.Max(0, table[i]) : 0;
     }
 
     /// <summary>この難易度で記録した最高の儲け（クリアしたランのみ）。未記録なら false。</summary>

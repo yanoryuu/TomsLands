@@ -8,6 +8,35 @@ using UnityEngine;
 /// </summary>
 public static class DebtCalculator
 {
+    /// <summary>
+    /// その日の朝までに期日が来た納付の回数（サイクル数）。
+    /// 店の朝の判定（TomsShopPresenter: 日 / DebtPaymentInterval &gt; 納付済みの回数 なら強制納付）と同じ数え方。
+    /// </summary>
+    public static int CountDueCycles(int day)
+    {
+        int interval = Mathf.Max(1, GameConst.DebtPaymentInterval);
+        return Mathf.Max(0, day) / interval;
+    }
+
+    /// <summary>
+    /// クリアしたランで期日が来た納付の回数。totalTurns はリザルトの日数（TomsModel.CurrentTurn。End ノードの日）。
+    /// フローは「Start(1日目) → 店・配信 … → 最後の配信 → End」で、納付の判定は店の朝にだけ走る。
+    /// End の日と最後の配信の日には店の朝が無いので、最後に判定が走るのは totalTurns − 2 日目（店・配信の日数 = その日）。
+    /// </summary>
+    public static int CountDueCyclesOfClearedRun(int totalTurns) => CountDueCycles(totalTurns - 2);
+
+    /// <summary>
+    /// 1〜cycles 回目の納付の「予定額」（GameConst.GetDebtAmount）の合計。
+    /// 減免状・初回の割引・借入の上乗せ・鍛冶屋の立て替え・レリック補正は含めない（完走ボーナスの計算用）。
+    /// </summary>
+    public static long GetScheduledTotal(int cycles)
+    {
+        long total = 0;
+        for (int c = 1; c <= cycles; c++)
+            total += GameConst.GetDebtAmount(c);
+        return total;
+    }
+
     public static int GetAmount(int cycle, TomsModel tomsModel, RelicEffectResolver relicResolver = null)
     {
         int amount = GameConst.GetDebtAmount(cycle);

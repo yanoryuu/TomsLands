@@ -44,6 +44,8 @@ public sealed partial class AutoPlayController : MonoBehaviour
     private string _sceneName = "";
     private float _sceneEnteredAt;
     private int _sceneStep;
+    /// <summary>RunEndAction = SettleAndStopAtVillage でリザルト / ゲームオーバーのボタンを押した（村に着いたら止める）。</summary>
+    private bool _stopAtVillage;
     private float _sceneRetryAt;
     private bool _sceneScenarioSeen;
     private string _lastLoggedSceneAction;
@@ -209,6 +211,7 @@ public sealed partial class AutoPlayController : MonoBehaviour
             Time.timeScale = AutoPlay.Settings.TimeScale;
         ConfigureEngineStatics();
 
+        RecoverOrphanPopup();
         bool talking = HandleScenario();
 
         await CheckStallAsync(talking, ct);
@@ -642,11 +645,39 @@ public sealed partial class AutoPlayController : MonoBehaviour
             AutoPlay.Status = "村: 画面待ち";
             return false;
         }
+        if (_stopAtVillage)
+        {
+            _stopAtVillage = false;
+            AutoPlay.Stop("ラン終了（精算して村に帰還）");
+            return false;
+        }
 
         if (AutoPlayUi.IsActive(view, "conversionPopup"))
             return await PressFieldAsync(view, "conversionCloseButton", "村: 帰還報告を閉じる", ct);
         if (view.IsInvestPanelOpen)
             return await PressFieldAsync(view, "investCloseButton", "村: 投資パネルを閉じる", ct);
+
+        // 実況用: 出店準備へ行く前に、施設を順に調べて眺める（戦略が言えば投資する）
+        if (_sceneStep == 0 && AutoPlay.Strategy is IAutoPlayJikkyoExtras extras && extras.VillageLookSeconds > 0f)
+        {
+            if (Now - _sceneEnteredAt < 5f || !view.IsInteractiveReady)
+            {
+                AutoPlay.Status = "村: 到着の演出待ち";
+                return false;
+            }
+            _sceneStep = 1;
+            var prefetch = AutoPlay.Strategy as IAutoPlayPrefetchStrategy;
+            if (prefetch != null)
+            {
+                try { await prefetch.PrefetchVillageAsync(ct); }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception e) { Debug.LogException(e); }
+            }
+            await TourVillageAsync(view, extras, ct);
+            try { prefetch?.OnVillageTourEnded(); }
+            catch (Exception e) { Debug.LogException(e); }
+            return true;
+        }
 
         // 帰還演出・会話中は Presenter が出店を無視するので、一定間隔で押し直す
         if (Now < _sceneRetryAt)
@@ -656,6 +687,70 @@ public sealed partial class AutoPlayController : MonoBehaviour
         }
         _sceneRetryAt = Now + RetryPressInterval;
         return await PressFieldAsync(view, "departButton", "村: 出店準備へ", ct);
+    }
+
+    /// <summary>各施設を調べて投資パネルを開き、眺めて、戦略が言えば投資して閉じる。</summary>
+    private async UniTask TourVillageAsync(VillageView view, IAutoPlayJikkyoExtras extras, CancellationToken ct)
+    {
+        int index = 0;
+        foreach (var plot in view.Plots)
+        {
+            if (plot == null || !plot.gameObject.activeInHierarchy || string.IsNullOrEmpty(plot.FacilityId)) continue;
+            ct.ThrowIfCancellationRequested();
+            // 村の会話（投資の説明など）が途中で始まると、その間は区画を調べても開かない（VillagePresenter.IsBusy）。
+            // 見て回るあいだは手番の外なので、ここで会話を送ってから調べる。開かなければ会話の後にもう 1 度だけ試す
+            bool opened = false;
+            for (int attempt = 0; attempt < 2 && !opened; attempt++)
+            {
+                await WaitScenarioDuringTourAsync(view, ct);
+                AutoPlay.Status = $"村: {plot.FacilityId} を調べる";
+                AutoPlay.AddLog($"村: {plot.FacilityId} を調べる");
+                plot.OnInteract.OnNext(plot.FacilityId);
+                float until = Now + 2f;
+                while (!view.IsInvestPanelOpen && Now < until) await UniTask.Yield(ct);
+                opened = view.IsInvestPanelOpen;
+            }
+            if (!opened) continue;
+            await UniTask.Delay(System.TimeSpan.FromSeconds(extras.VillageLookSeconds), ignoreTimeScale: true, cancellationToken: ct);
+            var invest = AutoPlayUi.GetField<Button>(view, "investButton");
+            if (AutoPlayUi.IsClickable(invest) && extras.ShouldInvestFacility(plot.FacilityId, index))
+            {
+                await PressAsync(invest, $"村: {plot.FacilityId} に投資", ct);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(1.6f), ignoreTimeScale: true, cancellationToken: ct);
+            }
+            if (view.IsInvestPanelOpen)
+                await PressFieldAsync(view, "investCloseButton", "村: 投資パネルを閉じる", ct);
+            await UniTask.Delay(System.TimeSpan.FromSeconds(0.8f), ignoreTimeScale: true, cancellationToken: ct);
+            index++;
+        }
+    }
+
+    /// <summary>
+    /// 村を見て回るあいだに始まった会話を送り終えるまで待つ（最大 90 秒）。投資で村の格が上がると、
+    /// 会話のあとに格の知らせ（帰還報告と同じ conversionPopup。モーダル）が出るので閉じる。
+    /// </summary>
+    private async UniTask WaitScenarioDuringTourAsync(VillageView view, CancellationToken ct)
+    {
+        float until = Now + 90f;
+        await UniTask.Delay(System.TimeSpan.FromSeconds(0.3f), ignoreTimeScale: true, cancellationToken: ct);
+        while (Now < until)
+        {
+            if (HandleScenario())
+            {
+                await UniTask.Yield(ct);
+                continue;
+            }
+            if (AutoPlayUi.IsActive(view, "conversionPopup"))
+            {
+                await PressFieldAsync(view, "conversionCloseButton", "村: 知らせを閉じる", ct);
+                await UniTask.Delay(System.TimeSpan.FromSeconds(0.5f), ignoreTimeScale: true, cancellationToken: ct);
+                continue;
+            }
+            break;
+        }
+        if (_scenarioActive) return;
+        // 会話が終わった直後は決定キーの漏れ止めで数フレーム操作を受け付けない
+        await UniTask.Delay(System.TimeSpan.FromSeconds(0.5f), ignoreTimeScale: true, cancellationToken: ct);
     }
 
     // ---------------- 出店準備 ----------------
@@ -709,10 +804,27 @@ public sealed partial class AutoPlayController : MonoBehaviour
 
     // ---------------- リザルト / ゲームオーバー ----------------
 
+    /// <summary>ラン終了の画面に来たことを人格プレイの戦略に 1 シーンにつき 1 回伝える（記憶に結果を足す）。</summary>
+    private void NotifyRunEnded(bool bankrupt)
+    {
+        if (_runEndNotifiedScene == _sceneHandle) return;
+        _runEndNotifiedScene = _sceneHandle;
+        try { (AutoPlay.Strategy as IAutoPlayPrefetchStrategy)?.OnRunEnded(bankrupt); }
+        catch (Exception e) { Debug.LogException(e); }
+    }
+
+    private int _runEndNotifiedScene = int.MinValue;
+
+    /// <summary>押せる方のボタン（どちらも押せなければ先に見つかった方）。</summary>
+    private static Button ClickableOf(Button first, Button second) =>
+        AutoPlayUi.IsClickable(first) ? first : AutoPlayUi.IsClickable(second) ? second : first ?? second;
+
     private async UniTask<bool> StepResultAsync(CancellationToken ct)
     {
+        NotifyRunEnded(bankrupt: false);
         var view = FindFirstObjectByType<ResultView>();
-        var button = AutoPlayUi.GetField<Button>(view, "retryButton") ?? AutoPlayUi.GetField<Button>(view, "goToTitleButton");
+        // retryButton は非表示のまま残っていることがあるので、押せる方を使う（?? だと押せない方を掴んで止まれなかった）
+        var button = ClickableOf(AutoPlayUi.GetField<Button>(view, "retryButton"), AutoPlayUi.GetField<Button>(view, "goToTitleButton"));
         if (!AutoPlayUi.IsClickable(button))
         {
             AutoPlay.Status = "リザルト: 演出待ち";
@@ -725,13 +837,17 @@ public sealed partial class AutoPlayController : MonoBehaviour
         }
         if (Now < _sceneRetryAt) return false;
         _sceneRetryAt = Now + RetryPressInterval;
-        return await PressAsync(button, "リザルト: 村へ帰還して次のランへ", ct);
+        bool settleOnly = AutoPlay.Settings.RunEndAction == AutoPlayRunEndAction.SettleAndStopAtVillage;
+        bool pressed = await PressAsync(button, settleOnly ? "リザルト: 精算して村へ帰還（村で止める）" : "リザルト: 村へ帰還して次のランへ", ct);
+        if (pressed && settleOnly) _stopAtVillage = true;
+        return pressed;
     }
 
     private async UniTask<bool> StepGameOverAsync(CancellationToken ct)
     {
+        NotifyRunEnded(bankrupt: true);
         var view = FindFirstObjectByType<GameOverView>();
-        var button = AutoPlayUi.GetField<Button>(view, "retryButton") ?? AutoPlayUi.GetField<Button>(view, "goToTitleButton");
+        var button = ClickableOf(AutoPlayUi.GetField<Button>(view, "retryButton"), AutoPlayUi.GetField<Button>(view, "goToTitleButton"));
         // 破産の会話が始まる前に動かないよう、会話を見届ける（会話が無い構成でも数秒で進む）
         bool talkDone = _sceneScenarioSeen || Now - _sceneEnteredAt > 6f;
         if (!talkDone || !AutoPlayUi.IsClickable(button))
@@ -746,7 +862,10 @@ public sealed partial class AutoPlayController : MonoBehaviour
         }
         if (Now < _sceneRetryAt) return false;
         _sceneRetryAt = Now + RetryPressInterval;
-        return await PressAsync(button, "ゲームオーバー: 村へ帰還して次のランへ", ct);
+        bool settleOnly = AutoPlay.Settings.RunEndAction == AutoPlayRunEndAction.SettleAndStopAtVillage;
+        bool pressed = await PressAsync(button, settleOnly ? "ゲームオーバー: 精算して村へ帰還（村で止める）" : "ゲームオーバー: 村へ帰還して次のランへ", ct);
+        if (pressed && settleOnly) _stopAtVillage = true;
+        return pressed;
     }
 
     private async UniTask<bool> StepEventSceneAsync(CancellationToken ct)
@@ -759,11 +878,37 @@ public sealed partial class AutoPlayController : MonoBehaviour
 
     // ---------------- 店・配信以外の確認ダイアログ ----------------
 
+    private float _orphanPopupSince = -1f;
+
+    /// <summary>
+    /// 閉じたはずのポップアップのシーンが残っている（PopUpManager は閉じたのにアンロードが空振りした）なら、5 秒待ってからアンロードし直す。
+    /// 残っていると「前のポップアップが閉じきってから次を出す」側（PreStreamPresenter など）が止まる。
+    /// </summary>
+    private void RecoverOrphanPopup()
+    {
+        var scene = SceneManager.GetSceneByName(PopupSceneName);
+        bool orphan = scene.isLoaded && PopUpManager.ActiveManager == null;
+        if (!orphan)
+        {
+            _orphanPopupSince = -1f;
+            return;
+        }
+        if (_orphanPopupSince < 0f)
+        {
+            _orphanPopupSince = Now;
+            return;
+        }
+        if (Now - _orphanPopupSince < 5f) return;
+        _orphanPopupSince = -1f;
+        AutoPlay.AddLog("閉じたポップアップのシーンが残っていたのでアンロードし直す");
+        SceneManager.UnloadSceneAsync(PopupSceneName);
+    }
+
     private bool HandleOutOfShopPopup()
     {
         var data = PopUpManager.ActiveManager?.CurrentData;
         if (data == null) return false;
-        if (!SceneManager.GetSceneByName(PopupSceneName).isLoaded)
+        if (!SceneManager.GetSceneByName(PopupSceneName).isLoaded || DebugAutoPlayer.PopupStillLoading())
         {
             AutoPlay.Status = "ポップアップ読み込み待ち";
             return true;
@@ -792,7 +937,7 @@ public sealed partial class AutoPlayController : MonoBehaviour
 
     private static void AnswerPopup(PopUpData data, bool preferCancel)
     {
-        if (!SceneManager.GetSceneByName(PopupSceneName).isLoaded) return;
+        if (!SceneManager.GetSceneByName(PopupSceneName).isLoaded || DebugAutoPlayer.PopupStillLoading()) return;
         string title = data.Title ?? "";
         bool hasCancel = !data.IsCloseOnly && !string.IsNullOrEmpty(data.CancelButtonText);
         if (preferCancel && hasCancel)
@@ -817,7 +962,8 @@ public sealed partial class AutoPlayController : MonoBehaviour
         string engineStatus = DebugAutoPlayer.Running ? DebugAutoPlayer.Status : "-";
         bool exempt = talking
                       || AutoPlay.IsPaused
-                      || (DebugAutoPlayer.Running && engineStatus.StartsWith("配信中"));
+                      || (DebugAutoPlayer.Running && engineStatus.StartsWith("配信中"))
+                      || (AutoPlay.Strategy is IAutoPlayPrefetchStrategy { IsThinking: true }); // 人格がモデルの答えを待っている
         if (exempt || s.StallSeconds <= 0f)
         {
             _stallKey = null;

@@ -95,6 +95,8 @@ public class DebugAutoPlayer : MonoBehaviour
     public static Func<string, int, AutoBuyStrategy, AutoPlayExternalStep> ExternalBlacksmithBuyer;
     /// <summary>仕入れフェーズで鍛冶屋を開く前の追加操作（true を返す間は待つ）。null なら従来どおり。</summary>
     public static Func<string, bool> ExternalBeforeProcurement;
+    /// <summary>陳列フェーズの頭（オート陳列の前）の事前操作（Debug/AutoPlay。魔王軍支援・店の改装・設備は陳列フェーズのボタン）。true の間は待つ。</summary>
+    public static Func<string, bool> ExternalBeforeDisplay;
     /// <summary>true の間は Debug/AutoPlay が UI を操作中なので何もしない。</summary>
     public static bool ExternalBusy;
 
@@ -125,6 +127,7 @@ public class DebugAutoPlayer : MonoBehaviour
         ExternalStrategy = null;
         ExternalBlacksmithBuyer = null;
         ExternalBeforeProcurement = null;
+        ExternalBeforeDisplay = null;
         ExternalBusy = false;
     }
 
@@ -459,13 +462,24 @@ public class DebugAutoPlayer : MonoBehaviour
 
     // ---------------- 汎用ポップアップ ----------------
 
+    private static readonly FieldInfo PopupIsLoadingField = typeof(PopUpManager).GetField("isLoading", BindingFlags.Instance | BindingFlags.NonPublic);
+
+    /// <summary>PopUpManager がまだ読み込みの完了通知を受けていないか（リフレクション名: PopUpManager.isLoading）。</summary>
+    public static bool PopupStillLoading()
+    {
+        var mgr = PopUpManager.ActiveManager;
+        return mgr != null && PopupIsLoadingField != null && PopupIsLoadingField.GetValue(mgr) is true;
+    }
+
     private bool HandlePopup()
     {
         var data = PopUpManager.ActiveManager?.CurrentData;
         if (data == null) return false;
 
         // PopupScene の読み込み完了前に閉じるとアンロードが失敗するので待つ
-        if (!SceneManager.GetSceneByName(PopupSceneName).isLoaded)
+        // （isLoaded が立っても読み込みの完了通知（PopUpManager.isLoading = false）の前に閉じると、アンロードが空振りして
+        //  PopupScene が残り、次のポップアップを待つ側が止まる。Unity を最小化していると読み込みが遅く、ここに当たった。2026-10-28）
+        if (!SceneManager.GetSceneByName(PopupSceneName).isLoaded || PopupStillLoading())
         {
             SetStatus("ポップアップ読み込み待ち");
             _stallExempt = true;
@@ -660,6 +674,12 @@ public class DebugAutoPlayer : MonoBehaviour
                 break;
 
             case TurnPhase.Display:
+                // Debug/AutoPlay の事前操作（魔王軍支援・店の改装・設備。ボタンは陳列フェーズにしか出ない）が動いていればそちらを待つ
+                if (_displayedKey != key && ExternalBeforeDisplay != null && ExternalBeforeDisplay(key))
+                {
+                    _stallExempt = true;
+                    break;
+                }
                 if (WantsDisplay() && _displayedKey != key)
                 {
                     DoAutoDisplay(key);

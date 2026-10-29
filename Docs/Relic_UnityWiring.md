@@ -31,7 +31,7 @@ feature/relics ブランチで実装した「レリック（ローグライト�
 | relic_showcase | 折りたたみ陳列棚 | Common | DisplayKindsAdd, Add, 1 |
 | relic_charm | 商売繁盛のお守り | Rare | DemandFloorAdd, Add, 0.08 |
 | relic_seal | ギルドの減免状 | Epic | DebtAmountMul, Mul, 0.8 |
-| relic_piggy | 子豚の貯金箱 | Common | behaviours: dailyGold, param=100 |
+| relic_piggy | 子豚の貯金箱 | Common | behaviours: dailyGold, param=3000（2026-10-28 に 100 → 3000） |
 | relic_cursed_ledger | 呪われた帳簿 | Rare(isCurse) | ShopRevenueMul 1.3 + behaviours: ledgerMissPenalty, param=0.2（配信が外れた＝勇者が負けて配当も無い・配信終了ボタンでの途中終了なら、次の朝に所持金の20%を取り立てる。不具合での途中終了は数えない。2026-10-21 に納付金 ×1.2 から変更） |
 | relic_allin_dice | 命知らずのサイコロ | Rare(isCurse) | SellClampAdd +0.35（売り注文の約定が注文時の値段から ±55% まで動く。ふだんは ±20%）+ DebtAmountMul 1.1 |
 
@@ -65,7 +65,7 @@ feature/relics ブランチで実装した「レリック（ローグライト�
 2. ShopRevenueMul レリック所持 → 営業サマリーの約定入金時、Console [SalesCalculator] に「× レリック」相当の倍率反映。
 3. DisplayKindsAdd レリック → 陳列カウンタの分母が+1。
 4. DebtAmountMul レリック → ホームの次回返済表示と返済パネルの額が同じく軽減される。
-5. dailyGold レリック → 翌朝の朝レポートに「子豚の貯金箱: +100G」。
+5. dailyGold レリック → 翌朝の朝レポートに「子豚の貯金箱: +3,000G」。
 6. F11 →「3択テスト」→ ホームに戻ると3択パネル（未配線なら自動獲得ログ）。
 7. 配信勝利 → 帰還後に3択。スキップも可能。
 8. セーブ→続きから→所持レリック復元。ニューゲームで消滅。

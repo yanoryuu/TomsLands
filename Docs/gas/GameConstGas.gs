@@ -555,3 +555,23 @@ function getProp_(name) {
   if (!v) throw new Error('スクリプトプロパティ "' + name + '" が未設定です。');
   return v;
 }
+
+// ============================================================
+// 外から実行する用（clasp run）。ダイアログを出さず、結果を文字列で返す。
+// ============================================================
+function apiUploadGameConst() {
+  uploadJsonToStorage(GAMECONST_OBJECT_PATH, buildEnvelopeJson());
+  return 'gameconst.json をアップロードしました（' + GAMECONST_OBJECT_PATH + '）';
+}
+
+function apiUploadItems() {
+  const envelope = buildItemsEnvelope();
+  uploadJsonToStorage(ITEMS_OBJECT_PATH, JSON.stringify(envelope, null, 2));
+  return 'items.json をアップロードしました（' + envelope.items.length + '件 / version ' + envelope.version + '）';
+}
+
+function apiUploadBalance() {
+  const envelope = buildBalanceEnvelope();
+  uploadJsonToStorage(BALANCE_OBJECT_PATH, JSON.stringify(envelope, null, 2));
+  return 'balance.json をアップロードしました（version ' + envelope.version + '）';
+}

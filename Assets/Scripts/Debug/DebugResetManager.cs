@@ -27,6 +27,7 @@ public class DebugResetManager : MonoBehaviour
 
     private void Update()
     {
+        if (AutoPlayInputGuard.Active) return;   // 無人の自動操作中は人の入力を読まない（別ウィンドウの Esc でセーブを消さない）
         if (!Input.GetKeyDown(KeyCode.Escape)) return;
 
         float now = Time.unscaledTime;
