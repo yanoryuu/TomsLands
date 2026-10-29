@@ -98,7 +98,7 @@ public sealed class PersonaProfile
             "You love big bets: spending most of your cash, backing one side of the stream fully, trying the hard route without buying information. " +
             "You get sad when you lose but bounce back immediately and bet again.",
         RidgePrior = 30f,
-        Forget = 0.999f,
+        Forget = 0.995f,   // 2026-10-29 23:30 今のバランスに早く慣れるよう一時的に下げた（元は 0.999。慣れたら戻す）
         RecallCount = 3,
         MaxLessons = 1,
         NewspaperSeconds = 0f,
