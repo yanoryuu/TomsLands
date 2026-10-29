@@ -44,6 +44,8 @@ public class TomsShopView : MonoBehaviour
     [SerializeField] private GameObject morningReportPanel;
     [SerializeField] private TextMeshProUGUI morningReportText;
     [SerializeField] private Button morningReportCloseButton;
+    [Tooltip("入金の出どころをアイコン付きの行で出す中身（Window に付ける）。未配線なら morningReportText に文で出す")]
+    [SerializeField] private MorningIncomeReportView morningIncomeReport;
 
     [Header("レリック獲得3択 ※未配線でも動作する")]
     [SerializeField] private GameObject relicChoicePanel;
@@ -370,6 +372,21 @@ public class TomsShopView : MonoBehaviour
         morningReportText.text = text;
         morningReportPanel.SetActive(true);
         UIFx.PanelOpen(morningReportPanel); // 開く演出（瞬間表示にしない）
+        return true;
+    }
+
+    /// <summary>
+    /// 朝レポートを入金の行つきで表示する（今朝の入金の合計・出どころごとのアイコンと額・総資産・その他の行）。
+    /// 中身（MorningIncomeReportView）かパネルが未配線なら false を返す（呼び出し側が文の表示にフォールバック）。
+    /// </summary>
+    public bool ShowMorningIncomeReport(IReadOnlyList<MorningIncomeEntry> incomes, string netWorthLine, IReadOnlyList<string> notes)
+    {
+        if (morningReportPanel == null || morningIncomeReport == null || !morningIncomeReport.IsWired) return false;
+        morningReportPanel.SetActive(true);
+        morningIncomeReport.Setup(incomes, netWorthLine, notes);
+        UIFx.PanelOpen(morningReportPanel);
+        UIFx.Pop(morningIncomeReport.transform, 0.92f, 0.22f);
+        morningIncomeReport.PlayOpen();
         return true;
     }
 

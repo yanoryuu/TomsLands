@@ -691,7 +691,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             BattleResult.Defeat => "lose",
             _ => "aborted",
         };
-        _capturedDelta = output.TotalEarnings + output.DefenseReward - output.InterventionNetSpending;
+        // TotalEarnings は防衛報酬・介入の支出・返金騒ぎまで差し引き済みの配信収支（BattleSceneStarter）。足し直すと二重に数える
+        _capturedDelta = output.TotalEarnings;
         _capturedReward = output.DefenseReward;
         _capturedDungeon = output.DungeonKey.ToString();
     }

@@ -178,7 +178,8 @@ public class ShopMachineModel
             {
                 case ShopMachineEffectType.DailyMoney:
                     result.TotalMoney += machine.dailyMoney;
-                    result.Lines.Add($"{machine.machineName}: +{machine.dailyMoney:N0}G");
+                    // 朝レポートでは台数ぶんを1行にまとめてアイコン付きで出すので、文の行にはしない
+                    result.MoneySources.Add(machine);
                     break;
 
                 case ShopMachineEffectType.DailyItem when machine.dailyItemSelectable:
@@ -379,7 +380,9 @@ public class ShopMachineDailyResult
 {
     /// <summary>マシンが産んだゴールド合計（入金は呼び出し側）。</summary>
     public int TotalMoney;
-    /// <summary>朝レポート用の明細行。</summary>
+    /// <summary>お金を産んだマシン（1台につき1件。同じマシンが2台なら2件。額は各 dailyMoney）。</summary>
+    public List<ShopMachineData> MoneySources = new();
+    /// <summary>朝レポート用の明細行（お金以外: 生成アイテム・製造中・未選択）。</summary>
     public List<string> Lines = new();
     public bool ProducedAnyItem;
 }

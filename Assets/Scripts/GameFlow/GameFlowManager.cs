@@ -297,7 +297,7 @@ public class GameFlowManager : IDisposable, IStartable
                 _tomsModel.AddRevenue(overdue.TotalIncome);
                 _sellOrderModel.SaveData();
                 _tomsModel.SavePlayerMoney();
-                _morningReport?.Add($"持ち越した売上の入金: +{overdue.TotalIncome:N0}G");
+                _morningReport?.AddIncome("overdueSales", "持ち越した売上", null, overdue.TotalIncome);
                 Debug.Log($"[GameFlowManager] 持ち越し売り注文を精算: +{overdue.TotalIncome}G ({overdue.Settled.Count}件)");
             }
         }
@@ -319,7 +319,7 @@ public class GameFlowManager : IDisposable, IStartable
                     financeIncome += finance.BondPayout;
                     foreach (var bond in finance.MaturedBonds)
                     {
-                        _morningReport?.Add($"債券償還: {bond.productName} 元本{bond.principal:N0}G + 利息{bond.interest:N0}G");
+                        _morningReport?.AddIncome($"bond:{bond.productName}", $"{bond.productName}の償還", null, bond.principal + bond.interest);
                         Debug.Log($"[GameFlowManager] 債券償還: {bond.productName} 元本{bond.principal}G + 利息{bond.interest}G");
                     }
                 }
@@ -332,7 +332,7 @@ public class GameFlowManager : IDisposable, IStartable
                 if (_relicResolver != null)
                     dividend = Mathf.Max(0, _relicResolver.ModifyInt(RelicStatId.DividendMul, dividend));
                 financeIncome += dividend;
-                _morningReport?.Add($"配当収入: +{dividend:N0}G");
+                _morningReport?.AddIncome("dividend", "配当", null, dividend);
                 Debug.Log($"[GameFlowManager] 配当収入: +{dividend}G");
             }
 
@@ -342,6 +342,9 @@ public class GameFlowManager : IDisposable, IStartable
                 var machineResult = _shopMachineModel.ExecuteDailyEffects(_itemModel, _relicResolver);
                 if (machineResult.TotalMoney > 0)
                     financeIncome += machineResult.TotalMoney;
+                // お金を産むマシンは同じマシンを1行にまとめる（「小さな貯金ゴーレム ×2 +1,600G」）
+                foreach (var m in machineResult.MoneySources)
+                    _morningReport?.AddIncome($"machine:{m.machineId}", m.machineName, m.icon, m.dailyMoney);
                 _morningReport?.AddRange(machineResult.Lines);
                 if (machineResult.ProducedAnyItem)
                     _itemModel.SaveData();
@@ -350,7 +353,10 @@ public class GameFlowManager : IDisposable, IStartable
             // レリックのターン開始フック（フック型効果。入金はビヘイビア内で行われる）
             if (_relicHooks != null)
             {
-                var relicLines = _relicHooks.OnTurnStart(CurrentTurn.Value, _tomsModel, _itemModel);
+                var relicLines = _relicHooks.OnTurnStart(CurrentTurn.Value, _tomsModel, _itemModel,
+                    _morningReport != null
+                        ? (relic, gained) => _morningReport.AddIncome($"relic:{relic.relicId}", relic.relicName, relic.icon, gained)
+                        : null);
                 _morningReport?.AddRange(relicLines);
             }
 

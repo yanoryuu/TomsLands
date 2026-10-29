@@ -324,7 +324,15 @@ public class BattleSceneStarter : IAsyncStartable
         var declarationSide = StreamDeclaration.ActiveFor(_tomsModel, _inputData.GameFlowIndex);
         var declarationOutcome = StreamDeclaration.Judge(declarationSide, battleResult.result, _abortedByError);
         int declarationBonus = declarationOutcome == StreamDeclarationOutcome.Hit ? StreamDeclaration.Bonus(rawSales, defeatReward) : 0;
-        int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward - interventionSpent + interventionRefund + declarationBonus;
+        // 勇者敗北の返金騒ぎ: 勇者が負けたら、この配信で売れた武器・防具の売上の一部を視聴者に返す（勇者に張った分だけ痛い）。
+        // 売上の一部なので、補充・介入と同じく配信の収支から引く（割合は 0〜1 なので売上を超えて引くことはない）
+        float heroDefeatRefundRate = _salesController != null ? _salesController.HeroDefeatRefundRate : 0f;
+        int heroDefeatRefund = HeroDefeatRefund.Calculate(battleResult.result, soldItems,
+            HeroDefeatRefund.TypeLookup(_itemModel), heroDefeatRefundRate);
+        int totalEarnings = rawSales - _battleSpending + restockRefund + defeatReward - interventionSpent + interventionRefund + declarationBonus
+                            - heroDefeatRefund;
+        if (heroDefeatRefund > 0)
+            Debug.Log($"[BattleSceneStarter] 返金騒ぎ: 武器・防具の売上の {heroDefeatRefundRate:P0} → -{heroDefeatRefund}G");
         if (declarationSide != StreamDeclarationSide.None)
             Debug.Log($"[BattleSceneStarter] 勝負配信の宣言「{StreamDeclaration.Label(declarationSide)}」→ {declarationOutcome}（上乗せ {declarationBonus}G）");
         if (restockRefund > 0)
@@ -338,6 +346,7 @@ public class BattleSceneStarter : IAsyncStartable
         }
         _outputData.SetDefenseReward(defeatReward, _inputData.DungeonKey);
         _outputData.SetDeclaration(declarationSide, declarationOutcome, declarationBonus);
+        _outputData.SetHeroDefeatRefund(heroDefeatRefund);
 
         var settlement = new BattleSettlement(battleResult.result, rawSales, _battleSpending, restockRefund,
             _outputData.InterventionNetSpending, defeatReward, totalEarnings, soldItems,
@@ -346,6 +355,8 @@ public class BattleSceneStarter : IAsyncStartable
             DeclarationSide = declarationSide,
             DeclarationOutcome = declarationOutcome,
             DeclarationBonus = declarationBonus,
+            HeroDefeatRefund = heroDefeatRefund,
+            HeroDefeatRefundRate = heroDefeatRefundRate,
         };
 
         // --- Phase 2.5: 決着の溜め（配信画面のまま。勝敗のコメント弾幕と最後の売上を見せる） ---
@@ -527,17 +538,16 @@ public class BattleSceneStarter : IAsyncStartable
     }
 
     /// <summary>
-    /// 勇者の装備の相場が勝敗でどう動くか（E-4）。勝ち: ×1.8（ボス撃破 ×2.2）、負け: 半値。
+    /// 勇者の装備の相場が勝ちでどう動くか（E-4）。勝ち: ×1.8（ボス撃破 ×2.2）。
     /// 値は帰還処理（BattleResultHandler）と同じ倍率を、店の値段に掛けてストップ高/安で丸めた見込み。
+    /// 負け・途中終了は店の値段を動かさない（負けの痛手は返金騒ぎ）ので空。
     /// </summary>
     private List<BattleMarketImpact> BuildMarketImpacts(BattleResult result, string weaponId, string armorId,
         List<BattleOutputSoldItem> soldItems, int defeatedBossCount)
     {
         var list = new List<BattleMarketImpact>();
-        if (result == BattleResult.Abort) return list;
-        float mul = result == BattleResult.Victory
-            ? ItemModel.HeroWinMultiplier(defeatedBossCount)
-            : 1f / ItemModel.HeroDefeatPriceDivisor;
+        if (result != BattleResult.Victory) return list;
+        float mul = ItemModel.HeroWinMultiplier(defeatedBossCount);
 
         foreach (var id in new[] { weaponId, armorId })
         {

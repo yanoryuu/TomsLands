@@ -59,6 +59,8 @@ public class StreamingSalesController : MonoBehaviour
     public float CurrentHeat => _heatModel != null ? _heatModel.Heat.Value : 0f;
     /// <summary>配信中の在庫補充の単価に掛ける率（その時の配信の値段 × この値）。</summary>
     public float RestockPriceRate => PriceSettings != null ? PriceSettings.restockPriceRate : 1f;
+    /// <summary>勇者が負けた配信で、武器・防具の売上のうち返金する割合（返金騒ぎ）。</summary>
+    public float HeroDefeatRefundRate => PriceSettings != null ? PriceSettings.heroDefeatRefundRate : 0f;
 
     /// <summary>現在の配信熱ティア（0=冷め / 1=普通 / 2=盛り上がり / 3=超人気。未開始なら -1）。</summary>
     public int CurrentHeatTier => _heatModel != null ? _heatModel.GetTierIndex() : -1;

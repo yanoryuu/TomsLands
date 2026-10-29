@@ -191,8 +191,8 @@ public class ItemModel
     /// </summary>
     public const float HeroWinPriceMultiplier = 1.8f;
     public const float HeroWinBossPriceMultiplier = 2.2f;
-    /// <summary>勇者敗北で装備の価格・需要を割る数（半値）。</summary>
-    public const int HeroDefeatPriceDivisor = 2;
+    // 勇者敗北で装備を半値にする罰は廃止した（賭けと無関係で手の打ちようがなかった）。
+    // 負けの痛手は配信の精算の「返金騒ぎ」（HeroDefeatRefund）
 
     /// <summary>勇者勝利時の装備の倍率（ボスを倒していれば ×2.2、それ以外 ×1.8）。</summary>
     public static float HeroWinMultiplier(int defeatedBossCount)
@@ -201,7 +201,7 @@ public class ItemModel
     /// <summary>
     /// 帰還後に店で付く装備の値段の見込み（勝敗の倍率を掛けたあと、日送りの ストップ高/安 で丸めた値）。
     /// 実際の値は日送りの相場の揺れ（±数%）が乗るので、配信リザルトの「相場への影響」の表示用。
-    /// multiplier &lt; 1 は敗北（割る）を表す。
+    /// multiplier &lt; 1 は割る（今は勝ちの倍率でしか呼ばないが、式は残す）。
     /// </summary>
     public static int PreviewPriceAfterBattle(int shopPrice, int basePrice, float multiplier, ShopEconomySettings settings)
     {
@@ -245,28 +245,6 @@ public class ItemModel
         else
         {
             Debug.LogWarning($"Item not found for battle win bonus: {itemId}");
-        }
-    }
-
-    public void BattleDefeatPenalty(string itemId, int penaltyAmountMultiplier)
-    {
-        // 0 以下で割るとゼロ除算（価格は例外、需要は Infinity）になるため、ペナルティなしとして扱う
-        if (penaltyAmountMultiplier <= 0)
-        {
-            Debug.LogWarning($"Battle defeat penalty skipped for {itemId}: invalid divisor {penaltyAmountMultiplier}.");
-            return;
-        }
-
-        var runtime = GetRuntimeItem(itemId);
-        if (runtime != null)
-        {
-            runtime.CurrentPrice.Value /= penaltyAmountMultiplier;
-            runtime.Demand.Value /= penaltyAmountMultiplier;
-            Debug.Log($"Battle defeat penalty applied to {itemId}: /{penaltyAmountMultiplier} stock.");
-        }
-        else
-        {
-            Debug.LogWarning($"Item not found for battle defeat penalty: {itemId}");
         }
     }
 

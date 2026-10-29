@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 配信リザルト（精算書）に出す内訳。お金の計算は BattleSceneStarter で済んでおり、ここは表示用の値だけ。
-/// 純利益 = 売上 − 補充 + 売れ残り返金 − 介入（返金後） + 防衛報酬（BattleOutputData.TotalEarnings と同じ）。
+/// 純利益 = 売上 − 補充 + 売れ残り返金 − 介入（返金後） + 防衛報酬 + 宣言の上乗せ − 返金騒ぎ（BattleOutputData.TotalEarnings と同じ）。
 /// </summary>
 public sealed class BattleSettlement
 {
@@ -33,6 +33,11 @@ public sealed class BattleSettlement
     public StreamDeclarationOutcome DeclarationOutcome { get; set; }
     /// <summary>宣言が当たって上乗せした額（NetProfit に入っている）。</summary>
     public int DeclarationBonus { get; set; }
+
+    /// <summary>勇者敗北の返金騒ぎ: 武器・防具の売上から視聴者に返した額（NetProfit から引いてある）。</summary>
+    public int HeroDefeatRefund { get; set; }
+    /// <summary>返金騒ぎの割合（表示用。武器・防具の売上の何割か）。</summary>
+    public float HeroDefeatRefundRate { get; set; }
 
     public BattleSettlement(BattleResult result, int sales, int restockCost, int restockRefund, int interventionNet,
         int defenseReward, int netProfit, IReadOnlyList<BattleOutputSoldItem> soldItems, IReadOnlyList<BattleMarketImpact> marketImpacts)

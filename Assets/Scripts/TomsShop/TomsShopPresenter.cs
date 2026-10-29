@@ -52,8 +52,8 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     /// <summary>朝の通知を順に出している処理（Entry のたびに作り直す）。</summary>
     private CancellationTokenSource morningCts;
 
-    /// <summary>まだ閉じられていない朝レポートの文（Entry をやり直しても失わないよう持っておく）。</summary>
-    private string pendingMorningReport;
+    /// <summary>まだ閉じられていない朝レポートの中身（Entry をやり直しても失わないよう持っておく）。</summary>
+    private PendingMorningReport pendingMorningReport;
 
     /// <summary>朝レポートを閉じたときに HUD の所持金を数え上げるか。</summary>
     private bool morningMoneyHeld;
@@ -431,17 +431,14 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         var announce = PrepareTurnOrBuzzAnnounce();
         if (announce != null) steps.Add(new MorningStep(announce, null, AnnounceSeconds));
 
-        // 朝レポート（売り注文の持ち越し精算・配当・債券償還・マシンの設備収入/生成）
-        // 消費型: NextTurn 中に溜まった行を1つの通知にまとめて表示する
+        // 朝レポート（売り注文の持ち越し精算・配当・債券償還・マシンの設備収入/生成・レリック）
+        // 消費型: NextTurn 中に溜まった入金の出どころと行を1つの通知にまとめて表示する
         if (morningReportModel != null && morningReportModel.HasLines)
         {
-            int income = morningReportModel.MorningIncome;
-            var lines = morningReportModel.Consume();
-            string body = string.Join("\n", lines);
-            string head = BuildMorningHeader(income);
-            pendingMorningReport = string.IsNullOrEmpty(pendingMorningReport)
-                ? (string.IsNullOrEmpty(head) ? body : $"{head}\n\n{body}")
-                : $"{pendingMorningReport}\n{body}";
+            var snapshot = morningReportModel.ConsumeReport();
+            int income = snapshot.MoneyDelta;
+            pendingMorningReport ??= new PendingMorningReport(BuildNetWorthLine());
+            pendingMorningReport.Merge(snapshot);
             // 朝の入金は HUD の所持金を前日の額に据え置き、レポートを閉じたときに数え上げて見せる
             if (income > 0 && !morningMoneyHeld)
             {
@@ -449,15 +446,17 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                 commonView.HoldMoneyDisplay(tomsShopModel.PlayerMoney.Value - income);
             }
         }
-        if (!string.IsNullOrEmpty(pendingMorningReport))
+        if (pendingMorningReport != null && !pendingMorningReport.IsEmpty)
         {
-            string text = pendingMorningReport;
+            var report = pendingMorningReport;
             steps.Add(new MorningStep(() =>
             {
                 if (tomsShopView.IsMorningReportOpen) return;
+                if (tomsShopView.ShowMorningIncomeReport(report.Incomes, report.NetWorthLine, report.Notes)) return;
+                // 行の部品が未配線なら文で出す。パネルごと未配線ならログにフォールバック（お金は適用済み）
+                string text = report.ToText();
                 if (!tomsShopView.ShowMorningReport(text))
                 {
-                    // パネル未配線時はログにフォールバック（お金は適用済み）
                     Debug.Log($"[MorningReport]\n{text}");
                     OnMorningReportClosed();
                 }
@@ -583,26 +582,82 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
 
     private void OnMorningReportClosed()
     {
+        var report = pendingMorningReport;
         pendingMorningReport = null;
         if (morningMoneyHeld)
         {
             morningMoneyHeld = false;
             commonView.ReleaseMoneyDisplay();
         }
+        // 閉じて所持金が数え上がるのに合わせ、お金をくれたレリック（子豚の貯金箱など）のアイコンを跳ねさせる（F-8）
+        if (report == null) return;
+        float delay = 0.2f;
+        foreach (var e in report.Incomes)
+        {
+            if (e.Key == null || !e.Key.StartsWith(RelicIncomeKeyPrefix, StringComparison.Ordinal)) continue;
+            tomsShopView.PopRelicIcon(e.Key.Substring(RelicIncomeKeyPrefix.Length), e.AmountLabel, delay);
+            delay += 0.15f;
+        }
+    }
+
+    /// <summary>GameFlowManager がレリックの入金に付ける key の頭（"relic:" + relicId）。</summary>
+    private const string RelicIncomeKeyPrefix = "relic:";
+
+    /// <summary>
+    /// 閉じられるまで持っておく朝レポートの中身。Entry がやり直されたら（詳細画面から戻ったなど）
+    /// 新しく溜まった分を足す（同じ出どころは台数と額をまとめる）。総資産の行は最初の Entry のものを使う。
+    /// </summary>
+    private sealed class PendingMorningReport
+    {
+        public readonly string NetWorthLine;
+        public readonly List<MorningIncomeEntry> Incomes = new();
+        public readonly List<string> Notes = new();
+
+        public PendingMorningReport(string netWorthLine) => NetWorthLine = netWorthLine;
+
+        public bool IsEmpty => Incomes.Count == 0 && Notes.Count == 0;
+
+        public void Merge(MorningReportSnapshot snapshot)
+        {
+            if (snapshot == null) return;
+            foreach (var e in snapshot.Incomes)
+            {
+                var same = Incomes.Find(x => x.Key == e.Key);
+                if (same == null)
+                {
+                    Incomes.Add(new MorningIncomeEntry(e.Key, e.DisplayName, e.Icon, e.Amount, e.Count));
+                    continue;
+                }
+                same.Count += e.Count;
+                same.Amount += e.Amount;
+            }
+            Notes.AddRange(snapshot.Notes);
+        }
+
+        /// <summary>行の部品が未配線のときの文の表示（旧・朝レポートと同じ形）。</summary>
+        public string ToText()
+        {
+            var sb = new StringBuilder();
+            int total = MorningReportModel.SumAmount(Incomes);
+            if (total > 0) sb.Append($"<size=140%><color=#E8A33D>今朝の入金 +{total:N0}G</color></size>\n");
+            sb.Append(NetWorthLine).Append('\n');
+            foreach (var e in Incomes) sb.Append('\n').Append(e.ToLine());
+            foreach (var n in Notes) sb.Append('\n').Append(n);
+            return sb.ToString();
+        }
     }
 
     /// <summary>
-    /// 朝レポートの見出し: 今朝の入金の合計（金色・大きく）と、総資産と昨日比（R1-A-12）。
+    /// 朝レポートの総資産の行: 総資産と昨日比（R1-A-12）。今朝の入金の合計は出どころの行の合計として別に出す。
     /// 総資産 = 現金 + 在庫の評価額（今の値段）+ 未約定の売り注文 + 金融資産。
     /// </summary>
-    private string BuildMorningHeader(int income)
+    private string BuildNetWorthLine()
     {
         int netWorth = CalculateNetWorth();
         int? last = morningReportModel?.LastNetWorth;
         if (morningReportModel != null) morningReportModel.LastNetWorth = netWorth;
 
         var sb = new StringBuilder();
-        if (income > 0) sb.Append($"<size=140%><color=#E8A33D>今朝の入金 +{income:N0}G</color></size>\n");
         sb.Append($"総資産 {netWorth:N0}G");
         if (last.HasValue)
         {

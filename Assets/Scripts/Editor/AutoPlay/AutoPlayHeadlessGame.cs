@@ -37,6 +37,8 @@ public sealed class AutoPlayAssets
     public List<DungeonInfoScriptableObj> Dungeons;
     /// <summary>配信中の介入・視聴者スパチャの調整値（Addressable → RemoteBalance → 既定値）。</summary>
     public StreamingInteractionSettings Interaction;
+    /// <summary>配信の値動き・返金騒ぎの割合（Addressable → RemoteBalance「battlePrice」→ 既定値）。</summary>
+    public BattlePriceSettings BattlePrice;
 
     /// <summary>
     /// GameLifetimeScope.Configure と同じ経路（Addressables + RemoteBalance）で読む。
@@ -85,6 +87,7 @@ public sealed class AutoPlayAssets
                 .ToList();
             a.Dungeons = RemoteBalance.ApplyList("dungeons", a.Dungeons, d => d.key.ToString());
             a.Interaction = StreamingInteractionSettings.Load();
+            a.BattlePrice = RemoteBalance.ApplyOverwrite("battlePrice", Or(AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings")));
             if (a.Dungeons.Count == 0)
             {
                 error = "DungeonInfoScriptableObj が見つかりませんでした。";
@@ -1223,17 +1226,22 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
         }
 
-        // 純利益 = 売上 − 補充(なし) + 返金(なし) + 防衛報酬 − 介入支出 + 未実行介入の返金（BattleSceneStarter の写し）
-        int totalEarnings = rawSales + defeatReward - outcome.InterventionSpent + outcome.InterventionRefund;
+        // 勇者敗北の返金騒ぎ（BattleSceneStarter の写し）: 負けたら武器・防具の売上の一部を返す
+        var battleResult = outcome.Victory ? BattleResult.Victory : BattleResult.Defeat;
+        float refundRate = Assets.BattlePrice != null ? Assets.BattlePrice.heroDefeatRefundRate : 0f;
+        int heroDefeatRefund = HeroDefeatRefund.Calculate(battleResult, outcome.Sold, HeroDefeatRefund.TypeLookup(ItemModel), refundRate);
+
+        // 純利益 = 売上 − 補充(なし) + 返金(なし) + 防衛報酬 − 介入支出 + 未実行介入の返金 − 返金騒ぎ（BattleSceneStarter の写し）
+        int totalEarnings = rawSales + defeatReward - outcome.InterventionSpent + outcome.InterventionRefund - heroDefeatRefund;
 
         string weaponId = _battleIn.EquippedItemIds.Count > 0 ? _battleIn.EquippedItemIds[0] : "";
         string armorId = _battleIn.EquippedItemIds.Count > 1 ? _battleIn.EquippedItemIds[1] : "";
-        var result = outcome.Victory ? BattleResult.Victory : BattleResult.Defeat;
-        _battleOut.SetResult(result, weaponId, armorId, outcome.Sold, totalEarnings,
+        _battleOut.SetResult(battleResult, weaponId, armorId, outcome.Sold, totalEarnings,
             outcome.MobsDefeated, outcome.BossesDefeated);
         _battleOut.SetStreamingStats(outcome.InterventionSpent, outcome.InterventionRefund, 0, outcome.ViewerSpecials, outcome.SpecialMoves);
+        _battleOut.SetHeroDefeatRefund(heroDefeatRefund);
 
-        Today.StreamEarnings = rawSales;
+        Today.StreamEarnings = rawSales - heroDefeatRefund; // 売上から返金騒ぎを引いた額（レポートの配信収入）
         Today.DefeatReward = defeatReward;
         Today.InterventionSpent = outcome.InterventionSpent;
         Today.InterventionRefund = outcome.InterventionRefund;
@@ -1257,7 +1265,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         News?.SetLastStreamResult(outcome.Victory);
 
         ResolveStageAfterFlow();
-        return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G");
+        return AutoPlayActionResult.Success($"{Today.BattleResult} 売上 {rawSales}G 防衛報酬 {defeatReward}G"
+                                            + (heroDefeatRefund > 0 ? $" 返金騒ぎ -{heroDefeatRefund}G" : ""));
     }
 
     // =================================================================
