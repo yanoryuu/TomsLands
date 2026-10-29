@@ -22,6 +22,9 @@
  * 2026-10-29 更新:
  *   - machineLevels を足す（店の設備のレベルの表。1行=1設備×1レベル → levels[] にグループ化。villageFacilities と同じ形）。
  *     修理費の率は data シートの machine.repairCostRate（float、既定 0.5）。
+ * 2026-10-30 更新:
+ *   - dungeonLevels を足す（ダンジョンのレベルの表: 魔王軍支援の費用 levelUpCost・防衛の配当 rewardGold）。
+ *     1行=1ダンジョン×1レベル。dungeonId "*" は全ダンジョン共通、個別の id（bal_dungeons の id）はそのダンジョンだけ上書き。
  */
 
 // ============================================================
@@ -64,6 +67,7 @@ const BALANCE_LISTS = {
 const BALANCE_HEROLEVELS_SHEET = 'bal_heroLevels';
 const VILLAGE_FACILITIES_SHEET = 'villageFacilities';
 const MACHINE_LEVELS_SHEET = 'machineLevels';
+const DUNGEON_LEVELS_SHEET = 'dungeonLevels';
 
 // ============================================================
 // メニュー
@@ -265,6 +269,10 @@ function buildBalanceEnvelope() {
   const machineLevels = readMachineLevels_();
   if (machineLevels.length > 0) envelope.machineLevels = machineLevels;
 
+  // dungeonLevels（1行=1ダンジョン×1レベル。"*" = 全ダンジョン共通）
+  const dungeonLevels = readDungeonLevels_();
+  if (dungeonLevels.length > 0) envelope.dungeonLevels = dungeonLevels;
+
   // heroLevels（空なら省略）
   const hero = readHeroLevels_();
   if (hero.length > 0) envelope.heroLevels = hero;
@@ -422,6 +430,47 @@ function readMachineLevels_() {
     g.obj.levels = g.rows.map(function (x) { return x.entry; });
     return g.obj;
   });
+}
+
+/**
+ * dungeonLevels: 1行=1ダンジョン×1レベル（魔王軍支援の費用と防衛の配当の表）。
+ * ヘッダ: dungeonId（id でも可） / level / levelUpCost / rewardGold（型サフィックス不要）
+ *   dungeonId: "*" = 全ダンジョン共通。個別の id（bal_dungeons の id。例 DemonKingCastle）はそのダンジョンだけ "*" より優先
+ *   level: 1〜5
+ *   levelUpCost: このレベルから次のレベルへ上げる費用（Lv0→Lv1 の最初の出資も Lv1 の行）。最大レベルは 0
+ *   rewardGold: このレベルで勇者が負けたときの配当
+ * 空欄のセルは出さない（Unity 側は同梱の値のまま）。行が無いレベルも同梱の値のまま。
+ * 出力: [ { dungeonId, level, levelUpCost, rewardGold }, ... ]（行の順のまま）
+ */
+function readDungeonLevels_() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(DUNGEON_LEVELS_SHEET);
+  if (!sheet) return []; // シート未作成なら区画ごと省略
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+
+  const header = values[0].map(function (h) { return String(h).trim().split(':')[0]; });
+  const col = {};
+  header.forEach(function (h, i) { if (h !== '' && !(h in col)) col[h] = i; });
+  if (!('dungeonId' in col) && ('id' in col)) col.dungeonId = col.id;
+  ['dungeonId', 'level'].forEach(function (req) {
+    if (!(req in col)) throw new Error(DUNGEON_LEVELS_SHEET + ': 列 "' + req + '" がありません。');
+  });
+
+  const result = [];
+  for (let r = 1; r < values.length; r++) {
+    const row = values[r];
+    const id = String(row[col.dungeonId]).trim();
+    if (id === '') continue;
+    const ctx = DUNGEON_LEVELS_SHEET + '(行' + (r + 1) + ')';
+
+    const entry = { dungeonId: id, level: castCell_(row[col.level], 'int', ctx + '!level') };
+    if ('levelUpCost' in col && row[col.levelUpCost] !== '')
+      entry.levelUpCost = castCell_(row[col.levelUpCost], 'int', ctx + '!levelUpCost');
+    if ('rewardGold' in col && row[col.rewardGold] !== '')
+      entry.rewardGold = castCell_(row[col.rewardGold], 'int', ctx + '!rewardGold');
+    result.push(entry);
+  }
+  return result;
 }
 
 /** heroLevels を全置換配列で返す（id無し・PascalCase + 型サフィックス）。 */

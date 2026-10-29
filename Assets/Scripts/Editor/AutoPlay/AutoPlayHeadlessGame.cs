@@ -85,7 +85,7 @@ public sealed class AutoPlayAssets
                 .Select(path => AssetDatabase.LoadAssetAtPath<DungeonInfoScriptableObj>(path))
                 .Where(d => d != null)
                 .ToList();
-            a.Dungeons = RemoteBalance.ApplyList("dungeons", a.Dungeons, d => d.key.ToString());
+            a.Dungeons = DungeonInfoScriptableObj.ApplyRemoteBalance(a.Dungeons);
             a.Interaction = StreamingInteractionSettings.Load();
             a.BattlePrice = RemoteBalance.ApplyOverwrite("battlePrice", Or(AddressableLoader.Load<BattlePriceSettings>("BattlePriceSettings")));
             if (a.Dungeons.Count == 0)
