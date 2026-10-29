@@ -132,6 +132,12 @@ public sealed class PersonaPlayConfig
     /// 更新は Meme 側の digest.mjs --export で tools/persona_play/memes/ に書き出してここを差し替える。
     /// </summary>
     [JsonProperty("memeLexiconPath")] public string MemeLexiconPath = "tools/persona_play/memes/memes_2026-10.json";
+    /// <summary>
+    /// 配信コメントの受け箱（配信側の live_chat.py が書く jsonl。絶対パスかプロジェクト直下からの相対パス）。
+    /// 空・無い・ファイルが無いなら返事の機能ごとオフ（Editor の PersonaCommentResponder。live.flag があるときだけ読む）。
+    /// 配信で使うときは D:\Tools\tokotom-live\chat\inbox.jsonl を入れる。
+    /// </summary>
+    [JsonProperty("commentInboxPath")] public string CommentInboxPath = "";
 
     [JsonIgnore] public string Endpoint => (BaseUrl ?? "").TrimEnd('/') + "/" + (Path ?? "").TrimStart('/');
 

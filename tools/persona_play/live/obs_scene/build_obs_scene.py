@@ -52,7 +52,7 @@ CREDIT_TEXT = "VOICEVOX:ずんだもん　VOICEVOX:四国めたん　立ち絵�
 #  ウィンドウキャプチャ（WGC）は重なりの影響を受けないが、Unity のタイトルはシーンごとに変わり
 #  （VillageScene / TomsShop）、OBS の起動時にタイトルが外れると、浮いている Project ウィンドウを拾って
 #  真っ黒になった（2026-10-29 に確認）。浮いている Unity のウィンドウを全部ドッキングしたら、こちらに切り替えてよい。
-CROP = {"left": 19, "top": 529, "right": 1060, "bottom": 78}            # 画面 1920x1080 基準
+CROP = {"left": 6, "top": 528, "right": 1057, "bottom": 70}             # 2 枚目のモニター（Redmi、1920x1080）基準。2026-10-29 23:50 に測り直した
 CROP_WINDOW = {"left": 11, "top": 478, "right": 1052, "bottom": 22}     # クライアント領域 1904x973（画面の 8,51 から）基準
 UNITY_WINDOW = "wt-04 - TomsShop - Windows, Mac, Linux - Unity 6 (6000.0.32f1) <DX11>:UnityContainerWndClass:Unity.exe"
 MONITOR_ID = r"\\?\DISPLAY#ACR0A6C#5&39dfcd35&0&UID4358#{e6f07b5f-ee97-4a90-b076-33f57bf4eaa7}"  # KG251Q（プライマリ）

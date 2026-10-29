@@ -308,7 +308,8 @@ public static class PersonaMarathon
             EditorUtility.audioMasterMute = false;
             JikkyoRecordingPreset.OverrideVolumes();
         }
-        else EditorUtility.audioMasterMute = true;
+        // 配信中（live.flag がある）は録画しないランでも音を消さない（配信で BGM・SE を流す）
+        else EditorUtility.audioMasterMute = !File.Exists(PersonaCommentResponder.LiveFlagPath);
 
         _applied = false;
         _exitAt = -1;
