@@ -15,7 +15,11 @@ using System.Text.RegularExpressions;
 /// </summary>
 public static class PersonaCommentLines
 {
-    public static readonly string[] Cats = { "greet", "cheer", "tease", "bet_hero", "bet_demon", "ask", "superchat", "other" };
+    public static readonly string[] Cats =
+    {
+        "greet", "cheer", "tease", "bet_hero", "bet_demon", "ask", "superchat",
+        "leave", "laugh", "clap", "game", "ai", "toko", "other",
+    };
 
     /// <summary>同じ行（テンプレート）は 1 配信にこの回数まで。</summary>
     public const int MaxPerStream = 3;
@@ -121,7 +125,9 @@ public static class PersonaCommentLines
         ["m|cheer|cute"] = P("normal",
             "ありがとう。素直に受け取っておくわ",
             "……ありがとう。悪い気はしないわ",
-            "ありがとう。でも帳簿はかわいくないのよ"),
+            "ありがとう。でも帳簿はかわいくないのよ",
+            "[e=tsun]かわいいのはずんだもんでしょ。……ありがと",
+            "[e=hiso]……今のは聞かなかったことにするわ"),
         ["m|cheer|genius"] = P("normal",
             "ありがとう。読んでから決めてるだけよ",
             "天才じゃないわ。説明書を読んだだけ",
@@ -172,7 +178,6 @@ public static class PersonaCommentLines
             "外したのはジュラル星人のせいなのだ！",
             "[win][e=tsun]さっきの配信は当てたのだ！ 見てなかったのだ？"),
         ["z|tease"] = P("tsun",
-            "なんだお前、なのだ",
             "ぼくはちゃんとやってるのだ！",
             "[e=hero]言い返せないのだ……でも次は当たるのだ",
             "うう、手厳しいのだ。でも負けないのだ",
@@ -216,6 +221,16 @@ public static class PersonaCommentLines
             "なんだお前、なのだ",
             "[e=hiso]聞いてるのだ……",
             "[e=namida]うう……学習したのだ"),
+        // めたんへのからかい（慎重すぎ・ビビり・弱気・臆病。めたんが先に話す）
+        ["m|tease|coward"] = P("tsun",
+            "慎重なのと臆病なのは違うのよ",
+            "慎重すぎて儲からない、ね。数えてから言って",
+            "[e=hero]……言ったわね。次の配信、見てなさい",
+            "[win][e=normal]さっきの配信は{stream}。慎重で悪かったわね"),
+        ["z+|tease|coward"] = P("tsun",
+            "めたんは慎重すぎて儲からないのだ！",
+            "[e=ama]ほら、みんなもそう思ってるのだ",
+            "ぼくみたいに全部張るのだ！"),
 
         // ================= 張る側の口出し（判断は変えない） =================
         ["z|bet_hero"] = P("hero",
@@ -298,7 +313,8 @@ public static class PersonaCommentLines
         ["m|ask|goal"] = P("normal",
             "目標は破産しないで、ちゃんと増やすことよ",
             "黒字で終えること。それだけ。",
-            "村資金を増やして、村を育てることね"),
+            "村資金を増やして、村を育てることね",
+            "[e=tsun]ずんだもんに全部張らせないこと。毎日の目標よ"),
         ["z|ask"] = P("normal",
             "[run]今は{day}、所持金は{money}なのだ",
             "[between]今はランの合間なのだ。村資金は{funds}なのだ",
@@ -347,9 +363,139 @@ public static class PersonaCommentLines
         ["z+|superchat"] = P("ama",
             "ぼくからもありがとうなのだ！",
             "ありがとうなのだ！ がんばるのだ",
-            "うれしいのだ！"),
+            "うれしいのだ！",
+            "{amount}、大事に使うのだ！",
+            "[e=surprise]めたん、見たのだ？ スパチャなのだ！"),
+
+        // ================= 見送り（ずんだもんは寂しがる、めたんはあっさり） =================
+        ["z|leave"] = P("ama",
+            "おつかれさまなのだ！ また来てほしいのだ",
+            "おやすみなのだ。ぼくはまだお店を開けてるのだ",
+            "またねなのだ！ 次はもっと儲けておくのだ",
+            "[run][e=hero]またなのだ！ 次に来るまでに{money}を倍にするのだ",
+            "[e=namida]もう帰っちゃうのだ？ ……また来るのだ"),
+        ["m|leave"] = P("normal",
+            "おつかれさま。また来てね",
+            "おやすみなさい。帳簿は私が見ておくわ",
+            "またね。全部張らないように見張っておくわ",
+            "[run]おつかれさま。次は{money}より増えてるといいわね",
+            "ありがとう。ゆっくり休んで"),
+        ["z+|leave"] = P("ama",
+            "おやすみなのだ！",
+            "またなのだ！",
+            "気をつけて帰るのだ"),
+        ["m+|leave"] = P("normal",
+            "おやすみなさい。",
+            "またね。",
+            "[e=tsun]寂しがってるわよ、この子"),
+
+        // ================= 笑われた（ずんだもんはウケたと勘違い、めたんは乗る） =================
+        ["z|laugh"] = P("tsun",
+            "笑いごとじゃないのだ！",
+            "[e=ama]ウケたのだ！ ぼく、おもしろいのだ？",
+            "[e=hiso]笑ってくれてうれしいのだ。……笑われてるのだ？",
+            "[e=hero]これは作戦なのだ。笑うところじゃないのだ",
+            "[lose][e=namida]笑うのはやめてほしいのだ……"),
+        ["m|laugh"] = P("normal",
+            "笑うしかないわよね。",
+            "[e=tsun]笑ってる場合じゃないのよ、帳簿的には",
+            "わかる。私も笑いをこらえてるわ",
+            "[lose]さっきの配信は{stream}。笑うしかないわ"),
+        ["z+|laugh"] = P("tsun",
+            "めたんまで笑ってるのだ！？",
+            "[e=ama]えへへ、なのだ",
+            "[e=hiso]計画通りなのだ"),
+        ["m+|laugh"] = P("tsun",
+            "笑われてるのよ、あなた",
+            "本人は真剣なのよ、これでも",
+            "[e=normal]……私もちょっと笑ったわ"),
+
+        // ================= 拍手（勝った直後はマウント、負けた直後は「どこに？」） =================
+        ["z|clap"] = P("surprise",
+            "[e=ama]拍手なのだ！ もっと拍手するのだ！",
+            "[win][e=tsun]ぼくの勘が勝ったのだ！ めたん、見たのだ？",
+            "[e=ama]やりますねぇ、なのだ",
+            "[lose][e=hiso]……拍手するところ、あったのだ？",
+            "[e=hiso]ありがとうなのだ。計画通りなのだ"),
+        ["m|clap"] = P("normal",
+            "ありがとう。今のは悪くなかったわ",
+            "[win]さっきの配信は{stream}。拍手していいわよ",
+            "[e=tsun]拍手すると調子に乗るから、ほどほどにね",
+            "[lose][e=tsun]どこに拍手したのかしら"),
+        ["z+|clap"] = P("ama",
+            "えっへんなのだ！",
+            "もっとほめるのだ！",
+            "[e=tsun]めたん、聞いたのだ？"),
+        ["m+|clap"] = P("tsun",
+            "浮かれないの。",
+            "[e=normal]私からも拍手しておくわ",
+            "それ、次あなたに返ってくるからね"),
+
+        // ================= どんなゲーム？（宣伝の一番の機会。タイトルと Steam を言う） =================
+        ["z|game"] = P("ama",
+            "『トコのトムトムランド』なのだ！ Steamにあるのだ",
+            "勇者の配信に賭けて、お店で儲けるゲームなのだ！",
+            "Steamで『トコのトムトムランド』って探すのだ！",
+            "武器を仕入れて勇者に売って、配信で勝負するのだ",
+            "[e=hero]『トコのトムトムランド』、ぼくより上手にできるのだ？",
+            "Steamでウィッシュリストに入れてほしいのだ！"),
+        ["m|game"] = P("normal",
+            "『トコのトムトムランド』よ。Steamで探してみて",
+            "勇者の配信を読んで、お店のお金を張るゲームよ",
+            "勇者の勝ち負けに賭けるお店のゲーム。Steamにあるわ",
+            "魔王側に張ってもいいの。なんでもありよ",
+            "[e=hiso]説明書なら私が読んだわ。……表紙は"),
+        ["z+|game"] = P("ama",
+            "やってみてほしいのだ！",
+            "[e=hero]ぼくより上手にできるのだ？",
+            "Steamで待ってるのだ！"),
+        ["m+|game"] = P("normal",
+            "『トコのトムトムランド』、Steamで探してみて",
+            "ずんだもんより手堅く遊べるはずよ",
+            "全部張らなければ大丈夫よ"),
+
+        // ================= AI なの？（判断は自分たちでしている。言い過ぎない） =================
+        ["z|ai"] = P("hero",
+            "お店の判断はぼくが自分で決めてるのだ！ 勘なのだ",
+            "[e=ama]ぼくはAIなのだ。でも勘は本物なのだ",
+            "判断に中の人はいないのだ。ずんだ餅の精がいるだけなのだ",
+            "自分で決めてるのだ。だから外すのもぼくなのだ"),
+        ["m|ai"] = P("normal",
+            "ええ、二人とも自分で判断してるわ。私は慎重な方",
+            "AIよ。だから数字はちゃんと見てるの",
+            "お店の判断に中の人はいないわ。止める係が私なだけ",
+            "判断は私たちが自分で。結果も自分たちのものよ"),
+        ["z+|ai"] = P("ama",
+            "そういうことなのだ！",
+            "[e=hero]ぼくの勘はAIより上なのだ"),
+        ["m+|ai"] = P("tsun",
+            "勘で決めるAIもいるのよ、そこに",
+            "[e=normal]私は数字で決める方よ"),
+
+        // ================= トコちゃん（めたんが先に。トコには甘い） =================
+        ["m|toko"] = P("ama",
+            "トコちゃんの話？ あの子はいい子よ",
+            "トコちゃんにはお世話になってるわ。ずんだもんが",
+            "[e=normal]トコちゃんのお店を潰すわけにはいかないの"),
+        ["z|toko"] = P("ama",
+            "トコちゃんなのだ！ ぼくたちの主人公なのだ",
+            "[e=namida]トコちゃん、ごめんなのだ……まだ何もしてないのだ",
+            "[e=hero]トコちゃんのためにも儲けるのだ！"),
+        ["z+|toko"] = P("tsun",
+            "めたんはトコちゃんに甘いのだ",
+            "ぼくにも甘くしてほしいのだ"),
+        ["m+|toko"] = P("normal",
+            "あの子の前では全部張らないでね",
+            "[e=ama]トコちゃんの言うことは、だいたい正しいのよ"),
 
         // ================= それ以外 =================
+        ["z|other|zunda"] = P("ama",
+            "ずんだ餅の話なのだ？ ぼくの大好物なのだ！",
+            "[e=hero]ずんだ餅の精は相場に強いのだ",
+            "ずんだ餅、半分あげるのだ"),
+        ["m+|other|zunda"] = P("tsun",
+            "ずんだ餅の予算は帳簿に入ってないわよ",
+            "その話になると長いわよ、この子"),
         ["z|other"] = P("normal",
             "コメントありがとうなのだ！",
             "うんうん、なのだ",
@@ -389,17 +535,46 @@ public static class PersonaCommentLines
         return Classify(c.Text);
     }
 
+    /// <summary>
+    /// 本文の言葉で分ける（live_chat.py の CATS と同じ言葉）。宣伝の機会（game）と AI の質問を先に見る。
+    /// 全角英数・半角カナは NFKC でそろえ、英字は小文字で語の途中では当てない（machine の ai など）。
+    /// </summary>
     public static string Classify(string text)
     {
-        string t = text ?? "";
+        string t = (text ?? "").Normalize(System.Text.NormalizationForm.FormKC);
+        string lower = t.ToLowerInvariant();
+        if (Has(t, "何のゲーム", "なんのゲーム", "なにのゲーム", "ゲーム名", "タイトル", "どこで買", "どこで売", "スチーム", "トムトムランド",
+                "面白そう", "おもしろそう", "やってみたい", "買いたい", "遊びたい") || Word(lower, "steam")) return "game";
+        if (Has(t, "中の人", "自動", "本当に考え", "ほんとに考え", "人間", "人工知能") || Word(lower, "ai")) return "ai";
         if (Has(t, "初見", "はじめまして", "初めまして", "こんにちは", "こんちは", "こんばんは", "こんばんわ", "おはよ", "やっほ", "わこつ")) return "greet";
         if (Regex.IsMatch(t, "勇者.*(張|いけ|行け|賭|推|勝)")) return "bet_hero";
         if (Regex.IsMatch(t, "魔王.*(張|いけ|行け|賭|推|勝)")) return "bet_demon";
+        if (Has(t, "おつかれ", "お疲れ", "おやすみ", "またね", "また来", "落ちます", "おちます", "寝ます", "ねます", "ばいばい", "バイバイ",
+                "さようなら", "おつ", "乙")) return "leave";
+        if (Has(t, "トコ")) return "toko";
         if (Has(t, "金欠", "貧乏", "破産", "借金", "外した", "外れ", "ハズレ", "負け", "下手", "へたくそ")) return "tease";
+        if (Has(t, CowardWords)) return "tease";
+        if (Has(t, "888", "おめでと", "ナイス", "上手い", "うまい", "やるやん", "やりますね", "拍手") || Word(lower, "gg") || Word(lower, "nice")) return "clap";
+        if (IsLaugh(t)) return "laugh";
         if (Has(t, "いくら", "何日", "何G", "目標", "所持金", "村資金", "?", "？")) return "ask";
         if (Has(t, "がんば", "頑張", "かわい", "可愛", "天才", "すご", "応援", "好き", "えらい")) return "cheer";
         return "other";
     }
+
+    /// <summary>めたんへのからかい（tease の sub = coward）の言葉。</summary>
+    private static readonly string[] CowardWords = { "慎重すぎ", "慎重過ぎ", "ビビ", "びび", "弱気", "臆病", "チキン" };
+
+    /// <summary>笑い: 草・笑・わろ、「ww」、「〜w」で終わる。ゲームの品物（薬草など）の「草」は数えない。</summary>
+    private static bool IsLaugh(string t)
+    {
+        string s = t.Replace("薬草", "").Replace("毒草", "").Replace("雑草", "");
+        if (Has(s, "草", "笑", "わろ", "ワロ")) return true;
+        return Regex.IsMatch(s, "[wWｗＷ]{2,}") || Regex.IsMatch(s, "[ぁ-んァ-ヶ一-龠ー！!。…][wWｗＷ]$");
+    }
+
+    /// <summary>英単語として含むか（前後が英字でない）。lower は小文字にした本文。</summary>
+    private static bool Word(string lower, string word) =>
+        Regex.IsMatch(lower, $"(?<![a-z]){Regex.Escape(word)}(?![a-z])");
 
     public static string SubOf(string cat, PersonaComment c)
     {
@@ -416,6 +591,8 @@ public static class PersonaCommentLines
                 if (Has(t, "天才", "すご", "賢", "えらい")) return "genius";
                 return null;
             case "tease":
+                // めたんへのからかい（ずんだもんを名指ししていなければ）。めたんが先に話す
+                if (c?.To != "z" && Has(t.Normalize(System.Text.NormalizationForm.FormKC), CowardWords)) return "coward";
                 if (Has(t, "金欠", "貧乏", "お金ない", "金ない", "文無し")) return "broke";
                 if (Has(t, "破産", "借金", "倒産", "返済")) return "bankrupt";
                 if (Has(t, "外", "ハズレ", "負け", "下手", "へた")) return "missed";
@@ -426,6 +603,10 @@ public static class PersonaCommentLines
                 if (Has(t, "目標", "ゴール")) return "goal";
                 if (Has(t, "何日", "日目")) return "day";
                 if (Has(t, "いくら", "所持金", "お金", "残高", "何G", "何万")) return "money";
+                return null;
+            case "other":
+                // ずんだ餅の話（「ずんだもん」「ずんだちゃん」の名指しは除く）
+                if (Regex.IsMatch(t, "ずんだ(?!もん|ちゃん)")) return "zunda";
                 return null;
         }
         return null;
@@ -617,7 +798,8 @@ public static class PersonaCommentLines
     }
 
     /// <summary>
-    /// 返事を作る。基本はずんだもん → めたん（逆・片方だけもある）。質問はめたんが先に答えることが多い。
+    /// 返事を作る。基本はずんだもん → めたん（逆・片方だけもある）。質問はめたんが先に答えることが多い。トコの話とめたんへのからかいはめたんが先。
+    /// 名指し（受け箱の to = "z" / "m"）があればその人が先に話す（抽選より優先）。
     /// 先に話す人の行が無ければもう一人が先に話し、二人とも無ければ空（返さない）。
     /// </summary>
     public static List<ReplyLine> Reply(PersonaComment c, string cat, PersonaCommentFacts facts, Random rng,
@@ -626,9 +808,13 @@ public static class PersonaCommentLines
         var lines = new List<ReplyLine>();
         if (c == null || rng == null) return lines;
         string sub = SubOf(cat, c);
-        double zFirst = cat switch { "ask" => 0.45, "superchat" => 0.75, _ => 0.72 };
+        double zFirst = sub == "coward" ? 0.0 : cat switch
+        {
+            "ask" => 0.45, "superchat" => 0.75, "toko" => 0.15, "game" => 0.55, "ai" => 0.55, _ => 0.72,
+        };
         double second = cat switch { "other" => 0.3, "superchat" => 0.85, _ => 0.72 };
-        string lead = rng.NextDouble() < zFirst ? "z" : "m";
+        string lead = rng.NextDouble() < zFirst ? "z" : "m";   // 名指しがあっても乱数は同じ数だけ使う
+        if (c.To is "z" or "m") lead = c.To;
         string other = lead == "z" ? "m" : "z";
         var first = Pick(lead, false, cat, sub, facts, c.SuperchatAmount, rng, counts, recent);
         if (first == null)
@@ -659,6 +845,8 @@ public sealed class PersonaComment
     public bool First;
     /// <summary>スパチャの額（superchat.amount）。スパチャでなければ null。</summary>
     public string SuperchatAmount;
+    /// <summary>名指し（"z" / "m"）。その人が先に話す。無い・知らない値は null。</summary>
+    public string To;
 
     /// <summary>1 行の JSON を読む（読めない・id が無い行は null）。</summary>
     public static PersonaComment Parse(string json)
@@ -676,6 +864,7 @@ public sealed class PersonaComment
                 Cat = (string)o["cat"],
                 First = o["first"]?.Type == Newtonsoft.Json.Linq.JTokenType.Boolean && (bool)o["first"],
             };
+            if (o["to"]?.Type == Newtonsoft.Json.Linq.JTokenType.String && (string)o["to"] is "z" or "m") c.To = (string)o["to"];
             if (o["superchat"] is Newtonsoft.Json.Linq.JObject sc)
                 c.SuperchatAmount = (string)sc["amount"] ?? "";
             return string.IsNullOrEmpty(c.Id) ? null : c;

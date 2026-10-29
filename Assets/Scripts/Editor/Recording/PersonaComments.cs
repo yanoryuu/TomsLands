@@ -50,10 +50,11 @@ public sealed class PersonaCommentEngine
         [JsonProperty("cat")] public string Cat;
         [JsonProperty("first")] public bool First;
         [JsonProperty("amount")] public string Amount;
+        [JsonProperty("to", NullValueHandling = NullValueHandling.Ignore)] public string To;
 
         public PersonaComment ToComment() => new()
         {
-            Id = Id, UnixMs = UnixMs, Author = Author, Text = Text, Cat = Cat, First = First, SuperchatAmount = Amount,
+            Id = Id, UnixMs = UnixMs, Author = Author, Text = Text, Cat = Cat, First = First, SuperchatAmount = Amount, To = To,
         };
     }
 
@@ -218,7 +219,7 @@ public sealed class PersonaCommentEngine
             }
             s.Pending.Add(new PendingComment
             {
-                Id = c.Id, UnixMs = c.UnixMs, Author = c.Author, Text = c.Text, Cat = c.Cat, First = c.First, Amount = c.SuperchatAmount,
+                Id = c.Id, UnixMs = c.UnixMs, Author = c.Author, Text = c.Text, Cat = c.Cat, First = c.First, Amount = c.SuperchatAmount, To = c.To,
             });
         }
         return dirty;

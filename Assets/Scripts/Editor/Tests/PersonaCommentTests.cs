@@ -54,7 +54,13 @@ public class PersonaCommentTests
             ["bet_demon"] = new[] { "魔王いけ" },
             ["ask"] = new[] { "今いくら？", "何日目？", "返済いつ？", "村資金は？", "目標は？", "調子どう？" },
             ["superchat"] = new[] { "", "応援してます" },
-            ["other"] = new[] { "なるほど" },
+            ["leave"] = new[] { "おやすみ", "おつ" },
+            ["laugh"] = new[] { "草", "www" },
+            ["clap"] = new[] { "8888", "おめでとう" },
+            ["game"] = new[] { "何のゲーム？", "Steamにある？" },
+            ["ai"] = new[] { "AIなの？", "中の人いる？" },
+            ["toko"] = new[] { "トコちゃん" },
+            ["other"] = new[] { "なるほど", "ずんだ餅食べたい" },
         };
         CollectionAssert.AreEquivalent(PersonaCommentLines.Cats, samples.Keys);
         foreach (var facts in new[] { InRun, Between })
@@ -85,6 +91,182 @@ public class PersonaCommentTests
                     }
             }
         }
+    }
+
+    [Test]
+    public void Classify_NewCats_FromText_AndKeepsOldCats()
+    {
+        var expect = new Dictionary<string, string>
+        {
+            // 前からの種類（変わらない）
+            ["こんにちは"] = "greet", ["初見です"] = "greet", ["勇者に張れ"] = "bet_hero", ["魔王いけ"] = "bet_demon",
+            ["今日も金欠？"] = "tease", ["また外した"] = "tease", ["今いくら？"] = "ask", ["がんばれ"] = "cheer", ["なるほど"] = "other",
+            // 見送り
+            ["おやすみ"] = "leave", ["おつ"] = "leave", ["またね"] = "leave", ["そろそろ落ちます"] = "leave", ["寝ます"] = "leave", ["ばいばい"] = "leave",
+            // 笑い
+            ["草"] = "laugh", ["www"] = "laugh", ["ｗｗｗ"] = "laugh", ["それはないｗ"] = "laugh", ["笑った"] = "laugh", ["わろた"] = "laugh",
+            ["薬草売れ"] = "other",
+            // 拍手
+            ["8888"] = "clap", ["８８８８"] = "clap", ["おめでとう"] = "clap", ["ナイス"] = "clap", ["GG"] = "clap", ["うまい"] = "clap", ["やるやん"] = "clap",
+            // ゲーム（宣伝）
+            ["これ何のゲーム？"] = "game", ["タイトル教えて"] = "game", ["どこで買える？"] = "game", ["Steamにある？"] = "game",
+            ["面白そう"] = "game", ["やってみたい"] = "game", ["ＳＴＥＡＭ"] = "game",
+            // AI
+            ["AIなの？"] = "ai", ["ＡＩ？"] = "ai", ["中の人いる？"] = "ai", ["自動で動いてる？"] = "ai", ["本当に考えてるの？"] = "ai", ["人間？"] = "ai",
+            ["mail見て"] = "other",
+            // トコ
+            ["トコちゃんかわいい"] = "toko", ["トコ"] = "toko",
+            // めたんへのからかい
+            ["めたん慎重すぎ"] = "tease", ["ビビりすぎ"] = "tease", ["弱気だね"] = "tease", ["臆病"] = "tease",
+        };
+        foreach (var kv in expect)
+        {
+            Assert.AreEqual(kv.Value, PersonaCommentLines.Classify(kv.Key), kv.Key);
+            Assert.AreEqual(kv.Value, PersonaCommentLines.NormalizeCat(C(null, kv.Key)), "cat 無し: " + kv.Key);
+            Assert.AreEqual(kv.Value, PersonaCommentLines.NormalizeCat(C("unknown_cat", kv.Key)), "知らない cat: " + kv.Key);
+        }
+        // 受け箱の cat は知っている種類なら信じる
+        foreach (var cat in new[] { "leave", "laugh", "clap", "game", "ai", "toko" })
+            Assert.AreEqual(cat, PersonaCommentLines.NormalizeCat(C(cat, "なるほど")), cat);
+    }
+
+    private static readonly string[] NewKeys =
+    {
+        "z|leave", "m|leave", "z+|leave", "m+|leave", "z|laugh", "m|laugh", "z+|laugh", "m+|laugh",
+        "z|clap", "m|clap", "z+|clap", "m+|clap", "z|game", "m|game", "z+|game", "m+|game",
+        "z|ai", "m|ai", "z+|ai", "m+|ai", "m|toko", "z|toko", "z+|toko", "m+|toko",
+        "m|tease|coward", "z+|tease|coward", "z|other|zunda", "m+|other|zunda",
+    };
+
+    [Test]
+    public void NewKeys_ReturnCleanLines_InRunAndBetweenRuns()
+    {
+        foreach (var key in NewKeys)
+        {
+            Assert.IsTrue(PersonaCommentLines.HasKey(key), key);
+            var parts = key.Split('|');
+            string speaker = parts[0].TrimEnd('+');
+            bool follow = parts[0].EndsWith("+", StringComparison.Ordinal);
+            string sub = parts.Length > 2 ? parts[2] : null;
+            Assert.Greater(PersonaCommentLines.All().Count(x => x.key == key), 1, key);
+            foreach (var facts in new[] { InRun, Between })
+            {
+                var seen = new HashSet<string>();
+                for (int seed = 0; seed < 40; seed++)
+                {
+                    var r = PersonaCommentLines.Pick(speaker, follow, parts[1], sub, facts, null, new System.Random(seed), null, null);
+                    Assert.IsTrue(r.HasValue, $"{key} {(facts.InRun ? "run" : "between")}");
+                    string line = r.Value.line;
+                    Assert.IsTrue(PersonaLines.IsClean(line), $"{key}: {line}");
+                    Assert.IsFalse(line.Contains("{") || line.Contains("["), line);
+                    Assert.IsTrue(ToneOk(speaker == "z", line), $"{key}: {line}");
+                    Assert.LessOrEqual(line.Length, 32, $"吹き出しに収まる長さ: {key}: {line}");
+                    if (!facts.InRun) Assert.IsFalse(line.Contains("日目") || line.Contains("万G"), "ランの合間に所持金・日を言わない: " + line);
+                    seen.Add(line);
+                }
+                Assert.Greater(seen.Count, 1, key);
+            }
+        }
+        // ゲームを聞かれたら、タイトルと Steam を言う行がある
+        var game = PersonaCommentLines.All().Where(x => x.key.EndsWith("|game", StringComparison.Ordinal)).Select(x => x.t.Text).ToList();
+        Assert.IsTrue(game.Any(l => l.Contains("トコのトムトムランド") && l.Contains("Steam")), "タイトルと Steam を一緒に言う行");
+        foreach (var who in new[] { "z|game", "m|game" })
+        {
+            var lines = PersonaCommentLines.All().Where(x => x.key == who).Select(x => x.t.Text).ToList();
+            Assert.GreaterOrEqual(lines.Count(l => l.Contains("トコのトムトムランド")), 1, who);
+            Assert.GreaterOrEqual(lines.Count(l => l.Contains("Steam")), 2, who);
+        }
+        // 「トコのトムランド」など違う名前で言わない
+        foreach (var (key, t) in PersonaCommentLines.All())
+            if (t.Text.Contains("トム")) StringAssert.Contains("トコのトムトムランド", t.Text, key);
+    }
+
+    [Test]
+    public void To_SpeaksFirst_OverridesDraw()
+    {
+        foreach (var (cat, text) in new[] { ("cheer", "がんばれ"), ("ask", "今いくら？"), ("greet", "こんにちは"), ("toko", "トコちゃん"), ("game", "何のゲーム？") })
+            foreach (var to in new[] { "z", "m" })
+                for (int seed = 0; seed < 40; seed++)
+                {
+                    var c = C(cat, text);
+                    c.To = to;
+                    var lines = PersonaCommentLines.Reply(c, cat, InRun, new System.Random(seed), new Dictionary<string, int>(), new List<string>());
+                    Assert.Greater(lines.Count, 0);
+                    Assert.AreEqual(to, lines[0].Speaker, $"{cat} to={to} seed={seed}");
+                    if (lines.Count == 2) Assert.AreNotEqual(to, lines[1].Speaker);
+                }
+        // 名指しが無ければ今までどおり両方が先に話すことがある
+        var leads = new HashSet<string>();
+        for (int seed = 0; seed < 60; seed++)
+            leads.Add(PersonaCommentLines.Reply(C("cheer", "がんばれ"), "cheer", InRun, new System.Random(seed), null, null)[0].Speaker);
+        CollectionAssert.AreEquivalent(new[] { "z", "m" }, leads);
+        // 受け箱の to を読む（知らない値は無し）
+        Assert.AreEqual("m", PersonaComment.Parse("{\"id\":\"a\",\"unixMs\":1,\"text\":\"めたん頑張れ\",\"to\":\"m\"}").To);
+        Assert.AreEqual("z", PersonaComment.Parse("{\"id\":\"a\",\"unixMs\":1,\"text\":\"x\",\"to\":\"z\"}").To);
+        Assert.IsNull(PersonaComment.Parse("{\"id\":\"a\",\"unixMs\":1,\"text\":\"x\",\"to\":\"q\"}").To);
+        Assert.IsNull(PersonaComment.Parse("{\"id\":\"a\",\"unixMs\":1,\"text\":\"x\"}").To);
+    }
+
+    [Test]
+    public void To_SurvivesInbox_AndPendingReload()
+    {
+        long now = 1_793_289_100_000;
+        string path = Path.Combine(_dir, "inbox.jsonl");
+        for (int i = 0; i < 6; i++)
+        {
+            string to = i % 2 == 0 ? "m" : "z";
+            File.AppendAllText(path, $"{{\"id\":\"to-{i}\",\"unixMs\":{now},\"author\":\"テスト\",\"text\":\"がんばれ\",\"cat\":\"cheer\",\"superchat\":null,\"first\":false,\"to\":\"{to}\"}}\n");
+        }
+        var e = Engine(() => now);
+        e.LastDecisionWriteMs = () => now;   // 判断の一言の直後: 読むだけで返さない（受け箱 → 待ち行列）
+        Assert.AreEqual(0, e.Tick("s1").Count);
+        Assert.AreEqual(6, e.Current.Pending.Count);
+        for (int i = 0; i < 6; i++)
+        {
+            now += 1_000;
+            var fresh = Engine(() => now);   // 状態ファイルから読み直しても名指しが残る
+            fresh.GapMs = 0;
+            var rows = fresh.Tick("s1");
+            Assert.Greater(rows.Count, 0);
+            string id = (string)rows[0]["commentId"];
+            string expected = int.Parse(id.Substring(3)) % 2 == 0 ? "m" : "z";
+            Assert.AreEqual(expected, rows[0]["speaker"], id);
+        }
+        Assert.AreEqual(6, Rows().Select(r => r["commentId"]).Distinct().Count());
+    }
+
+    [Test]
+    public void Tease_Coward_RoutesToMetanFirst()
+    {
+        var cowardLines = PersonaCommentLines.All().Where(x => x.key == "m|tease|coward").Select(x => x.t.Text).ToList();
+        var zFollow = PersonaCommentLines.All().Where(x => x.key == "z+|tease|coward").Select(x => x.t.Text).ToList();
+        bool followSeen = false;
+        foreach (var text in new[] { "めたん慎重すぎ", "ビビりすぎでしょ", "弱気だなあ", "臆病すぎ" })
+        {
+            Assert.AreEqual("coward", PersonaCommentLines.SubOf("tease", C("tease", text)), text);
+            for (int seed = 0; seed < 40; seed++)
+            {
+                var lines = PersonaCommentLines.Reply(C("tease", text), "tease", InRun, new System.Random(seed), new Dictionary<string, int>(), new List<string>());
+                Assert.AreEqual("m", lines[0].Speaker, text);
+                CollectionAssert.Contains(cowardLines, lines[0].Line, text);
+                if (lines.Count == 2)
+                {
+                    CollectionAssert.Contains(zFollow, lines[1].Line, text);
+                    followSeen = true;
+                }
+            }
+        }
+        Assert.IsTrue(followSeen, "ずんだもんの後の一言も sub で引く");
+        // ずんだもんを名指ししていたら、めたんへのからかいではない
+        var toZ = C("tease", "ずんだもんビビりすぎ");
+        toZ.To = "z";
+        Assert.AreNotEqual("coward", PersonaCommentLines.SubOf("tease", toZ));
+        // 前からの sub は変わらない
+        Assert.AreEqual("broke", PersonaCommentLines.SubOf("tease", C("tease", "今日も金欠？")));
+        Assert.AreEqual("missed", PersonaCommentLines.SubOf("tease", C("tease", "また外した")));
+        // ずんだ餅の話（名指しの「ずんだもん」は除く）
+        Assert.AreEqual("zunda", PersonaCommentLines.SubOf("other", C("other", "ずんだ餅食べたい")));
+        Assert.IsNull(PersonaCommentLines.SubOf("other", C("other", "ずんだもん、なるほど")));
     }
 
     [Test]
