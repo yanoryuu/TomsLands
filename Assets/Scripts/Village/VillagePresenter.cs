@@ -10,6 +10,7 @@ using VContainer.Unity;
 /// - 帰還時: VillageArrivalReport（消費型）を読んで収支ポップを表示
 /// - 区画（FacilityPlot）の調べる→投資パネル→投資
 /// - 総合Lvに応じて町人が増える（VillagePopulationView。投資で増えた分はその場でポップして現れる）
+/// - 村の格に応じてマップの地面と装飾が育つ（VillageRankDecor。格が上がった瞬間は新しい装飾が弾んで出る）
 /// - 出店 → PreparationScene / タイトルへ → TitleScene
 /// - 初回入場時: 村チュートリアル前半（暗幕）→ 帰還演出（儲け→村資金）→ 後半（看板を調べて投資）
 /// 村と店の経営（ラン）は別フロー: ここでの操作はラン外のメタ層のみに影響する。
@@ -29,6 +30,7 @@ public class VillagePresenter : IStartable, IDisposable
     private bool tutorialPlaying; // 村チュートリアル会話の再生中
     private bool rankUpPlaying; // 村の格が上がった演出（ポップ→会話）の再生中
     private int shownRank; // 画面に出している村の格（上がった瞬間を見つける）
+    private VillageRankDecor rankDecor; // 格ごとの地面・装飾（シーンに無ければ null）
 
     /// <summary>演出・会話中で村の操作を受け付けない状態か。</summary>
     private bool IsBusy => arrivalPlaying || tutorialPlaying || rankUpPlaying;
@@ -68,6 +70,7 @@ public class VillagePresenter : IStartable, IDisposable
         if (soundManager != null) soundManager.PlayBGM("OP");
 
         Bind();
+        rankDecor = UnityEngine.Object.FindFirstObjectByType<VillageRankDecor>(FindObjectsInactive.Include);
         shownRank = VillageRank.Compute(metaProgress);
         RefreshAll();
 
@@ -304,6 +307,9 @@ public class VillagePresenter : IStartable, IDisposable
         var population = view.Population;
         if (population != null) population.ApplyScaled(villageLevel, model.MaxVillageLevel, animatePopulation);
 
+        // 村の格に合わせた地面と装飾（投資・デバッグで格が上がったときは新しく出たものが弾む）
+        if (rankDecor != null) rankDecor.Apply(rank, animatePopulation);
+
         foreach (var plot in view.Plots)
         {
             if (plot == null) continue;
@@ -323,6 +329,7 @@ public class VillagePresenter : IStartable, IDisposable
                           facility.facilityId != VillageModel.HallId &&
                           model.HallLevel < facility.requiredHallLevel;
             plot.SetState(level, locked, facility.icon, facility.facilityName);
+            if (rankDecor != null) rankDecor.ApplyFacilityLevel(facility.facilityId, level, facility.MaxLevel, animatePopulation);
         }
     }
 

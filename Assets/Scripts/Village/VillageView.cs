@@ -22,6 +22,32 @@ public class VillageView : MonoBehaviour
     [SerializeField] private Button departButton;     // 出店準備へ（必須。未配線なら素通り）
     [SerializeField] private Button titleButton;      // タイトルへ
     [SerializeField] private TextMeshProUGUI messageText;
+    [Tooltip("任意: メッセージの帯（文字が空のときは隠す）")]
+    [SerializeField] private GameObject messageBand;
+
+    [Header("HUD の看板（任意。未配線なら村名の行に格と総合Lvを並べる）")]
+    [Tooltip("格と総合Lv（「町・総合Lv18」）。配線すると villageLevelText は村の名前だけになる")]
+    [SerializeField] private TextMeshProUGUI rankText;
+    [Tooltip("格ごとに見た目を変える看板の板（任意）")]
+    [SerializeField] private Image rankBanner;
+    [Tooltip("格の番号ごとの看板の絵（足りない分は最後を使う。空なら変えない）")]
+    [SerializeField] private Sprite[] rankBannerSprites;
+    [Tooltip("格の印（星）。格の番号+1 個を点ける")]
+    [SerializeField] private Image[] rankStars;
+    [SerializeField] private Sprite rankStarOn;
+    [SerializeField] private Sprite rankStarOff;
+    [Tooltip("格に応じて出す飾り（旗・冠など）")]
+    [SerializeField] private RankOrnament[] rankOrnaments;
+
+    [System.Serializable]
+    public struct RankOrnament
+    {
+        public GameObject target;
+        [Tooltip("この格の番号以上で出す")]
+        public int minRank;
+        [Tooltip("この格の番号以下で出す（-1 なら上限なし）")]
+        public int maxRank;
+    }
 
     [Header("施設区画（シーン手置き）")]
     [SerializeField] private FacilityPlot[] plots;
@@ -38,8 +64,25 @@ public class VillageView : MonoBehaviour
     [Tooltip("Lv5（特殊な効果）の欄だけ出す金の枠（任意）")]
     [SerializeField] private GameObject specialFrame;
     [SerializeField] private TextMeshProUGUI detailCostText;
+    [Tooltip("任意: 費用と比べる今の村資金")]
+    [SerializeField] private TextMeshProUGUI detailFundsText;
+    [Tooltip("費用が村資金で足りるときの色")]
+    [SerializeField] private Color costAffordableColor = new(0.91f, 0.64f, 0.24f); // 金 #E8A33D
+    [Tooltip("費用が村資金に足りないときの色")]
+    [SerializeField] private Color costShortColor = new(0.66f, 0.2f, 0.17f);       // 赤 #A8332B
+    [Tooltip("施設マスターに icon が無いときに使うアイコン（facilityId ごと）")]
+    [SerializeField] private FacilityIcon[] facilityIcons;
+
+    [System.Serializable]
+    public struct FacilityIcon
+    {
+        public string facilityId;
+        public Sprite icon;
+    }
     [SerializeField] private Button investButton;
     [SerializeField] private TextMeshProUGUI investButtonLabel;
+    [Tooltip("投資ボタンが押せないときの文字の色（グレーアウト）")]
+    [SerializeField] private Color investLabelDisabledColor = new(0.82f, 0.8f, 0.76f);
     [SerializeField] private Button investCloseButton;
 
     [Header("帰還収支ポップ")]
@@ -48,6 +91,8 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI conversionEarnedText;
     [SerializeField] private TextMeshProUGUI conversionConvertedText;
     [SerializeField] private Button conversionCloseButton;
+    [Tooltip("任意: 内訳を入れる枠（ポップの子・下寄せ）。配線するとポップの中に内訳を出し、内訳の有無でポップの高さを伸び縮みさせる")]
+    [SerializeField] private RectTransform conversionBreakdownArea;
 
     [Header("自己ベストの掲示板（任意。王都の広場の看板を調べると開く）")]
     [SerializeField] private GameObject recordBoardPopup;
@@ -247,6 +292,12 @@ public class VillageView : MonoBehaviour
         string head = string.IsNullOrEmpty(rankName)
             ? $"トコの村（総合Lv{villageLevel}）"
             : $"トコの村（{rankName}・総合Lv{villageLevel}）";
+        if (rankText != null)
+        {
+            rankText.text = string.IsNullOrEmpty(rankName) ? $"総合Lv{villageLevel}" : $"{rankName}・総合Lv{villageLevel}";
+            head = "トコの村";
+        }
+        ApplyRankStyle(RankIndexOf(rankName));
         if (rankNextText != null)
         {
             rankNextText.text = nextRankLine ?? "";
@@ -258,6 +309,47 @@ public class VillageView : MonoBehaviour
             villageLevelText.text = string.IsNullOrEmpty(nextRankLine)
                 ? head
                 : $"{head}\n<size=62%>{nextRankLine}</size>";
+        }
+    }
+
+    /// <summary>格の名前から格の番号を引く（見つからなければ 0）。</summary>
+    private static int RankIndexOf(string rankName)
+    {
+        if (string.IsNullOrEmpty(rankName)) return 0;
+        for (int i = 0; i < VillageRank.Count; i++)
+        {
+            if (VillageRank.Name(i) == rankName) return i;
+        }
+        return 0;
+    }
+
+    /// <summary>看板の絵・星・飾りを格に合わせる（未配線の部品は飛ばす）。</summary>
+    private void ApplyRankStyle(int rank)
+    {
+        if (rankBanner != null && rankBannerSprites != null && rankBannerSprites.Length > 0)
+        {
+            var sprite = rankBannerSprites[Mathf.Clamp(rank, 0, rankBannerSprites.Length - 1)];
+            if (sprite != null) rankBanner.sprite = sprite;
+        }
+        if (rankStars != null)
+        {
+            for (int i = 0; i < rankStars.Length; i++)
+            {
+                var star = rankStars[i];
+                if (star == null) continue;
+                bool on = i <= rank;
+                var sprite = on ? rankStarOn : rankStarOff;
+                if (sprite != null) star.sprite = sprite;
+                star.gameObject.SetActive(i < VillageRank.Count);
+            }
+        }
+        if (rankOrnaments != null)
+        {
+            foreach (var o in rankOrnaments)
+            {
+                if (o.target == null) continue;
+                o.target.SetActive(rank >= o.minRank && (o.maxRank < 0 || rank <= o.maxRank));
+            }
         }
     }
 
@@ -325,8 +417,11 @@ public class VillageView : MonoBehaviour
     /// <summary>村資金HUDの数値だけ更新する（到着演出のカウントアップ用）。</summary>
     public void SetFundsDisplay(int villageFunds)
     {
-        if (villageFundsText != null) villageFundsText.text = $"村資金 {villageFunds:N0}G";
+        lastFunds = villageFunds;
+        if (villageFundsText != null) villageFundsText.text = $"<size=64%>村資金</size> {villageFunds:N0}G";
     }
+
+    private int? lastFunds; // 投資パネルで費用と比べる（UpdateHud・到着演出のカウントアップで更新）
 
     /// <summary>村資金HUDのテキスト（到着演出のコイン到達先）。</summary>
     public TMP_Text FundsText => villageFundsText;
@@ -408,6 +503,7 @@ public class VillageView : MonoBehaviour
     public void ShowMessage(string message)
     {
         if (messageText != null) messageText.text = message;
+        if (messageBand != null) messageBand.SetActive(!string.IsNullOrEmpty(message));
     }
 
     /// <summary>
@@ -422,9 +518,10 @@ public class VillageView : MonoBehaviour
 
         if (detailIcon != null)
         {
-            detailIcon.sprite = facility.icon;
+            var icon = IconOf(facility);
+            detailIcon.sprite = icon;
             detailIcon.preserveAspect = true;
-            detailIcon.enabled = facility.icon != null;
+            detailIcon.enabled = icon != null;
         }
         if (detailNameText != null) detailNameText.text = facility.facilityName;
         if (detailLevelText != null)
@@ -446,16 +543,44 @@ public class VillageView : MonoBehaviour
         }
         if (specialFrame != null) specialFrame.SetActive(nextIsSpecial);
 
+        // 村資金が分かっていれば費用と比べる（足りないときは赤、足りるときは金。ボタンも押せない見た目に）
+        bool shortOfFunds = cost >= 0 && lastFunds.HasValue && lastFunds.Value < cost;
+        if (shortOfFunds) canInvest = false;
         if (detailCostText != null)
+        {
             detailCostText.text = cost < 0 ? "-" : $"{cost:N0}G";
+            if (cost >= 0) detailCostText.color = shortOfFunds ? costShortColor : costAffordableColor;
+        }
+        if (detailFundsText != null)
+        {
+            detailFundsText.text = lastFunds.HasValue ? $"村資金 {lastFunds.Value:N0}G" : "";
+            detailFundsText.gameObject.SetActive(lastFunds.HasValue && cost >= 0);
+        }
 
         if (investButton != null) investButton.interactable = canInvest;
         if (investButtonLabel != null)
         {
+            investLabelColor ??= investButtonLabel.color;
+            investButtonLabel.color = canInvest ? investLabelColor.Value : investLabelDisabledColor;
+            if (!canInvest && string.IsNullOrEmpty(blockedReason) && shortOfFunds) blockedReason = "村資金が足りない";
             investButtonLabel.text = cost < 0
                 ? "最大レベル"
                 : canInvest ? (level == 0 ? "建設する" : "拡張する") : blockedReason;
         }
+    }
+
+    private Color? investLabelColor; // 押せるときの文字の色（最初に開いたときに覚える）
+
+    private Sprite IconOf(VillageFacilityData facility)
+    {
+        if (facility == null) return null;
+        if (facility.icon != null) return facility.icon;
+        if (facilityIcons == null) return null;
+        foreach (var f in facilityIcons)
+        {
+            if (f.facilityId == facility.facilityId) return f.icon;
+        }
+        return null;
     }
 
     public void HideInvestPanel()
@@ -507,9 +632,17 @@ public class VillageView : MonoBehaviour
     private void SetConversionBreakdown(VillageFundsBreakdown breakdown)
     {
         var lines = breakdown?.BuildLines();
+        var popupRect = conversionPopup != null ? (RectTransform)conversionPopup.transform : null;
+        if (conversionBreakdownArea != null && popupRect != null) conversionPopupBaseHeight ??= popupRect.sizeDelta.y;
         if (lines == null || lines.Count == 0)
         {
             if (conversionBreakdownText != null) conversionBreakdownText.transform.parent.gameObject.SetActive(false);
+            if (conversionBreakdownArea != null)
+            {
+                conversionBreakdownArea.gameObject.SetActive(false);
+                if (popupRect != null && conversionPopupBaseHeight.HasValue)
+                    popupRect.sizeDelta = new Vector2(popupRect.sizeDelta.x, conversionPopupBaseHeight.Value);
+            }
             return;
         }
 
@@ -519,10 +652,21 @@ public class VillageView : MonoBehaviour
             var bg = new GameObject("Breakdown", typeof(RectTransform), typeof(Image));
             bg.layer = conversionPopup.layer;
             var bgRt = (RectTransform)bg.transform;
-            bgRt.SetParent(popupRt, false);
-            bgRt.anchorMin = bgRt.anchorMax = new Vector2(0.5f, 0f);
-            bgRt.pivot = new Vector2(0.5f, 1f);
-            bgRt.anchoredPosition = new Vector2(0f, -8f);
+            if (conversionBreakdownArea != null)
+            {
+                // ポップの中の枠いっぱいに並べる
+                bgRt.SetParent(conversionBreakdownArea, false);
+                bgRt.anchorMin = Vector2.zero;
+                bgRt.anchorMax = Vector2.one;
+                bgRt.offsetMin = bgRt.offsetMax = Vector2.zero;
+            }
+            else
+            {
+                bgRt.SetParent(popupRt, false);
+                bgRt.anchorMin = bgRt.anchorMax = new Vector2(0.5f, 0f);
+                bgRt.pivot = new Vector2(0.5f, 1f);
+                bgRt.anchoredPosition = new Vector2(0f, -8f);
+            }
             var img = bg.GetComponent<Image>();
             img.color = new Color(0f, 0f, 0f, 0f);   // 背景の帯は出さない（並べる場所としてだけ使う）
             img.raycastTarget = false;
@@ -532,6 +676,7 @@ public class VillageView : MonoBehaviour
             conversionBreakdownAmounts = CreateBreakdownColumn(bgRt, src, TextAlignmentOptions.Right, new Color(0.91f, 0.64f, 0.24f, 1f));
         }
 
+        if (conversionBreakdownArea != null) conversionBreakdownArea.gameObject.SetActive(true);
         var labels = new System.Text.StringBuilder();
         var amounts = new System.Text.StringBuilder();
         foreach (var line in lines)
@@ -546,9 +691,22 @@ public class VillageView : MonoBehaviour
         panel.gameObject.SetActive(true);
         conversionBreakdownText.ForceMeshUpdate();
         float textHeight = Mathf.Max(conversionBreakdownText.preferredHeight, lines.Count * 40f);
+        if (conversionBreakdownArea != null)
+        {
+            // 枠を内訳の高さにし、そのぶんポップを伸ばす（下寄せの枠とボタンの上に入る）
+            conversionBreakdownArea.gameObject.SetActive(true);
+            float areaHeight = 24f + textHeight;
+            conversionBreakdownArea.sizeDelta = new Vector2(conversionBreakdownArea.sizeDelta.x, areaHeight);
+            if (popupRect != null && conversionPopupBaseHeight.HasValue)
+                popupRect.sizeDelta = new Vector2(popupRect.sizeDelta.x, conversionPopupBaseHeight.Value + areaHeight + ConversionBreakdownGap);
+            return;
+        }
         panel.sizeDelta = new Vector2(720f, 24f + textHeight);
         panel.gameObject.SetActive(true);
     }
+
+    private const float ConversionBreakdownGap = 16f;
+    private float? conversionPopupBaseHeight; // 内訳なしのポップの高さ（最初に覚える）
 
     private TextMeshProUGUI conversionBreakdownAmounts;
 
