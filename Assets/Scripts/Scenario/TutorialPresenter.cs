@@ -42,8 +42,6 @@ public class TutorialPresenter : IStartable, IDisposable
     private const string EventTutorial     = "TurnEvent_EventTutorial";
     private const string BuzzTutorial      = "TurnEvent_BuzzTutorial";
     private const string IntroHero         = "Intro_Hero";
-    private const string IntroDemonLord    = "Intro_DemonLord";
-    private const string IntroProphet      = "Intro_Prophet";
     private const string IntroInfoBroker   = "Intro_InfoBroker";
 
     // ランの開始会話（2周目以降。Assets/TomsScenario/Scenarios/TokoTalk.csv）
@@ -145,8 +143,8 @@ public class TutorialPresenter : IStartable, IDisposable
 
         _stateManager.RegisterOnEnter(TomsShopGamePhase.BlackSmith,     OnEnterBlacksmith);
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Hero,           () => EnqueueOnce(IntroHero));
-        _stateManager.RegisterOnEnter(TomsShopGamePhase.DungeonLevelUp, () => EnqueueOnce(IntroDemonLord));
-        _stateManager.RegisterOnEnter(TomsShopGamePhase.Prophet,        () => EnqueueOnce(IntroProphet));
+        _stateManager.RegisterOnEnter(TomsShopGamePhase.DungeonLevelUp, () => EnqueueIntros(TomsShopGamePhase.DungeonLevelUp));
+        _stateManager.RegisterOnEnter(TomsShopGamePhase.Prophet,        () => EnqueueIntros(TomsShopGamePhase.Prophet));
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Broker,         () => EnqueueOnce(IntroInfoBroker));
         _stateManager.RegisterOnEnter(TomsShopGamePhase.Newspaper,      () => EnqueueOnce(IntroNewspaper));
 
@@ -432,6 +430,12 @@ public class TutorialPresenter : IStartable, IDisposable
         Enqueue(new QueuedScenario(EventLabelPrefix + id, onceOnly: false));
         // 初めてのイベントのあとに、イベントの説明を一度だけ（K-9。占い師に出会う前は出さない）
         if (_meta.HasSeenTutorial(ProphetMeeting)) EnqueueOnce(EventTutorial);
+    }
+
+    /// <summary>画面を初めて開いたときの会話を、未読の分だけ順に積む（TutorialSteps.IntroLabelsOnEnter）。</summary>
+    private void EnqueueIntros(TomsShopGamePhase phase)
+    {
+        foreach (var label in TutorialSteps.IntroLabelsOnEnter(phase)) EnqueueOnce(label);
     }
 
     /// <summary>未読なら再生キューに積む。既読・重複は無視する。onCompleted は既読になったときだけ呼ぶ。</summary>

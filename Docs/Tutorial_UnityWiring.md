@@ -51,6 +51,16 @@
     `Tutorial_FundsAdvanceAfter`（鍛冶屋・需要と価格の見方）。
   - 鍛冶屋の表情 04_困り / 12_ドヤ顔 を新たに使う（`Character.csv` に定義済み）。
 
+- 2026-10-31: 占い師を「上げる枠・下げる枠」に作り直した（#141）のに合わせて説明を足した。シナリオの元は「トコトムシナリオ正規版」シートのチュートリアルのタブ（同じ文を反映済み）。
+  - 追加（CharacterIntro.csv）: `Intro_ProphetRules`（`Intro_Prophet` の後。枠・力 最大2・配信で+1・3 日・出し入れ不可・仕入れにも効く）/
+    `Intro_SupportOdds`（`Intro_DemonLord` の後。見込みの段で倍率、勝てば配当なし、Lv を上げると倍率が下がる、情報が無いと「？」。オッズが全部 1 なら流さない）/
+    `Intro_SupportFloor`（元本保証。`streamTuning.supportPayoutFloorToStake` のときだけ）。
+    ラベルを分けたのは、前の説明を見たセーブにも足した分だけを一度流すため（`TutorialSteps.IntroLabelsOnEnter`）。
+  - 変更（Tutorial.csv）: `Tutorial_OpeningShop`（納付日は 7 日ごと・足りなければ在庫の投げ売り）/ `Tutorial_Display`（1 日の客の数の上限・売れ残り・売り圧力）/
+    `Tutorial_FundsShortage`（「ぜんぶ注文」→「たくさん注文」）/ `Tutorial_FundsAdvance`（50,000G は次の納付金に上乗せして返す）/ `Tutorial_HeroEquip`（負けた配信は武器・防具の売上の 4 割を返金）。
+    `Intro_InfoBroker` の最後（情報料は納付の期日ごとに倍）。
+  - 取り込み: `-executeMethod ScenarioImportBatch.ImportBatch`（エディタの宴の Import と同じ）。テスト `TutorialIntroTests` がラベルの取り込み漏れも見る。
+
 ### 進行（コード側は配線済み）
 | 台本の▼ | 実装 |
 |---|---|

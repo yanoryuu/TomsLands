@@ -260,14 +260,14 @@ public static class ProphetUIBuilder
         var emptyText = NewText("Text", empty, true, 32, Cream, "ここに品のカードを入れる");
         PlaceTL(emptyText.rectTransform, 20, 128, w - 40, 50);
         StyleText(emptyText, true, 32, 18, Cream);
-        var emptySub = NewText("Sub", empty, true, 23, Hex("D9CBB4"), up ? "需要が 3 ターン上がる・力を 1 つ使う" : "需要が 3 ターン下がる・力を 1 つ使う");
+        var emptySub = NewText("Sub", empty, true, 23, Hex("D9CBB4"), up ? "需要が 3 日上がる・力を 1 つ使う" : "需要が 3 日下がる・力を 1 つ使う");
         PlaceTL(emptySub.rectTransform, 20, 184, w - 40, 38);
         StyleText(emptySub, true, 23, 14, Hex("D9CBB4"));
 
         // 持ってきたときの確かめ
         var preview = NewImage("Preview", s, Part("vui_round_white"), new Color(0.06f, 0.04f, 0.1f, 0.82f), 1.6f);
         PlaceTL(preview.rectTransform, 58, 104, w - 116, 150);
-        var previewText = NewText("Text", preview.transform, true, 30, Cream, "需要 ▲ 3 ターン／力を 1 つ使う\n<size=80%>離すと入る</size>");
+        var previewText = NewText("Text", preview.transform, true, 30, Cream, "需要 ▲ 3 日／力を 1 つ使う\n<size=80%>離すと入る</size>");
         Stretch(previewText.rectTransform, 12);
         StyleText(previewText, true, 30, 16, Cream);
         previewText.textWrappingMode = TextWrappingModes.Normal;
@@ -297,7 +297,7 @@ public static class ProphetUIBuilder
         var title = NewText("Title", active, true, 32, Cream, up ? "炎の剣の需要を上げている" : "薬草の需要を下げている");
         PlaceTL(title.rectTransform, 232, 92, 360, 52);
         StyleText(title, true, 32, 18, Cream, TextAlignmentOptions.Left);
-        var turns = NewText("Turns", active, true, 30, BrightGold, "あと 3 ターン");
+        var turns = NewText("Turns", active, true, 30, BrightGold, "あと 3 日");
         PlaceTL(turns.rectTransform, 232, 152, 360, 44);
         StyleText(turns, true, 30, 18, BrightGold, TextAlignmentOptions.Left);
         var slotProp = so.FindProperty(up ? "upSlot" : "downSlot");
