@@ -145,6 +145,32 @@ public sealed class PersonaPlayConfig
     /// </summary>
     [JsonProperty("liveStatusPath")] public string LiveStatusPath = "";
 
+    /// <summary>
+    /// 配信コメントの返事を GPU サーバーの LLM で作る（D:\Tools\tokotom-live\llm\GPU_LLM_SPEC.md）。endpoint.json が RUNNING かつ ready のときだけ使い、
+    /// それ以外はテンプレート。false ならいつもテンプレート。
+    /// </summary>
+    [JsonProperty("commentLlm")] public bool CommentLlm = true;
+    /// <summary>LLM のつなぎ先の JSON（配信側が書く）。空なら受け箱の 2 つ上のフォルダの llm\endpoint.json（D:\Tools\tokotom-live\llm\endpoint.json）。</summary>
+    [JsonProperty("commentLlmEndpointPath")] public string CommentLlmEndpointPath = "";
+
+    // ---- 判断の直し（2026-10-30 の分析 P7）。どれもセーブを初めからにするまで false（今の測定の途中で手の選び方を変えない） ----
+
+    /// <summary>
+    /// 魔王軍支援の段数を期待値で決める（PersonaSupportEv）。ダンジョン×レベルごとの勇者の負け率（supportRatesPath。無ければ分析の既定値）で
+    /// 「負け率 × 防衛報酬 − 出資額」がいちばん大きい段数にする。false = 今までどおり人格の答えのまま。
+    /// </summary>
+    [JsonProperty("supportByEv")] public bool SupportByEv;
+    /// <summary>負け率の表（tools/persona_play/metrics/support_rates.py が persona_log から書く。プロジェクト直下からの相対か絶対）。</summary>
+    [JsonProperty("supportRatesPath")] public string SupportRatesPath = "Library/PersonaMarathon/support_rates.json";
+    /// <summary>
+    /// 魔王軍支援をする日は、その出資額を仕入れの予算から先に除けておく（陳列フェーズで押すまでに仕入れで使い切り、0G の支援操作になっていた 10/46）。
+    /// </summary>
+    [JsonProperty("supportCashReserve")] public bool SupportCashReserve;
+    /// <summary>
+    /// 周の終わり近くに新しい設備を置かない（元が取れる日数が残りの朝より長い・価値が測れない設備は残り 4 日以内なら置かない。設置の 50/330 が残り 4 日以内だった）。
+    /// </summary>
+    [JsonProperty("lateMachineGuard")] public bool LateMachineGuard;
+
     [JsonIgnore] public string Endpoint => (BaseUrl ?? "").TrimEnd('/') + "/" + (Path ?? "").TrimStart('/');
 
     public string ModelFor(string personaId) =>

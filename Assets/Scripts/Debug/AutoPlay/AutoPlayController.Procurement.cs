@@ -406,24 +406,27 @@ public sealed partial class AutoPlayController
         return true;
     }
 
-    /// <summary>陳列フェーズの頭（オート陳列の前）。魔王軍支援・店の改装・設備を押す（1 日 1 回）。</summary>
+    /// <summary>陳列フェーズの頭（オート陳列の前）。占い師の枠・魔王軍支援・店の改装・設備を押す（1 日 1 回）。</summary>
     private bool OnBeforeDisplay(string key)
     {
         if (!AutoPlay.IsRunning || _cts == null) return false;
         if (_displayRunning) return true;
         if (_displayDoneKey == key) return false;
         _displayDoneKey = key;
-        if (!_displayPending) return false;
+        var prophet = PlanProphet();
+        if (!_displayPending && prophet.IsNone) return false;
         _displayRunning = true;
-        RunDisplayTripsAsync(_cts.Token).Forget();
+        RunDisplayTripsAsync(prophet, _cts.Token).Forget();
         return true;
     }
 
-    private async UniTaskVoid RunDisplayTripsAsync(CancellationToken ct)
+    private async UniTaskVoid RunDisplayTripsAsync(ProphetAutoPick prophet, CancellationToken ct)
     {
         DebugAutoPlayer.ExternalBusy = true;
         try
         {
+            // 占い師の枠（失敗しても画面は閉じて戻る。残りの寄り道は続ける）
+            if (!prophet.IsNone) await PlaceProphetAsync(prophet, ct);
             if (_displayDemonLevels > 0 && _displayDemonPrep != null) await SupportDemonArmyAsync(_displayDemonPrep, _displayDemonLevels, ct);
             if (_investResult != null && (_displayInvest.UpgradeShop || !string.IsNullOrEmpty(_displayInvest.MachineId) || _displayInvest.HasMachineCare))
             {
@@ -450,7 +453,8 @@ public sealed partial class AutoPlayController
         {
             var state = AutoPlayUi.Resolve<StateManager>();
             if (state != null && state.CurrentPhase.Value == GamePhase.TomsShop
-                && state.CurrentTomsShopPhase.Value is TomsShopGamePhase.DungeonLevelUp or TomsShopGamePhase.ShopUpgrade or TomsShopGamePhase.MachineShop)
+                && state.CurrentTomsShopPhase.Value is TomsShopGamePhase.DungeonLevelUp or TomsShopGamePhase.ShopUpgrade
+                    or TomsShopGamePhase.MachineShop or TomsShopGamePhase.Prophet)
                 state.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
             _displayPending = false;
             _displayDemonLevels = 0;
@@ -577,6 +581,13 @@ public sealed partial class AutoPlayController
         if (state == null || shop == null || toms == null) return;
 
         int startMoney = toms.PlayerMoney.Value;
+        // 1 段も上げられない（上限・所持金が 1 段の額に足りない）なら画面を開かない（2026-10-30: 0G の支援操作が 10/46。仕入れで使い切っていた）
+        var target = AutoPlayUi.Resolve<DungeonRepository>()?.GetById(prep.Dungeon);
+        if (target != null && (target.currentDungeonLevel >= GameConst.MaxDungeonLevel || target.levelUpCost <= 0 || target.levelUpCost > startMoney))
+        {
+            AutoPlay.AddLog($"配信前: {prep.DungeonLabel} の魔王軍支援はやめる（Lv{target.currentDungeonLevel}、1 段 {target.levelUpCost:N0}G / 所持金 {startMoney:N0}G）");
+            return;
+        }
         int floor = startMoney * 3 / 10;
         AutoPlay.AddLog($"配信前: {prep.DungeonLabel} の魔王軍支援へ（所持金 {startMoney:N0}G、{floor:N0}G を残して出資）");
         if (!await PressAsync(AutoPlayUi.GetField<Button>(shop, "DungeonLevelUpButton"), "店: 魔王軍支援", ct)) return;
@@ -673,7 +684,7 @@ public sealed partial class AutoPlayController
     // =====================================================
     // 店への投資（IAutoPlayShopInvestor）: 勇者の装備・店の改装・設備・情報屋の開発・取引所。鍛冶屋の開発は鍛冶屋の画面で
     // 画面のボタンを実際に押す（リフレクション名: TomsShopView の HeroButton / ShopUpgradeButton / InfoButton、
-    // HeroPanelView の weaponDropdown / armorDropdown / tacticsDropdown / weaponIds / armorIds / tacticsValues / closeButton、
+    // HeroPanelView の tacticsDropdown / tacticsValues / closeButton（武器・防具は棚のカード ShelfCardButton を 2 回押す）、
     // ShopUpgradeView の upgradeButton / closeButton / tabs、ShopFacilityTabsView の machineTab、
     // ShopMachineView の purchaseButton / upgradeButton / repairButton / closeButton、
     // ShopMachineSlotUI の selectButton、InfoBrokerView の developmentButton / levelUpButton / exchangeButton / closeButton、
@@ -785,13 +796,13 @@ public sealed partial class AutoPlayController
         string NameOf(string id) => items?.GetRuntimeItem(id)?.ItemName ?? id;
 
         if (plan.HeroWeaponId != null && hero.weaponId.Value != plan.HeroWeaponId
-            && await PickDropdownAsync(view, "weaponDropdown", "weaponIds", plan.HeroWeaponId, $"勇者: 武器を「{NameOf(plan.HeroWeaponId)}」に", ct))
+            && await EquipFromShelfAsync(view, plan.HeroWeaponId, true, $"勇者: 武器を「{NameOf(plan.HeroWeaponId)}」に", ct))
         {
             if (hero.weaponId.Value == plan.HeroWeaponId) result.HeroWeaponEquipped = plan.HeroWeaponId;
             else result.Notes.Add("武器を替えられなかった");
         }
         if (plan.HeroArmorId != null && hero.armorId.Value != plan.HeroArmorId
-            && await PickDropdownAsync(view, "armorDropdown", "armorIds", plan.HeroArmorId, $"勇者: 防具を「{NameOf(plan.HeroArmorId)}」に", ct))
+            && await EquipFromShelfAsync(view, plan.HeroArmorId, false, $"勇者: 防具を「{NameOf(plan.HeroArmorId)}」に", ct))
         {
             if (hero.armorId.Value == plan.HeroArmorId) result.HeroArmorEquipped = plan.HeroArmorId;
             else result.Notes.Add("防具を替えられなかった");
@@ -803,6 +814,22 @@ public sealed partial class AutoPlayController
         }
         await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds * 2f), DelayType.UnscaledDeltaTime, cancellationToken: ct);
         await CloseToShopAsync(view, "closeButton", "勇者の画面", ct);
+    }
+
+    /// <summary>
+    /// 勇者の棚のカードを 2 回押して装備する（1 回目で持ち上げ、2 回目で勇者の枠に置く。人がクリックで付ける近道と同じ経路
+    /// → View の OnWeaponChanged / OnArmorChanged → Presenter）。棚がもう一方の種類ならタブを切り替えてから探す。
+    /// </summary>
+    private async UniTask<bool> EquipFromShelfAsync(HeroPanelView view, string itemId, bool weapon, string label, CancellationToken ct)
+    {
+        var card = view.ShelfCardButton(itemId, weapon);
+        if (card == null) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        if (!await PressAsync(card, $"{label}（棚から持ち上げる）", ct)) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        if (!await PressAsync(card, label, ct)) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        return true;
     }
 
     // ---------------- 店の改装・設備 ----------------

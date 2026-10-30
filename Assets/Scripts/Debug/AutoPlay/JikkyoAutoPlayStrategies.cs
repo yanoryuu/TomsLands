@@ -70,6 +70,19 @@ public interface IAutoPlayShopInvestor
 }
 
 /// <summary>
+/// 占い師の枠（Docs/Prophet_Intervention.md）を使う戦略への問い合わせ。実装していなくても、店を回す戦略（ShouldDisplay）なら
+/// AutoPlayController が陳列フェーズの頭に ProphetAutoRule の答えで入れる。実装すれば見送り・結果の記録（人格のログ）ができる。
+/// </summary>
+public interface IAutoPlayProphetUser
+{
+    /// <summary>決まり（ProphetAutoRule）が選んだ品を入れてよいか（false で見送る）。</summary>
+    bool ShouldUseProphet(AutoPlayContext ctx, ProphetAutoPick pick);
+
+    /// <summary>入れた・入れなかった（result が null なら押す前にやめた。note は理由）。</summary>
+    void OnProphetDone(AutoPlayContext ctx, ProphetAutoPick pick, ProphetPlaceResult? result, string note);
+}
+
+/// <summary>
 /// 実況動画の撮影用に、通常の戦略に足す判断（新聞を読む・地図を見る・魔王軍支援）。
 /// 戦略がこれを実装していれば AutoPlayController が仕入れの前に寄り道する。
 /// </summary>

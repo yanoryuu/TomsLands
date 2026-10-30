@@ -327,13 +327,28 @@ public class NewspaperView : MonoBehaviour
 
     // ---------------- 上部バー ----------------
 
+    private bool headerShown;
+
     public void ShowHeader(string issueLabel, int money, int turnsUntilBattle)
     {
-        if (issueText != null) issueText.text = issueLabel;
+        // #16 号数が替わったら（バックナンバーへの行き来・日が進んだ）日めくり。最初の表示は差し替えるだけ
+        if (issueText != null)
+        {
+            if (headerShown) FlipCounter.Flip(issueText, issueLabel);
+            else issueText.text = issueLabel;
+        }
         if (moneyText != null)
         {
-            moneyText.text = $"{money:N0}G";
-            if (lastMoney != int.MinValue && money != lastMoney) UIFx.Pop(moneyText.transform, 1.15f, 0.25f);
+            // #2 所持金が変わったら数字を回して弾ませる（最初の表示は差し替えるだけ）
+            if (lastMoney != int.MinValue && money != lastMoney)
+            {
+                UIMotion.CountTo(moneyText, lastMoney, money, v => $"{v:N0}G", 0.5f);
+                UIMotion.Bump(moneyText.transform, 1.15f, 0.25f);
+            }
+            else
+            {
+                UIMotion.CountTo(moneyText, money, money, v => $"{v:N0}G");
+            }
         }
         lastMoney = money;
 
@@ -342,8 +357,12 @@ public class NewspaperView : MonoBehaviour
         if (nextBattleText != null)
         {
             nextBattleText.gameObject.SetActive(hasBattle);
-            nextBattleText.text = turnsUntilBattle == 0 ? DayText.UntilStream(0) : $"次の配信まで {DayText.UntilStream(turnsUntilBattle)}";
+            string untilText = turnsUntilBattle == 0 ? DayText.UntilStream(0) : $"次の配信まで {DayText.UntilStream(turnsUntilBattle)}";
+            // #16 残り日数が進んだら日めくり
+            if (headerShown) FlipCounter.Flip(nextBattleText, untilText);
+            else nextBattleText.text = untilText;
         }
+        headerShown = true;
     }
 
     // ---------------- 左: 購読 ----------------
@@ -670,6 +689,16 @@ public class NewspaperView : MonoBehaviour
         Slide(centerPane, new Vector2(0f, -40f), 0.08f);
         Slide(rightPane, new Vector2(60f, 0f), 0.12f);
         StaggerCells(0.25f);
+
+        // #11 今日の一面トップは紙面が入ってからめくって見せる
+        if (leadArticle != null && leadArticle.gameObject.activeInHierarchy)
+            CardFlip.Flip((RectTransform)leadArticle.transform, null, 0.2f);
+
+        // #3 スクラップ帳のカードを上から順に出す
+        var scrapRows = new List<RectTransform>();
+        foreach (var card in scrapCards)
+            if (card != null && card.gameObject.activeSelf && card.transform is RectTransform rt) scrapRows.Add(rt);
+        if (scrapRows.Count > 0 && scrapRows[0].gameObject.activeInHierarchy) UIMotion.Stagger(scrapRows, 0.06f, 28f, 0.25f, 0.2f);
     }
 
     /// <summary>

@@ -34,6 +34,12 @@ public class StreamingSalesModel
     public BattleDemandTracker DemandTracker { get; set; }
 
     /// <summary>
+    /// 売れる数への倍率（品ごと。ボスの反応の売れ行きの気分。BossReactionTracker.GetVolumeMultiplier）。
+    /// null なら掛けない。需要の上限で切った後の数に掛ける（値札は動かさない。2026-10-30 の決定 v1）。
+    /// </summary>
+    public Func<RuntimeItemData, float> SalesVolumeMultiplier { get; set; }
+
+    /// <summary>
     /// ポーズ制御。外部から設定する。null の場合はポーズなし。
     /// </summary>
     public BattlePauseController PauseController { get; set; }
@@ -115,7 +121,7 @@ public class StreamingSalesModel
     }
 
     /// <summary>
-    /// 全アイテムの価格を一律に変動させる（配信熱の複利適用など）。
+    /// 全アイテムの価格を一律に変動させる（配信熱の段が変わったときの差の掛け直しなど。毎ターンは掛けない）。
     /// 売り場（ItemsForSale）と在庫（inventoryItems）の両方に適用。
     /// </summary>
     public void AdjustAllPrices(float rate, List<RuntimeItemData> inventoryItems,
@@ -250,6 +256,12 @@ public class StreamingSalesModel
         }
 
         float rawSold = demand * salesRate * displayStock;
+        // ボスの反応の「売れ行きの気分」（武器・防具の売れる数への倍率。値札は動かさない）。未設定・1 なら今と同じ
+        if (SalesVolumeMultiplier != null)
+        {
+            float volumeMul = SalesVolumeMultiplier(item);
+            if (volumeMul != 1f) rawSold *= Mathf.Max(0f, volumeMul);
+        }
         int quantitySold;
         if (rawSold >= 1f)
         {

@@ -459,6 +459,7 @@ public class BlackSmithPresenter : IPresenter, IDisposable, IStartable
         else
         {
             Debug.Log("お金が足りません！");
+            Toast.Show("お金が足りません", null, ToastKind.Warn); // #9
         }
     }
 

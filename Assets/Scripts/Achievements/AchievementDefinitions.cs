@@ -83,9 +83,11 @@ public static class AchievementDefinitions
     /// <summary>新聞社の数（実際の判定は NewsMasterLoader の社数。表示・Steam の進捗上限用）。</summary>
     public const int PaperCompanies = 5;
     /// <summary>
-    /// 「不利」以下とみなすクリア見込み(%)。PR #105 のクリア見込み5段階が main に入ったら、その段階判定に差し替える。
+    /// クリア見込み(%)が「不利」以下か（大穴の判定）。境目は画面の見込みと同じ ClearProbabilityCalculator.ToOutlook
+    /// （gameconst の clearOutlook.evenMin。既定 35 なら 35% 未満で今までと同じ）。
     /// </summary>
-    public const float LongShotClearPct = 35f;
+    public static bool IsLongShotClearPct(float clearPct)
+        => clearPct >= 0f && ClearProbabilityCalculator.ToOutlook(clearPct) <= ClearOutlook.Unfavorable;
 
     public static readonly IReadOnlyList<AchievementDefinition> All = new[]
     {

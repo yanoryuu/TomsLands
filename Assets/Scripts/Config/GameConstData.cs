@@ -78,6 +78,15 @@ public class GameConstData
     // --- 店の設備（マシン）の修理など。配信は data シートの「machine.」付きのキー ---
     public MachineSettingsData machine = new MachineSettingsData();
 
+    // --- クリア見込み（店の勇者パネル・マップ・配信の勝敗メーター）。2026-10-30 ユーザー決定「見込みに魔王の残り HP を入れる」 ---
+    // true: 負ける見込みのときの「どこまで迫れたか」を、倒した敵の数ではなく削った敵の HP の割合で測る
+    //       （ボス・魔王の残り HP がそのまま効く。配信中は場にいるボスのいまの HP を使う）。
+    // false（既定・配信に無いとき）: 今までどおり倒した敵の数の割合。data シートのキー clearOutlookProgressByEnemyHp（bool）
+    public bool clearOutlookProgressByEnemyHp = false;
+    // 見込みの段階（楽勝／有利／互角／不利／絶望）の境目（表示％）。data シートのキー clearOutlook.easyMin など。
+    // 画面の見込みと魔王軍支援のオッズの段（streamTuning.supportOdds*）は同じこの境目を使う。既定は今の 75 / 63 / 35 / 15
+    public ClearOutlookSettingsData clearOutlook = new ClearOutlookSettingsData();
+
     /// <summary>
     /// 配列まで含めた深いコピーを返す（ベイク済みアセットを実行時に汚染しないため）。
     /// </summary>
@@ -111,8 +120,19 @@ public class GameConstData
         clone.machine = machine != null
             ? machine.Clone()
             : new MachineSettingsData();
+        clone.clearOutlook = clearOutlook != null ? clearOutlook.Clone() : new ClearOutlookSettingsData();
+        // >>> 配信の調整キー・ボスの反応（2026-10-30。StreamTuning.cs）
+        clone.streamTuning = streamTuning != null ? streamTuning.Clone() : new StreamTuningData();
+        clone.bossReaction = bossReaction != null ? bossReaction.Clone() : new BossReactionSettingsData();
+        // <<<
         return clone;
     }
+
+    // >>> 配信の調整キー・ボスの反応（2026-10-30。クラスは Assets/Scripts/Streaming/StreamTuning.cs。既定値はどれも今の動き）
+    // data シートのキー: streamTuning.supportOddsEasy など / bossReaction.uiEnabled など
+    public StreamTuningData streamTuning = new StreamTuningData();
+    public BossReactionSettingsData bossReaction = new BossReactionSettingsData();
+    // <<<
 }
 
 /// <summary>
@@ -287,6 +307,14 @@ public class VillageSettingsData
     public int[] rankBaseProfits = { 60000, 130000, 220000 };
     public float rankSRatio = 2f;
     public float rankBRatio = 0.4f;
+    // >>> ランクの基準を村の総合Lv で伸ばす（2026-10-30 審議 L2-P2a。StreamTuning.RankBase。既定 0 = 今の動き）
+    /// <summary>ランク A の基準に足す額（村の総合Lv 1 あたり。全難易度共通）。例: 40000 で Lv30 なら +120万。</summary>
+    public int rankBasePerVillageLevel = 0;
+    /// <summary>シートからランクの基準を置き換える（0 = rankBaseProfits の値。配列はシートに書けないため）。</summary>
+    public int rankBaseProfitShort = 0;
+    public int rankBaseProfitMedium = 0;
+    public int rankBaseProfitLong = 0;
+    // <<<
 
     // --- 施設の効果（index = 施設レベル。0 = 未建設。施設の最大は Lv5） ---
     // Lv5 は特殊な効果だけで、数値は Lv4 と同じ（配列の Lv5 の値は Lv4 と同じにしておく。足りなければ最後の値を使う）
@@ -308,7 +336,7 @@ public class VillageSettingsData
     public float[] tavernNewspaperDiscounts = { 0f, 0f, 0.25f, 0.5f, 0.65f, 0.65f };
     /// <summary>酒場: 取引所（ファンド）の売買手数料の引き下げ幅（率のポイント）。</summary>
     public float[] tavernFundFeeReductions = { 0f, 0f, 0f, 0.01f, 0.02f, 0.02f };
-    /// <summary>酒場: 占い師の値段（0 = 通常の値段 ProphetFortune.Cost のまま）。</summary>
+    /// <summary>酒場: 占い師の枠に入れる 1 回の代金（0 = 通常の値段 ProphetTuning.Cost のまま。ProphetInterventionModel.Cost）。</summary>
     public int[] tavernProphetPrices = { 0, 0, 0, 0, 10000, 10000 };
     /// <summary>職人組合: ラン開始時の鍛冶屋のレベル（0 = そのまま）。</summary>
     public int[] artisanStartBlacksmithLevels = { 0, 2, 2, 2, 3, 3 };

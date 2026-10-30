@@ -141,6 +141,10 @@ public static class RemoteBalance
 
         // dungeonLevels（行ごと。不正な行は読み飛ばす）
         _dungeonLevels = ParseDungeonLevels(root["dungeonLevels"]);
+        _dungeonPhases = ParseDungeonPhases(root["dungeonPhases"]); // 敵・ダンジョン構成（下の区画）
+        // >>> ボスの反応の表（bal_bossReaction。空なら今と同じ動き。Assets/Scripts/Streaming/BossReaction.cs）
+        BossReactionTable.Load(root[BossReactionTable.RemoteKey]);
+        // <<<
 
         Debug.Log($"[RemoteBalance] version {version} を適用（single={_sections.Count}, list={_lists.Count}, heroLevels={(_heroLevels?.Count ?? 0)}, events={(_events?.Count ?? 0)}, dungeonLevels={(_dungeonLevels?.Count ?? 0)}）");
         return version;
@@ -348,5 +352,150 @@ public static class RemoteBalance
         _heroLevels = null;
         _events = null;
         _dungeonLevels = null;
+        _dungeonPhases = null;
+        BossReactionTable.Clear(); // ボスの反応の表（2026-10-30）
+    }
+
+    // ==== 敵・ダンジョン構成（2026-10-30。シート bal_enemies / bal_dungeons の敵の倍率 / dungeonPhases） ====
+    // 配信に無ければ今までどおり（アセットの敵・構成・倍率 1）。実際に戦うウェーブ列は DungeonWaveSource が組み立てる。
+
+    /// <summary>dungeonPhases の 1 行（= 実際に戦う 1 ウェーブ）。PhaseType は "normal"/"midboss"/"boss"（空なら敵から決める）。</summary>
+    public sealed class DungeonPhaseRow
+    {
+        public string DungeonId;
+        public int Level;
+        public int Phase;
+        public string PhaseType;
+        public List<string> EnemyIds = new();
+    }
+
+    // "dungeonId|level" -> phase 昇順の行
+    private static Dictionary<string, List<DungeonPhaseRow>> _dungeonPhases;
+
+    private static string PhaseKey(string dungeonId, int level) => dungeonId + "|" + level;
+
+    /// <summary>
+    /// 形: "dungeonPhases": [ { "dungeonId": "DemonKingCastle", "level": 1, "phase": 1, "phaseType": "normal",
+    ///                          "enemyIds": ["demon1", "demon2"] }, ... ]
+    /// enemyIds はカンマ区切りの文字列でも可。dungeonId / level / phase が不正な行・敵が空の行は読み飛ばす。
+    /// 同じ dungeonId × level × phase が 2 行あれば下の行。
+    /// </summary>
+    private static Dictionary<string, List<DungeonPhaseRow>> ParseDungeonPhases(JToken token)
+    {
+        if (token is not JArray arr || arr.Count == 0) return null;
+        var map = new Dictionary<string, List<DungeonPhaseRow>>();
+        foreach (var el in arr)
+        {
+            if (el is not JObject eo) continue;
+            string id = (eo.Value<string>("dungeonId") ?? eo.Value<string>("id"))?.Trim();
+            int? level = ReadNonNegativeInt(eo["level"]);
+            int? phase = ReadNonNegativeInt(eo["phase"]);
+            var ids = new List<string>();
+            var idsTok = eo["enemyIds"];
+            if (idsTok is JArray idArr)
+            {
+                foreach (var t in idArr)
+                {
+                    var s = t?.ToString().Trim();
+                    if (!string.IsNullOrEmpty(s)) ids.Add(s);
+                }
+            }
+            else if (idsTok != null && idsTok.Type == JTokenType.String)
+            {
+                foreach (var s in ((string)idsTok).Split(','))
+                    if (!string.IsNullOrWhiteSpace(s)) ids.Add(s.Trim());
+            }
+
+            if (string.IsNullOrEmpty(id) || level == null || level < 1 || phase == null || ids.Count == 0)
+            {
+                Debug.LogWarning($"[RemoteBalance] dungeonPhases の行を読み飛ばします（dungeonId / level / phase / enemyIds が不正）: {eo.ToString(Newtonsoft.Json.Formatting.None)}");
+                continue;
+            }
+
+            var key = PhaseKey(id, level.Value);
+            if (!map.TryGetValue(key, out var rows)) map[key] = rows = new List<DungeonPhaseRow>();
+            rows.RemoveAll(r => r.Phase == phase.Value);
+            rows.Add(new DungeonPhaseRow
+            {
+                DungeonId = id,
+                Level = level.Value,
+                Phase = phase.Value,
+                PhaseType = eo.Value<string>("phaseType")?.Trim() ?? "",
+                EnemyIds = ids,
+            });
+        }
+        foreach (var rows in map.Values) rows.Sort((a, b) => a.Phase.CompareTo(b.Phase));
+        return map.Count > 0 ? map : null;
+    }
+
+    /// <summary>配信の dungeonPhases にこのダンジョン×レベルの行があれば true（phase 昇順）。</summary>
+    public static bool TryGetDungeonPhases(string dungeonId, int level, out IReadOnlyList<DungeonPhaseRow> rows)
+    {
+        rows = null;
+        if (_dungeonPhases == null || string.IsNullOrEmpty(dungeonId)) return false;
+        if (!_dungeonPhases.TryGetValue(PhaseKey(dungeonId, level), out var list) || list.Count == 0) return false;
+        rows = list;
+        return true;
+    }
+
+    /// <summary>ダンジョンごとの敵の倍率（bal_dungeons の enemyHpRate / enemyAtkRate / enemyDefRate。無ければ 1）。</summary>
+    public readonly struct EnemyRates
+    {
+        public readonly float Hp, Atk, Def;
+        public EnemyRates(float hp, float atk, float def) { Hp = hp; Atk = atk; Def = def; }
+        public static EnemyRates One => new(1f, 1f, 1f);
+        public bool IsOne => Mathf.Approximately(Hp, 1f) && Mathf.Approximately(Atk, 1f) && Mathf.Approximately(Def, 1f);
+        public override string ToString() => $"{Hp:0.###}/{Atk:0.###}/{Def:0.###}";
+    }
+
+    /// <summary>
+    /// "dungeons" 区画の id = dungeonId の行から敵の倍率を読む（数値・数値の文字列どちらでも可）。
+    /// 区画・行・項目が無い／0 以下／数でない ときは 1（今までどおり）。
+    /// </summary>
+    public static EnemyRates GetDungeonEnemyRates(string dungeonId)
+    {
+        if (string.IsNullOrEmpty(dungeonId)) return EnemyRates.One;
+        if (!_lists.TryGetValue("dungeons", out var map) || !map.TryGetValue(dungeonId, out var raw)) return EnemyRates.One;
+        JObject o;
+        try { o = JObject.Parse(raw); }
+        catch { return EnemyRates.One; }
+        return new EnemyRates(ReadRate(o["enemyHpRate"]), ReadRate(o["enemyAtkRate"]), ReadRate(o["enemyDefRate"]));
+    }
+
+    private static float ReadRate(JToken t)
+    {
+        if (t == null || t.Type == JTokenType.Null) return 1f;
+        double d;
+        if (t.Type == JTokenType.Integer || t.Type == JTokenType.Float) d = t.Value<double>();
+        else if (t.Type == JTokenType.String && double.TryParse(((string)t).Trim(), System.Globalization.NumberStyles.Float,
+                     System.Globalization.CultureInfo.InvariantCulture, out var s)) d = s;
+        else return 1f;
+        return double.IsNaN(d) || double.IsInfinity(d) || d <= 0 ? 1f : (float)d;
+    }
+
+    /// <summary>リスト区画の 1 要素だけ id 突合で上書き（ApplyList と同じ複製を使い回す）。</summary>
+    public static T ApplyOne<T>(string section, T item, Func<T, string> idSelector) where T : ScriptableObject
+    {
+        if (item == null) return null;
+        var list = ApplyList(section, new List<T> { item }, idSelector);
+        return list != null && list.Count > 0 ? list[0] : item;
+    }
+
+    /// <summary>
+    /// 実際に戦う敵の値: bal_enemies（"enemies" 区画）を当て、ダンジョンの倍率を掛けた複製を返す。
+    /// どちらも無ければ元のアセットそのもの（今までどおり）。丸めは max(1, round(HP×倍率)) / max(0, round(攻撃・防御×倍率))。
+    /// </summary>
+    public static EnemyData ResolveEnemy(EnemyData enemy, string dungeonId, EnemyRates rates)
+    {
+        if (enemy == null) return null;
+        var applied = ApplyOne("enemies", enemy, e => e.enemyId);
+        if (rates.IsOne) return applied;
+        return _clones.GetOrCreate("enemyRates/" + dungeonId + "/" + rates, applied, clone =>
+        {
+            clone.hp = Mathf.Max(1, Mathf.RoundToInt(applied.hp * rates.Hp));
+            clone.attackPower = Mathf.Max(0, Mathf.RoundToInt(applied.attackPower * rates.Atk));
+            clone.defensePower = Mathf.Max(0, Mathf.RoundToInt(applied.defensePower * rates.Def));
+            return true;
+        });
     }
 }

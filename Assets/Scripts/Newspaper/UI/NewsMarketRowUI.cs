@@ -36,6 +36,8 @@ public class NewsMarketRowUI : MonoBehaviour
         _ => "全体",
     };
 
+    private int? lastPct;
+
     public void SetData(NewsMarketSummary.Row row)
     {
         if (iconImage != null) iconImage.enabled = iconImage.sprite != null;
@@ -52,6 +54,10 @@ public class NewsMarketRowUI : MonoBehaviour
             int pct = Mathf.RoundToInt(row.changeRate * 100f);
             changeText.text = row.hasData ? (pct > 0 ? $"+{pct}%" : pct < 0 ? $"-{-pct}%" : "0%") : "-";
             changeText.color = pct > 0 ? upColor : pct < 0 ? downColor : flatColor;
+            // #12 前に見た変動率から動いていたら、上がった/下がったを見せる（色は部品が元に戻す）
+            if (row.hasData && lastPct.HasValue && lastPct.Value != pct)
+                PriceChangeFx.Play(changeText, pct > lastPct.Value ? 1 : -1);
+            lastPct = row.hasData ? pct : (int?)null;
         }
 
         if (heatDot != null && heatSprites != null && row.heatLevel >= 0 && row.heatLevel < heatSprites.Length

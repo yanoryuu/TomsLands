@@ -312,46 +312,71 @@ public sealed class AutoPlayOracleBot : AutoPlayStrategyBotBase
 ///   上がると読んだ品 … 効き始めるまで並べずに持ち、効いている間に並べて売る（客の数 × HoldDays 日分まで仕入れる）
 ///   下がると読んだ品 … 仕入れず、在庫は先に並べて売り切る
 /// 残りの予算は capaware と同じ（おすすめ順・客の数 × 1.5 日分）。
-/// fortune = true なら、占い師の見立て（FortuneDirection）が「下がる」品は記事を信じず外す（裏取り）。
+/// prophet = true なら、占い師の枠も使う（ProphetAutoRule。力が満タンの日に 1 つ。上げる枠＝読んだ記事で上がる品で在庫の値打ちが大きい品、
+/// 下げる枠＝安く仕入れたい品（記事で 2 日以上先に上がる品・次の配信の弱点の品））。
 /// </summary>
-/// <summary>営業日の計画の前に占い師に占ってもらうか（AutoPlayRunner が先に占ってからスナップショットを取り直す）。</summary>
-public interface IAutoPlayFortuneBot
-{
-    bool WantsFortune(AutoPlaySnapshot s);
-}
-
-public sealed class AutoPlayReaderBot : AutoPlayStrategyBotBase, IAutoPlayFortuneBot
+public sealed class AutoPlayReaderBot : AutoPlayStrategyBotBase
 {
     private readonly string _name;
-    private readonly bool _fortune;
+    private readonly bool _prophet;
     private readonly bool _readNews;
     public float UpThreshold = 0.25f;
     public float HoldDays = 3f;
     public int ReserveForNews = 20000;
-    /// <summary>占うのは所持金がこれ以上のときだけ（15,000G は元手が小さいうちは重い）。</summary>
-    public int FortuneMinMoney = 150000;
 
-    /// <param name="fortune">占い師を使う</param>
-    /// <param name="readNews">新聞を読む（false なら記事を使わない＝占いだけで張る）</param>
-    public AutoPlayReaderBot(string name = "reader", bool fortune = false, bool readNews = true)
+    /// <param name="prophet">占い師の枠を使う</param>
+    /// <param name="readNews">新聞を読む（false なら記事を使わない）</param>
+    public AutoPlayReaderBot(string name = "reader", bool prophet = false, bool readNews = true)
     {
-        _name = name; _fortune = fortune; _readNews = readNews;
+        _name = name; _prophet = prophet; _readNews = readNews;
     }
     public override string Name => _name;
 
-    /// <summary>所持金に余裕がある日に占う（記事を読む側は、まだ効いていない「上がる」記事があるときだけ＝裏取り）。</summary>
-    public bool WantsFortune(AutoPlaySnapshot s)
+    /// <summary>
+    /// 占い師の枠の候補（解放済みの品）。読んだ記事で上がる品＝NewsUp、記事で 2 日以上先に上がる品・次の配信の弱点の品＝WantToBuy。
+    /// ProphetAutoRule が実際に選ぶ（プレイ中の自動プレイと同じ決まり）。
+    /// </summary>
+    public static List<ProphetAutoCandidate> ProphetCandidates(AutoPlaySnapshot s, bool readNews, float upThreshold) =>
+        s.Items.Where(i => i.Unlocked).Select(i => new ProphetAutoCandidate
+        {
+            ItemId = i.Id,
+            Price = i.Price,
+            Stock = i.Stock,
+            NewsUp = readNews && i.ReadNewsBias >= upThreshold,
+            WantToBuy = (readNews && i.ReadNewsBias >= upThreshold && i.ReadNewsDaysToEffect >= 2)
+                        || (!string.IsNullOrEmpty(s.NextStreamWeakness) && i.Attribute == s.NextStreamWeakness
+                            && (i.Type == "Weapon" || i.Type == "Armor")),
+        }).ToList();
+
+    /// <summary>スナップショットの枠から「入れられるか」を見る（空いている枠・もう片方と別の品）。本物の判定は PlaceProphet の TryPlace。</summary>
+    public static bool CanPlaceFromSnapshot(AutoPlaySnapshot s, string itemId, ProphetDirection d)
     {
-        if (!_fortune) return false;
+        string mine = d == ProphetDirection.Up ? s.ProphetUpItem : s.ProphetDownItem;
+        string other = d == ProphetDirection.Up ? s.ProphetDownItem : s.ProphetUpItem;
+        return string.IsNullOrEmpty(mine) && other != itemId;
+    }
+
+    /// <summary>占い師の枠を ProphetAutoRule で決めて plan に積み、代金の見込みを返す。</summary>
+    public static int PlanProphet(AutoPlaySnapshot s, AutoPlayDayPlan plan, bool readNews, float upThreshold)
+    {
         int reserve = s.TurnsUntilDebt <= 2 ? s.NextDebtAmount : 0;
-        if (s.Money - ProphetFortune.CurrentCost - reserve < FortuneMinMoney) return false;
-        return !_readNews || s.Items.Any(i => i.Unlocked && i.ReadNewsBias >= UpThreshold && i.ReadNewsDaysToEffect > 0);
+        var pick = ProphetAutoRule.Choose(s.ProphetPower, s.ProphetMaxPower, s.ProphetCost, s.Money - reserve,
+            ProphetCandidates(s, readNews, upThreshold), (id, d) => CanPlaceFromSnapshot(s, id, d));
+        plan.Decisions.Add(new AutoPlayDecision
+        {
+            Turn = s.RunTurn, Phase = "day", Question = "prophet",
+            Chosen = pick.IsNone ? $"none: {pick.Reason}" : $"{(pick.Direction == ProphetDirection.Up ? "up" : "down")}:{pick.ItemId} ({pick.Reason})",
+        });
+        if (pick.IsNone) return 0;
+        plan.ProphetItem = pick.ItemId;
+        plan.ProphetDirection = pick.Direction;
+        return s.ProphetCost;
     }
 
     protected override int Invest(AutoPlaySnapshot s, AutoPlayDayPlan plan)
     {
         int reserve = s.TurnsUntilDebt <= 2 ? s.NextDebtAmount : 0;
-        int spentNews = 0;
+        int spentNews = _prophet ? PlanProphet(s, plan, _readNews, UpThreshold) : 0;
         // 購読（貪欲の基準は「6万G 余るときだけ」。読む側はもっと積極的に取る）
         if (_readNews && plan.SubscribeNewspapers.Count == 0 && s.SubscriptionUsed < s.SubscriptionSlots)
         {
@@ -369,18 +394,9 @@ public sealed class AutoPlayReaderBot : AutoPlayStrategyBotBase, IAutoPlayFortun
 
         int budget = Mathf.Max(0, plan.AutoBuyBudget - spentNews);
         var unlocked = s.Items.Where(i => i.Unlocked).ToList();
-        // 占いに「上がる」と出なかった品は、記事を信じない（誤報の疑い）
-        bool Doubted(AutoPlayItemView i) => _fortune && i.FortuneDirection.HasValue && i.FortuneDirection.Value <= 0;
-        var up = !_readNews ? new List<AutoPlayItemView>() : unlocked.Where(i => i.ReadNewsBias >= UpThreshold && i.ReadNewsDaysToEffect >= 0 && !Doubted(i))
+        var up = !_readNews ? new List<AutoPlayItemView>() : unlocked.Where(i => i.ReadNewsBias >= UpThreshold && i.ReadNewsDaysToEffect >= 0)
             .OrderBy(i => i.ReadNewsDaysToEffect).ThenByDescending(i => i.ReadNewsBias).ToList();
-        // 占いで「上がる」と出た品も張る（効く日は分からないので、今日は並べずに持つ）
-        if (_fortune)
-            foreach (var i in unlocked.Where(i => i.FortuneDirection.HasValue && i.FortuneDirection.Value > 0 && !up.Contains(i)))
-            {
-                if (i.ReadNewsDaysToEffect < 0) i.ReadNewsDaysToEffect = 1;
-                up.Add(i);
-            }
-        var down = unlocked.Where(i => (_readNews && i.ReadNewsBias <= -UpThreshold) || (i.FortuneDirection.HasValue && i.FortuneDirection.Value < 0)).Where(i => !up.Contains(i)).ToList();
+        var down = unlocked.Where(i => _readNews && i.ReadNewsBias <= -UpThreshold).Where(i => !up.Contains(i)).ToList();
 
         // 効き始める前の品は持つ。効いている品（0日）は売る
         int spent = AutoPlayCapAwareBot.BuyByCustomers(s, plan, up, budget, HoldDays, 99);
@@ -416,7 +432,7 @@ public sealed class AutoPlayAttributeGearBot : AutoPlayStrategyBotBase
 
 public static class AutoPlayStrategyBots
 {
-    public static readonly string[] All = { "follower", "golem", "bond", "upgrade", "upgrade_lite", "max", "bargain", "capaware", "oracle", "oracle_hold", "gear_attr", "reader", "reader_fortune", "fortune" };
+    public static readonly string[] All = { "follower", "golem", "bond", "upgrade", "upgrade_lite", "max", "bargain", "capaware", "oracle", "oracle_hold", "gear_attr", "reader", "reader_prophet", "prophet" };
 
     public static IAutoPlayBot Create(string name) => name switch
     {
@@ -432,8 +448,8 @@ public static class AutoPlayStrategyBots
         "gear_attr" => new AutoPlayAttributeGearBot(),
         "oracle_hold" => new AutoPlayOracleBot("oracle_hold", true),
         "reader" => new AutoPlayReaderBot(),
-        "reader_fortune" => new AutoPlayReaderBot("reader_fortune", true),
-        "fortune" => new AutoPlayReaderBot("fortune", true, readNews: false),
+        "reader_prophet" => new AutoPlayReaderBot("reader_prophet", prophet: true),
+        "prophet" => new AutoPlayReaderBot("prophet", prophet: true, readNews: false),
         _ => null,
     };
 }

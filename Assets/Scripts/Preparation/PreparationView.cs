@@ -147,7 +147,11 @@ public class PreparationView : MonoBehaviour
         if (graceButton != null) graceButton.onClick.AddListener(() => { UIFx.Pop(graceButton.transform); OnGraceToggled.OnNext(Unit.Default); });
         if (relicPrevButton != null) relicPrevButton.onClick.AddListener(() => ScrollRelics(-1));
         if (relicNextButton != null) relicNextButton.onClick.AddListener(() => ScrollRelics(1));
-        if (departButton != null) departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
+        if (departButton != null)
+        {
+            departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
+            ButtonFeel.SetPrimary(departButton); // #4 この画面で次に押してほしいボタン
+        }
         if (backButton != null) backButton.onClick.AddListener(() => OnBack.OnNext(Unit.Default));
 
         SetupFocusScope();
@@ -183,9 +187,9 @@ public class PreparationView : MonoBehaviour
         float step = viewport.rect.width * 0.8f / overflow;
         float target = Mathf.Clamp01(relicScroll.horizontalNormalizedPosition + dir * step);
         relicScroll.StopMovement();
-        DOTween.To(() => relicScroll.horizontalNormalizedPosition,
+        UIMotion.Run(DOTween.To(() => relicScroll.horizontalNormalizedPosition,
                 v => relicScroll.horizontalNormalizedPosition = v, target, 0.25f)
-            .SetEase(Ease.OutCubic).SetLink(gameObject);
+            .SetEase(Ease.OutCubic), gameObject);
     }
 
     /// <summary>パッド/キー用のフォーカス単位。Cancel=戻る。出店ボタンは誤爆防止のため最初には選ばない。</summary>
@@ -224,11 +228,23 @@ public class PreparationView : MonoBehaviour
         }
     }
 
-    /// <summary>村資金の残高表示を更新する。</summary>
+    private int? shownFunds;
+    private int? shownCarry;
+
+    /// <summary>村資金の残高表示を更新する。額が変わったら #2 数字を回して弾ませる（初回は即）。</summary>
     public void UpdateVillageFunds(int amount)
     {
-        if (metaCurrencyText != null)
-            metaCurrencyText.text = villageFundsLabelText != null ? $"{amount:N0}G" : $"村資金 {amount:N0}G";
+        if (metaCurrencyText == null) return;
+        int? prev = shownFunds;
+        shownFunds = amount;
+        System.Func<long, string> format = v => villageFundsLabelText != null ? $"{v:N0}G" : $"村資金 {v:N0}G";
+        if (!prev.HasValue || prev.Value == amount)
+        {
+            metaCurrencyText.text = format(amount);
+            return;
+        }
+        UIMotion.CountTo(metaCurrencyText, prev.Value, amount, format, 0.5f);
+        UIMotion.Bump(metaCurrencyText.transform);
     }
 
     public void UpdateDifficulty(string label)
@@ -245,7 +261,22 @@ public class PreparationView : MonoBehaviour
     public void UpdateCarry(int amount, int carryLimit, int bankLevel, bool isLimitMax)
     {
         if (borrowAmountText != null)
-            borrowAmountText.text = carryLabelText != null ? $"{amount:N0}G" : $"持ち込み {amount:N0}G";
+        {
+            // #2 持ち込み額が変わったら数字を回して弾ませる。AutoPlay が「＋」の後にこの文字を読んで上限を見分けるので、
+            // 次の操作（ActionWait 0.8 秒）より十分短く回し終える（省略モードでは即）
+            int? prev = shownCarry;
+            shownCarry = amount;
+            System.Func<long, string> format = v => carryLabelText != null ? $"{v:N0}G" : $"持ち込み {v:N0}G";
+            if (!prev.HasValue || prev.Value == amount)
+            {
+                borrowAmountText.text = format(amount);
+            }
+            else
+            {
+                UIMotion.CountTo(borrowAmountText, prev.Value, amount, format, 0.3f);
+                UIMotion.Bump(borrowAmountText.transform, 1.1f, 0.18f);
+            }
+        }
         if (creditLineText != null)
             creditLineText.text = $"上限 {carryLimit:N0}G（銀行Lv{bankLevel}）";
         if (creditUpgradeCostText != null)
@@ -379,7 +410,10 @@ public class PreparationView : MonoBehaviour
 
         for (int i = parent.childCount - 1; i >= 0; i--)
         {
-            Destroy(parent.GetChild(i).gameObject);
+            // 消すのは次のフレームなので、先に隠してレイアウトから外す（並び直し・めくりの位置が古い札でずれないように）
+            var old = parent.GetChild(i).gameObject;
+            old.SetActive(false);
+            Destroy(old);
         }
 
         for (int i = 0; i < count; i++)
@@ -391,4 +425,32 @@ public class PreparationView : MonoBehaviour
     }
 
     public Transform RelicCatalogParent => relicCatalogParent;
+
+    /// <summary>
+    /// #11 並べたスターターレリックの札を左から順にめくって見せる（表は真横になった瞬間に出す）。
+    /// rarityOf(i) が Epic の札は溜めてからめくって金に光り、#8 Rare 以上のアイコンには時々光が走る。
+    /// 省略モードでは回さずに表を出したまま（最終状態は同じ）。
+    /// </summary>
+    public void RevealCatalog(IReadOnlyList<PreparationChoiceSlot> slots, System.Func<int, RelicRarity> rarityOf)
+    {
+        if (slots == null || slots.Count == 0) return;
+        var cards = new List<RectTransform>(slots.Count);
+        for (int i = 0; i < slots.Count; i++)
+        {
+            var slot = slots[i];
+            cards.Add(slot != null ? (RectTransform)slot.transform : null);
+            if (slot == null) continue;
+            var rarity = rarityOf != null ? rarityOf(i) : RelicRarity.Common;
+            if (rarity >= RelicRarity.Rare && slot.IconRect != null) IconGlint.Attach(slot.IconRect);
+        }
+        // 位置を確定してからめくる（溜めの浮きは今の位置へ戻すため）
+        if (relicCatalogParent is RectTransform parentRect) LayoutRebuilder.ForceRebuildLayoutImmediate(parentRect);
+        if (UIMotion.IsSkip) return; // 表を出したまま
+        foreach (var slot in slots)
+            if (slot != null) slot.SetFaceVisible(false);
+        CardFlip.FlipAll(cards, i =>
+        {
+            if (slots[i] != null) slots[i].SetFaceVisible(true);
+        }, i => rarityOf != null && rarityOf(i) == RelicRarity.Epic);
+    }
 }

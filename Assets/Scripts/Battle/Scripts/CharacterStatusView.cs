@@ -25,6 +25,15 @@ public class CharacterStatusView : MonoBehaviour
     private CancellationTokenSource damageFlashCts;
     private int damageFlashVersion;
     private readonly CompositeDisposable subscriptions = new();
+    private IBattleCharacterViewModel boundViewModel;
+
+    /// <summary>
+    /// #14 ダメージ数字の層の並び順。配信画面の UI（Canvas 0〜12）より上、ホバー説明（500）より下。
+    /// 演出用レイヤーは並び順ごとに 1 つ作られる（DamageNumber.SortingOrder は出す間だけ切り替えて戻す）。
+    /// </summary>
+    private const int DamageNumberOrder = 400;
+    /// <summary>この割合以上を一撃で削ったらクリティカル表示（配信コメントの HeroCritical と同じ目安）。</summary>
+    private const float CriticalDamageRatio = 0.5f;
 
     private void Awake()
     {
@@ -63,6 +72,7 @@ public class CharacterStatusView : MonoBehaviour
     {
         subscriptions.Clear();
         ResetDamageFlash();
+        boundViewModel = viewModel;
 
         viewModel.CurrentHp.Pairwise()
             .Subscribe(pair => HandleHpChanged(pair.Current, pair.Previous))
@@ -81,18 +91,20 @@ public class CharacterStatusView : MonoBehaviour
         int damage = previous - current;
         if (damage > 0)
             PlayDamageEffects(damage);
+        else if (damage < 0 && previous > 0)
+            SpawnNumber(-damage, DamageKind.Heal); // 回復（緑の +N）
 
         UpdateHpText(current);
     }
 
-    /// <summary>ダメージ演出（ポップアップと赤フラッシュ）。</summary>
+    /// <summary>ダメージ演出（ダメージ数字と赤フラッシュ）。</summary>
     public void PlayDamageEffects(int damageAmount)
     {
-        if (damagePopupPrefab != null && popupContainer != null)
-        {
-            DamagePopup popup = Instantiate(damagePopupPrefab, popupContainer);
-            popup.ShowAsync(damageAmount).Forget();
-        }
+        // #14 ダメージ数字（共通部品。キャラの頭上に弾んで出る）。従来の DamagePopup（上へ消える「-N」）の置き換え。
+        // 省略モードでは出ない（従来のポップアップも 0.5 秒で消えるだけで、残る状態は無い）
+        int maxHp = boundViewModel != null ? boundViewModel.MaxHp : 0;
+        bool critical = maxHp > 0 && damageAmount >= maxHp * CriticalDamageRatio;
+        SpawnNumber(damageAmount, critical ? DamageKind.Critical : DamageKind.Normal);
         damageFlashCts?.Cancel();
         damageFlashCts?.Dispose();
         damageFlashCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
@@ -116,6 +128,30 @@ public class CharacterStatusView : MonoBehaviour
             if (version == damageFlashVersion)
                 SetFlash(false);
         }
+    }
+
+    /// <summary>キャラの絵の頭上（レンダラーの上端の中央）に数字を出す。絵が無ければ自分の位置。</summary>
+    private void SpawnNumber(int amount, DamageKind kind)
+    {
+        if (amount <= 0 || !isActiveAndEnabled || UIMotion.IsSkip) return;
+        var cam = Camera.main;
+        if (cam == null) return;
+
+        Vector3 pos = transform.position;
+        bool hasBounds = false;
+        Bounds b = default;
+        foreach (var r in flashRenderers)
+        {
+            if (r == null || !r.enabled || !r.gameObject.activeInHierarchy) continue;
+            if (!hasBounds) { b = r.bounds; hasBounds = true; }
+            else b.Encapsulate(r.bounds);
+        }
+        if (hasBounds) pos = new Vector3(b.center.x, b.max.y, b.center.z);
+
+        int prev = DamageNumber.SortingOrder;
+        DamageNumber.SortingOrder = DamageNumberOrder;
+        DamageNumber.SpawnAtWorld(pos, amount, kind, cam);
+        DamageNumber.SortingOrder = prev;
     }
 
     private void ResetDamageFlash()

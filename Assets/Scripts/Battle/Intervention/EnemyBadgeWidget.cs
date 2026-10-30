@@ -40,14 +40,18 @@ public class EnemyBadgeWidget : MonoBehaviour
         if (hpFill != null)
         {
             hpFill.color = HpColor(hp);
-            if (_hp < 0f || !isActiveAndEnabled)
+            // #10 ゲージの残像（共通部品 TrailGauge）: 減ると白い残像が遅れて追い、バーが揺れる。従来の DOFillAmount の置き換え。
+            // 値は必ず SetValue で入れる（直接 fillAmount を書くと残像がずれる）。省略モード・非表示中は即座に新しい値
+            _hpTween?.Kill();
+            var gauge = TrailGauge.Attach(hpFill);
+            if (gauge != null)
+            {
+                if (_hp < 0f || !isActiveAndEnabled) gauge.SetValue(hp, animate: false);
+                else if (!Mathf.Approximately(_hp, hp)) gauge.SetValue(hp);
+            }
+            else
             {
                 hpFill.fillAmount = hp;
-            }
-            else if (!Mathf.Approximately(_hp, hp))
-            {
-                _hpTween?.Kill();
-                _hpTween = hpFill.DOFillAmount(hp, 0.25f).SetEase(Ease.OutCubic).SetUpdate(true).SetLink(gameObject);
             }
         }
         _hp = hp;

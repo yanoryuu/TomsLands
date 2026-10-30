@@ -189,8 +189,21 @@ public class ShopMachineView : MonoBehaviour
         if (focusScope != null && slots.Count > 0)
             focusScope.FirstSelected = slots[0].GetComponent<Selectable>();
         RefocusList(slots, prevIndex);
+
+        // #3 画面を開いて最初のカタログだけ札を順に出す（買った・置いた直後の作り直しでは動かさない）
+        if (staggerNextCatalog && catalogParent.gameObject.activeInHierarchy)
+        {
+            staggerNextCatalog = false;
+            var rows = new List<RectTransform>();
+            foreach (var s in slots) if (s != null && s.transform is RectTransform rt) rows.Add(rt);
+            UIMotion.Stagger(rows, 0.05f);
+        }
         return slots;
     }
+
+    private bool staggerNextCatalog = true;
+
+    private void OnEnable() => staggerNextCatalog = true;
 
     public void UpdateSlotCounter(int used, int max)
     {

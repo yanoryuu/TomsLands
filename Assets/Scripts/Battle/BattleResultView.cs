@@ -63,6 +63,8 @@ public class BattleResultView : MonoBehaviour
             confirmButton.onClick.AddListener(OnConfirmClicked);
         }
         if (resultTitleText != null) _titleBaseColor = resultTitleText.color;
+        // #4 この画面で次に押すボタン（店へ戻る）
+        if (confirmButton != null) ButtonFeel.SetPrimary(confirmButton);
 
         // パッド/キー: 確認ボタンへフォーカス（A で次へ）
         var scope = UIFocusScope.GetOrAdd(gameObject);
@@ -87,6 +89,9 @@ public class BattleResultView : MonoBehaviour
     {
         if (settlement == null) return;
         _confirmTcs = new UniTaskCompletionSource();
+
+        // #1 精算書がぽよんと開く（自分の矩形を拡縮。表示状態は BattlePanelManager が決めたまま）
+        UIMotion.Open(gameObject);
 
         ApplyTitle(settlement);
         PopulateSoldItemSlots(settlement.SoldItems);
@@ -258,8 +263,10 @@ public class BattleResultView : MonoBehaviour
     {
         if (netProfitText == null) return;
         netProfitText.gameObject.SetActive(text != null);
-        if (text != null) netProfitText.text = $"<size=50%>純利益  </size>{text}";
+        if (text != null) netProfitText.text = NetFieldText(text);
     }
+
+    private static string NetFieldText(string text) => $"<size=50%>純利益  </size>{text}";
 
     private void SetMarket(string text)
     {
@@ -283,14 +290,18 @@ public class BattleResultView : MonoBehaviour
         }
 
         // 純利益のカウントアップ（大儲けの数字を溜めてから見せる）
-        int shown = 0;
         SetNet(FormatNetLine(0, s.NetProfit));
         if (netProfitText != null) UIFx.Pop(netProfitText.transform, 0.85f, 0.18f);
-        float duration = CountUpDuration * GameSettings.EffectDurationScale;
         _countTween?.Kill();
-        _countTween = DOTween.To(() => shown, v => { shown = v; SetNet(FormatNetLine(v, s.NetProfit)); }, s.NetProfit, duration)
-            .SetEase(Ease.OutCubic)
-            .SetLink(gameObject);
+        // #2 数字を回す（共通部品。速い設定・省略は UIMotion が決める。最終の文字は SetNet と同じ）
+        int final = s.NetProfit;
+        _countTween = netProfitText != null
+            ? UIMotion.CountTo(netProfitText, 0, final, v => NetFieldText(FormatNetLine((int)v, final)), CountUpDuration)
+            : null;
+        // 儲かったときは売れた品の欄から純利益へコインが飛ぶ（演出用の層に描くので押せる物は塞がない）
+        if (final > 0 && netProfitText != null && soldItemContainer is RectTransform soldRect && soldItemContainer.childCount > 0)
+            CoinBurst.Fly(soldRect, netProfitText.rectTransform, Mathf.Clamp(4 + (int)Mathf.Log10(Mathf.Max(1, final)), 4, 10),
+                onEachArrive: () => UIMotion.Bump(netProfitText.transform, 1.06f, 0.16f));
         await DelaySeconds(CountUpDuration + 0.05f, ct);
         if (netProfitText != null)
             netProfitText.transform.DOPunchScale(Vector3.one * 0.12f, 0.3f, 6, 0.6f).SetLink(netProfitText.gameObject);
@@ -311,10 +322,15 @@ public class BattleResultView : MonoBehaviour
     {
         if (soldItemSlotPrefab == null || soldItemContainer == null) return;
 
+        // Destroy はフレームの終わりまで子に残るので、先に隠してレイアウトと順番の登場（#3）から外す
         foreach (Transform child in soldItemContainer)
+        {
+            child.gameObject.SetActive(false);
             Destroy(child.gameObject);
+        }
 
         if (soldItems == null) return;
+        var created = new List<RectTransform>();
 
         foreach (var soldItem in soldItems)
         {
@@ -325,7 +341,11 @@ public class BattleResultView : MonoBehaviour
 
             var slot = Instantiate(soldItemSlotPrefab, soldItemContainer);
             slot.Setup(runtimeItem.ItemIcon, soldItem.SoldQuantity, soldItem.Revenue);
+            if (slot.transform is RectTransform rt) created.Add(rt);
         }
+
+        // #3 売れた品が順に並んで出る
+        UIMotion.Stagger(created);
     }
 
     /// <summary>演出中なら最後まで飛ばす。演出が終わっていれば次へ進む。</summary>

@@ -7,6 +7,7 @@ from __future__ import annotations
 import contextlib
 import datetime as dt
 import io
+import json
 import sys
 import tempfile
 import unittest
@@ -459,6 +460,49 @@ class LongRunTest(unittest.TestCase):
         self.assertTrue((m.out_dir / "progress.log").exists())
         self.assertTrue((m.out_dir / "progress_2026-10-29.log").exists())
         self.assertTrue((m.out_dir / "summary_2026-10-29.md").exists())
+
+
+class SupportRatesTest(unittest.TestCase):
+    """魔王軍支援の負け率の表（metrics/support_rates.py。C# の supportByEv が読む）。"""
+
+    def _project(self):
+        project = Path(tempfile.mkdtemp(prefix="pm_rates_"))
+        rec = project / "Recordings"
+        rec.mkdir()
+        rows = [
+            {"question": "stream_result", "choice": "lose +90000G side=none", "dungeon": "DemonKingCastle", "dungeonLv": 1},
+            {"question": "stream_result", "choice": "lose +60000G side=none", "dungeon": "DemonKingCastle", "dungeonLv": 1},
+            {"question": "stream_result", "choice": "win +5000G side=none", "dungeon": "DemonKingCastle", "dungeonLv": 1},
+            {"question": "stream_result", "choice": "win +5000G side=none", "dungeon": "DeepGreenBeastForest", "dungeonLv": 0},
+            {"question": "stream_result", "choice": "aborted 0G side=none", "dungeon": "IceMistCave", "dungeonLv": 2},   # 数えない
+            {"question": "stream_result", "choice": "win +22749G side=none"},   # 2026-10-30 より前の形（dungeon なし）は数えない
+            {"question": "support", "choice": "1", "dungeon": "DemonKingCastle", "dungeonLv": 0},
+        ]
+        (rec / "persona_log_20261030_120000_x_m.jsonl").write_text(
+            "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\nnot json\n", encoding="utf-8")
+        return project
+
+    def test_collect_counts_hero_losses_by_dungeon_and_level(self):
+        sys.path.insert(0, str(HERE.parent / "metrics"))
+        import support_rates
+        data = support_rates.collect(self._project() / "Recordings")
+        self.assertEqual(data["streams"], 4)
+        self.assertEqual(data["rates"]["DemonKingCastle"]["1"], {"n": 3, "losses": 2})
+        self.assertEqual(data["rates"]["DeepGreenBeastForest"]["0"], {"n": 1, "losses": 0})
+        self.assertNotIn("IceMistCave", data["rates"])
+
+    def test_marathon_writes_table_into_library(self):
+        project = self._project()
+        path = M.update_support_rates(project)
+        self.assertEqual(path, project / "Library" / "PersonaMarathon" / "support_rates.json")
+        data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(data["rates"]["DemonKingCastle"]["1"]["losses"], 2)
+        self.assertEqual(sorted(data), ["files", "rates", "streams", "updated"])
+
+    def test_night_writes_table_after_each_run(self):
+        m, env, _ = make("ok", max_runs=1, never_record=True)
+        run_quiet(m)
+        self.assertTrue((m.project / "Library" / "PersonaMarathon" / "support_rates.json").exists())
 
 
 if __name__ == "__main__":

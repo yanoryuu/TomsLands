@@ -82,7 +82,11 @@ public class DungeonLevelUpView : MonoBehaviour
     private bool focusOnLevelUp;
     private Func<Selectable> slotFocusTarget;
 
-    private void OnEnable() => pendingFocus.Request(true);
+    private void OnEnable()
+    {
+        pendingFocus.Request(true);
+        staggerNextList = true;
+    }
 
     private void LateUpdate()
     {
@@ -137,9 +141,24 @@ public class DungeonLevelUpView : MonoBehaviour
             slot.SetSlot(dungeon);
             slots.Add(slot);
             activeSlots.Add(slot);
+            // 支援で上がったダンジョンの行（作り直した後の新しい行）のレベルを弾ませる
+            if (shownLevels.TryGetValue(dungeon.DungeonKey, out int prev) && dungeon.CurrentLevel > prev) slot.PopLevel();
+            shownLevels[dungeon.DungeonKey] = dungeon.CurrentLevel;
+        }
+
+        // #3 開いて最初の一覧だけ札を順に出す（支援した直後の作り直しでは動かさない）
+        if (staggerNextList && slotContainer != null && slotContainer.gameObject.activeInHierarchy)
+        {
+            staggerNextList = false;
+            var rows = new List<RectTransform>();
+            foreach (var s in slots) if (s != null && s.transform is RectTransform rt) rows.Add(rt);
+            UIMotion.Stagger(rows, 0.06f);
         }
         return slots;
     }
+
+    private bool staggerNextList = true;
+    private readonly Dictionary<DungeonName, int> shownLevels = new();
 
     private void PopulateMonsterContainer(Transform container, List<GameObject> objectList, List<EnemyData> monsters)
     {

@@ -230,6 +230,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         public int MachineSpend;
         public int FinanceSpend;
         public int FireSale;
+        /// <summary>占い師の枠の代金。</summary>
+        public int ProphetSpend;
         public readonly List<string> Notes = new();
     }
 
@@ -255,6 +257,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     public ScrapbookModel Scrapbook { get; private set; }
     public GameFlowManager Flow { get; private set; }
     public DungeonRepository Dungeons { get; private set; }
+    /// <summary>占い師の枠（本物の仕組み。需要への効きは本物の GameFlowManager → ItemModel が、力の戻りは本物の BattleResultHandler が呼ぶ）。</summary>
+    public ProphetInterventionModel Prophet { get; private set; }
 
     private MorningReportModel _morning;
     private PendingEventData _pendingEvent;
@@ -273,10 +277,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
     private int _lastSalesTurn = -1;
     private int _lastDayBeginTurn = -1;
 
-    // 占い師（I-11）: 買った日と見立て（品 → +1/-1）
-    private int _fortuneTurn = -1;
-    private readonly Dictionary<string, int> _fortune = new();
-    public int FortuneSpend { get; private set; }
+    /// <summary>このランで占い師の枠に払った代金の合計と、入れた回数。</summary>
+    public int ProphetSpend { get; private set; }
+    public int ProphetPlacements { get; private set; }
 
     // 読んだ記事（reader ボット用）: 事象キー → (事象, 記事から読める発効日)。訂正記事を読んだら外す
     private readonly Dictionary<string, (NewsEventInstance ev, int effectTurn)> _readEvents = new();
@@ -330,6 +333,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         NewsEffects = newsEffects;
         HeroModel = new HeroModel();
         _pendingEvent = new PendingEventData();
+        Prophet = new ProphetInterventionModel(TomsModel, ItemModel);
 
         ShopStatus = new ShopStatusModel(Assets.Balance);
         var followers = new FollowerSystem(ShopStatus, Assets.Milestones);
@@ -348,7 +352,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
         Flow = new GameFlowManager(_stateManager, Dungeons, _battleIn, ItemModel, Assets.Economy, TomsModel,
             _sceneTransition, HeroModel, _eventIn, _eventOut, _pendingEvent, Marketing, ShopStatus,
-            SellOrders, Portfolio, Machines, _morning, RelicResolver, relicHooks, News, newsEffects);
+            SellOrders, Portfolio, Machines, _morning, RelicResolver, relicHooks, News, newsEffects, Prophet);
 
         // 配信日に入ったら「寄り道ハンドラ」で止めてもらう＝FightScene へは行かずにこちらへ制御が戻る
         Flow.SetPreStreamHandler(_ => _streamPending = true);
@@ -364,6 +368,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         Portfolio.Clear();
         Machines.Clear();
         RelicInventory.Clear();
+        Prophet.Clear();
 
         TomsModel.UseAutoFlow = true;
         TomsModel.GameMode = Config.Mode;
@@ -411,6 +416,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         foreach (var so in new ScriptableObject[] { _startMode, _battleIn, _battleOut, _eventIn, _eventOut })
             if (so != null) UnityEngine.Object.DestroyImmediate(so);
         _achievements?.Dispose();
+        Prophet?.Dispose();
         Flow?.Dispose();
         _stateManager?.Dispose();
     }
@@ -638,13 +644,26 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 Customers = ItemModel.GetDailyCustomers(r),
                 RecommendScore = ItemModel.RecommendScoreOf(r),
                 OracleNewsBias = OracleBias(r),
+                ProphetSlot = ProphetSlotOf(r.ItemId),
             });
         }
+
+        // --- 占い師の枠（占い師の画面に出ている情報） ---
+        s.ProphetPower = Prophet.Power;
+        s.ProphetMaxPower = Prophet.MaxPower;
+        s.ProphetCost = Prophet.Cost;
+        var upSlot = Prophet.GetSlot(ProphetDirection.Up);
+        var downSlot = Prophet.GetSlot(ProphetDirection.Down);
+        s.ProphetUpItem = upSlot?.ItemId;
+        s.ProphetUpTurnsLeft = upSlot?.TurnsLeft ?? 0;
+        s.ProphetDownItem = downSlot?.ItemId;
+        s.ProphetDownTurnsLeft = downSlot?.TurnsLeft ?? 0;
 
         // --- ダンジョン（魔王軍支援の画面に出ている情報） ---
         foreach (var d in Dungeons.GetAll())
         {
             bool isMax = d.currentDungeonLevel >= GameConst.MaxDungeonLevel;
+            float clearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver);
             s.Dungeons.Add(new AutoPlayDungeonView
             {
                 Id = d.key.ToString(),
@@ -652,8 +671,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 Level = d.currentDungeonLevel,
                 MaxLevel = GameConst.MaxDungeonLevel,
                 SupportCost = isMax ? 0 : d.levelUpCost,
-                DefeatReward = d.rewardGold,
-                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver),
+                // 見込みの段のオッズ込み（SupportOdds。オッズが既定 1 なら rewardGold そのまま。レリックはここでは掛けない＝今と同じ）
+                DefeatReward = SupportOdds.Expected(d.rewardGold, () => clearPct, d.GetInvestedTotal(d.currentDungeonLevel)),
+                ClearChancePct = clearPct,
                 IsNextStream = next.HasValue && next.Value == d.key,
             });
         }
@@ -691,11 +711,6 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 SummaryEn = a.summaryEn,
             });
         }
-
-        // --- 占い師の見立て（買った日だけ。I-11） ---
-        if (_fortuneTurn == turnNow)
-            foreach (var iv in s.Items)
-                iv.FortuneDirection = _fortune.TryGetValue(iv.Id, out var dir) ? dir : 0;
 
         // --- 読んだ記事を覚える（reader ボット用。プレイヤーが紙面から読み取れる範囲: 効き先の推理＋社の早さから発効日） ---
         if (Stage == AutoPlayStage.ShopDay)
@@ -999,19 +1014,25 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         return AutoPlayActionResult.Success($"購読 {companyId}");
     }
 
-    /// <summary>占い師に占ってもらう（ProphetPresenter と同じ。1日1回 ProphetFortune.CurrentCost）。</summary>
-    public AutoPlayActionResult BuyFortune()
+    /// <summary>占い師の枠に品を入れる（ProphetPresenter → IProphetIntervention.TryPlace と同じ本物の仕組み。力と代金はそこで引かれる）。</summary>
+    public AutoPlayActionResult PlaceProphet(string itemId, ProphetDirection direction)
     {
-        if (_fortuneTurn == CurrentTurn) return AutoPlayActionResult.Success("今日は占い済み");
-        if (TomsModel.PlayerMoney.Value < ProphetFortune.CurrentCost) return Reject("占いの代金が足りない");
-        TomsModel.PurchaseItem(ProphetFortune.CurrentCost);
-        FortuneSpend += ProphetFortune.CurrentCost;
-        _fortuneTurn = CurrentTurn;
-        _fortune.Clear();
-        var (ups, downs) = ProphetFortune.Read(ItemModel.RuntimeItems, NewsEffects, CurrentTurn, TomsModel.FlowSeed, TomsModel.BlacksmithLevel.Value);
-        foreach (var r in ups) _fortune[r.item.ItemId] = 1;
-        foreach (var r in downs) _fortune[r.item.ItemId] = -1;
-        return AutoPlayActionResult.Success($"占い 上{ups.Count} 下{downs.Count}");
+        int before = TomsModel.PlayerMoney.Value;
+        var r = Prophet.TryPlace(itemId, direction);
+        if (r != ProphetPlaceResult.Ok) return Reject($"占い師の枠に入らない（{itemId} {direction}: {r}）");
+        int paid = before - TomsModel.PlayerMoney.Value;
+        ProphetSpend += paid;
+        ProphetPlacements++;
+        Today.ProphetSpend += paid;
+        return AutoPlayActionResult.Success($"占い師 {(direction == ProphetDirection.Up ? "上げる" : "下げる")}枠に {itemId}（-{paid}G・力 {Prophet.Power}/{Prophet.MaxPower}）");
+    }
+
+    private int ProphetSlotOf(string itemId)
+    {
+        var up = Prophet.GetSlot(ProphetDirection.Up);
+        if (up.HasValue && up.Value.ItemId == itemId) return 1;
+        var down = Prophet.GetSlot(ProphetDirection.Down);
+        return down.HasValue && down.Value.ItemId == itemId ? -1 : 0;
     }
 
     public AutoPlayActionResult PinScrap(string entryKey)
@@ -1252,12 +1273,13 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         LastBattle = outcome;
         int rawSales = outcome.RawSales;
 
-        // BattleSceneStarter.CalculateDefeatReward の写し
+        // BattleSceneStarter.CalculateDefeatReward と同じ式（SupportOdds.Payout: レリック × 配信開始時の見込みの段のオッズ）
         int defeatReward = 0;
         if (!outcome.Victory)
         {
             int reward = dungeon?.GetDefenseReward(level) ?? 0;
-            defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
+            defeatReward = SupportOdds.Payout(reward, RelicBattleEffects.DefeatRewardMul, _battleIn.PreStreamClearPct,
+                dungeon?.GetInvestedTotal(level) ?? 0).Total;
         }
 
         // 勇者敗北の返金騒ぎ（BattleSceneStarter の写し）: 負けたら武器・防具の売上の一部を返す
@@ -1285,7 +1307,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
 
         // 精算と日送りは本物のハンドラで（TomsShop 帰還時の BattleResultHandler.Start と同じ）
         var handler = new BattleResultHandler(_battleOut, _battleIn, ItemModel, _stateManager, Flow,
-            Assets.Economy, TomsModel, HeroModel, RelicRewards, null, null, RelicInventory);
+            Assets.Economy, TomsModel, HeroModel, RelicRewards, null, null, RelicInventory, Prophet);
         try
         {
             handler.Start();
@@ -1361,14 +1383,16 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         int Scale(int v) => Mathf.Max(1, Mathf.RoundToInt(v * powerMul));
         var (count, hasBoss) = AutoPlayBattleSurrogate.DescribeEnemies(dungeon, level);
 
+        float displayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver);
         var info = new AutoPlayStreamInfo
         {
             Dungeon = key.Value.ToString(),
             Level = level,
-            DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver),
+            DisplayedClearPct = displayedClearPct,
             HasBoss = hasBoss,
             EnemyCount = count,
-            DefeatReward = Mathf.RoundToInt(dungeon.GetDefenseReward(level) * rewardMul),
+            // 実際の支払いと同じ式（レリック × 見込みの段のオッズ。オッズが既定 1 なら今と同じ）
+            DefeatReward = SupportOdds.Payout(dungeon.GetDefenseReward(level), rewardMul, displayedClearPct, dungeon.GetInvestedTotal(level)).Total,
             HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
             HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
             HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,

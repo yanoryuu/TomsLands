@@ -139,30 +139,53 @@ public class AdvertisementView : MonoBehaviour
     public void UpdateTrust(int value, int max)
     {
         if (trustText != null) trustText.text = $"{value}/{max}";
+        PopStat(trustText, value, ref shownTrust);
+    }
+
+    // 開いている間に上がった値（広告を打った直後）だけ弾ませて「+N」を浮かせる。-1 はまだ出していない
+    private int shownTrust = -1, shownAttention = -1, shownSpread = -1, shownRetention = -1, shownFollowers = -1;
+
+    private static void PopStat(TextMeshProUGUI text, int value, ref int shown)
+    {
+        if (text != null && shown >= 0 && value > shown && text.gameObject.activeInHierarchy)
+        {
+            UIMotion.Bump(text.transform, 1.2f, 0.25f);
+            MoneyFx.FloatText(text.rectTransform, $"+{value - shown:#,0}", UIMotionFx.Green, 30f);
+        }
+        shown = value;
     }
 
     /// <summary>注目度の表示を更新する</summary>
     public void UpdateAttention(int value, int max)
     {
         if (attentionText != null) attentionText.text = $"{value}/{max}";
+        PopStat(attentionText, value, ref shownAttention);
     }
 
     /// <summary>拡散力の表示を更新する</summary>
     public void UpdateSpread(int value, int max)
     {
         if (spreadText != null) spreadText.text = $"{value}/{max}";
+        PopStat(spreadText, value, ref shownSpread);
     }
 
     /// <summary>顧客維持力の表示を更新する</summary>
     public void UpdateRetention(int value, int max)
     {
         if (retentionText != null) retentionText.text = $"{value}/{max}";
+        PopStat(retentionText, value, ref shownRetention);
     }
 
     /// <summary>フォロワー数の表示を更新する</summary>
     public void UpdateFollowers(int value)
     {
-        if (followerText != null) followerText.text = $"{value:#,0}";
+        if (followerText == null) return;
+        // #2 フォロワーが増えたら数字を回す（最初の表示は差し替えるだけ）
+        if (shownFollowers >= 0 && value != shownFollowers)
+            UIMotion.CountTo(followerText, shownFollowers, value, v => $"{v:#,0}", 0.6f);
+        else
+            UIMotion.CountTo(followerText, value, value, v => $"{v:#,0}");
+        PopStat(followerText, value, ref shownFollowers);
     }
 
     // =====================================================
@@ -291,6 +314,11 @@ public class AdvertisementView : MonoBehaviour
                 activeSlots.Add(slotUI);
             }
         }
+
+        // #3 広告の札を上から順に出す
+        var rows = new List<RectTransform>();
+        foreach (var s in activeSlots) if (s != null && s.transform is RectTransform rt) rows.Add(rt);
+        if (adListParent != null && adListParent.gameObject.activeInHierarchy) UIMotion.Stagger(rows, 0.06f);
 
         return activeSlots;
     }

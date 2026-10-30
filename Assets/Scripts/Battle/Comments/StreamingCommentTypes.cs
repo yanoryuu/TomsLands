@@ -62,13 +62,17 @@ public readonly struct StreamingCommentRequest
     public readonly NicoCommentPosition Position;
     /// <summary>大きいほど優先（同時表示上限を超えたとき低い方を捨てる）。</summary>
     public readonly int Priority;
+    /// <summary>スパチャ（投げ銭）のコメントか。表示側で枠付きに強調する（#15。見た目だけ）。</summary>
+    public readonly bool IsSuperChat;
 
-    public StreamingCommentRequest(string text, Color color, NicoCommentSize size, NicoCommentPosition position, int priority)
+    public StreamingCommentRequest(string text, Color color, NicoCommentSize size, NicoCommentPosition position, int priority,
+        bool isSuperChat = false)
     {
         Text = text;
         Color = color;
         Size = size;
         Position = position;
         Priority = priority;
+        IsSuperChat = isSuperChat;
     }
 }

@@ -80,6 +80,9 @@ public sealed class PersonaLogEntry
     [JsonProperty("cashStress", NullValueHandling = NullValueHandling.Ignore)] public float? CashStress;
     /// <summary>ゲームの速度（Time.timeScale）。</summary>
     [JsonProperty("timeScale", NullValueHandling = NullValueHandling.Ignore)] public float? TimeScale;
+    /// <summary>stream_result: 配信先（DungeonName の名前）と、そのときのダンジョンのLv（魔王軍支援の負け率の表 support_rates.py が数える）。</summary>
+    [JsonProperty("dungeon", NullValueHandling = NullValueHandling.Ignore)] public string Dungeon;
+    [JsonProperty("dungeonLv", NullValueHandling = NullValueHandling.Ignore)] public int? DungeonLv;
 }
 
 /// <summary>

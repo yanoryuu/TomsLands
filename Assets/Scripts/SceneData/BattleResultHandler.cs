@@ -22,6 +22,7 @@ public class BattleResultHandler : IStartable, IDisposable
     private readonly MetaProgressModel _metaProgress;
     private readonly ShopStatusModel _shopStatusModel;
     private readonly RelicInventoryModel _relicInventory;
+    private readonly ProphetInterventionModel _prophet;
     private readonly CancellationTokenSource _talkCts = new();
 
     public BattleResultHandler(
@@ -36,9 +37,11 @@ public class BattleResultHandler : IStartable, IDisposable
         RelicRewardService relicRewardService,
         MetaProgressModel metaProgress,
         ShopStatusModel shopStatusModel = null,
-        RelicInventoryModel relicInventory = null)
+        RelicInventoryModel relicInventory = null,
+        ProphetInterventionModel prophet = null)
     {
         _relicInventory = relicInventory;
+        _prophet = prophet;
         _shopStatusModel = shopStatusModel;
         _metaProgress = metaProgress;
         _outputData = outputData;
@@ -83,8 +86,10 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
-        // 村の広場: 配信で売れた額に上乗せ（途中終了でも売れた分には付く）
-        int streamBonus = VillageEffects.Current.StreamSalesBonusGold(RawStreamSales(_outputData.SoldItems));
+        // 村の広場: 配信で売れた額に上乗せ（途中終了でも売れた分には付く）。
+        // streamTuning.plazaBonusAfterRefund が on なら返金騒ぎを引いた売上に掛ける（既定 off = 返金前の売上。2026-10-30 決定）
+        int plazaBase = StreamTuning.PlazaBonusBase(RawStreamSales(_outputData.SoldItems), _outputData.HeroDefeatRefund);
+        int streamBonus = VillageEffects.Current.StreamSalesBonusGold(plazaBase);
         if (streamBonus > 0)
         {
             _tomsModel.AddRevenue(streamBonus);
@@ -224,6 +229,9 @@ public class BattleResultHandler : IStartable, IDisposable
         // 帰還の会話を流すなら、日送り（NextTurn → 店の Entry で朝の通知が始まる）より先に予約しておく。
         // 朝の通知（返済・納付・レリック選択など）は会話が終わるまで待つ（会話が始まる前に通知が出て重ならないように）
         if (!aborted) TokoTalk.ReserveStreamingReturn(_metaProgress);
+
+        // 占い師の力: 配信を 1 回終えると（途中終了でも）+1。日送りの前に戻す（翌朝の店で使える）
+        _prophet?.OnStreamFinished();
 
         // 戦闘結果処理後、次のターンへ進む
         int turnBefore = _gameFlowManager.CurrentTurn.Value;

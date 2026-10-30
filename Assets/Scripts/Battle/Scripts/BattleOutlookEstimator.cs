@@ -8,6 +8,8 @@ using UnityEngine;
 /// 店の勇者パネルのクリア確率（ClearProbabilityCalculator）と同じ目盛りで返す:
 ///   勝てる見込み → 0.55〜0.95（残りHPが多いほど高い） / 負ける見込み → 0.05〜0.45（倒せる敵が多いほど高い）
 /// 視聴者スパチャ（赤スパの必殺技・魔王軍スパの罠）や増援の抽選など、まだ起きていない偶然は入れない。
+/// GameConst.clearOutlookProgressByEnemyHp = true なら、負ける見込みの進み具合を「削れる HP の割合」で測る
+/// （場にいるボス・魔王はいまの残り HP を使う）。既定 false＝倒せる敵の数の割合（今までどおり）。
 /// </summary>
 public static class BattleOutlookEstimator
 {
@@ -54,8 +56,13 @@ public static class BattleOutlookEstimator
         int phaseIndex = context.CurrentPhaseIndex;
 
         int remainingEnemies = field.Count + queue.Count;
+        // 削った HP で測るとき（clearOutlookProgressByEnemyHp）の物差し: いまの残り HP の合計（場のボスはいまの HP）
+        long hpAtStart = 0;
+        foreach (var u in field) hpAtStart += Mathf.Max(0, u.Hp);
+        foreach (var e in queue) hpAtStart += Mathf.Max(1, e.hp);
         for (int i = phaseIndex + 1; i < context.PhaseCount; i++)
-            foreach (var e in context.Phases[i].enemies) if (e != null) remainingEnemies++;
+            foreach (var e in context.Phases[i].enemies)
+                if (e != null) { remainingEnemies++; hpAtStart += Mathf.Max(1, e.hp); }
         int defeated = 0;
 
         void Refill()
@@ -114,7 +121,13 @@ public static class BattleOutlookEstimator
         if (won && heroHp > 0)
             return Mathf.Clamp(0.55f + Mathf.Clamp01(heroHp / (float)heroMaxHp) * 0.4f, 0.55f, 0.95f);
 
-        float progress = remainingEnemies > 0 ? Mathf.Clamp01(defeated / (float)remainingEnemies) : 0f;
+        long hpLeft = 0;
+        foreach (var u in field) hpLeft += Mathf.Max(0, u.Hp);
+        foreach (var e in queue) hpLeft += Mathf.Max(1, e.hp);
+        for (int i = phaseIndex + 1; i < context.PhaseCount; i++)
+            foreach (var e in context.Phases[i].enemies) if (e != null) hpLeft += Mathf.Max(1, e.hp);
+        float progress = ClearProbabilityCalculator.LossProgress(
+            ClearProbabilityCalculator.ProgressByEnemyHp, defeated, remainingEnemies, hpLeft, hpAtStart);
         return Mathf.Clamp(0.05f + progress * 0.4f, 0.05f, 0.45f);
     }
 }

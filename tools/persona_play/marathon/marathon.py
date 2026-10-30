@@ -942,6 +942,11 @@ class Marathon:
                 run["villageAfter"] = read_village(Path(run["saveRoot"]))
                 run["villageInvested"] = village_invested(self.project, run_id)
                 self.save_state()
+                # 魔王軍支援の負け率の表（supportByEv が読む）を書き直す。読むのはログだけ。失敗しても続ける
+                try:
+                    update_support_rates(self.project)
+                except Exception as e:  # noqa: BLE001
+                    self.log(f"支援の負け率の表を書けなかった: {e!r}")
                 va = run["villageAfter"]
                 if va:
                     self.log(f"ラン {run_id} の後の村: ラン {va['totalRuns']} 回済み・村資金 {va['funds']:,}G・総合Lv {va['villageLevel']}"
@@ -1040,6 +1045,15 @@ class Marathon:
             self.log("人格の指標を summary.md に足した（metrics.md / metrics.json も）")
         except Exception as e:  # noqa: BLE001
             self.log(f"人格の指標を数えられなかった: {e!r}")
+
+
+def update_support_rates(project: Path) -> Path:
+    """metrics/support_rates.py で Recordings の persona_log から Library/PersonaMarathon/support_rates.json を書き直す。"""
+    metrics_dir = str(HERE.parent / "metrics")
+    if metrics_dir not in sys.path:
+        sys.path.insert(0, metrics_dir)
+    import support_rates  # noqa: E402（metrics フォルダ）
+    return support_rates.write(Path(project))[0]
 
 
 def append_metrics(marathon_dir: Path) -> Path:

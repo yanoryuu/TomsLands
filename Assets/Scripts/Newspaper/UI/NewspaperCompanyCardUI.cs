@@ -62,6 +62,8 @@ public class NewspaperCompanyCardUI : MonoBehaviour
         if (rootButton != null && subscribeButton != null) InnerSelectableNavigation.Attach(rootButton, subscribeButton);
     }
 
+    private bool measuredShown;
+
     public void SetData(Data d)
     {
         CompanyId = d.companyId;
@@ -87,7 +89,20 @@ public class NewspaperCompanyCardUI : MonoBehaviour
         {
             bool has = d.measuredAccuracy >= 0f;
             measuredFill.gameObject.SetActive(has);
-            if (has) measuredFill.fillAmount = d.measuredAccuracy;
+            // #10 的中率のゲージ。最初の表示は即座に、日をまたいで動いたら残像つきで動かす
+            if (has)
+            {
+                var gauge = TrailGauge.Attach(measuredFill);
+                if (gauge != null) gauge.SetValue(d.measuredAccuracy, animate: measuredShown);
+                else measuredFill.fillAmount = d.measuredAccuracy;
+                measuredShown = true;
+            }
+            else if (measuredFill.TryGetComponent<TrailGauge>(out var hidden))
+            {
+                // 本体を隠すときは後ろの残像も空にする（残像は本体の兄弟なので一緒に隠れない）
+                hidden.SetValue(0f, animate: false);
+                measuredShown = false;
+            }
         }
 
         if (subscribedRibbon != null) subscribedRibbon.SetActive(d.subscribed);

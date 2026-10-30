@@ -28,6 +28,8 @@ public static class RunSaveCleaner
         DemonPayoutHistory.FileName, // 配当通知書の回収倍率（防衛報酬の受取累計）
         AchievementStore.RunFileName, // 実績の1ラン内の途中経過（二枚舌・収集家など）
         ArtisanCraft.FileName, // 職人組合 Lv5「細工」（配信の間に1回）
+        ProphetInterventionModel.FileName, // 占い師の上げる枠・下げる枠と占いの力
+        "prophetFortune.json", // 廃止した「3 日先を占う」の買った日（旧セーブの残り。もう読まない）
     };
 
     /// <summary>

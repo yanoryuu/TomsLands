@@ -452,9 +452,10 @@ Lv3〜4 への投資と介入だけの戦略は、どの組み合わせでも元
 
 - **ボット**（`AutoPlayStrategyBots.cs`）:
   - `reader` … 新聞を普通に読むプレイヤーの代理。購読して、載った報道の効き先（属性×種別・高額帯）と「掲載日＋社の早さ」の発効日を覚え（`ReadNewsBias` / `ReadNewsDaysToEffect`。**誤報・誇張も信じる**。訂正記事を読んだら外す）、上がると読んだ品は客の数×3日分仕入れて効き始めるまで並べずに持ち、効いている間に売る。残りは capaware と同じ。効き先の推理は完璧（＝読みが上手いプレイヤー側）。
-  - `fortune` … 新聞を読まず、所持金に余裕（15万G＋返済分）がある日に占い師に占ってもらい、上がると出た品に張る。
-  - `reader_fortune` … reader が、占いに「上がる」と出なかった記事を疑う（裏取り）。
-- **占い**: ランナーは `IAutoPlayFortuneBot.WantsFortune` が true なら、計画の前に `BuyFortune`（15,000G）してスナップショットを取り直す（`FortuneDirection`）。
+  - `prophet` … 新聞を読まず、占い師の枠だけを使う（下げる枠に次の配信の弱点の武具。上げる枠は新聞を読まないので使わない）。
+  - `reader_prophet` … reader に占い師の枠を足す（`ProphetAutoRule`: 力が満タンの日に 1 つ。上げる枠＝読んだ記事で上がる品で在庫の値打ちが代金の 2 倍以上の一番大きい品、下げる枠＝記事で 2 日以上先に上がる品・次の配信の弱点の武具のうち、まだあまり持っていない一番高い品）。
+  - 以前の `fortune` / `reader_fortune`（15,000G で 3 日先を占う）は占いの廃止（2026-10-30）で消した。
+- **占い師の枠**: ボットが `AutoPlayDayPlan.ProphetItem` / `ProphetDirection` を決めると、ランナーは仕入れの前に `PlaceProphet`（本物の `ProphetInterventionModel.TryPlace`）を呼ぶ。効きは本物の `GameFlowManager` → `ItemModel.ApplyShopTurnEconomy`、力の戻りは本物の `BattleResultHandler` なので、本物のゲームと同じ。判断は `Decisions` の `prophet` / `prophet_placed` / `prophet_rejected`。
 - **イベントスタディ**（`AutoPlayNewsStudy.cs`）: 朝の相場を全ターン記録し（`AutoPlayHeadlessGame.MorningMarket`、解放済みの品だけ）、事象ごとに「報道の朝に買う → 発効・効いている間の最高・決着・決着+3」の値動きを、効き先の品と効き先でない品の差で出す。`<label>_table.md` の末尾と `<label>_news.csv`。
-- **上書き**: `-apSet "news.FairPerTrend=0.7;news.DriftPerTrend=0.05;fortune.Accuracy=0.8"`（`NewsTuning` / `ProphetFortune` の static フィールド）。
+- **上書き**: `-apSet "news.FairPerTrend=0.7;news.DriftPerTrend=0.05"`（`NewsTuning` の static フィールド）。占い師の枠の数値（`ProphetTuning`）は const なので上書きできない。
 - 壁新聞は本体と同じ `NewspaperPresenter.WallPaperEntries`、続報の配達は毎朝 `ScrapbookModel.DeliverFollowUps`。

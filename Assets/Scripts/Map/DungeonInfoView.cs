@@ -29,18 +29,26 @@ public class DungeonInfoView : MonoBehaviour
     
     private void Awake()
     {
-        closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+        closeButton.onClick.AddListener(() => { if (!UIMotion.IsClosing(dungeonInfoPanel)) OnCloseRequested.OnNext(Unit.Default); });
     }
     
     /// <param name="clearProbability">勇者のクリア確率（%）。5段階の見込みにして出す。情報未購入時は使用されない</param>
     /// <param name="weaknessKnown">弱点を知っているか（地図の名札と同じ判定。情報の購入とは別）</param>
     public void ShowDungeonInfo(DungeonData dungeonData, float clearProbability, bool weaknessKnown)
     {
+        bool shown = dungeonInfoPanel.activeSelf && !UIMotion.IsClosing(dungeonInfoPanel);
         SetDungeonInfo(dungeonData, clearProbability, weaknessKnown);
-        dungeonInfoPanel.SetActive(true);
+        // #1 閉じていればぽよんと開く。開いたまま別のダンジョンを選んだら短いポップ
+        if (shown) UIFx.Pop(dungeonInfoPanel.transform, 0.97f, 0.15f);
+        else UIMotion.Open(dungeonInfoPanel, MotionWindow.Of(dungeonInfoPanel));
+        // 出現モンスターの札を順に出す
+        var rows = new List<RectTransform>();
+        foreach (var p in dungeonMonsterPanels) if (p != null && p.transform is RectTransform rt) rows.Add(rt);
+        if (rows.Count > 0 && rows[0].gameObject.activeInHierarchy) UIMotion.Stagger(rows, 0.06f, 20f, 0.25f, 0.1f);
     }
 
-    public void HideDungeonInfo() => dungeonInfoPanel.SetActive(false);
+    /// <summary>#1 縮んで閉じる（省略モード・非表示中は即座に非表示）。</summary>
+    public void HideDungeonInfo() => UIMotion.Close(dungeonInfoPanel, null, MotionWindow.Of(dungeonInfoPanel));
 
     private void SetDungeonInfo(DungeonData d, float clearProbability, bool weaknessKnown)
     {

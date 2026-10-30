@@ -141,6 +141,17 @@ public sealed class AutoPlaySnapshot
     public string NextStreamWeakness;
     public float NextStreamClearChancePct;
 
+    // --- 占い師の枠（Docs/Prophet_Intervention.md。画面に出ている情報だけ） ---
+    public int ProphetPower;
+    public int ProphetMaxPower;
+    public int ProphetCost;
+    /// <summary>上げる枠に入っている品（空なら null）。</summary>
+    public string ProphetUpItem;
+    public int ProphetUpTurnsLeft;
+    /// <summary>下げる枠に入っている品（空なら null）。</summary>
+    public string ProphetDownItem;
+    public int ProphetDownTurnsLeft;
+
     public int HeroLevel;
     public int HeroHp;
     public int HeroAttack;
@@ -206,8 +217,8 @@ public sealed class AutoPlayItemView
     public float ReadNewsBias;
     /// <summary>読んだ記事のうち、この品に効く一番早いものが効き始めるまでの日数（0 = もう効いている / -1 = 該当なし）。発効日は掲載日＋社の早さ（lead）。</summary>
     public int ReadNewsDaysToEffect = -1;
-    /// <summary>占い師の見立て（数日先の相場の向き。+1 上がる / 0 横ばい / -1 下がる。占っていなければ null）。</summary>
-    public int? FortuneDirection;
+    /// <summary>占い師の枠に入っているか（+1 上げる枠 / -1 下げる枠 / 0 入っていない）。</summary>
+    public int ProphetSlot;
 }
 
 public sealed class AutoPlayAdView
@@ -360,6 +371,9 @@ public sealed class AutoPlayDayPlan
     public List<AutoPlayStreamItem> Bonds = new();
     /// <summary>この日の設備投資を何回まで続けるか（Upgrade を最大まで重ねる用）。</summary>
     public int UpgradeTimes = 1;
+    /// <summary>占い師の枠に入れる品（null = 入れない）。仕入れの前に入れる（代金を先に払う）。</summary>
+    public string ProphetItem;
+    public ProphetDirection ProphetDirection = ProphetDirection.Up;
 
     public List<AutoPlayDecision> Decisions = new();
 }

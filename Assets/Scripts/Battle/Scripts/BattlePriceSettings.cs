@@ -113,17 +113,19 @@ public class BattlePriceSettings : ScriptableObject
     [Min(1)]
     public int coolDownStartTurns = 3;
 
-    [Header("配信熱による価格倍率")]
-    [Tooltip("配信熱が coldTierMax 未満の時、ターン終了時に適用する価格倍率。例: 0.97 = 3%下落。")]
+    // 段の倍率は値段に 1 回分だけ乗る。段が変わったターンの終わりに「新しい倍率 ÷ 今乗っている倍率」を全品に掛け直すだけで、
+    // 同じ段が何ターン続いても積み上がらない（複利にならない。StreamingSalesController.ExecuteTurnSales）
+    [Header("配信熱による価格倍率（段ごと。値段に 1 回だけ乗り、毎ターン積み上がらない）")]
+    [Tooltip("配信熱が coldTierMax 未満の段の価格倍率。段に入ったとき 1 回だけ乗る（毎ターンは掛けない）。例: 0.97 = 3%下落。")]
     [Min(0f)]
     public float coldPriceMultiplier = 0.97f;
-    [Tooltip("配信熱が normalTierMax 未満の時、ターン終了時に適用する価格倍率。例: 1.00 = 変化なし。")]
+    [Tooltip("配信熱が normalTierMax 未満の段の価格倍率。段に入ったとき 1 回だけ乗る（毎ターンは掛けない）。例: 1.00 = 変化なし。")]
     [Min(0f)]
     public float normalPriceMultiplier = 1.00f;
-    [Tooltip("配信熱が hotTierMax 未満の時、ターン終了時に適用する価格倍率。例: 1.02 = 2%上昇。")]
+    [Tooltip("配信熱が hotTierMax 未満の段の価格倍率。段に入ったとき 1 回だけ乗る（毎ターンは掛けない）。例: 1.02 = 2%上昇。")]
     [Min(0f)]
     public float hotPriceMultiplier = 1.02f;
-    [Tooltip("配信熱が hotTierMax 以上の時、ターン終了時に適用する価格倍率。例: 1.05 = 5%上昇。")]
+    [Tooltip("配信熱が hotTierMax 以上の段の価格倍率。段に入ったとき 1 回だけ乗る（毎ターンは掛けない）。例: 1.05 = 5%上昇。")]
     [Min(0f)]
     public float superHotPriceMultiplier = 1.05f;
 

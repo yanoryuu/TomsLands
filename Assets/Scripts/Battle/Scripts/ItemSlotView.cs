@@ -39,6 +39,10 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     private static Image ghostIcon;
     private static Canvas parentCanvas;
 
+    // #13 置ける枠を光らせるために、表示中のスロットを覚えておく
+    private static readonly System.Collections.Generic.List<ItemSlotView> LiveSlots = new();
+    private bool _glowing;
+
     // 現在このスロットに割り当てられているRuntimeItemData（外部参照用に公開）
     public RuntimeItemData CurrentItem { get; private set; }
 
@@ -141,9 +145,12 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         label.gameObject.SetActive(true);
 
         bool changed = _shownPriceItemId == item.ItemId && _shownPrice >= 0 && _shownPrice != price;
+        int direction = changed ? (price > _shownPrice ? 1 : -1) : 0;
         _shownPriceItemId = item.ItemId;
         _shownPrice = price;
-        if (changed) UIFx.Pop(label.transform, price > start ? 1.3f : 0.8f, 0.22f);
+        // #12 値段の変化（共通部品）: 上がれば緑に光って膨らみ▲、下がれば赤く沈んで▼。従来の UIFx.Pop の置き換え。
+        // 色・大きさ・位置は部品が必ず元に戻す。↑↓（配信開始時との比較）の文字はそのまま
+        if (changed) PriceChangeFx.Play(label, direction);
     }
 
     private TMP_Text EnsureLivePriceText()
@@ -226,8 +233,11 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
 
         ghostIcon.sprite = this.itemIcon.sprite;
-        ghostIcon.rectTransform.sizeDelta = this.GetComponent<RectTransform>().sizeDelta;
+        FitGhost();
         ghostIcon.gameObject.SetActive(true);
+        // #13 持ち上げる（ゴーストが 1.12 倍に膨らんで傾き、影が付く）＋置き先の枠を光らせる。ドラッグのイベントには触らない
+        DragFeel.Lift(ghostIcon.rectTransform);
+        GlowTargetsFor(this);
 
         // 元のアイコンを半透明にする（非表示にしない）
         if (canvasGroup != null)
@@ -256,7 +266,10 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (ghostIcon != null)
         {
             ghostIcon.gameObject.SetActive(false);
+            // 隠した後なので持ち上げの拡縮・傾き・影を即座に元へ戻すだけ（つぶれる演出は置いたスロット側で出す）
+            DragFeel.Drop(ghostIcon.rectTransform);
         }
+        ClearAllGlow();
 
         // 元のアイコンを完全に表示に戻す
         if (canvasGroup != null)
@@ -281,11 +294,72 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
         if (fromSlot == null || fromSlot == this) return;
         OnItemDropped?.Invoke(fromSlot, this);
+        PlayPlaced();
+    }
+
+    // ─────────────────────────────────────────
+    //  #13 つかんで置く（見た目だけ。入れ替えは OnItemDropped の購読側が決める）
+    // ─────────────────────────────────────────
+
+    private void OnEnable()
+    {
+        if (!LiveSlots.Contains(this)) LiveSlots.Add(this);
+    }
+
+    /// <summary>置いたスロットのアイコンをつぶして戻し、ほこりを散らす（何か置かれたときだけ）。</summary>
+    private void PlayPlaced()
+    {
+        if (CurrentItem == null || itemIcon == null || !itemIcon.enabled) return;
+        DragFeel.Drop(itemIcon.rectTransform, placed: true);
+    }
+
+    /// <summary>
+    /// つかんだスロットに応じて置き先を光らせる。在庫からつかんだら売り場の全スロット（主な置き先）、
+    /// 売り場からつかんだら空いている在庫スロット。どこへ置いても入れ替わるので、ほかの枠は指したときだけ光る。
+    /// </summary>
+    private static void GlowTargetsFor(ItemSlotView from)
+    {
+        ClearAllGlow();
+        if (from == null) return;
+        foreach (var slot in LiveSlots)
+        {
+            if (slot == null || slot == from || !slot.isActiveAndEnabled) continue;
+            if (slot.IsMainTargetOf(from)) slot.SetGlow(true);
+        }
+    }
+
+    private bool IsMainTargetOf(ItemSlotView from)
+        => from != null && from != this && (from.isSellSlot ? (!isSellSlot && CurrentItem == null) : isSellSlot);
+
+    private static void ClearAllGlow()
+    {
+        for (int i = LiveSlots.Count - 1; i >= 0; i--)
+        {
+            var slot = LiveSlots[i];
+            if (slot == null) { LiveSlots.RemoveAt(i); continue; }
+            slot.SetGlow(false);
+        }
+    }
+
+    private void SetGlow(bool on)
+    {
+        if (_glowing == on) return;
+        _glowing = on;
+        DragFeel.SetSlotGlow(transform as RectTransform, on);
+    }
+
+    /// <summary>持ち上げ中（ドラッグ・パッド）にこのスロットを指したら光らせる。</summary>
+    private void GlowIfHovered()
+    {
+        var held = draggedItem != null ? draggedItem : padHeld;
+        if (held != null && held != this) SetGlow(true);
     }
 
     // ホバー処理（簡潔に、かつドラッグ中の抑制を含む）
     public void OnPointerEnter(PointerEventData eventData)
     {
+        GlowIfHovered();
+
         // 矢印が割り当てられている場合に矢印処理を行う
         if (arrowImage != null)
         {
@@ -323,7 +397,11 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             var from = padHeld;
             CancelPadHold();
-            if (from != this) OnItemDropped?.Invoke(from, this);
+            if (from != this)
+            {
+                OnItemDropped?.Invoke(from, this);
+                PlayPlaced();
+            }
             return;
         }
 
@@ -367,13 +445,15 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         }
         ghostIcon.transform.SetAsLastSibling();
         ghostIcon.sprite = itemIcon.sprite;
-        ghostIcon.rectTransform.sizeDelta = GetComponent<RectTransform>().sizeDelta;
+        FitGhost();
         ghostIcon.gameObject.SetActive(true);
         SetHeldLook(true);
 
         padHeld = this;
         UpdatePadGhost();
-        UIFx.Pop(ghostIcon.transform, 0.8f, 0.18f);
+        // #13 マウスのドラッグと同じ持ち上げ（従来の UIFx.Pop の置き換え）と置き先の光
+        DragFeel.Lift(ghostIcon.rectTransform);
+        GlowTargetsFor(this);
         return true;
     }
 
@@ -387,7 +467,34 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         if (draggedItem != null) return false;
         if (padHeld != null) CancelPadHold();
         OnItemDropped?.Invoke(this, target);
+        target.PlayPlaced();
         return true;
+    }
+
+    /// <summary>
+    /// ゴーストの大きさ・向きをそろえる。どのスロット（在庫は 0.65 倍に縮めて並べている）・どの品物からつかんでも同じ大きさで持ち上がるよう、
+    /// スロットの拡縮（売れたときのポップ・在庫の縮小）は数えず、アイコンの枠の大きさ（売り場の見た目の大きさ）にする。
+    /// 前の持ち上げの拡縮・傾きが残っていても戻してから持ち上げる。
+    /// </summary>
+    private void FitGhost()
+    {
+        if (ghostIcon == null) return;
+        var grt = ghostIcon.rectTransform;
+        var src = itemIcon != null ? itemIcon.rectTransform : (RectTransform)transform;
+        Vector2 size = src.rect.size;
+        var from = transform.parent;
+        var to = grt.parent;
+        if (from != null && to != null)
+        {
+            Vector3 a = from.lossyScale, b = to.lossyScale;
+            if (Mathf.Abs(b.x) > 1e-5f && Mathf.Abs(b.y) > 1e-5f)
+                size = new Vector2(size.x * Mathf.Abs(a.x / b.x), size.y * Mathf.Abs(a.y / b.y));
+        }
+        grt.anchorMin = grt.anchorMax = grt.pivot = new Vector2(0.5f, 0.5f);
+        grt.sizeDelta = size;
+        DOTween.Kill(grt.gameObject); // 前の持ち上げの途中なら止めて、大きさ・向きを元に戻す
+        grt.localScale = Vector3.one;
+        grt.localRotation = Quaternion.identity;
     }
 
     /// <summary>持ち上げを取り消す（B・マウスへの切替・パネル非表示など）。</summary>
@@ -395,8 +502,13 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     {
         var held = padHeld;
         padHeld = null;
-        if (ghostIcon != null) ghostIcon.gameObject.SetActive(false);
+        if (ghostIcon != null)
+        {
+            ghostIcon.gameObject.SetActive(false);
+            DragFeel.Drop(ghostIcon.rectTransform); // 隠した後なので拡縮・傾き・影を即座に戻すだけ
+        }
         if (held != null) held.SetHeldLook(false);
+        if (held != null || draggedItem == null) ClearAllGlow();
     }
 
     private void SetHeldLook(bool held)
@@ -448,10 +560,16 @@ public class ItemSlotView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     private void OnDisable()
     {
         if (padHeld == this) CancelPadHold();
+        LiveSlots.Remove(this);
+        SetGlow(false);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
+        // 持ち上げ中に指していただけの枠は光を消す（主な置き先として光らせている枠はそのまま）
+        var held = draggedItem != null ? draggedItem : padHeld;
+        if (held != null && _glowing && !IsMainTargetOf(held)) SetGlow(false);
+
         if (arrowImage != null)
         {
             arrowTweener?.Kill();

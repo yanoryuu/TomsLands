@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [System.Serializable]
@@ -68,6 +69,9 @@ public class DungeonData
     /// <summary>指定レベルの防衛報酬。Lv0（未出資）は 0。</summary>
     public int GetDefenseReward(int level) => DungeonLevels.DefenseReward(GetLevelData(level), level);
 
+    /// <summary>このダンジョンを level にするまでの魔王軍支援の出資の合計（DungeonLevels.InvestedTotal。配当の下限に使う）。</summary>
+    public int GetInvestedTotal(int level) => DungeonLevels.InvestedTotal(GetLevelData, initDungeonLevel, level);
+
     /// <summary>魔王軍支援で出資済み（Lv1 以上）か。</summary>
     public bool IsFunded => currentDungeonLevel > DungeonLevels.Unfunded;
 
@@ -109,6 +113,14 @@ public class DungeonData
                 {
                     levelDataList[i] = new DungeonLevelData
                     {
+                        // フェーズ構成も写す（写していなかったためクリア見込みが旧方式の monsters から組み立てられ、
+                        // 氷のダンジョン Lv1 だけ実戦と敵が違っていた）
+                        phases = src.phases != null
+                            ? src.phases.Select(p => new DungeonPhaseData
+                              {
+                                  enemies = p?.enemies != null ? new List<EnemyData>(p.enemies) : new List<EnemyData>(),
+                              }).ToList()
+                            : new List<DungeonPhaseData>(),
                         monsters = src.monsters != null
                             ? new List<EnemyData>(src.monsters)
                             : new List<EnemyData>(),

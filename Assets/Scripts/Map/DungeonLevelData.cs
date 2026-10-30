@@ -12,6 +12,24 @@ public class DungeonPhaseData
 {
     [Tooltip("このフェーズで出現する敵（リスト順に最大3体ずつ出現、倒すと補充）。最終フェーズには isBoss の敵＝ボスを含められる")]
     public List<EnemyData> enemies = new List<EnemyData>();
+
+    /// <summary>
+    /// ウェーブの種類（通常／中ボス／ボス）。アセットには保存しない。
+    /// 実際に戦うウェーブ列（DungeonWaveSource.Build）が埋める: 配信 dungeonPhases の phaseType、
+    /// それが無ければ isBoss の敵がいるウェーブ＝ボス、ほかは通常。勝敗メーター・ボスの反応などが読む。
+    /// </summary>
+    [NonSerialized] public DungeonPhaseType phaseType = DungeonPhaseType.Normal;
+
+    /// <summary>isBoss の敵を含むか。</summary>
+    public bool ContainsBoss => enemies != null && enemies.Exists(e => e != null && e.isBoss);
+}
+
+/// <summary>ウェーブの種類（シート dungeonPhases の phaseType = normal / midboss / boss）。</summary>
+public enum DungeonPhaseType
+{
+    Normal = 0,
+    MidBoss = 1,
+    Boss = 2,
 }
 
 /// <summary>

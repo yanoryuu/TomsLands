@@ -19,7 +19,7 @@ using UnityEngine;
 /// - 一言: 判断ごとに Recordings/persona_log_*.jsonl（PersonaLines のテンプレート）。
 /// 設定は UserSettings/PersonaPlay.json（PersonaPlayConfig）。
 /// </summary>
-public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, IAutoPlayPrefetchStrategy, IAutoPlayShopInvestor
+public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, IAutoPlayPrefetchStrategy, IAutoPlayShopInvestor, IAutoPlayProphetUser
 {
     private readonly PersonaProfile _p;
     private PersonaPlayConfig _config;
@@ -41,6 +41,10 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     private float? _focusShare;
     private List<KeyValuePair<string, float>> _weaponShares;
     private int _supportedTurn = int.MinValue;
+    /// <summary>今日の魔王軍支援に除けておく額（supportCashReserve。ChooseDemonSupportLevels で決め、仕入れの予算から引く）。</summary>
+    private int _supportReserveGold;
+    /// <summary>支援の負け率の表（supportByEv。ランの初めに読み直す）。</summary>
+    private PersonaSupportRates _supportRates;
     private string _dayChoiceSummary = "";
 
     // ---- 店への投資（rules 4.2。その日の判断で決め、AutoPlayController が実画面を押す） ----
@@ -78,6 +82,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
     private int _capturedDelta;
     private int _capturedReward;
     private string _capturedDungeon;
+    private int _capturedDungeonLv = -1;
 
     // ---- 学習（PersonaLearning） ----
     private PersonaRecallStore _recall;
@@ -212,6 +217,8 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         _memes = new PersonaLines.MemeRun(PersonaMemeLexicon.Load(_config.MemeLexiconPath), new System.Random(seed ^ 0x4D454D45));
         _dayTurn = int.MinValue;
         _supportedTurn = int.MinValue;
+        _supportReserveGold = 0;
+        _supportRates = null;
         _runStartMoney = -1;
         _invested = 0;
         _villageDecided = false;
@@ -457,6 +464,22 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             string key = Consult("support", support, own, line, adv, sit, facts, "day", day, lat, out var bind);
             int level = int.TryParse(key, out var lv) ? lv : 0;
             _supportLevels = level >= PersonaRequests.SupportLevels.Length - 1 ? 99 : level;
+            // 期待値で決める（supportByEv。セーブを初めからにするまで false）: 段数を負け率×防衛報酬−出資額で決め直す
+            var ev = (_config ??= PersonaPlayConfig.Load()).SupportByEv ? SupportByEv(n, s.Cash) : null;
+            if (ev.HasValue)
+            {
+                int k = ev.Value.Levels;
+                string evKey = Mathf.Min(k, PersonaRequests.SupportLevels.Length - 1).ToString();
+                AutoPlay.AddLog($"{_p.LabelJa}: 魔王軍支援を期待値で {key} → +{k}（{ev.Value.Detail}、出資 {ev.Value.Cost:N0}G）");
+                if (evKey != key)
+                {
+                    own.Why = (own.Why ?? "") + "+ev";
+                    line = PersonaLines.Pick(_p.Id, "support", BandOf(support), Label("support", evKey), null, _rng, _memes, _mood.Label);
+                }
+                key = evKey;
+                level = k;
+                _supportLevels = k;
+            }
             summary.Add("support=" + (level >= 3 ? "max" : level.ToString()));
             var rec = Decide("support", key, PersonaFeatures.Day, PersonaFeatures.HorizonAfterStream, f, _dayWorth);
             Bind(rec, bind, PersonaFeatures.HorizonAfterStream);
@@ -698,6 +721,9 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         _capturedDelta = output.TotalEarnings;
         _capturedReward = output.DefenseReward;
         _capturedDungeon = output.DungeonKey.ToString();
+        // 配信のときのダンジョンのLv（魔王軍支援の負け率の表 support_rates.json 用。Lv はランの中で上がるだけ）
+        try { _capturedDungeonLv = AutoPlayUi.Resolve<DungeonRepository>()?.GetById(output.DungeonKey)?.currentDungeonLevel ?? -1; }
+        catch (Exception) { _capturedDungeonLv = -1; }
     }
 
     /// <summary>直前の配信の結果を記憶に足す（店に戻った・ラン終了の画面で呼ぶ）。写せていなければ所持金の差で代用する。</summary>
@@ -708,8 +734,11 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
 
         string result, dungeon;
         int delta, reward;
+        int dungeonLv = -1;
+        bool known = _outcomeCaptured;
         if (_outcomeCaptured)
         {
+            dungeonLv = _capturedDungeonLv;
             result = _capturedResult;
             delta = _capturedDelta;
             reward = _capturedReward;
@@ -768,6 +797,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             Meme = _memes?.MemeFor(line), MemeCue = _memes?.CueFor(line),
             MoodBefore = moodBefore, MoodAfter = _mood.Snapshot(), Reward = delta,
             E = ResultExpression(good), Beat = good ? "win" : "cry",
+            Dungeon = known ? dungeon : null, DungeonLv = known && dungeonLv >= 0 ? dungeonLv : (int?)null,
         });
         AutoPlay.AddLog($"{_p.LabelJa}: 配信の結果 {result}（{delta:+#,0;-#,0;0}G）→ 記憶に追加「{lesson}」");
         ClearStream();
@@ -925,6 +955,17 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             var facts = Facts(pick?.Name, pick?.Cost ?? -1, pick != null && pick.DailyGold > 0 ? (pick.Cost + pick.DailyGold - 1) / pick.DailyGold : -1);
             string key = Consult("machine", mach, own, line, adv, sit, facts, "day", day, lat, out var bind);
             _planMachine = key != "none" && v.Machines.Any(m => m.Id == key && m.Placed == 0) ? key : null;   // 同じ設備は 1 台まで
+            // 周の終わり近くには置かない（lateMachineGuard。セーブを初めからにするまで false）
+            if (_planMachine != null && (_config ??= PersonaPlayConfig.Load()).LateMachineGuard)
+            {
+                var pm = v.Machines.First(m => m.Id == _planMachine);
+                if (!AutoPlayMachineRules.ShouldPlace(pm.Cost, pm.DailyGold, v.RemainingMornings))
+                {
+                    AutoPlay.AddLog($"{_p.LabelJa}: 設備 {pm.Name}（{pm.Cost:N0}G）は周の終わりが近いので置かない（残りの朝 {v.RemainingMornings}）");
+                    key = "none";
+                    _planMachine = null;
+                }
+            }
             var rec = Decide("machine", _planMachine != null ? MachineKind(key) : "none", PersonaFeatures.Day, PersonaFeatures.HorizonRunEnd, f, _dayWorth);
             Bind(rec, bind, PersonaFeatures.HorizonRunEnd);
             if (rec != null) _shopRecs["machine"] = rec;
@@ -1157,6 +1198,23 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 Choice = string.Join("; ", reasons), Line = "",
             });
         return plan;
+    }
+
+    // ---------------- 占い師の枠（決まりは ProphetAutoRule。人格は相談せず、判断と結果を人格のログに残す） ----------------
+
+    public bool ShouldUseProphet(AutoPlayContext ctx, ProphetAutoPick pick) => true;
+
+    public void OnProphetDone(AutoPlayContext ctx, ProphetAutoPick pick, ProphetPlaceResult? result, string note)
+    {
+        string choice = pick.IsNone
+            ? "none"
+            : $"{(pick.Direction == ProphetDirection.Up ? "up" : "down")}:{pick.ItemId}:{(result.HasValue ? result.Value.ToString() : "skipped")}";
+        _log?.Write(new PersonaLogEntry
+        {
+            Day = ctx?.Turn ?? -1, Persona = _p.Id, Model = Model, Question = "prophet", Kind = "prophet",
+            Choice = choice + (string.IsNullOrEmpty(note) ? "" : $" ({note})"),
+            Line = pick.IsNone ? "" : pick.Reason,
+        });
     }
 
     public void OnShopInvestmentsDone(AutoPlayShopInvestResult r)
@@ -1487,6 +1545,9 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             ? (int)(SpendableAfterStreamReserve(ctx) * (double)_budgetFrac.Value)
             : base.ChooseProcurementBudget(ctx);
         if (_p.CashFloor > 0) budget = Mathf.Min(budget, ctx.Money - Mathf.Max(_p.CashFloor, ctx.TaxReserve));
+        // 今日の魔王軍支援の出資額を先に除ける（supportCashReserve）。支援は陳列フェーズで押すので、仕入れで使い切ると 0G の操作になる
+        if (_supportReserveGold > 0 && _supportedTurn == ctx.Turn)
+            budget = Mathf.Min(budget, ctx.Money - _supportReserveGold - Mathf.Max(0, ctx.TaxReserve));
         return Mathf.Max(0, budget);
     }
 
@@ -1716,8 +1777,62 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (!HasDay(AutoPlay.CurrentTurn) || !_supportLevels.HasValue || _supportLevels.Value <= 0) return 0;
         if (_p.CashFloor > 0 && prep.Money < _p.CashFloor * 4) return 0;
         _supportedTurn = AutoPlay.CurrentTurn;
+        _supportReserveGold = (_config ??= PersonaPlayConfig.Load()).SupportCashReserve ? SupportCostFor(prep, _supportLevels.Value) : 0;
         return _supportLevels.Value;
     }
+
+    /// <summary>
+    /// 支援の出資額の見込み（今のLvから levels 段。陳列フェーズの操作と同じく所持金の 7 割まで）。表が読めなければ 0。
+    /// </summary>
+    private static int SupportCostFor(AutoPlayStreamPrepContext prep, int levels)
+    {
+        if (prep == null || levels <= 0) return 0;
+        var d = AutoPlayUi.Resolve<DungeonRepository>()?.GetById(prep.Dungeon);
+        if (d == null) return 0;
+        int cap = Mathf.Max(0, prep.Money * 7 / 10);
+        int cost = 0;
+        for (int lv = d.currentDungeonLevel; lv < GameConst.MaxDungeonLevel && levels-- > 0; lv++)
+        {
+            int step = d.GetLevelData(lv)?.levelUpCost ?? 0;
+            if (step <= 0 || cost + step > cap) break;
+            cost += step;
+        }
+        return cost;
+    }
+
+    /// <summary>期待値で決めた支援の段数（supportByEv）。次の配信先が分からなければ null。</summary>
+    private PersonaSupportEv.Choice? SupportByEv(PersonaStreamView n, int cash)
+    {
+        if (n == null || !Enum.TryParse<DungeonName>(n.Dungeon, out var key)) return null;
+        var d = AutoPlayUi.Resolve<DungeonRepository>()?.GetById(key);
+        if (d == null) return null;
+        if (_supportRates == null)
+        {
+            string path = _config?.SupportRatesPath;
+            if (!string.IsNullOrWhiteSpace(path) && !System.IO.Path.IsPathRooted(path)) path = System.IO.Path.Combine(PersonaPlayConfig.ProjectRoot, path);
+            _supportRates = PersonaSupportRates.Load(path);
+        }
+        int budget = Mathf.Max(0, cash * 7 / 10 - Mathf.Max(0, _p.CashFloor));
+        // 防衛報酬はそのレベルで配信したときの見込みの段のオッズ込み（実際の支払いと同じ SupportOdds。既定のオッズ 1 なら今と同じ）
+        return PersonaSupportEv.Choose(_supportRates, n.Dungeon, d.currentDungeonLevel, GameConst.MaxDungeonLevel,
+            lv => d.GetLevelData(lv)?.levelUpCost ?? 0,
+            PersonaSupportEv.RewardWithOdds(lv => d.GetDefenseReward(lv), lv => ClearPctAt(d, lv), d.GetInvestedTotal), budget);
+    }
+
+    /// <summary>
+    /// そのダンジョンをそのレベルで配信したときのクリア見込み（店の勇者パネル・GameFlowManager.ComputePreStreamClearPct と同じ計算。
+    /// 装備は今のまま）。配当のオッズの段を決めるのに使う。分からなければ -1（オッズ 1）。
+    /// </summary>
+    private static float ClearPctAt(DungeonData d, int level)
+    {
+        var hero = AutoPlayUi.Resolve<HeroModel>()?.heroData;
+        if (hero == null || d == null) return -1f;
+        return ClearProbabilityCalculator.Calculate(hero, AutoPlayUi.Resolve<ItemModel>(), d, level, AutoPlayUi.Resolve<RelicEffectResolver>());
+    }
+
+    /// <summary>そのレベルでの防衛報酬の見込み（見込みの段のオッズ込み・出資の合計が下限。オッズが全部 1 で下限に届かなければ GetDefenseReward そのまま）。</summary>
+    private static int ExpectedDefenseReward(DungeonData d, int level)
+        => SupportOdds.Expected(d.GetDefenseReward(level), () => ClearPctAt(d, level), d.GetInvestedTotal(level));
 
     public float VillageLookSeconds => _p.VillageLookSeconds;
 
@@ -1827,6 +1942,29 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             level = cover;
         }
         return level;
+    }
+
+    /// <summary>
+    /// 貯め込み防止: 予定（planned）を払い、残す額（reserve）を除いてもまだ遊んでいる村資金で、施設を足す。
+    /// 足すのは「買ったあとも同じ額以上が遊んでいる」施設だけ（＝その施設を 2 回買えるほど貯まっている）。
+    /// 領主館（上のレベルを開ける）を先に、あとは安い順。足した施設の id を返す（planned は変えない）。
+    /// 村資金は施設と持ち込みにしか使えないので、残す額を超えて貯めても得をしない。
+    /// </summary>
+    public static List<string> HoardTopUp(PersonaVillageSnapshot v, int reserve, ICollection<string> planned)
+    {
+        var added = new List<string>();
+        if (v == null || v.Funds <= 0) return added;
+        long spent = v.Facilities.Where(f => planned != null && planned.Contains(f.Id) && f.NextCost > 0).Sum(f => (long)f.NextCost);
+        long idle = v.Funds - (long)Mathf.Max(0, reserve) - spent;
+        foreach (var fa in v.Facilities
+                     .Where(f => f.CanInvest && f.NextCost > 0 && (planned == null || !planned.Contains(f.Id)))
+                     .OrderByDescending(f => f.Id == VillageModel.HallId).ThenBy(f => f.NextCost))
+        {
+            if (fa.NextCost * 2L > idle) continue;
+            idle -= fa.NextCost;
+            added.Add(fa.Id);
+        }
+        return added;
     }
 
     private static void CarefulVillageBudget(PickOutcome po, PersonaProfile p, PersonaVillageSnapshot v, IReadOnlyDictionary<string, bool> plausible)
@@ -1971,6 +2109,27 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             });
             AutoPlay.AddLog($"{_p.LabelJa}: 村 budget_short — {detail}");
             if (allowance != before && v.Funds > 0) _villageBudgetPct += $"→{Mathf.RoundToInt(allowance * 100f / v.Funds)}%";
+        }
+        // 貯め込み防止（2026-10-30）: 残す額を除いても施設 2 つぶん以上の村資金が遊んでいるなら、買える施設を足す
+        // （めたんの新しいセーブが総合Lv 0 のまま 126 万G、ずんだもんが 1,900 万G を抱えたまま「気分じゃない」で何も建てなかった）
+        var topUp = HoardTopUp(v, reserve, planned);
+        if (topUp.Count > 0)
+        {
+            int extra = v.Facilities.Where(f => topUp.Contains(f.Id)).Sum(f => f.NextCost);
+            foreach (var id in topUp)
+            {
+                planned.Add(id);
+                _villagePlan.Add(id);   // 質問に無かった施設も押す（下の order には無い）
+            }
+            int beforeAllowance = allowance;
+            allowance = Mathf.Max(allowance, v.Facilities.Where(f => planned.Contains(f.Id)).Sum(f => f.NextCost));
+            string detail = $"funds {v.Funds}G, keep {reserve}G, budget {beforeAllowance}G -> {allowance}G; added {string.Join(", ", topUp)} ({extra}G)";
+            _log?.Write(new PersonaLogEntry
+            {
+                Day = day, Persona = _p.Id, Model = Model, Question = "hoard_guard", Kind = "hoard_guard", Choice = detail, Line = "",
+            });
+            AutoPlay.AddLog($"{_p.LabelJa}: 村 hoard_guard — {detail}");
+            if (v.Funds > 0) _villageBudgetPct += $"→{Mathf.RoundToInt(allowance * 100f / v.Funds)}%";
         }
         foreach (var w in order)
         {
@@ -2292,9 +2451,10 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 WeaknessKnown = prep != null && prep.WeaknessKnown,
                 Weakness = prep != null && prep.Weakness.HasValue ? prep.Weakness.Value.ToString() : null,
                 IntelCost = prep?.IntelCost ?? -1,
-                DefeatReward = dungeon.rewardGold,
+                // 防衛報酬は見込みの段のオッズ込み（SupportOdds。既定のオッズ 1 なら rewardGold そのまま）
+                DefeatReward = ExpectedDefenseReward(dungeon, dungeon.currentDungeonLevel),
                 SupportCost = isMax ? 0 : dungeon.levelUpCost,
-                RewardAfterSupport = isMax ? dungeon.rewardGold : dungeon.GetDefenseReward(dungeon.currentDungeonLevel + 1),
+                RewardAfterSupport = ExpectedDefenseReward(dungeon, isMax ? dungeon.currentDungeonLevel : dungeon.currentDungeonLevel + 1),
             };
         }
         s.Shop = BuildShopView(ctx, s.NextStream);

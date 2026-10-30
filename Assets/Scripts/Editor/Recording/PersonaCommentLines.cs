@@ -680,6 +680,17 @@ public static class PersonaCommentLines
     public static bool HasKey(string key) => Templates.ContainsKey(key);
 
     /// <summary>
+    /// その人・種類のテンプレートの既定の表情（"z|greet" の E など。LLM の返事は表情を持たないのでこれを使う）。無ければ "normal"。
+    /// </summary>
+    public static string DefaultE(string speaker, string cat)
+    {
+        string group = cat is "bet_hero" or "bet_demon" && !Templates.ContainsKey($"{speaker}|{cat}") ? "bet" : cat;
+        foreach (var key in new[] { $"{speaker}|{cat}", $"{speaker}|{group}", $"{speaker}+|{group}" })
+            if (Templates.TryGetValue(key, out var pool) && !string.IsNullOrEmpty(pool.E)) return pool.E;
+        return "normal";
+    }
+
+    /// <summary>
     /// 1 行選ぶ。speaker = "z" / "m"、follow = 相手の後に足す一言か。条件と穴が満たせる行のうち、1 配信 MaxPerStream 回未満で、
     /// 直近に使った行ほど選ばれにくく。満たす行が無ければ null（呼ぶ側はその人を黙らせる）。
     /// counts / recent は呼ぶ側が持つ（配信ごと）。選んだ行はここで数える。

@@ -36,7 +36,7 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         fullAmountButton.onClick.AddListener(SetFullAmount);
         halfAmountButton.onClick.AddListener(SetHalfAmount);
         confirmButton.onClick.AddListener(HandleConfirm);
-        cancelButton.onClick.AddListener(Hide);
+        cancelButton.onClick.AddListener(() => { if (!UIMotion.IsClosing(gameObject)) Hide(); });
 
         // パッド操作: モーダル。B=キャンセル、初期フォーカスは「全額」（購入確定は誤爆防止のため避ける）
         var scope = UIFocusScope.GetOrAdd(gameObject);
@@ -131,13 +131,15 @@ public class AutoBuyBudgetPopup : MonoBehaviour
         if (confirmButton != null) confirmButton.interactable = true;
 
         IsOpenedByShow = true;
-        gameObject.SetActive(true);
+        // #1 ぽよんと開く（暗幕つきなら窓だけ弾む）
+        UIMotion.Open(gameObject, MotionWindow.Of(gameObject));
     }
 
     public void Hide()
     {
         IsOpenedByShow = false;
-        gameObject.SetActive(false);
+        // #1 縮んで閉じる。閉じ演出の間に「購入」が二度押されないよう HandleConfirm で弾く
+        UIMotion.Close(gameObject, null, MotionWindow.Of(gameObject));
     }
 
     private void SetFullAmount()
@@ -154,6 +156,7 @@ public class AutoBuyBudgetPopup : MonoBehaviour
 
     private void HandleConfirm()
     {
+        if (UIMotion.IsClosing(gameObject)) return;
         if (!int.TryParse(budgetInputField.text, out int budget))
             budget = 0;
         budget = Mathf.Clamp(budget, 0, playerMoney);

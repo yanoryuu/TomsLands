@@ -325,9 +325,17 @@ public class BlackSmithView : MonoBehaviour
         }
 
         ResetScroll();
+        // #3 商品棚の行を上から順に出す（画面に収まる先頭の行だけ。後ろの行は最初から出しておく）
+        var rows = new List<RectTransform>();
+        for (int i = 0; i < slots.Count && rows.Count < StaggerRowLimit; i++)
+            if (slots[i] != null && slots[i].transform is RectTransform rt) rows.Add(rt);
+        UIMotion.Stagger(rows, 0.035f);
         UpdatePadFocus(slots.Count > 0 ? slots[0].GetComponent<Selectable>() : weaponButton);
         return slots;
     }
+
+    /// <summary>順に出す行の上限（それ以降はスクロールしないと見えないので待たせない）。</summary>
+    private const int StaggerRowLimit = 10;
 
     /// <summary>カタログリストの全行を破棄する。</summary>
     private void ClearCatalog()
@@ -339,21 +347,11 @@ public class BlackSmithView : MonoBehaviour
         activeSlots.Clear();
     }
 
-    /// <summary>行を1つ生成し、登場演出（フェード＋ポップ）を付ける。</summary>
+    /// <summary>行を1つ生成する（登場演出は PopulateItemList でまとめて #3 を掛ける）。</summary>
     private ItemShopSlot CreateCatalogSlot(int index)
     {
         var slotObj = Instantiate(itemShopSlotPrefab, blackSmithContent.transform);
-        var slot = slotObj.GetComponent<ItemShopSlot>();
-
-        var cg = slotObj.GetComponent<CanvasGroup>();
-        if (cg == null) cg = slotObj.AddComponent<CanvasGroup>();
-        float delay = Mathf.Min(index * 0.035f, 0.35f); // 後半はまとめて出す
-        cg.alpha = 0f;
-        cg.DOFade(1f, 0.18f).SetDelay(delay).SetLink(slotObj);
-        slotObj.transform.localScale = Vector3.one * 0.94f;
-        slotObj.transform.DOScale(1f, 0.22f).SetDelay(delay).SetEase(Ease.OutCubic).SetLink(slotObj);
-
-        return slot;
+        return slotObj.GetComponent<ItemShopSlot>();
     }
 
     /// <summary>スクロール位置を先頭にリセットする。</summary>
@@ -383,18 +381,11 @@ public class BlackSmithView : MonoBehaviour
 
         if (displayedMoney == money) return;
 
-        moneyTween?.Kill();
-        moneyTween = DOTween.To(() => displayedMoney, x =>
-            {
-                displayedMoney = x;
-                playerMoneyText.text = $"{x:N0}G";
-            }, money, 0.35f)
-            .SetEase(Ease.OutCubic)
-            .SetLink(playerMoneyText.gameObject);
-
-        playerMoneyText.transform.DOKill(true);
-        playerMoneyText.transform.DOPunchScale(Vector3.one * 0.1f, 0.25f, 6, 0.7f)
-            .SetLink(playerMoneyText.gameObject);
+        // #2 数字を回して財布を弾ませる（共通部品。省略モードでは即最終の額）
+        int from = displayedMoney;
+        displayedMoney = money;
+        moneyTween = UIMotion.CountTo(playerMoneyText, from, money, v => $"{v:N0}G", 0.35f);
+        UIMotion.Bump(playerMoneyText.transform, 1.1f, 0.25f);
     }
 
     public void ShowDialogue(string message)
@@ -539,11 +530,34 @@ public class BlackSmithView : MonoBehaviour
 
         if (scrollRect)        scrollRect.gameObject.SetActive(!isDevelopment);
         if (developmentPanel)  developmentPanel.SetActive(isDevelopment);
+
+        // #7 タブを替えたら中身を横から滑り込ませる（右のタブへ移ったら右から）。初回・同じタブは動かさない
+        if (lastSwitchedTab.HasValue && lastSwitchedTab.Value != tab)
+        {
+            var content = isDevelopment
+                ? (developmentPanel != null ? developmentPanel.transform as RectTransform : null)
+                : (scrollRect != null ? scrollRect.transform as RectTransform : null);
+            TabSwitcher.SlideContent(content, TabOrder(tab) > TabOrder(lastSwitchedTab.Value) ? 1 : -1);
+        }
+        lastSwitchedTab = tab;
         // 並べ替えUIは武具の指標（収益/需要/価格）専用なので武具タブ以外では隠す
         if (sortDropdown)      sortDropdown.gameObject.SetActive(tab == BlackSmithTab.Weapon || tab == BlackSmithTab.Armor);
         // 開発タブ: レベルアップ（支払い）は初期フォーカスにしない。タブボタン自体に置く
         if (isDevelopment) UpdatePadFocus(developButton);
     }
+
+    private BlackSmithTab? lastSwitchedTab;
+    private int shownSmithLevel;
+
+    /// <summary>タブの並び（画面の左から）。</summary>
+    private static int TabOrder(BlackSmithTab tab) => tab switch
+    {
+        BlackSmithTab.Weapon => 0,
+        BlackSmithTab.Armor => 1,
+        BlackSmithTab.Special => 2,
+        BlackSmithTab.Development => 3,
+        _ => 0,
+    };
 
     private readonly List<GameObject> unlockEntries = new();
 
@@ -601,6 +615,11 @@ public class BlackSmithView : MonoBehaviour
 
             unlockEntries.Add(entry);
         }
+
+        // #3 次のレベルで並ぶ商品を順に出す
+        var rows = new List<RectTransform>();
+        foreach (var e in unlockEntries) if (e != null && e.transform is RectTransform rt) rows.Add(rt);
+        if (unlockListRoot.gameObject.activeInHierarchy) UIMotion.Stagger(rows, 0.05f);
     }
 
     private static T FindChildComponent<T>(Transform parent, string childName) where T : Component
@@ -641,7 +660,12 @@ public class BlackSmithView : MonoBehaviour
         bool isMax = currentLevel >= maxLevel;
 
         if (blackSmithLevelText)
+        {
             blackSmithLevelText.text = $"鍛冶屋 Lv.{currentLevel}";
+            // レベルが上がった瞬間だけ弾ませる
+            if (shownSmithLevel > 0 && currentLevel > shownSmithLevel) UIMotion.Bump(blackSmithLevelText.transform, 1.25f, 0.3f);
+            shownSmithLevel = currentLevel;
+        }
 
         if (isMax)
         {

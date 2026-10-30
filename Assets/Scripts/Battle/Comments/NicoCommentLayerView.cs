@@ -153,6 +153,22 @@ public class NicoCommentLayerView : MonoBehaviour
             item.Rect.anchoredPosition = new Vector2((areaSize.x - width) * 0.5f, y);
             UIFx.Pop(item.Rect, 0.6f, 0.18f);
         }
+
+        // #15 大きなコメント・スパチャだけ枠付きで強調（ほかは今まで通り。使い回しで Release されると枠は自動で消える）
+        if (req.IsSuperChat)
+            CommentHighlight.Apply(item.Rect, CommentHighlightStyle.SuperChat, SuperChatBoard(req.Color));
+        else if (req.Size == NicoCommentSize.Big)
+            CommentHighlight.Apply(item.Rect, CommentHighlightStyle.Big);
+        else
+            CommentHighlight.Clear(item.Rect);
+    }
+
+    /// <summary>スパチャの板の色: 文字と同じ色相の暗い色（文字の色のままだと読めないため）。</summary>
+    private static Color SuperChatBoard(Color textColor)
+    {
+        var c = Color.Lerp(textColor, Color.black, 0.62f);
+        c.a = 0.92f;
+        return c;
     }
 
     public void SetPaused(bool paused)

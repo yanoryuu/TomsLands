@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -18,6 +20,11 @@ using UnityEngine;
 /// - 受け箱の unixMs から StaleMs を過ぎたコメントは返さずに捨てる。
 /// - 返すのは 1 回に 1 件: 前の返事から MinGapMs 以上たち、判断の一言（persona_log / consult_log）が QuietMs 以上書かれていないとき。
 ///   やり取りの 2 行は同時に書く（読み上げ側は 30 秒を過ぎた返事を捨てるので、言わせる直前に書く）。
+/// - GPU サーバーの LLM（D:\Tools\tokotom-live\llm\GPU_LLM_SPEC.md）: LlmEndpoint が返す（endpoint.json が RUNNING かつ ready）ときは
+///   LLM に頼み（別スレッド。Tick は待たない）、3 秒で返らなければそのコメントには返さない。検査に落ちたら返さずに次のコメントへ。
+///   どちらも行は書くが line を付けず、rejected に捨てた文を入れる（読み上げ側は line が空の行を読まない）。
+///   行の source は "llm" / "template"、LLM に頼んだ行は llmMs（頼んでから返るまで）。配信の終わりに kind = "llm_summary" の行で捨てた割合を書く。
+///   LlmEndpoint が null（ファイルが無い・止まっている・準備中）なら今までどおりテンプレート。つながらない（打ち切り以外の失敗）ときもテンプレート。
 /// </summary>
 public sealed class PersonaCommentEngine
 {
@@ -39,6 +46,19 @@ public sealed class PersonaCommentEngine
         [JsonProperty("stream")] public string Stream = "";
         [JsonProperty("counts")] public Dictionary<string, int> Counts = new();
         [JsonProperty("recent")] public List<string> Recent = new();
+        /// <summary>この配信で LLM に頼んだ数・使った数・捨てた数（配信の終わりに llm_summary の行にする）。</summary>
+        [JsonProperty("llm")] public LlmStats Llm = new();
+    }
+
+    public sealed class LlmStats
+    {
+        [JsonProperty("tried")] public int Tried;
+        [JsonProperty("used")] public int Used;
+        /// <summary>捨てた数（検査に落ちた＋打ち切り）。</summary>
+        [JsonProperty("dropped")] public int Dropped;
+        [JsonProperty("timeout")] public int Timeout;
+        /// <summary>つながらない等（テンプレートで返した）。</summary>
+        [JsonProperty("error")] public int Error;
     }
 
     public sealed class PendingComment
@@ -71,6 +91,24 @@ public sealed class PersonaCommentEngine
     public long GapMs = MinGapMs;
     public long QuietGapMs = QuietMs;
     public System.Random Rng = new();
+    /// <summary>LLM のつなぎ先（毎回読み直す。null = テンプレート）。</summary>
+    public Func<PersonaCommentLlm.Endpoint> LlmEndpoint = () => null;
+    /// <summary>LLM に頼む（content を返す。打ち切りは ct）。テストでは差し替える。</summary>
+    public Func<PersonaCommentLlm.Endpoint, string, CancellationToken, Task<string>> LlmPost = PersonaCommentLlm.PostAsync;
+    public long LlmTimeoutMs = PersonaCommentLlm.TimeoutMs;
+
+    /// <summary>LLM に頼んで返りを待っているコメント（状態ファイルには残さない。ドメインの再読み込みで消えたら返さない）。</summary>
+    private sealed class Flight
+    {
+        public PersonaComment Comment;
+        public PersonaCommentFacts Facts;
+        public long StartMs;
+        public Task<(string content, long ms)> Task;
+        public CancellationTokenSource Cts;
+    }
+
+    private Flight _flight;
+    public bool LlmBusy => _flight != null;
 
     private State _state;
     public State Current => _state ??= LoadState();
@@ -88,6 +126,7 @@ public sealed class PersonaCommentEngine
         bool dirty = false;
         if (s.Stream != (streamId ?? ""))
         {
+            written.AddRange(FlushLlmStats(s));
             s.Stream = streamId ?? "";
             s.Counts.Clear();
             s.Recent.Clear();
@@ -100,7 +139,17 @@ public sealed class PersonaCommentEngine
         s.Pending.RemoveAll(p => now - p.UnixMs > StaleMs);
         dirty |= s.Pending.Count != before;
 
-        if (s.Pending.Count > 0 && now - s.LastReplyUnixMs >= GapMs && now - LastDecisionWriteMs() >= QuietGapMs)
+        if (_flight != null)
+        {
+            // LLM の返りを待っている: 返ったら書く（待っているあいだは次のコメントを取らない）
+            var rows = PollFlight(s, now);
+            if (rows != null)
+            {
+                written.AddRange(rows);
+                dirty = true;
+            }
+        }
+        else if (s.Pending.Count > 0 && now - s.LastReplyUnixMs >= GapMs && now - LastDecisionWriteMs() >= QuietGapMs)
         {
             // スパチャ → 新しい順
             var pick = s.Pending.OrderByDescending(p => p.Amount != null).ThenByDescending(p => p.UnixMs).First();
@@ -108,47 +157,248 @@ public sealed class PersonaCommentEngine
             Remember(s, pick.Id);
             dirty = true;
             var c = pick.ToComment();
-            string cat = PersonaCommentLines.NormalizeCat(c);
-            var lines = PersonaCommentLines.Reply(c, cat, Facts() ?? new PersonaCommentFacts(), Rng, s.Counts, s.Recent);
-            if (lines.Count > 0)
+            var facts = Facts() ?? new PersonaCommentFacts();
+            PersonaCommentLlm.Endpoint ep = null;
+            try { ep = LlmEndpoint?.Invoke(); }
+            catch (Exception) { ep = null; }
+            if (ep != null)
             {
-                int ex = ++s.Exchange;
-                var ctx = Context();
-                var at = DateTimeOffset.FromUnixTimeMilliseconds(now).ToLocalTime();
-                string text = !string.IsNullOrEmpty(c.Text) ? c.Text : c.SuperchatAmount ?? "";
-                var sb = new StringBuilder();
-                for (int i = 0; i < lines.Count; i++)
-                {
-                    var row = new Dictionary<string, object>
-                    {
-                        ["time"] = at.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture),
-                        ["unixMs"] = now,
-                        ["run"] = ctx.run ?? "",
-                        ["day"] = ctx.day,
-                        ["phase"] = ctx.phase ?? "",
-                        ["exchange"] = ex,
-                        ["seq"] = i,
-                        ["kind"] = "comment",
-                        ["speaker"] = lines[i].Speaker,
-                        ["line"] = lines[i].Line,
-                        ["e"] = lines[i].E ?? "normal",
-                        ["commentId"] = c.Id,
-                        ["commentAuthor"] = c.Author ?? "",
-                        ["commentText"] = text,
-                        ["commentCat"] = cat,
-                    };
-                    written.Add(row);
-                    sb.Append(JsonConvert.SerializeObject(row)).Append('\n');
-                }
-                // やり取りの 2 行は 1 回で書く（読み上げ側が途中までしか見ないことがないように）
-                string path = LogPathFor(at.LocalDateTime);
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
-                File.AppendAllText(path, sb.ToString(), new UTF8Encoding(false));
-                s.LastReplyUnixMs = now;
+                s.Llm.Tried++;
+                StartFlight(ep, c, facts, now);
+                var rows = PollFlight(s, now);   // すぐ返った（テストの差し替え）ならこの回で書く
+                if (rows != null) written.AddRange(rows);
+            }
+            else
+            {
+                written.AddRange(WriteTemplate(s, c, facts, now, null, null));
             }
         }
         if (dirty) SaveState();
         return written;
+    }
+
+    /// <summary>テンプレートで返す（今までどおり）。llmMs / llmError は LLM がつながらなかったときだけ。</summary>
+    private List<Dictionary<string, object>> WriteTemplate(State s, PersonaComment c, PersonaCommentFacts facts, long now, long? llmMs, string llmError)
+    {
+        string cat = PersonaCommentLines.NormalizeCat(c);
+        var lines = PersonaCommentLines.Reply(c, cat, facts, Rng, s.Counts, s.Recent);
+        if (lines.Count == 0) return new List<Dictionary<string, object>>();
+        var extra = new Dictionary<string, object> { ["source"] = "template" };
+        if (llmMs.HasValue) extra["llmMs"] = llmMs.Value;
+        if (!string.IsNullOrEmpty(llmError)) extra["llmError"] = llmError;
+        return WriteExchange(s, c, cat, lines.Select(l => (l.Speaker, l.Line, l.E ?? "normal")).ToList(), now, extra);
+    }
+
+    private void StartFlight(PersonaCommentLlm.Endpoint ep, PersonaComment c, PersonaCommentFacts facts, long now)
+    {
+        string body = PersonaCommentLlm.BuildRequest(ep.Model, c.Text, c.SuperchatAmount, facts);
+        var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(Math.Max(1, LlmTimeoutMs)));
+        var post = LlmPost;
+        var task = Task.Run(async () =>
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            string content = await post(ep, body, cts.Token).ConfigureAwait(false);
+            return (content, sw.ElapsedMilliseconds);
+        });
+        _flight = new Flight { Comment = c, Facts = facts, StartMs = now, Task = task, Cts = cts };
+        // すぐ返るもの（テストの差し替え）はこの回で書けるよう少しだけ待つ（本番の HTTP はここでは待たない）
+        try { task.Wait(TimeSpan.FromMilliseconds(50)); }
+        catch (Exception) { /* 下の PollFlight で扱う */ }
+    }
+
+    /// <summary>返りを見る。まだなら null。返った・打ち切ったら書いた行（捨てた行を含む）。</summary>
+    private List<Dictionary<string, object>> PollFlight(State s, long now)
+    {
+        var f = _flight;
+        if (f == null) return null;
+        var c = f.Comment;
+        if (!f.Task.IsCompleted)
+        {
+            if (now - f.StartMs <= LlmTimeoutMs) return null;
+            try { f.Cts.Cancel(); }
+            catch (Exception) { /* もう終わっている */ }
+            _flight = null;
+            s.Llm.Timeout++;
+            s.Llm.Dropped++;
+            return WriteDropped(s, c, PersonaCommentLines.NormalizeCat(c), null, new List<string> { "打ち切り" }, now - f.StartMs, now);
+        }
+        _flight = null;
+        f.Cts.Dispose();
+        if (f.Task.IsFaulted || f.Task.IsCanceled)
+        {
+            var ex = f.Task.Exception?.GetBaseException();
+            bool timeout = f.Task.IsCanceled || ex is OperationCanceledException;
+            if (timeout)
+            {
+                s.Llm.Timeout++;
+                s.Llm.Dropped++;
+                return WriteDropped(s, c, PersonaCommentLines.NormalizeCat(c), null, new List<string> { "打ち切り" }, Math.Max(LlmTimeoutMs, now - f.StartMs), now);
+            }
+            // つながらない等（打ち切り以外の失敗）: そのコメントはテンプレートで返す
+            s.Llm.Error++;
+            return WriteTemplate(s, c, f.Facts, now, now - f.StartMs, ex?.Message ?? "error");
+        }
+        var (content, ms) = f.Task.Result;
+        var reply = PersonaCommentLlm.Evaluate(content, c.Text ?? "", c.SuperchatAmount, f.Facts);
+        // 返ってきた cat を使う（受け箱の cat より正しい）。スパチャは額があれば superchat に固定
+        string cat = c.SuperchatAmount != null ? "superchat" : reply.Cat ?? PersonaCommentLines.NormalizeCat(c);
+        if (!reply.Ok)
+        {
+            s.Llm.Dropped++;
+            return WriteDropped(s, c, cat, reply, reply.Problems, ms, now);
+        }
+        s.Llm.Used++;
+        string lead = PersonaCommentLlm.Lead(c.To, cat);
+        var lines = new List<(string speaker, string line, string e)>();
+        foreach (var who in new[] { lead, lead == "z" ? "m" : "z" })
+        {
+            string line = who == "z" ? reply.Z : reply.M;
+            if (!string.IsNullOrEmpty(line)) lines.Add((who, line, PersonaCommentLines.DefaultE(who, cat)));
+        }
+        return WriteExchange(s, c, cat, lines, now, new Dictionary<string, object> { ["source"] = "llm", ["llmMs"] = ms });
+    }
+
+    private Dictionary<string, object> BaseRow(long now, int exchange, int seq)
+    {
+        var ctx = Context();
+        var at = DateTimeOffset.FromUnixTimeMilliseconds(now).ToLocalTime();
+        return new Dictionary<string, object>
+        {
+            ["time"] = at.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture),
+            ["unixMs"] = now,
+            ["run"] = ctx.run ?? "",
+            ["day"] = ctx.day,
+            ["phase"] = ctx.phase ?? "",
+            ["exchange"] = exchange,
+            ["seq"] = seq,
+            ["kind"] = "comment",
+        };
+    }
+
+    private static void AddComment(Dictionary<string, object> row, PersonaComment c, string cat)
+    {
+        row["commentId"] = c.Id;
+        row["commentAuthor"] = c.Author ?? "";
+        row["commentText"] = !string.IsNullOrEmpty(c.Text) ? c.Text : c.SuperchatAmount ?? "";
+        row["commentCat"] = cat;
+    }
+
+    /// <summary>やり取りの行を書く（2 行は 1 回で書く。読み上げ側が途中までしか見ないことがないように）。</summary>
+    private List<Dictionary<string, object>> WriteExchange(State s, PersonaComment c, string cat, List<(string speaker, string line, string e)> lines,
+        long now, Dictionary<string, object> extra)
+    {
+        var written = new List<Dictionary<string, object>>();
+        if (lines.Count == 0) return written;
+        int ex = ++s.Exchange;
+        for (int i = 0; i < lines.Count; i++)
+        {
+            var row = BaseRow(now, ex, i);
+            row["speaker"] = lines[i].speaker;
+            row["line"] = lines[i].line;
+            row["e"] = lines[i].e ?? "normal";
+            AddComment(row, c, cat);
+            foreach (var kv in extra) row[kv.Key] = kv.Value;
+            written.Add(row);
+        }
+        Append(now, written);
+        s.LastReplyUnixMs = now;
+        return written;
+    }
+
+    /// <summary>
+    /// 捨てた返事の行（line は付けない。読み上げ側は line が空の行を読まない）。rejected に捨てた文、problems に理由、dropped = true。
+    /// 返事の間隔は空けない（次のコメントへすぐ進む）。
+    /// </summary>
+    private List<Dictionary<string, object>> WriteDropped(State s, PersonaComment c, string cat, PersonaCommentLlm.Reply reply, List<string> problems,
+        long llmMs, long now)
+    {
+        var parts = new List<(string speaker, string text)>();
+        if (reply != null)
+        {
+            string lead = PersonaCommentLlm.Lead(c.To, cat);
+            foreach (var who in new[] { lead, lead == "z" ? "m" : "z" })
+            {
+                string t = who == "z" ? reply.Z : reply.M;
+                if (!string.IsNullOrEmpty(t)) parts.Add((who, t));
+            }
+        }
+        if (parts.Count == 0) parts.Add(("", reply?.Raw ?? ""));
+        var all = problems ?? new List<string>();
+        var written = new List<Dictionary<string, object>>();
+        int ex = ++s.Exchange;
+        for (int i = 0; i < parts.Count; i++)
+        {
+            string who = parts[i].speaker;
+            var row = BaseRow(now, ex, i);
+            row["speaker"] = who;
+            row["rejected"] = parts[i].text;
+            // その人の理由と、2 人に掛かる理由（人の印が無いもの）
+            row["problems"] = all.Where(p => who == "" || !(p.StartsWith("z:") || p.StartsWith("m:")) || p.StartsWith(who + ":")).ToList();
+            row["dropped"] = true;
+            row["e"] = "normal";
+            AddComment(row, c, cat);
+            row["source"] = "llm";
+            row["llmMs"] = llmMs;
+            written.Add(row);
+        }
+        Append(now, written);
+        return written;
+    }
+
+    private void Append(long now, List<Dictionary<string, object>> rows)
+    {
+        if (rows.Count == 0) return;
+        var sb = new StringBuilder();
+        foreach (var row in rows) sb.Append(JsonConvert.SerializeObject(row)).Append('\n');
+        var at = DateTimeOffset.FromUnixTimeMilliseconds(now).ToLocalTime();
+        string path = LogPathFor(at.LocalDateTime);
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        File.AppendAllText(path, sb.ToString(), new UTF8Encoding(false));
+    }
+
+    /// <summary>
+    /// 配信の終わり（live.flag が消えた）: この配信で LLM に頼んでいれば、捨てた割合を kind = "llm_summary" の行（line なし）で書き、数え直す。
+    /// 別の配信になったとき（Tick の streamId が変わった）も同じ行を書く。
+    /// </summary>
+    public List<Dictionary<string, object>> EndStream()
+    {
+        var s = Current;
+        if (_flight != null)
+        {
+            try { _flight.Cts.Cancel(); }
+            catch (Exception) { /* もう終わっている */ }
+            _flight = null;
+        }
+        var rows = FlushLlmStats(s);
+        if (rows.Count > 0) SaveState();
+        return rows;
+    }
+
+    private List<Dictionary<string, object>> FlushLlmStats(State s)
+    {
+        var rows = new List<Dictionary<string, object>>();
+        var st = s.Llm ?? new LlmStats();
+        s.Llm = new LlmStats();
+        if (st.Tried <= 0) return rows;
+        long now = NowMs();
+        var at = DateTimeOffset.FromUnixTimeMilliseconds(now).ToLocalTime();
+        double rate = st.Dropped / (double)st.Tried;
+        rows.Add(new Dictionary<string, object>
+        {
+            ["time"] = at.ToString("yyyy-MM-ddTHH:mm:ss.fff", CultureInfo.InvariantCulture),
+            ["unixMs"] = now,
+            ["kind"] = "llm_summary",
+            ["stream"] = s.Stream ?? "",
+            ["tried"] = st.Tried,
+            ["used"] = st.Used,
+            ["dropped"] = st.Dropped,
+            ["timeout"] = st.Timeout,
+            ["error"] = st.Error,
+            ["dropRate"] = Math.Round(rate, 3),
+        });
+        Append(now, rows);
+        Debug.Log($"[PersonaComments] この配信の LLM の返事: 頼んだ {st.Tried} / 使った {st.Used} / 捨てた {st.Dropped}（{rate:P0}、うち打ち切り {st.Timeout}）/ つながらずテンプレート {st.Error}");
+        return rows;
     }
 
     private static void Remember(State s, string id)
@@ -238,6 +488,7 @@ public sealed class PersonaCommentEngine
                     st.Pending ??= new List<PendingComment>();
                     st.Counts ??= new Dictionary<string, int>();
                     st.Recent ??= new List<string>();
+                    st.Llm ??= new LlmStats();
                     return st;
                 }
             }
@@ -285,6 +536,9 @@ public static class PersonaCommentResponder
     public static string StatePath => Path.Combine(ProjectRoot, "Library", "PersonaMarathon", "comment_state.json");
 
     private static PersonaCommentEngine _engine;
+    private static bool _wasLive;
+    private static bool _llmOn = true;
+    private static string _llmEndpointPath;
     private static double _nextPoll;
     private static double _nextConfig;
     private static string _inbox;
@@ -307,7 +561,15 @@ public static class PersonaCommentResponder
         if (EditorApplication.isPlayingOrWillChangePlaymode && !EditorApplication.isPlaying) return;   // Play に入る・抜ける途中
         try
         {
-            if (!File.Exists(LiveFlagPath)) return;   // 配信していない: 何もしない（設定ファイルも読まない）
+            if (!File.Exists(LiveFlagPath))
+            {
+                // 配信していない: 何もしない（設定ファイルも読まない）。配信が終わった直後だけ、LLM の捨てた割合を書く
+                if (_wasLive && _engine != null)
+                    foreach (var row in _engine.EndStream()) Debug.Log($"{LogPrefix} 配信の終わり: LLM 捨てた割合 {row["dropRate"]}");
+                _wasLive = false;
+                return;
+            }
+            _wasLive = true;
             string inbox = InboxPath(now);
             WriteStatus();
             if (!Active(LiveFlagPath, inbox)) return;
@@ -317,7 +579,12 @@ public static class PersonaCommentResponder
             _engine.GapMs = gap > 0f ? (long)(gap * 1000) : PersonaCommentEngine.MinGapMs;
             string stream = File.GetLastWriteTimeUtc(LiveFlagPath).Ticks.ToString(CultureInfo.InvariantCulture);
             foreach (var row in _engine.Tick(stream))
-                Debug.Log($"{LogPrefix} {row["commentCat"]} → {row["speaker"]}: {row["line"]}");
+            {
+                if (row.TryGetValue("line", out var line))
+                    Debug.Log($"{LogPrefix} {row["commentCat"]} → {row["speaker"]}: {line}（{(row.TryGetValue("source", out var src) ? src : "")}）");
+                else if (row.TryGetValue("rejected", out var rej))
+                    Debug.Log($"{LogPrefix} {row["commentCat"]} → {row["speaker"]}: 捨てた「{rej}」（{string.Join("・", row.TryGetValue("problems", out var pr) && pr is IEnumerable<string> ps ? ps : Array.Empty<string>())}）");
+            }
         }
         catch (Exception e)
         {
@@ -341,7 +608,17 @@ public static class PersonaCommentResponder
         _configTime = t;
         var config = PersonaPlayConfig.Load();
         _statusPath = Rooted(config.LiveStatusPath);
-        return _inbox = Rooted(config.CommentInboxPath);
+        _inbox = Rooted(config.CommentInboxPath);
+        _llmOn = config.CommentLlm;
+        _llmEndpointPath = Rooted(config.CommentLlmEndpointPath);
+        // 空なら受け箱（…	okotom-live\chat\inbox.jsonl）の隣の llm\endpoint.json（配信側が GPU サーバーの起動・停止のたびに書く）
+        if (_llmEndpointPath == null && !string.IsNullOrEmpty(_inbox))
+        {
+            string chat = Path.GetDirectoryName(_inbox);
+            string live = string.IsNullOrEmpty(chat) ? null : Path.GetDirectoryName(chat);
+            if (!string.IsNullOrEmpty(live)) _llmEndpointPath = Path.Combine(live, "llm", "endpoint.json");
+        }
+        return _inbox;
     }
 
     private static string Rooted(string path) =>
@@ -425,6 +702,8 @@ public static class PersonaCommentResponder
         Facts = GatherFacts,
         LastDecisionWriteMs = LastDecisionWrite,
         Context = RowContext,
+        // GPU サーバーの LLM（endpoint.json は毎回読み直す。RUNNING かつ ready のときだけ。それ以外はテンプレート）
+        LlmEndpoint = () => _llmOn ? PersonaCommentLlm.ReadEndpoint(_llmEndpointPath) : null,
     };
 
     // =====================================================

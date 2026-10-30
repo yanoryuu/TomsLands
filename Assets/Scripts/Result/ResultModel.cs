@@ -180,13 +180,26 @@ public class ResultModel
         return "C";
     }
 
-    /// <summary>難易度ごとのランク A の基準（儲け）。</summary>
+    /// <summary>
+    /// 難易度ごとのランク A の基準（儲け）。
+    /// = （village.rankBaseProfitShort/Medium/Long の上書き、無ければ rankBaseProfits）+ 村の総合Lv × village.rankBasePerVillageLevel。
+    /// 既定（上書き 0・増分 0）は rankBaseProfits のまま。村の総合Lv はいまの施設レベル（ラン中は建て替わらないので出店時と同じ）。
+    /// </summary>
     public static int RankBaseProfit(GameModeId mode)
     {
-        var table = GameConst.Village.rankBaseProfits;
+        var settings = GameConst.Village;
+        var table = settings.rankBaseProfits;
         int i = (int)mode;
         int v = table != null && i >= 0 && i < table.Length ? table[i] : 0;
-        return Mathf.Max(1, v);
+        int overrideValue = mode switch
+        {
+            GameModeId.Short => settings.rankBaseProfitShort,
+            GameModeId.Medium => settings.rankBaseProfitMedium,
+            GameModeId.Long => settings.rankBaseProfitLong,
+            _ => 0,
+        };
+        int villageLevel = settings.rankBasePerVillageLevel != 0 ? VillageRank.TotalLevel(VillageEffects.Current) : 0;
+        return StreamTuning.RankBase(v, overrideValue, settings.rankBasePerVillageLevel, villageLevel);
     }
 
     /// <summary>
