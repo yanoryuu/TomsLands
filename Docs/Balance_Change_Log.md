@@ -154,3 +154,22 @@ dungeonId `*` は全ダンジョン共通、bal_dungeons の id（例 DemonKingC
 
 - マラソンのセーブは Library/PersonaMarathonSaves_cleared/*_20261030_reset に退避し、全員最初から。AI の記憶は残す
 - 占い師の干渉の数値（ProphetTuning）はコードに仮置き。マラソンで測ってから審議でマスタへ移す
+
+## 2026-10-30 22:03 アップロード: 換金率を 1 に戻し、村まわりの額を全部 3 倍に
+
+ユーザーの指摘（換金率 0.3 は分かりにくく計算しにくい）と審議（panel_1030f、全部 ×3 の案 84 点）。育つ速さは今とほぼ同じ（3〜5% 速い）。体験版には村が無いので体験版の遊びは変わらない。
+
+| シート | キー | 前 | 後 | 理由 |
+|---|---|---|---|---|
+| data | village.conversionRate | 0.3 | 1 | 儲けはそのまま村に入る、を約束にする |
+| data | village.clearBaseFlat | 420000 | 1260000 | ×3（単位をそろえる） |
+| data | village.clearDebtMultiplier | 0.5 | 1.5 | ×3 |
+| data | village.bankruptcyBaseFunds | 50000 | 150000 | ×3 |
+| data | village.bankruptcyPaidDebtRate | 1 | 3 | ×3 |
+| villageFacilities | 領主館 Lv1〜5 | 25/45/70/100/140万 | 75/135/210/300/420万 | ×3 |
+| villageFacilities | 銀行 Lv1〜5 | 20/40/80/130/180万 | 60/120/240/390/540万 | ×3 |
+| villageFacilities | ギルド・酒場・職人組合・広場 Lv1〜5 | 9/16/27/42/61万 | 27/48/81/126/183万 | ×3（合計 4,350 万） |
+
+- スタートダッシュ（30/50/70 万）と難易度の倍率（1/1.25/1.5）は据え置き
+- C#（71aa3d6f）: AI の施設の元が取れるかの判断を「前の周に村へ入った額 × 4」と比べる形に
+- マラソンのセーブは Library/PersonaMarathonSaves_cleared/*_20261030_x3 に退避して最初から
