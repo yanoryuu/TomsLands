@@ -14,15 +14,30 @@ using UnityEngine.UI;
 /// </summary>
 public class DemonKingPayoutView : MonoBehaviour
 {
-    // 魔王のセリフ（のじゃ口調の短い1行）。表示ごとにランダム。吹き出しの折り返し位置は \n で決める
-    private static readonly string[] DemonKingLines =
+    // 魔王のセリフ（のじゃ口調の短い1行）。この回の儲け方で組を選び、組の中からランダム。吹き出しの折り返し位置は \n で決める
+    // 大儲け: この回の受取が出資の 3 倍以上
+    private static readonly string[] BigWinLines =
     {
         "我が軍への出資、\n大儲けじゃったな！",
+        "大穴じゃ！\nよう読んだのう！",
+        "ふはは！\n笑いが止まらぬわ！",
+    };
+    // ふつう: 出資より多く戻った（または出資なしで報酬だけ）
+    private static readonly string[] WinLines =
+    {
         "勇者め、\nざまあみろじゃ！",
         "よう出資してくれた。\n配当じゃ！",
         "我が城は落ちぬ。\n次も頼んだのじゃ！",
         "ふはは！\n出資の見返りじゃ！",
     };
+    // 元本だけ: 元本保証で出資の合計まで引き上げた
+    private static readonly string[] PrincipalOnlyLines =
+    {
+        "勝って当然の戦じゃ。\n元手だけは返そう",
+        "損はさせぬ。\nじゃが儲けもないぞ",
+        "読みは当たりじゃ。\n次は大穴を狙え！",
+    };
+    private const float BigWinRate = 3f;
 
     private const float RowInterval = 0.16f;
     private const float CountUpDuration = 0.8f;
@@ -182,8 +197,20 @@ public class DemonKingPayoutView : MonoBehaviour
         if (oddsValueText != null) oddsValueText.text = data.OddsValueNumber + "<size=70%>G</size>";
         // 回収倍率は受取累計で見る。はじめて支援額を回収しきった回だけ「元本回収」
         if (stampText != null) stampText.text = data.JustRecoveredPrincipal ? "元本\n回収" : FormatRate(data.ReturnRate);
-        if (bubbleText != null) bubbleText.text = DemonKingLines[UnityEngine.Random.Range(0, DemonKingLines.Length)];
+        if (bubbleText != null)
+        {
+            var lines = PickLines(data);
+            bubbleText.text = lines[UnityEngine.Random.Range(0, lines.Length)];
+        }
         SetTotal(0);
+    }
+
+    /// <summary>この回の儲け方に合うセリフの組（元本だけ／大儲け／ふつう）。</summary>
+    internal static string[] PickLines(DemonKingPayoutData data)
+    {
+        if (data.PrincipalGuaranteed) return PrincipalOnlyLines;
+        if (data.SupportAmount > 0 && data.FinalReward >= data.SupportAmount * BigWinRate) return BigWinLines;
+        return WinLines;
     }
 
     /// <summary>プレハブ上の明細3行の高さ（上から支援額・防衛報酬・レリック補正）を覚えておく。オッズの行はこの3行の間隔で詰めて並べる。</summary>
