@@ -663,7 +663,6 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         foreach (var d in Dungeons.GetAll())
         {
             bool isMax = d.currentDungeonLevel >= GameConst.MaxDungeonLevel;
-            float clearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver);
             s.Dungeons.Add(new AutoPlayDungeonView
             {
                 Id = d.key.ToString(),
@@ -671,9 +670,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 Level = d.currentDungeonLevel,
                 MaxLevel = GameConst.MaxDungeonLevel,
                 SupportCost = isMax ? 0 : d.levelUpCost,
-                // 見込みの段のオッズ込み（SupportOdds。オッズが既定 1 なら rewardGold そのまま。レリックはここでは掛けない＝今と同じ）
-                DefeatReward = SupportOdds.Expected(d.rewardGold, () => clearPct, d.GetInvestedTotal(d.currentDungeonLevel)),
-                ClearChancePct = clearPct,
+                DefeatReward = d.rewardGold, // 画面の防衛報酬（基本額。レリックはここでは掛けない）
+                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver),
                 IsNextStream = next.HasValue && next.Value == d.key,
             });
         }
@@ -1273,13 +1271,12 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         LastBattle = outcome;
         int rawSales = outcome.RawSales;
 
-        // BattleSceneStarter.CalculateDefeatReward と同じ式（SupportOdds.Payout: レリック × 配信開始時の見込みの段のオッズ）
+        // BattleSceneStarter.CalculateDefeatReward と同じ式（SupportPayout.Calculate: 基本額 × レリック倍率）
         int defeatReward = 0;
         if (!outcome.Victory)
         {
             int reward = dungeon?.GetDefenseReward(level) ?? 0;
-            defeatReward = SupportOdds.Payout(reward, RelicBattleEffects.DefeatRewardMul, _battleIn.PreStreamClearPct,
-                dungeon?.GetInvestedTotal(level) ?? 0).Total;
+            defeatReward = SupportPayout.Calculate(reward, RelicBattleEffects.DefeatRewardMul).Total;
         }
 
         // 勇者敗北の返金騒ぎ（BattleSceneStarter の写し）: 負けたら武器・防具の売上の一部を返す
@@ -1391,8 +1388,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             DisplayedClearPct = displayedClearPct,
             HasBoss = hasBoss,
             EnemyCount = count,
-            // 実際の支払いと同じ式（レリック × 見込みの段のオッズ。オッズが既定 1 なら今と同じ）
-            DefeatReward = SupportOdds.Payout(dungeon.GetDefenseReward(level), rewardMul, displayedClearPct, dungeon.GetInvestedTotal(level)).Total,
+            // 実際の支払いと同じ式（SupportPayout.Calculate: 基本額 × レリック倍率）
+            DefeatReward = SupportPayout.Calculate(dungeon.GetDefenseReward(level), rewardMul).Total,
             HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
             HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
             HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,

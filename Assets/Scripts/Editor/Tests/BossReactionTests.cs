@@ -53,7 +53,7 @@ public class BossReactionTests
     [Test]
     public void Score_MeterKeepsSixStepsWithOwnEvenSplit()
     {
-        // オッズの互角は 1 段になったが、ボスの点数のメーター点は 6 段のまま（互角を 50% で分ける）
+        // 見込みの互角は 1 段だが、ボスの点数のメーター点は 6 段のまま（互角を 50% で分ける）
         var s = new BossReactionSettingsData();
         Assert.AreEqual(5f, BossSituationScorer.Score(0.90f, 1f, false, null, s, Pinch, Critical).MeterPoints);
         Assert.AreEqual(4f, BossSituationScorer.Score(0.69f, 1f, false, null, s, Pinch, Critical).MeterPoints);
@@ -208,7 +208,7 @@ public class BossReactionTests
     [Test]
     public void ShadowLogs_WrittenWithStreamContext()
     {
-        BalanceLog.BeginStream("DemonKingCastle", 3, 12, 20, 58f, SupportOdds.FromClearPct(58f));
+        BalanceLog.BeginStream("DemonKingCastle", 3, 12, 20, 58f);
         var t = new BossReactionTracker(new BossReactionSettingsData(), Pinch, Critical, 30f);
         t.RecordTurn(At(0.6f, heat: 35f, phase: 0), 1, 1f, DungeonPhaseTypes.Normal, false);
         var e = t.OnAppear(BossReactionTracker.KindBoss, At(0.6f), false, 40f);

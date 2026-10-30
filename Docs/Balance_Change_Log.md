@@ -173,3 +173,14 @@ dungeonId `*` は全ダンジョン共通、bal_dungeons の id（例 DemonKingC
 - スタートダッシュ（30/50/70 万）と難易度の倍率（1/1.25/1.5）は据え置き
 - C#（71aa3d6f）: AI の施設の元が取れるかの判断を「前の周に村へ入った額 × 4」と比べる形に
 - マラソンのセーブは Library/PersonaMarathonSaves_cleared/*_20261030_x3 に退避して最初から
+
+## 2026-10-31 魔王軍支援のオッズと元本保証をやめる
+
+ユーザーの指摘・決定。配当は防衛報酬 × 遺物の倍率だけに戻る。dungeonLevels の値は今のまま。
+
+| シート | キー | 前 | 後 | 理由 |
+|---|---|---|---|---|
+| data | streamTuning.supportOddsEasy / Favorable / Even / Unfavorable / Hopeless | 2 / 1.5 / 1 / 0.45 / 0.3 | （行を削除＝1） | レベルアップでダンジョンが難しくなるほどオッズが下がり、上げた恩恵を打ち消していた（ユーザーの指摘・決定） |
+| data | streamTuning.supportPayoutFloorToStake | true | （行を削除＝false） | オッズをやめるので、その下限の元本保証も不要（同上） |
+
+- マラソンのセーブを最初からにするかはユーザー判断

@@ -84,7 +84,7 @@ public class GameConstData
     // false（既定・配信に無いとき）: 今までどおり倒した敵の数の割合。data シートのキー clearOutlookProgressByEnemyHp（bool）
     public bool clearOutlookProgressByEnemyHp = false;
     // 見込みの段階（楽勝／有利／互角／不利／絶望）の境目（表示％）。data シートのキー clearOutlook.easyMin など。
-    // 画面の見込みと魔王軍支援のオッズの段（streamTuning.supportOdds*）は同じこの境目を使う。既定は今の 75 / 63 / 35 / 15
+    // 画面の見込み・配信の勝敗メーターの段・計測ログの見込みの段は同じこの境目を使う。既定は今の 75 / 63 / 35 / 15
     public ClearOutlookSettingsData clearOutlook = new ClearOutlookSettingsData();
 
     /// <summary>
@@ -129,7 +129,7 @@ public class GameConstData
     }
 
     // >>> 配信の調整キー・ボスの反応（2026-10-30。クラスは Assets/Scripts/Streaming/StreamTuning.cs。既定値はどれも今の動き）
-    // data シートのキー: streamTuning.supportOddsEasy など / bossReaction.uiEnabled など
+    // data シートのキー: streamTuning.restockRefundRate など / bossReaction.uiEnabled など
     public StreamTuningData streamTuning = new StreamTuningData();
     public BossReactionSettingsData bossReaction = new BossReactionSettingsData();
     // <<<

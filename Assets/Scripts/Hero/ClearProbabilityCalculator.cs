@@ -16,7 +16,7 @@ using UnityEngine;
 /// 画面には％を出さず、<see cref="ToOutlook"/> の5段階（楽勝／有利／互角／不利／絶望）で出す
 /// （戦闘は決定論なので「60%」は実際には「ほぼ勝つ」で、確率として読むと誤解されるため）。
 /// 段階の境目（表示％）は gameconst の clearOutlook.easyMin / favorableMin / evenMin / unfavorableMin
-/// （ClearOutlookSettingsData）。店の勇者パネル・マップ・配信の勝敗メーターの段・魔王軍支援のオッズの段（SupportOdds）は
+/// （ClearOutlookSettingsData）。店の勇者パネル・マップ・配信の勝敗メーターの段・計測ログの見込みの段（BalanceLog）は
 /// みなこの 1 か所の境目を使う。境目は上の変換を逆算して、ドライランの勝敗と残りHP・撃破数に対応させている。
 /// 既定（配信に無いとき。2026-10-30 までの動き）: 75 / 63 / 35 / 15
 /// ・楽勝: 勝つ想定で、勇者の残りHPが 50% 以上（75% 以上）

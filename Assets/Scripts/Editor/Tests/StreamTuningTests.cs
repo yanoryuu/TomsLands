@@ -20,14 +20,8 @@ public class StreamTuningTests
     public void Defaults_ReproduceCurrentBehavior()
     {
         var d = new StreamTuningData();
-        Assert.AreEqual(1f, d.supportOddsEasy);
-        Assert.AreEqual(1f, d.supportOddsFavorable);
-        Assert.AreEqual(1f, d.supportOddsEven);
-        Assert.AreEqual(1f, d.supportOddsUnfavorable);
-        Assert.AreEqual(1f, d.supportOddsHopeless);
         Assert.IsFalse(d.plazaBonusAfterRefund);
         Assert.IsFalse(d.paymentMorningLossFloor);
-        Assert.IsFalse(d.supportPayoutFloorToStake, "元本保証は既定 off（同梱の表では Lv4・Lv5 で額が変わるため）");
         Assert.AreEqual(ItemModel.HeroWinPriceMultiplier, d.heroWinPriceMultiplier);
         Assert.AreEqual(ItemModel.HeroWinBossPriceMultiplier, d.heroWinBossPriceMultiplier);
         Assert.AreEqual(1f, d.restockRefundRate);
@@ -58,7 +52,6 @@ public class StreamTuningTests
         Assert.AreEqual(63f, ClearProbabilityCalculator.Thresholds.favorableMin);
         Assert.AreEqual(35f, ClearProbabilityCalculator.Thresholds.evenMin);
         Assert.AreEqual(15f, ClearProbabilityCalculator.Thresholds.unfavorableMin);
-        Assert.AreEqual(1f, SupportOdds.Multiplier(SupportOddsTier.Easy));
         Assert.AreEqual(2.2f, ItemModel.HeroWinMultiplier(1), 1e-6f);
         Assert.AreEqual(1.8f, ItemModel.HeroWinMultiplier(0), 1e-6f);
     }
@@ -67,10 +60,10 @@ public class StreamTuningTests
     public void Clone_CopiesTuningDeeply()
     {
         var a = new GameConstData();
-        a.streamTuning.supportOddsEasy = 2f;
+        a.streamTuning.restockRefundRate = 0.5f;
         var b = a.Clone();
-        b.streamTuning.supportOddsEasy = 3f;
-        Assert.AreEqual(2f, a.streamTuning.supportOddsEasy, "複製を書き換えても元は変わらない");
+        b.streamTuning.restockRefundRate = 0.8f;
+        Assert.AreEqual(0.5f, a.streamTuning.restockRefundRate, "複製を書き換えても元は変わらない");
         Assert.AreNotSame(a.bossReaction, b.bossReaction);
         a.clearOutlook.favorableMin = 55f;
         var c = a.Clone();
@@ -78,48 +71,51 @@ public class StreamTuningTests
         Assert.AreEqual(55f, a.clearOutlook.favorableMin, "境目も深くコピーする");
     }
 
-    // ---- 1. オッズ ----
+    // ---- 1. 見込みの段の境目 ----
 
-    // 既定の境目（75 / 63 / 35 / 15）= 2026-10-30 までの見込みの段そのまま
-    [TestCase(90f, SupportOddsTier.Easy)]
-    [TestCase(75f, SupportOddsTier.Easy)]
-    [TestCase(74.9f, SupportOddsTier.Favorable)]
-    [TestCase(63f, SupportOddsTier.Favorable)]
-    [TestCase(62.9f, SupportOddsTier.Even)]
-    [TestCase(59f, SupportOddsTier.Even)]
-    [TestCase(40f, SupportOddsTier.Even)]
-    [TestCase(35f, SupportOddsTier.Even)]
-    [TestCase(34.9f, SupportOddsTier.Unfavorable)]
-    [TestCase(15f, SupportOddsTier.Unfavorable)]
-    [TestCase(14.9f, SupportOddsTier.Hopeless)]
-    [TestCase(5f, SupportOddsTier.Hopeless)]
-    [TestCase(-1f, SupportOddsTier.Unknown)]
-    public void SupportOdds_TierFromClearPct_DefaultThresholds(float pct, SupportOddsTier expected)
+    /// <summary>シートで境目を変えたとき（75 / 55 / 45 / 15）。</summary>
+    private const string PlannedJson =
+        "{\"clearOutlook\":{\"easyMin\":75,\"favorableMin\":55,\"evenMin\":45,\"unfavorableMin\":15}}";
+
+    // 既定の境目（75 / 63 / 35 / 15）= 2026-10-30 までの見込みの段そのまま。計測ログの段のキーも同じ境目
+    [TestCase(90f, ClearOutlook.Easy, "easy")]
+    [TestCase(75f, ClearOutlook.Easy, "easy")]
+    [TestCase(74.9f, ClearOutlook.Favorable, "favorable")]
+    [TestCase(63f, ClearOutlook.Favorable, "favorable")]
+    [TestCase(62.9f, ClearOutlook.Even, "even")]
+    [TestCase(40f, ClearOutlook.Even, "even")]
+    [TestCase(35f, ClearOutlook.Even, "even")]
+    [TestCase(34.9f, ClearOutlook.Unfavorable, "unfavorable")]
+    [TestCase(15f, ClearOutlook.Unfavorable, "unfavorable")]
+    [TestCase(14.9f, ClearOutlook.Hopeless, "hopeless")]
+    [TestCase(5f, ClearOutlook.Hopeless, "hopeless")]
+    public void ClearOutlook_DefaultThresholds_LogKeyMatches(float pct, ClearOutlook expected, string key)
     {
         GameConst.ResetToDefault();
-        Assert.AreEqual(expected, SupportOdds.FromClearPct(pct));
-        if (expected != SupportOddsTier.Unknown)
-            Assert.AreEqual((int)expected, (int)ClearProbabilityCalculator.ToOutlook(pct), "画面の見込みと同じ段");
+        Assert.AreEqual(expected, ClearProbabilityCalculator.ToOutlook(pct));
+        Assert.AreEqual(key, BalanceLog.OutlookKey(pct), "計測ログの段は画面の見込みと同じ");
     }
 
-    // 予定の境目（clearOutlook.favorableMin 55・evenMin 45）: 楽勝 75〜 / 有利 55〜75 / 互角 45〜55 / 不利 15〜45 / 絶望 〜15
-    [TestCase(90f, SupportOddsTier.Easy)]
-    [TestCase(75f, SupportOddsTier.Easy)]
-    [TestCase(74.9f, SupportOddsTier.Favorable)]
-    [TestCase(59f, SupportOddsTier.Favorable)]
-    [TestCase(55f, SupportOddsTier.Favorable)]
-    [TestCase(54.9f, SupportOddsTier.Even)]
-    [TestCase(50f, SupportOddsTier.Even)]
-    [TestCase(45f, SupportOddsTier.Even)]
-    [TestCase(44.9f, SupportOddsTier.Unfavorable)]
-    [TestCase(40f, SupportOddsTier.Unfavorable)]
-    [TestCase(15f, SupportOddsTier.Unfavorable)]
-    [TestCase(14.9f, SupportOddsTier.Hopeless)]
-    public void SupportOdds_TierFromClearPct_RemoteThresholds(float pct, SupportOddsTier expected)
+    [Test]
+    public void ClearOutlook_UnknownPct_LogKeyIsUnknown()
+    {
+        Assert.AreEqual("unknown", BalanceLog.OutlookKey(-1f));
+        Assert.AreEqual("不明", BalanceLog.OutlookLabel(-1f));
+    }
+
+    // 境目を変えたとき（clearOutlook.favorableMin 55・evenMin 45）: 楽勝 75〜 / 有利 55〜75 / 互角 45〜55 / 不利 15〜45 / 絶望 〜15
+    [TestCase(90f, ClearOutlook.Easy)]
+    [TestCase(74.9f, ClearOutlook.Favorable)]
+    [TestCase(55f, ClearOutlook.Favorable)]
+    [TestCase(54.9f, ClearOutlook.Even)]
+    [TestCase(45f, ClearOutlook.Even)]
+    [TestCase(44.9f, ClearOutlook.Unfavorable)]
+    [TestCase(15f, ClearOutlook.Unfavorable)]
+    [TestCase(14.9f, ClearOutlook.Hopeless)]
+    public void ClearOutlook_RemoteThresholds(float pct, ClearOutlook expected)
     {
         GameConst.OverrideFromJson(PlannedJson);
-        Assert.AreEqual(expected, SupportOdds.FromClearPct(pct));
-        Assert.AreEqual((int)expected, (int)ClearProbabilityCalculator.ToOutlook(pct), "画面の見込み（店・マップ・メーター）も同じ境目");
+        Assert.AreEqual(expected, ClearProbabilityCalculator.ToOutlook(pct), "画面の見込み（店・マップ・メーター）も同じ境目");
     }
 
     [Test]
@@ -155,183 +151,45 @@ public class StreamTuningTests
         Assert.IsFalse(AchievementDefinitions.IsLongShotClearPct(45f));
     }
 
-    [Test]
-    public void SupportOdds_DefaultIsOneForEveryTier_RewardUnchanged()
+    // ---- 1b. 防衛報酬（魔王軍支援の配当）= 基本額 × レリック倍率 ----
+
+    [TestCase(1f)]
+    [TestCase(1.2f)]
+    [TestCase(1.35f)]
+    public void Payout_IsBaseTimesRelic_NoticeMatchesPaid(float relicMul)
     {
-        var d = new StreamTuningData();
-        foreach (SupportOddsTier t in System.Enum.GetValues(typeof(SupportOddsTier)))
-        {
-            Assert.AreEqual(1f, SupportOdds.Multiplier(t, d), t.ToString());
-            Assert.AreEqual(45000, SupportOdds.Apply(45000, SupportOdds.Multiplier(t, d)));
-        }
-    }
-
-    [Test]
-    public void SupportOdds_PlannedValues_Applied()
-    {
-        var d = PlannedOdds();
-        Assert.AreEqual(200000, SupportOdds.Apply(100000, SupportOdds.Multiplier(SupportOddsTier.Easy, d)));
-        Assert.AreEqual(150000, SupportOdds.Apply(100000, SupportOdds.Multiplier(SupportOddsTier.Favorable, d)));
-        Assert.AreEqual(100000, SupportOdds.Apply(100000, SupportOdds.Multiplier(SupportOddsTier.Even, d)));
-        Assert.AreEqual(45000, SupportOdds.Apply(100000, SupportOdds.Multiplier(SupportOddsTier.Unfavorable, d)));
-        Assert.AreEqual(30000, SupportOdds.Apply(100000, SupportOdds.Multiplier(SupportOddsTier.Hopeless, d)));
-        Assert.AreEqual(100000, SupportOdds.Apply(100000, SupportOdds.Multiplier(SupportOddsTier.Unknown, d)), "見込みが分からなければ 1");
-    }
-
-    [Test]
-    public void SupportOdds_FromRemoteGameConst()
-    {
-        GameConst.OverrideFromJson("{\"streamTuning\":{\"supportOddsEven\":0.8}}");
-        Assert.AreEqual(0.8f, SupportOdds.Multiplier(SupportOddsTier.Even), 1e-6f);
-        Assert.AreEqual(1f, SupportOdds.Multiplier(SupportOddsTier.Favorable), "書いていないキーは既定のまま");
-
-        GameConst.OverrideFromJson(PlannedJson);
-        var d = StreamTuning.Data;
-        var planned = PlannedOdds();
-        Assert.AreEqual(planned.supportOddsEasy, d.supportOddsEasy);
-        Assert.AreEqual(planned.supportOddsFavorable, d.supportOddsFavorable);
-        Assert.AreEqual(planned.supportOddsEven, d.supportOddsEven);
-        Assert.AreEqual(planned.supportOddsUnfavorable, d.supportOddsUnfavorable);
-        Assert.AreEqual(planned.supportOddsHopeless, d.supportOddsHopeless);
-    }
-
-    // ---- 1b. オッズの配当を、通知書・実績・AI の見込みが同じ額で見ること ----
-
-    private static StreamTuningData PlannedOdds() => new()
-    {
-        supportOddsEasy = 2f, supportOddsFavorable = 1.5f, supportOddsEven = 1f,
-        supportOddsUnfavorable = 0.45f, supportOddsHopeless = 0.3f,
-    };
-
-    /// <summary>リセット時にシートへ入れる予定の値（境目 75 / 55 / 45 / 15、オッズ 2.0 / 1.5 / 1.0 / 0.45 / 0.3）。</summary>
-    private const string PlannedJson =
-        "{\"clearOutlook\":{\"easyMin\":75,\"favorableMin\":55,\"evenMin\":45,\"unfavorableMin\":15}," +
-        "\"streamTuning\":{\"supportOddsEasy\":2,\"supportOddsFavorable\":1.5,\"supportOddsEven\":1," +
-        "\"supportOddsUnfavorable\":0.45,\"supportOddsHopeless\":0.3}}";
-
-    [TestCase(90f, 1f)]
-    [TestCase(59f, 1.2f)]
-    [TestCase(25f, 1.35f)]
-    [TestCase(-1f, 1.2f)]
-    public void Payout_Default_IsRelicOnly_Unchanged(float pct, float relicMul)
-    {
-        var d = new StreamTuningData();
         const int baseReward = 45001;
         int legacy = UnityEngine.Mathf.RoundToInt(baseReward * relicMul); // 2026-10-30 までの式
-        var p = SupportOdds.Payout(baseReward, relicMul, pct, 0, d);
-        Assert.IsFalse(SupportOdds.IsActive(d));
+        var p = SupportPayout.Calculate(baseReward, relicMul); // BattleSceneStarter.CalculateDefeatReward と同じ呼び出し
         Assert.AreEqual(legacy, p.Total);
-        Assert.AreEqual(legacy, p.RelicReward);
-        Assert.AreEqual(1f, p.OddsMultiplier);
+        Assert.AreEqual(baseReward, p.BaseReward);
+        Assert.AreEqual(relicMul, p.Multiplier, 1e-6f);
 
-        // 通知書: オッズの行は出ず、レリック補正の行は今までと同じ
+        // 通知書: レリック補正の行は基本額との差、行を足すと受取額
         var notice = DemonKingPayoutData.From("魔王城", 3, 30000, p, 0);
         var old = new DemonKingPayoutData("魔王城", 3, 30000, baseReward, relicMul, legacy, 0);
-        Assert.IsFalse(notice.HasOddsLine);
         Assert.AreEqual(old.HasRelicBonus, notice.HasRelicBonus);
         Assert.AreEqual(old.RelicBonus, notice.RelicBonus);
         Assert.AreEqual(old.FinalReward, notice.FinalReward);
-        Assert.IsFalse(old.HasOddsLine, "オッズを渡さない古い作り方も行を出さない");
-
-        // 実績
-        Assert.AreEqual(legacy, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, 0, d));
-
-        // AI の見込み: オッズが全部 1 なら見込みのドライランを呼ばず、額もそのまま
-        bool called = false;
-        Assert.AreEqual(legacy, SupportOdds.Expected(legacy, () => { called = true; return pct; }, 0, d));
-        System.Func<int, int> rewardAt = lv => baseReward * lv;
-        Assert.AreSame(rewardAt, PersonaSupportEv.RewardWithOdds(rewardAt, lv => { called = true; return pct; }, null, d));
-        Assert.IsFalse(called);
+        Assert.AreEqual(notice.FinalReward, notice.BaseReward + notice.RelicBonus);
     }
 
     [Test]
-    public void Payout_DefaultFromBakedGameConst_IsInactive()
+    public void Payout_None_IsZero()
     {
-        GameConst.ResetToDefault();
-        Assert.IsFalse(SupportOdds.IsActive());
-        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f, 0));
-    }
-
-    // シートに予定の境目とオッズを入れたとき（GameConst 経由。境目の 75 / 55 / 45 / 15 をまたぐ）
-    [TestCase(90f, 2f)]
-    [TestCase(75f, 2f)]
-    [TestCase(74.9f, 1.5f)]
-    [TestCase(55f, 1.5f)]
-    [TestCase(54.9f, 1f)]
-    [TestCase(45f, 1f)]
-    [TestCase(44.9f, 0.45f)]
-    [TestCase(15f, 0.45f)]
-    [TestCase(14.9f, 0.3f)]
-    [TestCase(5f, 0.3f)]
-    public void Payout_WithOdds_NoticeAchievementAndAiMatchPaid(float pct, float odds)
-    {
-        GameConst.OverrideFromJson(PlannedJson);
-        const int baseReward = 50000;
-        const float relicMul = 1.2f;
-        var paid = SupportOdds.Payout(baseReward, relicMul, pct, 0); // BattleSceneStarter.CalculateDefeatReward と同じ呼び出し
-        Assert.IsTrue(SupportOdds.IsActive());
-        Assert.AreEqual(60000, paid.RelicReward);
-        Assert.AreEqual(odds, paid.OddsMultiplier, 1e-6f);
-        Assert.AreEqual((int)System.Math.Round(60000 * (double)odds, System.MidpointRounding.AwayFromZero), paid.Total);
-
-        // 通知書: オッズの行（段の名前と倍率）を出し、差はレリック補正に混ぜない。行を足すと受取額になる。互角（×1.0）は行を出さない
-        var notice = DemonKingPayoutData.From("魔王城", 3, 30000, paid, 0);
-        Assert.AreEqual(!UnityEngine.Mathf.Approximately(odds, 1f), notice.HasOddsLine);
-        if (notice.HasOddsLine)
-        {
-            StringAssert.Contains(SupportOdds.Label(SupportOdds.FromClearPct(pct)), notice.OddsLabel);
-            StringAssert.Contains(ClearProbabilityCalculator.OutlookLabel(ClearProbabilityCalculator.ToOutlook(pct)), notice.OddsLabel,
-                "通知書の段の名前は画面の見込みと同じ");
-            StringAssert.Contains($"×{odds:0.0#}", notice.OddsLabel);
-            StringAssert.StartsWith(odds >= 1f ? "+" : "-", notice.OddsValueNumber);
-        }
-        Assert.AreEqual(10000, notice.RelicBonus, "レリック補正の行は基本額 × レリックの分だけ");
-        Assert.IsTrue(notice.HasRelicBonus);
-        Assert.AreEqual(paid.Total, notice.FinalReward);
-        Assert.AreEqual(notice.FinalReward, notice.BaseReward + notice.RelicBonus + notice.OddsBonus);
-
-        // 実績の「配当」
-        Assert.AreEqual(paid.Total, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, 0));
-
-        // AI の見込み: レリック込みの額にオッズを掛けると実際の支払いと同じ
-        Assert.AreEqual(paid.Total, SupportOdds.Expected(paid.RelicReward, () => pct, 0));
-        // 支援の期待値（レリックを掛けない rewardAt）: 同じ見込みならレリック 1 の支払いと同じ
-        var rewardAt = PersonaSupportEv.RewardWithOdds(lv => baseReward, lv => pct, null, StreamTuning.Data);
-        Assert.AreEqual(SupportOdds.Payout(baseReward, 1f, pct, 0).Total, rewardAt(3));
+        Assert.AreEqual(0, SupportPayout.None.Total);
+        Assert.AreEqual(0, SupportPayout.Calculate(0, 1.2f).Total, "未出資（基本額 0）は 0");
     }
 
     [Test]
-    public void Payout_WithOdds_UnknownEstimate_NoLine()
+    public void SupportEv_UsesRewardTimesLossRate()
     {
-        var paid = SupportOdds.Payout(50000, 1f, -1f, 0, PlannedOdds());
-        Assert.AreEqual(50000, paid.Total);
-        Assert.IsFalse(DemonKingPayoutData.From("魔王城", 1, 0, paid, 0).HasOddsLine);
-    }
-
-    [Test]
-    public void Payout_WithOdds_FromRemote_AchievementUsesSameValue()
-    {
-        GameConst.OverrideFromJson("{\"streamTuning\":{\"supportOddsUnfavorable\":0.45}}");
-        Assert.IsTrue(SupportOdds.IsActive());
-        var paid = SupportOdds.Payout(50000, 1.2f, 25f, 0);
-        Assert.AreEqual(27000, paid.Total);
-        Assert.AreEqual(27000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f, 0));
-        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 59f, 0), "1 のままの段は変わらない");
-        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 40f, 0), "既定の境目では 40% は互角（1 のまま）");
-    }
-
-    [Test]
-    public void SupportEv_UsesOddsAdjustedReward()
-    {
-        var d = PlannedOdds();
         var rates = new PersonaSupportRates();
         // 上限 = 今のLv なので、支援しないときの期待値（負け率 × 防衛報酬）だけを見る
-        var plain = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000, lv => 100000, 1000000);
-        var withOdds = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000,
-            PersonaSupportEv.RewardWithOdds(lv => 100000, lv => 25f, null, d), 1000000);
+        var plain = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000,
+            lv => SupportPayout.Calculate(100000, 1.2f).Total, 1000000);
         float p = rates.LossRate("DemonKingCastle", 3);
-        Assert.AreEqual(p * 100000, plain.EvNone, 1f);
-        Assert.AreEqual(p * SupportOdds.Payout(100000, 1f, 25f, 0, d).Total, withOdds.EvNone, 1f);
+        Assert.AreEqual(p * 120000, plain.EvNone, 1f);
     }
 
     // ---- 2. 広場の上乗せの土台 ----

@@ -27,7 +27,7 @@ public class BattleInputData : ScriptableObject
 
     /// <summary>
     /// 配信開始時（配信の日の朝に配信を決めた時点）のクリア見込み（ClearProbabilityCalculator の表示％）。-1 = 分からない。
-    /// 魔王軍支援の配当のオッズ（SupportOdds）と計測ログに使う。アセットには保存しない。
+    /// 計測ログ（BalanceLog の clearPct・estimateTier）に使う。アセットには保存しない。
     /// </summary>
     [NonSerialized] public float PreStreamClearPct = -1f;
 

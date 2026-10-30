@@ -224,7 +224,7 @@ public static class BossReactionTable
 
 /// <summary>
 /// ボスの状況の点数に使う勝敗メーターの 6 段（0 = 絶望 … 5 = 楽勝）。見込みの 5 段（ClearProbabilityCalculator.ToOutlook）の
-/// 互角だけを 50% で勇者寄り・魔王寄りに分ける。魔王軍支援のオッズ（SupportOddsTier。互角は 1 段）とは別に、ここだけで持つ。
+/// 互角だけを 50% で勇者寄り・魔王寄りに分ける。見込みの 5 段（ClearOutlook。互角は 1 段）とは別に、ここだけで持つ。
 /// </summary>
 public enum BossMeterStep
 {

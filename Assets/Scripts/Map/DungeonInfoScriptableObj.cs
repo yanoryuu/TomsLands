@@ -112,7 +112,7 @@ public static class DungeonLevels
     /// <summary>
     /// 出資の合計: 初期Lv（0 未満は 0）→ level までの魔王軍支援の費用（levelUpCost は「そのLvから次のLvへ」の費用）の合計。
     /// Lv0→Lv1（最初の出資）は Lv1 の行の費用（GetLevelData のクランプ）。ダンジョンLvは魔王軍支援でしか上がらないので、払った額と一致する。
-    /// 配当通知書の「支援額」と、配当の下限（SupportOdds.Payout の stake）はこの 1 か所から取る。
+    /// 配当通知書の「支援額」はこの 1 か所から取る。
     /// </summary>
     public static int InvestedTotal(System.Func<int, DungeonLevelData> getLevelData, int initLevel, int level)
     {

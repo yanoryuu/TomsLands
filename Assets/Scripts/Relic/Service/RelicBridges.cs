@@ -24,7 +24,7 @@ public static class RelicBattleEffects
             Debug.Log($"[RelicBattleEffects] HeroPowerMul={HeroPowerMul:F2}, DefeatRewardMul={DefeatRewardMul:F2}");
     }
 
-    /// <summary>所持レリックの防衛報酬の倍率（SetFrom が配信の直前に確定する値。魔王軍支援の画面の見込みもこれを使う）。</summary>
+    /// <summary>所持レリックの防衛報酬の倍率（SetFrom が配信の直前に確定する値。AI の支援の見込みもこれを使う）。</summary>
     public static float DefeatRewardMulOf(RelicEffectResolver resolver)
         => resolver != null ? Mathf.Max(0f, resolver.Modify(RelicStatId.DefeatRewardMul, 1f)) : 1f;
 }

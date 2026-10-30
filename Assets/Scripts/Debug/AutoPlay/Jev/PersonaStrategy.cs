@@ -1813,26 +1813,16 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
             _supportRates = PersonaSupportRates.Load(path);
         }
         int budget = Mathf.Max(0, cash * 7 / 10 - Mathf.Max(0, _p.CashFloor));
-        // 防衛報酬はそのレベルで配信したときの見込みの段のオッズ込み（実際の支払いと同じ SupportOdds。既定のオッズ 1 なら今と同じ）
+        // 防衛報酬はレリック込み（実際の支払いと同じ SupportPayout.Calculate）
         return PersonaSupportEv.Choose(_supportRates, n.Dungeon, d.currentDungeonLevel, GameConst.MaxDungeonLevel,
             lv => d.GetLevelData(lv)?.levelUpCost ?? 0,
-            PersonaSupportEv.RewardWithOdds(lv => d.GetDefenseReward(lv), lv => ClearPctAt(d, lv), d.GetInvestedTotal), budget);
+            lv => ExpectedDefenseReward(d, lv), budget);
     }
 
-    /// <summary>
-    /// そのダンジョンをそのレベルで配信したときのクリア見込み（店の勇者パネル・GameFlowManager.ComputePreStreamClearPct と同じ計算。
-    /// 装備は今のまま）。配当のオッズの段を決めるのに使う。分からなければ -1（オッズ 1）。
-    /// </summary>
-    private static float ClearPctAt(DungeonData d, int level)
-    {
-        var hero = AutoPlayUi.Resolve<HeroModel>()?.heroData;
-        if (hero == null || d == null) return -1f;
-        return ClearProbabilityCalculator.Calculate(hero, AutoPlayUi.Resolve<ItemModel>(), d, level, AutoPlayUi.Resolve<RelicEffectResolver>());
-    }
-
-    /// <summary>そのレベルでの防衛報酬の見込み（見込みの段のオッズ込み・出資の合計が下限。オッズが全部 1 で下限に届かなければ GetDefenseReward そのまま）。</summary>
+    /// <summary>そのレベルで勇者が負けたときの防衛報酬（基本額 × レリック倍率。実際の支払いと同じ SupportPayout.Calculate）。</summary>
     private static int ExpectedDefenseReward(DungeonData d, int level)
-        => SupportOdds.Expected(d.GetDefenseReward(level), () => ClearPctAt(d, level), d.GetInvestedTotal(level));
+        => SupportPayout.Calculate(d.GetDefenseReward(level),
+            RelicBattleEffects.DefeatRewardMulOf(AutoPlayUi.Resolve<RelicEffectResolver>())).Total;
 
     public float VillageLookSeconds => _p.VillageLookSeconds;
 
@@ -2453,7 +2443,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 WeaknessKnown = prep != null && prep.WeaknessKnown,
                 Weakness = prep != null && prep.Weakness.HasValue ? prep.Weakness.Value.ToString() : null,
                 IntelCost = prep?.IntelCost ?? -1,
-                // 防衛報酬は見込みの段のオッズ込み（SupportOdds。既定のオッズ 1 なら rewardGold そのまま）
+                // 防衛報酬はレリック込み（SupportPayout.Calculate。レリックが無ければ rewardGold そのまま）
                 DefeatReward = ExpectedDefenseReward(dungeon, dungeon.currentDungeonLevel),
                 SupportCost = isMax ? 0 : dungeon.levelUpCost,
                 RewardAfterSupport = ExpectedDefenseReward(dungeon, isMax ? dungeon.currentDungeonLevel : dungeon.currentDungeonLevel + 1),

@@ -29,7 +29,7 @@ public static class BalanceLog
     }
 
     /// <summary>配信の始まり。以後の行にこの配信の情報を付ける。</summary>
-    public static void BeginStream(string dungeon, int level, int day, int flowIndex, float clearPct, SupportOddsTier tier)
+    public static void BeginStream(string dungeon, int level, int day, int flowIndex, float clearPct)
     {
         _streamSeq++;
         _stream = new JObject
@@ -40,8 +40,29 @@ public static class BalanceLog
             ["day"] = day,
             ["flowIndex"] = flowIndex,
             ["clearPct"] = clearPct >= 0f ? Math.Round(clearPct, 1) : (double?)null,
-            ["estimateTier"] = SupportOdds.Key(tier),
+            ["estimateTier"] = OutlookKey(clearPct),
         };
+    }
+
+    /// <summary>見込み（表示％）の段のログ用のキー（easy / favorable / even / unfavorable / hopeless。分からなければ unknown）。</summary>
+    public static string OutlookKey(float clearPct)
+    {
+        if (float.IsNaN(clearPct) || clearPct < 0f) return "unknown";
+        return ClearProbabilityCalculator.ToOutlook(clearPct) switch
+        {
+            ClearOutlook.Easy => "easy",
+            ClearOutlook.Favorable => "favorable",
+            ClearOutlook.Even => "even",
+            ClearOutlook.Unfavorable => "unfavorable",
+            _ => "hopeless",
+        };
+    }
+
+    /// <summary>見込み（表示％）の段の見出し（楽勝〜絶望。分からなければ 不明）。</summary>
+    public static string OutlookLabel(float clearPct)
+    {
+        if (float.IsNaN(clearPct) || clearPct < 0f) return "不明";
+        return ClearProbabilityCalculator.OutlookLabel(ClearProbabilityCalculator.ToOutlook(clearPct));
     }
 
     public static void EndStream() => _stream = null;

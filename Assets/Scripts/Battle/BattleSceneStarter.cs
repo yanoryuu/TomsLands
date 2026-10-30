@@ -177,7 +177,7 @@ public class BattleSceneStarter : IAsyncStartable, IDisposable
         // 計測ログ（BalanceLog）: この配信の行にダンジョン・Lv・日・配信開始時の見込みの段を付ける
         BalanceLog.BeginStream(_inputData.DungeonKey.ToString(), _inputData.DungeonLevel,
             _tomsModel != null ? _tomsModel.CurrentTurn.Value : -1, _inputData.GameFlowIndex,
-            _inputData.PreStreamClearPct, SupportOdds.FromClearPct(_inputData.PreStreamClearPct));
+            _inputData.PreStreamClearPct);
 
         // 勇者モデルを構築
         var heroModel = new HeroModel();
@@ -766,7 +766,7 @@ public class BattleSceneStarter : IAsyncStartable, IDisposable
     /// <summary>
     /// 勇者敗北時（＝ダンジョン防衛成功時）の報酬を計算する。
     /// 現在のダンジョンレベルの rewardGold（魔王軍側からの報酬）を受け取る。勝利時は 0。
-    /// 配当通知書に出すため、基本額・レリック倍率・見込みの段のオッズも一緒に返す（式は SupportOdds.Payout）。
+    /// 配当通知書に出すため、基本額と倍率も一緒に返す（式は SupportPayout.Calculate）。
     /// </summary>
     private SupportPayout CalculateDefeatReward(BattleResult result)
     {
@@ -775,14 +775,11 @@ public class BattleSceneStarter : IAsyncStartable, IDisposable
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
         int baseReward = dungeon != null ? dungeon.GetDefenseReward(_inputData.DungeonLevel) : 0;
 
-        // レリック補正（魔王ビルド: 防衛報酬アップ。配信遷移時に GameFlowManager がセットする）と、
-        // 見込みに応じたオッズ（配信開始時の見込みの段ごとの倍率。既定はどの段も 1 で今と同じ）
-        // 当たれば最低でも出資の合計（元本保証。streamTuning.supportPayoutFloorToStake）
-        var payout = SupportOdds.Payout(baseReward, RelicBattleEffects.DefeatRewardMul, _inputData.PreStreamClearPct,
-            CalculateSupportAmount(dungeon, _inputData.DungeonLevel));
+        // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
+        var payout = SupportPayout.Calculate(baseReward, RelicBattleEffects.DefeatRewardMul);
 
         if (payout.Total > 0)
-            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {payout.Total}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={payout.Multiplier:F2}, 見込み={SupportOdds.Label(payout.OddsTier)} オッズ×{payout.OddsMultiplier:F2}, 出資の合計={payout.Stake}{(payout.FloorApplied ? " 元本保証" : "")})");
+            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {payout.Total}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={payout.Multiplier:F2})");
         return payout;
     }
 
@@ -798,14 +795,13 @@ public class BattleSceneStarter : IAsyncStartable, IDisposable
         {
             var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
             var tuning = StreamTuning.Data;
-            var tier = SupportOdds.FromClearPct(_inputData.PreStreamClearPct);
             int plazaBase = StreamTuning.PlazaBonusBase(rawSales, heroDefeatRefund);
             var payload = new Newtonsoft.Json.Linq.JObject
             {
                 ["outcome"] = result.ToString(),
                 ["abortedByError"] = result == BattleResult.Abort && _abortedByError,
-                ["estimateTier"] = SupportOdds.Key(tier),
-                ["estimateLabel"] = SupportOdds.Label(tier),
+                ["estimateTier"] = BalanceLog.OutlookKey(_inputData.PreStreamClearPct),
+                ["estimateLabel"] = BalanceLog.OutlookLabel(_inputData.PreStreamClearPct),
                 ["sales"] = rawSales,
                 ["restockCost"] = _battleSpending,
                 ["restockRefund"] = restockRefund,
@@ -815,7 +811,6 @@ public class BattleSceneStarter : IAsyncStartable, IDisposable
                 ["supportPaid"] = CalculateSupportAmount(dungeon, _inputData.DungeonLevel),
                 ["payoutBase"] = reward.BaseReward,
                 ["relicMul"] = Math.Round(reward.Multiplier, 3),
-                ["oddsMul"] = Math.Round(SupportOdds.Multiplier(tier), 3),
                 ["payout"] = reward.Total,
                 ["declarationBonus"] = declarationBonus,
                 ["totalEarnings"] = totalEarnings,
@@ -855,7 +850,6 @@ public class BattleSceneStarter : IAsyncStartable, IDisposable
     /// 魔王軍支援でこのダンジョンに払った累計額。
     /// 支払額はセーブしていないが、ダンジョンLvは魔王軍支援（DungeonLevelUpPresenter）でしか上がらないので、
     /// 初期Lv→現在Lv のレベルアップ費用（levelUpCost は「そのLvから次のLvへ」の費用）の合計と一致する（DungeonLevels.InvestedTotal）。
-    /// 配当の下限（元本保証）にも同じ額を使うので、通知書の回収倍率は防衛成功で 1 倍を下回らない。
     /// </summary>
     private static int CalculateSupportAmount(DungeonInfoScriptableObj dungeon, int currentLevel)
         => dungeon != null ? dungeon.GetInvestedTotal(currentLevel) : 0;

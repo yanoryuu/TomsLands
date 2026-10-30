@@ -143,7 +143,7 @@ public static class PersonaChooser
     // 場面の倍率（画面の数字だけ。ログの features から作り直せるように、ほとんど features から読む）
     // =====================================================
 
-    /// <summary>選択肢 → 倍率（載っていなければ 1）。真偽の質問は "true" の倍率（オッズに掛かる）。</summary>
+    /// <summary>選択肢 → 倍率（載っていなければ 1）。真偽の質問は "true" の倍率（true と false の比に掛かる）。</summary>
     public static Dictionary<string, float> Situation(string question, PersonaSituation s)
     {
         var m = new Dictionary<string, float>();
