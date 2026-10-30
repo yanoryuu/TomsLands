@@ -25,6 +25,8 @@
  * 2026-10-30 更新:
  *   - dungeonLevels を足す（ダンジョンのレベルの表: 魔王軍支援の費用 levelUpCost・防衛の配当 rewardGold）。
  *     1行=1ダンジョン×1レベル。dungeonId "*" は全ダンジョン共通、個別の id（bal_dungeons の id）はそのダンジョンだけ上書き。
+ *   - メニューに「ダンジョン構成ビューア」「ダンジョン構成をチェック」を足す（本体は DungeonViewer.gs / DungeonViewerUI.html）。
+ *     dungeonPhases シートはまだ配信しない（readDungeonPhases_ は用意だけ）。
  */
 
 // ============================================================
@@ -81,6 +83,9 @@ function onOpen() {
     .addSeparator()
     .addItem('Firebaseへアップロード（アイテム）', 'uploadItems')
     .addItem('Firebaseへアップロード（バランス）', 'uploadBalance')
+    .addSeparator()
+    .addItem('ダンジョン構成ビューア', 'showDungeonViewer') // DungeonViewer.gs
+    .addItem('ダンジョン構成をチェック', 'validateDungeonPhases')
     .addToUi();
 }
 

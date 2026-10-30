@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<style>
+  :root {
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #24211d; --sub: #6d675e; --line: #e2ded6;
+    --accent: #6b4fd8; --boss: #c0392b; --warn: #b7791f; --err: #c0392b; --ok: #2f855a;
+    --Water: #2b7bd6; --Fire: #d9532b; --Wood: #3a9a4a; --Light: #c9a227; --Dark: #7046b8; --None: #8a8a8a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif; font-size: 13px; color: var(--ink); background: var(--bg); }
+  header { position: sticky; top: 0; z-index: 2; background: var(--panel); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+  select, button, input { font: inherit; }
+  select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .tabs { display: flex; gap: 4px; }
+  .tab { border: 1px solid var(--line); background: #fff; padding: 5px 12px; border-radius: 6px; cursor: pointer; color: var(--sub); }
+  .tab.on { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .rates { color: var(--sub); font-size: 12px; }
+  .rates b { color: var(--ink); }
+  .rates b.changed { color: var(--accent); }
+  main { padding: 14px 16px 30px; }
+  .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 120px; }
+  .stat .k { color: var(--sub); font-size: 11px; }
+  .stat .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .phases { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .card.bossphase { border-color: #e6b3ad; }
+  .card h3 { margin: 0; padding: 9px 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); background: #faf9f7; }
+  .card h3 .tot { margin-left: auto; font-weight: 500; color: var(--sub); font-size: 12px; font-variant-numeric: tabular-nums; }
+  table { border-collapse: collapse; width: 100%; }
+  .card td, .card th { padding: 6px 10px; border-bottom: 1px solid #f0ede7; text-align: left; white-space: nowrap; }
+  .card th { font-size: 11px; color: var(--sub); font-weight: 500; }
+  .num { text-align: right !important; font-variant-numeric: tabular-nums; }
+  .ename { font-weight: 600; }
+  .eid { color: var(--sub); font-size: 11px; display: block; font-weight: 400; }
+  .el { display: inline-block; padding: 1px 7px; border-radius: 10px; color: #fff; font-size: 11px; }
+  .boss { display: inline-block; padding: 1px 6px; border-radius: 4px; background: var(--boss); color: #fff; font-size: 10px; font-weight: 700; margin-left: 4px; vertical-align: 1px; }
+  .base { color: var(--sub); font-size: 10px; display: block; }
+  .unknown td { color: var(--err); }
+  .card .foot { padding: 7px 10px; display: flex; gap: 6px; justify-content: flex-end; }
+  .btn { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.danger { color: var(--err); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .note { margin: 0 12px 8px; padding: 6px 8px; background: #fff8e6; border-radius: 6px; color: #7a5a12; font-size: 11px; white-space: normal; }
+  .issues { margin-bottom: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+  .issues li { margin: 2px 0; }
+  .issues .error { color: var(--err); }
+  .issues .warn { color: var(--warn); }
+  .issues.ok { color: var(--ok); }
+  .edit-row { display: flex; gap: 6px; align-items: center; padding: 4px 10px; }
+  .edit-row select { flex: 1; min-width: 0; }
+  .matrix { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: auto; }
+  .matrix table td, .matrix table th { border-bottom: 1px solid var(--line); border-right: 1px solid #f0ede7; padding: 7px 10px; vertical-align: top; text-align: left; }
+  .matrix th { background: #faf9f7; font-size: 12px; color: var(--sub); }
+  .matrix tr.sel td { background: #f3f0ff; }
+  .matrix tr { cursor: pointer; }
+  .chip { display: inline-block; margin: 1px 3px 1px 0; padding: 1px 6px; border-radius: 4px; background: #f1efe9; font-size: 12px; }
+  .chip.b { background: #fbe6e3; color: var(--boss); font-weight: 600; }
+  .ptot { display: block; color: var(--sub); font-size: 11px; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  h2 { font-size: 14px; margin: 22px 0 8px; }
+  #status { color: var(--sub); font-size: 12px; margin-left: auto; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <label>ダンジョン <select id="dungeon"></select></label>
+  <div class="tabs" id="levels"></div>
+  <div class="tabs">
+    <button class="tab on" id="viewPhases">フェーズ</button>
+    <button class="tab" id="viewMatrix">5 レベル一覧</button>
+  </div>
+  <span class="rates" id="rates"></span>
+  <label class="rates"><input type="checkbox" id="allEnemies"> 編集で全ダンジョンの敵を選べる</label>
+  <span id="status">読み込み中…</span>
+</header>
+<main>
+  <div id="issues"></div>
+  <section id="phaseView">
+    <div class="summary" id="summary"></div>
+    <div class="phases" id="phases"></div>
+    <div style="margin-top:12px"><button class="btn" id="addPhase">＋ フェーズを足す</button></div>
+  </section>
+  <section id="matrixView" class="hidden">
+    <div class="matrix" id="matrix"></div>
+  </section>
+</main>
+<script>
+var EL_JA = { None: '無', Water: '水', Fire: '火', Wood: '木', Light: '光', Dark: '闇' };
+var state = { data: null, dungeonId: null, level: 1, view: 'phases', editing: null, busy: false };
+
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function fmt(n) { return n == null || isNaN(n) ? '—' : Number(n).toLocaleString('ja-JP'); }
+function scaled(v, rate) { return v == null ? null : Math.round(v * rate); }
+
+function dungeon() {
+  var ds = state.data.dungeons;
+  for (var i = 0; i < ds.length; i++) if (ds[i].id === state.dungeonId) return ds[i];
+  return { id: state.dungeonId, name: state.dungeonId, hpRate: 1, atkRate: 1, defRate: 1 };
+}
+function phasesOf(dungeonId, level) {
+  return state.data.phases.filter(function (p) { return p.dungeonId === dungeonId && p.level === level; })
+    .sort(function (a, b) { return a.phase - b.phase; });
+}
+function enemyPool() {
+  var en = state.data.enemies, ids;
+  if ($('allEnemies').checked) {
+    ids = Object.keys(en);
+  } else {
+    var set = {};
+    state.data.phases.forEach(function (p) { if (p.dungeonId === state.dungeonId) p.enemyIds.forEach(function (id) { set[id] = 1; }); });
+    ids = Object.keys(set).filter(function (id) { return en[id]; });
+  }
+  return ids.sort(function (a, b) {
+    var ea = en[a], eb = en[b];
+    if (ea.isBoss !== eb.isBoss) return ea.isBoss ? 1 : -1;
+    return (ea.hp || 0) - (eb.hp || 0) || a.localeCompare(b, 'en', { numeric: true });
+  });
+}
+function rewardFor(level) {
+  var hit = null, star = null;
+  state.data.levels.forEach(function (r) {
+    if (r.level !== level) return;
+    if (r.dungeonId === state.dungeonId) hit = r;
+    if (r.dungeonId === '*') star = r;
+  });
+  var r = { levelUpCost: null, rewardGold: null };
+  [star, hit].forEach(function (x) { if (!x) return; if (x.levelUpCost != null) r.levelUpCost = x.levelUpCost; if (x.rewardGold != null) r.rewardGold = x.rewardGold; });
+  return r;
+}
+function phaseTotals(p, d) {
+  var hp = 0, atk = 0, unknown = 0;
+  p.enemyIds.forEach(function (id) {
+    var e = state.data.enemies[id];
+    if (!e) { unknown++; return; }
+    hp += scaled(e.hp, d.hpRate) || 0;
+    atk += scaled(e.atk, d.atkRate) || 0;
+  });
+  return { hp: hp, atk: atk, n: p.enemyIds.length, unknown: unknown };
+}
+
+function render() {
+  if (!state.data) return;
+  var d = dungeon();
+  function rate(label, v) { return label + ' <b class="' + (v !== 1 ? 'changed' : '') + '">×' + v + '</b>'; }
+  $('rates').innerHTML = '敵の倍率 ' + rate('HP', d.hpRate) + ' ' + rate('ATK', d.atkRate) + ' ' + rate('DEF', d.defRate);
+  var lv = '';
+  for (var i = 1; i <= 5; i++) lv += '<button class="tab' + (i === state.level ? ' on' : '') + '" data-lv="' + i + '">Lv' + i + '</button>';
+  $('levels').innerHTML = lv;
+  $('viewPhases').className = 'tab' + (state.view === 'phases' ? ' on' : '');
+  $('viewMatrix').className = 'tab' + (state.view === 'matrix' ? ' on' : '');
+  $('phaseView').classList.toggle('hidden', state.view !== 'phases');
+  $('matrixView').classList.toggle('hidden', state.view !== 'matrix');
+  renderIssues();
+  if (state.view === 'phases') renderPhases(d); else renderMatrix(d);
+}
+
+function renderIssues() {
+  var list = state.data.issues.filter(function (s) { return s.dungeonId === state.dungeonId || s.dungeonId === ''; });
+  if (state.view === 'phases') list = list.filter(function (s) { return !s.lv || s.lv === state.level; });
+  if (list.length === 0) { $('issues').innerHTML = '<div class="issues ok">チェック: 問題なし</div>'; return; }
+  $('issues').innerHTML = '<div class="issues"><b>チェック（' + list.length + ' 件）</b><ul style="margin:4px 0 0;padding-left:18px">' +
+    list.map(function (s) { return '<li class="' + s.kind + '">' + esc(s.text) + '</li>'; }).join('') + '</ul></div>';
+}
+
+function renderPhases(d) {
+  var ps = phasesOf(state.dungeonId, state.level);
+  var totHp = 0, totAtk = 0, totN = 0;
+  ps.forEach(function (p) { var t = phaseTotals(p, d); totHp += t.hp; totAtk += t.atk; totN += t.n; });
+  var rw = rewardFor(state.level);
+  $('summary').innerHTML =
+    stat('フェーズ', ps.length) + stat('敵の数', totN) + stat('HP 合計', fmt(totHp)) + stat('ATK 合計', fmt(totAtk)) +
+    stat('防衛の配当', rw.rewardGold == null ? '—' : fmt(rw.rewardGold) + ' G') + stat('次のレベルへの費用', rw.levelUpCost == null ? '—' : fmt(rw.levelUpCost) + ' G');
+  $('phases').innerHTML = ps.length === 0 ? '<div class="issues">このレベルの行はまだありません（ゲームではアセットの構成のまま）。</div>' :
+    ps.map(function (p, idx) { return state.editing === p.row ? editCard(p) : viewCard(p, d, idx === ps.length - 1); }).join('');
+}
+function stat(k, v) { return '<div class="stat"><div class="k">' + k + '</div><div class="v">' + v + '</div></div>'; }
+
+function viewCard(p, d, isLast) {
+  var t = phaseTotals(p, d);
+  var hasBoss = p.enemyIds.some(function (id) { var e = state.data.enemies[id]; return e && e.isBoss; });
+  var rows = p.enemyIds.map(function (id) {
+    var e = state.data.enemies[id];
+    if (!e) return '<tr class="unknown"><td colspan="5">不明な enemyId: ' + esc(id) + '</td></tr>';
+    function cell(v, rate) {
+      var s = scaled(v, rate);
+      return '<td class="num">' + fmt(s) + (rate !== 1 ? '<span class="base">元 ' + fmt(v) + '</span>' : '') + '</td>';
+    }
+    return '<tr><td><span class="ename">' + esc(e.name) + (e.isBoss ? '<span class="boss">BOSS</span>' : '') + '</span><span class="eid">' + esc(id) + '</span></td>' +
+      cell(e.hp, d.hpRate) + cell(e.atk, d.atkRate) + cell(e.def, d.defRate) +
+      '<td><span class="el" style="background:var(--' + esc(e.element) + ')">' + (EL_JA[e.element] || esc(e.element)) + '</span></td></tr>';
+  }).join('');
+  return '<div class="card' + (hasBoss ? ' bossphase' : '') + '"><h3>フェーズ ' + p.phase + (isLast ? ' <span style="color:var(--sub);font-weight:400;font-size:11px">（最後）</span>' : '') +
+    '<span class="tot">' + t.n + ' 体 ・ HP ' + fmt(t.hp) + ' ・ ATK ' + fmt(t.atk) + '</span></h3>' +
+    (p.note ? '<div class="note" style="margin-top:8px">' + esc(p.note) + '</div>' : '') +
+    '<table><tr><th>敵</th><th class="num">HP</th><th class="num">ATK</th><th class="num">DEF</th><th>属性</th></tr>' + rows + '</table>' +
+    '<div class="foot"><button class="btn" data-edit="' + p.row + '">編集</button></div></div>';
+}
+
+function editCard(p) {
+  var pool = enemyPool();
+  p.enemyIds.forEach(function (id) { if (pool.indexOf(id) < 0) pool.unshift(id); });
+  var draft = state.draft;
+  function opts(sel) {
+    return pool.map(function (id) {
+      var e = state.data.enemies[id];
+      var label = e ? e.name + '（' + id + ' / HP ' + e.hp + ' / ATK ' + e.atk + (e.isBoss ? ' / BOSS' : '') + '）' : '不明: ' + id;
+      return '<option value="' + esc(id) + '"' + (id === sel ? ' selected' : '') + '>' + esc(label) + '</option>';
+    }).join('');
+  }
+  var rows = draft.map(function (id, i) {
+    return '<div class="edit-row"><span style="width:18px;color:var(--sub)">' + (i + 1) + '</span><select data-slot="' + i + '">' + opts(id) + '</select>' +
+      '<button class="btn" data-up="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button><button class="btn danger" data-rm="' + i + '">×</button></div>';
+  }).join('');
+  return '<div class="card"><h3>フェーズ ' + p.phase + ' を編集<span class="tot">出る順（3 体ずつ出て、倒すと補充）</span></h3>' + rows +
+    '<div class="edit-row"><button class="btn" data-addslot="1">＋ 敵を足す</button></div>' +
+    '<div class="foot"><button class="btn danger" data-delphase="' + p.phase + '">このフェーズを消す</button><span style="flex:1"></span>' +
+    '<button class="btn" data-cancel="1">やめる</button><button class="btn primary" data-save="' + p.phase + '">シートに書く</button></div></div>';
+}
+
+function renderMatrix(d) {
+  var maxP = 0, lv;
+  for (lv = 1; lv <= 5; lv++) maxP = Math.max(maxP, phasesOf(state.dungeonId, lv).length);
+  var head = '<tr><th>レベル</th>';
+  for (var i = 1; i <= maxP; i++) head += '<th>フェーズ ' + i + '</th>';
+  head += '<th class="num">HP 合計</th><th class="num">ATK 合計</th><th class="num">配当</th></tr>';
+  var body = '';
+  for (lv = 1; lv <= 5; lv++) {
+    var ps = phasesOf(state.dungeonId, lv), th = 0, ta = 0;
+    body += '<tr data-lv="' + lv + '" class="' + (lv === state.level ? 'sel' : '') + '"><td><b>Lv' + lv + '</b></td>';
+    for (var j = 0; j < maxP; j++) {
+      var p = ps[j];
+      if (!p) { body += '<td style="color:var(--sub)">—</td>'; continue; }
+      var t = phaseTotals(p, d); th += t.hp; ta += t.atk;
+      body += '<td>' + p.enemyIds.map(function (id) {
+        var e = state.data.enemies[id];
+        return '<span class="chip' + (e && e.isBoss ? ' b' : '') + '" title="' + esc(id) + '">' + esc(e ? e.name : '?' + id) + '</span>';
+      }).join('') + '<span class="ptot">HP ' + fmt(t.hp) + ' ・ ATK ' + fmt(t.atk) + '</span></td>';
+    }
+    var rw = rewardFor(lv);
+    body += '<td class="num">' + (ps.length ? fmt(th) : '—') + '</td><td class="num">' + (ps.length ? fmt(ta) : '—') + '</td><td class="num">' + (rw.rewardGold == null ? '—' : fmt(rw.rewardGold)) + '</td></tr>';
+  }
+  $('matrix').innerHTML = '<table>' + head + body + '</table>';
+}
+
+function setStatus(s) { $('status').textContent = s; }
+function load(data) {
+  state.data = data;
+  var sel = $('dungeon');
+  if (!sel.options.length) {
+    sel.innerHTML = data.dungeons.map(function (d) { return '<option value="' + esc(d.id) + '">' + esc(d.name) + '（' + esc(d.id) + '）</option>'; }).join('');
+    if (!state.dungeonId) state.dungeonId = data.dungeons.length ? data.dungeons[0].id : null;
+    sel.value = state.dungeonId;
+  }
+  setStatus('敵 ' + Object.keys(data.enemies).length + ' 種 ・ フェーズ ' + data.phases.length + ' 行');
+  render();
+}
+function fail(e) { state.busy = false; setStatus('エラー'); alert(e && e.message ? e.message : e); }
+function call(fn, args, done) {
+  state.busy = true; setStatus('書き込み中…');
+  var r = google.script.run.withSuccessHandler(function (data) { state.busy = false; done && done(); load(data); }).withFailureHandler(fail);
+  r[fn].apply(r, args);
+}
+
+document.addEventListener('click', function (ev) {
+  var t = ev.target.closest('[data-lv],[data-edit],[data-cancel],[data-save],[data-rm],[data-up],[data-addslot],[data-delphase]');
+  if (!t || state.busy) return;
+  if (t.dataset.lv) { state.level = Number(t.dataset.lv); state.editing = null; if (t.tagName === 'TR') state.view = 'phases'; render(); return; }
+  if (t.dataset.edit) {
+    var row = Number(t.dataset.edit);
+    var p = state.data.phases.filter(function (x) { return x.row === row; })[0];
+    state.editing = row; state.draft = p.enemyIds.slice(); render(); return;
+  }
+  if (t.dataset.cancel) { state.editing = null; render(); return; }
+  if (t.dataset.rm) { state.draft.splice(Number(t.dataset.rm), 1); render(); return; }
+  if (t.dataset.up) { var i = Number(t.dataset.up); var x = state.draft[i]; state.draft[i] = state.draft[i - 1]; state.draft[i - 1] = x; render(); return; }
+  if (t.dataset.addslot) { var pool = enemyPool(); state.draft.push(state.draft[state.draft.length - 1] || pool[0]); render(); return; }
+  if (t.dataset.save) {
+    var bad = state.draft.filter(function (id) { return !state.data.enemies[id]; });
+    if (bad.length) { alert('bal_enemies に無い enemyId: ' + bad.join(', ')); return; }
+    if (!state.draft.length) { alert('敵が 1 体もいません。'); return; }
+    call('dvSavePhase', [state.dungeonId, state.level, Number(t.dataset.save), state.draft.slice()], function () { state.editing = null; });
+    return;
+  }
+  if (t.dataset.delphase) {
+    if (!confirm('Lv' + state.level + ' のフェーズ ' + t.dataset.delphase + ' を消します（後ろのフェーズ番号は詰めます）。')) return;
+    call('dvDeletePhase', [state.dungeonId, state.level, Number(t.dataset.delphase)], function () { state.editing = null; });
+  }
+});
+document.addEventListener('change', function (ev) {
+  if (ev.target.dataset && ev.target.dataset.slot) { state.draft[Number(ev.target.dataset.slot)] = ev.target.value; return; }
+  if (ev.target.id === 'dungeon') { state.dungeonId = ev.target.value; state.editing = null; render(); return; }
+  if (ev.target.id === 'allEnemies' && state.editing) render();
+});
+$('viewPhases').onclick = function () { state.view = 'phases'; render(); };
+$('viewMatrix').onclick = function () { state.view = 'matrix'; state.editing = null; render(); };
+$('addPhase').onclick = function () {
+  if (state.busy) return;
+  var ps = phasesOf(state.dungeonId, state.level);
+  var next = ps.length ? ps[ps.length - 1].phase + 1 : 1;
+  var pool = enemyPool();
+  if (!pool.length) { alert('選べる敵がいません。'); return; }
+  if (!confirm('Lv' + state.level + ' にフェーズ ' + next + ' を足します（まず ' + pool[0] + ' 1 体で作り、あとで編集）。')) return;
+  call('dvSavePhase', [state.dungeonId, state.level, next, [pool[0]]]);
+};
+
+google.script.run.withSuccessHandler(load).withFailureHandler(fail).dvGetViewerData();
+</script>
+</body>
+</html>
