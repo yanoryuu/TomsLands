@@ -76,6 +76,7 @@ public sealed class PersonaVillageSnapshot
     public int TopRank;
     public string RankName;
     public int LastRunProfit;
+    public int LastRunVillageFunds;  // 前の周に村資金へ入った額（RunRecordPlain.villageFunds。前の周が無ければ 0）
     public bool LastRunCleared = true;
     public readonly List<PersonaFacilityView> Facilities = new();
 

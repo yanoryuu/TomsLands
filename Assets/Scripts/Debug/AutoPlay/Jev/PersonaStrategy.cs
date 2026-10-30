@@ -1987,7 +1987,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         var careful = _p.Careful ? _p : _advisor != null && _advisor._p.Careful ? _advisor._p : null;
         int carefulReserve = careful?.VillageReserve(v.Funds) ?? 0;
         var plausible = v.Facilities.Where(fa => fa.CanInvest && fa.NextCost > 0)
-            .ToDictionary(fa => fa.Id, fa => PersonaChooser.PaybackPlausible(fa.NextCost, v.Funds, carefulReserve, v.LastRunProfit));
+            .ToDictionary(fa => fa.Id, fa => PersonaChooser.PaybackPlausible(fa.NextCost, v.Funds, carefulReserve, v.LastRunVillageFunds));
         var budgetSit = new PersonaSituation
         {
             Kind = PersonaFeatures.Village, Features = budgetFeatures, Cash = v.Funds, PlausibleCount = plausible.Count(kv => kv.Value),
@@ -2209,6 +2209,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (last != null)
         {
             v.LastRunProfit = last.profit;
+            v.LastRunVillageFunds = last.villageFunds;
             v.LastRunCleared = last.cleared;
         }
         foreach (var fac in village.Facilities)
@@ -2369,6 +2370,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         if (last != null)
         {
             v.LastRunProfit = last.profit;
+            v.LastRunVillageFunds = last.villageFunds;
             v.LastRunCleared = last.cleared;
         }
         return v;
