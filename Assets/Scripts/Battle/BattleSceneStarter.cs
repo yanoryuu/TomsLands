@@ -12,7 +12,7 @@ using VContainer.Unity;
 /// StreamingSetting → Battle → Result → TomsShop の順にフェーズを制御する。
 /// パネルの表示/非表示は BattlePanelManager が一元管理する。
 /// </summary>
-public class BattleSceneStarter : IAsyncStartable
+public class BattleSceneStarter : IAsyncStartable, IDisposable
 {
     private readonly BattleSequencer _battleSequencer;
     private readonly BattleInputData _inputData;
@@ -45,6 +45,10 @@ public class BattleSceneStarter : IAsyncStartable
     // 配信チュートリアルのシナリオラベル
     private const string TutorialStreamingPrepare = "Tutorial_StreamingPrepare";
     private const string TutorialStreamingStart   = "Tutorial_StreamingStart";
+
+    // #9 トーストの置き場所（配信中は映像の下・売り場の棚の上の帯）。配信を終えたら・シーンを出たら既定に戻す
+    private ToastPlacement _toastBand;
+    private DungeonPhaseGaugeView _phaseGauge;
 
     // ポーズ・在庫切れ管理
     private readonly BattlePauseController _pauseController = new();
@@ -149,6 +153,10 @@ public class BattleSceneStarter : IAsyncStartable
         // --- Phase 2: Battle（配信中・戦闘） ---
         Debug.Log("[BattleSceneStarter] Phase 2: Battle");
         if (_panelManager != null) _panelManager.ShowPanel(StreamingGamePhase.Streaming);
+
+        // #9 配信中のお知らせ（売り切れ・補充）は、勇者の映像に重ならないよう映像の下・売り場の棚の上の帯に 1 行で出す
+        _toastBand = ToastPlacement.Band(MeasureToastBand);
+        Toast.SetPlacement(_toastBand);
 
         // カウントダウン前にダンジョン（背景）と品出しアイテムを反映しておく。
         // 後回しにするとカウントダウン中にシーン既定の背景・空の在庫が映ってしまう
@@ -324,6 +332,7 @@ public class BattleSceneStarter : IAsyncStartable
 
         ItemSlotView.OnItemClicked -= OnDepletedItemClicked;
         disposables.Dispose();
+        RestoreToastPlacement(); // リザルト以降は既定の置き場所（画面上部の中央）
 
         // 販売ループを停止してから結果を集計する。
         // 停止しないとリザルト画面中も売れ続け、ここで取るスナップショットとの差分
@@ -899,5 +908,92 @@ public class BattleSceneStarter : IAsyncStartable
             });
         }
         return soldItems;
+    }
+    /// <summary>シーンを出るとき（VContainer のスコープ破棄）にトーストの置き場所を既定に戻す。</summary>
+    public void Dispose() => RestoreToastPlacement();
+
+    private void RestoreToastPlacement()
+    {
+        if (_toastBand != null && ReferenceEquals(Toast.Placement, _toastBand))
+            Toast.SetPlacement(ToastPlacement.Default);
+        _toastBand = null;
+    }
+
+    /// <summary>トーストの帯を測る（出すたびに呼ばれる）。測れなければ null（既定の置き場所で出る）。</summary>
+    private Rect? MeasureToastBand()
+    {
+        var fx = _battleSequencer != null ? _battleSequencer.WaveFx : null;
+        if (_phaseGauge == null) _phaseGauge = UnityEngine.Object.FindFirstObjectByType<DungeonPhaseGaugeView>();
+        var salesView = _salesController != null ? _salesController.View : null;
+        return MeasureToastBand(fx != null ? (RectTransform)fx.transform : null,
+            salesView != null ? salesView.ItemSlots : null,
+            _phaseGauge != null ? (RectTransform)_phaseGauge.transform : null);
+    }
+
+    /// <summary>
+    /// 配信画面のトーストの帯（スクリーン座標）。上端 = 配信の映像の枠の下端、下端 = 売り場の棚の上端。
+    /// 映像と棚の間にあるダンジョンの進行ゲージは避けたいので、枠とゲージの間が板の下限（<see cref="Toast.BandMinHeight"/>）以上あれば
+    /// ゲージの上端までにする。狭ければ（1920x1080 の配置では約 7px）ゲージには重ねて、枠の下端〜棚の上端の帯にする。
+    /// 横は映像の枠の幅。どれかが無い・非表示なら null。
+    /// video は配信の映像の View（BattleWaveFxView。映像の内側）で、同じ親にあってそれを囲む Image（BattleFrame）を枠とみなす。
+    /// </summary>
+    public static Rect? MeasureToastBand(RectTransform video, IReadOnlyList<ItemSlotView> shelfSlots, RectTransform phaseGauge)
+    {
+        if (video == null || !video.gameObject.activeInHierarchy || shelfSlots == null) return null;
+        if (!TryScreenRect(FindVideoFrame(video), out var frame)) return null;
+
+        float top = frame.yMin;
+        float shelfTop = float.NegativeInfinity;
+        foreach (var slot in shelfSlots)
+        {
+            if (slot == null || !slot.gameObject.activeInHierarchy) continue;
+            if (!TryScreenRect((RectTransform)slot.transform, out var r) || r.yMax > top + 1f) continue; // 枠より下の棚だけ
+            shelfTop = Mathf.Max(shelfTop, r.yMax);
+        }
+        if (float.IsNegativeInfinity(shelfTop) || top - shelfTop < 1f) return null;
+
+        float bottom = shelfTop;
+        if (phaseGauge != null && phaseGauge.gameObject.activeInHierarchy && TryScreenRect(phaseGauge, out var g)
+            && g.yMax > shelfTop && g.yMax < top && Toast.FitsBand(top - g.yMax))
+            bottom = g.yMax;
+
+        return Rect.MinMaxRect(frame.xMin, bottom, frame.xMax, top);
+    }
+
+    /// <summary>映像の外枠: 映像と同じ親にあって映像を囲む、表示中の Image のうち一番小さいもの。無ければ映像そのもの。</summary>
+    private static RectTransform FindVideoFrame(RectTransform video)
+    {
+        var parent = video.parent;
+        if (parent == null || !TryScreenRect(video, out var inner)) return video;
+        RectTransform best = video;
+        float bestArea = float.PositiveInfinity;
+        foreach (Transform child in parent)
+        {
+            if (child == video || !child.gameObject.activeInHierarchy) continue;
+            if (!child.TryGetComponent<UnityEngine.UI.Image>(out var img) || !img.enabled) continue;
+            var rt = (RectTransform)child;
+            if (!TryScreenRect(rt, out var r)) continue;
+            if (r.xMin > inner.xMin + 1f || r.xMax < inner.xMax - 1f || r.yMin > inner.yMin + 1f || r.yMax < inner.yMax - 1f) continue;
+            float area = r.width * r.height;
+            if (area < bestArea) { bestArea = area; best = rt; }
+        }
+        return best;
+    }
+
+    /// <summary>UI の矩形をスクリーン座標（左下原点）に直す。</summary>
+    private static bool TryScreenRect(RectTransform rt, out Rect rect)
+    {
+        rect = default;
+        if (rt == null) return false;
+        var canvas = rt.GetComponentInParent<Canvas>();
+        if (canvas == null) return false;
+        var root = canvas.rootCanvas;
+        Camera cam = root.renderMode != RenderMode.ScreenSpaceOverlay ? root.worldCamera : null;
+        var corners = new Vector3[4];
+        rt.GetWorldCorners(corners);
+        Vector2 a = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+        Vector2 b = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+        rect = Rect.MinMaxRect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y));
+        return rect.width > 0f && rect.height > 0f;
     }
 }

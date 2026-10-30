@@ -363,6 +363,19 @@ public class TomsShopView : MonoBehaviour
             shopMachineDisplay.RefreshDisplay(machineModel);
     }
 
+    /// <summary>朝の入金の報告は、店の画面・上の HUD（CommonCanvas）・ターン終了のまとめより手前に出す。</summary>
+    private const int MorningReportSortingOrder = 100;
+
+    /// <summary>パネルに専用の Canvas を付けて並び順を上書きする（押せるように GraphicRaycaster も付ける）。</summary>
+    private static void BringToFront(GameObject panel, int sortingOrder)
+    {
+        if (panel == null) return;
+        if (!panel.TryGetComponent<Canvas>(out var canvas)) canvas = panel.AddComponent<Canvas>();
+        canvas.overrideSorting = true;
+        canvas.sortingOrder = sortingOrder;
+        if (!panel.TryGetComponent<UnityEngine.UI.GraphicRaycaster>(out _)) panel.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+    }
+
     /// <summary>
     /// 朝レポートを表示する。パネル未配線なら false を返す（呼び出し側がログにフォールバック）。
     /// </summary>
@@ -415,6 +428,7 @@ public class TomsShopView : MonoBehaviour
             NewspaperButton.onClick.AddListener(() => OnNewspaperClicked.OnNext(Unit.Default));
         if (morningReportCloseButton != null && morningReportPanel != null)
             morningReportCloseButton.onClick.AddListener(() => UIMotion.Close(morningReportPanel)); // #1 縮んで閉じる
+        BringToFront(morningReportPanel, MorningReportSortingOrder);
 
         if (relicChoiceButtons != null)
         {
