@@ -22,6 +22,32 @@ public class VillageView : MonoBehaviour
     [SerializeField] private Button departButton;     // 出店準備へ（必須。未配線なら素通り）
     [SerializeField] private Button titleButton;      // タイトルへ
     [SerializeField] private TextMeshProUGUI messageText;
+    [Tooltip("任意: メッセージの帯（文字が空のときは隠す）")]
+    [SerializeField] private GameObject messageBand;
+
+    [Header("HUD の看板（任意。未配線なら村名の行に格と総合Lvを並べる）")]
+    [Tooltip("格と総合Lv（「町・総合Lv18」）。配線すると villageLevelText は村の名前だけになる")]
+    [SerializeField] private TextMeshProUGUI rankText;
+    [Tooltip("格ごとに見た目を変える看板の板（任意）")]
+    [SerializeField] private Image rankBanner;
+    [Tooltip("格の番号ごとの看板の絵（足りない分は最後を使う。空なら変えない）")]
+    [SerializeField] private Sprite[] rankBannerSprites;
+    [Tooltip("格の印（星）。格の番号+1 個を点ける")]
+    [SerializeField] private Image[] rankStars;
+    [SerializeField] private Sprite rankStarOn;
+    [SerializeField] private Sprite rankStarOff;
+    [Tooltip("格に応じて出す飾り（旗・冠など）")]
+    [SerializeField] private RankOrnament[] rankOrnaments;
+
+    [System.Serializable]
+    public struct RankOrnament
+    {
+        public GameObject target;
+        [Tooltip("この格の番号以上で出す")]
+        public int minRank;
+        [Tooltip("この格の番号以下で出す（-1 なら上限なし）")]
+        public int maxRank;
+    }
 
     [Header("施設区画（シーン手置き）")]
     [SerializeField] private FacilityPlot[] plots;
@@ -38,8 +64,25 @@ public class VillageView : MonoBehaviour
     [Tooltip("Lv5（特殊な効果）の欄だけ出す金の枠（任意）")]
     [SerializeField] private GameObject specialFrame;
     [SerializeField] private TextMeshProUGUI detailCostText;
+    [Tooltip("任意: 費用と比べる今の村資金")]
+    [SerializeField] private TextMeshProUGUI detailFundsText;
+    [Tooltip("費用が村資金で足りるときの色")]
+    [SerializeField] private Color costAffordableColor = new(0.91f, 0.64f, 0.24f); // 金 #E8A33D
+    [Tooltip("費用が村資金に足りないときの色")]
+    [SerializeField] private Color costShortColor = new(0.66f, 0.2f, 0.17f);       // 赤 #A8332B
+    [Tooltip("施設マスターに icon が無いときに使うアイコン（facilityId ごと）")]
+    [SerializeField] private FacilityIcon[] facilityIcons;
+
+    [System.Serializable]
+    public struct FacilityIcon
+    {
+        public string facilityId;
+        public Sprite icon;
+    }
     [SerializeField] private Button investButton;
     [SerializeField] private TextMeshProUGUI investButtonLabel;
+    [Tooltip("投資ボタンが押せないときの文字の色（グレーアウト）")]
+    [SerializeField] private Color investLabelDisabledColor = new(0.82f, 0.8f, 0.76f);
     [SerializeField] private Button investCloseButton;
 
     [Header("帰還収支ポップ")]
@@ -48,6 +91,8 @@ public class VillageView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI conversionEarnedText;
     [SerializeField] private TextMeshProUGUI conversionConvertedText;
     [SerializeField] private Button conversionCloseButton;
+    [Tooltip("任意: 内訳を入れる枠（ポップの子・下寄せ）。配線するとポップの中に内訳を出し、内訳の有無でポップの高さを伸び縮みさせる")]
+    [SerializeField] private RectTransform conversionBreakdownArea;
 
     [Header("自己ベストの掲示板（任意。王都の広場の看板を調べると開く）")]
     [SerializeField] private GameObject recordBoardPopup;
@@ -58,6 +103,54 @@ public class VillageView : MonoBehaviour
     [Header("帰還到着演出（任意。未設定なら子→シーンから自動検索。無ければ上の収支ポップ）")]
     [SerializeField] private VillageArrivalFx arrivalFx;
 
+    [Header("小窓の後ろの幕（任意。投資パネル・帰還/格上げポップ・掲示板を開いている間だけ出す）")]
+    [Tooltip("全画面の黒の幕（押すと投資パネル・掲示板は閉じる。帰還/格上げは閉じない）")]
+    [SerializeField] private Image modalDim;
+    [SerializeField] private float modalDimAlpha = 0.8f; // リニア色空間なので 0.8 で見た目 55% ほど暗くなる
+
+    [Header("投資パネルの追加（任意）")]
+    [Tooltip("最大レベルのときに投資ボタンの代わりに出す「MAX」の札")]
+    [SerializeField] private GameObject maxLevelPlate;
+    [Tooltip("「費用」の見出し（最大レベルのときは費用の行ごと隠す）")]
+    [SerializeField] private TextMeshProUGUI costCaptionText;
+    [Tooltip("「現在」の行（未建設のときは隠して「次Lv」の行をこの位置へ上げる）")]
+    [SerializeField] private RectTransform currentEffectRow;
+    [SerializeField] private RectTransform nextEffectRow;
+
+    [Header("格上げポップの飾り（任意。帰還収支ポップの枠を使う）")]
+    [Tooltip("格上げのときだけ使う金寄りの枠（null なら変えない）")]
+    [SerializeField] private Sprite rankUpPopupSprite;
+    [Tooltip("ポップの後ろで回る放射状の光（ポップの兄弟・ポップより手前の順）")]
+    [SerializeField] private Image rankUpRays;
+    [Tooltip("ポップの上の紋章（格の番号ごとの絵は rankUpEmblems）")]
+    [SerializeField] private Image rankUpEmblem;
+    [SerializeField] private Sprite[] rankUpEmblems;
+    [Tooltip("星の「前→後」の行")]
+    [SerializeField] private GameObject rankUpStarsRow;
+    [SerializeField] private Image[] rankUpStarsBefore;
+    [SerializeField] private Image[] rankUpStarsAfter;
+    [Tooltip("格上げのときにポップを縦に伸ばす量（星の行のぶん）")]
+    [SerializeField] private float rankUpExtraHeight = 76f;
+
+    [Header("自己ベストの表（任意。未配線なら recordBoardBodyText に1行ずつ並べる）")]
+    [SerializeField] private TextMeshProUGUI recordBoardAmountText;
+    [SerializeField] private TextMeshProUGUI recordBoardRankText;
+
+    [Header("施設へのショートカット（任意。画面左端のつまみで開く帯）")]
+    [Tooltip("左から滑り出る帯（左端・縦中央。閉じているときは帯の幅だけ左へ隠す）")]
+    [SerializeField] private RectTransform shortcutDrawer;
+    [Tooltip("帯の右に付いたつまみ（常に見える）")]
+    [SerializeField] private Button shortcutKnob;
+    [Tooltip("つまみの矢印（閉じているときは右向き、開いているときは左向き）")]
+    [SerializeField] private RectTransform shortcutKnobArrow;
+    [Tooltip("施設ボタンの雛形（非アクティブ。子に Icon / Name / Level / Badge）")]
+    [SerializeField] private Button shortcutButtonTemplate;
+    [Tooltip("施設ボタンを並べる入れ物（閉じている間は押せなくする）")]
+    [SerializeField] private CanvasGroup shortcutListGroup;
+    [Tooltip("記録掲示板のボタンのアイコン")]
+    [SerializeField] private Sprite recordBoardIcon;
+    [SerializeField] private float shortcutSlideDuration = 0.25f;
+
     [Header("町人（任意。未設定ならシーンから自動検索。総合Lvに応じて増える）")]
     [SerializeField] private VillagePopulationView population;
 
@@ -66,10 +159,13 @@ public class VillageView : MonoBehaviour
     public Subject<Unit> OnInvest { get; } = new();
     public Subject<Unit> OnPanelClosed { get; } = new();
     public Subject<Unit> OnConversionClosed { get; } = new();
+    /// <summary>ショートカットの帯で施設（または記録掲示板 = VillagePresenter.RecordBoardId）が選ばれた。</summary>
+    public Subject<string> OnShortcutFacility { get; } = new();
+
+    /// <summary>true の間はショートカットのつまみ・ボタンを受け付けない（Presenter が演出・会話中を返す）。</summary>
+    public System.Func<bool> ShortcutBlocked { get; set; }
 
     private const string SpecialCaption = "特殊な効果";
-    private static readonly Color SpecialCaptionColor = new(0.91f, 0.64f, 0.24f); // ui-rules の強調の金 #E8A33D
-    private const float SpecialCaptionMaxSize = 20f; // 「特殊な効果」は5文字なので、見出しの枠（幅120）に収まる大きさにする
     private string defaultNextCaption;
     private Color defaultNextCaptionColor;
     private float defaultNextCaptionMaxSize;
@@ -117,10 +213,15 @@ public class VillageView : MonoBehaviour
             conversionCloseButton.onClick.AddListener(() =>
             {
                 if (conversionPopup != null) conversionPopup.SetActive(false);
+                ApplyRankUpDecor(false, -1, -1);
+                RefreshModalDim();
                 OnConversionClosed.OnNext(Unit.Default);
             });
         if (recordBoardCloseButton != null)
             recordBoardCloseButton.onClick.AddListener(HideRecordBoard);
+        if (modalDim != null && modalDim.TryGetComponent<Button>(out var dimButton))
+            dimButton.onClick.AddListener(OnModalDimClicked);
+        SetupShortcuts();
 
         if (nextCaptionText != null)
         {
@@ -134,6 +235,8 @@ public class VillageView : MonoBehaviour
         if (investPanel != null) investPanel.SetActive(false);
         if (conversionPopup != null) conversionPopup.SetActive(false);
         if (recordBoardPopup != null) recordBoardPopup.SetActive(false);
+        ApplyRankUpDecor(false, -1, -1);
+        RefreshModalDim(false);
     }
 
     private void SetupFocusScopes()
@@ -191,6 +294,7 @@ public class VillageView : MonoBehaviour
 
     private void Update()
     {
+        UpdateShortcuts();
         if (ArrivalPlaying) return; // 到着演出は自前で入力をロックする
 
         bool navigating = ControllerInput.IsNavigating.CurrentValue;
@@ -204,6 +308,8 @@ public class VillageView : MonoBehaviour
     private void LateUpdate()
     {
         fieldFreeLastFrame = IsFieldFreeNow;
+        // 小窓をどこから閉じても（AutoPlay・チュートリアル等）幕が残らないように合わせる
+        if (modalDim != null && modalDim.gameObject.activeSelf != AnyModalOpen) RefreshModalDim();
     }
 
     private void LockPlayerInput()
@@ -234,6 +340,7 @@ public class VillageView : MonoBehaviour
         OnInvest.Dispose();
         OnPanelClosed.Dispose();
         OnConversionClosed.Dispose();
+        OnShortcutFacility.Dispose();
     }
 
     /// <summary>
@@ -247,6 +354,12 @@ public class VillageView : MonoBehaviour
         string head = string.IsNullOrEmpty(rankName)
             ? $"トコの村（総合Lv{villageLevel}）"
             : $"トコの村（{rankName}・総合Lv{villageLevel}）";
+        if (rankText != null)
+        {
+            rankText.text = string.IsNullOrEmpty(rankName) ? $"総合Lv{villageLevel}" : $"{rankName}・総合Lv{villageLevel}";
+            head = "トコの村";
+        }
+        ApplyRankStyle(RankIndexOf(rankName));
         if (rankNextText != null)
         {
             rankNextText.text = nextRankLine ?? "";
@@ -261,8 +374,49 @@ public class VillageView : MonoBehaviour
         }
     }
 
+    /// <summary>格の名前から格の番号を引く（見つからなければ 0）。</summary>
+    private static int RankIndexOf(string rankName)
+    {
+        if (string.IsNullOrEmpty(rankName)) return 0;
+        for (int i = 0; i < VillageRank.Count; i++)
+        {
+            if (VillageRank.Name(i) == rankName) return i;
+        }
+        return 0;
+    }
+
+    /// <summary>看板の絵・星・飾りを格に合わせる（未配線の部品は飛ばす）。</summary>
+    private void ApplyRankStyle(int rank)
+    {
+        if (rankBanner != null && rankBannerSprites != null && rankBannerSprites.Length > 0)
+        {
+            var sprite = rankBannerSprites[Mathf.Clamp(rank, 0, rankBannerSprites.Length - 1)];
+            if (sprite != null) rankBanner.sprite = sprite;
+        }
+        if (rankStars != null)
+        {
+            for (int i = 0; i < rankStars.Length; i++)
+            {
+                var star = rankStars[i];
+                if (star == null) continue;
+                bool on = i <= rank;
+                var sprite = on ? rankStarOn : rankStarOff;
+                if (sprite != null) star.sprite = sprite;
+                star.gameObject.SetActive(i < VillageRank.Count);
+            }
+        }
+        if (rankOrnaments != null)
+        {
+            foreach (var o in rankOrnaments)
+            {
+                if (o.target == null) continue;
+                o.target.SetActive(rank >= o.minRank && (o.maxRank < 0 || rank <= o.maxRank));
+            }
+        }
+    }
+
     /// <summary>村の格が上がったことを帰還収支ポップの枠で出す（格の名前を大きく。閉じると OnConversionClosed）。</summary>
-    public bool ShowRankUpPopup(string title, string rankLine, string unlockLine)
+    public bool ShowRankUpPopup(string title, string rankLine, string unlockLine, int fromRank = -1, int toRank = -1)
     {
         if (conversionPopup == null) return false;
         conversionPopup.SetActive(true);
@@ -271,6 +425,9 @@ public class VillageView : MonoBehaviour
         // 格の名前は大きい金の行（村資金の額を出す行）に出して上へ、解放の説明は小さい行に出して下へ入れ替える
         SwapConversionRows(true);
         SetConversionBreakdown(null);
+        ApplyRankUpDecor(true, fromRank, toRank);
+        RefreshModalDim();
+        PlayRankUpDecor(fromRank, toRank);
         if (conversionConvertedText != null)
         {
             DOTween.Kill(conversionConvertedText.gameObject);
@@ -301,6 +458,147 @@ public class VillageView : MonoBehaviour
 
     public bool IsConversionPopupOpen => conversionPopup != null && conversionPopup.activeSelf;
 
+    // ───────── 格上げポップの飾り ─────────
+
+    private Sprite conversionDefaultSprite;
+    private bool conversionDefaultSpriteKnown;
+
+    /// <summary>
+    /// 格上げのときだけ、枠を金寄りにし・紋章・星の「前→後」・後ろの光を出す（on=false で帰還ポップの見た目へ戻す）。
+    /// 動きは付けない（動きは PlayRankUpDecor。撮影ツールは編集モードでこちらだけ呼ぶ）。
+    /// </summary>
+    private void ApplyRankUpDecor(bool on, int fromRank, int toRank)
+    {
+        var popupImage = conversionPopup != null ? conversionPopup.GetComponent<Image>() : null;
+        if (popupImage != null && !conversionDefaultSpriteKnown)
+        {
+            conversionDefaultSprite = popupImage.sprite;
+            conversionDefaultSpriteKnown = true;
+        }
+        if (popupImage != null)
+            popupImage.sprite = on && rankUpPopupSprite != null ? rankUpPopupSprite : conversionDefaultSprite;
+
+        if (rankUpRays != null)
+        {
+            KillTweens(rankUpRays.transform);
+            rankUpRays.transform.localRotation = Quaternion.identity;
+            rankUpRays.gameObject.SetActive(on);
+        }
+
+        Sprite emblem = null;
+        if (on && rankUpEmblems != null && rankUpEmblems.Length > 0 && toRank >= 0)
+            emblem = rankUpEmblems[Mathf.Clamp(toRank, 0, rankUpEmblems.Length - 1)];
+        if (rankUpEmblem != null)
+        {
+            KillTweens(rankUpEmblem.transform);
+            rankUpEmblem.transform.localScale = Vector3.one;
+            rankUpEmblem.sprite = emblem;
+            rankUpEmblem.preserveAspect = true;
+            rankUpEmblem.gameObject.SetActive(emblem != null);
+        }
+
+        bool stars = on && toRank >= 0 && rankUpStarsRow != null;
+        if (rankUpStarsRow != null) rankUpStarsRow.SetActive(stars);
+        if (stars)
+        {
+            int from = fromRank >= 0 ? fromRank : toRank - 1;
+            SetRankUpStars(rankUpStarsBefore, from, -1);
+            SetRankUpStars(rankUpStarsAfter, toRank, from);
+        }
+
+        // 星の行のぶんポップを伸ばす（内訳の無い高さが基準）
+        var popupRect = conversionPopup != null ? (RectTransform)conversionPopup.transform : null;
+        if (popupRect != null)
+        {
+            conversionPopupBaseHeight ??= popupRect.sizeDelta.y;
+            float h = conversionPopupBaseHeight.Value + (stars ? rankUpExtraHeight : 0f);
+            if (on || !ConversionBreakdownAreaShown)
+                popupRect.sizeDelta = new Vector2(popupRect.sizeDelta.x, h);
+        }
+    }
+
+    private bool ConversionBreakdownAreaShown => conversionBreakdownArea != null && conversionBreakdownArea.gameObject.activeSelf;
+
+    /// <summary>動きを止める（撮影ツールが編集モードで見た目だけ作るときは DOTween を起こさない）。</summary>
+    private static void KillTweens(Object target)
+    {
+        if (target != null && Application.isPlaying) DOTween.Kill(target);
+    }
+
+    /// <summary>格の星を点ける（rank 以下を点灯。newerThan より上の星は新しく増えた星として大きく）。</summary>
+    private void SetRankUpStars(Image[] stars, int rank, int newerThan)
+    {
+        if (stars == null) return;
+        for (int i = 0; i < stars.Length; i++)
+        {
+            var s = stars[i];
+            if (s == null) continue;
+            s.gameObject.SetActive(i < VillageRank.Count);
+            bool lit = i <= rank;
+            var sprite = lit ? rankStarOn : rankStarOff;
+            if (sprite != null) s.sprite = sprite;
+            KillTweens(s.transform);
+            s.transform.localScale = Vector3.one * (newerThan >= 0 && lit && i > newerThan ? 1.3f : 1f);
+        }
+    }
+
+    /// <summary>格上げポップの動き（少し拡大して出る・紋章が弾む・増えた星が順に弾む・後ろの光がゆっくり回る）。</summary>
+    private void PlayRankUpDecor(int fromRank, int toRank)
+    {
+        if (conversionPopup != null)
+        {
+            var t = conversionPopup.transform;
+            t.DOKill();
+            t.localScale = Vector3.one * 0.86f;
+            t.DOScale(1f, 0.35f).SetEase(Ease.OutBack).SetLink(conversionPopup);
+        }
+        if (rankUpRays != null && rankUpRays.gameObject.activeSelf)
+        {
+            var rt = rankUpRays.transform;
+            rt.localScale = Vector3.one * 0.6f;
+            rt.DOScale(1f, 0.5f).SetEase(Ease.OutCubic).SetLink(rankUpRays.gameObject);
+            rt.DOLocalRotate(new Vector3(0f, 0f, -360f), 16f, RotateMode.FastBeyond360)
+                .SetEase(Ease.Linear).SetLoops(-1).SetLink(rankUpRays.gameObject);
+        }
+        if (rankUpEmblem != null && rankUpEmblem.gameObject.activeSelf)
+        {
+            var et = rankUpEmblem.transform;
+            et.localScale = Vector3.zero;
+            et.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.1f).SetLink(rankUpEmblem.gameObject);
+        }
+        if (rankUpStarsAfter != null && toRank >= 0)
+        {
+            int from = fromRank >= 0 ? fromRank : toRank - 1;
+            float delay = 0.4f;
+            for (int i = from + 1; i <= toRank && i < rankUpStarsAfter.Length; i++)
+            {
+                var s = rankUpStarsAfter[i];
+                if (s == null || i < 0) continue;
+                var st = s.transform;
+                st.localScale = Vector3.zero;
+                st.DOScale(1.3f, 0.4f).SetEase(Ease.OutBack).SetDelay(delay).SetLink(s.gameObject);
+                delay += 0.15f;
+            }
+        }
+    }
+
+    // ───────── 自己ベストの掲示板 ─────────
+
+    /// <summary>自己ベストの表の1行（難易度・金額・ランク）。</summary>
+    public readonly struct RecordRow
+    {
+        public readonly string Mode;
+        public readonly string Amount;
+        public readonly string Rank;
+
+        public RecordRow(string mode, string amount, string rank)
+        {
+            Mode = mode;
+            Amount = amount;
+            Rank = rank;
+        }
+    }
+
     /// <summary>自己ベストの掲示板を開く（未配線ならメッセージ欄に出す）。</summary>
     public void ShowRecordBoard(string title, string body)
     {
@@ -313,11 +611,278 @@ public class VillageView : MonoBehaviour
         UIFx.PanelOpen(recordBoardPopup);
         if (recordBoardTitleText != null) recordBoardTitleText.text = title;
         if (recordBoardBodyText != null) recordBoardBodyText.text = body;
+        if (recordBoardAmountText != null) recordBoardAmountText.text = "";
+        if (recordBoardRankText != null) recordBoardRankText.text = "";
+        RefreshModalDim();
+    }
+
+    /// <summary>自己ベストの掲示板を3列の表（難易度・金額・ランク）で開く。列が未配線なら1行ずつ並べる。</summary>
+    public void ShowRecordBoard(string title, IReadOnlyList<RecordRow> rows)
+    {
+        if (recordBoardPopup == null || recordBoardAmountText == null || recordBoardRankText == null)
+        {
+            var sb = new System.Text.StringBuilder();
+            if (rows != null)
+            {
+                foreach (var r in rows)
+                {
+                    if (sb.Length > 0) sb.Append('\n');
+                    sb.Append(r.Mode).Append('　').Append(r.Amount);
+                    if (!string.IsNullOrEmpty(r.Rank)) sb.Append('　').Append("ランク ").Append(r.Rank);
+                }
+            }
+            ShowRecordBoard(title, sb.ToString());
+            return;
+        }
+        recordBoardPopup.SetActive(true);
+        UIFx.PanelOpen(recordBoardPopup);
+        if (recordBoardTitleText != null) recordBoardTitleText.text = title;
+        SetRecordRows(rows);
+        RefreshModalDim();
+    }
+
+    /// <summary>表の3列に文字を入れる（動きなし。撮影ツールも使う）。</summary>
+    private void SetRecordRows(IReadOnlyList<RecordRow> rows)
+    {
+        var modes = new System.Text.StringBuilder();
+        var amounts = new System.Text.StringBuilder();
+        var ranks = new System.Text.StringBuilder();
+        if (rows != null)
+        {
+            foreach (var r in rows)
+            {
+                if (modes.Length > 0) { modes.Append('\n'); amounts.Append('\n'); ranks.Append('\n'); }
+                modes.Append(r.Mode);
+                amounts.Append(r.Amount);
+                ranks.Append(string.IsNullOrEmpty(r.Rank) ? "-" : "ランク " + r.Rank);
+            }
+        }
+        if (recordBoardBodyText != null) recordBoardBodyText.text = modes.ToString();
+        if (recordBoardAmountText != null) recordBoardAmountText.text = amounts.ToString();
+        if (recordBoardRankText != null) recordBoardRankText.text = ranks.ToString();
     }
 
     public void HideRecordBoard()
     {
         if (recordBoardPopup != null) recordBoardPopup.SetActive(false);
+        RefreshModalDim();
+    }
+
+    // ───────── 小窓の後ろの幕 ─────────
+
+    private bool AnyModalOpen => IsInvestPanelOpen || IsConversionPopupOpen || IsRecordBoardOpen;
+
+    /// <summary>小窓が1つでも開いていれば幕を出す（animate なら薄く入る）。</summary>
+    private void RefreshModalDim(bool animate = true)
+    {
+        bool open = AnyModalOpen;
+        if (rankUpRays != null && !IsConversionPopupOpen && rankUpRays.gameObject.activeSelf)
+        {
+            KillTweens(rankUpRays.transform);
+            rankUpRays.gameObject.SetActive(false);
+        }
+        if (modalDim == null) return;
+        bool was = modalDim.gameObject.activeSelf;
+        KillTweens(modalDim);
+        modalDim.gameObject.SetActive(open);
+        if (!open) return;
+        var c = modalDim.color;
+        if (animate && !was)
+        {
+            modalDim.color = new Color(c.r, c.g, c.b, 0f);
+            modalDim.DOFade(modalDimAlpha, 0.15f).SetLink(modalDim.gameObject);
+        }
+        else
+        {
+            modalDim.color = new Color(c.r, c.g, c.b, modalDimAlpha);
+        }
+    }
+
+    /// <summary>幕を押した: 投資パネル・掲示板は閉じる（帰還/格上げのポップはボタンで閉じる）。</summary>
+    private void OnModalDimClicked()
+    {
+        if (IsConversionPopupOpen) return;
+        if (IsInvestPanelOpen)
+        {
+            HideInvestPanel();
+            OnPanelClosed.OnNext(Unit.Default);
+            return;
+        }
+        if (IsRecordBoardOpen) HideRecordBoard();
+    }
+
+    // ───────── 施設へのショートカット（左端のつまみで開く帯） ─────────
+
+    /// <summary>ショートカットの帯の1項目。</summary>
+    public sealed class ShortcutEntry
+    {
+        /// <summary>施設ID（記録掲示板は VillagePresenter.RecordBoardId）。</summary>
+        public string Id;
+        public string Name;
+        /// <summary>アイコンを引く施設（記録掲示板は null）。</summary>
+        public VillageFacilityData Facility;
+        /// <summary>「Lv3」「MAX」「未建設」など。</summary>
+        public string LevelLabel;
+        /// <summary>今の村資金で拡張・建設できる（金の「！」を付ける）。</summary>
+        public bool CanUpgrade;
+    }
+
+    private readonly List<Button> shortcutButtons = new();
+    private readonly List<string> shortcutIds = new();
+    private bool shortcutOpen;
+    private Tween shortcutTween;
+
+    public bool IsShortcutOpen => shortcutOpen;
+
+    private void SetupShortcuts()
+    {
+        if (shortcutButtonTemplate != null) shortcutButtonTemplate.gameObject.SetActive(false);
+        if (shortcutKnob != null) shortcutKnob.onClick.AddListener(ToggleShortcuts);
+        SetShortcutOpen(false, false);
+    }
+
+    private bool ShortcutInputBlocked =>
+        uiLocked || ArrivalPlaying || (ShortcutBlocked != null && ShortcutBlocked());
+
+    private void UpdateShortcuts()
+    {
+        if (shortcutDrawer == null) return;
+        bool blocked = ShortcutInputBlocked;
+        if (shortcutKnob != null && shortcutKnob.interactable == blocked) shortcutKnob.interactable = !blocked;
+        if (blocked)
+        {
+            if (shortcutOpen) SetShortcutOpen(false, true); // 演出・会話が始まったら帯をしまう
+            return;
+        }
+        if (AnyModalOpen || ControllerInput.IsTextInputFocused()) return;
+        var kb = Keyboard.current;
+        var pad = Gamepad.current;
+        bool pressed = (kb != null && kb.tabKey.wasPressedThisFrame)
+                       || (pad != null && pad.leftShoulder.wasPressedThisFrame);
+        if (pressed) ToggleShortcuts();
+    }
+
+    /// <summary>つまみ（Tab / パッドの LB）で帯を開け閉めする。演出・会話中と小窓を開いている間は無視。</summary>
+    public void ToggleShortcuts()
+    {
+        if (shortcutDrawer == null || ShortcutInputBlocked || AnyModalOpen) return;
+        SetShortcutOpen(!shortcutOpen, true);
+        if (!ControllerInput.IsNavigating.CurrentValue || fieldScope == null)
+        {
+            // マウスで押したつまみが選ばれたままだと、Space/Enter（区画の「調べる」）でも開け閉めしてしまうので外す
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null && shortcutKnob != null && es.currentSelectedGameObject == shortcutKnob.gameObject)
+                es.SetSelectedGameObject(null);
+            return;
+        }
+        // パッド/キーで開いたら最初のボタンを選ぶ（閉じたら歩く操作へ戻す）
+        if (shortcutOpen)
+        {
+            var first = shortcutButtons.Find(b => b != null && b.gameObject.activeSelf);
+            if (first != null)
+            {
+                hudMode = true;
+                fieldScope.Select(first);
+            }
+        }
+        else if (hudMode)
+        {
+            ExitHudMode();
+        }
+    }
+
+    /// <summary>帯を開く/閉じる（animate=false ならすぐその位置へ。撮影ツールも使う）。連打しても今の位置から向きを変えるだけ。</summary>
+    public void SetShortcutOpen(bool open, bool animate)
+    {
+        shortcutOpen = open;
+        if (shortcutDrawer == null) return;
+        float width = shortcutDrawer.rect.width > 0f ? shortcutDrawer.rect.width : shortcutDrawer.sizeDelta.x;
+        float target = open ? 0f : -width;
+        shortcutTween?.Kill();
+        shortcutTween = null;
+        if (shortcutKnobArrow != null)
+        {
+            var s = shortcutKnobArrow.localScale;
+            shortcutKnobArrow.localScale = new Vector3(open ? -Mathf.Abs(s.x) : Mathf.Abs(s.x), s.y, s.z);
+        }
+        if (open) SetShortcutListInteractable(true);
+        if (!animate)
+        {
+            shortcutDrawer.anchoredPosition = new Vector2(target, shortcutDrawer.anchoredPosition.y);
+            if (!open) SetShortcutListInteractable(false);
+            return;
+        }
+        shortcutTween = shortcutDrawer.DOAnchorPosX(target, shortcutSlideDuration)
+            .SetEase(open ? Ease.OutCubic : Ease.InCubic)
+            .SetLink(shortcutDrawer.gameObject)
+            .OnComplete(() =>
+            {
+                shortcutTween = null;
+                if (!shortcutOpen) SetShortcutListInteractable(false);
+            });
+    }
+
+    private void SetShortcutListInteractable(bool on)
+    {
+        if (shortcutListGroup == null) return;
+        shortcutListGroup.interactable = on;
+        shortcutListGroup.blocksRaycasts = on;
+    }
+
+    /// <summary>帯のボタンを並べ直す（村資金・Lv が変わるたびに Presenter が呼ぶ）。足りない分は雛形から作る。</summary>
+    public void SetShortcuts(IReadOnlyList<ShortcutEntry> entries)
+    {
+        if (shortcutButtonTemplate == null) return;
+        int count = entries?.Count ?? 0;
+        var parent = shortcutButtonTemplate.transform.parent;
+        while (shortcutButtons.Count < count)
+        {
+            var b = Instantiate(shortcutButtonTemplate, parent);
+            int index = shortcutButtons.Count;
+            b.name = $"Shortcut{index}";
+            b.onClick.AddListener(() => OnShortcutButton(index));
+            shortcutButtons.Add(b);
+        }
+        shortcutIds.Clear();
+        for (int i = 0; i < shortcutButtons.Count; i++)
+        {
+            var b = shortcutButtons[i];
+            bool on = i < count;
+            b.gameObject.SetActive(on);
+            if (!on) continue;
+            var e = entries[i];
+            shortcutIds.Add(e.Id);
+            var icon = FindChild<Image>(b.transform, "Icon");
+            if (icon != null)
+            {
+                var sprite = e.Facility != null ? IconOf(e.Facility) : recordBoardIcon;
+                icon.sprite = sprite;
+                icon.preserveAspect = true;
+                icon.enabled = sprite != null;
+            }
+            var nameText = FindChild<TMP_Text>(b.transform, "Name");
+            if (nameText != null) nameText.text = e.Name;
+            var level = FindChild<TMP_Text>(b.transform, "Level");
+            if (level != null)
+            {
+                level.text = e.LevelLabel ?? "";
+                level.gameObject.SetActive(!string.IsNullOrEmpty(e.LevelLabel));
+            }
+            var badge = b.transform.Find("Badge");
+            if (badge != null) badge.gameObject.SetActive(e.CanUpgrade);
+        }
+    }
+
+    private void OnShortcutButton(int index)
+    {
+        if (ShortcutInputBlocked || index < 0 || index >= shortcutIds.Count) return;
+        OnShortcutFacility.OnNext(shortcutIds[index]);
+    }
+
+    private static T FindChild<T>(Transform t, string name) where T : Component
+    {
+        var c = t.Find(name);
+        return c != null ? c.GetComponent<T>() : null;
     }
 
     public bool IsRecordBoardOpen => recordBoardPopup != null && recordBoardPopup.activeSelf;
@@ -325,8 +890,12 @@ public class VillageView : MonoBehaviour
     /// <summary>村資金HUDの数値だけ更新する（到着演出のカウントアップ用）。</summary>
     public void SetFundsDisplay(int villageFunds)
     {
-        if (villageFundsText != null) villageFundsText.text = $"村資金 {villageFunds:N0}G";
+        lastFunds = villageFunds;
+        // 見出しを小さく上に、額を下に（7桁でも文字を縮めない幅に箱を合わせてある）
+        if (villageFundsText != null) villageFundsText.text = $"<line-height=72%><size=52%>村資金</size>\n</line-height>{villageFunds:N0}G";
     }
+
+    private int? lastFunds; // 投資パネルで費用と比べる（UpdateHud・到着演出のカウントアップで更新）
 
     /// <summary>村資金HUDのテキスト（到着演出のコイン到達先）。</summary>
     public TMP_Text FundsText => villageFundsText;
@@ -408,6 +977,7 @@ public class VillageView : MonoBehaviour
     public void ShowMessage(string message)
     {
         if (messageText != null) messageText.text = message;
+        if (messageBand != null) messageBand.SetActive(!string.IsNullOrEmpty(message));
     }
 
     /// <summary>
@@ -422,9 +992,10 @@ public class VillageView : MonoBehaviour
 
         if (detailIcon != null)
         {
-            detailIcon.sprite = facility.icon;
+            var icon = IconOf(facility);
+            detailIcon.sprite = icon;
             detailIcon.preserveAspect = true;
-            detailIcon.enabled = facility.icon != null;
+            detailIcon.enabled = icon != null;
         }
         if (detailNameText != null) detailNameText.text = facility.facilityName;
         if (detailLevelText != null)
@@ -434,33 +1005,121 @@ public class VillageView : MonoBehaviour
                 : (level == 0 ? "未建設" : $"Lv{level} → Lv{level + 1}");
         }
         if (currentEffectText != null)
-            currentEffectText.text = string.IsNullOrEmpty(currentEffect) ? "-" : currentEffect;
+            currentEffectText.text = string.IsNullOrEmpty(currentEffect) ? "-" : KeepPhrases(currentEffect);
         if (nextEffectText != null)
-            nextEffectText.text = string.IsNullOrEmpty(nextEffect) ? "これ以上の拡張はない" : nextEffect;
+            nextEffectText.text = string.IsNullOrEmpty(nextEffect) ? "これ以上の拡張はない" : KeepPhrases(nextEffect);
         if (nextCaptionText != null)
         {
+            // 「特殊な効果」も「現在」「次Lv」と同じ大きさ・色（強調は左の金の帯 specialFrame）
             nextCaptionText.text = nextIsSpecial ? SpecialCaption : defaultNextCaption;
-            nextCaptionText.color = nextIsSpecial ? SpecialCaptionColor : defaultNextCaptionColor;
-            nextCaptionText.fontSizeMax = nextIsSpecial ? Mathf.Min(SpecialCaptionMaxSize, defaultNextCaptionMaxSize) : defaultNextCaptionMaxSize;
-            nextCaptionText.horizontalAlignment = nextIsSpecial ? HorizontalAlignmentOptions.Center : defaultNextCaptionAlign;
+            nextCaptionText.color = defaultNextCaptionColor;
+            nextCaptionText.fontSizeMax = defaultNextCaptionMaxSize;
+            nextCaptionText.horizontalAlignment = defaultNextCaptionAlign;
         }
         if (specialFrame != null) specialFrame.SetActive(nextIsSpecial);
 
-        if (detailCostText != null)
-            detailCostText.text = cost < 0 ? "-" : $"{cost:N0}G";
+        // 未建設なら「現在」の行は隠し、「次Lv」の行をその位置へ上げる
+        if (currentEffectRow != null && nextEffectRow != null)
+        {
+            currentRowHome ??= currentEffectRow.anchoredPosition;
+            nextRowHome ??= nextEffectRow.anchoredPosition;
+            bool unbuilt = level <= 0;
+            currentEffectRow.gameObject.SetActive(!unbuilt);
+            nextEffectRow.anchoredPosition = unbuilt ? currentRowHome.Value : nextRowHome.Value;
+        }
 
-        if (investButton != null) investButton.interactable = canInvest;
+        // 村資金が分かっていれば費用と比べる（足りないときは赤、足りるときは緑。ボタンも押せない見た目に）
+        bool isMax = cost < 0;
+        bool shortOfFunds = cost >= 0 && lastFunds.HasValue && lastFunds.Value < cost;
+        if (shortOfFunds) canInvest = false;
+        if (isMax) canInvest = false;
+        if (detailCostText != null)
+        {
+            detailCostText.text = isMax ? "-" : $"{cost:N0}G";
+            if (!isMax) detailCostText.color = shortOfFunds ? costShortColor : costAffordableColor;
+            detailCostText.gameObject.SetActive(!isMax); // 最大レベルは「費用 -」の行ごと隠す
+        }
+        if (costCaptionText != null) costCaptionText.gameObject.SetActive(!isMax);
+        if (detailFundsText != null)
+        {
+            detailFundsText.text = lastFunds.HasValue ? $"村資金 {lastFunds.Value:N0}G" : "";
+            detailFundsText.gameObject.SetActive(lastFunds.HasValue && !isMax);
+        }
+
+        // 最大レベルは押せるボタンに見えないよう、ボタンの代わりに「MAX」の札を出す
+        bool showPlate = isMax && maxLevelPlate != null;
+        if (maxLevelPlate != null) maxLevelPlate.SetActive(showPlate);
+        if (investButton != null)
+        {
+            investButton.gameObject.SetActive(!showPlate);
+            investButton.interactable = canInvest;
+        }
         if (investButtonLabel != null)
         {
-            investButtonLabel.text = cost < 0
+            investLabelColor ??= investButtonLabel.color;
+            investButtonLabel.color = canInvest ? investLabelColor.Value : investLabelDisabledColor;
+            if (!canInvest && string.IsNullOrEmpty(blockedReason) && shortOfFunds) blockedReason = "村資金が足りない";
+            investButtonLabel.text = isMax
                 ? "最大レベル"
                 : canInvest ? (level == 0 ? "建設する" : "拡張する") : blockedReason;
         }
+        RefreshModalDim();
+    }
+
+    private Vector2? currentRowHome, nextRowHome;
+
+    /// <summary>
+    /// 効果文を言葉の切れ目（「・」「、」「：」の後、助詞の後）でだけ折り返すようにする。
+    /// 切れ目ごとに &lt;nobr&gt; で包み、間に幅のない改行候補（U+200B）を入れる（「+5 / 種」「危ないぶ / ん」のような折り返しを防ぐ）。
+    /// </summary>
+    public static string KeepPhrases(string text)
+    {
+        if (string.IsNullOrEmpty(text) || text.IndexOf('<') >= 0) return text;
+        var sb = new System.Text.StringBuilder(text.Length + 32);
+        var chunk = new System.Text.StringBuilder();
+        void Flush()
+        {
+            if (chunk.Length == 0) return;
+            if (sb.Length > 0) sb.Append('\u200B');
+            sb.Append("<nobr>").Append(chunk).Append("</nobr>");
+            chunk.Clear();
+        }
+        for (int i = 0; i < text.Length; i++)
+        {
+            char c = text[i];
+            char next = i + 1 < text.Length ? text[i + 1] : '\0';
+            if (c == '（' || c == '(') Flush(); // 括弧の前で切れてよい
+            chunk.Append(c);
+            bool breakAfter = c is '・' or '、' or '。' or '：' or ':' or ' ' or '\u3000' or '）' or ')' or '→'
+                              || (IsParticle(c) && chunk.Length >= 3 && next != '\0' && !IsHiragana(next) && !IsClosing(next));
+            if (breakAfter) Flush();
+        }
+        Flush();
+        return sb.ToString();
+    }
+
+    private static bool IsParticle(char c) => c is 'の' or 'に' or 'が' or 'を' or 'は' or 'で' or 'と' or 'へ' or 'も';
+    private static bool IsHiragana(char c) => c >= '\u3041' && c <= '\u309F';
+    private static bool IsClosing(char c) => c is '、' or '。' or '・' or '）' or ')' or '：' or ':' or '」' or '』';
+
+    private Color? investLabelColor; // 押せるときの文字の色（最初に開いたときに覚える）
+
+    private Sprite IconOf(VillageFacilityData facility)
+    {
+        if (facility == null) return null;
+        if (facility.icon != null) return facility.icon;
+        if (facilityIcons == null) return null;
+        foreach (var f in facilityIcons)
+        {
+            if (f.facilityId == facility.facilityId) return f.icon;
+        }
+        return null;
     }
 
     public void HideInvestPanel()
     {
         if (investPanel != null) investPanel.SetActive(false);
+        RefreshModalDim();
     }
 
     public bool IsInvestPanelOpen => investPanel != null && investPanel.activeSelf;
@@ -470,8 +1129,11 @@ public class VillageView : MonoBehaviour
     {
         if (conversionPopup == null) return;
         conversionPopup.SetActive(true);
+        conversionPopup.transform.localScale = Vector3.one;
         SwapConversionRows(false); // 格上げで入れ替えた行を戻す
+        ApplyRankUpDecor(false, -1, -1);
         SetConversionBreakdown(breakdown);
+        RefreshModalDim();
         if (conversionConvertedText != null) conversionConvertedText.transform.localScale = Vector3.one;
 
         if (conversionTitleText != null)
@@ -507,9 +1169,17 @@ public class VillageView : MonoBehaviour
     private void SetConversionBreakdown(VillageFundsBreakdown breakdown)
     {
         var lines = breakdown?.BuildLines();
+        var popupRect = conversionPopup != null ? (RectTransform)conversionPopup.transform : null;
+        if (conversionBreakdownArea != null && popupRect != null) conversionPopupBaseHeight ??= popupRect.sizeDelta.y;
         if (lines == null || lines.Count == 0)
         {
             if (conversionBreakdownText != null) conversionBreakdownText.transform.parent.gameObject.SetActive(false);
+            if (conversionBreakdownArea != null)
+            {
+                conversionBreakdownArea.gameObject.SetActive(false);
+                if (popupRect != null && conversionPopupBaseHeight.HasValue)
+                    popupRect.sizeDelta = new Vector2(popupRect.sizeDelta.x, conversionPopupBaseHeight.Value);
+            }
             return;
         }
 
@@ -519,10 +1189,21 @@ public class VillageView : MonoBehaviour
             var bg = new GameObject("Breakdown", typeof(RectTransform), typeof(Image));
             bg.layer = conversionPopup.layer;
             var bgRt = (RectTransform)bg.transform;
-            bgRt.SetParent(popupRt, false);
-            bgRt.anchorMin = bgRt.anchorMax = new Vector2(0.5f, 0f);
-            bgRt.pivot = new Vector2(0.5f, 1f);
-            bgRt.anchoredPosition = new Vector2(0f, -8f);
+            if (conversionBreakdownArea != null)
+            {
+                // ポップの中の枠いっぱいに並べる
+                bgRt.SetParent(conversionBreakdownArea, false);
+                bgRt.anchorMin = Vector2.zero;
+                bgRt.anchorMax = Vector2.one;
+                bgRt.offsetMin = bgRt.offsetMax = Vector2.zero;
+            }
+            else
+            {
+                bgRt.SetParent(popupRt, false);
+                bgRt.anchorMin = bgRt.anchorMax = new Vector2(0.5f, 0f);
+                bgRt.pivot = new Vector2(0.5f, 1f);
+                bgRt.anchoredPosition = new Vector2(0f, -8f);
+            }
             var img = bg.GetComponent<Image>();
             img.color = new Color(0f, 0f, 0f, 0f);   // 背景の帯は出さない（並べる場所としてだけ使う）
             img.raycastTarget = false;
@@ -532,6 +1213,7 @@ public class VillageView : MonoBehaviour
             conversionBreakdownAmounts = CreateBreakdownColumn(bgRt, src, TextAlignmentOptions.Right, new Color(0.91f, 0.64f, 0.24f, 1f));
         }
 
+        if (conversionBreakdownArea != null) conversionBreakdownArea.gameObject.SetActive(true);
         var labels = new System.Text.StringBuilder();
         var amounts = new System.Text.StringBuilder();
         foreach (var line in lines)
@@ -546,9 +1228,22 @@ public class VillageView : MonoBehaviour
         panel.gameObject.SetActive(true);
         conversionBreakdownText.ForceMeshUpdate();
         float textHeight = Mathf.Max(conversionBreakdownText.preferredHeight, lines.Count * 40f);
+        if (conversionBreakdownArea != null)
+        {
+            // 枠を内訳の高さにし、そのぶんポップを伸ばす（下寄せの枠とボタンの上に入る）
+            conversionBreakdownArea.gameObject.SetActive(true);
+            float areaHeight = 24f + textHeight;
+            conversionBreakdownArea.sizeDelta = new Vector2(conversionBreakdownArea.sizeDelta.x, areaHeight);
+            if (popupRect != null && conversionPopupBaseHeight.HasValue)
+                popupRect.sizeDelta = new Vector2(popupRect.sizeDelta.x, conversionPopupBaseHeight.Value + areaHeight + ConversionBreakdownGap);
+            return;
+        }
         panel.sizeDelta = new Vector2(720f, 24f + textHeight);
         panel.gameObject.SetActive(true);
     }
+
+    private const float ConversionBreakdownGap = 16f;
+    private float? conversionPopupBaseHeight; // 内訳なしのポップの高さ（最初に覚える）
 
     private TextMeshProUGUI conversionBreakdownAmounts;
 

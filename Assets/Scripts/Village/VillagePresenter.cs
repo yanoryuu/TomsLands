@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using R3;
@@ -10,6 +12,7 @@ using VContainer.Unity;
 /// - 帰還時: VillageArrivalReport（消費型）を読んで収支ポップを表示
 /// - 区画（FacilityPlot）の調べる→投資パネル→投資
 /// - 総合Lvに応じて町人が増える（VillagePopulationView。投資で増えた分はその場でポップして現れる）
+/// - 村の格に応じてマップの地面と装飾が育つ（VillageRankDecor。格が上がった瞬間は新しい装飾が弾んで出る）
 /// - 出店 → PreparationScene / タイトルへ → TitleScene
 /// - 初回入場時: 村チュートリアル前半（暗幕）→ 帰還演出（儲け→村資金）→ 後半（看板を調べて投資）
 /// 村と店の経営（ラン）は別フロー: ここでの操作はラン外のメタ層のみに影響する。
@@ -29,6 +32,7 @@ public class VillagePresenter : IStartable, IDisposable
     private bool tutorialPlaying; // 村チュートリアル会話の再生中
     private bool rankUpPlaying; // 村の格が上がった演出（ポップ→会話）の再生中
     private int shownRank; // 画面に出している村の格（上がった瞬間を見つける）
+    private VillageRankDecor rankDecor; // 格ごとの地面・装飾（シーンに無ければ null）
 
     /// <summary>演出・会話中で村の操作を受け付けない状態か。</summary>
     private bool IsBusy => arrivalPlaying || tutorialPlaying || rankUpPlaying;
@@ -68,6 +72,7 @@ public class VillagePresenter : IStartable, IDisposable
         if (soundManager != null) soundManager.PlayBGM("OP");
 
         Bind();
+        rankDecor = UnityEngine.Object.FindFirstObjectByType<VillageRankDecor>(FindObjectsInactive.Include);
         shownRank = VillageRank.Compute(metaProgress);
         RefreshAll();
 
@@ -159,6 +164,12 @@ public class VillagePresenter : IStartable, IDisposable
         }).AddTo(disposables);
         view.OnConversionClosed
             .Subscribe(_ => { if (!rankUpPlaying) view.ShowMessage(DefaultMessage); })
+            .AddTo(disposables);
+
+        // 左端のショートカットの帯（区画を調べたのと同じ処理。演出・会話中はつまみも受け付けない）
+        view.ShortcutBlocked = () => IsBusy;
+        view.OnShortcutFacility
+            .Subscribe(facilityId => SelectFacility(facilityId))
             .AddTo(disposables);
 
         DebugFacilityLevelsChanged += OnDebugFacilityLevelsChanged;
@@ -304,6 +315,9 @@ public class VillagePresenter : IStartable, IDisposable
         var population = view.Population;
         if (population != null) population.ApplyScaled(villageLevel, model.MaxVillageLevel, animatePopulation);
 
+        // 村の格に合わせた地面と装飾（投資・デバッグで格が上がったときは新しく出たものが弾む）
+        if (rankDecor != null) rankDecor.Apply(rank, animatePopulation);
+
         foreach (var plot in view.Plots)
         {
             if (plot == null) continue;
@@ -323,7 +337,39 @@ public class VillagePresenter : IStartable, IDisposable
                           facility.facilityId != VillageModel.HallId &&
                           model.HallLevel < facility.requiredHallLevel;
             plot.SetState(level, locked, facility.icon, facility.facilityName);
+            if (rankDecor != null) rankDecor.ApplyFacilityLevel(facility.facilityId, level, facility.MaxLevel, animatePopulation);
         }
+
+        view.SetShortcuts(BuildShortcuts(rank));
+    }
+
+    /// <summary>
+    /// 左端の帯に並べる施設（マスターの施設を、領主館 → 建設に要る領主館Lv の順。同じならマスターの順）。
+    /// 記録掲示板は区画がその格で立っているときだけ足す（上の区画の表示と同じ判定）。
+    /// </summary>
+    private List<VillageView.ShortcutEntry> BuildShortcuts(int rank)
+    {
+        var list = new List<VillageView.ShortcutEntry>();
+        var ordered = model.Facilities
+            .Where(f => f != null)
+            .OrderBy(f => f.facilityId == VillageModel.HallId ? 0 : 1)
+            .ThenBy(f => f.requiredHallLevel);
+        foreach (var f in ordered)
+        {
+            int level = model.GetLevel(f.facilityId);
+            list.Add(new VillageView.ShortcutEntry
+            {
+                Id = f.facilityId,
+                Name = f.facilityName,
+                Facility = f,
+                LevelLabel = level >= f.MaxLevel ? "MAX" : level <= 0 ? "未建設" : $"Lv{level}",
+                CanUpgrade = model.CanInvest(f).ok,
+            });
+        }
+        bool recordShown = VillageRank.IsTop(rank) && view.Plots.Any(p => p != null && p.FacilityId == RecordBoardId);
+        if (recordShown)
+            list.Add(new VillageView.ShortcutEntry { Id = RecordBoardId, Name = "自己ベストの掲示板", LevelLabel = "" });
+        return list;
     }
 
     // ───────── 村の格 ─────────
@@ -345,11 +391,12 @@ public class VillagePresenter : IStartable, IDisposable
             shownRank = rank; // デバッグで下げたときに合わせる
             return;
         }
+        int from = shownRank;
         shownRank = rank;
-        PlayRankUpAsync(rank, cts.Token).Forget();
+        PlayRankUpAsync(from, rank, cts.Token).Forget();
     }
 
-    private async UniTaskVoid PlayRankUpAsync(int to, CancellationToken ct)
+    private async UniTaskVoid PlayRankUpAsync(int from, int to, CancellationToken ct)
     {
         rankUpPlaying = true;
         view.HideInvestPanel();
@@ -363,7 +410,7 @@ public class VillagePresenter : IStartable, IDisposable
                     : "";
             view.ShowMessage($"トコの村が『{name}』になった！");
 
-            if (view.ShowRankUpPopup("村の格が上がった！", $"トコの村は『{name}』に", unlock))
+            if (view.ShowRankUpPopup("村の格が上がった！", $"トコの村は『{name}』に", unlock, from, to))
             {
                 var closed = new UniTaskCompletionSource();
                 using (view.OnConversionClosed.Subscribe(_ => closed.TrySetResult()))
@@ -407,22 +454,21 @@ public class VillagePresenter : IStartable, IDisposable
     private void ShowRecordBoard()
     {
         view.HideInvestPanel();
-        var lines = new System.Text.StringBuilder();
+        // 3列の表（難易度・金額・ランク）
+        var rows = new List<VillageView.RecordRow>();
         foreach (var mode in new[] { GameModeId.Short, GameModeId.Medium, GameModeId.Long })
         {
-            if (lines.Length > 0) lines.Append('\n');
-            lines.Append(ModeLabel(mode)).Append('\u3000');
             if (metaProgress != null && metaProgress.TryGetBestProfit(mode, out int best))
             {
-                string rank = BestRankOf(mode, best);
-                lines.Append(best >= 0 ? "+" : "\u2212").Append(Mathf.Abs(best).ToString("N0")).Append("G\u3000ランク ").Append(rank);
+                string amount = (best >= 0 ? "+" : "−") + Mathf.Abs(best).ToString("N0") + "G";
+                rows.Add(new VillageView.RecordRow(ModeLabel(mode), amount, BestRankOf(mode, best)));
             }
             else
             {
-                lines.Append("まだ記録なし");
+                rows.Add(new VillageView.RecordRow(ModeLabel(mode), "まだ記録なし", ""));
             }
         }
-        view.ShowRecordBoard("自己ベスト", lines.ToString());
+        view.ShowRecordBoard("自己ベスト", rows);
     }
 
     /// <summary>その長さでいちばん良かったランク（ラン履歴にあればその中の最高。無ければ最高の儲けから求める）。</summary>
