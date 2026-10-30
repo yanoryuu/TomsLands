@@ -2,8 +2,9 @@
 #   powershell -ExecutionPolicy Bypass -File tools/village_capture.ps1 [-Shots hud,invest,conversion,overview] [-Levels 0,3,5] [-Ranks 0,1,2,3] [-Funds 99999] [-Out <dir>]
 # -Ranks: 村の格ごとの地面と装飾（VillageRankDecor.prefab）を一時的に置き、施設レベルも格に合わせて撮る（village_rank{格}_{種類}.png）。
 #         -Ranks だけ付けたときはレベル別（-Levels）は撮らない。両方付ければ両方撮る。
-# -Shots: hud / invest / conversion / rankup（格上げのポップ）/ record（自己ベストの掲示板）/ overview
-# -Funds: HUD の村資金（投資パネルの費用と比べる額）。多めにすると「足りる＝金色・ボタン有効」の状態が撮れる。
+# -Shots: hud / invest / conversion / rankup（格上げのポップ）/ record（自己ベストの掲示板）/ tabs（左端の施設の帯を開いた状態）/ overview
+# -Levels だけでも、そのレベルの格の地面と装飾を置いて撮る（本編と同じ）。投資パネルの押せる/押せない・MAX も本編と同じ判定。
+# -Funds: HUD の村資金（投資パネルの費用と比べる額）。多めにすると「足りる＝緑・ボタン有効」の状態が撮れる。
 # 中身は Assets/Scripts/Editor/VillageCapture.cs（編集モードで開いて撮るだけ。シーンもセーブも書き換えない）。
 # 描画が要るので -nographics は付けない。同じプロジェクトをエディタで開いているとロックで失敗する。
 param(

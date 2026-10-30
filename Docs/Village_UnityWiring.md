@@ -148,6 +148,29 @@ Unity.exe -batchmode -nographics -projectPath <wt> -executeMethod VillageUIBuild
   `-Funds 9999999` で HUD の村資金を上書きでき、「足りる＝金色・ボタン有効」の投資パネルが撮れる。`rankup`（格上げのポップ）と `record`（自己ベストの掲示板）を足した。
 - 未確認（Play でしか見られない）: 宴の会話ウィンドウとメッセージの帯の重なり、ボタンのハイライト・押下の色、格上げのポップの拡大アニメ、パッド操作で「タイトルへ」にフォーカスが移ること。
 
+## 3-5. 施設へのショートカット・小窓の幕・デザインレビューの直し（2026-10-30）
+
+同じく `VillageUIBuilder.BuildBatch` で組む（手でシーンをいじらない）。描く順は「HUD → 施設の帯 → 幕 → 格上げの光 → 小窓」（Build の最後で並べ直す）。
+
+- 施設へのショートカット（`VillageUI/FacilityTabs`）: 左端・縦中央に「施設」のつまみ（濃い茶＋金縁）を常に出し、押すと施設ボタンの帯が左から滑り出る（DOTween 0.25 秒・OutCubic、閉じは InCubic。`SetLink`。連打しても今の位置から向きを変えるだけ）。矢印は閉じ「→」／開き「←」。
+  - 配線（新規・どれも未配線なら帯ごと出ない）: `shortcutDrawer` ← `FacilityTabs`（閉じた位置 x=-340 で保存）、`shortcutKnob` ← `FacilityTabs/Knob`、`shortcutKnobArrow` ← `Knob/Arrow`、`shortcutButtonTemplate` ← `FacilityTabs/List/ButtonTemplate`（非アクティブ。子に Icon / Name / Level / Badge）、`shortcutListGroup` ← `FacilityTabs/List`（閉じている間は押せない）、`recordBoardIcon`（星）。
+  - ボタンは Presenter が `RefreshAll` のたびに `view.SetShortcuts` で並べ直す（マスターの施設を 領主館 → 建設に要る領主館Lv の順、同じならマスターの順。名前はマスター）。Lv は「Lv3」・最大は「MAX」・未建設は「未建設」。`VillageModel.CanInvest` が通る施設に金の「！」。
+    記録掲示板は区画（`records`）が立つ格（王都）のときだけ足す。押すと `OnShortcutFacility` → `SelectFacility`（区画を調べたのと同じ）。
+  - 受け付けない: `IsBusy`（帰還演出・会話・格上げ）・`SetUiInputLocked` 中・小窓を開いている間。演出が始まったら帯は自動で閉じ、つまみはグレー。帯は投資パネルと重ならない（パネルは中央 840 幅）ので開いたまま、幕の下になる。
+  - キー/パッド: Tab キー・パッドの LB で開閉（キーの Q/E は既存の TabLeft/Right と区画の「調べる」に使っているので使わない）。パッド/キーで開くと先頭のボタンを選ぶ。
+- 小窓の後ろの幕（`VillageUI/ModalDim`・`modalDim`）: 投資パネル・帰還/格上げポップ・記録掲示板のどれかが開いている間だけ全画面の黒を敷く。不透明度は `modalDimAlpha = 0.8`（リニア色空間なので見た目でおよそ 55%）。
+  開閉は View の各 Show/Hide から `RefreshModalDim` を呼び、`LateUpdate` でも合わせる（AutoPlay 等で直接閉じても残らない）。幕を押すと投資パネル・掲示板は閉じる（帰還/格上げはボタンで閉じる）。
+- 投資パネル: 最大レベルはボタンの代わりに `maxLevelPlate`（金縁＋濃い茶 #4A2A14 の「MAX」の札）を出し、費用の行（`costCaptionText`・費用・村資金）を隠す。未建設は `currentEffectRow` を隠して `nextEffectRow` をその位置へ上げる。
+  「特殊な効果」は見出しを「現在」「次Lv」と同じ大きさ・色にし、強調は `specialFrame` を左の 8px の金の帯にした。効果文は `VillageView.KeepPhrases` で「・」「、」「：」と助詞の後でだけ折り返す（`<nobr>` で包む）。
+  費用が足りるときの色は緑 #7CD36A（アウトライン付き）。パネルは 840 幅・カード 740 幅。
+- 格上げのポップ: `ShowRankUpPopup(..., fromRank, toRank)`。枠を `vui_panel_frame_gold`（`rankUpPopupSprite`）にし、上に格ごとの紋章（`rankUpEmblems`: 村=緑の旗・町=紋章の盾・王都=王冠）、星の「前→後」（`rankUpStarsBefore/After`。増えた星は大きく弾む）、後ろで回る放射光（`rankUpRays` = `vui_rays`。コードで描いた PNG）。ポップは星の行のぶん 76px 縦に伸びる。
+- 記録掲示板: 3 列の表（`recordBoardBodyText`=難易度・左揃え、新規 `recordBoardAmountText`=金額・右揃え、`recordBoardRankText`=ランク・中央）。Presenter は `ShowRecordBoard(title, IReadOnlyList<RecordRow>)` を使う。
+- HUD: 村資金の箱は `vui_funds_box`（`基本/3ゴールド.png` の 9 スライス版）372x104、文字は「村資金」を小さく上・額を 40px 固定（7 桁でも縮まない）。
+  看板は 124px に詰め、星と「町・総合Lv18」を `RankBanner/RankRow` に横並び、次の格の札は看板の下の縁に吊るす（上の帯は約 168px）。王都の看板は `vui_wood_plate_gold`（角の飾りを他と揃える）、王冠は枠の内側へ。
+  小窓の枠は帰還ポップ・記録掲示板も `vui_panel_frame`（右上の渦で内側の線が途切れないように）。
+- 撮影: `-Levels` だけでもレベルから格を決めてその格の地面・装飾を置く。投資パネルの押せる/押せない・MAX の札は `VillageModel.CanInvest` と同じ判定。開いた帯は `tabs`、閉じた帯は `hud` で見る。
+- 未確認（Play でしか見られない）: 帯の滑り・連打・矢印の向き、演出中につまみがグレーになって帯が閉じること、Tab/LB での開閉とパッドの選択、幕のフェードと押して閉じる動き、格上げの拡大・光の回転・星の弾み。
+
 ## 4. 未確認・今後（V2以降）
 
 - タイトル「ニューゲーム」→村、Result/GameOver→村 の通しプレイ（コード実装済み・実ラン未確認）

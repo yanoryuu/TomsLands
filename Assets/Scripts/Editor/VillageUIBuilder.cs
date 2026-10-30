@@ -69,9 +69,14 @@ public static class VillageUIBuilder
         BuildTitleAndMessage(root.transform, so, style);
         BuildInvestPanel(so, style);
         BuildPopups(so, style);
-        // ポップは HUD より手前に描く（HUD の部品を作り足すと後ろに並ぶので、最後に並べ直す）
-        foreach (var f in new[] { "investPanel", "conversionPopup", "recordBoardPopup" })
-            Ref<GameObject>(so, f)?.transform.SetAsLastSibling();
+        BuildOverlays(root.transform, so, style);
+        // 描く順: HUD → 施設の帯 → 幕 → 格上げの光 → 小窓（HUD の部品を作り足すと後ろに並ぶので、最後に並べ直す）
+        foreach (var f in new[] { "shortcutDrawer", "modalDim", "rankUpRays", "investPanel", "conversionPopup", "recordBoardPopup" })
+        {
+            var o = so.FindProperty(f)?.objectReferenceValue;
+            var t = o is Component c ? c.transform : o is GameObject g ? g.transform : null;
+            if (t != null) t.SetAsLastSibling();
+        }
         so.ApplyModifiedPropertiesWithoutUndo();
         PlaceRankDecor(scene);
 
@@ -187,20 +192,20 @@ public static class VillageUIBuilder
                 return new Style
                 {
                     Name = "A",
-                    Banner = Part("vui_wood_plate"), BannerPpu = 0.8f, BannerTop = goldBtn,
+                    Banner = Part("vui_wood_plate"), BannerPpu = 0.8f, BannerTop = Part("vui_wood_plate_gold"), // 王都は同じ木の看板の金の版（角の飾りを揃える）
                     Plate = Part("vui_label_plate"), PlatePpu = 1f, PlateTextColor = Cream, PlateOutline = false,
                     PinsAtRank1 = false, FlagsAtRank1 = true, CrestAtRank2 = false, TopEmblem = crown,
-                    FundsBox = coinBox, FundsSize = new Vector2(424, 130),
-                    FundsTextLeft = 128,
+                    FundsBox = Part("vui_funds_box"), FundsPpu = 1.25f, FundsSize = new Vector2(372, 104),
+                    FundsTextLeft = 104,
                     Depart = goldBtn, DepartPpu = 1.2f, DepartSize = new Vector2(470, 136),
-                    // 投資パネルの枠は右上の飾りを消した複製（× を置くため）。ポップは元の飾り付き
+                    // 投資パネル・ポップの枠は右上の飾りを消した複製（× を置くため・右上で内側の線が途切れないため）
                     Panel = Part("vui_panel_frame"), PanelPpu = 1.9f,
-                    Popup = Load("Assets/UI/新聞/1枠.png"), PopupPpu = 1.9f,
+                    Popup = Part("vui_panel_frame"), PopupPpu = 1.9f, // 右上の渦で内側の線が途切れないよう、投資パネルと同じ枠
                     Ledger = Part("vui_label_plate"), LedgerPpu = 1f, LedgerColor = Hex("C9B8A6"),
                     SubButton = Part("vui_brown_btn"), SubButtonPpu = 1f, SubButtonTextColor = Cream,
                     MessageBand = Part("vui_wood_plate"), MessageBandPpu = 1.4f,
                     Card = Load("Assets/UI/新聞/13記事ボックス小.png"), CardPpu = 1.8f, CardInset = 46f, CardCaption = Hex("6B4630"),
-                    CostCaption = Hex("F5E9D5"), CostFunds = Hex("F5E9D5"), CostOk = BrightGold, CostShort = Hex("FF7A66"),
+                    CostCaption = Hex("F5E9D5"), CostFunds = Hex("F5E9D5"), CostOk = Hex("7CD36A"), CostShort = Hex("FF7A66"),
                     IconFrame = goldFrame, IconFramePpu = 0.8f, IconBack = Load("Assets/UI/鍛冶屋・道具屋/8−1アイコン背景.png"),
                     Button = goldBtn, ButtonDisabled = Part("vui_gold_btn_off"), ButtonPpu = 1.4f,
                     Close = Load("Assets/UI/鍛冶屋・道具屋/9−0閉じる.png"), ClosePos = new Vector2(-74, -74), CloseSize = 56f,
@@ -216,46 +221,85 @@ public static class VillageUIBuilder
         var levelText = Ref<TextMeshProUGUI>(so, "villageLevelText");
         var nextText = Ref<TextMeshProUGUI>(so, "rankNextText");
 
-        // 村資金（左上の箱）
+        // 村資金（左上の箱）。うさぎの町人の頭を隠さないよう低めにし、7桁でも文字を縮めない幅に固定する
         var funds = NewImage("FundsBox", root, s.FundsBox, s.FundsBoxColor, s.FundsPpu);
-        Place(funds.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(24, -18), s.FundsSize);
+        Place(funds.rectTransform, new Vector2(0, 1), new Vector2(0, 1), new Vector2(20, -14), s.FundsSize);
         if (s.FundsFrame != null) Stretch(NewImage("Frame", funds.transform, s.FundsFrame, Color.white, s.FundsFramePpu).rectTransform, 0);
         if (s.FundsCoin != null)
         {
             var c = NewImage("Coin", funds.transform, s.FundsCoin, Color.white, 1f, sliced: false);
-            Place(c.rectTransform, new Vector2(0, 1), new Vector2(0.5f, 0.5f), s.FundsCoinPos, new Vector2(64, 64));
+            Place(c.rectTransform, new Vector2(0, 1), new Vector2(0.5f, 0.5f), s.FundsCoinPos, new Vector2(56, 56));
         }
         if (fundsText != null)
         {
             fundsText.transform.SetParent(funds.transform, false);
             var rt = fundsText.rectTransform;
             rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.offsetMin = new Vector2(s.FundsTextLeft, 6); rt.offsetMax = new Vector2(-30, -4);
+            rt.offsetMin = new Vector2(s.FundsTextLeft, 8); rt.offsetMax = new Vector2(-22, -6);
             SetFont(fundsText, true);
-            fundsText.fontSize = 44; fundsText.enableAutoSizing = true; fundsText.fontSizeMin = 24; fundsText.fontSizeMax = 44;
+            fundsText.enableAutoSizing = false; fundsText.fontSize = 40;
             fundsText.alignment = TextAlignmentOptions.MidlineLeft;
             fundsText.color = s.FundsTextColor;
             fundsText.textWrappingMode = TextWrappingModes.NoWrap;
-            fundsText.text = "<size=64%>村資金</size> 0G";
+            fundsText.overflowMode = TextOverflowModes.Overflow;
+            fundsText.text = "<line-height=72%><size=52%>村資金</size>\n</line-height>9,999,999G";
         }
 
-        // 看板（村の名前・格・総合Lv）
-        var bannerSize = new Vector2(720, 136);
+        // 看板（村の名前・格と星・総合Lv）。上の帯は「次の格」の札まで含めて 170px 前後に収める
+        var bannerSize = new Vector2(720, 124);
         var banner = NewImage("RankBanner", root, s.Banner, s.BannerColor, s.BannerPpu);
-        Place(banner.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -16), bannerSize);
+        Place(banner.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -8), bannerSize);
         if (s.BannerFrame != null) Stretch(NewImage("Frame", banner.transform, s.BannerFrame, Color.white, s.BannerFramePpu).rectTransform, 0);
 
         if (levelText != null)
         {
             levelText.transform.SetParent(banner.transform, false);
-            Place(levelText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 22), new Vector2(560, 60));
+            Place(levelText.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 22), new Vector2(480, 56));
             SetFont(levelText, s.NameOutline);
-            levelText.fontSize = 50; levelText.enableAutoSizing = false; levelText.color = s.NameColor;
+            levelText.fontSize = 46; levelText.enableAutoSizing = false; levelText.color = s.NameColor;
             levelText.alignment = TextAlignmentOptions.Center;
             levelText.text = "トコの村";
         }
-        var rank = NewText("RankText", banner.transform, s.NameOutline, 30, s.RankColor, "町・総合Lv18");
-        Place(rank.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -30), new Vector2(560, 40));
+
+        // 格の行: 星（格の印）と「町・総合Lv18」を横に並べ、看板の中に収める
+        var rankRow = NewRect("RankRow", banner.transform);
+        Place(rankRow, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -27), new Vector2(420, 38));
+        var rowLayout = GetOrAdd<HorizontalLayoutGroup>(rankRow.gameObject);
+        rowLayout.spacing = 12; rowLayout.childAlignment = TextAnchor.MiddleCenter;
+        rowLayout.childControlWidth = true; rowLayout.childControlHeight = true;
+        rowLayout.childForceExpandWidth = false; rowLayout.childForceExpandHeight = false;
+        var rowFit = GetOrAdd<ContentSizeFitter>(rankRow.gameObject);
+        rowFit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        rowFit.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+        const float starSize = 32f, starGap = 4f;
+        var stars = Adopt("RankStars", banner.transform, rankRow) ?? NewRect("RankStars", rankRow);
+        stars.SetSiblingIndex(0);
+        var starsLe = GetOrAdd<LayoutElement>(stars.gameObject);
+        starsLe.preferredWidth = 4 * starSize + 3 * starGap; starsLe.preferredHeight = starSize;
+        var starOn = Load("Assets/UI/新聞/3−1星.png");
+        var starOff = Load("Assets/UI/新聞/3−0星.png");
+        var starProp = so.FindProperty("rankStars");
+        starProp.arraySize = 4;
+        for (int i = 0; i < 4; i++)
+        {
+            var st = NewImage($"Star{i}", stars, i == 0 ? starOn : starOff, Color.white, 1f, sliced: false);
+            st.preserveAspect = true;
+            Place(st.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(i * (starSize + starGap), 0), new Vector2(starSize, starSize));
+            starProp.GetArrayElementAtIndex(i).objectReferenceValue = st;
+        }
+        so.FindProperty("rankStarOn").objectReferenceValue = starOn;
+        so.FindProperty("rankStarOff").objectReferenceValue = starOff;
+
+        var rankRt = Adopt("RankText", banner.transform, rankRow);
+        var rank = rankRt != null ? rankRt.GetComponent<TextMeshProUGUI>() : null;
+        if (rank == null) rank = NewText("RankText", rankRow, s.NameOutline, 28, s.RankColor, "町・総合Lv18");
+        SetFont(rank, s.NameOutline);
+        rank.fontSize = 28; rank.enableAutoSizing = false; rank.color = s.RankColor;
+        rank.textWrappingMode = TextWrappingModes.NoWrap;
+        rank.alignment = TextAlignmentOptions.MidlineLeft;
+        rank.text = "町・総合Lv18";
+        rank.transform.SetSiblingIndex(1);
         so.FindProperty("rankText").objectReferenceValue = rank;
         so.FindProperty("rankBanner").objectReferenceValue = banner;
         var bannerSprites = so.FindProperty("rankBannerSprites");
@@ -266,23 +310,6 @@ public static class VillageUIBuilder
             bannerSprites.GetArrayElementAtIndex(3).objectReferenceValue = s.BannerTop;
         }
         else bannerSprites.arraySize = 0;
-
-        // 星（格の印。看板の下の縁に重ねる）
-        var stars = NewRect("RankStars", banner.transform);
-        Place(stars, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(0, 2), new Vector2(4 * 44 + 3 * 4, 44));
-        var starOn = Load("Assets/UI/新聞/3−1星.png");
-        var starOff = Load("Assets/UI/新聞/3−0星.png");
-        var starProp = so.FindProperty("rankStars");
-        starProp.arraySize = 4;
-        for (int i = 0; i < 4; i++)
-        {
-            var st = NewImage($"Star{i}", stars, i == 0 ? starOn : starOff, Color.white, 1f, sliced: false);
-            st.preserveAspect = true;
-            Place(st.rectTransform, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(i * 48, 0), new Vector2(44, 44));
-            starProp.GetArrayElementAtIndex(i).objectReferenceValue = st;
-        }
-        so.FindProperty("rankStarOn").objectReferenceValue = starOn;
-        so.FindProperty("rankStarOff").objectReferenceValue = starOff;
 
         // 飾り（格が上がるほど増える）
         var ornaments = new List<(GameObject go, int min, int max)>();
@@ -309,14 +336,15 @@ public static class VillageUIBuilder
         {
             var crest = NewImage("Crest", banner.transform, Load("Assets/UI/レリック/百貨店の理念.png"), Color.white, 1f, sliced: false);
             crest.preserveAspect = true;
-            Place(crest.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(64, 4), new Vector2(104, 104));
+            Place(crest.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(100, 2), new Vector2(84, 84));
             ornaments.Add((crest.gameObject, 2, 2));
         }
         if (s.TopEmblem != null)
         {
+            // 王冠は枠の左の飾りと旗竿にかからないよう、枠の内側（左端から 60px 以上）に置く
             var crown = NewImage("Crown", banner.transform, s.TopEmblem, Color.white, 1f, sliced: false);
             crown.preserveAspect = true;
-            Place(crown.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(66, 6), new Vector2(108, 108));
+            Place(crown.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(120, 4), new Vector2(72, 72));
             ornaments.Add((crown.gameObject, 3, -1));
         }
         var ornProp = so.FindProperty("rankOrnaments");
@@ -329,14 +357,14 @@ public static class VillageUIBuilder
             e.FindPropertyRelative("maxRank").intValue = ornaments[i].max;
         }
 
-        // 次の格の条件（看板の下の札。文字の幅に合わせて伸びる）
+        // 次の格の条件（看板の下の縁に少し重ねて吊るす札。文字の幅に合わせて伸びる）
         if (nextText != null)
         {
             var plate = NewImage("RankNextPlate", root, s.Plate, s.PlateColor, s.PlatePpu);
             var prt = plate.rectTransform;
-            Place(prt, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -16 - bannerSize.y - 26), new Vector2(600, 52));
+            Place(prt, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, -8 - bannerSize.y + 10), new Vector2(600, 44));
             var hl = GetOrAdd<HorizontalLayoutGroup>(plate.gameObject);
-            hl.padding = new RectOffset(32, 32, 6, 8);
+            hl.padding = new RectOffset(28, 28, 4, 6);
             hl.childAlignment = TextAnchor.MiddleCenter;
             hl.childControlWidth = true; hl.childControlHeight = true;
             hl.childForceExpandWidth = false; hl.childForceExpandHeight = false;
@@ -351,11 +379,21 @@ public static class VillageUIBuilder
             }
             nextText.transform.SetParent(plate.transform, false);
             SetFont(nextText, s.PlateOutline);
-            nextText.enableAutoSizing = false; nextText.fontSize = 30;
+            nextText.enableAutoSizing = false; nextText.fontSize = 26;
             nextText.color = s.PlateTextColor;
             nextText.alignment = TextAlignmentOptions.Center;
             nextText.textWrappingMode = TextWrappingModes.NoWrap;
         }
+    }
+
+    /// <summary>前の組み方で oldParent の下にあった部品を newParent へ移す（何度組んでも重複しない）。</summary>
+    private static RectTransform Adopt(string name, Transform oldParent, Transform newParent)
+    {
+        var t = newParent.Find(name) as RectTransform;
+        if (t != null) return t;
+        t = oldParent.Find(name) as RectTransform;
+        if (t != null) t.SetParent(newParent, false);
+        return t;
     }
 
     private static IEnumerable<GameObject> Flags(Transform banner, Sprite flag, string name, Vector2 bannerSize)
@@ -409,7 +447,7 @@ public static class VillageUIBuilder
         var panelGo = Ref<GameObject>(so, "investPanel");
         if (panelGo == null) return;
         var panel = (RectTransform)panelGo.transform;
-        var size = new Vector2(780, 640);
+        var size = new Vector2(840, 640);
         Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -44), size);
         SetImage(panelGo.GetComponent<Image>(), s.Panel, s.PanelColor, s.PanelPpu);
         if (s.PanelFrame != null)
@@ -452,7 +490,7 @@ public static class VillageUIBuilder
         var nameText = Ref<TextMeshProUGUI>(so, "detailNameText");
         if (nameText != null)
         {
-            Place(nameText.rectTransform, new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(196, -78), new Vector2(460, 60));
+            Place(nameText.rectTransform, new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(196, -78), new Vector2(500, 60));
             SetFont(nameText, s.HeadOutline);
             nameText.fontSize = 44; nameText.enableAutoSizing = true; nameText.fontSizeMin = 28; nameText.fontSizeMax = 44;
             nameText.color = s.HeadNameColor;
@@ -460,7 +498,7 @@ public static class VillageUIBuilder
         var levelText = Ref<TextMeshProUGUI>(so, "detailLevelText");
         if (levelText != null)
         {
-            Place(levelText.rectTransform, new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(198, -132), new Vector2(460, 40));
+            Place(levelText.rectTransform, new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(198, -132), new Vector2(500, 40));
             SetFont(levelText, s.HeadOutline);
             levelText.fontSize = 30; levelText.color = s.HeadLevelColor;
         }
@@ -474,18 +512,25 @@ public static class VillageUIBuilder
             if (l != null) l.gameObject.SetActive(false); // × の絵があるので文字は出さない
         }
 
-        // 効果の2枚のカード
+        // 効果の2枚のカード（見出しの列は「特殊な効果」5文字が同じ大きさで入る幅。本文は広めにして言葉の途中で折り返さない）
         var cur = MakeCard("CurrentCard", panel, s, -190, 112);
         var nxt = MakeCard("NextCard", panel, s, -312, 112);
         PutRow(cur, Ref<TextMeshProUGUI>(so, "currentEffectText"), R("CurrentCaption"), s, s.CardText);
         PutRow(nxt, Ref<TextMeshProUGUI>(so, "nextEffectText"), R("NextCaption"), s, s.CardNext);
+        so.FindProperty("currentEffectRow").objectReferenceValue = cur;
+        so.FindProperty("nextEffectRow").objectReferenceValue = nxt;
         var special = Ref<GameObject>(so, "specialFrame");
         if (special != null)
         {
+            // 「特殊な効果」の強調: 二重の外枠ではなく、カードの内側の左に 8px の金の帯
             special.transform.SetParent(nxt, false);
-            Stretch((RectTransform)special.transform, -4);
+            var img = special.GetComponent<Image>();
+            img.sprite = null; img.type = Image.Type.Simple; img.color = Gold; img.raycastTarget = false;
+            var rt = (RectTransform)special.transform;
+            rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(0, 1); rt.pivot = new Vector2(0, 0.5f);
+            rt.offsetMin = new Vector2(s.CardInset + 4, 22); rt.offsetMax = new Vector2(s.CardInset + 12, -22);
+            rt.localScale = Vector3.one;
             special.transform.SetAsFirstSibling();
-            special.GetComponent<Image>().pixelsPerUnitMultiplier = 0.9f;
         }
 
         // 費用（村資金と並べて、足りる/足りないを色で）
@@ -496,6 +541,7 @@ public static class VillageUIBuilder
             Place(costCaption, new Vector2(0, 1), new Vector2(0, 0.5f), new Vector2(70, -456), new Vector2(110, 44));
             var t = costCaption.GetComponent<TextMeshProUGUI>();
             SetFont(t, s.CostOutline); t.fontSize = 28; t.color = s.CostCaption; t.enableAutoSizing = false;
+            so.FindProperty("costCaptionText").objectReferenceValue = t;
         }
         if (costText != null)
         {
@@ -506,7 +552,7 @@ public static class VillageUIBuilder
         }
         var fundsLine = Find("FundsText")?.GetComponent<TextMeshProUGUI>();
         if (fundsLine == null) fundsLine = NewText("FundsText", panel, s.CostOutline, 28, s.CostFunds, "村資金 0G");
-        Place(fundsLine.rectTransform, new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-70, -456), new Vector2(290, 44));
+        Place(fundsLine.rectTransform, new Vector2(1, 1), new Vector2(1, 0.5f), new Vector2(-70, -456), new Vector2(320, 44));
         fundsLine.alignment = TextAlignmentOptions.MidlineRight;
         fundsLine.enableAutoSizing = true; fundsLine.fontSizeMin = 18; fundsLine.fontSizeMax = 28;
         so.FindProperty("detailFundsText").objectReferenceValue = fundsLine;
@@ -515,10 +561,12 @@ public static class VillageUIBuilder
 
         // 投資ボタン
         var invest = Ref<Button>(so, "investButton");
+        var buttonPos = new Vector2(0, 34);
+        var buttonSize = new Vector2(400, 104);
         if (invest != null)
         {
             SetImage(invest.GetComponent<Image>(), s.Button, Color.white, s.ButtonPpu);
-            Place((RectTransform)invest.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0, 34), new Vector2(400, 104));
+            Place((RectTransform)invest.transform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), buttonPos, buttonSize);
             if (s.ButtonDisabled != null)
             {
                 invest.transition = Selectable.Transition.SpriteSwap;
@@ -537,6 +585,16 @@ public static class VillageUIBuilder
                 l.color = s.ButtonTextColor;
             }
         }
+
+        // 最大レベルの札（押せるボタンに見えないよう、金縁＋濃い茶の地に「MAX」。最大のときだけボタンの代わりに出す）
+        var plate = NewImage("MaxLevelPlate", panel, Part("vui_round_white"), Hex("4A2A14"), 2f);
+        Place(plate.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0), buttonPos + new Vector2(0, 6), new Vector2(300, 92));
+        Stretch(NewImage("Frame", plate.transform, Load("Assets/UI/Preparation/Prep_GoldFrame.png"), Color.white, 1.4f).rectTransform, 0);
+        var maxLabel = NewText("Label", plate.transform, true, 50, BrightGold, "MAX");
+        Stretch(maxLabel.rectTransform, 0);
+        maxLabel.characterSpacing = 8;
+        plate.gameObject.SetActive(false);
+        so.FindProperty("maxLevelPlate").objectReferenceValue = plate.gameObject;
 
         // 施設アイコン（マスターに icon が無いので View 側で facilityId ごとに持つ）
         var icons = new (string id, string path)[]
@@ -558,10 +616,13 @@ public static class VillageUIBuilder
         }
     }
 
+    private const float CardWidth = 740f;
+    private const float CaptionWidth = 150f;
+
     private static RectTransform MakeCard(string name, RectTransform panel, Style s, float top, float height)
     {
         var card = NewImage(name, panel, s.Card, s.CardColor, s.CardPpu);
-        Place(card.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, top), new Vector2(680, height));
+        Place(card.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(0, top), new Vector2(CardWidth, height));
         // 見出し・本文より奥、パネル直下の背景の上に置く
         card.transform.SetSiblingIndex(Mathf.Min(1, panel.childCount - 1));
         return card.rectTransform;
@@ -572,19 +633,20 @@ public static class VillageUIBuilder
         if (caption != null)
         {
             caption.SetParent(card, false);
-            Place(caption, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(s.CardInset + 18, 0), new Vector2(120, 44));
+            Place(caption, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(s.CardInset + 20, 0), new Vector2(CaptionWidth, 44));
             var t = caption.GetComponent<TextMeshProUGUI>();
             SetFont(t, s.CardOutline);
-            t.fontSize = 28; t.enableAutoSizing = true; t.fontSizeMin = 16; t.fontSizeMax = 28;
+            t.fontSize = 28; t.enableAutoSizing = false;
             t.color = s.CardCaption;
             t.alignment = TextAlignmentOptions.MidlineLeft;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
         }
         if (body != null)
         {
             body.transform.SetParent(card, false);
             var rt = body.rectTransform;
             rt.anchorMin = new Vector2(0, 0); rt.anchorMax = new Vector2(1, 1); rt.pivot = new Vector2(0.5f, 0.5f);
-            rt.offsetMin = new Vector2(s.CardInset + 146, 12); rt.offsetMax = new Vector2(-s.CardInset - 18, -12);
+            rt.offsetMin = new Vector2(s.CardInset + 20 + CaptionWidth - 4, 12); rt.offsetMax = new Vector2(-s.CardInset - 10, -12);
             SetFont(body, s.CardOutline);
             body.fontSize = 28; body.enableAutoSizing = true; body.fontSizeMin = 18; body.fontSizeMax = 28;
             body.color = bodyColor;
@@ -680,14 +742,17 @@ public static class VillageUIBuilder
             Place(area.rectTransform, bottom, new Vector2(0.5f, 0), new Vector2(0, 36 + 100 + 20), new Vector2(720, 180));
             area.gameObject.SetActive(false);
             so.FindProperty("conversionBreakdownArea").objectReferenceValue = area.rectTransform;
+
+            BuildRankUpDecor(rt, so);
         }
 
-        // 記録掲示板: 見出し・記録の板・閉じる
+        // 記録掲示板: 見出し・3列の表（難易度は左・金額は右・ランクは中央にそろえる）・閉じる
         var board = Ref<GameObject>(so, "recordBoardPopup");
         if (board != null)
         {
+            const float boxHeight = 200f;
             var rt = (RectTransform)board.transform;
-            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -40), new Vector2(820, 580));
+            Place(rt, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -40), new Vector2(820, 112 + boxHeight + 30 + 136));
             SetImage(board.GetComponent<Image>(), popupSprite, s.PopupColor, popupPpu);
             var title = Ref<TextMeshProUGUI>(so, "recordBoardTitleText");
             if (title != null)
@@ -696,20 +761,237 @@ public static class VillageUIBuilder
                 StyleText(title, s.HeadOutline, 44, 28, s.HeadNameColor);
             }
             var box = NewImage("BodyBox", rt, s.Ledger, s.LedgerColor, s.LedgerPpu);
-            Place(box.rectTransform, top, new Vector2(0.5f, 1), new Vector2(0, -112), new Vector2(720, 290));
+            Place(box.rectTransform, top, new Vector2(0.5f, 1), new Vector2(0, -112), new Vector2(720, boxHeight));
             box.transform.SetSiblingIndex(0);
-            var body = Ref<TextMeshProUGUI>(so, "recordBoardBodyText");
-            if (body != null)
+
+            var mode = Ref<TextMeshProUGUI>(so, "recordBoardBodyText");
+            if (mode != null)
             {
-                body.transform.SetParent(box.transform, false);
-                Stretch(body.rectTransform, 0);
-                body.rectTransform.offsetMin = new Vector2(32, 20); body.rectTransform.offsetMax = new Vector2(-32, -20);
-                StyleText(body, true, 34, 18, Cream);
-                body.textWrappingMode = TextWrappingModes.Normal;
-                body.lineSpacing = 20;
+                mode.transform.SetParent(box.transform, false);
+                RecordColumn(mode, 0f, 0.33f, 40, 0, TextAlignmentOptions.Left, Cream);
+                mode.text = "かんたん\nふつう\nむずかしい";
             }
+            var amount = NewText("AmountColumn", box.transform, true, 32, Cream, "+1,234,567G");
+            RecordColumn(amount, 0.33f, 0.72f, 0, -10, TextAlignmentOptions.Right, Cream);
+            var rank = NewText("RankColumn", box.transform, true, 32, BrightGold, "ランク S");
+            RecordColumn(rank, 0.72f, 1f, 0, -32, TextAlignmentOptions.Center, BrightGold);
+            so.FindProperty("recordBoardAmountText").objectReferenceValue = amount;
+            so.FindProperty("recordBoardRankText").objectReferenceValue = rank;
             StyleGoldButton(Ref<Button>(so, "recordBoardCloseButton"), s, bottom, new Vector2(0, 36), new Vector2(360, 100));
         }
+    }
+
+    /// <summary>自己ベストの表の1列（3列とも同じ大きさ・行間にして行をそろえる）。</summary>
+    private static void RecordColumn(TextMeshProUGUI t, float xMin, float xMax, float left, float right, TextAlignmentOptions align, Color color)
+    {
+        var rt = t.rectTransform;
+        rt.anchorMin = new Vector2(xMin, 0); rt.anchorMax = new Vector2(xMax, 1); rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.offsetMin = new Vector2(left, 18); rt.offsetMax = new Vector2(right, -18);
+        rt.localScale = Vector3.one;
+        SetFont(t, true);
+        t.enableAutoSizing = false; t.fontSize = 32;
+        t.alignment = align;
+        t.textWrappingMode = TextWrappingModes.NoWrap;
+        t.overflowMode = TextOverflowModes.Overflow;
+        t.lineSpacing = 22;
+        t.raycastTarget = false;
+        t.color = color;
+    }
+
+    /// <summary>
+    /// 格上げのポップの飾り（帰還ポップの枠を使う。格上げのときだけ View が出す）:
+    /// 金寄りの枠・上の紋章（格ごと）・星の「前→後」・後ろで回る放射光。
+    /// </summary>
+    private static void BuildRankUpDecor(RectTransform popup, SerializedObject so)
+    {
+        so.FindProperty("rankUpPopupSprite").objectReferenceValue = Part("vui_panel_frame_gold");
+
+        var emblem = NewImage("RankUpEmblem", popup, null, Color.white, 1f, sliced: false);
+        emblem.preserveAspect = true;
+        Place(emblem.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, 30), new Vector2(112, 112));
+        emblem.gameObject.SetActive(false);
+        so.FindProperty("rankUpEmblem").objectReferenceValue = emblem;
+        // 上がった先の格ごとの紋章（0=開拓地は上がることが無いので村と同じ）: 村=緑の旗 / 町=紋章の盾 / 王都=王冠（HUD の王都版と同じ）
+        var emblems = new[]
+        {
+            Load("Assets/UI/追加/緑旗.png"), Load("Assets/UI/追加/緑旗.png"),
+            Load("Assets/UI/レリック/百貨店の理念.png"), Load("Assets/UI/新聞/6紋章_王立官報.png"),
+        };
+        var ep = so.FindProperty("rankUpEmblems");
+        ep.arraySize = emblems.Length;
+        for (int i = 0; i < emblems.Length; i++) ep.GetArrayElementAtIndex(i).objectReferenceValue = emblems[i];
+
+        // 星の「前→後」（前は小さく、後は大きく。増えた星は View が大きくして弾ませる）
+        var row = NewRect("RankUpStars", popup);
+        Place(row, new Vector2(0.5f, 1), new Vector2(0.5f, 0.5f), new Vector2(0, -264), new Vector2(460, 56));
+        var starOff = Load("Assets/UI/新聞/3−0星.png");
+        const float small = 34f, big = 46f, gapS = 4f, gapB = 8f, arrowW = 50f, pad = 18f;
+        float total = 4 * small + 3 * gapS + pad + arrowW + pad + 4 * big + 3 * gapB;
+        float x = -total * 0.5f;
+        var before = NewRect("Before", row);
+        Place(before, new Vector2(0.5f, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(4 * small + 3 * gapS, small));
+        var beforeProp = so.FindProperty("rankUpStarsBefore");
+        beforeProp.arraySize = 4;
+        for (int i = 0; i < 4; i++)
+        {
+            var st = NewImage($"Star{i}", before, starOff, Color.white, 1f, sliced: false);
+            st.preserveAspect = true;
+            Place(st.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(small * 0.5f + i * (small + gapS), 0), new Vector2(small, small));
+            beforeProp.GetArrayElementAtIndex(i).objectReferenceValue = st;
+        }
+        x += 4 * small + 3 * gapS + pad;
+        var arrow = NewText("Arrow", row, true, 40, BrightGold, "→");
+        Place(arrow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 2), new Vector2(arrowW, 50));
+        x += arrowW + pad;
+        var after = NewRect("After", row);
+        Place(after, new Vector2(0.5f, 0.5f), new Vector2(0, 0.5f), new Vector2(x, 0), new Vector2(4 * big + 3 * gapB, big));
+        var afterProp = so.FindProperty("rankUpStarsAfter");
+        afterProp.arraySize = 4;
+        for (int i = 0; i < 4; i++)
+        {
+            var st = NewImage($"Star{i}", after, starOff, Color.white, 1f, sliced: false);
+            st.preserveAspect = true;
+            Place(st.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(big * 0.5f + i * (big + gapB), 0), new Vector2(big, big));
+            afterProp.GetArrayElementAtIndex(i).objectReferenceValue = st;
+        }
+        row.gameObject.SetActive(false);
+        so.FindProperty("rankUpStarsRow").objectReferenceValue = row.gameObject;
+        so.FindProperty("rankUpExtraHeight").floatValue = 76f;
+    }
+
+    // ───────── 幕・格上げの光・施設へのショートカット ─────────
+
+    /// <summary>
+    /// 小窓の後ろの幕・格上げのポップの後ろの光・左端のショートカットの帯を作る。
+    /// 描く順は「…HUD・帯 → 幕 → 光 → 小窓」（Build の最後で並べ直す）。帯・出店準備・ヒントは幕の下になる。
+    /// </summary>
+    /// <summary>幕の不透明度。リニア色空間で UI を合成するので、0.8 で見た目がおよそ 55% 暗くなる（0.55 だと 3 割ほどしか暗くならない）。</summary>
+    private const float DimAlpha = 0.8f;
+
+    private static void BuildOverlays(Transform root, SerializedObject so, Style s)
+    {
+        // 幕（全画面の黒。見た目 55% ほど。押すと投資パネル・掲示板は閉じる）
+        var dim = NewImage("ModalDim", root, null, new Color(0, 0, 0, DimAlpha), 1f, sliced: false);
+        Stretch(dim.rectTransform, 0);
+        dim.raycastTarget = true;
+        var dimButton = GetOrAdd<Button>(dim.gameObject);
+        dimButton.transition = Selectable.Transition.None;
+        dimButton.navigation = new Navigation { mode = Navigation.Mode.None };
+        dimButton.targetGraphic = dim;
+        dim.gameObject.SetActive(false);
+        so.FindProperty("modalDim").objectReferenceValue = dim;
+        so.FindProperty("modalDimAlpha").floatValue = DimAlpha;
+
+        // 格上げのポップの後ろの光（帰還ポップと同じ中心）
+        var rays = NewImage("RankUpRays", root, Part("vui_rays"), new Color(1, 1, 1, 0.8f), 1f, sliced: false);
+        Place(rays.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -40), new Vector2(1180, 1180));
+        rays.gameObject.SetActive(false);
+        so.FindProperty("rankUpRays").objectReferenceValue = rays;
+
+        BuildShortcutDrawer(root, so, s);
+    }
+
+    private const float DrawerWidth = 340f;
+
+    /// <summary>
+    /// 左端・縦中央の「施設」のつまみと、左から滑り出る施設ボタンの帯。ボタンは View が雛形から施設の数だけ作る。
+    /// 閉じた位置（帯の幅だけ左）で保存する。
+    /// </summary>
+    private static void BuildShortcutDrawer(Transform root, SerializedObject so, Style s)
+    {
+        var drawer = NewRect("FacilityTabs", root);
+        Place(drawer, new Vector2(0, 0.5f), new Vector2(0, 0.5f), new Vector2(-DrawerWidth, 10), new Vector2(DrawerWidth, 600));
+        var vl = GetOrAdd<VerticalLayoutGroup>(drawer.gameObject);
+        vl.padding = new RectOffset(16, 14, 18, 18);
+        vl.childAlignment = TextAnchor.MiddleCenter;
+        vl.childControlWidth = true; vl.childControlHeight = true;
+        vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+        var fit = GetOrAdd<ContentSizeFitter>(drawer.gameObject);
+        fit.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+        fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+        var back = NewImage("Back", drawer, s.Banner ?? Part("vui_wood_plate"), Color.white, s.BannerPpu);
+        GetOrAdd<LayoutElement>(back.gameObject).ignoreLayout = true;
+        Stretch(back.rectTransform, 0);
+        back.transform.SetSiblingIndex(0);
+
+        // つまみ（帯の右に付く。閉じていても画面の左端に見える）
+        var knobImg = NewImage("Knob", drawer, Part("vui_round_white"), DarkBrown, 2.2f);
+        knobImg.raycastTarget = true;
+        GetOrAdd<LayoutElement>(knobImg.gameObject).ignoreLayout = true;
+        Place(knobImg.rectTransform, new Vector2(1, 0.5f), new Vector2(0, 0.5f), new Vector2(-6, 0), new Vector2(64, 172));
+        Stretch(NewImage("Frame", knobImg.transform, Load("Assets/UI/Preparation/Prep_GoldFrame.png"), Color.white, 2.2f).rectTransform, 0);
+        var knob = GetOrAdd<Button>(knobImg.gameObject);
+        knob.targetGraphic = knobImg;
+        SetTint(knob);
+        var knobLabel = NewText("Label", knobImg.transform, true, 30, Cream, "施\n設");
+        Place(knobLabel.rectTransform, new Vector2(0.5f, 1), new Vector2(0.5f, 1), new Vector2(2, -16), new Vector2(56, 84));
+        knobLabel.lineSpacing = -14;
+        var arrow = NewText("Arrow", knobImg.transform, true, 34, BrightGold, "→");
+        Place(arrow.rectTransform, new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f), new Vector2(2, 38), new Vector2(48, 44));
+        so.FindProperty("shortcutKnob").objectReferenceValue = knob;
+        so.FindProperty("shortcutKnobArrow").objectReferenceValue = arrow.rectTransform;
+
+        // ボタンの入れ物（閉じている間は押せない）
+        var list = NewRect("List", drawer);
+        var ll = GetOrAdd<VerticalLayoutGroup>(list.gameObject);
+        ll.spacing = 6;
+        ll.childAlignment = TextAnchor.UpperCenter;
+        ll.childControlWidth = true; ll.childControlHeight = true;
+        ll.childForceExpandWidth = true; ll.childForceExpandHeight = false;
+        var group = GetOrAdd<CanvasGroup>(list.gameObject);
+        so.FindProperty("shortcutListGroup").objectReferenceValue = group;
+
+        // 施設ボタンの雛形（アイコン・施設名・Lv・拡張できる印）
+        var tplImg = NewImage("ButtonTemplate", list, s.SubButton ?? Part("vui_brown_btn"), Color.white, 1f);
+        tplImg.raycastTarget = true;
+        var le = GetOrAdd<LayoutElement>(tplImg.gameObject);
+        le.preferredHeight = 76; le.minHeight = 76;
+        var tpl = GetOrAdd<Button>(tplImg.gameObject);
+        tpl.targetGraphic = tplImg;
+        SetTint(tpl);
+        var iconBack = NewImage("IconBack", tplImg.transform, Load("Assets/UI/鍛冶屋・道具屋/8−1アイコン背景.png"), Color.white, 1f, sliced: false);
+        Place(iconBack.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(44, 0), new Vector2(60, 60));
+        var icon = NewImage("Icon", tplImg.transform, null, Color.white, 1f, sliced: false);
+        icon.preserveAspect = true;
+        Place(icon.rectTransform, new Vector2(0, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(44, 0), new Vector2(50, 50));
+        var name = NewText("Name", tplImg.transform, true, 26, Color.white, "冒険者ギルド");
+        name.rectTransform.anchorMin = new Vector2(0, 0.5f); name.rectTransform.anchorMax = new Vector2(1, 1);
+        name.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        name.rectTransform.offsetMin = new Vector2(86, -4); name.rectTransform.offsetMax = new Vector2(-40, -6);
+        name.alignment = TextAlignmentOptions.BottomLeft;
+        name.enableAutoSizing = true; name.fontSizeMin = 16; name.fontSizeMax = 26;
+        var level = NewText("Level", tplImg.transform, true, 22, BrightGold, "Lv3");
+        level.rectTransform.anchorMin = new Vector2(0, 0); level.rectTransform.anchorMax = new Vector2(1, 0.5f);
+        level.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+        level.rectTransform.offsetMin = new Vector2(86, 6); level.rectTransform.offsetMax = new Vector2(-40, 2);
+        level.alignment = TextAlignmentOptions.TopLeft;
+        // 拡張できる印: 濃い茶の縁に金の丸と「！」
+        var badge = NewRect("Badge", tplImg.transform);
+        Place(badge, new Vector2(1, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(-24, 0), new Vector2(36, 36));
+        Stretch(NewImage("Ring", badge, Part("vui_round_white"), DarkBrown, 2.6f).rectTransform, 0);
+        Stretch(NewImage("Fill", badge, Part("vui_round_white"), BrightGold, 3f).rectTransform, 3);
+        var mark = NewText("Mark", badge, false, 26, DarkBrown, "！");
+        Stretch(mark.rectTransform, 0);
+        mark.rectTransform.offsetMin = new Vector2(0, 1);
+        tplImg.gameObject.SetActive(false);
+        so.FindProperty("shortcutButtonTemplate").objectReferenceValue = tpl;
+        so.FindProperty("shortcutDrawer").objectReferenceValue = drawer;
+        so.FindProperty("recordBoardIcon").objectReferenceValue = Load("Assets/UI/新聞/3−1星.png");
+        so.FindProperty("shortcutSlideDuration").floatValue = 0.25f;
+    }
+
+    /// <summary>押せるときは白、押せないときはグレーに見える色の切り替え。</summary>
+    private static void SetTint(Button b)
+    {
+        b.transition = Selectable.Transition.ColorTint;
+        var colors = ColorBlock.defaultColorBlock;
+        colors.normalColor = Color.white;
+        colors.highlightedColor = new Color(1f, 0.93f, 0.8f, 1f);
+        colors.selectedColor = new Color(1f, 0.93f, 0.8f, 1f);
+        colors.pressedColor = new Color(0.82f, 0.76f, 0.7f, 1f);
+        colors.disabledColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+        b.colors = colors;
     }
 
     private static void StyleText(TextMeshProUGUI t, bool outline, float max, float min, Color color)
@@ -807,6 +1089,10 @@ public static class VillageUIBuilder
         { "vui_round_white", new Vector4(44, 44, 44, 44) },
         { "vui_panel_frame", new Vector4(342, 258, 330, 243) }, // 新聞/1枠.png の右上の飾りを左上の鏡写しで消したもの
         { "vui_gold_btn_off", new Vector4(169, 70, 169, 70) },  // 新聞/4−0購読する.png をグレーにしたもの（押せないとき）
+        { "vui_wood_plate_gold", new Vector4(72, 42, 72, 42) }, // vui_wood_plate を金寄りにしたもの（王都の看板）
+        { "vui_panel_frame_gold", new Vector4(342, 258, 330, 243) }, // vui_panel_frame を金寄りにしたもの（格上げのポップ）
+        { "vui_funds_box", new Vector4(135, 40, 70, 40) }, // 基本/3ゴールド.png の複製（硬貨と渦を潰さずに縮める）
+        { "vui_rays", Vector4.zero }, // 格上げのポップの後ろの放射光（コードで描いた PNG）
     };
 
     private static void ImportParts()

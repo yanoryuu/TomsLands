@@ -18,11 +18,14 @@ using UnityEngine.UI;
 /// バッチモード（描画が要るので -nographics は付けない）:
 ///   Unity.exe -batchmode -projectPath &lt;wt&gt; -executeMethod VillageCapture.RunBatch -logFile &lt;log&gt;
 ///     -captureOut &lt;dir&gt; -captureShots hud,invest,conversion,overview -captureLevels 0,3,5 [-captureRanks 0,1,2,3] [-captureFunds 99999]
-/// 種類: hud / invest（投資パネル）/ conversion（帰還収支ポップ）/ rankup（格上げのポップ）/ record（自己ベストの掲示板）/ overview（全景）。
+/// 種類: hud / invest（投資パネル）/ conversion（帰還収支ポップ）/ rankup（格上げのポップ）/ record（自己ベストの掲示板）/
+///       tabs（左端の施設ショートカットの帯を開いた状態）/ overview（全景）。
 /// -captureFunds: HUD の村資金（投資パネルの費用と比べる額）。多めにすると「足りる＝金・ボタン有効」が撮れる。
 /// -captureRanks を付けると、村の格ごとの地面と装飾（Assets/Prefabs/Village/VillageRankDecor.prefab）を一時的に置いて
 /// Apply(格) し、施設レベルも格に合わせて（その格になるいちばん低い全施設共通のLv。王都は全Lv5）撮る（village_rank{格}_{種類}.png）。
 /// -captureRanks だけなら格の分だけ、-captureLevels も付ければ両方撮る。
+/// -captureLevels だけのときも、そのレベルの格（VillageRank.Compute）の地面と装飾を置いて撮る（本編の Presenter と同じ）。
+/// 投資パネルの押せる/押せない・MAX の札は本編と同じ判定（VillageModel.CanInvest と同じ。村資金は -captureFunds）。
 /// 実行は tools/village_capture.ps1。
 /// </summary>
 public static class VillageCapture
@@ -33,7 +36,7 @@ public static class VillageCapture
     private const int Height = 1080;
 
     /// <summary>撮れる種類。</summary>
-    private static readonly string[] AllShots = { "hud", "invest", "conversion", "rankup", "record", "overview" };
+    private static readonly string[] AllShots = { "hud", "invest", "conversion", "rankup", "record", "tabs", "overview" };
 
     /// <summary>HUD の村資金（-captureFunds で上書き。-1 なら 12345×(Lv+1)）。</summary>
     private static int fundsOverride = -1;
@@ -173,7 +176,9 @@ public static class VillageCapture
 
         var facilities = LoadFacilities();
         ApplyLevels(view, facilities, job.Level);
-        if (job.Rank >= 0) PlaceRankDecor(scene, facilities, job.Rank, job.Level);
+        // 格の指定が無ければレベルから格を決めて、その格の地面と装飾にする（本編は Presenter が Apply している）
+        int rank = job.Rank >= 0 ? job.Rank : RankForLevel(facilities, job.Level);
+        PlaceRankDecor(scene, facilities, rank, job.Level);
 
         // 実行時は Awake で隠すパネルを、まず全部閉じる
         var so = view != null ? new SerializedObject(view) : null;
@@ -183,6 +188,7 @@ public static class VillageCapture
 
         PlaceCamera(cam, job.Shot == "overview");
         SetUiVisible(view, job.Shot != "overview");
+        ShowShortcuts(view, facilities, job.Level, rank, job.Shot == "tabs");
 
         switch (job.Shot)
         {
@@ -193,12 +199,14 @@ public static class VillageCapture
                 ShowConversion(view, so, job.Level);
                 break;
             case "rankup":
-                ShowRankUp(view, so);
+                ShowRankUp(view, so, rank);
                 break;
             case "record":
-                ShowRecord(so);
+                ShowRecord(view, so);
                 break;
         }
+        // 小窓の後ろの幕（本編は開閉のたびに View が合わせる。編集モードは動きなしで呼ぶ）
+        Invoke(view, "RefreshModalDim", false);
         RefreshUi(scene);
     }
 
@@ -244,7 +252,7 @@ public static class VillageCapture
             string next = VillageRank.IsTop(rank)
                 ? $"称号「{VillageRank.TopTitle}」"
                 : $"次は『{VillageRank.Name(rank + 1)}』: {VillageRank.ConditionText(rank + 1)}";
-            view.UpdateHud(fundsOverride >= 0 ? fundsOverride : 12345 * (level + 1), total, VillageRank.Name(rank), next);
+            view.UpdateHud(FundsFor(level), total, VillageRank.Name(rank), next);
             view.ShowMessage("稼いだお金で村に投資しよう。施設に近づいて調べると詳細が見られる。");
         }
 
@@ -263,6 +271,60 @@ public static class VillageCapture
             }
         }
         Debug.Log($"{Tag} Lv{level}: 総合Lv{total}/{maxTotal}・領主館Lv{hall}・格 {VillageRank.Name(rank)}");
+    }
+
+    /// <summary>全施設を同じレベルにしたときの格（ApplyLevels と同じ決め方）。</summary>
+    private static int RankForLevel(Dictionary<string, VillageFacilityData> facilities, int level)
+    {
+        int hall = facilities.TryGetValue(VillageEffects.HallId, out var h) ? Mathf.Min(level, h.MaxLevel) : level;
+        int total = FacilityOrder.Sum(id => facilities.TryGetValue(id, out var f) ? Mathf.Min(level, f.MaxLevel) : 0);
+        return VillageRank.Compute(total, hall);
+    }
+
+    /// <summary>投資できるか（VillageModel.CanInvest と同じ。全施設が同じレベル・領主館も同じレベルとして判定）。</summary>
+    private static (bool ok, string reason) CanInvest(Dictionary<string, VillageFacilityData> facilities, VillageFacilityData f, int level, int funds)
+    {
+        int lv = Mathf.Min(level, f.MaxLevel);
+        int next = lv + 1;
+        if (next > f.MaxLevel) return (false, "最大レベル");
+        int hall = facilities.TryGetValue(VillageEffects.HallId, out var h) ? Mathf.Min(level, h.MaxLevel) : level;
+        if (f.facilityId != VillageEffects.HallId)
+        {
+            if (next == 1 && hall < f.requiredHallLevel) return (false, $"領主館Lv{f.requiredHallLevel}で建設可能");
+            if (next >= 2 && hall < next - 1) return (false, $"領主館Lv{next - 1}でLv{next}に拡張可能");
+        }
+        if (funds < f.GetLevel(next).cost) return (false, "村資金が足りない");
+        return (true, "");
+    }
+
+    private static int FundsFor(int level) => fundsOverride >= 0 ? fundsOverride : 12345 * (level + 1);
+
+    /// <summary>左端の施設ショートカット（Presenter.BuildShortcuts と同じ並び・表示）。open なら開いた位置で撮る。</summary>
+    private static void ShowShortcuts(VillageView view, Dictionary<string, VillageFacilityData> facilities, int level, int rank, bool open)
+    {
+        if (view == null) return;
+        var entries = new List<VillageView.ShortcutEntry>();
+        var ordered = facilities.Values
+            .OrderBy(f => f.facilityId == VillageEffects.HallId ? 0 : 1)
+            .ThenBy(f => f.requiredHallLevel)
+            .ThenBy(f => Array.IndexOf(FacilityOrder, f.facilityId));
+        foreach (var f in ordered)
+        {
+            int lv = Mathf.Min(level, f.MaxLevel);
+            entries.Add(new VillageView.ShortcutEntry
+            {
+                Id = f.facilityId,
+                Name = f.facilityName,
+                Facility = f,
+                LevelLabel = lv >= f.MaxLevel ? "MAX" : lv <= 0 ? "未建設" : $"Lv{lv}",
+                CanUpgrade = CanInvest(facilities, f, level, FundsFor(level)).ok,
+            });
+        }
+        if (VillageRank.IsTop(rank) && view.Plots.Any(p => p != null && p.FacilityId == VillagePresenter.RecordBoardId))
+            entries.Add(new VillageView.ShortcutEntry { Id = VillagePresenter.RecordBoardId, Name = "自己ベストの掲示板", LevelLabel = "" });
+        view.SetShortcuts(entries);
+        Canvas.ForceUpdateCanvases();
+        view.SetShortcutOpen(open, false);
     }
 
     /// <summary>その格になる、いちばん低い全施設共通のレベル（王都は全Lv5 = 最大の見た目）。</summary>
@@ -328,7 +390,9 @@ public static class VillageCapture
             nextIsSpecial = lv < f.MaxLevel && lv + 1 >= special;
         }
         int cost = lv < f.MaxLevel ? f.GetLevel(lv + 1)?.cost ?? -1 : -1;
-        view.ShowInvestPanel(f, lv, cur, nxt, cost, true, "", nextIsSpecial);
+        // 押せる/押せない・MAX の札は本編と同じ判定にする
+        var (ok, reason) = CanInvest(facilities, f, level, FundsFor(level));
+        view.ShowInvestPanel(f, lv, cur, nxt, cost, ok, reason, nextIsSpecial);
     }
 
     /// <summary>
@@ -365,29 +429,51 @@ public static class VillageCapture
     }
 
     /// <summary>格上げのポップ（ShowRankUpPopup は DOTween を使うので、同じ並びを直接作る）。</summary>
-    private static void ShowRankUp(VillageView view, SerializedObject so)
+    private static void ShowRankUp(VillageView view, SerializedObject so, int rank)
     {
         if (view == null || so == null) return;
         var popup = so.FindProperty("conversionPopup")?.objectReferenceValue as GameObject;
         if (popup == null) { Debug.LogWarning($"{Tag} conversionPopup が未配線"); return; }
         popup.SetActive(true);
+        // 今の格に上がった瞬間として撮る（開拓地なら「村」へ上がったところ）
+        int to = Mathf.Clamp(Mathf.Max(1, rank), 0, VillageRank.TopRank);
+        int from = to - 1;
+        string unlock = VillageRank.IsTop(to)
+            ? $"称号「{VillageRank.TopTitle}」と、広場に自己ベストの掲示板"
+            : VillageRank.TryGetUnlockedMode(to, out var mode)
+                ? $"「{SaveSlotView.GetModeLabel(mode)}」のランが選べるようになった"
+                : "";
         SetText(so, "conversionTitleText", "村の格が上がった！");
-        SetText(so, "conversionConvertedText", "トコの村は『町』に");
-        SetText(so, "conversionEarnedText", "「むずかしい」のランが選べるようになった");
-        typeof(VillageView).GetMethod("SwapConversionRows", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(view, new object[] { true });
-        typeof(VillageView).GetMethod("SetConversionBreakdown", BindingFlags.Instance | BindingFlags.NonPublic)?.Invoke(view, new object[] { null });
+        SetText(so, "conversionConvertedText", $"トコの村は『{VillageRank.Name(to)}』に");
+        SetText(so, "conversionEarnedText", unlock);
+        Invoke(view, "SwapConversionRows", true);
+        Invoke(view, "SetConversionBreakdown", new object[] { null });
+        Invoke(view, "ApplyRankUpDecor", true, from, to);
     }
 
-    /// <summary>自己ベストの掲示板（ShowRecordBoard は UIFx を使うので、文字を直接入れる）。</summary>
-    private static void ShowRecord(SerializedObject so)
+    /// <summary>自己ベストの掲示板（ShowRecordBoard は UIFx を使うので、3列の文字を直接入れる）。</summary>
+    private static void ShowRecord(VillageView view, SerializedObject so)
     {
         if (so == null) return;
         var popup = so.FindProperty("recordBoardPopup")?.objectReferenceValue as GameObject;
         if (popup == null) { Debug.LogWarning($"{Tag} recordBoardPopup が未配線"); return; }
         popup.SetActive(true);
         SetText(so, "recordBoardTitleText", "自己ベスト");
-        SetText(so, "recordBoardBodyText",
-            "かんたん　+123,456G　ランク S\nふつう　+1,234,567G　ランク A\nむずかしい　まだ記録なし");
+        IReadOnlyList<VillageView.RecordRow> rows = new List<VillageView.RecordRow>
+        {
+            new("かんたん", "+123,456G", "S"),
+            new("ふつう", "+1,234,567G", "A"),
+            new("むずかしい", "まだ記録なし", ""),
+        };
+        Invoke(view, "SetRecordRows", rows);
+    }
+
+    /// <summary>View の private メソッドを呼ぶ（編集モードで動きなしの見た目だけ作る用）。</summary>
+    private static void Invoke(object target, string method, params object[] args)
+    {
+        var m = target?.GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+        if (m == null) { Debug.LogWarning($"{Tag} {target?.GetType().Name}.{method} が見つからない"); return; }
+        m.Invoke(target, args);
     }
 
     // ───────── カメラ・UI ─────────
