@@ -194,7 +194,7 @@ public class ProphetPresenter : IDisposable, IStartable
         if (r != ProphetPlaceResult.Ok) return (ShortReason(r), false);
         string arrow = d == ProphetDirection.Up ? "▲" : "▼";
         string cost = intervention.Cost > 0 ? $"{intervention.Cost:N0}G・" : string.Empty;
-        return ($"需要 {arrow} {intervention.EffectTurns} ターン／力を 1 つ使う\n<size=80%>{cost}離すと入る</size>", true);
+        return ($"需要 {arrow} {intervention.EffectTurns} 日／力を 1 つ使う\n<size=80%>{cost}離すと入る</size>", true);
     }
 
     private void Place(string itemId, ProphetDirection d)

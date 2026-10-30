@@ -120,9 +120,9 @@ public interface IProphetIntervention
 - `Assets/Scripts/Editor/AutoPlay/AutoPlayRunner.cs:72-73, 205-212, 498`（`TotalFortuneSpend` / `IAutoPlayFortuneBot` / `BuyFortune`）
 - `Assets/Scripts/Editor/AutoPlay/AutoPlayStrategyBots.cs:315-347, 372-383, 419, 435-436`（`IAutoPlayFortuneBot` / `AutoPlayReaderBot` の fortune / ボット名 `reader_fortune`・`fortune`）
 - 画面の古い部品（もう使っていない。消してよい）: `Assets/Scripts/Prophet/ProphetTrendRowUI.cs`、`Assets/Scripts/Prophet/ProphetRankingRowUI.cs`、`Assets/Prefabs/TrendRow.prefab`、`Assets/Prefabs/RankRow.prefab`（どれも占い師の画面からしか使われていなかった。`ProphetTrendRowUI.PlayDirection` は UI アニメの作業で足されたもの）
-- 文言: `Assets/TomsScenario/Scenarios/CharacterIntro.csv` と `.book.asset` の `Intro_Prophet`（「この町の流行をボクのタロットで占ってあげよう」「今のトレンド武器…」）。宴のシナリオなので、直すなら CSV とブック両方
+- 文言: `CharacterIntro.csv` の `Intro_Prophet` は「上げる枠・下げる枠」に書き換え済み。2026-10-31 に使い方の `Intro_ProphetRules` を足した（Docs/Tutorial_UnityWiring.md）
 - 文書: `Docs/News_Spec.md` C5（「占い師が 3 日先を 15,000G で占う」＝新聞の有料の裏取り）・C6
-- 実績・チュートリアル（`TutorialPresenter` ほか）は占いの機能を参照していない（「占い師」はキャラクターの呼び名としてだけ出る）
+- 実績は占いの機能を参照していない。チュートリアルは `TutorialSteps.IntroLabelsOnEnter` で `Intro_Prophet` → `Intro_ProphetRules` を流す
 - 村の酒場の効果の説明文がスプレッドシートにあれば「占いの値段」の文言（シート側。GAS は触らない約束なので仕組み側で確認）
 
 ## 画面の配線（wt-05 が作ったもの）

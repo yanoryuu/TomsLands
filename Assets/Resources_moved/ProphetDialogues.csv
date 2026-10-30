@@ -8,8 +8,8 @@ place_slot_in_use,その枠のカードは、効果が切れるまで動かせ�
 place_same_item,同じ品を両方の枠には入れられないよ。
 place_no_money,おや、{cost}G には少し足りないね。
 place_not_unlocked,その品は、まだキミの店では扱えないね。
-placed_up,{item}の需要、引き上げたよ。{turns} ターンは動かせない。切れたら元の需要へ戻ろうとするさ。
-placed_down,{item}の需要、押し下げたよ。{turns} ターンは動かせない。安く仕入れるなら今のうちさ。
+placed_up,{item}の需要、引き上げたよ。{turns} 日は動かせない。切れたら元の需要へ戻ろうとするさ。
+placed_down,{item}の需要、押し下げたよ。{turns} 日は動かせない。安く仕入れるなら今のうちさ。
 character_talk_1,ボクの力は、品の行く末を少しだけ曲げるのさ。どこに使うかはキミ次第だよ。
 character_talk_2,上げて売り抜けるか、下げて買い込むか……使い方ひとつで商いは変わるのさ。
 character_talk_3,未来は一つじゃないさ。けれど準備した者だけが、望む未来を選び取れるんだよ。

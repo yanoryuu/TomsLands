@@ -15,7 +15,7 @@ public struct ProphetSlotInfo
 }
 
 /// <summary>
-/// 上げる枠（緑）・下げる枠（赤）の 1 つ。空き（点線・「ここに品のカードを入れる」）→ 持ってきた（光る・「需要 ▲ 3 ターン／力を 1 つ使う」）
+/// 上げる枠（緑）・下げる枠（赤）の 1 つ。空き（点線・「ここに品のカードを入れる」）→ 持ってきた（光る・「需要 ▲ 3 日／力を 1 つ使う」）
 /// → 効いている（実線・鍵・品のカード・あと N ターンの目盛り）。押すと、品を選んでいればここへ入れる（ProphetView が決める）。
 /// </summary>
 public sealed class ProphetSlotView : MonoBehaviour
@@ -28,11 +28,11 @@ public sealed class ProphetSlotView : MonoBehaviour
     [SerializeField] private GameObject dashedFrame;
     [Tooltip("効いている間の実線の縁")]
     [SerializeField] private GameObject solidFrame;
-    [Tooltip("空きの案内（ここに品のカードを入れる／需要が 3 ターン上がる・力を 1 つ使う）")]
+    [Tooltip("空きの案内（ここに品のカードを入れる／需要が 3 日上がる・力を 1 つ使う）")]
     [SerializeField] private GameObject emptyRoot;
     [SerializeField] private TextMeshProUGUI emptyText;
     [SerializeField] private TextMeshProUGUI emptySubText;
-    [Tooltip("持ってきたときの確かめ（需要 ▲ 3 ターン／力を 1 つ使う、または入れられない理由）")]
+    [Tooltip("持ってきたときの確かめ（需要 ▲ 3 日／力を 1 つ使う、または入れられない理由）")]
     [SerializeField] private GameObject previewRoot;
     [SerializeField] private TextMeshProUGUI previewText;
     [Tooltip("効いている間の中身")]
@@ -77,7 +77,7 @@ public sealed class ProphetSlotView : MonoBehaviour
         if (lockMark != null) lockMark.SetActive(false);
         if (emptyText != null) emptyText.text = "ここに品のカードを入れる";
         if (emptySubText != null)
-            emptySubText.text = $"需要が {effectTurns} ターン{(direction == ProphetDirection.Up ? "上がる" : "下がる")}・力を 1 つ使う";
+            emptySubText.text = $"需要が {effectTurns} 日{(direction == ProphetDirection.Up ? "上がる" : "下がる")}・力を 1 つ使う";
         SetBackgroundStrong(false);
     }
 
@@ -101,7 +101,7 @@ public sealed class ProphetSlotView : MonoBehaviour
         if (activeCardInfo != null) activeCardInfo.text = $"{info.Price:N0}G・在庫{info.Stock}";
         if (activeTitle != null)
             activeTitle.text = $"{info.Name}の需要を{(direction == ProphetDirection.Up ? "上げている" : "下げている")}";
-        if (turnsText != null) turnsText.text = $"あと {info.TurnsLeft} ターン";
+        if (turnsText != null) turnsText.text = $"あと {info.TurnsLeft} 日";
         if (turnPips != null)
         {
             int total = Mathf.Max(info.TotalTurns, 1);

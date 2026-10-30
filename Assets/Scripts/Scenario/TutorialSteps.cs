@@ -24,6 +24,42 @@ public static class TutorialSteps
     /// <summary>初配信の前日、勇者に何を持たせるかを促す会話。</summary>
     public const string HeroEquip         = "Tutorial_HeroEquip";
 
+    // ---- 画面を初めて開いたときの会話（Assets/TomsScenario/Scenarios/CharacterIntro.csv のラベルと一致させること） ----
+    public const string IntroDemonLord    = "Intro_DemonLord";
+    /// <summary>
+    /// 魔王軍支援の配当のオッズ（配信開始時の見込みの段で倍率が変わる）。オッズが全部 1 のあいだは流さない。
+    /// Intro_DemonLord とは別のラベルにして、オッズより前に魔王城を訪れたセーブにも一度流す。
+    /// </summary>
+    public const string IntroSupportOdds  = "Intro_SupportOdds";
+    /// <summary>配当の元本保証（勇者が負ければ配当は出資の合計を下回らない）。streamTuning.supportPayoutFloorToStake のときだけ。</summary>
+    public const string IntroSupportFloor = "Intro_SupportFloor";
+    public const string IntroProphet      = "Intro_Prophet";
+    /// <summary>
+    /// 占い師の「上げる枠・下げる枠」の使い方（力・代金・効く日数・出し入れ不可・仕入れにも効く）。
+    /// 廃止した「3 日先を占う」の頃に Intro_Prophet を見たセーブにも流すため、別のラベルにしている。
+    /// </summary>
+    public const string IntroProphetRules = "Intro_ProphetRules";
+
+    /// <summary>
+    /// 画面に入ったときに流す会話を、流す順に返す（既読かどうかは見ない）。
+    /// 説明の会話をあとから足したとき、前の会話を見たセーブにも足した分だけが流れるよう、ラベルを分けて並べる。
+    /// </summary>
+    public static string[] IntroLabelsOnEnter(TomsShopGamePhase phase, StreamTuningData tuning = null)
+    {
+        switch (phase)
+        {
+            case TomsShopGamePhase.Prophet:
+                return new[] { IntroProphet, IntroProphetRules };
+            case TomsShopGamePhase.DungeonLevelUp:
+                var labels = new System.Collections.Generic.List<string> { IntroDemonLord };
+                if (SupportOdds.IsActive(tuning)) labels.Add(IntroSupportOdds);
+                if (SupportOdds.FloorsToStake(tuning)) labels.Add(IntroSupportFloor);
+                return labels.ToArray();
+            default:
+                return System.Array.Empty<string>();
+        }
+    }
+
     // ---- 会話ではない段階フラグ ----
     /// <summary>初回のオート購入（所持金全額・調整不可）を済ませた。</summary>
     public const string StepFirstAutoBuy      = "TutorialStep_FirstAutoBuy";
