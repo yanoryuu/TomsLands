@@ -59,7 +59,7 @@
   - 変更（Tutorial.csv）: `Tutorial_OpeningShop`（納付日は 7 日ごと・足りなければ在庫の投げ売り）/ `Tutorial_Display`（1 日の客の数の上限・売れ残り・売り圧力）/
     `Tutorial_FundsShortage`（「ぜんぶ注文」→「たくさん注文」）/ `Tutorial_FundsAdvance`（50,000G は次の納付金に上乗せして返す）/ `Tutorial_HeroEquip`（負けた配信は武器・防具の売上の 4 割を返金）。
     `Intro_InfoBroker` の最後（情報料は納付の期日ごとに倍）。
-  - 取り込み: `-executeMethod ScenarioImportBatch.ImportBatch`（エディタの宴の Import と同じ）。テスト `TutorialIntroTests` がラベルの取り込み漏れも見る。
+  - `.book.asset` は宴の Import（`AdvScenarioDataProject.ImportAll()`）で取り込み直し済み。テスト `TutorialIntroTests` がラベルの取り込み漏れも見る。
 
 ### 進行（コード側は配線済み）
 | 台本の▼ | 実装 |
