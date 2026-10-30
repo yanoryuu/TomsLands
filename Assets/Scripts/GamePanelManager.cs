@@ -31,25 +31,6 @@ public class GamePanelManager : MonoBehaviour
 
     private static bool IsShopFacility(TomsShopGamePhase? p) => p == TomsShopGamePhase.ShopUpgrade || p == TomsShopGamePhase.MachineShop;
 
-    /// <summary>
-    /// #17 店のホームから入ると扉が開く画面と、扉の札の名前（店のホームのボタンの文字に合わせる）。null は扉なし。
-    /// 店へ戻る・ターン終了のまとめ・道具屋（未使用）は流れの画面なので扉を出さない。
-    /// </summary>
-    private static string DoorLabel(TomsShopGamePhase p) => p switch
-    {
-        TomsShopGamePhase.BlackSmith => "鍛冶屋",
-        TomsShopGamePhase.Broker => "情報屋",
-        TomsShopGamePhase.Hero => "勇者",
-        TomsShopGamePhase.Prophet => "占い師",
-        TomsShopGamePhase.Map => "地図",
-        TomsShopGamePhase.Newspaper => "新聞",
-        TomsShopGamePhase.ShopUpgrade => "店の設備",
-        TomsShopGamePhase.MachineShop => "店の設備",
-        TomsShopGamePhase.Advertisement => "広告",
-        TomsShopGamePhase.DungeonLevelUp => "魔王軍支援",
-        _ => null,
-    };
-
     private void HideAll()
     {
         tomsShopPanel.SetActive(false);
@@ -118,12 +99,9 @@ public class GamePanelManager : MonoBehaviour
         _commonWasActive = commonPanel != null && commonPanel.activeSelf;
         // 「店」画面の改装⇔設備はタブの切り替えなので、パネルを差し替えるだけで開く演出は出さない
         bool tabSwitch = IsShopFacility(_lastSubPhase) && IsShopFacility(subPhase) && _lastSubPhase != subPhase;
-        // #17 店のホームから施設に入るときだけ、扉をかぶせる（見た目だけ。下の切り替えは今までどおり即座に行う）
-        string doorLabel = tomsShopPanel != null && tomsShopPanel.activeSelf ? DoorLabel(subPhase) : null;
+        // 施設に入るときの扉（#17 DoorTransition）はユーザーの指示で使わない
         _lastSubPhase = subPhase;
         HideAll();
-        if (doorLabel != null) DoorTransition.Play(doorLabel);
-        else if (DoorLabel(subPhase) == null) DoorTransition.Stop(); // 扉の途中で店へ戻った・流れの画面へ進んだ
         if (tabSwitch)
         {
             var panel = subPhase == TomsShopGamePhase.ShopUpgrade ? shopUpgradePanel : machineShopPanel;
