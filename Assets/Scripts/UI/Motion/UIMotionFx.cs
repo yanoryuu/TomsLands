@@ -30,6 +30,10 @@ public static class UIMotionFx
         if (Layers.TryGetValue(sortingOrder, out var layer) && layer != null) return layer;
 
         var go = new GameObject($"UIMotionLayer_{sortingOrder}", typeof(RectTransform));
+        // 設定を済ませてから有効にする。有効なまま AddComponent すると CanvasScaler が既定（拡縮なし）で一度計算し、
+        // 正しい倍率になるのは次の Update になる。その間に LayerPos で置いた最初の演出（コイン・浮き文字など）が
+        // 「倍率 1 の層」の座標で置かれ、画面の中心から外へ（Game ビューが大きいと画面外へ）ずれる
+        go.SetActive(false);
         var canvas = go.AddComponent<Canvas>();
         var cam = UIMotion.CaptureCamera;
         if (cam != null)
@@ -48,6 +52,7 @@ public static class UIMotionFx
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.matchWidthOrHeight = 0.5f;
         if (Application.isPlaying) Object.DontDestroyOnLoad(go);
+        go.SetActive(true); // ここで CanvasScaler.OnEnable が上の設定で倍率を入れる
 
         layer = (RectTransform)go.transform;
         Layers[sortingOrder] = layer;
