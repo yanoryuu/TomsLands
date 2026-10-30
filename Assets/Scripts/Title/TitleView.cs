@@ -69,6 +69,7 @@ public sealed class TitleView : MonoBehaviour
     private void Awake()
     {
         AddClickListener(startButton, () => OnStartRequested.OnNext(Unit.Default));
+        if (startButton != null) ButtonFeel.SetPrimary(startButton); // #4 この画面で次に押してほしいボタン
         AddClickListener(newGameButton, () => OnNewGameSelected.OnNext(Unit.Default));
         AddClickListener(continueButton, () => OnContinueSelected.OnNext(Unit.Default));
         AddClickListener(optionButton, () => OnOptionSelected.OnNext(Unit.Default));
@@ -117,7 +118,7 @@ public sealed class TitleView : MonoBehaviour
     private void OnDestroy()
     {
         _titleTween?.Kill();
-        ClearSaveSlots();
+        ClearSaveSlots(hideFirst: false); // 破棄中は SetActive を触らない
         _slotDisposables.Dispose();
         OnStartRequested.Dispose();
         OnNewGameSelected.Dispose();
@@ -196,7 +197,6 @@ public sealed class TitleView : MonoBehaviour
         }
         if (infos == null) return;
 
-        int index = 0;
         foreach (var info in infos)
         {
             var slot = Instantiate(saveSlotPrefab, saveSlotContainer);
@@ -208,17 +208,11 @@ public sealed class TitleView : MonoBehaviour
             slot.OnDelete.Subscribe(i => { _focusSlotIndex = i; OnSaveSlotDeleteRequested.OnNext(i); }).AddTo(_slotDisposables);
 
             _slotViews.Add(slot);
-
-            // 上から順にポップイン
-            if (!slot.TryGetComponent<CanvasGroup>(out var cg))
-                cg = slot.gameObject.AddComponent<CanvasGroup>();
-            float delay = index * 0.07f;
-            cg.alpha = 0f;
-            cg.DOFade(1f, 0.2f).SetDelay(delay).SetLink(slot.gameObject);
-            slot.transform.localScale = Vector3.one * 0.92f;
-            slot.transform.DOScale(1f, 0.28f).SetDelay(delay).SetEase(Ease.OutBack).SetLink(slot.gameObject);
-            index++;
         }
+
+        // #3 上から順に並んで出る・#2 金額が回る。画面がまだ出ていなければ（スロットを作ってから画面を切り替える流れ）、出たときに動かす
+        if (saveSlotContainer.gameObject.activeInHierarchy) PlaySlotReveal();
+        else _slotRevealPending = true;
 
         // パッド/キー: 直前に操作したスロット（無ければ最初に選べるスロット）へフォーカス
         if (_saveScope != null)
@@ -229,6 +223,22 @@ public sealed class TitleView : MonoBehaviour
             _saveScope.FirstSelected = PickFocusSlotButton();
             _saveScope.Refocus(true);
         }
+    }
+
+    private bool _slotRevealPending;
+
+    /// <summary>#3 スロットを上から順に出し（共通部品。alpha と位置だけ）、#2 金額を回す（省略モードではどちらも即）。</summary>
+    private void PlaySlotReveal()
+    {
+        _slotRevealPending = false;
+        var rows = new List<RectTransform>(_slotViews.Count);
+        foreach (var slot in _slotViews)
+        {
+            if (slot == null) continue;
+            rows.Add((RectTransform)slot.transform);
+            slot.PlayAmountCount();
+        }
+        UIMotion.Stagger(rows);
     }
 
     private Selectable LastUsableSlotButton()
@@ -254,13 +264,15 @@ public sealed class TitleView : MonoBehaviour
         return firstUsable != null ? firstUsable : saveDataBackButton;
     }
 
-    private void ClearSaveSlots()
+    private void ClearSaveSlots(bool hideFirst = true)
     {
         _slotDisposables.Clear();
         foreach (var view in _slotViews)
         {
-            if (view != null)
-                Destroy(view.gameObject);
+            if (view == null) continue;
+            // 消すのは次のフレームなので、先に隠してレイアウトから外す（作り直したスロットの並ぶ位置が古いスロットでずれないように）
+            if (hideFirst) view.gameObject.SetActive(false);
+            Destroy(view.gameObject);
         }
         _slotViews.Clear();
     }
@@ -283,15 +295,10 @@ public sealed class TitleView : MonoBehaviour
             TitleType.SaveData => saveDataScreenGroup,
             _ => null,
         };
-        if (shown != null) FadeIn(shown);
-    }
-
-    private static void FadeIn(GameObject group)
-    {
-        if (!group.TryGetComponent<CanvasGroup>(out var cg)) cg = group.AddComponent<CanvasGroup>();
-        cg.DOKill();
-        cg.alpha = 0f;
-        cg.DOFade(1f, 0.18f).SetLink(group);
+        // #1 ぽよんと開く（フェード＋中身が弾む。省略モードでは即）
+        if (shown != null) UIMotion.Open(shown);
+        if (screen == TitleType.SaveData && _slotRevealPending && saveSlotContainer != null && saveSlotContainer.gameObject.activeInHierarchy)
+            PlaySlotReveal();
     }
 
     private void NotifyBackRequested() => OnBackRequested.OnNext(Unit.Default);

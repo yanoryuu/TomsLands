@@ -93,6 +93,14 @@ public class MapInfoView : MonoBehaviour
         if (mapInfoContent)
         {
             LayoutRebuilder.ForceRebuildLayoutImmediate(mapInfoContent.GetComponent<RectTransform>());
+            // #3 開いて最初の一覧だけ行を順に出す（購入直後の作り直しでは動かさない）
+            if (staggerNextBuild && mapInfoContent.activeInHierarchy)
+            {
+                staggerNextBuild = false;
+                var rows = new List<RectTransform>();
+                foreach (var s in activeSlots) if (s != null && s.transform is RectTransform rt) rows.Add(rt);
+                UIMotion.Stagger(rows, 0.05f);
+            }
         }
 
         // 選択の維持 or 先頭を自動選択（鍛冶屋と同じ操作感）
@@ -120,6 +128,10 @@ public class MapInfoView : MonoBehaviour
         }
         return list;
     }
+
+    private bool staggerNextBuild = true;
+
+    private void OnEnable() => staggerNextBuild = true;
 
     private void LateUpdate()
     {
@@ -187,6 +199,10 @@ public class MapInfoView : MonoBehaviour
     {
         if (detailPanel == null) return;
         detailPanel.SetActive(true);
+        // 別のダンジョンを選んだら詳細を短くポップ（購入直後の同じ行の再表示では動かさない）
+        if (lastDetailKey.HasValue && lastDetailKey.Value != data.key)
+            UIFx.Pop(detailPanel.transform, 0.98f, 0.15f);
+        lastDetailKey = data.key;
 
         bool purchased = data.isShowedInfo;
 
@@ -229,6 +245,8 @@ public class MapInfoView : MonoBehaviour
         if (purchaseButton != null)
             purchaseButton.gameObject.SetActive(!purchased && sellable);
     }
+
+    private DungeonName? lastDetailKey;
 
     /// <summary>情報料テーブルに載っているか（載っていないダンジョンの情報は売っていない）。</summary>
     private bool IsSellable(DungeonName key) =>

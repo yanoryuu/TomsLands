@@ -226,9 +226,13 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
 
         view.SetHeroStatus(hero);
         var stats = ClearProbabilityCalculator.GetEffectiveStats(hero, itemModel, relicResolver);
-        view.SetCombatStats(stats.Attack, stats.Defense);
+        view.SetCombatStats(stats.Attack, stats.Defense, stats.Hp);
 
         var weakness = GetKnownWeakness();
+        // 棚の「なし（外す）」を置いたときの見込み（ドラッグ中に能力値の板へ出す）
+        view.SetUnequipPreview(
+            StatsWith(string.Empty, hero.armorId.Value),
+            StatsWith(hero.weaponId.Value, string.Empty));
         view.SetWeaponOptions(BuildEquipmentOptions(ItemTypeData.ItemType.Weapon, hero.weaponId.Value, weakness), hero.weaponId.Value);
         view.SetArmorOptions(BuildEquipmentOptions(ItemTypeData.ItemType.Armor, hero.armorId.Value, weakness), hero.armorId.Value);
         view.SetTacticsOptions(hero.tactics.Value);
@@ -368,17 +372,53 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
             .ThenByDescending(item => IsWeaknessMatch(item, weakness))
             .ThenByDescending(item => item.RequiredLevel.Value)
             .ThenByDescending(item => item.CurrentPrice.Value)
-            .Select(item => new HeroEquipmentOption(item.ItemId, BuildEquipmentLabel(item, weakness), BuildEquipmentCaption(item)))
+            .Select(item => BuildOption(item, weakness, BuildEquipmentLabel(item, weakness), BuildEquipmentCaption(item), false))
             .ToList();
 
         if (!string.IsNullOrEmpty(selectedItemId) && options.All(option => option.ItemId != selectedItemId))
         {
             var selected = itemModel.GetRuntimeItem(selectedItemId);
             if (selected != null && selected.ItemType == type)
-                options.Insert(0, new HeroEquipmentOption(selected.ItemId, $"{selected.ItemName}（未所持）"));
+                options.Insert(0, BuildOption(selected, weakness, $"{selected.ItemName}（未所持）", null, true));
         }
 
         return options;
+    }
+
+    /// <summary>棚のカード 1 枚ぶん（名前・属性・在庫・値段・上乗せ・弱点・付けた後の能力値）。表記は BuildEquipmentLabel と同じ。</summary>
+    private HeroEquipmentOption BuildOption(RuntimeItemData item, ItemTypeData.ItemAttribute? weakness, string label, string caption, bool notOwned)
+    {
+        var hero = heroModel.heroData;
+        bool isWeapon = item.ItemType == ItemTypeData.ItemType.Weapon;
+        var after = isWeapon
+            ? StatsWith(item.ItemId, hero.armorId.Value)
+            : StatsWith(hero.weaponId.Value, item.ItemId);
+        return new HeroEquipmentOption(item.ItemId, label, caption)
+        {
+            Name = item.ItemName,
+            Icon = item.ItemIcon,
+            Attribute = ItemTypeData.NormalizeAttribute(item.ItemAttribute),
+            AttributeLabel = ItemAttributeText.ToJapanese(item.ItemAttribute),
+            Stock = item.Stock.Value,
+            Price = item.CurrentPrice.Value,
+            BonusText = BuildBonusText(item),
+            IsWeakness = IsWeaknessMatch(item, weakness),
+            NotOwned = notOwned,
+            After = after,
+        };
+    }
+
+    /// <summary>武器・防具を付け替えたときの戦う強さ（勇者の装備は変えない）。</summary>
+    private ClearProbabilityCalculator.HeroStats StatsWith(string weaponId, string armorId)
+        => ClearProbabilityCalculator.GetEffectiveStatsWith(heroModel.heroData, itemModel, relicResolver, weaponId, armorId);
+
+    /// <summary>「攻撃+10%」／「防御+15% HP+5%」（候補の行と同じ表記）。</summary>
+    private static string BuildBonusText(RuntimeItemData item)
+    {
+        int tier = HeroEquipmentBonus.TierOf(item);
+        return item.ItemType == ItemTypeData.ItemType.Weapon
+            ? $"攻撃+{HeroEquipmentBonus.WeaponAttackBonus(tier) * 100f:0}%"
+            : $"防御+{HeroEquipmentBonus.ArmorDefenseBonus(tier) * 100f:0}% HP+{HeroEquipmentBonus.ArmorHpBonus(tier) * 100f:0}%";
     }
 
     private static bool IsWeaknessMatch(RuntimeItemData item, ItemTypeData.ItemAttribute? weakness)
@@ -393,10 +433,7 @@ public class HeroPanelPresenter : IDisposable, IPresenter, IStartable
         string attribute = ItemAttributeText.ToJapanese(item.ItemAttribute);
         if (IsWeaknessMatch(item, weakness)) attribute = $"<color={MatchColor}>{attribute}</color>";
 
-        int tier = HeroEquipmentBonus.TierOf(item);
-        string bonus = item.ItemType == ItemTypeData.ItemType.Weapon
-            ? $"攻撃+{HeroEquipmentBonus.WeaponAttackBonus(tier) * 100f:0}%"
-            : $"防御+{HeroEquipmentBonus.ArmorDefenseBonus(tier) * 100f:0}% HP+{HeroEquipmentBonus.ArmorHpBonus(tier) * 100f:0}%";
+        string bonus = BuildBonusText(item);
 
         string label = $"{item.ItemName}　{attribute}　在庫{item.Stock.Value}　{item.CurrentPrice.Value:N0}G　{bonus}";
         return item.Stock.Value > 0 ? label : $"<color={NoStockColor}>{label}</color>";

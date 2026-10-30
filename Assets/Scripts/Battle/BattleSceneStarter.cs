@@ -267,7 +267,14 @@ public class BattleSceneStarter : IAsyncStartable
         if (_salesController != null)
         {
             _salesController.OnItemStockDepleted
-                .Subscribe(item => TryShowRestockAsync(item, battleCts.Token).Forget())
+                .Subscribe(item =>
+                {
+                    // #9 補充ポップアップを出せない（別の補充・終了確認の最中）ときは、売り切れをトーストで知らせる。
+                    // ポップアップ（AutoPlay が答える）はこれまでどおり。トーストは入力を受けない
+                    if (_isRestockPopupShowing || _isEndConfirmShowing)
+                        Toast.Show($"「{item.ItemName}」も売り切れ（売り場の枠を押すと補充）", item.ItemIcon, ToastKind.Warn);
+                    TryShowRestockAsync(item, battleCts.Token).Forget();
+                })
                 .AddTo(disposables);
         }
 
@@ -692,6 +699,7 @@ public class BattleSceneStarter : IAsyncStartable
                 _battleSpending += totalCost; // バトル中売上から充当（PlayerMoneyは戦闘終了時に精算）
                 _restockedQuantities[item.ItemId] = (_restockedQuantities.TryGetValue(item.ItemId, out var prev) ? prev : 0) + quantity;
                 _restockUnitCosts[item.ItemId] = unitCost; // 売れ残りの払い戻しも補充した時の単価で
+                Toast.Show($"「{item.ItemName}」を {quantity} 個補充（-{totalCost:N0}G）", item.ItemIcon, ToastKind.Info, 2f);
                 Debug.Log($"[BattleSceneStarter] 在庫補充: {item.ItemName} +{quantity}個, 費用 {totalCost}G (利用可能残高: {availableForPurchase}G → {availableForPurchase - totalCost}G)");
             }
         }

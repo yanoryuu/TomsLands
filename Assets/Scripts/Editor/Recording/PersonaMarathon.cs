@@ -393,6 +393,7 @@ public static class PersonaMarathon
             }
             case PlayModeStateChange.ExitingPlayMode:
                 AutoPlayInputGuard.Release("Play を抜ける");
+                ClearUIMotionFlags();
                 break;
             case PlayModeStateChange.EnteredEditMode:
             {
@@ -437,6 +438,7 @@ public static class PersonaMarathon
             s.SaveSettings();
         }
         AutoPlayInputGuard.Release("ランの終わり");
+        ClearUIMotionFlags();
         RestoreRunInBackground();
         string mute = SessionState.GetString(MuteBackupKey, "");
         if (mute.Length > 0)
@@ -448,6 +450,15 @@ public static class PersonaMarathon
         _exitAt = -1;
         _strategy = null;
         Debug.Log($"{LogPrefix} ラン {status.Id} 終了: {state} {status.Reason}（{status.LapsDone}/{status.LapsTarget} 周）");
+    }
+
+    /// <summary>UIMotion への省略／見せる再生の要求の名前（ランの Play の間だけ立てる）。</summary>
+    private const string UIMotionSource = "PersonaMarathon";
+
+    private static void ClearUIMotionFlags()
+    {
+        UIMotion.SetSkip(UIMotionSource, false);
+        UIMotion.SetShowcase(UIMotionSource, false);
     }
 
     private const string RunInBackgroundBackupKey = "PersonaMarathon.RunInBackgroundBackup";
@@ -471,6 +482,10 @@ public static class PersonaMarathon
     {
         if (_applied || !EditorApplication.isPlaying) return;
         _applied = true;
+        // UI アニメーション（Docs/UI_Motion.md）: 録画なしのランは省略（即座に最終状態）。
+        // 録画ありは見せるための撮影（timeScale 1・会話 Read 固定の経路）なので、AutoPlay の省略要求より優先して通常で再生する。
+        UIMotion.SetSkip(UIMotionSource, !run.Record);
+        UIMotion.SetShowcase(UIMotionSource, run.Record);
         bool metan = run.Persona == PersonaProfile.Metan.Id;
         var settings = new AutoPlaySettings
         {

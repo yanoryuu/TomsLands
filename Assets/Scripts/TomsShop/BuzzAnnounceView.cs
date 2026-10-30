@@ -84,6 +84,12 @@ public class BuzzAnnounceView : MonoBehaviour
             case BuzzType.Big:
                 Play("超バズ発生！！", detail ?? "大注目！売上が大幅にアップ！", bigTitleColor,
                     characterTint: Color.white, useRainbow: true, charScaleFactor: bigCharScale, flameShake: false);
+                // #5 超バズだけ祝う（タイトルが弾む瞬間に重ねる。省略モードでは出ない）
+                if (_currentSequence != null && buzzTitleText != null)
+                {
+                    var at = buzzTitleText.rectTransform;
+                    _currentSequence.InsertCallback(slideInDuration, () => Celebration.Play(null, null, null, at));
+                }
                 break;
 
             default:

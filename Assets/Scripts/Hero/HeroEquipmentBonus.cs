@@ -74,9 +74,14 @@ public static class HeroEquipmentBonus
     public static Multipliers Get(RuntimeHeroData hero, ItemModel itemModel = null)
     {
         if (hero == null) return Multipliers.None;
+        return Get(hero.weaponId.Value, hero.armorId.Value, itemModel);
+    }
 
-        int weaponTier = GetTier(hero.weaponId.Value, itemModel);
-        int armorTier = GetTier(hero.armorId.Value, itemModel);
+    /// <summary>武器・防具の itemId から倍率を求める（勇者画面で「付けた後」の見込みを出すときに使う）。</summary>
+    public static Multipliers Get(string weaponId, string armorId, ItemModel itemModel = null)
+    {
+        int weaponTier = GetTier(weaponId, itemModel);
+        int armorTier = GetTier(armorId, itemModel);
 
         float attack = 1f + WeaponAttackBonus(weaponTier);
         float defense = 1f + ArmorDefenseBonus(armorTier);

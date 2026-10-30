@@ -24,6 +24,10 @@ public class StreamingSalesView : MonoBehaviour
     private int _available;
     private bool _ledgerMode;
     private bool _layoutDone;
+    // 売上の文字にいま出ている値（#2 で数字を回すときの出発点。回っている途中ならその途中の値）
+    private long _shownMain;
+    private bool _mainShown;
+    private bool _shownLedger;
 
     /// <summary>売上の累計（StreamingSalesModel.TotalSales）。表示は「売上 − 補充 − 介入」の配信収支。</summary>
     public void UpdateTotalSales(int amount)
@@ -52,14 +56,26 @@ public class StreamingSalesView : MonoBehaviour
         EnsureLayout();
         if (totalSalesText != null)
         {
-            if (!_ledgerMode)
+            // #2 数字を回す（共通部品 UIMotion.CountTo。途中で次の値が来たら今見えている値から続ける。
+            // 最終の文字は従来と同じ。省略モード・非表示中は即座に最終の文字）
+            bool ledger = _ledgerMode;
+            long target = ledger ? _sales - _spending : _sales;
+            string Format(long v)
             {
-                totalSalesText.text = $"{_sales:N0} G";
+                _shownMain = v;
+                if (!ledger) return $"{v:N0} G";
+                return v >= 0 ? $"+{v:N0} G" : $"<color={NegativeColor}>-{-v:N0} G</color>";
             }
-            else
+            if (!_mainShown || _shownLedger != ledger)
             {
-                int net = _sales - _spending;
-                totalSalesText.text = net >= 0 ? $"+{net:N0} G" : $"<color={NegativeColor}>-{-net:N0} G</color>";
+                // 初回と、売上 → 配信収支へ表示が切り替わったときは数え上げずにそのまま出す
+                _mainShown = true;
+                _shownLedger = ledger;
+                UIMotion.CountTo(totalSalesText, target, target, Format);
+            }
+            else if (target != _shownMain)
+            {
+                UIMotion.CountTo(totalSalesText, _shownMain, target, Format, 0.5f);
             }
         }
         if (availableText != null)
@@ -97,24 +113,17 @@ public class StreamingSalesView : MonoBehaviour
         }
     }
 
-    /// <summary>売れた分を「+1,200」で浮かせる（売れた瞬間に儲かったことが数字で返る）。</summary>
+    /// <summary>
+    /// 売れた分を「+1,200」で浮かせる（売れた瞬間に儲かったことが数字で返る）。
+    /// #2 共通部品の浮き文字（MoneyFx.FloatText）と弾み（UIMotion.Bump）に置き換え。省略モードでは出さない。
+    /// 文字の色は従来の浮き文字（gainPopupTemplate）の色。
+    /// </summary>
     private void ShowGainPopup(int gain)
     {
-        if (gainPopupTemplate == null || totalSalesText == null || !isActiveAndEnabled) return;
-        var popup = Instantiate(gainPopupTemplate, gainPopupTemplate.transform.parent);
-        popup.gameObject.SetActive(true);
-        popup.text = $"+{gain:N0}";
-        var rt = popup.rectTransform;
-        // 枠の上（空き）へ浮かせる。下には「使えるお金」があるので重ねない
-        var from = totalSalesText.rectTransform.anchoredPosition + new Vector2(0f, 30f);
-        rt.anchoredPosition = from;
-        float duration = 0.8f * GameSettings.EffectDurationScale;
-        var seq = DOTween.Sequence();
-        seq.Append(rt.DOAnchorPosY(from.y + 26f, duration).SetEase(Ease.OutCubic));
-        seq.Insert(duration * 0.45f, popup.DOFade(0f, duration * 0.55f));
-        seq.OnComplete(() => { if (popup != null) Destroy(popup.gameObject); });
-        seq.SetLink(popup.gameObject);
-        UIFx.Pop(totalSalesText.transform, 1.12f, 0.18f);
+        if (totalSalesText == null || !isActiveAndEnabled) return;
+        var color = gainPopupTemplate != null ? gainPopupTemplate.color : new Color(1f, 0.84f, 0.35f, 1f);
+        MoneyFx.FloatText(totalSalesText.rectTransform, $"+{gain:N0}", color, totalSalesText.fontSize * 0.75f, 30f);
+        UIMotion.Bump(totalSalesText.transform);
     }
 
     /// <summary>
@@ -149,5 +158,10 @@ public class StreamingSalesView : MonoBehaviour
     {
         if (slotIndex < 0 || slotIndex >= itemSlots.Count) return;
         itemSlots[slotIndex].PlaySoldAnimation();
+
+        // #2 売れた品から売上の枠へコインが飛ぶ（3 枚。演出用の層に描くので売り場のドラッグを邪魔しない）
+        if (totalSalesText != null && isActiveAndEnabled && itemSlots[slotIndex] != null)
+            CoinBurst.Fly((RectTransform)itemSlots[slotIndex].transform, totalSalesText.rectTransform, 3,
+                onEachArrive: () => UIMotion.Bump(totalSalesText.transform, 1.06f, 0.14f));
     }
 }

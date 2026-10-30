@@ -32,6 +32,7 @@ public sealed class SaveSlotView : MonoBehaviour
     public Subject<int> OnDelete { get; } = new();
 
     private int _slotIndex;
+    private SaveSlotInfo _info;
 
     /// <summary>スロット本体の選択ボタン（パッド/キーのフォーカス先）。</summary>
     public Button SelectButton => selectButton;
@@ -56,6 +57,7 @@ public sealed class SaveSlotView : MonoBehaviour
     public void Bind(SaveSlotInfo info)
     {
         _slotIndex = info.SlotIndex;
+        _info = info;
 
         if (slotNumberText != null)
             slotNumberText.text = $"スロット {info.SlotIndex + 1}";
@@ -74,18 +76,35 @@ public sealed class SaveSlotView : MonoBehaviour
             deleteButton.interactable = hasData;
     }
 
-    private static string BuildSummary(SaveSlotInfo info)
+    /// <summary>
+    /// #2 サマリの金額（進行中のランは所持金、村の進行だけなら村資金）を 0 から回す。文字は最後に Bind と同じになる。
+    /// 金額の無いスロット・省略モードでは何もしない（Bind の文字のまま）。
+    /// </summary>
+    public void PlayAmountCount(float duration = 0.5f)
+    {
+        if (summaryText == null || _info == null) return;
+        var info = _info;
+        long amount = info.Exists ? info.Gold : info.HasProfile ? info.VillageFunds : 0;
+        if (amount <= 0) return;
+        UIMotion.CountTo(summaryText, 0, amount, v => BuildSummary(info, v), duration);
+    }
+
+    private static string BuildSummary(SaveSlotInfo info) =>
+        BuildSummary(info, info.Exists ? info.Gold : info.VillageFunds);
+
+    /// <summary>サマリの文（amount は金額の欄に出す値。数え上げの途中の値を入れる）。</summary>
+    private static string BuildSummary(SaveSlotInfo info, long amount)
     {
         // 村が王都になったスロットは、行の頭に称号を付ける
         string title = global::VillageRank.IsTop(info.VillageRank) ? global::VillageRank.TopTitle + "　" : "";
         if (info.Exists)
-            return $"{title}{GetModeLabel(info.Mode)}　{DayText.DayOf(info.Day)}　{info.Gold:N0}G";
+            return $"{title}{GetModeLabel(info.Mode)}　{DayText.DayOf(info.Day)}　{amount:N0}G";
         if (info.HasProfile)
         {
             // 進行中のランの行（難易度・日数・所持金）と同じくらいの長さに収める
             return string.IsNullOrEmpty(title)
-                ? $"村の進行あり　村資金 {info.VillageFunds:N0}G　{info.TotalRuns}周"
-                : $"{title}村資金 {info.VillageFunds:N0}G　{info.TotalRuns}周";
+                ? $"村の進行あり　村資金 {amount:N0}G　{info.TotalRuns}周"
+                : $"{title}村資金 {amount:N0}G　{info.TotalRuns}周";
         }
         if (info.IsCorrupted)
             return "データが壊れています（削除できます）";

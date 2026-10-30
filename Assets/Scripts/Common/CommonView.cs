@@ -99,21 +99,22 @@ public class CommonView : MonoBehaviour
         }
 
         float duration = Mathf.Abs(delta) > Mathf.Max(1, Mathf.Abs(from)) * bigChangeRate ? bigChangeDuration : moneyCountDuration;
-        moneyTween = DOTween.To(() => from, value =>
+        // #2 所持金 HUD は従来のカウント・色・浮く差分のまま（MoneyFx に置き換えると二重に数えるため）。
+        // 再生だけ UIMotion に通し、速い設定・省略モード（即最終の額）に従わせる
+        moneyTween = UIMotion.Run(DOTween.To(() => from, value =>
             {
                 displayedMoney = value;
                 SetMoneyText(value);
             }, to, duration)
             .SetEase(Ease.OutCubic)
-            .SetLink(gameObject)
             .OnComplete(() =>
             {
                 displayedMoney = to;
                 SetMoneyText(to);
-            });
+            }), gameObject);
 
         FlashMoney(delta > 0 ? gainColor : lossColor, duration);
-        if (delta > 0 && playerMoneyText != null) UIFx.Pop(playerMoneyText.transform, 1.12f, 0.25f);
+        if (delta > 0 && playerMoneyText != null) UIMotion.Bump(playerMoneyText.transform, 1.12f, 0.25f);
         FloatDelta(delta);
     }
 
@@ -122,15 +123,13 @@ public class CommonView : MonoBehaviour
         if (playerMoneyText == null) return;
         colorTween?.Kill();
         playerMoneyText.color = color;
-        colorTween = playerMoneyText.DOColor(moneyBaseColor, 0.35f)
-            .SetDelay(duration)
-            .SetLink(playerMoneyText.gameObject);
+        colorTween = UIMotion.Run(playerMoneyText.DOColor(moneyBaseColor, 0.35f).SetDelay(duration), playerMoneyText.gameObject);
     }
 
     /// <summary>所持金の下に「+1,200G」「-800G」を浮かせて消す。</summary>
     private void FloatDelta(int delta)
     {
-        if (playerMoneyText == null || !playerMoneyText.gameObject.activeInHierarchy) return;
+        if (playerMoneyText == null || !playerMoneyText.gameObject.activeInHierarchy || UIMotion.IsSkip) return;
 
         var go = Instantiate(playerMoneyText.gameObject, playerMoneyText.transform.parent);
         go.name = "MoneyDelta";
@@ -142,9 +141,9 @@ public class CommonView : MonoBehaviour
         var rt = (RectTransform)go.transform;
         var start = ((RectTransform)playerMoneyText.transform).anchoredPosition + new Vector2(0f, -78f);
         rt.anchoredPosition = start;
-        rt.DOAnchorPosY(start.y + 26f, deltaFloatDuration).SetEase(Ease.OutCubic).SetLink(go);
-        tmp.DOFade(0f, deltaFloatDuration * 0.5f).SetDelay(deltaFloatDuration * 0.5f).SetLink(go)
-            .OnComplete(() => Destroy(go));
+        UIMotion.Run(rt.DOAnchorPosY(start.y + 26f, deltaFloatDuration).SetEase(Ease.OutCubic), go);
+        UIMotion.Run(tmp.DOFade(0f, deltaFloatDuration * 0.5f).SetDelay(deltaFloatDuration * 0.5f)
+            .OnComplete(() => Destroy(go)), go);
     }
 
     // 例: 1,234,567G
@@ -156,10 +155,18 @@ public class CommonView : MonoBehaviour
     /// </summary>
     public void UpdateCurrentTurn(int turn, string buzzInfo = null)
     {
-        currentTurnText.text = string.IsNullOrEmpty(buzzInfo)
+        string text = string.IsNullOrEmpty(buzzInfo)
             ? DayText.DayOf(turn)
             : $"{DayText.DayOf(turn)} <size=60%>{buzzInfo}</size>";
+        // #16 日が進んだときだけ日めくり（最初の表示・バズの併記だけの変化は差し替えるだけ）
+        if (shownTurn >= 0 && turn != shownTurn)
+            FlipCounter.Flip(currentTurnText, text);
+        else
+            currentTurnText.text = text;
+        shownTurn = turn;
     }
+
+    private int shownTurn = -1;
 
     /// <summary>次の配信までの表示を更新する。空文字なら隠す。未配線なら何もしない。</summary>
     public void UpdateStreamInfo(string text)
@@ -167,8 +174,14 @@ public class CommonView : MonoBehaviour
         if (streamInfoText == null) return;
         bool show = !string.IsNullOrEmpty(text);
         streamInfoText.gameObject.SetActive(show);
-        if (show) streamInfoText.text = text;
+        if (!show) return;
+        // #16 日が進んで残り日数が変わったら日めくり（最初の表示は差し替えるだけ）
+        if (streamInfoShown) FlipCounter.Flip(streamInfoText, text);
+        else streamInfoText.text = text;
+        streamInfoShown = true;
     }
+
+    private bool streamInfoShown;
 
     /// <summary>
     /// 未約定の売り注文の見込み入金額バッジを更新する。0 なら非表示。

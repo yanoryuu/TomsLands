@@ -63,6 +63,9 @@ public class ProphetTrendRowUI : MonoBehaviour, IPointerEnterHandler, IPointerEx
         this.dialogueId = dialogueId;
     }
 
+    /// <summary>#12 占いの向き（上がる/下がる）を品名の値動きとして見せる。</summary>
+    public void PlayDirection(int direction) => PriceChangeFx.Play(itemNameText, direction, rowBackground);
+
     public void OnPointerEnter(PointerEventData eventData) => OnHoverEnter?.Invoke(dialogueId);
     public void OnPointerExit(PointerEventData eventData) => OnHoverExit?.Invoke();
 }

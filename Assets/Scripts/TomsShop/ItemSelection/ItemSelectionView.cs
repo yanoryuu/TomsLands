@@ -38,7 +38,8 @@ public class ItemSelectionView : MonoBehaviour
 
     private void Awake()
     {
-        closeButton.onClick.AddListener(() => OnCloseRequested.OnNext(Unit.Default));
+        // 閉じ演出（0.15 秒）の間に押されても二度閉じない
+        closeButton.onClick.AddListener(() => { if (!UIMotion.IsClosing(itemSelectionPanel)) OnCloseRequested.OnNext(Unit.Default); });
         armorPanelButton.onClick.AddListener(() => OnArmorPanelRequested.OnNext(Unit.Default));
         weaponPanelButton.onClick.AddListener(() => OnWeaponPanelRequested.OnNext(Unit.Default));
 
@@ -101,11 +102,20 @@ public class ItemSelectionView : MonoBehaviour
         itemIcon.preserveAspect = true;
     }
 
-    public void Initialize() => Hide();
+    // 起動時は演出なしで閉じる
+    public void Initialize() => itemSelectionPanel.SetActive(false);
 
-    public void Show() => itemSelectionPanel.SetActive(true);
+    /// <summary>#1 ぽよんと開く（暗幕つきなら窓だけ弾む）。</summary>
+    public void Show()
+    {
+        lastListType = null;
+        UIMotion.Open(itemSelectionPanel, MotionWindow.Of(itemSelectionPanel));
+    }
 
-    public void Hide() => itemSelectionPanel.SetActive(false);
+    /// <summary>#1 縮んで閉じる（省略モード・非表示中は即座に非表示）。</summary>
+    public void Hide() => UIMotion.Close(itemSelectionPanel, null, MotionWindow.Of(itemSelectionPanel));
+
+    private ItemTypeData.ItemType? lastListType;
 
     /// <summary>
     /// 商品リストを表示
@@ -137,6 +147,12 @@ public class ItemSelectionView : MonoBehaviour
             activeSlots.Add(slotObj);
         }
         lastSlots = slots;
+
+        // #3 商品の札を上から順に出す（画面に収まる先頭だけ）
+        var rows = new List<RectTransform>();
+        foreach (var s in slots)
+            if (s != null && s.transform is RectTransform rt && rows.Count < 10) rows.Add(rt);
+        if (itemListParent.gameObject.activeInHierarchy) UIMotion.Stagger(rows, 0.04f);
         return slots;
     }
 
@@ -144,6 +160,15 @@ public class ItemSelectionView : MonoBehaviour
     {
         if (type == ItemTypeData.ItemType.Weapon) currentTabButton = weaponPanelButton;
         else if (type == ItemTypeData.ItemType.Armor) currentTabButton = armorPanelButton;
+
+        // #7 武器⇔防具を替えたら一覧を横から滑り込ませる（武器が左、防具が右）。開いた直後は動かさない
+        if (lastListType.HasValue && lastListType.Value != type)
+        {
+            var scroll = itemListParent != null ? itemListParent.GetComponentInParent<ScrollRect>() : null;
+            if (scroll != null)
+                TabSwitcher.SlideContent((RectTransform)scroll.transform, type == ItemTypeData.ItemType.Armor ? 1 : -1);
+        }
+        lastListType = type;
         // 一覧の購読が済んだ後（説明表示の結線後）にフォーカスする
         FocusFirstSlot(lastSlots);
 
@@ -170,6 +195,8 @@ public class ItemSelectionView : MonoBehaviour
         var slot = slotObj.GetComponent<ItemDisplaySlot>();
         slot.SetItem(itemId, icon, quantity);
         displaySlots[itemId] = slot;
+        // 陳列に加わった札を弾ませる
+        if (slotObj.activeInHierarchy) UIFx.Pop(slotObj.transform, 0.7f, 0.25f);
         UpdateHeaderNavigation();
         return slot;
     }
@@ -242,5 +269,8 @@ public class ItemSelectionView : MonoBehaviour
     {
         UpdateSlotCounter(used, max);
         Debug.Log($"[ItemSelection] 陳列枠が足りない（{used}/{max}）。店を改装すると枠が増える。");
+        // #9 知らせ＋カウンタを首振り
+        Toast.Show($"陳列枠がいっぱいです（{used}/{max}）。店を改装すると増えます", null, ToastKind.Warn);
+        if (slotCounterText != null) UIMotion.Shake(slotCounterText.rectTransform);
     }
 }

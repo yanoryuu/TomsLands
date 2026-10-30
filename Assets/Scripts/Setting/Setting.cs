@@ -179,6 +179,36 @@ public class Setting : MonoBehaviour
         Bind();
 
         ShowTab(0); // 初期表示はサウンド
+
+        // #1 窓がぽよんと開く（この GameObject が 1000x720 の窓。省略モードでは即）
+        UIMotion.Open(gameObject);
+        // #7 選んでいるタブの下に金の下線（タブの並びが決まってから置く）
+        CreateTabUnderline();
+    }
+
+    // ---- #7 タブ切替の動き ----
+
+    private RectTransform tabUnderline;
+
+    private void CreateTabUnderline()
+    {
+        if (currentTab < 0 || currentTab >= tabs.Count) return;
+        var tabButton = tabs[currentTab].Button;
+        if (tabButton == null) return;
+        var tabRect = (RectTransform)tabButton.transform;
+        if (tabRect.parent is RectTransform row) LayoutRebuilder.ForceRebuildLayoutImmediate(row);
+        tabUnderline = TabSwitcher.CreateUnderline(tabRect);
+    }
+
+    /// <summary>下線を選んだタブへ動かし、中身を横から滑り込ませる（右のタブへ移ったら右から）。</summary>
+    private void PlayTabSwitch(int from, int to)
+    {
+        if (to < 0 || to >= tabs.Count) return;
+        var tab = tabs[to];
+        if (tabUnderline != null && tab.Button != null)
+            TabSwitcher.MoveUnderline(tabUnderline, (RectTransform)tab.Button.transform);
+        if (from != to && tab.Group != null && tab.Group.transform is RectTransform content)
+            TabSwitcher.SlideContent(content, to > from ? 1 : -1);
     }
 
     private void Update()
@@ -292,6 +322,7 @@ public class Setting : MonoBehaviour
 
     private void ShowTab(int index)
     {
+        int previous = currentTab;
         currentTab = index;
         for (int i = 0; i < tabs.Count; i++)
         {
@@ -312,6 +343,8 @@ public class Setting : MonoBehaviour
             var target = TabFocusTarget(index);
             if (target != null) focusScope.FirstSelected = target;
         }
+
+        PlayTabSwitch(previous, index); // 見た目だけ（タブの中身の表示は上で決めてある）
     }
 
     // ---- 変更の反映 ----
@@ -364,7 +397,7 @@ public class Setting : MonoBehaviour
             skipReadToggle.onValueChanged.AddListener(isOn => GameSettings.SkipRead = isOn);
 
         // 閉じる
-        closeBtn.onClick.AddListener(CloseSelf);
+        closeBtn.onClick.AddListener(() => CloseSelf());
 
         // タイトルへ戻る。タイトル画面と配信中（FightScene）では出さない
         // （配信は途中で抜けると決着が付かない。配信中に終了した場合は「続きから」でその配信をやり直す）
@@ -440,13 +473,26 @@ public class Setting : MonoBehaviour
     private const string TitleSceneName = "TitleScene";
     private const string FightSceneName = "FightScene";
 
-    private void CloseSelf()
+    /// <summary>
+    /// 閉じる。animate なら #1 窓が縮んで消えてからシーンを外す（0.15 秒。省略モードでは即）。
+    /// 保存と OnCloseButtonClicked は今までどおり押した瞬間に行う。
+    /// </summary>
+    private void CloseSelf(bool animate = true)
     {
         if (isClosing) return;
         isClosing = true;
         GameSettings.Save();
         OnCloseButtonClicked.OnNext(Unit.Default);
-        SceneManager.UnloadSceneAsync("Setting");
+        if (!animate)
+        {
+            SceneManager.UnloadSceneAsync("Setting");
+            return;
+        }
+        UIMotion.Close(gameObject, () =>
+        {
+            var scene = SceneManager.GetSceneByName("Setting");
+            if (scene.isLoaded) SceneManager.UnloadSceneAsync(scene);
+        });
     }
 
     /// <summary>
@@ -481,7 +527,7 @@ public class Setting : MonoBehaviour
             ? "タイトルへ戻りますか？\n店の状態は保存されます。\n「続きから」では、今日の配信から始まります。"
             : "タイトルへ戻りますか？\n店の状態は保存されます。";
 
-        CloseSelf();
+        CloseSelf(animate: false); // すぐ上に確認を出すので、閉じ演出で重ならないよう即外す
         popUpManager.Show(new PopUpData
         {
             Title = "タイトルへ戻る",

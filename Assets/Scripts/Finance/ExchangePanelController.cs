@@ -23,6 +23,8 @@ public class ExchangePanelController : IDisposable
     private CompositeDisposable disposables = new();
     private List<ItemShopSlot> rows = new();
     private string selectedProductId;
+    /// <summary>行に最後に出した値段（値段の変化の演出を、動いたときだけ出すため）。</summary>
+    private readonly Dictionary<string, int> lastShownPrice = new();
 
     public ExchangePanelController(
         PortfolioModel portfolioModel,
@@ -91,6 +93,15 @@ public class ExchangePanelController : IDisposable
 
             slot.SetFinance(product.productId, product.productName, product.icon, unitPrice,
                 portfolioModel.GetHeldUnits(product.productId), marketLabel, marketColor, prevPrice, unlocked);
+
+            // #12 前に見た値段（初めてなら前日の値）から動いていたら、行が出たあとに上がった/下がったを見せる。
+            // 売買のたびの再構築では同じ値段なので出ない
+            if (unlocked)
+            {
+                int seen = lastShownPrice.TryGetValue(product.productId, out var p) ? p : prevPrice;
+                if (seen > 0 && seen != unitPrice) slot.PlayPriceChange(unitPrice > seen ? 1 : -1, 0.3f + i * 0.05f);
+                lastShownPrice[product.productId] = unitPrice;
+            }
             slot.SetSelected(product.productId == selectedProductId);
 
             // 行クリック/アイコンで選択、ホバー/情報ボタンで説明

@@ -66,7 +66,8 @@ public class FinanceDetailPanel : MonoBehaviour
         IReadOnlyList<int> navHistory, float fundBuyFeeRate, bool canAffordOne,
         int maxOrderQuantity = 99)
     {
-        gameObject.SetActive(true);
+        // #1 閉じていたらぽよんと開く（開いたまま銘柄を替えたときは中身の差し替えだけ）
+        if (!gameObject.activeSelf || UIMotion.IsClosing(gameObject)) UIMotion.Open(gameObject);
 
         unitPrice = currentUnitPrice;
         buyFeeRate = product.kind == FinancialProductKind.IndexFund ? fundBuyFeeRate : 0f;
@@ -119,7 +120,8 @@ public class FinanceDetailPanel : MonoBehaviour
         RefreshQuantity();
     }
 
-    public void Hide() => gameObject.SetActive(false);
+    /// <summary>#1 縮んで閉じる（省略モード・非表示中は即座に非表示）。</summary>
+    public void Hide() => UIMotion.Close(gameObject);
 
     public void UpdateInteractable(int heldUnits, bool canAffordQuantity)
     {

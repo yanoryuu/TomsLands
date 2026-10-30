@@ -153,9 +153,20 @@ public class TomsShopView : MonoBehaviour
             }
         }
 
-        relicChoicePanel.SetActive(true);
-        UIFx.PanelOpen(relicChoicePanel);
-        if (relicChoiceWindow != null) UIFx.Pop(relicChoiceWindow, 0.92f, 0.22f);
+        // #1 ぽよんと開き、#11 カードを左から順にめくる（エピックは溜めてから金に光る）。中身は上で差し替え済み
+        UIMotion.Open(relicChoicePanel, relicChoiceWindow);
+        var cards = new List<RectTransform>();
+        var rareFlags = new List<bool>();
+        for (int i = 0; i < relicChoiceButtons.Length && i < choices.Count; i++)
+        {
+            if (relicChoiceButtons[i] == null || choices[i] == null) continue;
+            if (relicChoiceButtons[i].transform is RectTransform card)
+            {
+                cards.Add(card);
+                rareFlags.Add(!choices[i].isCurse && choices[i].rarity == RelicRarity.Epic);
+            }
+        }
+        CardFlip.FlipAll(cards, null, i => rareFlags[i]);
         return true;
     }
 
@@ -187,7 +198,7 @@ public class TomsShopView : MonoBehaviour
             var clone = Instantiate(template, template.transform.parent);
             clone.onClick.RemoveAllListeners();
             int index = relicChoiceButtons.Length;
-            clone.onClick.AddListener(() => OnRelicChoiceSelected.OnNext(index));
+            clone.onClick.AddListener(() => { if (!UIMotion.IsClosing(relicChoicePanel)) OnRelicChoiceSelected.OnNext(index); });
             System.Array.Resize(ref relicChoiceButtons, index + 1);
             relicChoiceButtons[index] = clone;
             if (relicChoiceSlots != null && relicChoiceSlots.Length > 0)
@@ -244,18 +255,19 @@ public class TomsShopView : MonoBehaviour
 
     public void HideRelicChoices()
     {
+        // #1 縮んで閉じる（閉じ演出の 0.15 秒は IsRelicChoiceOpen を false として扱う）
         if (relicChoicePanel != null)
-            relicChoicePanel.SetActive(false);
+            UIMotion.Close(relicChoicePanel);
     }
 
     /// <summary>レリック3択を開いているか（朝の通知を1枚ずつ出す待ち合わせ用。F-4）。</summary>
     /// <summary>営業ダイジェスト（未配線なら null）。</summary>
     public SalesDigestView SalesDigest => salesDigest;
 
-    public bool IsRelicChoiceOpen => relicChoicePanel != null && relicChoicePanel.activeSelf;
+    public bool IsRelicChoiceOpen => relicChoicePanel != null && relicChoicePanel.activeSelf && !UIMotion.IsClosing(relicChoicePanel);
 
     /// <summary>朝レポートを開いているか（朝の通知を1枚ずつ出す待ち合わせ用。F-4）。</summary>
-    public bool IsMorningReportOpen => morningReportPanel != null && morningReportPanel.activeSelf;
+    public bool IsMorningReportOpen => morningReportPanel != null && morningReportPanel.activeSelf && !UIMotion.IsClosing(morningReportPanel);
 
     /// <summary>
     /// 所持レリックバーの該当アイコンを跳ねさせ、上に金額を浮かせる（F-8: レリックが効いた瞬間を見せる）。
@@ -267,28 +279,14 @@ public class TomsShopView : MonoBehaviour
         var icon = relicBarParent.Find($"Relic_{relicId}") as RectTransform;
         if (icon == null || !icon.gameObject.activeInHierarchy) return;
 
-        DOVirtual.DelayedCall(delay, () =>
+        // #2 アイコンが弾み、金額が浮いて消える（共通部品。省略モードでは何も出さない）
+        UIMotion.Delay(delay, () =>
         {
-            if (icon == null) return;
-            UIFx.Pop(icon, 1.35f, 0.3f);
+            if (icon == null || !icon.gameObject.activeInHierarchy) return;
+            UIMotion.Bump(icon, 1.35f, 0.3f);
             if (string.IsNullOrEmpty(amountText)) return;
-            var go = new GameObject("RelicGain", typeof(RectTransform));
-            var rt = (RectTransform)go.transform;
-            rt.SetParent(icon, false);
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 1f);
-            rt.sizeDelta = new Vector2(220f, 40f);
-            rt.anchoredPosition = new Vector2(0f, 18f);
-            var tmp = go.AddComponent<TextMeshProUGUI>();
-            var font = morningReportText != null ? morningReportText.font : null;
-            if (font != null) tmp.font = font;
-            tmp.text = amountText;
-            tmp.fontSize = 26f;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = new Color(0.91f, 0.64f, 0.24f, 1f);
-            tmp.raycastTarget = false;
-            rt.DOAnchorPosY(48f, 0.9f).SetEase(Ease.OutCubic).SetLink(go);
-            tmp.DOFade(0f, 0.4f).SetDelay(0.6f).SetLink(go).OnComplete(() => Destroy(go));
-        }).SetLink(icon.gameObject);
+            MoneyFx.FloatText(icon, amountText, UIMotionFx.Gold2, 30f);
+        }, icon.gameObject);
     }
 
     /// <summary>
@@ -342,6 +340,8 @@ public class TomsShopView : MonoBehaviour
 
             string capturedId = relic.relicId;
             iconObj.GetComponent<Button>().onClick.AddListener(() => OnRelicIconClicked.OnNext(capturedId));
+            // #8 エピックの遺物は時々光が走る（アイコンの絵には触らない）
+            if (!relic.isCurse && relic.rarity == RelicRarity.Epic) IconGlint.Attach(rt, 4f);
         }
     }
 
@@ -370,8 +370,7 @@ public class TomsShopView : MonoBehaviour
     {
         if (morningReportPanel == null || morningReportText == null) return false;
         morningReportText.text = text;
-        morningReportPanel.SetActive(true);
-        UIFx.PanelOpen(morningReportPanel); // 開く演出（瞬間表示にしない）
+        UIMotion.Open(morningReportPanel); // #1 ぽよんと開く
         return true;
     }
 
@@ -382,10 +381,11 @@ public class TomsShopView : MonoBehaviour
     public bool ShowMorningIncomeReport(IReadOnlyList<MorningIncomeEntry> incomes, string netWorthLine, IReadOnlyList<string> notes)
     {
         if (morningReportPanel == null || morningIncomeReport == null || !morningIncomeReport.IsWired) return false;
+        UIMotion.CancelClose(morningReportPanel);
         morningReportPanel.SetActive(true);
         morningIncomeReport.Setup(incomes, netWorthLine, notes);
-        UIFx.PanelOpen(morningReportPanel);
-        UIFx.Pop(morningIncomeReport.transform, 0.92f, 0.22f);
+        // #1 窓（行の中身）がぽよんと開く
+        UIMotion.Open(morningReportPanel, morningIncomeReport.transform as RectTransform);
         morningIncomeReport.PlayOpen();
         return true;
     }
@@ -414,7 +414,7 @@ public class TomsShopView : MonoBehaviour
         if (NewspaperButton != null)
             NewspaperButton.onClick.AddListener(() => OnNewspaperClicked.OnNext(Unit.Default));
         if (morningReportCloseButton != null && morningReportPanel != null)
-            morningReportCloseButton.onClick.AddListener(() => morningReportPanel.SetActive(false));
+            morningReportCloseButton.onClick.AddListener(() => UIMotion.Close(morningReportPanel)); // #1 縮んで閉じる
 
         if (relicChoiceButtons != null)
         {
@@ -422,13 +422,17 @@ public class TomsShopView : MonoBehaviour
             {
                 int index = i;
                 if (relicChoiceButtons[i] != null)
-                    relicChoiceButtons[i].onClick.AddListener(() => OnRelicChoiceSelected.OnNext(index));
+                    // 閉じ演出（0.15 秒）の間に押されても二度選ばない
+                    relicChoiceButtons[i].onClick.AddListener(() => { if (!UIMotion.IsClosing(relicChoicePanel)) OnRelicChoiceSelected.OnNext(index); });
             }
         }
         if (relicChoiceSkipButton != null)
-            relicChoiceSkipButton.onClick.AddListener(() => OnRelicChoiceSkipped.OnNext(Unit.Default));
+            relicChoiceSkipButton.onClick.AddListener(() => { if (!UIMotion.IsClosing(relicChoicePanel)) OnRelicChoiceSkipped.OnNext(Unit.Default); });
         if (debtPaymentButton != null)
             debtPaymentButton.onClick.AddListener(() => OnDebtPaymentClicked.OnNext(Unit.Default));
+
+        // #4 この画面の主ボタン（営業開始）は脈打つ
+        if (StartShopButton != null) ButtonFeel.SetPrimary(StartShopButton);
 
         SetupPadFocusForOverlays();
     }
@@ -540,9 +544,22 @@ public class TomsShopView : MonoBehaviour
         {
             var t = button.transform;
             t.DOKill(true);
-            t.DOPunchScale(Vector3.one * 0.18f, 0.6f, 4, 0.6f).SetDelay(0.3f).SetLink(button.gameObject);
+            UIMotion.Run(t.DOPunchScale(Vector3.one * 0.18f, 0.6f, 4, 0.6f).SetDelay(0.3f), button.gameObject);
+            // #8 NEW 札。一度押したら外す
+            if (button.transform is RectTransform rt)
+            {
+                NewBadge.Attach(rt);
+                if (newBadgeHooked.Add(button))
+                    button.onClick.AddListener(() => NewBadge.Detach(rt));
+            }
+        }
+        else if (!visible && button.transform is RectTransform hidden)
+        {
+            NewBadge.Detach(hidden);
         }
     }
+
+    private readonly HashSet<Button> newBadgeHooked = new();
 
     private static void SetInteractableSafe(Selectable selectable, bool interactable)
     {
@@ -577,13 +594,25 @@ public class TomsShopView : MonoBehaviour
     public void UpdateNextDebt(int amount, int remainingTurns, string label = null)
     {
         if (nextDebtText == null) return;
-        nextDebtText.text = $"{label ?? "次の納付"}\n{amount:#,0}G\n{DayText.Remaining(remainingTurns)}";
+        string head = label ?? "次の納付";
+        string tail = DayText.Remaining(remainingTurns);
+        string Format(long v) => $"{head}\n{v:#,0}G\n{tail}";
+        // #2 額が変わったら数字を回す（最初の表示・見出しが替わったときは差し替えるだけ）
+        if (lastNextDebtAmount.HasValue && lastNextDebtAmount.Value != amount && lastNextDebtLabel == head)
+            UIMotion.CountTo(nextDebtText, lastNextDebtAmount.Value, amount, Format, 0.6f);
+        else
+            UIMotion.CountTo(nextDebtText, amount, amount, Format); // 回っている途中の数字も止めて差し替える
+        lastNextDebtAmount = amount;
+        lastNextDebtLabel = head;
     }
+
+    private int? lastNextDebtAmount;
+    private string lastNextDebtLabel;
 
     /// <summary>納付の表示を弾ませる（村の銀行 Lv5「勝負の融資」を借りたとき）。</summary>
     public void PopNextDebt()
     {
-        if (nextDebtText != null) UIFx.Pop(nextDebtText.transform, 0.85f, 0.2f);
+        if (nextDebtText != null) UIMotion.Bump(nextDebtText.transform, 1.15f, 0.25f);
     }
 
     /// <summary>

@@ -107,11 +107,18 @@ public class ItemDetailPanel : MonoBehaviour
     public void ShowItem(RuntimeItemData runtime, int basePrice, float recommendScore, bool useBattleHistory = false,
         System.Collections.Generic.IReadOnlyList<PriceChartView.Marker> markers = null)
     {
-        Root.SetActive(true);
-        ApplyPadNavigation();
-
-        // 銘柄切替のフィードバック（短いポップ）
-        UIFx.Pop(Root.transform, 0.98f, 0.15f);
+        // #1 閉じていたらぽよんと開く。開いたまま銘柄を替えたときは短いポップ
+        bool wasShown = Root.activeSelf && !UIMotion.IsClosing(Root);
+        if (wasShown)
+        {
+            ApplyPadNavigation();
+            UIFx.Pop(Root.transform, 0.98f, 0.15f);
+        }
+        else
+        {
+            UIMotion.Open(Root);
+            ApplyPadNavigation();
+        }
         if (icon != null)
         {
             icon.transform.DOKill(true);
@@ -215,7 +222,8 @@ public class ItemDetailPanel : MonoBehaviour
         UpdateButtons();
     }
 
-    public void Hide() => Root.SetActive(false);
+    /// <summary>#1 縮んで閉じる（省略モード・非表示中は即座に非表示）。</summary>
+    public void Hide() => UIMotion.Close(Root);
 
     private void OnSliderValueChanged(float value)
     {

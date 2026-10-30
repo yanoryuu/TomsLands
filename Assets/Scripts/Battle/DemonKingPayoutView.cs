@@ -76,6 +76,8 @@ public class DemonKingPayoutView : MonoBehaviour
     {
         if (receiveButton != null) receiveButton.onClick.AddListener(OnReceiveClicked);
         if (skipCatcher != null) skipCatcher.onClick.AddListener(SkipAnimation);
+        // #4 演出のあとに出る「受け取る」がこの画面の主ボタン
+        if (receiveButton != null) ButtonFeel.SetPrimary(receiveButton);
         if (demonRoot != null) _demonBasePos = demonRoot.anchoredPosition;
         CacheRowSlots();
 
@@ -115,8 +117,8 @@ public class DemonKingPayoutView : MonoBehaviour
         LayoutRows(data);
         PrepareHiddenState(data);
 
-        panelRoot.SetActive(true);
-        UIFx.PanelOpen(panelRoot, 0.25f);
+        // #1 通知書がぽよんと開く（暗幕ごとフェード、木枠の通知書が弾む）。従来の PanelOpen + Pop(windowRoot) の置き換え
+        UIMotion.Open(panelRoot, windowRoot);
 
         _skipCts?.Dispose();
         _skipCts = CancellationTokenSource.CreateLinkedTokenSource(cancellation, destroyCancellationToken);
@@ -139,7 +141,8 @@ public class DemonKingPayoutView : MonoBehaviour
         finally
         {
             _receiveTcs = null;
-            if (panelRoot != null) panelRoot.SetActive(false);
+            // #1 縮んで閉じる（0.15 秒。省略モードは即 SetActive(false)）。IsShowing はこの時点で false
+            if (panelRoot != null) UIMotion.Close(panelRoot, null, windowRoot);
         }
     }
 
@@ -202,8 +205,10 @@ public class DemonKingPayoutView : MonoBehaviour
 
     private void SetTotal(int value)
     {
-        if (totalValueText != null) totalValueText.text = $"{value:N0}<size=55%>G</size>";
+        if (totalValueText != null) totalValueText.text = TotalText(value);
     }
+
+    private static string TotalText(int value) => $"{value:N0}<size=55%>G</size>";
 
     private static string FormatGold(int value) => $"{value:N0}<size=70%>G</size>";
 
@@ -229,8 +234,7 @@ public class DemonKingPayoutView : MonoBehaviour
 
     private async UniTask PlayIntroAsync(DemonKingPayoutData data, CancellationToken ct)
     {
-        // 1. 通知書が開く（魔王は右から滑り込む）
-        if (windowRoot != null) UIFx.Pop(windowRoot, 0.9f, 0.28f);
+        // 1. 通知書が開く（ShowAsync の UIMotion.Open で弾む。魔王は右から滑り込む）
         if (demonRoot != null)
         {
             demonRoot.DOKill();
@@ -246,13 +250,16 @@ public class DemonKingPayoutView : MonoBehaviour
 
         // 3. 受取額のカウントアップ
         await RevealRowAsync(totalRow, ct);
-        int shown = 0;
         _countTween?.Kill();
-        float countDuration = CountUpDuration * GameSettings.EffectDurationScale;
         PlaySe(CountSe);
-        _countTween = DOTween.To(() => shown, v => { shown = v; SetTotal(v); }, data.FinalReward, countDuration)
-            .SetEase(Ease.OutCubic)
-            .SetLink(gameObject);
+        // #2 明細から受取額へコインが飛び、数字が回る（共通部品。速い設定・省略は UIMotion が決める。最終の文字は SetTotal と同じ）
+        _countTween = totalValueText != null
+            ? UIMotion.CountTo(totalValueText, 0, data.FinalReward, v => TotalText((int)v), CountUpDuration)
+            : null;
+        if (totalValueText != null && defenseRow != null && data.FinalReward > 0)
+            CoinBurst.Fly((RectTransform)defenseRow.transform, totalValueText.rectTransform,
+                Mathf.Clamp(4 + (int)Mathf.Log10(Mathf.Max(1, data.FinalReward)), 4, 10),
+                onEachArrive: () => UIMotion.Bump(totalValueText.transform, 1.06f, 0.16f));
         await DelaySeconds(CountUpDuration + 0.05f, ct);
         PlayFinalSeOnce();
 

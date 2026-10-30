@@ -22,7 +22,7 @@ public class NewsUnreadBadge : MonoBehaviour
         if (show && count > last && last >= 0 && go.activeInHierarchy)
         {
             go.transform.DOKill(true);
-            go.transform.DOPunchScale(Vector3.one * 0.25f, 0.3f, 6, 0.6f).SetLink(go);
+            UIMotion.Run(go.transform.DOPunchScale(Vector3.one * 0.25f, 0.3f, 6, 0.6f), go); // 速さ・省略は UIMotion に従う
         }
         last = count;
     }

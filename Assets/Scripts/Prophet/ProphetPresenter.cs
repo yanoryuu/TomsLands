@@ -5,44 +5,57 @@ using R3;
 using UnityEngine;
 using VContainer.Unity;
 
+/// <summary>
+/// 占い師の画面「上げる枠・下げる枠」（Docs/Prophet_Intervention.md）の Presenter。画面の部分だけを持つ。
+/// 仕組み（力・枠・効果の日数・代金・保存・需要への効き方）は IProphetIntervention が持ち、ここはそれを読んで描き、
+/// 「この品をこの枠へ」を TryPlace に渡して、答え（ProphetPlaceResult）を占い師のセリフにするだけ。
+/// 品の一覧は ItemModel（解放済みの全品）から、新聞の向きはプレイヤーのスクラップの予想メモから取る。
+/// 以前の「3 日先を占う」と 3 件だけの一覧（荒れ相場・高値・おすすめ）はこの画面から外した（ProphetFortune のコードの削除は仕組み側）。
+/// </summary>
 public class ProphetPresenter : IDisposable, IStartable
 {
     private readonly ProphetView prophetView;
     private readonly ItemModel itemModel;
     private readonly GameFlowManager gameFlowManager;
-    private readonly DungeonRepository dungeonRepository;
     private readonly StateManager stateManager;
     private readonly TomsModel tomsModel;
-    private readonly DungeonIntelModel dungeonIntel;
-    private readonly NewsEffectResolver newsEffects;
+    private readonly IProphetIntervention intervention;
+    private readonly ScrapbookModel scrapbook;
+    private readonly NewsModel newsModel;
+    private readonly NewspaperSubscriptionModel subscriptions;
     private readonly CompositeDisposable disposables = new();
     private string currentDialogue = string.Empty;
     private int characterTalkIndex;
+    private int lastPower = -1;
 
     public ProphetPresenter(
         ProphetView prophetView,
         ItemModel itemModel,
         GameFlowManager gameFlowManager,
-        DungeonRepository dungeonRepository,
         StateManager stateManager,
         TomsModel tomsModel,
-        DungeonIntelModel dungeonIntel,
-        NewsEffectResolver newsEffects)
+        IProphetIntervention intervention,
+        ScrapbookModel scrapbook,
+        NewsModel newsModel,
+        NewspaperSubscriptionModel subscriptions)
     {
-        this.newsEffects = newsEffects;
         this.prophetView = prophetView;
         this.itemModel = itemModel;
         this.gameFlowManager = gameFlowManager;
-        this.dungeonRepository = dungeonRepository;
         this.stateManager = stateManager;
         this.tomsModel = tomsModel;
-        this.dungeonIntel = dungeonIntel;
+        this.intervention = intervention;
+        this.scrapbook = scrapbook;
+        this.newsModel = newsModel;
+        this.subscriptions = subscriptions;
 
         stateManager.RegisterOnEnter(TomsShopGamePhase.Prophet, Entry);
     }
 
     public void Start()
     {
+        prophetView.PreviewProvider = Preview;
+
         prophetView.OnCloseClicked
             .Subscribe(_ => stateManager.ChangeTomsShopPhase(TomsShopGamePhase.Shop))
             .AddTo(disposables);
@@ -51,173 +64,209 @@ public class ProphetPresenter : IDisposable, IStartable
             .Subscribe(_ => ShowCharacterTalk())
             .AddTo(disposables);
 
-        prophetView.OnFortuneClicked
-            .Subscribe(_ => BuyFortune())
+        prophetView.OnPlaceRequested
+            .Subscribe(r => Place(r.itemId, r.direction))
             .AddTo(disposables);
 
-        prophetView.OnRowHoverEnter
-            .Subscribe(id =>
-            {
-                // 台詞の無い行は今の台詞のまま
-                var line = string.IsNullOrEmpty(id) ? null : ProphetDialogueLoader.Get(id);
-                if (!string.IsNullOrEmpty(line)) prophetView.ShowDialogue(line);
-            })
+        prophetView.OnInUseItemPressed
+            .Subscribe(_ => Say(Line("item_in_use")))
             .AddTo(disposables);
 
-        prophetView.OnRowHoverExit
-            .Subscribe(_ => prophetView.ShowDialogue(currentDialogue))
+        prophetView.OnSlotPressedWithoutItem
+            .Subscribe(d => Say(intervention.GetSlot(d).HasValue ? Line("place_slot_in_use") : Line("slot_pick_first")))
+            .AddTo(disposables);
+
+        prophetView.OnHint
+            .Subscribe(line => prophetView.ShowDialogue(string.IsNullOrEmpty(line) ? currentDialogue : line))
+            .AddTo(disposables);
+
+        // 仕組みの状態が変わったら（入れた・日が進んだ・配信で力が戻った）開いていれば描き直す
+        intervention.Changed
+            .Subscribe(_ => { if (prophetView.IsOpen) Refresh(animate: false); })
             .AddTo(disposables);
     }
 
     private void Entry()
     {
         characterTalkIndex = 0;
-        // 今日もう占っていれば結果を、まだなら荒れている品と「占う」ボタンを出す（I-11）
-        bool bought = ProphetFortune.IsBought(tomsModel.FlowSeed, Turn);
-        currentDialogue = Line(bought ? "fortune_after" : "fortune_before");
+        prophetView.ClearSelection();
+        lastPower = -1;
+        Refresh(animate: true);
+        currentDialogue = GreetingLine();
         prophetView.ShowDialogue(currentDialogue);
-        if (bought) ShowFortune(false);
-        else ShowMarketHeat();
-        ShowPriceRanking();
-        ShowDungeonInfo();
     }
+
+    // =====================================================================
+    // 表示
+    // =====================================================================
+
+    private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
+
+    private void Refresh(bool animate)
+    {
+        int power = intervention.Power;
+        prophetView.SetPower(power, intervention.MaxPower, animateUse: lastPower >= 0 && power < lastPower);
+        lastPower = power;
+        prophetView.SetSlots(SlotInfo(ProphetDirection.Up), SlotInfo(ProphetDirection.Down), intervention.EffectTurns, power <= 0);
+        prophetView.SetItems(BuildItems(), animate);
+    }
+
+    private ProphetSlotInfo? SlotInfo(ProphetDirection d)
+    {
+        var s = intervention.GetSlot(d);
+        if (!s.HasValue) return null;
+        var r = itemModel.GetRuntimeItem(s.Value.ItemId);
+        return new ProphetSlotInfo
+        {
+            ItemId = s.Value.ItemId,
+            Name = r != null ? r.ItemName : s.Value.ItemId,
+            Icon = r?.ItemIcon,
+            Price = r != null ? r.CurrentPrice.Value : 0,
+            Stock = r != null ? r.Stock.Value : 0,
+            TurnsLeft = s.Value.TurnsLeft,
+            TotalTurns = s.Value.TotalTurns > 0 ? s.Value.TotalTurns : intervention.EffectTurns,
+        };
+    }
+
+    /// <summary>解放済みの全品（並び・絞り込みは View）。</summary>
+    private List<ProphetItemInfo> BuildItems()
+    {
+        int level = tomsModel.BlacksmithLevel.Value;
+        var up = intervention.GetSlot(ProphetDirection.Up);
+        var down = intervention.GetSlot(ProphetDirection.Down);
+        var memos = ActiveMemos();
+        return itemModel.RuntimeItems
+            .Where(r => r != null && r.RequiredLevel.Value <= level)
+            .Select(r =>
+            {
+                int prev = r.PreviousPrice;
+                int inSlot = up.HasValue && up.Value.ItemId == r.ItemId ? 1
+                    : down.HasValue && down.Value.ItemId == r.ItemId ? -1 : 0;
+                return new ProphetItemInfo
+                {
+                    ItemId = r.ItemId, Name = r.ItemName, Icon = r.ItemIcon, Type = r.ItemType,
+                    Price = r.CurrentPrice.Value,
+                    Change1d = prev > 0 ? (r.CurrentPrice.Value - prev) / (float)prev : 0f,
+                    Stock = r.Stock.Value,
+                    NewsDirection = memos.Any(m => ScrapPrediction.Matches(m, r)) ? 1 : 0,
+                    InSlot = inSlot,
+                };
+            })
+            .ToList();
+    }
+
+    /// <summary>
+    /// まだ答えの出ていないスクラップに書いた予想メモ（「この品が上がる」）。品のカードの「新聞 ▲」に使う。
+    /// 記事から品へのリンクはゲームが作らない（News_Spec §9.3）ので、プレイヤー自身の予想だけを出す。
+    /// </summary>
+    private List<string> ActiveMemos()
+    {
+        var list = new List<string>();
+        if (scrapbook == null || newsModel == null) return list;
+        try
+        {
+            int seed = tomsModel.FlowSeed;
+            newsModel.Build(seed);
+            NewspaperSaveStore.EnsureLoaded(seed, subscriptions, scrapbook, newsModel);
+            int turn = Turn;
+            foreach (var s in scrapbook.Pinned)
+            {
+                if (string.IsNullOrEmpty(s.prediction)) continue;
+                var st = ScrapbookModel.StateOf(s, newsModel.FindEntry(s.entryKey), turn);
+                if (st == ScrapState.Pending || st == ScrapState.Unconfirmed) list.Add(s.prediction);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[ProphetPresenter] 予想メモを読めなかった: {e.Message}");
+        }
+        return list;
+    }
+
+    // =====================================================================
+    // 入れる
+    // =====================================================================
+
+    /// <summary>枠の上に持ってきたときの確かめ（入れられるなら「需要 ▲ 3 ターン／力を 1 つ使う」、だめなら理由）。</summary>
+    private (string text, bool ok) Preview(string itemId, ProphetDirection d)
+    {
+        var r = intervention.CanPlace(itemId, d);
+        if (r != ProphetPlaceResult.Ok) return (ShortReason(r), false);
+        string arrow = d == ProphetDirection.Up ? "▲" : "▼";
+        string cost = intervention.Cost > 0 ? $"{intervention.Cost:N0}G・" : string.Empty;
+        return ($"需要 {arrow} {intervention.EffectTurns} ターン／力を 1 つ使う\n<size=80%>{cost}離すと入る</size>", true);
+    }
+
+    private void Place(string itemId, ProphetDirection d)
+    {
+        var r = intervention.TryPlace(itemId, d);
+        if (r != ProphetPlaceResult.Ok)
+        {
+            prophetView.PlayRejected(d);
+            Say(ReasonLine(r));
+            return;
+        }
+        var sound = SoundManager.Instance;
+        if (sound != null) sound.PlaySE("営業/SE_仕入れ完了");
+        Refresh(animate: false); // 仕組みが Changed を流さなくても描き直す
+        prophetView.PlayPlaced(d);
+        var item = itemModel.GetRuntimeItem(itemId);
+        currentDialogue = Line(d == ProphetDirection.Up ? "placed_up" : "placed_down").Replace("{item}", item != null ? item.ItemName : itemId);
+        if (intervention.Power <= 0) currentDialogue += "\n" + Line("power_empty");
+        prophetView.ShowDialogue(currentDialogue);
+    }
+
+    // =====================================================================
+    // セリフ
+    // =====================================================================
+
+    /// <summary>開いたときの一言: 満タンなら「あふれる前に使おう」、0 なら「次の配信まで休む」。</summary>
+    private string GreetingLine()
+    {
+        int p = intervention.Power;
+        if (p >= intervention.MaxPower) return Line("power_full");
+        if (p <= 0) return Line("power_empty");
+        return Line("default");
+    }
+
+    private string ReasonLine(ProphetPlaceResult r) => r switch
+    {
+        ProphetPlaceResult.NoPower => Line("power_empty"),
+        ProphetPlaceResult.NotEnoughMoney => Line("place_no_money"),
+        ProphetPlaceResult.SlotInUse => Line("place_slot_in_use"),
+        ProphetPlaceResult.SameItemInOtherSlot => Line("place_same_item"),
+        ProphetPlaceResult.NotUnlocked => Line("place_not_unlocked"),
+        _ => Line("default"),
+    };
+
+    private static string ShortReason(ProphetPlaceResult r) => r switch
+    {
+        ProphetPlaceResult.NoPower => "力が残っていない\n<size=80%>配信 1 回で 1 つ回復</size>",
+        ProphetPlaceResult.NotEnoughMoney => "代金が足りない",
+        ProphetPlaceResult.SlotInUse => "効果が切れるまで出し入れ不可",
+        ProphetPlaceResult.SameItemInOtherSlot => "同じ品は両方の枠に入れられない",
+        ProphetPlaceResult.NotUnlocked => "まだ扱えない品",
+        _ => "入れられない",
+    };
+
+    /// <summary>一時的なセリフ（ホバーを外すと元の currentDialogue に戻る）。</summary>
+    private void Say(string line) => prophetView.ShowDialogue(line);
 
     private void ShowCharacterTalk()
     {
         characterTalkIndex = (characterTalkIndex % 3) + 1;
-        currentDialogue = ProphetDialogueLoader.Get($"character_talk_{characterTalkIndex}");
+        currentDialogue = Line($"character_talk_{characterTalkIndex}");
         prophetView.ShowDialogue(currentDialogue);
     }
 
-    /// <summary>台詞 CSV の1行。{days}（占う先の日数）と {cost}（占いの値段）を埋める。行が無ければ default。</summary>
-    private static string Line(string id)
+    /// <summary>台詞 CSV の 1 行。{turns}（効く日数）・{cost}（代金）・{max}（力の最大）を埋める。行が無ければ default。</summary>
+    private string Line(string id)
     {
         var s = ProphetDialogueLoader.Get(id);
         if (string.IsNullOrEmpty(s)) s = ProphetDialogueLoader.GetDefault();
-        return s.Replace("{days}", ProphetFortune.HorizonDays.ToString()).Replace("{cost}", ProphetFortune.CurrentCost.ToString("N0"));
-    }
-
-    private int Turn => gameFlowManager != null ? gameFlowManager.CurrentTurn.Value : tomsModel.CurrentTurn.Value;
-
-    // =====================================================================
-    // 占い（I-11・Q20）: 3日先の相場の向きを 15,000G（酒場 Lv4 で 10,000G）で占う。外れることもある（ProphetFortune.Accuracy）
-    // =====================================================================
-
-    private void BuyFortune()
-    {
-        int seed = tomsModel.FlowSeed, turn = Turn;
-        if (ProphetFortune.IsBought(seed, turn)) { ShowFortune(false); return; }
-        if (tomsModel.PlayerMoney.Value < ProphetFortune.CurrentCost)
-        {
-            currentDialogue = Line("fortune_short");
-            prophetView.ShowDialogue(currentDialogue);
-            return;
-        }
-        tomsModel.PurchaseItem(ProphetFortune.CurrentCost);
-        tomsModel.SavePlayerMoney();
-        ProphetFortune.MarkBought(seed, turn);
-        var sound = SoundManager.Instance;
-        if (sound != null) sound.PlaySE("営業/SE_仕入れ完了");
-        ShowFortune(true);
-    }
-
-    private void ShowFortune(bool justBought)
-    {
-        var (ups, downs) = ProphetFortune.Read(itemModel.RuntimeItems, newsEffects, Turn, tomsModel.FlowSeed, tomsModel.BlacksmithLevel.Value);
-        var rows = new List<(Sprite, string, int, bool)>();
-        foreach (var r in ups) rows.Add((r.item.ItemIcon, r.item.ItemName, 1, r.strength >= NewsTuning.TrendMedium));
-        foreach (var r in downs)
-        {
-            if (rows.Count >= ProphetFortune.MaxRows + 1) break;
-            rows.Add((r.item.ItemIcon, r.item.ItemName, -1, r.strength >= NewsTuning.TrendMedium));
-        }
-        prophetView.SetTrendHeader("占いの結果");
-        prophetView.ShowFortuneRows(rows);
-        prophetView.ShowFortuneButton(false, false, string.Empty);
-        if (justBought)
-        {
-            currentDialogue = Line(rows.Count > 0 ? "fortune_result" : "fortune_none");
-            prophetView.ShowDialogue(currentDialogue);
-        }
-    }
-
-    // 相場が荒れている銘柄の上位3件。
-    // 以前は Trend（未来の需要が向かう先）の降順で並べていたが、それは
-    // 「次に上がる銘柄」の答えを無料で配ることに等しかった（Docs/News_Spec.md §2 C5）。
-    // Heat は価格履歴だけから決まる現在の情報なので、未来は漏れない。
-    private void ShowMarketHeat()
-    {
-        int level = tomsModel.BlacksmithLevel.Value;
-        var rows = itemModel.RuntimeItems
-            .Where(r => r.RequiredLevel.Value <= level)
-            .Select(r => (r, heat: MarketHeat.Compute(r.ShopPriceHistory)))
-            .OrderByDescending(x => x.heat)
-            .Take(3)
-            .Select(x => (x.r.ItemIcon, x.r.ItemName, x.heat, x.r.Demand.Value))
-            .ToList();
-        prophetView.SetTrendHeader("荒れ相場");
-        prophetView.ShowTrendRows(rows);
-        prophetView.ShowFortuneButton(true, tomsModel.PlayerMoney.Value >= ProphetFortune.CurrentCost, $"{ProphetFortune.CurrentCost:N0}Gで占う");
-    }
-
-    // 現在価格の高い順に上位3件を表示
-    private void ShowPriceRanking()
-    {
-        int level = tomsModel.BlacksmithLevel.Value;
-        var sorted = itemModel.RuntimeItems
-            .Where(r => r.RequiredLevel.Value <= level)
-            .OrderByDescending(r => r.CurrentPrice.Value)
-            .Take(3)
-            .ToList();
-
-        var rows = new List<(int, Sprite, string, int)>();
-        for (int i = 0; i < sorted.Count; i++)
-        {
-            var r = sorted[i];
-            rows.Add((i + 1, r.ItemIcon, r.ItemName, r.CurrentPrice.Value));
-        }
-        prophetView.ShowRankingRows(rows);
-    }
-
-    // 次のダンジョン情報とおすすめ武器を表示
-    private void ShowDungeonInfo()
-    {
-        // 表示用の日数（今日 0・明日 1）と行き先は、地図・鍛冶屋と同じ取り方
-        int turnsUntil = gameFlowManager.GetDaysUntilNextStream();
-        var nextKey = gameFlowManager.GetUpcomingStreamDungeon();
-
-        if (nextKey == null)
-        {
-            prophetView.ShowDungeonInfo("—", "—", 0, -1, null);
-            prophetView.ShowRecommendedRows(new List<(Sprite, string, float, float)>());
-            return;
-        }
-
-        var dungeon = dungeonRepository.GetById(nextKey.Value);
-        if (dungeon == null)
-        {
-            prophetView.ShowDungeonInfo("不明", "—", 0, turnsUntil, null);
-            prophetView.ShowRecommendedRows(new List<(Sprite, string, float, float)>());
-            return;
-        }
-
-        // 弱点は「知っている」ときだけ開示する（Docs/News_Spec.md §2 C4）。
-        bool known = dungeonIntel != null && dungeonIntel.IsWeaknessKnown(dungeon.key);
-        string attributeName = ItemAttributeText.Weakness(dungeon.requiredAttribute, known);
-        prophetView.ShowDungeonInfo(dungeon.dungeonName, attributeName, dungeon.difficulty, turnsUntil, dungeon.dungeonIcon);
-
-        // おすすめは現在の期待収益（ExpectedRevenueOf）だけで決める。
-        // 弱点を知らないうちは属性で絞り込まない。絞り込むと、弱点を伏せていても
-        // 並んだ顔ぶれから属性が読めてしまい、C4 のゲートが意味を失うため。
-        int level = tomsModel.BlacksmithLevel.Value;
-        var recommended = itemModel.RuntimeItems
-            .Where(r => r.RequiredLevel.Value <= level)
-            .Where(r => !known || r.ItemAttribute == dungeon.requiredAttribute)
-            .OrderByDescending(r => ItemModel.ExpectedRevenueOf(r))
-            .Take(3)
-            .Select(r => (r.ItemIcon, r.ItemName, MarketHeat.Compute(r.ShopPriceHistory), r.Demand.Value))
-            .ToList();
-        prophetView.ShowRecommendedRows(recommended);
+        return s.Replace("{turns}", intervention.EffectTurns.ToString())
+            .Replace("{cost}", intervention.Cost.ToString("N0"))
+            .Replace("{max}", intervention.MaxPower.ToString());
     }
 
     public void Dispose() => disposables.Dispose();

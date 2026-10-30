@@ -344,7 +344,9 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
         flipRoot.localRotation = Quaternion.identity;
         flipRoot.localScale = Vector3.one;
 
-        _flipSeq = DOTween.Sequence()
+        // #11 カードめくり: 真横（90°）で面を替えて戻す（既存のめくり。CardFlip と同じ形で、一時停止中も動く unscaled）。
+        // UIMotion.Run を通して「演出を速くする」・省略モード（即座に面を替えて EndFlip）に乗せる
+        _flipSeq = UIMotion.Run(DOTween.Sequence()
             .Append(flipRoot.DOLocalRotate(new Vector3(0f, 90f, 0f), flipOutDuration).SetEase(Ease.InQuad))
             .AppendCallback(() => ShowFaceImmediate(next, keepRotation: true))
             .Append(flipRoot.DOLocalRotate(Vector3.zero, flipInDuration).SetEase(Ease.OutBack))
@@ -357,7 +359,7 @@ public class InterventionCardView : MonoBehaviour, IInterventionCardView,
             .OnKill(() =>
             {
                 if (_flipping) EndFlip();
-            });
+            }), gameObject, unscaled: true);
     }
 
     /// <summary>配信開始時など。アニメなしで面を決める。</summary>
