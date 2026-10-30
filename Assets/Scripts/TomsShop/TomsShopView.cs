@@ -363,26 +363,12 @@ public class TomsShopView : MonoBehaviour
             shopMachineDisplay.RefreshDisplay(machineModel);
     }
 
-    // 朝レポートは店の画面の上の窓（並び順 5）や共通の帯（1）より手前に出す。幕（1990）・チュートリアル（32000）よりは下
-    private const int MorningReportSortingOrder = 100;
-
-    /// <summary>朝レポートのパネルに専用の Canvas を付け、店のどの画面よりも手前に描く（ボタンを押せるよう GraphicRaycaster も付ける）。</summary>
-    private void BringMorningReportToFront()
-    {
-        var canvas = morningReportPanel.GetComponent<Canvas>();
-        if (canvas == null) canvas = morningReportPanel.AddComponent<Canvas>();
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = MorningReportSortingOrder;
-        if (morningReportPanel.GetComponent<GraphicRaycaster>() == null) morningReportPanel.AddComponent<GraphicRaycaster>();
-    }
-
     /// <summary>
     /// 朝レポートを表示する。パネル未配線なら false を返す（呼び出し側がログにフォールバック）。
     /// </summary>
     public bool ShowMorningReport(string text)
     {
         if (morningReportPanel == null || morningReportText == null) return false;
-        BringMorningReportToFront();
         morningReportText.text = text;
         UIMotion.Open(morningReportPanel); // #1 ぽよんと開く
         return true;
@@ -396,7 +382,6 @@ public class TomsShopView : MonoBehaviour
     {
         if (morningReportPanel == null || morningIncomeReport == null || !morningIncomeReport.IsWired) return false;
         UIMotion.CancelClose(morningReportPanel);
-        BringMorningReportToFront();
         morningReportPanel.SetActive(true);
         morningIncomeReport.Setup(incomes, netWorthLine, notes);
         // #1 窓（行の中身）がぽよんと開く
