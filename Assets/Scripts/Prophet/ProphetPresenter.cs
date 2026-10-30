@@ -10,7 +10,7 @@ using VContainer.Unity;
 /// 仕組み（力・枠・効果の日数・代金・保存・需要への効き方）は IProphetIntervention が持ち、ここはそれを読んで描き、
 /// 「この品をこの枠へ」を TryPlace に渡して、答え（ProphetPlaceResult）を占い師のセリフにするだけ。
 /// 品の一覧は ItemModel（解放済みの全品）から、新聞の向きはプレイヤーのスクラップの予想メモから取る。
-/// 以前の「3 日先を占う」と 3 件だけの一覧（荒れ相場・高値・おすすめ）はこの画面から外した（ProphetFortune のコードの削除は仕組み側）。
+/// 以前の「3 日先を占う」と 3 件だけの一覧（荒れ相場・高値・おすすめ）は廃止した（仕組みは ProphetInterventionModel）。
 /// </summary>
 public class ProphetPresenter : IDisposable, IStartable
 {

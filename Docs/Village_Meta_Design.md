@@ -41,7 +41,7 @@
   効果の中身は別の段で入れる。今は施設データの Lv5 の効果文（説明）だけが入っている。
 - 村画面の投資パネル: Lv5 の欄（Lv4 のときは「次Lv」、Lv5 のときは今付いている効果）を金の枠で「特殊な効果」と出す。
   Lv5 のときは「現在」に Lv4 の効果文（数値の効果は Lv4 のまま続く）を出す。建物の見た目は Lv3 の絵のまま（Lv4・Lv5 の段階絵は未作成）。
-- 占い師の値段は `ProphetFortune.CurrentCost`（= `VillageEffects.ApplyProphetPrice(15,000G)`）を支払いと表示の両方で使う。
+- 占い師の枠の代金は `ProphetInterventionModel.Cost`（= `VillageEffects.ApplyProphetPrice(ProphetTuning.Cost)`。今は仮 15,000G、酒場 Lv4 以上で 10,000G）を支払いと表示の両方で使う（「3 日先を占う」は 2026-10-30 に廃止）。
 - 領主館の完走ボーナスの上乗せは `MetaProgressModel.CalculateVillageFunds` の完走ボーナス（`ClearBonusBase` = 30万G + 2 × 納付金の予定額の合計）に掛かる（`hallClearBonusRates`）。
 - 削除: 倉庫（持ち込みアイテムは廃止済み）・街道整備・農場。統合: 骨董品店・祠→冒険者ギルド、工房区画→職人組合、印刷所・訓練所→広場。
 - 効果の数値は `GameConst.Village`（`VillageSettingsData`。配信値で調整可）。施設レベルから効果を決めるのは `VillageEffects`（Assets/Scripts/Village/VillageEffects.cs）。

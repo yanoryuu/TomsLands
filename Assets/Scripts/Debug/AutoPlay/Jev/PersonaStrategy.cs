@@ -19,7 +19,7 @@ using UnityEngine;
 /// - 一言: 判断ごとに Recordings/persona_log_*.jsonl（PersonaLines のテンプレート）。
 /// 設定は UserSettings/PersonaPlay.json（PersonaPlayConfig）。
 /// </summary>
-public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, IAutoPlayPrefetchStrategy, IAutoPlayShopInvestor
+public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, IAutoPlayPrefetchStrategy, IAutoPlayShopInvestor, IAutoPlayProphetUser
 {
     private readonly PersonaProfile _p;
     private PersonaPlayConfig _config;
@@ -1198,6 +1198,23 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
                 Choice = string.Join("; ", reasons), Line = "",
             });
         return plan;
+    }
+
+    // ---------------- 占い師の枠（決まりは ProphetAutoRule。人格は相談せず、判断と結果を人格のログに残す） ----------------
+
+    public bool ShouldUseProphet(AutoPlayContext ctx, ProphetAutoPick pick) => true;
+
+    public void OnProphetDone(AutoPlayContext ctx, ProphetAutoPick pick, ProphetPlaceResult? result, string note)
+    {
+        string choice = pick.IsNone
+            ? "none"
+            : $"{(pick.Direction == ProphetDirection.Up ? "up" : "down")}:{pick.ItemId}:{(result.HasValue ? result.Value.ToString() : "skipped")}";
+        _log?.Write(new PersonaLogEntry
+        {
+            Day = ctx?.Turn ?? -1, Persona = _p.Id, Model = Model, Question = "prophet", Kind = "prophet",
+            Choice = choice + (string.IsNullOrEmpty(note) ? "" : $" ({note})"),
+            Line = pick.IsNone ? "" : pick.Reason,
+        });
     }
 
     public void OnShopInvestmentsDone(AutoPlayShopInvestResult r)

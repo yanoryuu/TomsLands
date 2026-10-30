@@ -69,8 +69,10 @@ public sealed class AutoPlayRunResult
     public int TotalSupportSpend;
     public int TotalUpgradeSpend;
     public int TotalNewspaperSpend;
-    /// <summary>占い師への支払い（I-11）。</summary>
-    public int TotalFortuneSpend;
+    /// <summary>占い師の枠に払った代金（Docs/Prophet_Intervention.md）。</summary>
+    public int TotalProphetSpend;
+    /// <summary>占い師の枠に入れた回数。</summary>
+    public int ProphetPlacements;
     public int TotalAdSpend;
     public int TotalMachineSpend;
     public int TotalFinanceSpend;
@@ -202,15 +204,6 @@ public sealed class AutoPlayRunner
 
                 if (snap.Stage == AutoPlayStage.ShopDay)
                 {
-                    // 占い師（I-11）: 占いを使うボットは、仕入れを決める前に占ってもらい、見立てを見てから決める
-                    if (_bot is IAutoPlayFortuneBot fortuneBot && fortuneBot.WantsFortune(snap))
-                    {
-                        using (_ctx.Enter())
-                        {
-                            _game.BuyFortune();
-                            snap = _game.Snapshot();
-                        }
-                    }
                     var plan = await _bot.PlanDayAsync(snap, ct);
                     using (_ctx.Enter())
                     {
@@ -306,6 +299,17 @@ public sealed class AutoPlayRunner
 
     private void ApplyDayPlan(AutoPlayDayPlan plan)
     {
+        // 占い師の枠: 仕入れより先に入れる（代金を先に払う。効きは翌朝から）
+        if (!string.IsNullOrEmpty(plan.ProphetItem))
+        {
+            var placed = _game.PlaceProphet(plan.ProphetItem, plan.ProphetDirection);
+            Result.Decisions.Add(new AutoPlayDecision
+            {
+                Turn = _game.CurrentTurn, Phase = "day", Question = placed.Ok ? "prophet_placed" : "prophet_rejected",
+                Chosen = placed.Message,
+            });
+        }
+
         // 新聞: 購読 → スクラップ → 確認（購読した社の紙面は翌日から盤面に載る）
         foreach (var id in plan.SubscribeNewspapers ?? new List<string>()) _game.SubscribeNewspaper(id);
         foreach (var key in plan.PinScraps ?? new List<string>()) _game.PinScrap(key);
@@ -495,7 +499,8 @@ public sealed class AutoPlayRunner
                     Result.HeroFinalLevel = _game.HeroModel.heroData?.level.Value ?? 0;
                     Result.ArcInfo = _game.ArcSummary();
                     AutoPlayNewsStudy.Collect(_game, Result);
-                    Result.TotalFortuneSpend = _game.FortuneSpend;
+                    Result.TotalProphetSpend = _game.ProphetSpend;
+                    Result.ProphetPlacements = _game.ProphetPlacements;
                 }
                 DrainLogs(SafeTurn());
                 _game.Dispose();

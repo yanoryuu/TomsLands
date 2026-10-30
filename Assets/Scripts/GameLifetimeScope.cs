@@ -258,8 +258,8 @@ public class GameLifetimeScope : LifetimeScope
         builder.Register<DungeonIntelModel>(Lifetime.Singleton);
         builder.Register<NewsModel>(Lifetime.Singleton);
         builder.Register<NewsEffectResolver>(Lifetime.Singleton);
-        // 占い師の上げる枠・下げる枠（Docs/Prophet_Intervention.md）。今は仮の実装（メモリ上だけ）。仕組みが入ったらこの 1 行を本物に差し替える
-        builder.Register<IProphetIntervention, ProphetInterventionStub>(Lifetime.Singleton);
+        // 占い師の上げる枠・下げる枠（Docs/Prophet_Intervention.md）。画面は IProphetIntervention、日送り・配信・需要の計算は本体の型で読む
+        builder.Register<ProphetInterventionModel>(Lifetime.Singleton).As<IProphetIntervention>().AsSelf();
         builder.Register<NewspaperSubscriptionModel>(Lifetime.Singleton);
         builder.Register<ScrapbookModel>(Lifetime.Singleton);
         builder.Register<HeroModel>(Lifetime.Singleton);

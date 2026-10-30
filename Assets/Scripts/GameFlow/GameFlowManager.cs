@@ -29,6 +29,7 @@ public class GameFlowManager : IDisposable, IStartable
     private readonly MorningReportModel _morningReport;
     private readonly RelicEffectResolver _relicResolver;
     private readonly RelicHookDispatcher _relicHooks;
+    private readonly ProphetInterventionModel _prophet;
     private int _currentIndex;
 
     /// <summary>
@@ -69,7 +70,8 @@ public class GameFlowManager : IDisposable, IStartable
         PortfolioModel portfolioModel, ShopMachineModel shopMachineModel,
         MorningReportModel morningReport, RelicEffectResolver relicResolver,
         RelicHookDispatcher relicHooks,
-        NewsModel newsModel, NewsEffectResolver newsEffects)
+        NewsModel newsModel, NewsEffectResolver newsEffects,
+        ProphetInterventionModel prophet = null)
     {
         _stateManager = stateManager;
         _dungeonRepository = dungeonRepository;
@@ -92,6 +94,7 @@ public class GameFlowManager : IDisposable, IStartable
         _morningReport = morningReport;
         _relicResolver = relicResolver;
         _relicHooks = relicHooks;
+        _prophet = prophet;
         _currentIndex = 0;
 
         // 営業で1日に来る客の数（売れる量の上限）とおすすめ（適正値）の計算に、経済設定と広告ステータスを渡す（H-2 / G-11）
@@ -286,11 +289,14 @@ public class GameFlowManager : IDisposable, IStartable
 
             _itemModel.ApplyShopTurnEconomy(_economySettings, _tomsModel.BlacksmithLevel.Value, _shopStatusModel, demandFloorBonus,
                 CurrentTurn.Value, _tomsModel.FlowSeed, _newsEffects, GetStreamAnticipationAttribute(),
-                _shopMachineModel?.NotDisplayedDemandDropRate ?? 1f);
+                _shopMachineModel?.NotDisplayedDemandDropRate ?? 1f, _prophet);
             _itemModel.SaveData();
             _tomsModel.SavePlayerMoney();
             Debug.Log("[GameFlowManager] Shop economy updated for new turn.");
         }
+
+        // 占い師の枠: 今朝の経済更新で効かせたあとに残り日数を 1 減らし、0 になった枠を外す（Docs/Prophet_Intervention.md）
+        _prophet?.AdvanceDay();
 
         // 今朝の入金合計（朝レポートの見出し）を数えるため、朝の入金処理の前の所持金を記録する
         if (_tomsModel != null) _morningReport?.MarkMoneyBefore(_tomsModel.PlayerMoney.Value);

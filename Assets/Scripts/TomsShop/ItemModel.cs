@@ -495,10 +495,11 @@ public class ItemModel
     /// <param name="turnIndex">現在のターン番号。ABM がターン専用の乱数を作るのに使う（セーブ/ロード後も同じ系列になる）。</param>
     /// <param name="flowSeed">ランのシード。ABM のトレーダー編成に使う。0 なら設定または乱数にフォールバック。</param>
     /// <param name="notDisplayDropRate">並べていない品の需要の落ち込みに掛ける率（冷蔵ケース。ShopMachineModel.NotDisplayedDemandDropRate）。</param>
+    /// <param name="prophet">占い師の上げる枠・下げる枠（Docs/Prophet_Intervention.md）。null なら効果なし（従来と完全一致）。</param>
     public void ApplyShopTurnEconomy(ShopEconomySettings settings, int blacksmithLevel, ShopStatusModel status = null,
         float machineDemandFloorBonus = 0f, int turnIndex = 0, int flowSeed = 0,
         NewsEffectResolver news = null, ItemTypeData.ItemAttribute? anticipationAttribute = null,
-        float notDisplayDropRate = 1f)
+        float notDisplayDropRate = 1f, ProphetInterventionModel prophet = null)
     {
         if (settings == null) return;
         // 冷蔵ケース（店の設備）: 並べていない品の需要の落ち込みに掛ける率（1 で従来挙動と完全一致）
@@ -591,7 +592,9 @@ public class ItemModel
             //     Trend はランダムウォークと減衰を続けているので、直接足すと期間終了時に
             //     剥がせなくなる（Docs/News_Spec.md §7.2）。
             float newsTrendBias = news != null ? news.TrendBias(runtime, turnIndex) : 0f;
-            float effectiveTrend = Mathf.Clamp(runtime.Trend + newsTrendBias, -1f, 1f);
+            // 占い師の枠: ニュースと同じく Trend の外の別枠で足す。枠から外れたらバイアスが消えるだけで、需要はふだんの収束で戻る
+            float prophetTrendBias = prophet != null ? prophet.TrendBias(runtime.ItemId) : 0f;
+            float effectiveTrend = Mathf.Clamp(runtime.Trend + newsTrendBias + prophetTrendBias, -1f, 1f);
 
             float naturalDemand = Mathf.Clamp01(0.5f + effectiveTrend * settings.trendAmplitude);
             float convergenceDelta = (naturalDemand - runtime.Demand.Value) * settings.trendConvergenceRate;
@@ -607,6 +610,8 @@ public class ItemModel
             // 発効ターンだけ乗る直撃分。需要の収束が 15%/ターンと遅く、lead 1〜3 の
             // 短い窓では Trend バイアスだけでは体感に届かないため。
             float newsDemandKick = news != null ? news.DemandKick(runtime, turnIndex) : 0f;
+            // 占い師の枠に入れて最初の朝だけの小さな直撃（ProphetTuning.DemandKick）
+            float prophetDemandKick = prophet != null ? prophet.DemandKick(runtime.ItemId) : 0f;
 
             // 配信前の期待: 次の配信先の弱点属性の品は、配信までの数日、決着を見越して買われる（需要が少しずつ上がる）。
             // 呼び出し側（GameFlowManager）が日数の条件を見て属性を渡す。品出し・売り圧力とは別枠
@@ -614,7 +619,7 @@ public class ItemModel
             float anticipationKick = anticipated ? settings.streamAnticipationDemandUp : 0f;
 
             runtime.Demand.Value = Mathf.Clamp(
-                runtime.Demand.Value + convergenceDelta + displayDelta + newsDemandKick + anticipationKick,
+                runtime.Demand.Value + convergenceDelta + displayDelta + newsDemandKick + prophetDemandKick + anticipationKick,
                 dynamicDemandFloor, settings.demandCeiling);
 
             // ------------------------------------------------
@@ -640,6 +645,13 @@ public class ItemModel
             {
                 fairValue = Mathf.Clamp(fairValue * news.FairRate(runtime, turnIndex), fairFloor, fairCeiling);
                 previousFairValue = Mathf.Clamp(previousFairValue * news.FairRate(runtime, turnIndex - 1), fairFloor, fairCeiling);
+            }
+
+            // 占い師の枠も値段側の均衡点（適正値）を動かす（需要だけでは 3 日で値段に出ないのはニュースと同じ）。前日分は前の朝の効き
+            if (prophet != null)
+            {
+                fairValue = Mathf.Clamp(fairValue * prophet.FairRate(runtime.ItemId), fairFloor, fairCeiling);
+                previousFairValue = Mathf.Clamp(previousFairValue * prophet.PreviousFairRate(runtime.ItemId), fairFloor, fairCeiling);
             }
 
             var context = new ShopPriceContext(

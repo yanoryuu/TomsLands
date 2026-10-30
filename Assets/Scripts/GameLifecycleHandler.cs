@@ -26,6 +26,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
     private readonly RunSetupData _runSetupData;
     private readonly PendingEventData _pendingEventData;
     private readonly MetaProgressModel _metaProgress;
+    private readonly ProphetInterventionModel _prophet;
     private readonly CompositeDisposable _disposables = new();
 
     // コンストラクタ（依存関係はVContainerが注入）
@@ -46,7 +47,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         RelicInventoryModel relicInventory,
         RunSetupData runSetupData,
         PendingEventData pendingEventData,
-        MetaProgressModel metaProgress)
+        MetaProgressModel metaProgress,
+        ProphetInterventionModel prophet)
     {
         _itemModel = itemModel;
         _tomsModel = tomsModel;
@@ -65,6 +67,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _runSetupData = runSetupData;
         _pendingEventData = pendingEventData;
         _metaProgress = metaProgress;
+        _prophet = prophet;
     }
 
     public void Start()
@@ -173,6 +176,8 @@ public class GameLifecycleHandler : IStartable, IDisposable
         _portfolioModel.Clear();
         _shopMachineModel.Clear();
         _relicInventory.Clear();
+        // 占い師の枠は空に、力は満タンに（コンストラクタで前のランのセーブを読んでいるため）
+        _prophet.Clear();
 
         // 準備シーンの設定（借入・持ち込み・スターターレリック・スタートダッシュ）を適用
         bool hadSetup = _runSetupData != null && _runSetupData.HasSetup;
@@ -362,6 +367,7 @@ public class GameLifecycleHandler : IStartable, IDisposable
         TrySave(nameof(PortfolioModel), _portfolioModel.SaveData);
         TrySave(nameof(ShopMachineModel), _shopMachineModel.SaveData);
         TrySave(nameof(RelicInventoryModel), _relicInventory.SaveData);
+        TrySave(nameof(ProphetInterventionModel), _prophet.SaveData);
 
         Debug.Log($"Game Data Saved & Disposed (FlowIndex={_gameFlowManager.CurrentIndex})");
     }

@@ -42,8 +42,8 @@
 | C2 | `ItemModel.cs:36` `RecommendAttributeBonus = 1.5f` | 次ダンジョン弱点で加点 | **1f** |
 | C3 | `ItemModel.cs:47` `GetRecommendScore` | 名前が「前向きおすすめ」 | `GetCurrentExpectedRevenue` に改名。XMLコメントも現在値専用に |
 | C4 | `BlackSmithPresenter.cs:99` | `弱点:火` を常時無料表示 | 未取得なら **`弱点:?`**。情報屋で購入 or 記事から推論 |
-| C5 | `ProphetPresenter.cs:75-84` | Trend 上位3件を**数値で**無料表示 | 廃止。**2026-10 I-11（Q20）で実装**: 占い師が「3日先に相場が大きく上がる品・下がる品」を **15,000G** で占う（`Prophet/ProphetFortune.cs`。1日1回・その日の中は見直せる）。中身は新聞の本当の効果（誤報は出ない・誇張は半分）なので記事の裏取りになる。行ごとに 2割は外れる（動かない品にすり替わる）。精度の根拠は `Docs/Level_Design_Log.md` 2026-10-21 グループ I |
-| C6 | `ProphetPresenter.cs:130-136` | おすすめ上位3件が Trend＋弱点込み | 現在値ベースへ |
+| C5 | `ProphetPresenter.cs:75-84` | Trend 上位3件を**数値で**無料表示 | 廃止。2026-10 I-11 の「15,000G で 3 日先を占う」（`ProphetFortune`）も **2026-10-30 に廃止**。占い師は先を読む場所から「未来に干渉する」場所になった: 品のカードを **上げる枠・下げる枠**に入れると、その品の需要の均衡点が数日ずれる（`Prophet/ProphetInterventionModel.cs`、数値は `ProphetTuning.cs`、仕様は `Docs/Prophet_Intervention.md`）。新聞の裏取りの役目は無くなった（裏取りは酒場 Lv5 §9.4） |
+| C6 | `ProphetPresenter.cs:130-136` | おすすめ上位3件が Trend＋弱点込み | 現在値ベースへ（占い師の画面の 3 件の一覧は 2026-10-30 に画面ごと廃止。品の一覧は解放済みの全品で、未来の情報は出さない） |
 | C7 | `ItemModel.cs:471` `AutoPurchase` | 弱点属性で最優先ソート | 現在値ベース。方針プリセットに「**既読の記事に従う**」を追加（フェーズ4） |
 
 C1/C2 は定数2つの変更だけで C1/C2/C6/C7 の漏れが同時に止まる。**最初にこれだけ入れて手触りを確認する。**

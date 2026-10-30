@@ -336,7 +336,7 @@ public class VillageSettingsData
     public float[] tavernNewspaperDiscounts = { 0f, 0f, 0.25f, 0.5f, 0.65f, 0.65f };
     /// <summary>酒場: 取引所（ファンド）の売買手数料の引き下げ幅（率のポイント）。</summary>
     public float[] tavernFundFeeReductions = { 0f, 0f, 0f, 0.01f, 0.02f, 0.02f };
-    /// <summary>酒場: 占い師の値段（0 = 通常の値段 ProphetFortune.Cost のまま）。</summary>
+    /// <summary>酒場: 占い師の枠に入れる 1 回の代金（0 = 通常の値段 ProphetTuning.Cost のまま。ProphetInterventionModel.Cost）。</summary>
     public int[] tavernProphetPrices = { 0, 0, 0, 0, 10000, 10000 };
     /// <summary>職人組合: ラン開始時の鍛冶屋のレベル（0 = そのまま）。</summary>
     public int[] artisanStartBlacksmithLevels = { 0, 2, 2, 2, 3, 3 };

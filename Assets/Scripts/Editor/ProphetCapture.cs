@@ -14,7 +14,7 @@ using UnityEngine.UI;
 /// 占い師の画面（FortuneTeller.prefab）を 1920x1080 の PNG に書き出す（ProphetUIBuilder で組んだ見た目の確認用）。
 /// 保存しない空のシーンに FortuneTeller.prefab と CommonCanvas.prefab（日付・所持金。占い師の画面でも上に出る）を置き、
 /// カメラ描画の Canvas にして RenderTexture に描く。Play しない・DI もセーブも使わない。
-/// 状態は仮の実装 ProphetInterventionStub で作り、Presenter と同じ写し方で View に渡す（品は ItemData の見本）。
+/// 状態は本物の仕組みを保存しない形（ProphetInterventionModel.CreateInMemory）で作り、Presenter と同じ写し方で View に渡す（品は ItemData の見本）。
 /// 演出は省略モード（UIMotion.ForcedMode = Skip）で最終状態を撮る。
 /// バッチ（描画が要るので -nographics は付けない）:
 ///   Unity.exe -batchmode -projectPath &lt;wt&gt; -executeMethod ProphetCapture.RunBatch -captureOut &lt;dir&gt; [-captureShots empty,up,both,power0,preview] -logFile &lt;log&gt;
@@ -128,7 +128,7 @@ public static class ProphetCapture
         Canvas.ForceUpdateCanvases();
     }
 
-    // ───────── 見本の中身（仮の実装で状態を作る） ─────────
+    // ───────── 見本の中身（保存しない本物の仕組みで状態を作る） ─────────
 
     private static void Fill(ProphetView view, string shot)
     {
@@ -143,7 +143,7 @@ public static class ProphetCapture
             .ToList();
         var byId = items.ToDictionary(i => i.itemId);
 
-        var stub = new ProphetInterventionStub();
+        var stub = ProphetInterventionModel.CreateInMemory();
         string upId = items.FirstOrDefault(i => i.itemType == ItemTypeData.ItemType.Weapon)?.itemId;
         string downId = items.FirstOrDefault(i => i.itemType == ItemTypeData.ItemType.Tool)?.itemId
                         ?? items.LastOrDefault()?.itemId;
@@ -216,7 +216,7 @@ public static class ProphetCapture
         }
     }
 
-    private static int Slot(ProphetInterventionStub stub, string id)
+    private static int Slot(ProphetInterventionModel stub, string id)
     {
         var up = stub.GetSlot(ProphetDirection.Up);
         if (up.HasValue && up.Value.ItemId == id) return 1;

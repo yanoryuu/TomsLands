@@ -52,7 +52,7 @@ public readonly struct ProphetSlotState
 
 /// <summary>
 /// 占い師の「上げる枠・下げる枠」の仕組みと画面の間の口（Docs/Prophet_Intervention.md）。画面（ProphetPresenter）はこれだけを見る。
-/// 本物の実装は仕組み側（wt-04）が作り、GameLifetimeScope の登録 1 行を差し替える。それまでは ProphetInterventionStub（メモリ上だけ）。
+/// 実装は ProphetInterventionModel（数値は ProphetTuning）。GameLifetimeScope で IProphetIntervention と本体の型の両方で登録している。
 ///
 /// 決まり（仕組み側が守る）:
 ///   ・上げる枠・下げる枠が 1 つずつ。同時に効くのは上げる 1・下げる 1。同じ品を両方の枠には入れられない

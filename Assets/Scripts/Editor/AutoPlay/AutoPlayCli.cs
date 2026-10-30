@@ -159,8 +159,8 @@ public static class AutoPlayCli
         md.AppendLine("新聞費（平均/ラン）: " + string.Join(" / ", runs.GroupBy(r => r.Bot).OrderBy(g => g.Key)
             .Select(g => $"{g.Key} {g.Average(r => (double)r.TotalNewspaperSpend):N0}G")));
         md.AppendLine();
-        md.AppendLine("占い費（平均/ラン）: " + string.Join(" / ", runs.GroupBy(r => r.Bot).OrderBy(g => g.Key)
-            .Select(g => $"{g.Key} {g.Average(r => (double)r.TotalFortuneSpend):N0}G")));
+        md.AppendLine("占い師の枠（平均/ラン）: " + string.Join(" / ", runs.GroupBy(r => r.Bot).OrderBy(g => g.Key)
+            .Select(g => $"{g.Key} {g.Average(r => (double)r.ProphetPlacements):0.0}回 {g.Average(r => (double)r.TotalProphetSpend):N0}G")));
         md.AppendLine();
         md.AppendLine(AutoPlayNewsStudy.Summarize(runs));
         var news = new StringBuilder("run,bot,event,truth,scale,sign,lead,duration,matched,reported,hype,pubToEffect,pubToBest,pubToSettle,pubToAfter,preToBest,demandGain,customerGain\n");

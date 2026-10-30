@@ -406,24 +406,27 @@ public sealed partial class AutoPlayController
         return true;
     }
 
-    /// <summary>陳列フェーズの頭（オート陳列の前）。魔王軍支援・店の改装・設備を押す（1 日 1 回）。</summary>
+    /// <summary>陳列フェーズの頭（オート陳列の前）。占い師の枠・魔王軍支援・店の改装・設備を押す（1 日 1 回）。</summary>
     private bool OnBeforeDisplay(string key)
     {
         if (!AutoPlay.IsRunning || _cts == null) return false;
         if (_displayRunning) return true;
         if (_displayDoneKey == key) return false;
         _displayDoneKey = key;
-        if (!_displayPending) return false;
+        var prophet = PlanProphet();
+        if (!_displayPending && prophet.IsNone) return false;
         _displayRunning = true;
-        RunDisplayTripsAsync(_cts.Token).Forget();
+        RunDisplayTripsAsync(prophet, _cts.Token).Forget();
         return true;
     }
 
-    private async UniTaskVoid RunDisplayTripsAsync(CancellationToken ct)
+    private async UniTaskVoid RunDisplayTripsAsync(ProphetAutoPick prophet, CancellationToken ct)
     {
         DebugAutoPlayer.ExternalBusy = true;
         try
         {
+            // 占い師の枠（失敗しても画面は閉じて戻る。残りの寄り道は続ける）
+            if (!prophet.IsNone) await PlaceProphetAsync(prophet, ct);
             if (_displayDemonLevels > 0 && _displayDemonPrep != null) await SupportDemonArmyAsync(_displayDemonPrep, _displayDemonLevels, ct);
             if (_investResult != null && (_displayInvest.UpgradeShop || !string.IsNullOrEmpty(_displayInvest.MachineId) || _displayInvest.HasMachineCare))
             {
@@ -450,7 +453,8 @@ public sealed partial class AutoPlayController
         {
             var state = AutoPlayUi.Resolve<StateManager>();
             if (state != null && state.CurrentPhase.Value == GamePhase.TomsShop
-                && state.CurrentTomsShopPhase.Value is TomsShopGamePhase.DungeonLevelUp or TomsShopGamePhase.ShopUpgrade or TomsShopGamePhase.MachineShop)
+                && state.CurrentTomsShopPhase.Value is TomsShopGamePhase.DungeonLevelUp or TomsShopGamePhase.ShopUpgrade
+                    or TomsShopGamePhase.MachineShop or TomsShopGamePhase.Prophet)
                 state.ChangeTomsShopPhase(TomsShopGamePhase.Shop);
             _displayPending = false;
             _displayDemonLevels = 0;

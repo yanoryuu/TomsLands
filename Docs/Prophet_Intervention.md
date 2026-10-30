@@ -138,3 +138,22 @@ public interface IProphetIntervention
 | `Assets/Scripts/Editor/ProphetCapture.cs` | 撮影（`-executeMethod ProphetCapture.RunBatch -captureOut <dir>`。empty / up / both / power0 / preview） |
 
 演出: 枠に入ると `CardFlip`（レア）でカードがめくれて `DragFeel.Puff`・枠が弾む。持ち上げは `DragFeel.Lift/Drop`、枠の光は `DragFeel.SetSlotGlow`、棚は `UIMotion.Stagger`、力を使うと玉が弾む。入れられないと枠が首を振る。
+
+## 仕組みの実装（wt-04、2026-10-30）
+
+仮の実装（`ProphetInterventionStub`）は消して、本物 `Assets/Scripts/Prophet/ProphetInterventionModel.cs` に替えた。
+DI は `builder.Register<ProphetInterventionModel>(Lifetime.Singleton).As<IProphetIntervention>().AsSelf();`（画面は口、日送り・配信・需要の計算は本体の型を読む）。
+撮影ツール（`ProphetCapture`）は保存しない形 `ProphetInterventionModel.CreateInMemory()` を使う（デバッグ用の `SetPower` / `ForceSlot` は本物にもある）。
+
+| 項目 | 実装 |
+|---|---|
+| 数値の置き場 | `Assets/Scripts/Prophet/ProphetTuning.cs`（力 最大 2・開始 2・配信で +1、代金 15,000G、3 日、バイアス 0.6、適正値の傾き 0.7、直撃 0.03、AI のしきい値）。マスタ・GAS は触っていない |
+| 効き方 | `ItemModel.ApplyShopTurnEconomy(..., prophet)` が朝の更新で読む。①需要の均衡点: ニュースと同じく Trend の外の別枠で ±0.6 を足す ②値段側の均衡点: 適正値 × (1 ± 0.7×0.6)（ニュースの 2 段目と同じ形。前日の適正値には前の朝の効き）③入れて最初の朝だけ需要へ ±0.03 の直撃 |
+| 直撃の判断 | 入れたその日のうちは需要も値段も動かさない（陳列・売り注文の途中で値が変わらないように）。翌朝（最初に効く朝）にニュースの「小」と同じ 0.03 だけ直撃。控えめ |
+| 日数 | 入れた日 TurnsLeft=3。朝の経済更新で効かせたあと `GameFlowManager.NextTurn` が `AdvanceDay()` → 3 回の朝に効き、3 回目の朝に外れる（枠に見えるのは入れた日を含め 3 日）。外れたらバイアスが消えるだけ（反動なし、需要はふだんの収束 15%/日 で戻る） |
+| 力 | `BattleResultHandler.Start` が日送りの前に `OnStreamFinished()`（途中終了でも）。最大を超えない |
+| 代金 | `VillageEffects.ApplyProphetPrice(15,000G)`（酒場 Lv4 以上 10,000G）。`TomsModel.PurchaseItem` → `SavePlayerMoney` |
+| 保存 | ラン内のセーブ `prophetIntervention.json`（`RunSaveCleaner` の一覧に追加。旧 `prophetFortune.json` も新しいランで消す）。`{version, power, slots[{itemId, direction(+1/-1), turnsLeft, totalTurns}], expired[...]}`。ファイルが無い旧セーブ・power が欠けたファイルは「枠は空・力 2」。新しいランは `GameLifecycleHandler.InitializeNewGame` が `Clear()` |
+| AI | 決まりは `Assets/Scripts/Prophet/ProphetAutoRule.cs` の 1 か所。力が満タンの日に 1 つだけ・代金を払って 3 万G 残るときだけ。上げる枠＝新聞▲で在庫の値打ちが代金の 2 倍以上の一番大きい品、下げる枠＝仕入れたい品でまだあまり持っていない（在庫の値打ちが代金未満）一番高い品 |
+| ヘッドレス | `AutoPlayHeadlessGame` は同じ `ProphetInterventionModel` を本物の `GameFlowManager` / `BattleResultHandler` に渡す。ボットは `reader_prophet` / `prophet` |
+| プレイ中の自動プレイ | `AutoPlayController.Prophet.cs`。陳列フェーズの頭に決まりへ聞き、上の名前で押す。失敗しても画面を閉じて店ホームへ戻す。人格（`PersonaStrategy`）は `IAutoPlayProphetUser` で人格のログに `prophet` を書く |
