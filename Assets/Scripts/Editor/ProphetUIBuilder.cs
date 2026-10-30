@@ -138,6 +138,7 @@ public static class ProphetUIBuilder
         Stretch(mask, 6);
         var rectMask = GetOrAdd<RectMask2D>(mask.gameObject);
         rectMask.softness = new Vector2Int(48, 0);
+        rectMask.enabled = false; // 立ち絵の左が切れるので切り取りはしない（2026-10-30 ユーザー）
         var chara = Ref<Button>(so, "characterButton");
         if (chara != null)
         {
