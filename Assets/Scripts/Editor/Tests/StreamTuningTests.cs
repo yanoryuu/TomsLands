@@ -111,6 +111,128 @@ public class StreamTuningTests
         Assert.AreEqual(1f, SupportOdds.Multiplier(SupportOddsTier.EvenHero), "書いていないキーは既定のまま");
     }
 
+    // ---- 1b. オッズの配当を、通知書・実績・AI の見込みが同じ額で見ること ----
+
+    private static StreamTuningData PlannedOdds() => new()
+    {
+        supportOddsEasy = 2f, supportOddsFavorable = 1.5f, supportOddsEvenHero = 1.4f,
+        supportOddsEvenDemon = 0.6f, supportOddsUnfavorable = 0.45f, supportOddsHopeless = 0.3f,
+    };
+
+    [TestCase(90f, 1f)]
+    [TestCase(59f, 1.2f)]
+    [TestCase(25f, 1.35f)]
+    [TestCase(-1f, 1.2f)]
+    public void Payout_Default_IsRelicOnly_Unchanged(float pct, float relicMul)
+    {
+        var d = new StreamTuningData();
+        const int baseReward = 45001;
+        int legacy = UnityEngine.Mathf.RoundToInt(baseReward * relicMul); // 2026-10-30 までの式
+        var p = SupportOdds.Payout(baseReward, relicMul, pct, d);
+        Assert.IsFalse(SupportOdds.IsActive(d));
+        Assert.AreEqual(legacy, p.Total);
+        Assert.AreEqual(legacy, p.RelicReward);
+        Assert.AreEqual(1f, p.OddsMultiplier);
+
+        // 通知書: オッズの行は出ず、レリック補正の行は今までと同じ
+        var notice = DemonKingPayoutData.From("魔王城", 3, 30000, p, 0);
+        var old = new DemonKingPayoutData("魔王城", 3, 30000, baseReward, relicMul, legacy, 0);
+        Assert.IsFalse(notice.HasOddsLine);
+        Assert.AreEqual(old.HasRelicBonus, notice.HasRelicBonus);
+        Assert.AreEqual(old.RelicBonus, notice.RelicBonus);
+        Assert.AreEqual(old.FinalReward, notice.FinalReward);
+        Assert.IsFalse(old.HasOddsLine, "オッズを渡さない古い作り方も行を出さない");
+
+        // 実績
+        Assert.AreEqual(legacy, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, d));
+
+        // AI の見込み: オッズが全部 1 なら見込みのドライランを呼ばず、額もそのまま
+        bool called = false;
+        Assert.AreEqual(legacy, SupportOdds.Expected(legacy, () => { called = true; return pct; }, d));
+        System.Func<int, int> rewardAt = lv => baseReward * lv;
+        Assert.AreSame(rewardAt, PersonaSupportEv.RewardWithOdds(rewardAt, lv => { called = true; return pct; }, d));
+        Assert.IsFalse(called);
+    }
+
+    [Test]
+    public void Payout_DefaultFromBakedGameConst_IsInactive()
+    {
+        GameConst.ResetToDefault();
+        Assert.IsFalse(SupportOdds.IsActive());
+        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f));
+    }
+
+    [TestCase(90f, 2f)]
+    [TestCase(69f, 1.5f)]
+    [TestCase(59f, 1.4f)]
+    [TestCase(40f, 0.6f)]
+    [TestCase(25f, 0.45f)]
+    [TestCase(5f, 0.3f)]
+    public void Payout_WithOdds_NoticeAchievementAndAiMatchPaid(float pct, float odds)
+    {
+        var d = PlannedOdds();
+        const int baseReward = 50000;
+        const float relicMul = 1.2f;
+        var paid = SupportOdds.Payout(baseReward, relicMul, pct, d); // BattleSceneStarter.CalculateDefeatReward と同じ呼び出し
+        Assert.IsTrue(SupportOdds.IsActive(d));
+        Assert.AreEqual(60000, paid.RelicReward);
+        Assert.AreEqual(odds, paid.OddsMultiplier, 1e-6f);
+        Assert.AreEqual((int)System.Math.Round(60000 * (double)odds, System.MidpointRounding.AwayFromZero), paid.Total);
+
+        // 通知書: オッズの行（段の名前と倍率）を出し、差はレリック補正に混ぜない。行を足すと受取額になる
+        var notice = DemonKingPayoutData.From("魔王城", 3, 30000, paid, 0);
+        Assert.IsTrue(notice.HasOddsLine);
+        StringAssert.Contains(SupportOdds.Label(SupportOdds.FromClearPct(pct)), notice.OddsLabel);
+        StringAssert.Contains($"×{odds:0.0#}", notice.OddsLabel);
+        Assert.AreEqual(10000, notice.RelicBonus, "レリック補正の行は基本額 × レリックの分だけ");
+        Assert.IsTrue(notice.HasRelicBonus);
+        Assert.AreEqual(paid.Total, notice.FinalReward);
+        Assert.AreEqual(notice.FinalReward, notice.BaseReward + notice.RelicBonus + notice.OddsBonus);
+        StringAssert.StartsWith(odds >= 1f ? "+" : "−", notice.OddsValueNumber);
+
+        // 実績の「配当」
+        Assert.AreEqual(paid.Total, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, d));
+
+        // AI の見込み: レリック込みの額にオッズを掛けると実際の支払いと同じ
+        Assert.AreEqual(paid.Total, SupportOdds.Expected(paid.RelicReward, () => pct, d));
+        // 支援の期待値（レリックを掛けない rewardAt）: 同じ見込みならレリック 1 の支払いと同じ
+        var rewardAt = PersonaSupportEv.RewardWithOdds(lv => baseReward, lv => pct, d);
+        Assert.AreEqual(SupportOdds.Payout(baseReward, 1f, pct, d).Total, rewardAt(3));
+    }
+
+    [Test]
+    public void Payout_WithOdds_UnknownEstimate_NoLine()
+    {
+        var paid = SupportOdds.Payout(50000, 1f, -1f, PlannedOdds());
+        Assert.AreEqual(50000, paid.Total);
+        Assert.IsFalse(DemonKingPayoutData.From("魔王城", 1, 0, paid, 0).HasOddsLine);
+    }
+
+    [Test]
+    public void Payout_WithOdds_FromRemote_AchievementUsesSameValue()
+    {
+        GameConst.OverrideFromJson("{\"streamTuning\":{\"supportOddsUnfavorable\":0.45}}");
+        Assert.IsTrue(SupportOdds.IsActive());
+        var paid = SupportOdds.Payout(50000, 1.2f, 25f);
+        Assert.AreEqual(27000, paid.Total);
+        Assert.AreEqual(27000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f));
+        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 59f), "1 のままの段は変わらない");
+    }
+
+    [Test]
+    public void SupportEv_UsesOddsAdjustedReward()
+    {
+        var d = PlannedOdds();
+        var rates = new PersonaSupportRates();
+        // 上限 = 今のLv なので、支援しないときの期待値（負け率 × 防衛報酬）だけを見る
+        var plain = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000, lv => 100000, 1000000);
+        var withOdds = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000,
+            PersonaSupportEv.RewardWithOdds(lv => 100000, lv => 25f, d), 1000000);
+        float p = rates.LossRate("DemonKingCastle", 3);
+        Assert.AreEqual(p * 100000, plain.EvNone, 1f);
+        Assert.AreEqual(p * SupportOdds.Payout(100000, 1f, 25f, d).Total, withOdds.EvNone, 1f);
+    }
+
     // ---- 2. 広場の上乗せの土台 ----
 
     [Test]

@@ -746,51 +746,25 @@ public class BattleSceneStarter : IAsyncStartable
         return null;
     }
 
-    /// <summary>防衛報酬の内訳（基本額 × レリック倍率 × 見込みの段のオッズ = 受取額）</summary>
-    private readonly struct DefeatRewardBreakdown
-    {
-        public readonly int BaseReward;
-        public readonly float Multiplier;
-        public readonly int Total;
-        /// <summary>配信開始時の見込みの段と、その段のオッズ（streamTuning.supportOdds*。既定 1）。</summary>
-        public readonly SupportOddsTier OddsTier;
-        public readonly float OddsMultiplier;
-
-        public DefeatRewardBreakdown(int baseReward, float multiplier, int total,
-            SupportOddsTier oddsTier = SupportOddsTier.Unknown, float oddsMultiplier = 1f)
-        {
-            BaseReward = baseReward;
-            Multiplier = multiplier;
-            Total = total;
-            OddsTier = oddsTier;
-            OddsMultiplier = oddsMultiplier;
-        }
-    }
-
     /// <summary>
     /// 勇者敗北時（＝ダンジョン防衛成功時）の報酬を計算する。
     /// 現在のダンジョンレベルの rewardGold（魔王軍側からの報酬）を受け取る。勝利時は 0。
-    /// 配当通知書に出すため、基本額と倍率も一緒に返す。
+    /// 配当通知書に出すため、基本額・レリック倍率・見込みの段のオッズも一緒に返す（式は SupportOdds.Payout）。
     /// </summary>
-    private DefeatRewardBreakdown CalculateDefeatReward(BattleResult result)
+    private SupportPayout CalculateDefeatReward(BattleResult result)
     {
-        if (result != BattleResult.Defeat) return new DefeatRewardBreakdown(0, 1f, 0);
+        if (result != BattleResult.Defeat) return SupportPayout.None;
 
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
         int baseReward = dungeon != null ? dungeon.GetDefenseReward(_inputData.DungeonLevel) : 0;
 
-        // レリック補正（魔王ビルド: 防衛報酬アップ）。配信遷移時に GameFlowManager がセットする
-        float mul = RelicBattleEffects.DefeatRewardMul;
-        int reward = Mathf.RoundToInt(baseReward * mul);
+        // レリック補正（魔王ビルド: 防衛報酬アップ。配信遷移時に GameFlowManager がセットする）と、
+        // 見込みに応じたオッズ（配信開始時の見込みの段ごとの倍率。既定はどの段も 1 で今と同じ）
+        var payout = SupportOdds.Payout(baseReward, RelicBattleEffects.DefeatRewardMul, _inputData.PreStreamClearPct);
 
-        // 見込みに応じたオッズ: 配信開始時の見込みの段（互角は勇者寄り・魔王寄りの 2 つ）ごとの倍率。既定はどの段も 1（今と同じ）
-        var tier = SupportOdds.FromClearPct(_inputData.PreStreamClearPct);
-        float odds = SupportOdds.Multiplier(tier);
-        reward = SupportOdds.Apply(reward, odds);
-
-        if (reward > 0)
-            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={mul:F2}, 見込み={SupportOdds.Label(tier)} オッズ×{odds:F2})");
-        return new DefeatRewardBreakdown(baseReward, mul, reward, tier, odds);
+        if (payout.Total > 0)
+            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {payout.Total}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={payout.Multiplier:F2}, 見込み={SupportOdds.Label(payout.OddsTier)} オッズ×{payout.OddsMultiplier:F2})");
+        return payout;
     }
 
     /// <summary>
@@ -799,7 +773,7 @@ public class BattleSceneStarter : IAsyncStartable
     /// ログを書くだけで、お金の計算には触らない。
     /// </summary>
     private void WriteStreamResultLog(BattleResult result, int rawSales, int restockRefund, int heroDefeatRefund, int interventionNet,
-        int declarationBonus, int totalEarnings, DefeatRewardBreakdown reward, int mobs, int bosses)
+        int declarationBonus, int totalEarnings, SupportPayout reward, int mobs, int bosses)
     {
         try
         {
@@ -848,14 +822,14 @@ public class BattleSceneStarter : IAsyncStartable
     }
 
     /// <summary>配当通知書に渡す表示データを組み立てる。</summary>
-    private DemonKingPayoutData BuildPayoutData(DefeatRewardBreakdown reward)
+    private DemonKingPayoutData BuildPayoutData(SupportPayout reward)
     {
         var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
         string dungeonName = dungeon != null ? dungeon.dungeonName : _inputData.DungeonKey.ToString();
         int supportAmount = CalculateSupportAmount(dungeon, _inputData.DungeonLevel);
         // 回収倍率は防衛報酬の受取累計で見る（今回分は帰還処理で記録されるので、ここでは足して表示するだけ）
-        return new DemonKingPayoutData(dungeonName, _inputData.DungeonLevel, supportAmount,
-            reward.BaseReward, reward.Multiplier, reward.Total, DemonPayoutHistory.GetTotal(_inputData.DungeonKey));
+        return DemonKingPayoutData.From(dungeonName, _inputData.DungeonLevel, supportAmount, reward,
+            DemonPayoutHistory.GetTotal(_inputData.DungeonKey));
     }
 
     /// <summary>

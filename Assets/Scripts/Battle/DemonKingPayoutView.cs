@@ -44,6 +44,10 @@ public class DemonKingPayoutView : MonoBehaviour
     [SerializeField] private CanvasGroup relicRow;
     [SerializeField] private TextMeshProUGUI relicLabelText;
     [SerializeField] private TextMeshProUGUI relicValueText;
+    [Tooltip("見込みの段のオッズの行（任意）。未設定ならレリック補正の行を複製して、その下に作る")]
+    [SerializeField] private CanvasGroup oddsRow;
+    [SerializeField] private TextMeshProUGUI oddsLabelText;
+    [SerializeField] private TextMeshProUGUI oddsValueText;
     [SerializeField] private CanvasGroup totalRow;
     [SerializeField] private TextMeshProUGUI totalValueText;
 
@@ -111,6 +115,7 @@ public class DemonKingPayoutView : MonoBehaviour
 
         _receiveTcs = new UniTaskCompletionSource();
         _finalSePlayed = false;
+        if (data.HasOddsLine) EnsureOddsRow();
         ApplyTexts(data);
         LayoutRows(data);
         PrepareHiddenState(data);
@@ -161,32 +166,60 @@ public class DemonKingPayoutView : MonoBehaviour
         if (defenseValueText != null) defenseValueText.text = FormatGold(data.BaseReward);
         if (relicLabelText != null) relicLabelText.text = $"レリック補正 <size=80%>×{data.RelicMultiplier:0.0#}</size>";
         if (relicValueText != null) relicValueText.text = "+" + FormatGold(data.RelicBonus);
+        // 見込みの段のオッズ（倍率 1 なら行ごと出さない）。オッズで変わった分をレリック補正に混ぜない
+        if (oddsLabelText != null) oddsLabelText.text = data.OddsLabel;
+        if (oddsValueText != null) oddsValueText.text = data.OddsValueNumber + "<size=70%>G</size>";
         // 回収倍率は受取累計で見る。はじめて支援額を回収しきった回だけ「元本回収」
         if (stampText != null) stampText.text = data.JustRecoveredPrincipal ? "元本\n回収" : FormatRate(data.ReturnRate);
         if (bubbleText != null) bubbleText.text = DemonKingLines[UnityEngine.Random.Range(0, DemonKingLines.Length)];
         SetTotal(0);
     }
 
-    /// <summary>プレハブ上の明細3行の高さ（上から支援額・防衛報酬・レリック補正）を覚えておく。</summary>
+    /// <summary>プレハブ上の明細3行の高さ（上から支援額・防衛報酬・レリック補正）を覚えておく。オッズの行はこの3行の間隔で詰めて並べる。</summary>
     private void CacheRowSlots()
     {
-        var rows = DetailRows();
+        var rows = new[] { supportRow, defenseRow, relicRow };
         _rowSlotY = new float[rows.Length];
         for (int i = 0; i < rows.Length; i++)
             _rowSlotY[i] = rows[i] != null ? ((RectTransform)rows[i].transform).anchoredPosition.y : 0f;
+    }
+
+    /// <summary>
+    /// オッズの行がプレハブに無ければ、レリック補正の行を複製して作る（文字は同じ位置の子から取る）。
+    /// レリック補正の行も無ければ作らない（オッズの行は出ないが、受取額は正しい）。
+    /// </summary>
+    private void EnsureOddsRow()
+    {
+        if (oddsRow != null || relicRow == null) return;
+        var clone = Instantiate(relicRow.gameObject, relicRow.transform.parent);
+        clone.name = "OddsRow";
+        oddsRow = clone.GetComponent<CanvasGroup>();
+        oddsLabelText = FindSameChild(relicRow.transform, relicLabelText, clone.transform);
+        oddsValueText = FindSameChild(relicRow.transform, relicValueText, clone.transform);
+        clone.SetActive(false);
+    }
+
+    private static TextMeshProUGUI FindSameChild(Transform originalRoot, TextMeshProUGUI original, Transform cloneRoot)
+    {
+        if (original == null) return null;
+        if (original.transform == originalRoot) return cloneRoot.GetComponent<TextMeshProUGUI>();
+        string path = original.name;
+        for (var t = original.transform.parent; t != null && t != originalRoot; t = t.parent) path = t.name + "/" + path;
+        var found = cloneRoot.Find(path);
+        return found != null ? found.GetComponent<TextMeshProUGUI>() : null;
     }
 
     /// <summary>出す行だけを、明細欄の中央に詰めて並べ直す（支援額0・補正なしで隙間が空かないように）。</summary>
     private void LayoutRows(DemonKingPayoutData data)
     {
         var rows = DetailRows();
-        if (_rowSlotY == null || _rowSlotY.Length < rows.Length) return;
+        if (_rowSlotY == null || _rowSlotY.Length < 3) return;
 
-        bool[] visible = { data.SupportAmount > 0, true, data.HasRelicBonus };
+        bool[] visible = { data.SupportAmount > 0, true, data.HasRelicBonus, data.HasOddsLine };
         int count = 0;
-        foreach (bool v in visible) if (v) count++;
+        for (int i = 0; i < visible.Length; i++) if (visible[i] && rows[i] != null) count++;
 
-        float center = (_rowSlotY[0] + _rowSlotY[rows.Length - 1]) * 0.5f;
+        float center = (_rowSlotY[0] + _rowSlotY[_rowSlotY.Length - 1]) * 0.5f;
         float spacing = _rowSlotY[0] - _rowSlotY[1];
         int index = 0;
         for (int i = 0; i < rows.Length; i++)
@@ -198,7 +231,7 @@ public class DemonKingPayoutView : MonoBehaviour
         }
     }
 
-    private CanvasGroup[] DetailRows() => new[] { supportRow, defenseRow, relicRow };
+    private CanvasGroup[] DetailRows() => new[] { supportRow, defenseRow, relicRow, oddsRow };
 
     private void SetTotal(int value)
     {
@@ -219,6 +252,7 @@ public class DemonKingPayoutView : MonoBehaviour
         HideRow(supportRow);
         HideRow(defenseRow);
         HideRow(relicRow);
+        HideRow(oddsRow);
         HideRow(totalRow);
         SetActive(sealRoot, false);
         SetActive(stampRoot, false);
@@ -243,6 +277,7 @@ public class DemonKingPayoutView : MonoBehaviour
         if (data.SupportAmount > 0) await RevealRowAsync(supportRow, ct);
         await RevealRowAsync(defenseRow, ct);
         if (data.HasRelicBonus) await RevealRowAsync(relicRow, ct);
+        if (data.HasOddsLine) await RevealRowAsync(oddsRow, ct);
 
         // 3. 受取額のカウントアップ
         await RevealRowAsync(totalRow, ct);
@@ -284,6 +319,7 @@ public class DemonKingPayoutView : MonoBehaviour
         ShowRow(supportRow, data.SupportAmount > 0);
         ShowRow(defenseRow, true);
         ShowRow(relicRow, data.HasRelicBonus);
+        ShowRow(oddsRow, data.HasOddsLine);
         ShowRow(totalRow, true);
 
         ResetScale(windowRoot);
@@ -399,5 +435,9 @@ public class DemonKingPayoutView : MonoBehaviour
     [ContextMenu("Debug: ダミー表示")]
     private void DebugShowDummy()
         => ShowAsync(new DemonKingPayoutData("魔王城", 3, 30000, 50000, 1.2f, 60000)).Forget();
+
+    [ContextMenu("Debug: ダミー表示（オッズあり）")]
+    private void DebugShowDummyOdds()
+        => ShowAsync(new DemonKingPayoutData("魔王城", 3, 30000, 50000, 1.2f, 60000, SupportOddsTier.Unfavorable, 0.45f, 27000)).Forget();
 #endif
 }

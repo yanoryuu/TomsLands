@@ -157,6 +157,74 @@ public static class SupportOdds
         if (Mathf.Approximately(multiplier, 1f)) return reward;
         return (int)Math.Round(reward * (double)multiplier, MidpointRounding.AwayFromZero);
     }
+
+    /// <summary>どれかの段の倍率が 1 でないか（全部 1 なら配当はどこでも今と同じ）。</summary>
+    public static bool IsActive(StreamTuningData d = null)
+    {
+        d ??= StreamTuning.Data;
+        foreach (SupportOddsTier t in AllTiers)
+            if (!Mathf.Approximately(Multiplier(t, d), 1f)) return true;
+        return false;
+    }
+
+    private static readonly SupportOddsTier[] AllTiers =
+    {
+        SupportOddsTier.Hopeless, SupportOddsTier.Unfavorable, SupportOddsTier.EvenDemon,
+        SupportOddsTier.EvenHero, SupportOddsTier.Favorable, SupportOddsTier.Easy,
+    };
+
+    /// <summary>
+    /// 防衛報酬（魔王軍支援の配当）の計算の唯一の式。基本額 × レリック倍率（四捨五入）→ 見込みの段のオッズ（Apply）。
+    /// 実際の支払い（BattleSceneStarter）・配当通知書・実績（AchievementTracker）・AI の見込み（オートプレイ）はみなここを通す。
+    /// clearPct は配信開始時の見込み（表示％。分からなければ負の値 → オッズ 1）。
+    /// </summary>
+    public static SupportPayout Payout(int baseReward, float relicMultiplier, float clearPct, StreamTuningData d = null)
+    {
+        int relicReward = Mathf.RoundToInt(baseReward * relicMultiplier);
+        var tier = FromClearPct(clearPct);
+        float odds = Multiplier(tier, d);
+        return new SupportPayout(baseReward, relicMultiplier, relicReward, tier, odds, Apply(relicReward, odds));
+    }
+
+    /// <summary>
+    /// AI などの見込み用: レリック込みの配当 reward に、その見込み（clearPct()）の段のオッズを掛ける。
+    /// オッズが全部 1 なら clearPct を呼ばずにそのまま返す（重いドライランをしない・今と同じ）。
+    /// </summary>
+    public static int Expected(int reward, Func<float> clearPct, StreamTuningData d = null)
+    {
+        d ??= StreamTuning.Data;
+        if (reward <= 0 || clearPct == null || !IsActive(d)) return reward;
+        float pct;
+        try { pct = clearPct(); }
+        catch (Exception) { return reward; }
+        return Apply(reward, Multiplier(FromClearPct(pct), d));
+    }
+}
+
+/// <summary>防衛報酬の内訳（基本額 × レリック倍率 = RelicReward、× 見込みの段のオッズ = Total）。</summary>
+public readonly struct SupportPayout
+{
+    public readonly int BaseReward;
+    /// <summary>レリックの倍率（DefeatRewardMul）。</summary>
+    public readonly float Multiplier;
+    /// <summary>レリック補正まで掛けた額（オッズの前）。</summary>
+    public readonly int RelicReward;
+    public readonly SupportOddsTier OddsTier;
+    public readonly float OddsMultiplier;
+    /// <summary>実際に受け取る額。</summary>
+    public readonly int Total;
+
+    public SupportPayout(int baseReward, float multiplier, int relicReward, SupportOddsTier oddsTier, float oddsMultiplier, int total)
+    {
+        BaseReward = baseReward;
+        Multiplier = multiplier;
+        RelicReward = relicReward;
+        OddsTier = oddsTier;
+        OddsMultiplier = oddsMultiplier;
+        Total = total;
+    }
+
+    public static readonly SupportPayout None = new(0, 1f, 0, SupportOddsTier.Unknown, 1f, 0);
 }
 
 /// <summary>StreamTuningData を読む口と、キーを効かせる計算（テストのため純粋な関数にしてある）。</summary>

@@ -645,6 +645,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         foreach (var d in Dungeons.GetAll())
         {
             bool isMax = d.currentDungeonLevel >= GameConst.MaxDungeonLevel;
+            float clearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver);
             s.Dungeons.Add(new AutoPlayDungeonView
             {
                 Id = d.key.ToString(),
@@ -652,8 +653,9 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 Level = d.currentDungeonLevel,
                 MaxLevel = GameConst.MaxDungeonLevel,
                 SupportCost = isMax ? 0 : d.levelUpCost,
-                DefeatReward = d.rewardGold,
-                ClearChancePct = ClearProbabilityCalculator.Calculate(hero, ItemModel, d, d.currentDungeonLevel, RelicResolver),
+                // 見込みの段のオッズ込み（SupportOdds。オッズが既定 1 なら rewardGold そのまま。レリックはここでは掛けない＝今と同じ）
+                DefeatReward = SupportOdds.Expected(d.rewardGold, () => clearPct),
+                ClearChancePct = clearPct,
                 IsNextStream = next.HasValue && next.Value == d.key,
             });
         }
@@ -1252,12 +1254,12 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         LastBattle = outcome;
         int rawSales = outcome.RawSales;
 
-        // BattleSceneStarter.CalculateDefeatReward の写し
+        // BattleSceneStarter.CalculateDefeatReward と同じ式（SupportOdds.Payout: レリック × 配信開始時の見込みの段のオッズ）
         int defeatReward = 0;
         if (!outcome.Victory)
         {
             int reward = dungeon?.GetDefenseReward(level) ?? 0;
-            defeatReward = Mathf.RoundToInt(reward * RelicBattleEffects.DefeatRewardMul);
+            defeatReward = SupportOdds.Payout(reward, RelicBattleEffects.DefeatRewardMul, _battleIn.PreStreamClearPct).Total;
         }
 
         // 勇者敗北の返金騒ぎ（BattleSceneStarter の写し）: 負けたら武器・防具の売上の一部を返す
@@ -1361,14 +1363,16 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         int Scale(int v) => Mathf.Max(1, Mathf.RoundToInt(v * powerMul));
         var (count, hasBoss) = AutoPlayBattleSurrogate.DescribeEnemies(dungeon, level);
 
+        float displayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver);
         var info = new AutoPlayStreamInfo
         {
             Dungeon = key.Value.ToString(),
             Level = level,
-            DisplayedClearPct = ClearProbabilityCalculator.Calculate(hero, ItemModel, dungeon, level, RelicResolver),
+            DisplayedClearPct = displayedClearPct,
             HasBoss = hasBoss,
             EnemyCount = count,
-            DefeatReward = Mathf.RoundToInt(dungeon.GetDefenseReward(level) * rewardMul),
+            // 実際の支払いと同じ式（レリック × 見込みの段のオッズ。オッズが既定 1 なら今と同じ）
+            DefeatReward = SupportOdds.Payout(dungeon.GetDefenseReward(level), rewardMul, displayedClearPct).Total,
             HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
             HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
             HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,
