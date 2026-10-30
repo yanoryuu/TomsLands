@@ -25,7 +25,9 @@
   .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; min-width: 120px; }
   .stat .k { color: var(--sub); font-size: 11px; }
   .stat .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
-  .phases { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+  .phases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 900px) { .phases { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .phases { grid-template-columns: 1fr; } }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .card.bossphase { border-color: #e6b3ad; }
   .card h3 { margin: 0; padding: 9px 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); background: #faf9f7; }
@@ -58,7 +60,9 @@
   .matrix th { background: #faf9f7; font-size: 12px; color: var(--sub); }
   .matrix tr.sel td { background: #f3f0ff; }
   .matrix tr { cursor: pointer; }
-  .chip { display: inline-block; margin: 1px 3px 1px 0; padding: 1px 6px; border-radius: 4px; background: #f1efe9; font-size: 12px; }
+  .chip { display: inline-block; margin: 1px 3px 1px 0; padding: 1px 5px; border-radius: 4px; background: #f1efe9; font-size: 11px; white-space: nowrap; }
+  .chip i { font-style: normal; color: var(--sub); margin-left: 2px; }
+  .matrix td { min-width: 120px; }
   .chip.b { background: #fbe6e3; color: var(--boss); font-weight: 600; }
   .ptot { display: block; color: var(--sub); font-size: 11px; margin-top: 3px; font-variant-numeric: tabular-nums; }
   h2 { font-size: 14px; margin: 22px 0 8px; }
@@ -199,7 +203,8 @@ function viewCard(p, d, isLast) {
     '<span class="tot">' + t.n + ' 体 ・ HP ' + fmt(t.hp) + ' ・ ATK ' + fmt(t.atk) + '</span></h3>' +
     (p.note ? '<div class="note" style="margin-top:8px">' + esc(p.note) + '</div>' : '') +
     '<table><tr><th>敵</th><th class="num">HP</th><th class="num">ATK</th><th class="num">DEF</th><th>属性</th></tr>' + rows + '</table>' +
-    '<div class="foot"><button class="btn" data-edit="' + p.row + '">編集</button></div></div>';
+    '<div class="foot">' + (!isLast && !hasBoss ? '<button class="btn" data-copy="' + p.phase + '" title="ボスのいるフェーズには写さない">同じ敵を後ろのフェーズにも写す</button>' : '') +
+    '<button class="btn" data-edit="' + p.row + '">編集</button></div></div>';
 }
 
 function editCard(p) {
@@ -237,15 +242,25 @@ function renderMatrix(d) {
       var p = ps[j];
       if (!p) { body += '<td style="color:var(--sub)">—</td>'; continue; }
       var t = phaseTotals(p, d); th += t.hp; ta += t.atk;
-      body += '<td>' + p.enemyIds.map(function (id) {
-        var e = state.data.enemies[id];
-        return '<span class="chip' + (e && e.isBoss ? ' b' : '') + '" title="' + esc(id) + '">' + esc(e ? e.name : '?' + id) + '</span>';
+      body += '<td>' + groupRuns(p.enemyIds).map(function (g) {
+        var e = state.data.enemies[g.id];
+        return '<span class="chip' + (e && e.isBoss ? ' b' : '') + '" title="' + esc(g.id) + '">' + esc(e ? e.name : '?' + g.id) + (g.n > 1 ? '<i>×' + g.n + '</i>' : '') + '</span>';
       }).join('') + '<span class="ptot">HP ' + fmt(t.hp) + ' ・ ATK ' + fmt(t.atk) + '</span></td>';
     }
     var rw = rewardFor(lv);
     body += '<td class="num">' + (ps.length ? fmt(th) : '—') + '</td><td class="num">' + (ps.length ? fmt(ta) : '—') + '</td><td class="num">' + (rw.rewardGold == null ? '—' : fmt(rw.rewardGold)) + '</td></tr>';
   }
   $('matrix').innerHTML = '<table>' + head + body + '</table>';
+}
+
+/** 続けて同じ敵が並ぶところをまとめる（表示用。並びは変えない） */
+function groupRuns(ids) {
+  var out = [];
+  ids.forEach(function (id) {
+    var last = out[out.length - 1];
+    if (last && last.id === id) last.n++; else out.push({ id: id, n: 1 });
+  });
+  return out;
 }
 
 function setStatus(s) { $('status').textContent = s; }
@@ -268,7 +283,7 @@ function call(fn, args, done) {
 }
 
 document.addEventListener('click', function (ev) {
-  var t = ev.target.closest('[data-lv],[data-edit],[data-cancel],[data-save],[data-rm],[data-up],[data-addslot],[data-delphase]');
+  var t = ev.target.closest('[data-lv],[data-edit],[data-cancel],[data-save],[data-rm],[data-up],[data-addslot],[data-delphase],[data-copy]');
   if (!t || state.busy) return;
   if (t.dataset.lv) { state.level = Number(t.dataset.lv); state.editing = null; if (t.tagName === 'TR') state.view = 'phases'; render(); return; }
   if (t.dataset.edit) {
@@ -285,6 +300,11 @@ document.addEventListener('click', function (ev) {
     if (bad.length) { alert('bal_enemies に無い enemyId: ' + bad.join(', ')); return; }
     if (!state.draft.length) { alert('敵が 1 体もいません。'); return; }
     call('dvSavePhase', [state.dungeonId, state.level, Number(t.dataset.save), state.draft.slice()], function () { state.editing = null; });
+    return;
+  }
+  if (t.dataset.copy) {
+    if (!confirm('Lv' + state.level + ' のフェーズ ' + t.dataset.copy + ' の敵を、後ろのフェーズ（ボスのいるフェーズは除く）にも写します。')) return;
+    call('dvCopyPhaseForward', [state.dungeonId, state.level, Number(t.dataset.copy)]);
     return;
   }
   if (t.dataset.delphase) {

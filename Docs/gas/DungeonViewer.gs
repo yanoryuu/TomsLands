@@ -3,7 +3,9 @@
  *
  * シート:
  *   dungeonPhases : dungeonId / level / phase / enemyIds（カンマ区切り・出る順） / note
- *                   1行=1ダンジョン×1レベル×1フェーズ。Unity の DungeonLevelData.phases と同じ並び。
+ *                   1行=1ダンジョン×1レベル×1フェーズ（＝実際に戦うウェーブ）。
+ *                   ゲームの通常ウェーブの繰り返し（GameConst.battleTempo.normalWaveRepeat = 4）を展開済みの形で書く。
+ *                   例: 通常 4 ウェーブ + ボス 1 ウェーブ = phase 1〜5。シートのフェーズは繰り返さずにそのまま使う前提。
  *   bal_enemies   : 敵の基本値（id = EnemyData.enemyId）
  *   bal_dungeons  : enemyHpRate / enemyAtkRate / enemyDefRate（ダンジョンごとの敵の倍率。ビューアの表示に掛ける）
  *
@@ -12,7 +14,8 @@
  */
 
 const DUNGEON_PHASES_SHEET = 'dungeonPhases';
-const DV_ELEMENTS = ['None', 'Water', 'Fire', 'Wood', 'Light', 'Dark']; // Unity の ElementType の並び（int 値）
+const DV_EXPECTED_PHASES = 5; // 通常 4 ウェーブ + ボス 1 ウェーブ（数が違えば警告だけ出す）
+const DV_ELEMENTS =['None', 'Water', 'Fire', 'Wood', 'Light', 'Dark']; // Unity の ElementType の並び（int 値）
 
 // ============================================================
 // メニューから呼ぶ
@@ -102,6 +105,31 @@ function dvDeletePhase(dungeonId, level, phase) {
   return dvGetViewerData();
 }
 
+/**
+ * phase の敵を、同じダンジョン×レベルの後ろのフェーズに写す（ボスがいるフェーズには写さない）。
+ * 例: P1 を直してから押すと P2〜P4 が同じ並びになり、ボスの P5 はそのまま。
+ */
+function dvCopyPhaseForward(dungeonId, level, phase) {
+  dungeonId = String(dungeonId).trim();
+  level = Number(level);
+  phase = Number(phase);
+  const data = dvLoad_();
+  const src = data.phases.filter(function (p) { return p.dungeonId === dungeonId && p.level === level && p.phase === phase; })[0];
+  if (!src) throw new Error('行が見つかりません: ' + dungeonId + ' Lv' + level + ' P' + phase);
+  const sheet = dvPhasesSheet_();
+  let n = 0;
+  data.phases.forEach(function (p) {
+    if (p.dungeonId !== dungeonId || p.level !== level || p.phase <= phase) return;
+    const hasBoss = p.enemyIds.some(function (id) { const e = data.enemies[id]; return e && e.isBoss; });
+    if (hasBoss) return;
+    sheet.getRange(p.row, data.phaseCols.enemyIds + 1).setValue(src.enemyIds.join(','));
+    n++;
+  });
+  const out = dvGetViewerData();
+  out.copied = n;
+  return out;
+}
+
 // ============================================================
 // 配信用（TODO: まだ buildBalanceEnvelope からは呼ばない）
 // ============================================================
@@ -112,6 +140,11 @@ function dvDeletePhase(dungeonId, level, phase) {
  *     const dungeonPhases = readDungeonPhases_();
  *     if (dungeonPhases.length > 0) envelope.dungeonPhases = dungeonPhases;
  * を足す。それまでは呼ばないこと（今は配信物に入れない）。
+ *
+ * 重要: sheet phases are explicit waves; do not apply normalWaveRepeat.
+ *   シートのフェーズは「戦うウェーブそのもの」（通常ウェーブの繰り返しを展開済み）。
+ *   Unity 側でこの配信を使うときは BattleWavePlan.Expand（normalWaveRepeat の繰り返し）を通さないこと。
+ *   通すと通常ウェーブが 4 倍に増える。クリア確率の計算（ClearProbabilityCalculator）も同じ扱いにする。
  *
  * 出力: [ { dungeonId, level, phase, enemyIds: [ 'demon9', 'demon10', ... ] }, ... ]
  *   dungeonId / level / phase の順に並べる。enemyIds が空の行は出さない。
@@ -291,6 +324,7 @@ function dvInsertRowAfterLevel_(sheet, data, dungeonId, level, phase) {
  *   - 敵が空のフェーズ
  *   - bal_enemies に無い enemyId
  *   - ボス（isBoss）が最後のフェーズ以外にいる
+ *   - フェーズの数が 5 でない（warn。今のゲームは通常 4 + ボス 1）
  *   - ダンジョン×レベルに行が 1 つも無い（warn: アセットの構成のまま）
  */
 function dvValidate_(data) {
@@ -322,7 +356,10 @@ function dvValidate_(data) {
     });
     const nums = Object.keys(seen).map(Number).sort(function (a, b) { return a - b; });
     if (nums.some(function (n, i) { return n !== i + 1; })) {
-      add('warn', list[0], 'フェーズ番号が 1 から続いていない（' + nums.map(function (n) { return 'P' + n; }).join(', ') + '）');
+      add('error', list[0], 'フェーズ番号が 1 から続いていない（' + nums.map(function (n) { return 'P' + n; }).join(', ') + '）');
+    }
+    if (nums.length !== DV_EXPECTED_PHASES) {
+      add('warn', list[0], 'フェーズが ' + nums.length + ' 個（今のゲームは 5 = 通常 4 + ボス 1）');
     }
     const maxPhase = list.length > 0 ? list[list.length - 1].phase : 0;
     list.forEach(function (p) {
