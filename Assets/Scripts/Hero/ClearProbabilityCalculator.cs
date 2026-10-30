@@ -15,13 +15,21 @@ using UnityEngine;
 ///
 /// 画面には％を出さず、<see cref="ToOutlook"/> の5段階（楽勝／有利／互角／不利／絶望）で出す
 /// （戦闘は決定論なので「60%」は実際には「ほぼ勝つ」で、確率として読むと誤解されるため）。
-/// 段階の境目は上の変換を逆算して、ドライランの勝敗と残りHP・撃破数に対応させている。
+/// 段階の境目（表示％）は gameconst の clearOutlook.easyMin / favorableMin / evenMin / unfavorableMin
+/// （ClearOutlookSettingsData）。店の勇者パネル・マップ・配信の勝敗メーターの段・魔王軍支援のオッズの段（SupportOdds）は
+/// みなこの 1 か所の境目を使う。境目は上の変換を逆算して、ドライランの勝敗と残りHP・撃破数に対応させている。
+/// 既定（配信に無いとき。2026-10-30 までの動き）: 75 / 63 / 35 / 15
 /// ・楽勝: 勝つ想定で、勇者の残りHPが 50% 以上（75% 以上）
 /// ・有利: 勝つ想定で、残りHP 20〜50%（63〜75%）
 /// ・互角: 勝つ想定でも残りHP 20% 未満（55〜63%）／負ける想定でも敵の 75% 以上を倒す（35〜45%）
 ///         … 回復（最大HPの30%）・罠・増援など介入1回でひっくり返り得る幅
 /// ・不利: 負ける想定で、倒せる敵が 25〜75%（15〜35%）
 /// ・絶望: 負ける想定で、倒せる敵が 25% 未満（15% 未満）
+/// 予定（2026-10-30 ユーザー決定。リセット時にシートで 75 / 55 / 45 / 15 を入れる）:
+/// ・楽勝 75% 以上（勝つ・残りHP 50% 以上）／有利 55〜75%（勝つ想定のそれ以外すべて）
+/// ・互角 45〜55%（勝ち負けの境目。上の変換では勝つ想定は 55% 以上・負ける想定は 45% 以下なので、
+///   ここに入るのは「負ける想定で進み具合 100%」の 45% ちょうどと、配信中のメーターが間を通るときだけ）
+/// ・不利 15〜45%（負ける・敵の 25% 以上を倒す）／絶望 15% 未満
 /// 属性は戦闘に効かせる予定だが、この計算には入れない（2026-10 の決定）。
 /// GameConst.clearOutlookProgressByEnemyHp = true のときは、負ける側の「倒せる敵の割合」を「削れる敵 HP の割合」に置き換える
 /// （魔王の残り HP が見込みに入る。2026-10-30 ユーザー決定。既定 false＝今までどおり）。
@@ -208,19 +216,22 @@ public static class ClearProbabilityCalculator
 
     // ─── 5段階の表示（数字は出さない） ───
 
-    /// <summary>段階の境目（表示％）。根拠はクラスの summary を参照。</summary>
-    private const float EasyMin = 75f;      // 勝ち・残りHP 50% 以上
-    private const float FavorableMin = 63f; // 勝ち・残りHP 20% 以上
-    private const float EvenMin = 35f;      // 負けでも敵の 75% 以上を倒す
-    private const float UnfavorableMin = 15f; // 負け・敵の 25% 以上を倒す
+    /// <summary>段階の境目（gameconst の clearOutlook.*）。根拠はクラスの summary を参照。</summary>
+    public static ClearOutlookSettingsData Thresholds => GameConst.Data?.clearOutlook ?? DefaultThresholds;
 
-    /// <summary>表示％ → 5段階。</summary>
-    public static ClearOutlook ToOutlook(float probability)
+    private static readonly ClearOutlookSettingsData DefaultThresholds = new();
+
+    /// <summary>表示％ → 5段階（境目は Thresholds）。</summary>
+    public static ClearOutlook ToOutlook(float probability) => ToOutlook(probability, Thresholds);
+
+    /// <summary>表示％ → 5段階。境目が壊れている（数でない・上の段ほど高くなっていない）ときは既定の境目を使う。</summary>
+    public static ClearOutlook ToOutlook(float probability, ClearOutlookSettingsData t)
     {
-        if (probability >= EasyMin) return ClearOutlook.Easy;
-        if (probability >= FavorableMin) return ClearOutlook.Favorable;
-        if (probability >= EvenMin) return ClearOutlook.Even;
-        if (probability >= UnfavorableMin) return ClearOutlook.Unfavorable;
+        if (t == null || !t.IsValid) t = DefaultThresholds;
+        if (probability >= t.easyMin) return ClearOutlook.Easy;
+        if (probability >= t.favorableMin) return ClearOutlook.Favorable;
+        if (probability >= t.evenMin) return ClearOutlook.Even;
+        if (probability >= t.unfavorableMin) return ClearOutlook.Unfavorable;
         return ClearOutlook.Hopeless;
     }
 
@@ -265,6 +276,31 @@ public static class ClearProbabilityCalculator
 
         return Mathf.Clamp(baseProbability, 5f, 95f);
     }
+}
+
+/// <summary>
+/// クリア見込みの段階の境目（表示％。gameconst の data.clearOutlook.*、シート data に「clearOutlook.キー名」の行で書く）。
+/// 既定値は 2026-10-30 時点の境目そのまま（配信に無ければ今と同じ）。リセット時にシートで favorableMin 55・evenMin 45 を入れる予定。
+/// 各キーは「その段になる最低の％」（以上でその段）。
+/// </summary>
+[System.Serializable]
+public class ClearOutlookSettingsData
+{
+    /// <summary>楽勝の下限（既定 75 = 勝つ想定・残りHP 50% 以上）。</summary>
+    public float easyMin = 75f;
+    /// <summary>有利の下限（既定 63 = 勝つ想定・残りHP 20% 以上。予定 55 = 勝つ想定のすべて）。</summary>
+    public float favorableMin = 63f;
+    /// <summary>互角の下限（既定 35 = 負けでも敵の 75% 以上を倒す。予定 45）。</summary>
+    public float evenMin = 35f;
+    /// <summary>不利の下限（既定 15 = 負け・敵の 25% 以上を倒す）。これ未満は絶望。</summary>
+    public float unfavorableMin = 15f;
+
+    /// <summary>どれも数で、楽勝 ≥ 有利 ≥ 互角 ≥ 不利 の順になっているか。</summary>
+    public bool IsValid =>
+        !float.IsNaN(easyMin) && !float.IsNaN(favorableMin) && !float.IsNaN(evenMin) && !float.IsNaN(unfavorableMin)
+        && easyMin >= favorableMin && favorableMin >= evenMin && evenMin >= unfavorableMin;
+
+    public ClearOutlookSettingsData Clone() => (ClearOutlookSettingsData)MemberwiseClone();
 }
 
 /// <summary>クリア見込みの5段階（ClearProbabilityCalculator.ToOutlook）。</summary>

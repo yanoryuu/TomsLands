@@ -51,6 +51,16 @@ public class DemonKingPayoutView : MonoBehaviour
     [SerializeField] private CanvasGroup totalRow;
     [SerializeField] private TextMeshProUGUI totalValueText;
 
+    [Header("明細が4行のとき（支援額・防衛報酬・レリック補正・オッズ）")]
+    [Tooltip("明細と受取額の間の線。4行のときだけ下へずらして、明細欄を広げる")]
+    [SerializeField] private RectTransform separatorRoot;
+    [Tooltip("4行のときの行の間隔（3行以下はプレハブ上の3行の間隔のまま）")]
+    [SerializeField] private float compactRowSpacing = 64f;
+    [Tooltip("4行のときの行の中心のずれ（プレハブ上の3行の中心から。負で下へ）")]
+    [SerializeField] private float compactRowCenterOffset = -6f;
+    [Tooltip("4行のときの線のずれ（負で下へ）")]
+    [SerializeField] private float compactSeparatorOffset = -12f;
+
     [Header("封蝋・回収倍率ハンコ")]
     [SerializeField] private RectTransform sealRoot;
     [SerializeField] private RectTransform stampRoot;
@@ -72,6 +82,7 @@ public class DemonKingPayoutView : MonoBehaviour
     private Tween _countTween;
     private Vector2 _demonBasePos;
     private float[] _rowSlotY;
+    private Vector2 _separatorBasePos;
 
     /// <summary>通知書を表示中（受け取り待ち・演出中）か。オートプレイが見る</summary>
     public bool IsShowing => _receiveTcs != null;
@@ -182,6 +193,7 @@ public class DemonKingPayoutView : MonoBehaviour
         _rowSlotY = new float[rows.Length];
         for (int i = 0; i < rows.Length; i++)
             _rowSlotY[i] = rows[i] != null ? ((RectTransform)rows[i].transform).anchoredPosition.y : 0f;
+        if (separatorRoot != null) _separatorBasePos = separatorRoot.anchoredPosition;
     }
 
     /// <summary>
@@ -209,7 +221,10 @@ public class DemonKingPayoutView : MonoBehaviour
         return found != null ? found.GetComponent<TextMeshProUGUI>() : null;
     }
 
-    /// <summary>出す行だけを、明細欄の中央に詰めて並べ直す（支援額0・補正なしで隙間が空かないように）。</summary>
+    /// <summary>
+    /// 出す行だけを、明細欄の中央に詰めて並べ直す（支援額0・補正なしで隙間が空かないように）。
+    /// 3行以下はプレハブ上の3行の間隔のまま。4行（オッズの行あり）は間隔を詰め、線を少し下げて枠からはみ出さないようにする。
+    /// </summary>
     private void LayoutRows(DemonKingPayoutData data)
     {
         var rows = DetailRows();
@@ -219,8 +234,17 @@ public class DemonKingPayoutView : MonoBehaviour
         int count = 0;
         for (int i = 0; i < visible.Length; i++) if (visible[i] && rows[i] != null) count++;
 
+        bool compact = count > _rowSlotY.Length;
         float center = (_rowSlotY[0] + _rowSlotY[_rowSlotY.Length - 1]) * 0.5f;
         float spacing = _rowSlotY[0] - _rowSlotY[1];
+        if (compact)
+        {
+            center += compactRowCenterOffset;
+            spacing = compactRowSpacing;
+        }
+        if (separatorRoot != null)
+            separatorRoot.anchoredPosition = _separatorBasePos + new Vector2(0f, compact ? compactSeparatorOffset : 0f);
+
         int index = 0;
         for (int i = 0; i < rows.Length; i++)
         {
@@ -439,5 +463,9 @@ public class DemonKingPayoutView : MonoBehaviour
     [ContextMenu("Debug: ダミー表示（オッズあり）")]
     private void DebugShowDummyOdds()
         => ShowAsync(new DemonKingPayoutData("魔王城", 3, 30000, 50000, 1.2f, 60000, SupportOddsTier.Unfavorable, 0.45f, 27000)).Forget();
+
+    [ContextMenu("Debug: ダミー表示（オッズあり・楽勝 ×2.0）")]
+    private void DebugShowDummyOddsUp()
+        => ShowAsync(new DemonKingPayoutData("魔王城", 3, 30000, 50000, 1.2f, 60000, SupportOddsTier.Easy, 2f, 120000)).Forget();
 #endif
 }

@@ -10,11 +10,12 @@ using UnityEngine;
 public class StreamTuningData
 {
     // --- 魔王軍支援の配当のオッズ（配信開始時の見込みの段ごとの倍率。防衛報酬 rewardGold × レリック × この値） ---
-    // 予定の値: 楽勝 2.0 / 有利 1.5 / 互角(勇者寄り 55〜63%) 1.4 / 互角(魔王寄り 35〜45%) 0.6 / 不利 0.45 / 絶望 0.3
+    // 段の境目は表示の見込みと同じ clearOutlook.*（ClearOutlookSettingsData。ここに別の境目は持たない）。
+    // 予定の値（2026-10-30 ユーザー決定）: 楽勝 2.0 / 有利 1.5 / 互角 1.0 / 不利 0.45 / 絶望 0.3
+    //   （境目を clearOutlook で 75 / 55 / 45 / 15 にしたとき: 楽勝 75〜 / 有利 55〜75 / 互角 45〜55 / 不利 15〜45 / 絶望 〜15）
     public float supportOddsEasy = 1f;
     public float supportOddsFavorable = 1f;
-    public float supportOddsEvenHero = 1f;
-    public float supportOddsEvenDemon = 1f;
+    public float supportOddsEven = 1f;
     public float supportOddsUnfavorable = 1f;
     public float supportOddsHopeless = 1f;
 
@@ -75,26 +76,23 @@ public class BossReactionSettingsData
 }
 
 /// <summary>
-/// 配信開始時の見込み（ClearProbabilityCalculator の表示％）の 6 段。互角は 50% で勇者寄り・魔王寄りに分ける。
-/// 数字の並びは勇者から見た強さ（0 = 絶望 … 5 = 楽勝）。ボスの状況の点数（メーター点）にも使う。
+/// 配信開始時の見込み（ClearProbabilityCalculator の表示％）の 5 段。境目は表示の見込み（ToOutlook・clearOutlook.*）と同じ。
+/// 数字の並びは勇者から見た強さ（0 = 絶望 … 4 = 楽勝）。
 /// </summary>
 public enum SupportOddsTier
 {
     Unknown = -1,
     Hopeless = 0,
     Unfavorable = 1,
-    EvenDemon = 2,
-    EvenHero = 3,
-    Favorable = 4,
-    Easy = 5,
+    Even = 2,
+    Favorable = 3,
+    Easy = 4,
 }
 
 /// <summary>魔王軍支援の配当のオッズ（見込みの段 → 倍率）。</summary>
 public static class SupportOdds
 {
-    /// <summary>互角を分ける境目（表示％）。勝つ想定は 55% 以上、負ける想定は 45% 以下なので、この間で分かれる。</summary>
-    public const float EvenSplitPct = 50f;
-
+    /// <summary>表示％ → 段。境目は ClearProbabilityCalculator.ToOutlook（画面の見込みと同じ 1 か所）。</summary>
     public static SupportOddsTier FromClearPct(float pct)
     {
         if (float.IsNaN(pct) || pct < 0f) return SupportOddsTier.Unknown;
@@ -102,7 +100,7 @@ public static class SupportOdds
         {
             case ClearOutlook.Easy: return SupportOddsTier.Easy;
             case ClearOutlook.Favorable: return SupportOddsTier.Favorable;
-            case ClearOutlook.Even: return pct >= EvenSplitPct ? SupportOddsTier.EvenHero : SupportOddsTier.EvenDemon;
+            case ClearOutlook.Even: return SupportOddsTier.Even;
             case ClearOutlook.Unfavorable: return SupportOddsTier.Unfavorable;
             default: return SupportOddsTier.Hopeless;
         }
@@ -115,8 +113,7 @@ public static class SupportOdds
     {
         SupportOddsTier.Easy => "easy",
         SupportOddsTier.Favorable => "favorable",
-        SupportOddsTier.EvenHero => "evenHero",
-        SupportOddsTier.EvenDemon => "evenDemon",
+        SupportOddsTier.Even => "even",
         SupportOddsTier.Unfavorable => "unfavorable",
         SupportOddsTier.Hopeless => "hopeless",
         _ => "unknown",
@@ -126,8 +123,7 @@ public static class SupportOdds
     {
         SupportOddsTier.Easy => "楽勝",
         SupportOddsTier.Favorable => "有利",
-        SupportOddsTier.EvenHero => "互角（勇者寄り）",
-        SupportOddsTier.EvenDemon => "互角（魔王寄り）",
+        SupportOddsTier.Even => "互角",
         SupportOddsTier.Unfavorable => "不利",
         SupportOddsTier.Hopeless => "絶望",
         _ => "不明",
@@ -141,8 +137,7 @@ public static class SupportOdds
         {
             SupportOddsTier.Easy => d.supportOddsEasy,
             SupportOddsTier.Favorable => d.supportOddsFavorable,
-            SupportOddsTier.EvenHero => d.supportOddsEvenHero,
-            SupportOddsTier.EvenDemon => d.supportOddsEvenDemon,
+            SupportOddsTier.Even => d.supportOddsEven,
             SupportOddsTier.Unfavorable => d.supportOddsUnfavorable,
             SupportOddsTier.Hopeless => d.supportOddsHopeless,
             _ => 1f,
@@ -169,8 +164,8 @@ public static class SupportOdds
 
     private static readonly SupportOddsTier[] AllTiers =
     {
-        SupportOddsTier.Hopeless, SupportOddsTier.Unfavorable, SupportOddsTier.EvenDemon,
-        SupportOddsTier.EvenHero, SupportOddsTier.Favorable, SupportOddsTier.Easy,
+        SupportOddsTier.Hopeless, SupportOddsTier.Unfavorable, SupportOddsTier.Even,
+        SupportOddsTier.Favorable, SupportOddsTier.Easy,
     };
 
     /// <summary>

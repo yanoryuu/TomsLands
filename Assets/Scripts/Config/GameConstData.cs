@@ -83,6 +83,9 @@ public class GameConstData
     //       （ボス・魔王の残り HP がそのまま効く。配信中は場にいるボスのいまの HP を使う）。
     // false（既定・配信に無いとき）: 今までどおり倒した敵の数の割合。data シートのキー clearOutlookProgressByEnemyHp（bool）
     public bool clearOutlookProgressByEnemyHp = false;
+    // 見込みの段階（楽勝／有利／互角／不利／絶望）の境目（表示％）。data シートのキー clearOutlook.easyMin など。
+    // 画面の見込みと魔王軍支援のオッズの段（streamTuning.supportOdds*）は同じこの境目を使う。既定は今の 75 / 63 / 35 / 15
+    public ClearOutlookSettingsData clearOutlook = new ClearOutlookSettingsData();
 
     /// <summary>
     /// 配列まで含めた深いコピーを返す（ベイク済みアセットを実行時に汚染しないため）。
@@ -117,6 +120,7 @@ public class GameConstData
         clone.machine = machine != null
             ? machine.Clone()
             : new MachineSettingsData();
+        clone.clearOutlook = clearOutlook != null ? clearOutlook.Clone() : new ClearOutlookSettingsData();
         // >>> 配信の調整キー・ボスの反応（2026-10-30。StreamTuning.cs）
         clone.streamTuning = streamTuning != null ? streamTuning.Clone() : new StreamTuningData();
         clone.bossReaction = bossReaction != null ? bossReaction.Clone() : new BossReactionSettingsData();

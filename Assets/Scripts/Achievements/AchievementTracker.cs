@@ -256,8 +256,7 @@ public sealed class AchievementTracker : IInitializable, IDisposable
                 if (!run.heroSideProfit) { run.heroSideProfit = true; changed = true; }
 
                 // 配信日に入ったときのクリア見込みが「不利」以下だったか
-                if (run.departureTurn == info.Turn && run.departureClearPct >= 0f
-                    && run.departureClearPct < AchievementDefinitions.LongShotClearPct)
+                if (run.departureTurn == info.Turn && AchievementDefinitions.IsLongShotClearPct(run.departureClearPct))
                     service.Unlock(AchievementId.LongShot, $"クリア見込み {run.departureClearPct:F0}% から勝利");
             }
         }

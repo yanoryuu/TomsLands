@@ -222,6 +222,54 @@ public static class BossReactionTable
     }
 }
 
+/// <summary>
+/// ボスの状況の点数に使う勝敗メーターの 6 段（0 = 絶望 … 5 = 楽勝）。見込みの 5 段（ClearProbabilityCalculator.ToOutlook）の
+/// 互角だけを 50% で勇者寄り・魔王寄りに分ける。魔王軍支援のオッズ（SupportOddsTier。互角は 1 段）とは別に、ここだけで持つ。
+/// </summary>
+public enum BossMeterStep
+{
+    Unknown = -1,
+    Hopeless = 0,
+    Unfavorable = 1,
+    EvenDemon = 2,
+    EvenHero = 3,
+    Favorable = 4,
+    Easy = 5,
+}
+
+public static class BossMeterSteps
+{
+    /// <summary>互角を分ける境目（表示％）。勝つ想定は 55% 以上、負ける想定は 45% 以下なので、この間で分かれる。</summary>
+    public const float EvenSplitPct = 50f;
+
+    /// <summary>勝敗メーター（0〜1。BattleOutlookEstimator）→ 6 段。</summary>
+    public static BossMeterStep FromMeter(float meter)
+    {
+        if (float.IsNaN(meter)) return BossMeterStep.Unknown;
+        float pct = Mathf.Clamp01(meter) * 100f;
+        return ClearProbabilityCalculator.ToOutlook(pct) switch
+        {
+            ClearOutlook.Easy => BossMeterStep.Easy,
+            ClearOutlook.Favorable => BossMeterStep.Favorable,
+            ClearOutlook.Even => pct >= EvenSplitPct ? BossMeterStep.EvenHero : BossMeterStep.EvenDemon,
+            ClearOutlook.Unfavorable => BossMeterStep.Unfavorable,
+            _ => BossMeterStep.Hopeless,
+        };
+    }
+
+    /// <summary>ログのキー（2026-10-30 の影のログと同じ文字列）。</summary>
+    public static string Key(BossMeterStep step) => step switch
+    {
+        BossMeterStep.Easy => "easy",
+        BossMeterStep.Favorable => "favorable",
+        BossMeterStep.EvenHero => "evenHero",
+        BossMeterStep.EvenDemon => "evenDemon",
+        BossMeterStep.Unfavorable => "unfavorable",
+        BossMeterStep.Hopeless => "hopeless",
+        _ => "unknown",
+    };
+}
+
 /// <summary>状況の点数（足し算）。画面に出ているものだけで決める。</summary>
 public static class BossSituationScorer
 {
@@ -229,13 +277,13 @@ public static class BossSituationScorer
     {
         public readonly float Score;
         public readonly BossSituation Situation;
-        public readonly SupportOddsTier MeterTier;
+        public readonly BossMeterStep MeterTier;
         public readonly float MeterPoints;
         public readonly float HpPoints;
         public readonly float WeakPoints;
         public readonly float FlowPoints;
 
-        public Result(float score, BossSituation situation, SupportOddsTier meterTier, float meterPoints, float hpPoints, float weakPoints, float flowPoints)
+        public Result(float score, BossSituation situation, BossMeterStep meterTier, float meterPoints, float hpPoints, float weakPoints, float flowPoints)
         {
             Score = score;
             Situation = situation;
@@ -258,8 +306,8 @@ public static class BossSituationScorer
         BossReactionSettingsData s, float pinchHpRatio, float criticalPinchHpRatio)
     {
         s ??= new BossReactionSettingsData();
-        var tier = SupportOdds.FromMeter(meter);
-        float meterPts = tier == SupportOddsTier.Unknown ? 2.5f : (int)tier;
+        var tier = BossMeterSteps.FromMeter(meter);
+        float meterPts = tier == BossMeterStep.Unknown ? 2.5f : (int)tier;
         float hpPts = heroHpRatio < criticalPinchHpRatio ? -1f : heroHpRatio < pinchHpRatio ? -0.5f : 0f;
         float weakPts = weak ? 1f : 0f;
         float flowPts = 0f;
@@ -487,7 +535,7 @@ public sealed class BossReactionTracker
                 ["tier"] = heatTier,
                 ["priceMul"] = Round(heatPriceMul, 3),
                 ["meter"] = Round(at.Meter, 3),
-                ["meterTier"] = SupportOdds.Key(SupportOdds.FromMeter(at.Meter)),
+                ["meterTier"] = BossMeterSteps.Key(BossMeterSteps.FromMeter(at.Meter)),
                 ["heroHp"] = Round(at.HeroHpRatio, 3),
                 ["phase"] = at.PhaseIndex,
                 ["phaseType"] = phaseType,
@@ -531,7 +579,7 @@ public sealed class BossReactionTracker
             ["situationLabel"] = BossSituations.Label(e.Situation),
             ["score"] = Round(sc.Score, 2),
             ["meter"] = Round(e.At.Meter, 3),
-            ["meterTier"] = SupportOdds.Key(sc.MeterTier),
+            ["meterTier"] = BossMeterSteps.Key(sc.MeterTier),
             ["meterPts"] = sc.MeterPoints,
             ["heroHp"] = Round(e.At.HeroHpRatio, 3),
             ["hpPts"] = sc.HpPoints,

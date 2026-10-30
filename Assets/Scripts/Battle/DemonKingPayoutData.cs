@@ -83,8 +83,8 @@ public sealed class DemonKingPayoutData
     /// <summary>オッズの行の見出し（例: 見込み 不利 ×0.45）。</summary>
     public string OddsLabel => $"見込み {SupportOdds.Label(OddsTier)} <size=80%>×{OddsMultiplier:0.0#}</size>";
 
-    /// <summary>オッズの行の金額の数字（+12,000 / −8,000。単位 G は表示側で付ける）。</summary>
-    public string OddsValueNumber => (OddsBonus >= 0 ? "+" : "−") + $"{Mathf.Abs(OddsBonus):N0}";
+    /// <summary>オッズの行の金額の数字（+12,000 / -8,000。単位 G は表示側で付ける。通知書のフォントに U+2212 の − が無いので ASCII の - を使う）。</summary>
+    public string OddsValueNumber => (OddsBonus >= 0 ? "+" : "-") + $"{Mathf.Abs(OddsBonus):N0}";
 
     /// <summary>
     /// 回収倍率（受取累計 ÷ 支援額）。支援額が 0 なら 0。

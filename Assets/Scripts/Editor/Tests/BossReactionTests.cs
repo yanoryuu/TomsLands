@@ -51,6 +51,22 @@ public class BossReactionTests
     }
 
     [Test]
+    public void Score_MeterKeepsSixStepsWithOwnEvenSplit()
+    {
+        // オッズの互角は 1 段になったが、ボスの点数のメーター点は 6 段のまま（互角を 50% で分ける）
+        var s = new BossReactionSettingsData();
+        Assert.AreEqual(5f, BossSituationScorer.Score(0.90f, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual(4f, BossSituationScorer.Score(0.69f, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual(3f, BossSituationScorer.Score(0.59f, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual(2f, BossSituationScorer.Score(0.40f, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual(1f, BossSituationScorer.Score(0.25f, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual(0f, BossSituationScorer.Score(0.05f, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual(2.5f, BossSituationScorer.Score(float.NaN, 1f, false, null, s, Pinch, Critical).MeterPoints);
+        Assert.AreEqual("evenHero", BossMeterSteps.Key(BossMeterSteps.FromMeter(0.59f)));
+        Assert.AreEqual("evenDemon", BossMeterSteps.Key(BossMeterSteps.FromMeter(0.40f)));
+    }
+
+    [Test]
     public void Score_AddsHpWeakAndFlow()
     {
         var s = new BossReactionSettingsData();
@@ -201,7 +217,7 @@ public class BossReactionTests
 
         Assert.AreEqual("heat_turn", (string)_logs[0]["kind"]);
         Assert.AreEqual("DemonKingCastle", (string)_logs[0]["dungeon"]);
-        Assert.AreEqual("evenHero", (string)_logs[0]["estimateTier"]);
+        Assert.AreEqual("even", (string)_logs[0]["estimateTier"]);
         Assert.AreEqual("boss_situation", (string)_logs[1]["kind"]);
         Assert.AreEqual("close", (string)_logs[1]["situation"]);
         Assert.AreEqual(75.0, (double)_logs[1]["heatAfter"], 1e-6);
