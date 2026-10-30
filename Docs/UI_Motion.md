@@ -22,7 +22,7 @@
 | 6 | 幕で場面切替 | **呼び出し不要**。`SceneLoader.Load*` が使う `LoadingView` に入っている。従来の黒フェードに戻すなら `SceneCurtain.Enabled = false` |
 | 7 | タブ切替 | `TabSwitcher.MoveUnderline(underline, tab)` / `TabSwitcher.SlideContent(content, +1 or -1)` / 下線が無ければ `TabSwitcher.CreateUnderline(firstTab)` |
 | 8 | アイドル | `IdleBob.Attach(iconRect)` / `IconGlint.Attach(iconRect)`（レア）/ `NewBadge.Attach(rect, "NEW")`・`NewBadge.Detach(rect)` |
-| 9 | トースト | `Toast.Show("入荷しました", icon, ToastKind.Info, 2.5f)`（`Good` 緑 / `Warn` 赤）/ `Toast.ClearAll()` |
+| 9 | トースト | `Toast.Show("入荷しました", icon, ToastKind.Info, 2.5f)`（`Good` 緑 / `Warn` 赤）/ `Toast.ClearAll()` / 置き場所 `Toast.SetPlacement(ToastPlacement.Band(() => 帯のスクリーン矩形))`・戻す `Toast.SetPlacement(ToastPlacement.Default)` |
 | 10 | ゲージの残像 | `var g = TrailGauge.Attach(fillImage); g.SetValue(0.45f);`（初期化は `SetValue(v, animate:false)`） |
 | 11 | カードめくり | `CardFlip.Flip(card, () => ShowFront(), delay, rare, onDone)` / `CardFlip.FlipAll(cards, i => ShowFront(i), i => IsRare(i), onDone)` |
 | 12 | 値段の変化 | 数字を差し替えてから `PriceChangeFx.Play(priceText, +1 or -1, rowBackground)` |
@@ -43,6 +43,8 @@
 7. **TabSwitcher**: `SlideContent` は中身の今の位置からの横のずらしだけを足す（途中で呼び直しても、途中で位置が変わっても、最後は正しい位置）。LB/RB の切替と同じ処理から呼ぶ。
 8. **IdleBob**: anchoredPosition を書き換えるので、**レイアウトグループが位置を決める要素には付けず、その中のアイコン（子）に付ける**。無効化・Detach で元の位置に戻る。
 9. **Toast**: 画面上部の中央。新しいものが上、最大 4 枚。入力は受けない。
+   - **置き場所の切り替え**: `Toast.SetPlacement(ToastPlacement.Band(func))` で「帯の中央に 1 行・幅は帯に合わせる・同時 1 件（新しいもので置き換え、古いものはその場で薄れて消える）」になる。`func` は出すたびに呼ばれ、帯のスクリーン座標（左下原点）の矩形を返す（測れなければ `null` → 既定の置き場所で出る）。スクリーン座標から演出用レイヤーの座標へは `UIMotionFx.ScreenToLayer`（`LayerPos` と同じ経路）で直すので、解像度・Game ビューの大きさが変わっても合う。板の高さは帯に合わせて 40〜64 に縮み、文字は 1 行で入らなければ 20 まで縮め、それでも入らなければ末尾を「…」にする（帯が 40 より狭いときは帯の中央から上下にはみ出す）。切り替えると出ているトーストは演出なしで消える。**画面を出るときは必ず `ToastPlacement.Default` に戻す**（既定のまま他の画面へ行くと実績トーストなども帯に出てしまう）。省略モード（AutoPlay・人格マラソン）で出さないこと、入力を受けないことは既定と同じ。
+   - **配信画面（FightScene）**: `BattleSceneStarter` が配信（Phase 2）に入ったときに帯へ切り替え、決着後（リザルトの前）とシーンを出るとき（`Dispose`）に既定へ戻す。帯は `BattleSceneStarter.MeasureToastBand`: 上端 = 配信の映像の枠（`BattleWaveFxView` と同じ親でそれを囲む Image = `BattleFrame`）の下端、下端 = 売り場の棚（`StreamingSalesView.ItemSlots`）の上端、横 = 枠の幅。枠と進行ゲージ（`DungeonPhaseGaugeView`）の間が 40 以上あればゲージの上端までにするが、今の配置（1920x1080 で約 7px）では足りないので、ゲージの上に重ねて出す（2〜3 秒だけゲージが隠れる）。品出し画面（Phase 1）とリザルトは既定の置き場所。
 10. **TrailGauge**: Filled の Image は fillAmount、それ以外（Slider の Fill など）は anchorMax.x を動かす。**値は必ず `SetValue` で**（直接 fillAmount を書くと残像がずれる）。減るとゲージ（Fill の親）が揺れる。
 11. **CardFlip**: 表の差し替えは真横（90°）になった瞬間に `showFront` で行う。レアは 0.4 秒溜めてからめくり、後ろに金の光。
 12. **PriceChangeFx**: 色・大きさ・位置・回転は必ず元に戻る（途中で次が来ても元の値を覚えている）。矢印は子の `PriceArrow`（1.2 秒で消える）。
