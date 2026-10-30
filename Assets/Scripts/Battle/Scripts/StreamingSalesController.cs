@@ -168,9 +168,7 @@ public class StreamingSalesController : MonoBehaviour
 
     /// <summary>
     /// BattleSceneStarterから呼ばれる初期化メソッド。
-    /// BattleInputDataのSelectedItemsをInventory（在庫）に配置する。
-    /// 売り場（ItemsForSale）には見込み売上（ItemModel.ExpectedRevenueOf）の高い順に売り場の枠数ぶんを最初から並べる
-    /// （空の売り場で始まると、ドラッグするまで何も売れず最初の数秒が無駄になっていた。SUMMARY E-7）。
+    /// BattleInputDataのSelectedItemsをInventory（在庫）に配置する。売り場（ItemsForSale）は空で始める。
     /// </summary>
     public void Setup(ItemModel itemModel, List<BattleInputItem> selectedItems)
     {
@@ -193,14 +191,24 @@ public class StreamingSalesController : MonoBehaviour
             }
         }
 
-        // 見込み売上の高い順に売り場へ並べ、残りは在庫側に置く
         int sellSlots = view != null && view.ItemSlots != null ? view.ItemSlots.Count : 0;
-        var ranked = new List<RuntimeItemData>(inventoryItems);
-        ranked.Sort((a, b) => ItemModel.ExpectedRevenueOf(b).CompareTo(ItemModel.ExpectedRevenueOf(a)));
-        var forSale = new List<RuntimeItemData>();
-        for (int i = 0; i < ranked.Count && forSale.Count < sellSlots; i++) forSale.Add(ranked[i]);
-        var rest = inventoryItems.FindAll(item => !forSale.Contains(item));
+        int invSlots = inventorySlotViews != null ? inventorySlotViews.Count : 0;
+        PlanInitialShelves(inventoryItems, sellSlots, invSlots, out var forSale, out var rest);
         StartStreamingPhase(itemModel, forSale, rest);
+    }
+
+    /// <summary>
+    /// 配信開始時に持ち込んだ品をどこへ置くかを決める。
+    /// はじめは持ち込んだ順に全部左の在庫スロットへ並べ、売り場は空で始める（何を売り場に出すかはプレイヤーが選ぶ）。
+    /// 在庫の枠に入りきらない分だけ、消えないよう売り場の枠数まで回す。
+    /// </summary>
+    public static void PlanInitialShelves(List<RuntimeItemData> carried, int sellSlotCount, int inventorySlotCount,
+        out List<RuntimeItemData> forSale, out List<RuntimeItemData> inventory)
+    {
+        int invCount = Mathf.Min(carried.Count, Mathf.Max(0, inventorySlotCount));
+        inventory = carried.GetRange(0, invCount);
+        int overflow = Mathf.Min(carried.Count - invCount, Mathf.Max(0, sellSlotCount));
+        forSale = carried.GetRange(invCount, overflow);
     }
 
     /// <summary>
