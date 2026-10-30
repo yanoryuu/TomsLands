@@ -68,7 +68,8 @@ public class RestockQuantityPopup : MonoBehaviour
         _quantity = Mathf.Clamp(10, _maxQuantity > 0 ? 1 : 0, _maxQuantity); // 既定10個（買える範囲に丸める）
 
         if (titleText) titleText.text = $"「{runtime.ItemName}」を補充";
-        if (panel) panel.SetActive(true);
+        // #1 ぽよんと開く（閉じ演出の途中なら取り消して開く。表示状態は呼んだ時点で決まる）
+        if (panel) UIMotion.Open(panel);
 
         // 鍛冶屋と同じ表示（アイコン・チャート・市場分析）。チャートは配信中の価格変動を表示
         detailPanel.ShowItem(runtime, unitCost, recommendScore, useBattleHistory: true);
@@ -107,9 +108,11 @@ public class RestockQuantityPopup : MonoBehaviour
         {
             _showDisposables?.Dispose();
             _showDisposables = null;
-            detailPanel.Hide();
-            if (panel) panel.SetActive(false);
             _tcs = null;
+            // #1 縮んで閉じる（0.15 秒。省略モード・非表示中は即）。中身は閉じ終わってから隠す
+            // （閉じる途中に次の ShowAsync が来たら Open が取り消すので、そのときは隠さない）
+            if (panel) UIMotion.Close(panel, () => { if (_tcs == null && detailPanel != null) detailPanel.Hide(); });
+            else detailPanel.Hide();
         }
         return result;
     }

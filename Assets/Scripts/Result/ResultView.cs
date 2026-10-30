@@ -424,6 +424,25 @@ public class ResultView : MonoBehaviour
     {
         if (goToTitleButton != null) goToTitleButton.interactable = interactable;
         if (retryButton != null) retryButton.interactable = interactable;
+        if (!interactable) return;
+        // #4 押せるようになったら、村へ戻るボタン（見えている方。AutoPlay と同じく retry を先に見る）を主ボタンにして脈打たせる
+        var primary = retryButton != null && retryButton.gameObject.activeInHierarchy ? retryButton
+            : goToTitleButton != null && goToTitleButton.gameObject.activeInHierarchy ? goToTitleButton : null;
+        if (primary != null) ButtonFeel.SetPrimary(primary);
+    }
+
+    // =====================================================
+    // 自己ベスト更新の祝い（#5）。待たない（ボタンはすぐ押せる）
+    // =====================================================
+
+    /// <summary>
+    /// 自己ベストを更新したときの祝い（白い光・紋章のハンコ・放射光・紙吹雪・「自己ベスト更新！」の札。1.5 秒）。
+    /// ランク S の祝い（紙吹雪＋トコ）とは別物として、記録の更新だけに使う（ランクのハンコは既に押してあるので重ねない）。
+    /// 入力は受けない層に出るので、ボタンは押せたまま。省略モードでは何も出さない。
+    /// </summary>
+    public void PlayNewBestCelebration()
+    {
+        Celebration.Play("自己ベスト更新！");
     }
 
     public void SetSkipEnabled(bool enabled)

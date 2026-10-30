@@ -114,6 +114,9 @@ public sealed partial class AutoPlayController : MonoBehaviour
         _lastPhaseLabel = null;
         _nextActionAt = 0f;
 
+        // UI アニメーションは省略（即座に最終状態）。録画中は UIMotion 側が通常に戻す（Docs/UI_Motion.md）
+        UIMotion.SetSkip(UIMotionSkipSource, true);
+
         ApplySettings();
 
         _cts?.Cancel();
@@ -150,12 +153,17 @@ public sealed partial class AutoPlayController : MonoBehaviour
             _engineStaticsSaved = false;
         }
         Time.timeScale = _prevTimeScale;
+        UIMotion.SetSkip(UIMotionSkipSource, false);
     }
+
+    /// <summary>UIMotion への省略要求の名前（AutoPlay の開始〜停止の間だけ立てる）。</summary>
+    private const string UIMotionSkipSource = "AutoPlay";
 
     private void OnDestroy()
     {
         // AutoPlay.Stop 以外で破棄された（Play 終了など）ときも設定を戻してから通知する
         if (!_ended && AutoPlay.IsRunning) End();
+        UIMotion.SetSkip(UIMotionSkipSource, false);
         _cts?.Cancel();
         _cts?.Dispose();
         _cts = null;

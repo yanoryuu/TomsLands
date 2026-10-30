@@ -63,7 +63,8 @@ public class ItemPriceGraphView : MonoBehaviour
     {
         if (closeButton != null)
             closeButton.onClick.AddListener(Hide);
-        Hide();
+        // 起動時は演出なしで隠す
+        if (graphPanel != null) graphPanel.SetActive(false);
         SetInfoVisible(false);
     }
 
@@ -130,13 +131,20 @@ public class ItemPriceGraphView : MonoBehaviour
         BuildLineGraph(history);
 
         if (graphPanel != null)
-            graphPanel.SetActive(true);
+        {
+            // #1 ぽよんと開く（開いたまま別の品に切り替えたときは弾ませない。閉じる途中なら取り消して開く）。
+            // 商品詳細パネルの中に小さく出す compactMode は親のパネルが開閉するので従来どおり
+            if (compactMode || (graphPanel.activeSelf && !UIMotion.IsClosing(graphPanel))) graphPanel.SetActive(true);
+            else UIMotion.Open(graphPanel);
+        }
     }
 
     public void Hide()
     {
-        if (graphPanel != null)
-            graphPanel.SetActive(false);
+        if (graphPanel == null) return;
+        // #1 縮んで閉じる（0.15 秒。省略モード・非表示中は即）
+        if (compactMode) graphPanel.SetActive(false);
+        else UIMotion.Close(graphPanel);
     }
 
     public bool IsVisible => graphPanel != null && graphPanel.activeSelf;

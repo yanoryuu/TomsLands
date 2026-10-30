@@ -44,6 +44,9 @@ public class StreamingSettingView : MonoBehaviour
         if (autoSelectButton != null)
             autoSelectButton.onClick.AddListener(() => OnAutoSelectClicked.OnNext(Unit.Default));
 
+        // #4 この画面の主ボタンは「配信開始」（確定）
+        if (confirmButton != null) ButtonFeel.SetPrimary(confirmButton);
+
         SetupGamepad();
     }
 
@@ -100,8 +103,9 @@ public class StreamingSettingView : MonoBehaviour
     /// <param name="matchupOf">品ごとの行き先との相性（null なら出さない）。値段と一緒に各行へ出す</param>
     public void PopulateAvailable(IEnumerable<RuntimeItemData> items, System.Func<RuntimeItemData, AttributeMatchup> matchupOf = null)
     {
-        foreach (Transform t in availablePanel) Destroy(t.gameObject);
+        ClearChildren(availablePanel);
         Selectable firstAvailable = null;
+        var created = new List<RectTransform>();
         foreach (var item in items)
         {
             // 所持数が0以下のアイテムは表示しない
@@ -113,7 +117,11 @@ public class StreamingSettingView : MonoBehaviour
             if (matchupOf != null) slot.SetReadInfo(item.CurrentPrice.Value, matchupOf(item));
             slot.OnItemSelected += id => OnItemSelected.OnNext(id);
             if (firstAvailable == null) firstAvailable = FirstSelectable(go);
+            if (go.transform is RectTransform rt) created.Add(rt);
         }
+
+        // #3 手持ちの一覧が順に並んで出る（画面に入ったとき。1 行 0.25 秒・0.04 秒ずつ）
+        UIMotion.Stagger(created, step: 0.04f);
 
         // 最初のフォーカスは左の一覧の先頭（確定ボタンは誤爆しやすいので既定にしない）
         if (_scope != null)
@@ -126,8 +134,10 @@ public class StreamingSettingView : MonoBehaviour
 
     public void PopulateSelected(IEnumerable<KeyValuePair<string, int>> selected, ItemModel model)
     {
-        foreach (Transform t in selectedPanel) Destroy(t.gameObject);
+        ClearChildren(selectedPanel);
         var created = new List<SelectedItemSlot>();
+        var appeared = new List<RectTransform>();
+        var shownIds = new HashSet<string>();
 
         foreach (var kv in selected)
         {
@@ -156,7 +166,14 @@ public class StreamingSettingView : MonoBehaviour
                 OnItemDeselected.OnNext(itemId);
             slot.OnPadDeselectRequested += s => _padRefocusIndex = created.IndexOf(s);
             created.Add(slot);
+            shownIds.Add(id);
+            // 前回の一覧に無かった品（いま並べた品）だけ出る演出の対象にする（数量の変更で全部が動かないように）
+            if ((_selectedIds == null || !_selectedIds.Contains(id)) && go.transform is RectTransform rt) appeared.Add(rt);
         }
+        _selectedIds = shownIds;
+
+        // #3 並べた品が順に出る（初回・オート選択は全部、1 つ足したときはその 1 行だけ）
+        UIMotion.Stagger(appeared, step: 0.05f);
 
         // パッドの X で解除した直後: 同じ位置（末尾なら1つ上）のスロットへフォーカスを戻す
         if (_padRefocusIndex >= 0)
@@ -186,6 +203,22 @@ public class StreamingSettingView : MonoBehaviour
             OnQuantityChanged.OnNext((itemId, newQty));
         slot.OnItemDeselected += itemId => 
             OnItemDeselected.OnNext(itemId);
+    }
+
+    /// <summary>前回 PopulateSelected で並べた品（新しく足された行だけを出す演出に使う）。</summary>
+    private HashSet<string> _selectedIds;
+
+    /// <summary>
+    /// 一覧の子を消す。Destroy はフレームの終わりまで子に残るので、先に隠してレイアウトと順番の登場（#3）から外す。
+    /// </summary>
+    private static void ClearChildren(Transform parent)
+    {
+        if (parent == null) return;
+        foreach (Transform t in parent)
+        {
+            t.gameObject.SetActive(false);
+            Destroy(t.gameObject);
+        }
     }
 
     public void Show() => gameObject.SetActive(true);

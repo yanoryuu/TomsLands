@@ -194,7 +194,35 @@ public class InfoBrokerView : MonoBehaviour
         {
             developmentPanel.SetActive(tab == InfoBrokerTab.Development);
         }
+
+        // #7 タブを替えたら中身を横から滑り込ませる（右のタブへ移ったら右から）
+        if (changed)
+        {
+            var shown = PanelOf(tab);
+            if (shown != null)
+                TabSwitcher.SlideContent(shown.transform as RectTransform, TabOrder(tab) > TabOrder(previousTab) ? 1 : -1);
+        }
+        previousTab = tab;
     }
+
+    private InfoBrokerTab previousTab = InfoBrokerTab.Map;
+
+    private GameObject PanelOf(InfoBrokerTab tab) => tab switch
+    {
+        InfoBrokerTab.Map => mapPanel,
+        InfoBrokerTab.Exchange => exchangePanel,
+        InfoBrokerTab.Development => developmentPanel,
+        _ => null,
+    };
+
+    /// <summary>画面上のタブの並び（地図 → 取引所 → 開発）。</summary>
+    private static int TabOrder(InfoBrokerTab tab) => tab switch
+    {
+        InfoBrokerTab.Map => 0,
+        InfoBrokerTab.Exchange => 1,
+        InfoBrokerTab.Development => 2,
+        _ => 0,
+    };
 
     public void SortItemTab(InfoBrokerTab type)
     {
@@ -211,7 +239,12 @@ public class InfoBrokerView : MonoBehaviour
         bool isMax = currentLevel >= maxLevel;
 
         if (brokerLevelText != null)
+        {
             brokerLevelText.text = $"情報屋 Lv.{currentLevel}";
+            // レベルが上がった瞬間だけ弾ませる
+            if (shownBrokerLevel > 0 && currentLevel > shownBrokerLevel) UIMotion.Bump(brokerLevelText.transform, 1.25f, 0.3f);
+            shownBrokerLevel = currentLevel;
+        }
 
         if (isMax)
         {
@@ -226,6 +259,8 @@ public class InfoBrokerView : MonoBehaviour
             if (levelUpButton != null) levelUpButton.interactable = playerMoney >= cost;
         }
     }
+
+    private int shownBrokerLevel;
 
     /// <summary>次レベルで解禁される商品のプレビュー表示を更新する。</summary>
     public void UpdateUnlockPreview(string header, string body)
@@ -284,8 +319,21 @@ public class InfoBrokerView : MonoBehaviour
     /// <summary>情報屋専用の所持金表示を更新する。</summary>
     public void UpdatePlayerMoney(int money)
     {
-        if (playerMoneyText != null) playerMoneyText.text = $"{money:N0}G";
+        if (playerMoneyText == null) return;
+        // #2 開いている間に増減したら数字を回して弾ませる（最初の表示・非表示中は差し替えるだけ）
+        if (shownMoney.HasValue && shownMoney.Value != money && playerMoneyText.gameObject.activeInHierarchy)
+        {
+            UIMotion.CountTo(playerMoneyText, shownMoney.Value, money, v => $"{v:N0}G", 0.35f);
+            UIMotion.Bump(playerMoneyText.transform, 1.1f, 0.25f);
+        }
+        else
+        {
+            UIMotion.CountTo(playerMoneyText, money, money, v => $"{v:N0}G");
+        }
+        shownMoney = money;
     }
+
+    private int? shownMoney;
 }
 
 public enum InfoBrokerTab

@@ -59,6 +59,12 @@ public class DungeonLevelUpSlot : MonoBehaviour
         SetAffordable(data.CanAfford);
     }
 
+    /// <summary>支援でレベルが上がった直後に、レベルの表示を弾ませる。</summary>
+    public void PopLevel()
+    {
+        if (currentLevelText != null) UIMotion.Bump(currentLevelText.transform, 1.3f, 0.3f);
+    }
+
     public void UpdateLevel(int currentLevel, bool maxLevel)
     {
         isMaxLevel = maxLevel;

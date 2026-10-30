@@ -16,6 +16,8 @@ public static class UIFx
     public static void PanelOpen(GameObject panelRoot, float duration = 0.18f, float fromAlpha = 0f)
     {
         if (panelRoot == null || !panelRoot.activeInHierarchy) return;
+        // UIMotion.Close の閉じ演出中に開き直されたら、閉じ終わりで消されないよう取り消す（閉じ演出中でなければ何もしない）
+        UIMotion.CancelClose(panelRoot);
 
         var canvas = panelRoot.GetComponentInChildren<Canvas>();
         var target = canvas != null ? canvas.gameObject : panelRoot;

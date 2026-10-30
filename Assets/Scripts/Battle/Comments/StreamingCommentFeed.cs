@@ -134,12 +134,13 @@ public sealed class StreamingCommentFeed : IDisposable
 
     /// <summary>
     /// 文言を直接差し込む（スパチャの同色の上固定コメなど、カタログに無い文言用）。即時に出す。
+    /// isSuperChat=true のコメントは表示側で枠付きに強調する（#15）。
     /// </summary>
     public void PushText(string text, Color color, NicoCommentSize size = NicoCommentSize.Medium,
-        NicoCommentPosition position = NicoCommentPosition.Top, int priority = 4)
+        NicoCommentPosition position = NicoCommentPosition.Top, int priority = 4, bool isSuperChat = false)
     {
         if (!IsRunning || string.IsNullOrEmpty(text)) return;
-        _scheduled.Add((_now, new StreamingCommentRequest(Fill(text, null), color, size, position, priority)));
+        _scheduled.Add((_now, new StreamingCommentRequest(Fill(text, null), color, size, position, priority, isSuperChat)));
     }
 
     private float NextIdleInterval()

@@ -72,6 +72,7 @@ public class DebtPresenter : IDisposable, IStartable
     private void Bind()
     {
         debtView.OnPayClicked
+            .Where(_ => !debtView.IsClosing) // 閉じ演出の間の二度押し（外から OnNext されたときも）を弾く
             .Subscribe(_ => OnPay())
             .AddTo(disposables);
 

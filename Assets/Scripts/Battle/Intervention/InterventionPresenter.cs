@@ -468,7 +468,7 @@ public sealed class InterventionPresenter : IDisposable
         if (feed == null) return;
         string text = string.IsNullOrEmpty(info.Message) ? $"{info.Amount:N0}G" : $"{info.Amount:N0}G {info.Message}";
         var size = info.Color == SuperChatColor.Red ? NicoCommentSize.Big : NicoCommentSize.Medium;
-        feed.PushText(text, ToCommentColor(info.Color), size, NicoCommentPosition.Top, info.IsPlayer ? 5 : 4);
+        feed.PushText(text, ToCommentColor(info.Color), size, NicoCommentPosition.Top, info.IsPlayer ? 5 : 4, isSuperChat: true);
     }
 
     public static Color ToCommentColor(SuperChatColor color) => StreamingCommentCatalog.ParseColor(color switch

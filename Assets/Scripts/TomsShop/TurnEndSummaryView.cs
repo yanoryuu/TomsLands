@@ -74,6 +74,8 @@ public class TurnEndSummaryView : MonoBehaviour
         if (confirmButton != null)
         {
             confirmButton.onClick.AddListener(() => OnConfirmClicked.OnNext(Unit.Default));
+            // #4 この画面の主ボタン（次の日へ）は脈打つ
+            ButtonFeel.SetPrimary(confirmButton);
         }
     }
 
@@ -100,7 +102,12 @@ public class TurnEndSummaryView : MonoBehaviour
 
         // ランク画像を弾ませる（瞬間表示にしない）
         if (gradeImage != null && gradeImage.gameObject.activeInHierarchy)
+        {
             UIFx.Pop(gradeImage.transform, 0.6f, 0.3f);
+            // #5 最高評価の日だけ祝う（省略モードでは出ない）
+            if (grade == TurnGrade.S)
+                Celebration.Play("本日の評価 S！", null, null, gradeImage.rectTransform);
+        }
     }
 
     /// <summary>
@@ -110,10 +117,12 @@ public class TurnEndSummaryView : MonoBehaviour
     {
         ClearRows();
 
+        var newRows = new List<RectTransform>(items.Count);
         foreach (var item in items)
         {
             var row = Instantiate(rowPrefab, contentParent);
             row.SetActive(true);
+            if (row.transform is RectTransform rowRect) newRows.Add(rowRect);
 
             var rowUI = row.GetComponent<TurnEndSummaryRowUI>();
             if (rowUI != null)
@@ -131,6 +140,10 @@ public class TurnEndSummaryView : MonoBehaviour
 
         if (daysUntilBattleText != null)
             daysUntilBattleText.text = FormatDays(daysUntilBattle);
+
+        // #3 売れた品の行を上から順に出す（消した旧行は Destroy 待ちなので、新しい行だけを渡す）
+        if (contentParent != null && contentParent.gameObject.activeInHierarchy)
+            UIMotion.Stagger(newRows, 0.05f);
     }
 
     /// <summary>次の配信までの日数の表示（明日=1）。</summary>
@@ -215,16 +228,15 @@ public class TurnEndSummaryView : MonoBehaviour
             settledIncomeText.text = $"{prefix}{target:N0}G";
             return;
         }
-        int shown = 0;
+        // #2 数字を 0 から回す（共通部品。速さ・省略は UIMotion に従う。省略時は即最終の額）
         settledIncomeText.text = $"{prefix}0G";
-        float duration = incomeCountDuration * GameSettings.EffectDurationScale;
-        incomeTween = DOTween.To(() => shown, v => { shown = v; settledIncomeText.text = $"{prefix}{v:N0}G"; }, target, duration)
-            .SetEase(Ease.OutCubic)
-            .SetLink(settledIncomeText.gameObject)
-            .OnComplete(() =>
+        var text = settledIncomeText;
+        incomeTween = UIMotion.CountTo(text, 0, target, v => $"{prefix}{v:N0}G", incomeCountDuration);
+        if (incomeTween != null)
+            incomeTween.OnComplete(() =>
             {
-                settledIncomeText.text = $"{prefix}{target:N0}G";
-                UIFx.Pop(settledIncomeText.transform, 1.15f, 0.25f);
+                text.text = $"{prefix}{target:N0}G";
+                UIMotion.Bump(text.transform, 1.15f, 0.25f);
             });
     }
 

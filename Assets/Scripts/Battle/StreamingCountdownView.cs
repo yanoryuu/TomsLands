@@ -29,18 +29,29 @@ public class StreamingCountdownView : MonoBehaviour
         {
             for (int i = seconds; i >= 1; i--)
             {
-                PopText(i.ToString());
+                // #16 めくり: 最初の数字は弾ませて出し、2 つ目からは日めくりのように古い数字がめくれて替わる
+                if (i == seconds) PopText(i.ToString());
+                else FlipText(i.ToString());
                 await UniTask.Delay(TimeSpan.FromSeconds(1), cancellationToken: token);
             }
 
+            DOTween.Kill(countText.gameObject); // めくりの途中なら止めて（部品が文字の大きさ・透明度を戻す）から弾ませる
             PopText("配信開始！");
             await UniTask.Delay(TimeSpan.FromSeconds(startLabelDuration), cancellationToken: token);
         }
         finally
         {
+            DOTween.Kill(countText.gameObject);
             countText.transform.DOKill();
             panel.SetActive(false);
         }
+    }
+
+    private void FlipText(string text)
+    {
+        countText.transform.DOKill();
+        countText.transform.localScale = Vector3.one;
+        FlipCounter.Flip(countText, text);
     }
 
     private void PopText(string text)

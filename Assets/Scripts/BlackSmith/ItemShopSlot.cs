@@ -99,6 +99,7 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
         SetPrice(price);
         SetCurrentStock(currentStock);
         if (popularBadge) popularBadge.SetActive(isPopular);
+        SetPopularGlint(isPopular);
 
         SetMaxDisplayQuantity(Mathf.Max(0, maxStock));
         SetDisplayQuantity(0);
@@ -169,8 +170,47 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
             demandText.text = $"{demand:P0}";
             demandText.color = DemandColor(demand);
         }
-        if (demandBar) demandBar.value = demand; // バー未使用時はnull（旧レイアウト互換）
+        if (demandBar) SetDemandBar(demand); // バー未使用時はnull（旧レイアウト互換）
         if (popularBadge) popularBadge.SetActive(isPopular);
+        SetPopularGlint(isPopular);
+    }
+
+    private TrailGauge demandGauge;
+
+    /// <summary>#8 人気の品はアイコンに時々光が走る（アイコンの絵には触らない）。</summary>
+    private void SetPopularGlint(bool on)
+    {
+        if (icon == null) return;
+        if (on) IconGlint.Attach(icon.rectTransform, 3.5f);
+        else IconGlint.Detach(icon.rectTransform);
+    }
+
+    /// <summary>
+    /// #10 需要バー。最初の表示は即座に、開いている間に需要が動いたら残像つきで動かす。
+    /// Slider の値も合わせる（Slider が Fill を最終位置へ動かすので、見えている位置へ戻してから残像に任せる）。
+    /// </summary>
+    private void SetDemandBar(float demand)
+    {
+        var fill = demandBar.fillRect != null ? demandBar.fillRect.GetComponent<Image>() : null;
+        bool horizontal = demandBar.direction == Slider.Direction.LeftToRight;
+        if (fill == null || !horizontal || fill.type == Image.Type.Filled)
+        {
+            demandBar.value = demand;
+            return;
+        }
+        bool first = demandGauge == null;
+        if (first) demandGauge = TrailGauge.Attach(fill);
+        var fillRect = demandBar.fillRect;
+        Vector2 shownMax = fillRect.anchorMax;
+        demandBar.SetValueWithoutNotify(demand);
+        float target = demandBar.normalizedValue; // Fill の anchorMax.x と同じ尺度
+        if (first || demandGauge == null)
+        {
+            demandGauge?.SetValue(target, animate: false);
+            return;
+        }
+        fillRect.anchorMax = shownMax;
+        demandGauge.SetValue(target);
     }
 
     /// <summary>需要の高さを温度で表す色（低=青灰 / 中=白 / 高=オレンジ）。</summary>
@@ -213,8 +253,25 @@ public class ItemShopSlot : MonoBehaviour, IPointerEnterHandler, IPointerExitHan
 
     public void SetPrice(int price)
     {
+        int before = unitPrice;
         unitPrice = price;
         UpdatePriceText();
+        // #12 開いている間に値段が動いたら、上がった/下がったを見せる（最初の表示は動かさない）
+        if (priceShown && before != price && priceText != null)
+            PriceChangeFx.Play(priceText, price > before ? 1 : -1, tutorialPulse == null ? rowBackground : null);
+        priceShown = true;
+    }
+
+    private bool priceShown;
+
+    /// <summary>#12 値段の変化を見せる（取引所の行を開いたとき、前に見た値段からの動き）。delay 秒後に再生。</summary>
+    public void PlayPriceChange(int direction, float delay = 0f)
+    {
+        if (priceText == null || direction == 0) return;
+        UIMotion.Delay(delay, () =>
+        {
+            if (priceText != null) PriceChangeFx.Play(priceText, direction, tutorialPulse == null ? rowBackground : null);
+        }, gameObject);
     }
 
     /// <summary>

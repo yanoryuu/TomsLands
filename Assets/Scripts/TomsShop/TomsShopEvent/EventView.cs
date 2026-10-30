@@ -77,6 +77,8 @@ public class EventView : MonoBehaviour
 
     private void OnClickConfirm()
     {
+        // 閉じ演出（0.15 秒）の間に押されても二度通知しない
+        if (gamePanelManager != null && gamePanelManager.IsEventPanelClosing) return;
         if (_isShowingEffect)
         {
             // エフェクト表示中にクリック → 完了通知を発行してパネルを閉じる

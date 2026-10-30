@@ -198,6 +198,17 @@ public static class ClearProbabilityCalculator
         return ComputeStats(hero, HeroEquipmentBonus.Get(hero, itemModel), powerMul);
     }
 
+    /// <summary>
+    /// 武器・防具を weaponId / armorId に付け替えたときの「戦うときの攻撃・防御・HP」（勇者画面のドラッグ中の見込み）。
+    /// 勇者の装備そのものは変えない。
+    /// </summary>
+    public static HeroStats GetEffectiveStatsWith(RuntimeHeroData hero, ItemModel itemModel, RelicEffectResolver relicResolver, string weaponId, string armorId)
+    {
+        if (hero == null) return new HeroStats(0, 0, 0);
+        float powerMul = relicResolver != null ? Mathf.Max(0.1f, relicResolver.Modify(RelicStatId.HeroPowerMul, 1f)) : 1f;
+        return ComputeStats(hero, HeroEquipmentBonus.Get(weaponId, armorId, itemModel), powerMul);
+    }
+
     private static HeroStats ComputeStats(RuntimeHeroData hero, HeroEquipmentBonus.Multipliers equip, float powerMul)
     {
         int hp  = Mathf.Max(1, Mathf.RoundToInt(hero.hp.Value * equip.Hp));

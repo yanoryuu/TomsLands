@@ -171,6 +171,11 @@ public class MapView : MonoBehaviour
             label.SetScheduleRow(row.Name, row.DayText, row.StatusText, row.IsPast);
             scheduleRows.Add(label.gameObject);
         }
+
+        // #3 配信の予定の札を左から順に出す
+        var plates = new List<RectTransform>();
+        foreach (var go in scheduleRows) if (go != null && go.transform is RectTransform rt) plates.Add(rt);
+        if (scheduleStrip.gameObject.activeInHierarchy) UIMotion.Stagger(plates, 0.06f, 0f, 0.25f, 0.15f);
     }
 }
 

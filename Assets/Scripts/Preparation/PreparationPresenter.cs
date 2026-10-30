@@ -210,6 +210,8 @@ public class PreparationPresenter : IStartable, IDisposable
                 RefreshAll();
             }).AddTo(catalogDisposables);
         }
+        // 見た目だけ: 並べた札を順にめくって出す（選べるかどうか・並びは変えない）
+        view.RevealCatalog(relicSlots, i => i < relicPool.Count ? relicPool[i].rarity : RelicRarity.Common);
     }
 
     /// <summary>

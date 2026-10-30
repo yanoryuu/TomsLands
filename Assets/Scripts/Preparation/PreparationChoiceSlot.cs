@@ -78,5 +78,26 @@ public class PreparationChoiceSlot : MonoBehaviour
     public void SetHighlighted(bool on)
     {
         if (highlight != null) highlight.SetActive(on);
+        // #8 選んでいる札のアイコンだけゆっくり上下させる（アイコンは札の直下でレイアウトに入っていない）
+        if (iconImage != null && Application.isPlaying)
+        {
+            if (on && iconImage.enabled) { if (!iconImage.TryGetComponent<IdleBob>(out _)) IdleBob.Attach(iconImage.rectTransform, 5f, 2.2f); }
+            else IdleBob.Detach(iconImage.rectTransform);
+        }
+    }
+
+    /// <summary>アイコンの RectTransform（光・アイドルを付ける先）。未配線なら null。</summary>
+    public RectTransform IconRect => iconImage != null ? iconImage.rectTransform : null;
+
+    /// <summary>
+    /// #11 めくりの裏面: 絵と文字を隠す／戻す（札の枠だけ残る）。表示・押せる状態は変えず、描画だけ切り替える。
+    /// 戻すときは Setup で決めた見え方（アイコンは絵がある時だけ）に戻す。
+    /// </summary>
+    public void SetFaceVisible(bool visible)
+    {
+        if (iconImage != null) iconImage.enabled = visible && iconImage.sprite != null;
+        if (nameText != null) nameText.enabled = visible;
+        if (infoText != null) infoText.enabled = visible;
+        if (countText != null) countText.enabled = visible;
     }
 }

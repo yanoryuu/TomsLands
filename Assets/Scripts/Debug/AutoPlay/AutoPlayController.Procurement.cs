@@ -680,7 +680,7 @@ public sealed partial class AutoPlayController
     // =====================================================
     // 店への投資（IAutoPlayShopInvestor）: 勇者の装備・店の改装・設備・情報屋の開発・取引所。鍛冶屋の開発は鍛冶屋の画面で
     // 画面のボタンを実際に押す（リフレクション名: TomsShopView の HeroButton / ShopUpgradeButton / InfoButton、
-    // HeroPanelView の weaponDropdown / armorDropdown / tacticsDropdown / weaponIds / armorIds / tacticsValues / closeButton、
+    // HeroPanelView の tacticsDropdown / tacticsValues / closeButton（武器・防具は棚のカード ShelfCardButton を 2 回押す）、
     // ShopUpgradeView の upgradeButton / closeButton / tabs、ShopFacilityTabsView の machineTab、
     // ShopMachineView の purchaseButton / upgradeButton / repairButton / closeButton、
     // ShopMachineSlotUI の selectButton、InfoBrokerView の developmentButton / levelUpButton / exchangeButton / closeButton、
@@ -792,13 +792,13 @@ public sealed partial class AutoPlayController
         string NameOf(string id) => items?.GetRuntimeItem(id)?.ItemName ?? id;
 
         if (plan.HeroWeaponId != null && hero.weaponId.Value != plan.HeroWeaponId
-            && await PickDropdownAsync(view, "weaponDropdown", "weaponIds", plan.HeroWeaponId, $"勇者: 武器を「{NameOf(plan.HeroWeaponId)}」に", ct))
+            && await EquipFromShelfAsync(view, plan.HeroWeaponId, true, $"勇者: 武器を「{NameOf(plan.HeroWeaponId)}」に", ct))
         {
             if (hero.weaponId.Value == plan.HeroWeaponId) result.HeroWeaponEquipped = plan.HeroWeaponId;
             else result.Notes.Add("武器を替えられなかった");
         }
         if (plan.HeroArmorId != null && hero.armorId.Value != plan.HeroArmorId
-            && await PickDropdownAsync(view, "armorDropdown", "armorIds", plan.HeroArmorId, $"勇者: 防具を「{NameOf(plan.HeroArmorId)}」に", ct))
+            && await EquipFromShelfAsync(view, plan.HeroArmorId, false, $"勇者: 防具を「{NameOf(plan.HeroArmorId)}」に", ct))
         {
             if (hero.armorId.Value == plan.HeroArmorId) result.HeroArmorEquipped = plan.HeroArmorId;
             else result.Notes.Add("防具を替えられなかった");
@@ -810,6 +810,22 @@ public sealed partial class AutoPlayController
         }
         await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds * 2f), DelayType.UnscaledDeltaTime, cancellationToken: ct);
         await CloseToShopAsync(view, "closeButton", "勇者の画面", ct);
+    }
+
+    /// <summary>
+    /// 勇者の棚のカードを 2 回押して装備する（1 回目で持ち上げ、2 回目で勇者の枠に置く。人がクリックで付ける近道と同じ経路
+    /// → View の OnWeaponChanged / OnArmorChanged → Presenter）。棚がもう一方の種類ならタブを切り替えてから探す。
+    /// </summary>
+    private async UniTask<bool> EquipFromShelfAsync(HeroPanelView view, string itemId, bool weapon, string label, CancellationToken ct)
+    {
+        var card = view.ShelfCardButton(itemId, weapon);
+        if (card == null) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        if (!await PressAsync(card, $"{label}（棚から持ち上げる）", ct)) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        if (!await PressAsync(card, label, ct)) return false;
+        await UniTask.Delay(TimeSpan.FromSeconds(UiStepSeconds), DelayType.UnscaledDeltaTime, cancellationToken: ct);
+        return true;
     }
 
     // ---------------- 店の改装・設備 ----------------

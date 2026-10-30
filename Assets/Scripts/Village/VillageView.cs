@@ -198,7 +198,10 @@ public class VillageView : MonoBehaviour
         instance = this;
         SetupFocusScopes();
         if (departButton != null)
+        {
             departButton.onClick.AddListener(() => OnDepart.OnNext(Unit.Default));
+            ButtonFeel.SetPrimary(departButton); // #4 この画面で次に押してほしいボタン
+        }
         if (titleButton != null)
             titleButton.onClick.AddListener(() => OnGoTitle.OnNext(Unit.Default));
         if (investButton != null)
@@ -206,14 +209,16 @@ public class VillageView : MonoBehaviour
         if (investCloseButton != null)
             investCloseButton.onClick.AddListener(() =>
             {
+                if (UIMotion.IsClosing(investPanel)) return; // 閉じ演出中の 2 度押し（Cancel の連打など）
                 HideInvestPanel();
                 OnPanelClosed.OnNext(Unit.Default);
             });
         if (conversionCloseButton != null)
             conversionCloseButton.onClick.AddListener(() =>
             {
-                if (conversionPopup != null) conversionPopup.SetActive(false);
-                ApplyRankUpDecor(false, -1, -1);
+                if (UIMotion.IsClosing(conversionPopup)) return; // 閉じ演出中の 2 度押しで OnConversionClosed を 2 回出さない
+                // #1 縮んで消える。格上げの飾りを外すのは消えてから（消える途中で枠の絵・高さが変わらないように）
+                ClosePanel(conversionPopup, () => ApplyRankUpDecor(false, -1, -1));
                 RefreshModalDim();
                 OnConversionClosed.OnNext(Unit.Default);
             });
@@ -308,8 +313,8 @@ public class VillageView : MonoBehaviour
     private void LateUpdate()
     {
         fieldFreeLastFrame = IsFieldFreeNow;
-        // 小窓をどこから閉じても（AutoPlay・チュートリアル等）幕が残らないように合わせる
-        if (modalDim != null && modalDim.gameObject.activeSelf != AnyModalOpen) RefreshModalDim();
+        // 小窓をどこから閉じても（AutoPlay・チュートリアル等）幕が残らないように合わせる（消えていく途中の幕は「出ていない」とみなす）
+        if (modalDim != null && (modalDim.gameObject.activeSelf && !dimFadingOut) != AnyModalOpen) RefreshModalDim();
     }
 
     private void LockPlayerInput()
@@ -348,7 +353,8 @@ public class VillageView : MonoBehaviour
     /// </summary>
     public void UpdateHud(int villageFunds, int villageLevel, string rankName = null, string nextRankLine = null)
     {
-        SetFundsDisplay(villageFunds);
+        AnimateFunds(villageFunds);
+        BumpLevelIfChanged(villageLevel);
         // metaCurrencyText（旧・銀行預金/のれん表示）は村資金へ統合したため使わない
         if (metaCurrencyText != null) metaCurrencyText.gameObject.SetActive(false);
         string head = string.IsNullOrEmpty(rankName)
@@ -419,8 +425,7 @@ public class VillageView : MonoBehaviour
     public bool ShowRankUpPopup(string title, string rankLine, string unlockLine, int fromRank = -1, int toRank = -1)
     {
         if (conversionPopup == null) return false;
-        conversionPopup.SetActive(true);
-        UIFx.PanelOpen(conversionPopup);
+        OpenPanel(conversionPopup); // #1 ぽよんと開く
         if (conversionTitleText != null) conversionTitleText.text = title;
         // 格の名前は大きい金の行（村資金の額を出す行）に出して上へ、解放の説明は小さい行に出して下へ入れ替える
         SwapConversionRows(true);
@@ -435,7 +440,7 @@ public class VillageView : MonoBehaviour
             var t = conversionConvertedText.transform;
             t.DOKill();
             t.localScale = Vector3.one * 0.6f;
-            t.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.15f).SetLink(conversionConvertedText.gameObject);
+            UIMotion.Run(t.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.15f), conversionConvertedText.gameObject);
         }
         if (conversionEarnedText != null) conversionEarnedText.text = unlockLine ?? "";
         if (conversionCloseButton != null) UIFx.Pop(conversionCloseButton.transform);
@@ -456,7 +461,8 @@ public class VillageView : MonoBehaviour
         c.anchoredPosition = swapped ? earnedHome.Value : convertedHome.Value;
     }
 
-    public bool IsConversionPopupOpen => conversionPopup != null && conversionPopup.activeSelf;
+    /// <summary>帰還/格上げのポップが開いているか（閉じ演出中は閉じたものとみなす）。</summary>
+    public bool IsConversionPopupOpen => IsShown(conversionPopup);
 
     // ───────── 格上げポップの飾り ─────────
 
@@ -484,6 +490,8 @@ public class VillageView : MonoBehaviour
             rankUpRays.transform.localRotation = Quaternion.identity;
             rankUpRays.gameObject.SetActive(on);
         }
+        if (rankUpCelebrationDelay != null && rankUpCelebrationDelay.IsActive()) rankUpCelebrationDelay.Kill();
+        rankUpCelebrationDelay = null;
 
         Sprite emblem = null;
         if (on && rankUpEmblems != null && rankUpEmblems.Length > 0 && toRank >= 0)
@@ -542,29 +550,44 @@ public class VillageView : MonoBehaviour
         }
     }
 
-    /// <summary>格上げポップの動き（少し拡大して出る・紋章が弾む・増えた星が順に弾む・後ろの光がゆっくり回る）。</summary>
+    private Tween rankUpCelebrationDelay;
+
+    /// <summary>
+    /// 格上げポップの動き（ポップはぽよんと開く・紋章が祝いのハンコで押されてからポップに収まる・増えた星が順に弾む・後ろの光がゆっくり回る）。
+    /// #5 祝い: 紋章を Celebration のハンコとして押し（白い光・放射光・紙吹雪）、ハンコが引くのと入れ替わりにポップの紋章が弾んで出る。
+    /// 祝いを別にもう 1 つ重ねるのではなく、ポップの紋章の登場をそれに置き換える（紋章が二重に出ない）。
+    /// 動きは UIMotion を通すので、省略モードでは最終状態（紋章・星が出た状態）に即なる。
+    /// </summary>
     private void PlayRankUpDecor(int fromRank, int toRank)
     {
-        if (conversionPopup != null)
-        {
-            var t = conversionPopup.transform;
-            t.DOKill();
-            t.localScale = Vector3.one * 0.86f;
-            t.DOScale(1f, 0.35f).SetEase(Ease.OutBack).SetLink(conversionPopup);
-        }
         if (rankUpRays != null && rankUpRays.gameObject.activeSelf)
         {
             var rt = rankUpRays.transform;
             rt.localScale = Vector3.one * 0.6f;
-            rt.DOScale(1f, 0.5f).SetEase(Ease.OutCubic).SetLink(rankUpRays.gameObject);
-            rt.DOLocalRotate(new Vector3(0f, 0f, -360f), 16f, RotateMode.FastBeyond360)
-                .SetEase(Ease.Linear).SetLoops(-1).SetLink(rankUpRays.gameObject);
+            UIMotion.Run(rt.DOScale(1f, 0.5f).SetEase(Ease.OutCubic), rankUpRays.gameObject);
+            UIMotion.RunLoop(rt.DOLocalRotate(new Vector3(0f, 0f, -360f), 16f, RotateMode.FastBeyond360)
+                .SetEase(Ease.Linear).SetLoops(-1), rankUpRays.gameObject);
         }
         if (rankUpEmblem != null && rankUpEmblem.gameObject.activeSelf)
         {
             var et = rankUpEmblem.transform;
             et.localScale = Vector3.zero;
-            et.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(0.1f).SetLink(rankUpEmblem.gameObject);
+            float emblemDelay = 0.1f;
+            if (!UIMotion.IsSkip && rankUpEmblem.sprite != null)
+            {
+                // ポップが開き終わって紋章の位置が決まってから押す（開く途中は拡縮で位置がずれる）
+                const float openWait = 0.25f;
+                var emblemRect = rankUpEmblem.rectTransform;
+                var sprite = rankUpEmblem.sprite;
+                rankUpCelebrationDelay = UIMotion.Delay(openWait, () =>
+                {
+                    rankUpCelebrationDelay = null;
+                    if (emblemRect != null && emblemRect.gameObject.activeInHierarchy)
+                        Celebration.Play(null, sprite, null, emblemRect);
+                }, rankUpEmblem.gameObject);
+                emblemDelay = openWait + 1.3f; // ハンコが縮んで消えるのと入れ替わり
+            }
+            UIMotion.Run(et.DOScale(1f, 0.45f).SetEase(Ease.OutBack).SetDelay(emblemDelay), rankUpEmblem.gameObject);
         }
         if (rankUpStarsAfter != null && toRank >= 0)
         {
@@ -576,7 +599,7 @@ public class VillageView : MonoBehaviour
                 if (s == null || i < 0) continue;
                 var st = s.transform;
                 st.localScale = Vector3.zero;
-                st.DOScale(1.3f, 0.4f).SetEase(Ease.OutBack).SetDelay(delay).SetLink(s.gameObject);
+                UIMotion.Run(st.DOScale(1.3f, 0.4f).SetEase(Ease.OutBack).SetDelay(delay), s.gameObject);
                 delay += 0.15f;
             }
         }
@@ -607,8 +630,7 @@ public class VillageView : MonoBehaviour
             ShowMessage($"{title}\n{body}");
             return;
         }
-        recordBoardPopup.SetActive(true);
-        UIFx.PanelOpen(recordBoardPopup);
+        OpenPanel(recordBoardPopup); // #1 ぽよんと開く
         if (recordBoardTitleText != null) recordBoardTitleText.text = title;
         if (recordBoardBodyText != null) recordBoardBodyText.text = body;
         if (recordBoardAmountText != null) recordBoardAmountText.text = "";
@@ -634,8 +656,7 @@ public class VillageView : MonoBehaviour
             ShowRecordBoard(title, sb.ToString());
             return;
         }
-        recordBoardPopup.SetActive(true);
-        UIFx.PanelOpen(recordBoardPopup);
+        OpenPanel(recordBoardPopup); // #1 ぽよんと開く
         if (recordBoardTitleText != null) recordBoardTitleText.text = title;
         SetRecordRows(rows);
         RefreshModalDim();
@@ -664,7 +685,7 @@ public class VillageView : MonoBehaviour
 
     public void HideRecordBoard()
     {
-        if (recordBoardPopup != null) recordBoardPopup.SetActive(false);
+        ClosePanel(recordBoardPopup); // #1 縮んで消える
         RefreshModalDim();
     }
 
@@ -672,7 +693,12 @@ public class VillageView : MonoBehaviour
 
     private bool AnyModalOpen => IsInvestPanelOpen || IsConversionPopupOpen || IsRecordBoardOpen;
 
-    /// <summary>小窓が1つでも開いていれば幕を出す（animate なら薄く入る）。</summary>
+    private bool dimFadingOut; // 幕が消えていく途中（見た目はまだ出ている）
+
+    /// <summary>
+    /// 小窓が1つでも開いていれば幕を出す（animate なら薄く入る／消える）。動きは UIMotion を通す（省略モードでは即）。
+    /// 消えるときは 0.15 秒（小窓の閉じ演出と同じ長さ）で薄くしてから隠す。
+    /// </summary>
     private void RefreshModalDim(bool animate = true)
     {
         bool open = AnyModalOpen;
@@ -682,15 +708,32 @@ public class VillageView : MonoBehaviour
             rankUpRays.gameObject.SetActive(false);
         }
         if (modalDim == null) return;
-        bool was = modalDim.gameObject.activeSelf;
+        bool wasShown = modalDim.gameObject.activeSelf && !dimFadingOut;
         KillTweens(modalDim);
-        modalDim.gameObject.SetActive(open);
-        if (!open) return;
+        dimFadingOut = false;
+        bool tween = animate && Application.isPlaying && !UIMotion.IsSkip;
         var c = modalDim.color;
-        if (animate && !was)
+        if (!open)
         {
-            modalDim.color = new Color(c.r, c.g, c.b, 0f);
-            modalDim.DOFade(modalDimAlpha, 0.15f).SetLink(modalDim.gameObject);
+            if (tween && wasShown)
+            {
+                dimFadingOut = true;
+                UIMotion.Run(modalDim.DOFade(0f, 0.15f).OnComplete(() =>
+                {
+                    dimFadingOut = false;
+                    if (modalDim != null && !AnyModalOpen) modalDim.gameObject.SetActive(false);
+                }), modalDim.gameObject);
+                return;
+            }
+            modalDim.gameObject.SetActive(false);
+            return;
+        }
+        bool wasActive = modalDim.gameObject.activeSelf; // 消えていく途中なら、今の濃さから戻す
+        modalDim.gameObject.SetActive(true);
+        if (tween && !wasShown)
+        {
+            if (!wasActive) modalDim.color = new Color(c.r, c.g, c.b, 0f);
+            UIMotion.Run(modalDim.DOFade(modalDimAlpha, 0.15f), modalDim.gameObject);
         }
         else
         {
@@ -812,14 +855,26 @@ public class VillageView : MonoBehaviour
             if (!open) SetShortcutListInteractable(false);
             return;
         }
-        shortcutTween = shortcutDrawer.DOAnchorPosX(target, shortcutSlideDuration)
+        // UIMotion を通す（省略モードでは即その位置へ。OnComplete も同期で呼ばれる）
+        var tween = shortcutDrawer.DOAnchorPosX(target, shortcutSlideDuration)
             .SetEase(open ? Ease.OutCubic : Ease.InCubic)
-            .SetLink(shortcutDrawer.gameObject)
             .OnComplete(() =>
             {
                 shortcutTween = null;
                 if (!shortcutOpen) SetShortcutListInteractable(false);
             });
+        UIMotion.Run(tween, shortcutDrawer.gameObject);
+        shortcutTween = tween.IsActive() ? tween : null;
+        if (open) StaggerShortcutButtons();
+    }
+
+    /// <summary>#3 帯を開いたとき、施設のボタンを上から順に出す（alpha と位置だけ。押せる状態は変えない）。</summary>
+    private void StaggerShortcutButtons()
+    {
+        var rows = new List<RectTransform>(shortcutButtons.Count);
+        foreach (var b in shortcutButtons)
+            if (b != null && b.gameObject.activeSelf) rows.Add((RectTransform)b.transform);
+        UIMotion.Stagger(rows, step: 0.04f, distance: 24f, duration: 0.22f, delay: 0.05f);
     }
 
     private void SetShortcutListInteractable(bool on)
@@ -869,7 +924,12 @@ public class VillageView : MonoBehaviour
                 level.gameObject.SetActive(!string.IsNullOrEmpty(e.LevelLabel));
             }
             var badge = b.transform.Find("Badge");
-            if (badge != null) badge.gameObject.SetActive(e.CanUpgrade);
+            if (badge != null)
+            {
+                badge.gameObject.SetActive(e.CanUpgrade);
+                // #8 拡張できる施設の「！」をぷるっと揺らす（表示中だけ動く。撮影ツールの編集モードでは付けない）
+                if (e.CanUpgrade && Application.isPlaying) VillageBadgeWobble.Ensure(badge);
+            }
         }
     }
 
@@ -885,15 +945,84 @@ public class VillageView : MonoBehaviour
         return c != null ? c.GetComponent<T>() : null;
     }
 
-    public bool IsRecordBoardOpen => recordBoardPopup != null && recordBoardPopup.activeSelf;
+    /// <summary>掲示板が開いているか（閉じ演出中は閉じたものとみなす）。</summary>
+    public bool IsRecordBoardOpen => IsShown(recordBoardPopup);
+
+    // ───────── #1 小窓の開閉（UIMotion。撮影ツールの編集モードでは演出なしで出し入れする） ─────────
+
+    private static void OpenPanel(GameObject panel)
+    {
+        if (panel == null) return;
+        if (Application.isPlaying) UIMotion.Open(panel);
+        else panel.SetActive(true);
+    }
+
+    /// <summary>縮んで消える（0.15 秒）。onDone は消えたあと（省略モード・非表示中は即）。</summary>
+    private static void ClosePanel(GameObject panel, System.Action onDone = null)
+    {
+        if (panel == null)
+        {
+            onDone?.Invoke();
+            return;
+        }
+        if (Application.isPlaying)
+        {
+            UIMotion.Close(panel, onDone);
+            return;
+        }
+        panel.SetActive(false);
+        onDone?.Invoke();
+    }
+
+    private static bool IsShown(GameObject panel) => panel != null && panel.activeSelf && !UIMotion.IsClosing(panel);
+
+    // ───────── #2 村資金の数字・総合Lv ─────────
+
+    private int? lastVillageLevel;
+
+    /// <summary>
+    /// 村資金が変わったら（投資で減った・デバッグで増えた）数字を回して財布を弾ませ、差額を浮かせる。
+    /// 帰還の到着演出（VillageArrivalFx）の最中は、演出が SetFundsDisplay で数えるので触らない（二重に数えない）。
+    /// 初回・編集モード（撮影ツール）・同じ額は即表示。
+    /// </summary>
+    private void AnimateFunds(int villageFunds)
+    {
+        int? prev = lastFunds;
+        bool animate = Application.isPlaying && villageFundsText != null && prev.HasValue && prev.Value != villageFunds
+                       && !ArrivalPlaying;
+        if (!animate)
+        {
+            SetFundsDisplay(villageFunds);
+            return;
+        }
+        lastFunds = villageFunds;
+        int delta = villageFunds - prev.Value;
+        UIMotion.CountTo(villageFundsText, prev.Value, villageFunds, v => FundsLabel(v), 0.6f);
+        UIMotion.Bump(villageFundsText.transform);
+        MoneyFx.FloatText(villageFundsText.rectTransform,
+            delta > 0 ? $"+{delta:N0}G" : $"-{-delta:N0}G",
+            delta > 0 ? UIMotionFx.Gold2 : UIMotionFx.Red, 36f);
+    }
+
+    /// <summary>総合Lvが変わったら、格と総合Lvの看板の文字を弾ませる（初回・編集モードは何もしない）。</summary>
+    private void BumpLevelIfChanged(int villageLevel)
+    {
+        int? prev = lastVillageLevel;
+        lastVillageLevel = villageLevel;
+        if (!Application.isPlaying || !prev.HasValue || prev.Value == villageLevel) return;
+        var target = rankText != null ? rankText : villageLevelText;
+        if (target != null) UIMotion.Bump(target.transform, 1.15f, 0.28f);
+    }
 
     /// <summary>村資金HUDの数値だけ更新する（到着演出のカウントアップ用）。</summary>
     public void SetFundsDisplay(int villageFunds)
     {
         lastFunds = villageFunds;
         // 見出しを小さく上に、額を下に（7桁でも文字を縮めない幅に箱を合わせてある）
-        if (villageFundsText != null) villageFundsText.text = $"<line-height=72%><size=52%>村資金</size>\n</line-height>{villageFunds:N0}G";
+        if (villageFundsText != null) villageFundsText.text = FundsLabel(villageFunds);
     }
+
+    private static string FundsLabel(long villageFunds) => $"<line-height=72%><size=52%>村資金</size>\n</line-height>{villageFunds:N0}G";
 
     private int? lastFunds; // 投資パネルで費用と比べる（UpdateHud・到着演出のカウントアップで更新）
 
@@ -988,7 +1117,14 @@ public class VillageView : MonoBehaviour
         int cost, bool canInvest, string blockedReason, bool nextIsSpecial = false)
     {
         if (investPanel == null) return;
-        investPanel.SetActive(true);
+        // 閉じている（または閉じ演出中）なら #1 ぽよんと開く。開いたままの更新（投資の直後）は開き直さない
+        bool reopened = IsInvestPanelOpen;
+        if (reopened) investPanel.SetActive(true);
+        else OpenPanel(investPanel);
+        // 開いたまま同じ施設の Lv が上がった（投資した）ら、Lv の行を弾ませる
+        bool leveledUp = reopened && Application.isPlaying && facility != null && facility.facilityId == shownFacilityId && level > shownLevel;
+        shownFacilityId = facility != null ? facility.facilityId : null;
+        shownLevel = level;
 
         if (detailIcon != null)
         {
@@ -1064,7 +1200,11 @@ public class VillageView : MonoBehaviour
                 : canInvest ? (level == 0 ? "建設する" : "拡張する") : blockedReason;
         }
         RefreshModalDim();
+        if (leveledUp && detailLevelText != null) UIMotion.Bump(detailLevelText.transform, 1.18f, 0.3f);
     }
+
+    private string shownFacilityId;
+    private int shownLevel;
 
     private Vector2? currentRowHome, nextRowHome;
 
@@ -1118,18 +1258,18 @@ public class VillageView : MonoBehaviour
 
     public void HideInvestPanel()
     {
-        if (investPanel != null) investPanel.SetActive(false);
+        ClosePanel(investPanel); // #1 縮んで消える（閉じているときは何もしない）
         RefreshModalDim();
     }
 
-    public bool IsInvestPanelOpen => investPanel != null && investPanel.activeSelf;
+    /// <summary>投資パネルが開いているか（閉じ演出中は閉じたものとみなす。AutoPlay もこれを見る）。</summary>
+    public bool IsInvestPanelOpen => IsShown(investPanel);
 
     /// <summary>帰還収支ポップを表示する（村資金のカウントアップ演出付き）。</summary>
     public void ShowConversionPopup(bool cleared, int earned, int converted, VillageFundsBreakdown breakdown = null)
     {
         if (conversionPopup == null) return;
-        conversionPopup.SetActive(true);
-        conversionPopup.transform.localScale = Vector3.one;
+        OpenPanel(conversionPopup); // #1 ぽよんと開く
         SwapConversionRows(false); // 格上げで入れ替えた行を戻す
         ApplyRankUpDecor(false, -1, -1);
         SetConversionBreakdown(breakdown);
@@ -1150,13 +1290,13 @@ public class VillageView : MonoBehaviour
         {
             int shown = 0;
             conversionConvertedText.text = "村へ +0G";
-            DOTween.To(() => shown, x =>
+            // UIMotion を通す（省略モードでは即「村へ +○G」）
+            UIMotion.Run(DOTween.To(() => shown, x =>
                 {
                     shown = x;
                     conversionConvertedText.text = $"村へ +{x:N0}G";
                 }, converted, 0.8f)
-                .SetEase(Ease.OutCubic)
-                .SetLink(conversionConvertedText.gameObject);
+                .SetEase(Ease.OutCubic), conversionConvertedText.gameObject);
         }
     }
 

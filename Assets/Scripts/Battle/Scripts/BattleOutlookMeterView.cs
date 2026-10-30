@@ -32,6 +32,7 @@ public class BattleOutlookMeterView : MonoBehaviour
     private Image _heroFill;
     private Image _demonFill;
     private RectTransform _needle;
+    private Image _trail;
     private bool _built;
     private float _value = -1f;
     private Tween _tween;
@@ -59,6 +60,47 @@ public class BattleOutlookMeterView : MonoBehaviour
             .SetEase(Ease.OutCubic)
             .SetLink(gameObject);
         UIFx.Pop(_needle, 1.35f, 0.25f);
+        PlayTrail(from, heroWin01);
+    }
+
+    /// <summary>
+    /// #10 ゲージの残像。針が動いた区間（前の位置〜新しい位置）に白い残像を残し、0.4 秒待ってから 0.5 秒で新しい位置へ縮める。
+    /// 綱引きバーは勇者・魔王の 2 枚の塗りで TrailGauge（1 枚の塗りの後ろに描く）では隠れてしまうため、塗りの上・針の下に描く。
+    /// 省略モードでは出さない。
+    /// </summary>
+    private void PlayTrail(float from, float to)
+    {
+        if (_trail == null) return;
+        var go = _trail.gameObject;
+        DOTween.Kill(go);
+        if (UIMotion.IsSkip || !isActiveAndEnabled || Mathf.Abs(to - from) < 0.01f)
+        {
+            go.SetActive(false);
+            return;
+        }
+        var rt = _trail.rectTransform;
+        float near = to;
+        float far = from;
+        SetTrailSpan(rt, near, far);
+        var c = _trail.color;
+        c.a = 0.55f;
+        _trail.color = c;
+        go.SetActive(true);
+
+        var seq = DOTween.Sequence().SetId(go);
+        seq.Insert(0.4f, DOVirtual.Float(far, near, 0.5f, x => SetTrailSpan(rt, near, x)).SetEase(Ease.InOutQuad));
+        seq.Insert(0.6f, _trail.DOFade(0f, 0.3f));
+        seq.OnComplete(() => { if (go != null) go.SetActive(false); });
+        seq.OnKill(() => { if (go != null) go.SetActive(false); });
+        UIMotion.Run(seq, go);
+    }
+
+    private static void SetTrailSpan(RectTransform rt, float a, float b)
+    {
+        rt.anchorMin = new Vector2(Mathf.Min(a, b), 0f);
+        rt.anchorMax = new Vector2(Mathf.Max(a, b), 1f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
     }
 
     public void SetImmediate(float heroWin01)
@@ -104,6 +146,9 @@ public class BattleOutlookMeterView : MonoBehaviour
         Stretch(_heroFill.rectTransform, 0f);
         _demonFill = NewImage("DemonFill", _bar, trackSprite, demonColor);
         Stretch(_demonFill.rectTransform, 0f);
+        // #10 残像（塗りの上・針の下。普段は隠す）
+        _trail = NewImage("OutlookTrail", _bar, null, Color.white);
+        _trail.gameObject.SetActive(false);
 
         var needle = NewImage("Needle", _bar, MakeCircleSprite(), needleColor);
         _needle = needle.rectTransform;

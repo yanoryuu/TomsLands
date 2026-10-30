@@ -73,6 +73,9 @@ public class ResultPresenter : IPresenter, IDisposable, IStartable
                 await _resultView.PlayRevealAsync(_lastStatistics, ct);
                 if (_lastStatistics != null && _lastStatistics.Rank == "S")
                     _resultView.PlayRankSCelebration();
+                // 見た目だけ: 自己ベストを塗り替えたら祝う（初クリアは「はじめてのクリア」の行だけで、祝いは出さない）
+                if (_lastStatistics != null && _lastStatistics.IsNewBest && _lastStatistics.HasPreviousBest)
+                    _resultView.PlayNewBestCelebration();
             }
         }
         catch (OperationCanceledException) { return; }

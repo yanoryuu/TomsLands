@@ -3,6 +3,7 @@ using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// ローディング画面。SPUM の勇者が歩く演出・ステータス表示・フェードイン/アウトを提供する。
@@ -33,6 +34,13 @@ public sealed class LoadingView : MonoBehaviour
     private Vector2 heroBasePos;
     private bool heroBaseCached;
 
+    // #6 幕（Docs/UI_Motion.md）。プレハブは変えずに実行時に Canvas の中へ作る。
+    // 幕を使うときは黒の Background を隠し、勇者と文言は閉じた幕の上（右下）に出す。
+    private SceneCurtain curtain;
+    private Graphic background;
+    private CanvasGroup[] contentGroups;
+    private bool curtainResolved;
+
     /// <summary>表示中（フェード中を含む）か。</summary>
     public bool IsVisible { get; private set; }
 
@@ -58,6 +66,7 @@ public sealed class LoadingView : MonoBehaviour
     public void ShowImmediate()
     {
         BeginShow();
+        ResetCurtain();
         if (canvasGroup != null)
         {
             canvasGroup.DOKill();
@@ -72,6 +81,25 @@ public sealed class LoadingView : MonoBehaviour
         if (canvasGroup == null) return;
 
         canvasGroup.DOKill();
+        if (UIMotion.IsSkip)
+        {
+            // 省略モード（オートプレイ等）: 演出なしで即暗転（最終状態は通常と同じ）
+            ResetCurtain();
+            canvasGroup.alpha = 1f;
+            return;
+        }
+        if (SceneCurtain.Enabled && EnsureCurtain())
+        {
+            // 幕: 背景の黒は出さず、幕が閉じきってから勇者と文言を出す
+            SetBackgroundVisible(false);
+            SetContentAlpha(0f);
+            canvasGroup.alpha = 1f;
+            await curtain.CloseAsync(ct);
+            FadeContent(1f, 0.15f);
+            return;
+        }
+
+        ResetCurtain();
         canvasGroup.alpha = 0f;
         var tween = canvasGroup.DOFade(1f, fadeInDuration)
             .SetEase(Ease.OutQuad)
@@ -86,6 +114,20 @@ public sealed class LoadingView : MonoBehaviour
         if (canvasGroup == null) return;
 
         canvasGroup.DOKill();
+        if (UIMotion.IsSkip)
+        {
+            ResetCurtain();
+            canvasGroup.alpha = 0f;
+            return;
+        }
+        if (curtain != null && curtain.IsClosed)
+        {
+            FadeContent(0f, 0.12f);
+            await curtain.OpenAsync(ct);
+            canvasGroup.alpha = 0f;
+            return;
+        }
+
         var tween = canvasGroup.DOFade(0f, fadeOutDuration)
             .SetEase(Ease.InQuad)
             .SetUpdate(true)
@@ -104,7 +146,73 @@ public sealed class LoadingView : MonoBehaviour
             canvasGroup.blocksRaycasts = false;
         }
         if (heroStage != null) heroStage.Stop();
+        ResetCurtain();
         gameObject.SetActive(false);
+    }
+
+    // ---------------------------------------------------------------- #6 幕
+
+    /// <summary>幕を作る（初回だけ）。Canvas が見つからなければ false（従来のフェードで続ける）。</summary>
+    private bool EnsureCurtain()
+    {
+        if (curtain != null) return true;
+        if (curtainResolved) return false;
+        curtainResolved = true;
+
+        var canvas = GetComponentInChildren<Canvas>(true);
+        if (canvas == null) return false;
+        var bgTransform = canvas.transform.Find("Background");
+        background = bgTransform != null ? bgTransform.GetComponent<Graphic>() : null;
+        int index = bgTransform != null ? bgTransform.GetSiblingIndex() + 1 : 0;
+        curtain = SceneCurtain.Create((RectTransform)canvas.transform, index);
+
+        var groups = new System.Collections.Generic.List<CanvasGroup>();
+        if (statusText != null) groups.Add(ContentGroup(statusText.gameObject));
+        if (heroRect != null) groups.Add(ContentGroup(heroRect.gameObject));
+        if (spinner != null) groups.Add(ContentGroup(spinner.gameObject));
+        contentGroups = groups.ToArray();
+        return true;
+    }
+
+    private static CanvasGroup ContentGroup(GameObject go)
+    {
+        if (!go.TryGetComponent<CanvasGroup>(out var cg)) cg = go.AddComponent<CanvasGroup>();
+        return cg;
+    }
+
+    /// <summary>幕を開いた状態に戻し、黒の背景と勇者・文言を元どおり見せる。</summary>
+    private void ResetCurtain()
+    {
+        if (curtain != null) curtain.SetClosedImmediate(false);
+        SetBackgroundVisible(true);
+        SetContentAlpha(1f);
+    }
+
+    private void SetBackgroundVisible(bool visible)
+    {
+        if (background != null) background.enabled = visible;
+    }
+
+    private void SetContentAlpha(float alpha)
+    {
+        if (contentGroups == null) return;
+        foreach (var g in contentGroups)
+        {
+            if (g == null) continue;
+            g.DOKill();
+            g.alpha = alpha;
+        }
+    }
+
+    private void FadeContent(float to, float duration)
+    {
+        if (contentGroups == null) return;
+        foreach (var g in contentGroups)
+        {
+            if (g == null) continue;
+            g.DOKill();
+            UIMotion.Run(g.DOFade(to, duration), gameObject, unscaled: true);
+        }
     }
 
     /// <summary>Tween の完了（または Kill）をフレーム単位で待つ。timeScale に左右されない。</summary>
@@ -136,5 +244,6 @@ public sealed class LoadingView : MonoBehaviour
     {
         if (canvasGroup != null) canvasGroup.DOKill();
         if (heroRect != null) heroRect.DOKill();
+        curtain?.Kill();
     }
 }

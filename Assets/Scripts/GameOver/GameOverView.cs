@@ -33,6 +33,18 @@ public class GameOverView : MonoBehaviour
         // パッド/キー: 最初は「村へ戻る」。戻る操作は無い（Cancel なし）
         var scope = UIFocusScope.GetOrAdd(gameObject);
         scope.FirstSelected = retryButton;
+
+        if (retryButton != null) ButtonFeel.SetPrimary(retryButton); // #4 この画面で押すのはこのボタンだけ
+    }
+
+    private void Start()
+    {
+        // #3 見出し → 文 → 日数 → 振り返り → ボタンの順に出す（alpha と位置だけ。ボタンは出ている間も押せる）
+        var rows = new List<RectTransform>();
+        foreach (var t in new TMP_Text[] { titleText, messageText, turnText, reviewText })
+            if (t != null && t.gameObject.activeSelf) rows.Add(t.rectTransform);
+        if (retryButton != null && retryButton.gameObject.activeSelf) rows.Add((RectTransform)retryButton.transform);
+        UIMotion.Stagger(rows, step: 0.12f, distance: 36f, duration: 0.3f, delay: 0.15f);
     }
 
     private static void SetButtonLabel(Button button, string label)
@@ -74,15 +86,27 @@ public class GameOverView : MonoBehaviour
             $"配信　討伐 {heroWins}・防衛 {heroLosses}　収支 {sign}{Mathf.Abs(streamEarnings):N0}G",
         };
         if (carried > 0) lines.Add($"持ち込んだ {carried:N0}G は戻らない");
-        if (villageFunds >= 0) // 体験版は -1（村が無い）
+        if (villageFunds < 0) // 体験版は -1（村が無い）
         {
-            // 内訳は同じ行に小さく添える（欄は 1000x190 で行を増やすと文字が縮むため）
-            string detail = breakdown != null ? breakdown.BuildInlineText() : "";
-            lines.Add(string.IsNullOrEmpty(detail)
-                ? $"村へ +{villageFunds:N0}G"
-                : $"村へ +{villageFunds:N0}G<size=70%>（{detail}）</size>");
+            reviewText.text = string.Join("\n", lines);
+            return;
         }
-        reviewText.text = string.Join("\n", lines);
+        // 内訳は同じ行に小さく添える（欄は 1000x190 で行を増やすと文字が縮むため）
+        string detail = breakdown != null ? breakdown.BuildInlineText() : "";
+        string head = string.Join("\n", lines);
+        System.Func<long, string> format = v => head + "\n" + (string.IsNullOrEmpty(detail)
+            ? $"村へ +{v:N0}G"
+            : $"村へ +{v:N0}G<size=70%>（{detail}）</size>");
+        reviewText.text = format(villageFunds);
+        // #2 村へ入る額を、振り返りの行が出てから 0 から回す（省略モードでは即この額のまま）
+        if (villageFunds <= 0 || UIMotion.IsSkip) return;
+        reviewText.text = format(0);
+        UIMotion.Delay(0.6f, () =>
+        {
+            if (reviewText == null) return;
+            UIMotion.CountTo(reviewText, 0, villageFunds, format, 0.8f);
+            UIMotion.Bump(reviewText.transform, 1.04f, 0.2f);
+        }, reviewText.gameObject);
     }
 
     /// <summary>体験版: ボタンを「次へ」にする（押すと「製品版へ」を出す。村へは戻らない）。</summary>

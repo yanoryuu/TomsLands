@@ -43,7 +43,8 @@ public class BattlePanelManager : MonoBehaviour
         switch (phase)
         {
             case StreamingGamePhase.StreamingSetting:
-                if (streamingSettingPanel != null) streamingSettingPanel.SetActive(true);
+                // #1 ぽよんと開く（品出し画面は UI の矩形なので拡縮できる。表示状態は呼んだ時点で決まる）
+                if (streamingSettingPanel != null) UIMotion.Open(streamingSettingPanel);
                 break;
 
             case StreamingGamePhase.Streaming:
@@ -51,6 +52,8 @@ public class BattlePanelManager : MonoBehaviour
                 break;
 
             case StreamingGamePhase.StreamingResult:
+                // 配信中・リザルトのルートは UI ではない Transform（戦闘のワールド物も含む）なので拡縮しない。
+                // リザルトの開く演出は BattleResultView が自分の矩形で行う
                 if (streamingResultPanel != null) streamingResultPanel.SetActive(true);
                 break;
         }

@@ -29,6 +29,10 @@ public class DungeonPhaseGaugeView : MonoBehaviour
     private readonly List<Image> _dots = new();
     private int _phaseCount;
     private Tween _fillTween;
+    // #10 ゲージの残像（共通部品）。Sliced の塗りは anchorMax.x で伸縮するので TrailGauge がそのまま使える
+    private TrailGauge _trail;
+    private Image _trailImage;
+    private Image _leadImage;
 
     /// <summary>フェーズ数に合わせてゲージを初期化する（点を生成、塗りを0に）。</summary>
     public void Setup(int phaseCount)
@@ -46,6 +50,9 @@ public class DungeonPhaseGaugeView : MonoBehaviour
             fillImage.DOKill();
             _fillTween?.Kill();
             ApplyFill(0f);
+            EnsureTrail();
+            if (_trail != null) _trail.SetValue(0f, animate: false);
+            SyncTrailVisibility();
         }
 
         if (dotsContainer == null || dotTemplate == null) return;
@@ -80,7 +87,15 @@ public class DungeonPhaseGaugeView : MonoBehaviour
         {
             fillImage.DOKill();
             _fillTween?.Kill();
-            if (fillImage.type == Image.Type.Filled)
+            EnsureTrail();
+            if (_trail != null)
+            {
+                // 進むと緑の先触れが先に伸び、塗りが追いつく（値は SetValue で。省略モードは即座）
+                fillImage.enabled = true;
+                _trail.SetValue(target);
+                SyncTrailVisibility();
+            }
+            else if (fillImage.type == Image.Type.Filled)
             {
                 fillImage.DOFillAmount(target, fillDuration).SetEase(Ease.OutCubic).SetLink(fillImage.gameObject);
             }
@@ -110,6 +125,39 @@ public class DungeonPhaseGaugeView : MonoBehaviour
                 dot.color = dotInactiveColor;
             }
         }
+    }
+
+    private void EnsureTrail()
+    {
+        if (_trail != null || fillImage == null) return;
+        _trail = TrailGauge.Attach(fillImage);
+        if (_trail == null || fillImage.transform.parent == null) return;
+        var parent = fillImage.transform.parent;
+        var t = parent.Find("GaugeTrail");
+        var l = parent.Find("GaugeLead");
+        _trailImage = t != null ? t.GetComponent<Image>() : null;
+        _leadImage = l != null ? l.GetComponent<Image>() : null;
+    }
+
+    private void LateUpdate()
+    {
+        if (_trail != null) SyncTrailVisibility();
+    }
+
+    /// <summary>Sliced の塗りは角丸より短い間は隠す（ApplyFill と同じ決まり）。残像・先触れも同じ。</summary>
+    private void SyncTrailVisibility()
+    {
+        if (fillImage == null || fillImage.type == Image.Type.Filled) return;
+        HideIfShort(fillImage);
+        HideIfShort(_trailImage);
+        HideIfShort(_leadImage);
+    }
+
+    private static void HideIfShort(Image img)
+    {
+        if (img == null) return;
+        var rt = img.rectTransform;
+        img.enabled = rt.rect.width >= rt.rect.height;
     }
 
     /// <summary>塗りを割合 t で即時反映する。Sliced は幅を伸縮し、角丸より短い間は非表示にする。</summary>
