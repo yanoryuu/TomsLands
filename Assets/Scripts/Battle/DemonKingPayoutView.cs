@@ -467,5 +467,9 @@ public class DemonKingPayoutView : MonoBehaviour
     [ContextMenu("Debug: ダミー表示（オッズあり・楽勝 ×2.0）")]
     private void DebugShowDummyOddsUp()
         => ShowAsync(new DemonKingPayoutData("魔王城", 3, 30000, 50000, 1.2f, 60000, SupportOddsTier.Easy, 2f, 120000)).Forget();
+
+    [ContextMenu("Debug: ダミー表示（絶望 ×0.3・元本保証）")]
+    private void DebugShowDummyFloor()
+        => ShowAsync(new DemonKingPayoutData("魔王城", 3, 50000, 150000, 1f, 150000, SupportOddsTier.Hopeless, 0.3f, 50000, 0, true)).Forget();
 #endif
 }

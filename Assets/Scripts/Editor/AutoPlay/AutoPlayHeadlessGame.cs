@@ -654,7 +654,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
                 MaxLevel = GameConst.MaxDungeonLevel,
                 SupportCost = isMax ? 0 : d.levelUpCost,
                 // 見込みの段のオッズ込み（SupportOdds。オッズが既定 1 なら rewardGold そのまま。レリックはここでは掛けない＝今と同じ）
-                DefeatReward = SupportOdds.Expected(d.rewardGold, () => clearPct),
+                DefeatReward = SupportOdds.Expected(d.rewardGold, () => clearPct, d.GetInvestedTotal(d.currentDungeonLevel)),
                 ClearChancePct = clearPct,
                 IsNextStream = next.HasValue && next.Value == d.key,
             });
@@ -1259,7 +1259,8 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
         if (!outcome.Victory)
         {
             int reward = dungeon?.GetDefenseReward(level) ?? 0;
-            defeatReward = SupportOdds.Payout(reward, RelicBattleEffects.DefeatRewardMul, _battleIn.PreStreamClearPct).Total;
+            defeatReward = SupportOdds.Payout(reward, RelicBattleEffects.DefeatRewardMul, _battleIn.PreStreamClearPct,
+                dungeon?.GetInvestedTotal(level) ?? 0).Total;
         }
 
         // 勇者敗北の返金騒ぎ（BattleSceneStarter の写し）: 負けたら武器・防具の売上の一部を返す
@@ -1372,7 +1373,7 @@ public sealed class AutoPlayHeadlessGame : IPlayerActions, IDisposable
             HasBoss = hasBoss,
             EnemyCount = count,
             // 実際の支払いと同じ式（レリック × 見込みの段のオッズ。オッズが既定 1 なら今と同じ）
-            DefeatReward = SupportOdds.Payout(dungeon.GetDefenseReward(level), rewardMul, displayedClearPct).Total,
+            DefeatReward = SupportOdds.Payout(dungeon.GetDefenseReward(level), rewardMul, displayedClearPct, dungeon.GetInvestedTotal(level)).Total,
             HeroMaxHp = hero != null ? Scale(Mathf.RoundToInt(hero.hp.Value * equip.Hp)) : 0,
             HeroAttack = hero != null ? Scale(Mathf.RoundToInt(hero.attackPower.Value * equip.Attack)) : 0,
             HeroDefense = hero != null ? Scale(Mathf.RoundToInt(hero.defensePower.Value * equip.Defense)) : 0,

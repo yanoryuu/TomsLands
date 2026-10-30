@@ -19,6 +19,15 @@ public class StreamTuningData
     public float supportOddsUnfavorable = 1f;
     public float supportOddsHopeless = 1f;
 
+    /// <summary>
+    /// 読みが当たった（勇者が負けた）ときの配当は、出資の合計（そのダンジョンを今のLvにするまでの魔王軍支援の費用の合計）を下回らない
+    /// （2026-10-30 ユーザー決定: 馬券と同じく当たれば最低でも元本）。勇者が勝ったときは 0 のまま。
+    /// 既定 false（今の動き）。配信中の表（dungeonLevels。配当 ÷ 出資の合計 = 2.8〜3.0 倍）とオッズ 1 なら true でも配当は変わらない
+    /// （StreamTuningTests.PayoutFloor_LiveTable_OddsOne_IsUnchanged）が、同梱のアセットの表（dungeonLevels が無い配信＝体験版・初回のオフライン）では
+    /// Lv4 配当 70,000 &lt; 出資 80,000、Lv5 120,000 &lt; 230,000 で額が変わるため、既定では入れない。オッズと一緒にシートで true にする。
+    /// </summary>
+    public bool supportPayoutFloorToStake = false;
+
     /// <summary>村の広場の上乗せを「返金騒ぎを引いた売上」に掛ける（false = 今の動き: 返金前の売上に掛ける）。</summary>
     public bool plazaBonusAfterRefund = false;
 
@@ -169,36 +178,61 @@ public static class SupportOdds
     };
 
     /// <summary>
-    /// 防衛報酬（魔王軍支援の配当）の計算の唯一の式。基本額 × レリック倍率（四捨五入）→ 見込みの段のオッズ（Apply）。
+    /// 防衛報酬（魔王軍支援の配当）の計算の唯一の式。基本額 × レリック倍率（四捨五入）→ 見込みの段のオッズ（Apply）
+    /// → 出資の合計 stake を下限にする（streamTuning.supportPayoutFloorToStake）。
     /// 実際の支払い（BattleSceneStarter）・配当通知書・実績（AchievementTracker）・AI の見込み（オートプレイ）はみなここを通す。
     /// clearPct は配信開始時の見込み（表示％。分からなければ負の値 → オッズ 1）。
+    /// stake は出資の合計（DungeonLevels.InvestedTotal。GetInvestedTotal(Lv)）。勇者が勝ったときはこれを呼ばない（配当 0）。
     /// </summary>
-    public static SupportPayout Payout(int baseReward, float relicMultiplier, float clearPct, StreamTuningData d = null)
+    public static SupportPayout Payout(int baseReward, float relicMultiplier, float clearPct, int stake, StreamTuningData d = null)
     {
+        d ??= StreamTuning.Data;
         int relicReward = Mathf.RoundToInt(baseReward * relicMultiplier);
         var tier = FromClearPct(clearPct);
         float odds = Multiplier(tier, d);
-        return new SupportPayout(baseReward, relicMultiplier, relicReward, tier, odds, Apply(relicReward, odds));
+        int oddsReward = Apply(relicReward, odds);
+        int total = FloorToStake(relicReward, oddsReward, stake, d);
+        return new SupportPayout(baseReward, relicMultiplier, relicReward, tier, odds, total, Mathf.Max(0, stake), total > oddsReward);
     }
 
     /// <summary>
-    /// AI などの見込み用: レリック込みの配当 reward に、その見込み（clearPct()）の段のオッズを掛ける。
-    /// オッズが全部 1 なら clearPct を呼ばずにそのまま返す（重いドライランをしない・今と同じ）。
+    /// AI などの見込み用: レリック込みの配当 reward に、その見込み（clearPct()）の段のオッズを掛け、出資の合計 stake を下限にする（Payout と同じ）。
+    /// オッズが全部 1 なら clearPct を呼ばない（重いドライランをしない）。下限が効かなければ今と同じ額。
     /// </summary>
-    public static int Expected(int reward, Func<float> clearPct, StreamTuningData d = null)
+    public static int Expected(int reward, Func<float> clearPct, int stake, StreamTuningData d = null)
     {
         d ??= StreamTuning.Data;
-        if (reward <= 0 || clearPct == null || !IsActive(d)) return reward;
-        float pct;
-        try { pct = clearPct(); }
-        catch (Exception) { return reward; }
-        return Apply(reward, Multiplier(FromClearPct(pct), d));
+        if (reward <= 0) return reward;
+        int withOdds = reward;
+        if (clearPct != null && IsActive(d))
+        {
+            try { withOdds = Apply(reward, Multiplier(FromClearPct(clearPct()), d)); }
+            catch (Exception) { withOdds = reward; }
+        }
+        return FloorToStake(reward, withOdds, stake, d);
+    }
+
+    /// <summary>出資の合計を下限にするキーが入っているか。</summary>
+    public static bool FloorsToStake(StreamTuningData d = null) => (d ?? StreamTuning.Data).supportPayoutFloorToStake;
+
+    /// <summary>
+    /// 配当の下限（元本保証）。防衛報酬がある（relicReward &gt; 0 ＝ 出資済みのダンジョンで勇者が負けた）ときだけ、
+    /// オッズを掛けた額 amount を出資の合計 stake まで引き上げる。キーが off・stake が 0 以下なら amount のまま。
+    /// </summary>
+    private static int FloorToStake(int relicReward, int amount, int stake, StreamTuningData d)
+    {
+        if (relicReward <= 0 || stake <= 0 || !d.supportPayoutFloorToStake) return amount;
+        return Math.Max(amount, stake);
     }
 }
 
-/// <summary>防衛報酬の内訳（基本額 × レリック倍率 = RelicReward、× 見込みの段のオッズ = Total）。</summary>
+/// <summary>防衛報酬の内訳（基本額 × レリック倍率 = RelicReward、× 見込みの段のオッズ、出資の合計を下限 = Total）。</summary>
 public readonly struct SupportPayout
 {
+    /// <summary>出資の合計（下限に使った額。0 = 下限なし）。</summary>
+    public readonly int Stake;
+    /// <summary>下限（元本保証）で額が引き上がったか。</summary>
+    public readonly bool FloorApplied;
     public readonly int BaseReward;
     /// <summary>レリックの倍率（DefeatRewardMul）。</summary>
     public readonly float Multiplier;
@@ -209,7 +243,8 @@ public readonly struct SupportPayout
     /// <summary>実際に受け取る額。</summary>
     public readonly int Total;
 
-    public SupportPayout(int baseReward, float multiplier, int relicReward, SupportOddsTier oddsTier, float oddsMultiplier, int total)
+    public SupportPayout(int baseReward, float multiplier, int relicReward, SupportOddsTier oddsTier, float oddsMultiplier, int total,
+        int stake = 0, bool floorApplied = false)
     {
         BaseReward = baseReward;
         Multiplier = multiplier;
@@ -217,8 +252,11 @@ public readonly struct SupportPayout
         OddsTier = oddsTier;
         OddsMultiplier = oddsMultiplier;
         Total = total;
+        Stake = stake;
+        FloorApplied = floorApplied;
     }
 
+    /// <summary>勇者が勝った（または防衛報酬が無い）ときの配当 0。下限はかからない。</summary>
     public static readonly SupportPayout None = new(0, 1f, 0, SupportOddsTier.Unknown, 1f, 0);
 }
 

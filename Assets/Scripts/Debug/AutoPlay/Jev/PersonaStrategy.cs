@@ -1799,7 +1799,7 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         // 防衛報酬はそのレベルで配信したときの見込みの段のオッズ込み（実際の支払いと同じ SupportOdds。既定のオッズ 1 なら今と同じ）
         return PersonaSupportEv.Choose(_supportRates, n.Dungeon, d.currentDungeonLevel, GameConst.MaxDungeonLevel,
             lv => d.GetLevelData(lv)?.levelUpCost ?? 0,
-            PersonaSupportEv.RewardWithOdds(lv => d.GetDefenseReward(lv), lv => ClearPctAt(d, lv)), budget);
+            PersonaSupportEv.RewardWithOdds(lv => d.GetDefenseReward(lv), lv => ClearPctAt(d, lv), d.GetInvestedTotal), budget);
     }
 
     /// <summary>
@@ -1813,9 +1813,9 @@ public class PersonaStrategy : DefaultAutoPlayStrategy, IAutoPlayJikkyoExtras, I
         return ClearProbabilityCalculator.Calculate(hero, AutoPlayUi.Resolve<ItemModel>(), d, level, AutoPlayUi.Resolve<RelicEffectResolver>());
     }
 
-    /// <summary>そのレベルでの防衛報酬の見込み（見込みの段のオッズ込み。オッズが全部 1 なら GetDefenseReward そのまま）。</summary>
+    /// <summary>そのレベルでの防衛報酬の見込み（見込みの段のオッズ込み・出資の合計が下限。オッズが全部 1 で下限に届かなければ GetDefenseReward そのまま）。</summary>
     private static int ExpectedDefenseReward(DungeonData d, int level)
-        => SupportOdds.Expected(d.GetDefenseReward(level), () => ClearPctAt(d, level));
+        => SupportOdds.Expected(d.GetDefenseReward(level), () => ClearPctAt(d, level), d.GetInvestedTotal(level));
 
     public float VillageLookSeconds => _p.VillageLookSeconds;
 

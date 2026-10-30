@@ -760,10 +760,12 @@ public class BattleSceneStarter : IAsyncStartable
 
         // レリック補正（魔王ビルド: 防衛報酬アップ。配信遷移時に GameFlowManager がセットする）と、
         // 見込みに応じたオッズ（配信開始時の見込みの段ごとの倍率。既定はどの段も 1 で今と同じ）
-        var payout = SupportOdds.Payout(baseReward, RelicBattleEffects.DefeatRewardMul, _inputData.PreStreamClearPct);
+        // 当たれば最低でも出資の合計（元本保証。streamTuning.supportPayoutFloorToStake）
+        var payout = SupportOdds.Payout(baseReward, RelicBattleEffects.DefeatRewardMul, _inputData.PreStreamClearPct,
+            CalculateSupportAmount(dungeon, _inputData.DungeonLevel));
 
         if (payout.Total > 0)
-            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {payout.Total}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={payout.Multiplier:F2}, 見込み={SupportOdds.Label(payout.OddsTier)} オッズ×{payout.OddsMultiplier:F2})");
+            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {payout.Total}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={payout.Multiplier:F2}, 見込み={SupportOdds.Label(payout.OddsTier)} オッズ×{payout.OddsMultiplier:F2}, 出資の合計={payout.Stake}{(payout.FloorApplied ? " 元本保証" : "")})");
         return payout;
     }
 
@@ -835,16 +837,11 @@ public class BattleSceneStarter : IAsyncStartable
     /// <summary>
     /// 魔王軍支援でこのダンジョンに払った累計額。
     /// 支払額はセーブしていないが、ダンジョンLvは魔王軍支援（DungeonLevelUpPresenter）でしか上がらないので、
-    /// 初期Lv→現在Lv のレベルアップ費用（levelUpCost は「そのLvから次のLvへ」の費用）の合計と一致する。
+    /// 初期Lv→現在Lv のレベルアップ費用（levelUpCost は「そのLvから次のLvへ」の費用）の合計と一致する（DungeonLevels.InvestedTotal）。
+    /// 配当の下限（元本保証）にも同じ額を使うので、通知書の回収倍率は防衛成功で 1 倍を下回らない。
     /// </summary>
     private static int CalculateSupportAmount(DungeonInfoScriptableObj dungeon, int currentLevel)
-    {
-        if (dungeon == null) return 0;
-        int total = 0;
-        for (int lv = Mathf.Max(DungeonLevels.Unfunded, dungeon.initDungeonLevel); lv < currentLevel; lv++)
-            total += dungeon.GetLevelData(lv)?.levelUpCost ?? 0;
-        return total;
-    }
+        => dungeon != null ? dungeon.GetInvestedTotal(currentLevel) : 0;
 
     /// <summary>
     /// バトル中に補充したが売れ残った分の返金額を計算する。

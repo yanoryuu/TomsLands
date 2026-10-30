@@ -297,20 +297,21 @@ public sealed class AchievementTracker : IInitializable, IDisposable
     }
 
     /// <summary>
-    /// BattleSceneStarter.CalculateDefeatReward と同じ式（SupportOdds.Payout: 基本額 × レリック × 見込みの段のオッズ）。
+    /// BattleSceneStarter.CalculateDefeatReward と同じ式（SupportOdds.Payout: 基本額 × レリック × 見込みの段のオッズ、出資の合計が下限）。
     /// 防衛報酬は TotalEarnings に混ざって返ってくるため計算し直す。
     /// </summary>
     private int DefenseReward(StreamSettledInfo info)
     {
         if (src.Dungeons == null || !src.Dungeons.TryGetById(info.DungeonKey, out var d) || d == null) return 0;
         // Lv0（未出資）は防衛報酬 0 なので「配当確定」は解除されない
-        int baseReward = d.GetDefenseReward(info.DungeonLevel >= 0 ? info.DungeonLevel : d.currentDungeonLevel);
-        return ComputeDefenseReward(baseReward, RelicBattleEffects.DefeatRewardMul, info.PreStreamClearPct);
+        int level = info.DungeonLevel >= 0 ? info.DungeonLevel : d.currentDungeonLevel;
+        int baseReward = d.GetDefenseReward(level);
+        return ComputeDefenseReward(baseReward, RelicBattleEffects.DefeatRewardMul, info.PreStreamClearPct, d.GetInvestedTotal(level));
     }
 
-    /// <summary>実績の「配当」の額（実際の支払いと同じ SupportOdds.Payout）。テストから呼ぶため static。</summary>
-    public static int ComputeDefenseReward(int baseReward, float relicMul, float preStreamClearPct, StreamTuningData tuning = null)
-        => SupportOdds.Payout(baseReward, relicMul, preStreamClearPct, tuning).Total;
+    /// <summary>実績の「配当」の額（実際の支払いと同じ SupportOdds.Payout。stake = 出資の合計で元本保証）。テストから呼ぶため static。</summary>
+    public static int ComputeDefenseReward(int baseReward, float relicMul, float preStreamClearPct, int stake, StreamTuningData tuning = null)
+        => SupportOdds.Payout(baseReward, relicMul, preStreamClearPct, stake, tuning).Total;
 
     private void RecordDepartureClearPct()
     {

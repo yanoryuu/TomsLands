@@ -110,14 +110,18 @@ public static class PersonaSupportEv
 
     /// <summary>
     /// 防衛報酬（rewardAt）に、そのレベルで配信したときの見込み（clearPctAt）の段のオッズ（streamTuning.supportOdds*）を掛ける。
-    /// 掛け方は実際の支払いと同じ SupportOdds（Expected → FromClearPct・Multiplier・Apply）。オッズが全部 1 なら rewardAt そのまま
-    /// （見込みのドライランもしない）。
+    /// 掛け方は実際の支払いと同じ SupportOdds（Expected → FromClearPct・Multiplier・Apply → 出資の合計 stakeAt(lv) を下限）。
+    /// オッズが全部 1 で元本保証も off なら rewardAt そのまま（見込みのドライランもしない）。
     /// </summary>
-    public static Func<int, int> RewardWithOdds(Func<int, int> rewardAt, Func<int, float> clearPctAt, StreamTuningData tuning = null)
+    public static Func<int, int> RewardWithOdds(Func<int, int> rewardAt, Func<int, float> clearPctAt, Func<int, int> stakeAt,
+        StreamTuningData tuning = null)
     {
         if (rewardAt == null) return null;
-        if (clearPctAt == null || !SupportOdds.IsActive(tuning)) return rewardAt;
-        return lv => SupportOdds.Expected(rewardAt(lv), () => clearPctAt(lv), tuning);
+        bool odds = clearPctAt != null && SupportOdds.IsActive(tuning);
+        bool floor = stakeAt != null && SupportOdds.FloorsToStake(tuning);
+        if (!odds && !floor) return rewardAt;
+        return lv => SupportOdds.Expected(rewardAt(lv), clearPctAt != null ? () => clearPctAt(lv) : null,
+            stakeAt != null ? stakeAt(lv) : 0, tuning);
     }
 
     /// <summary>

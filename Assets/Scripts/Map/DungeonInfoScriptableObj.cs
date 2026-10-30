@@ -83,6 +83,9 @@ public class DungeonInfoScriptableObj : ScriptableObject
     /// </summary>
     public int GetDefenseReward(int level) => DungeonLevels.DefenseReward(GetLevelData(level), level);
 
+    /// <summary>このダンジョンを level にするまでの魔王軍支援の出資の合計（DungeonLevels.InvestedTotal）。</summary>
+    public int GetInvestedTotal(int level) => DungeonLevels.InvestedTotal(GetLevelData, initDungeonLevel, level);
+
     /// <summary>
     /// 配信値を当てる（"dungeons" の部分上書き → "dungeonLevels" のレベルごとの費用・配当の順）。
     /// マップ（DungeonRepository）・戦闘（BattleLifetimeScope）・自動プレイのヘッドレスで同じものを使う。
@@ -105,6 +108,20 @@ public static class DungeonLevels
 
     /// <summary>防衛報酬。未出資（Lv0 以下）は 0。</summary>
     public static int DefenseReward(DungeonLevelData data, int level) => level <= Unfunded ? 0 : data?.rewardGold ?? 0;
+
+    /// <summary>
+    /// 出資の合計: 初期Lv（0 未満は 0）→ level までの魔王軍支援の費用（levelUpCost は「そのLvから次のLvへ」の費用）の合計。
+    /// Lv0→Lv1（最初の出資）は Lv1 の行の費用（GetLevelData のクランプ）。ダンジョンLvは魔王軍支援でしか上がらないので、払った額と一致する。
+    /// 配当通知書の「支援額」と、配当の下限（SupportOdds.Payout の stake）はこの 1 か所から取る。
+    /// </summary>
+    public static int InvestedTotal(System.Func<int, DungeonLevelData> getLevelData, int initLevel, int level)
+    {
+        if (getLevelData == null) return 0;
+        long total = 0;
+        for (int lv = System.Math.Max(Unfunded, initLevel); lv < level; lv++)
+            total += System.Math.Max(0, getLevelData(lv)?.levelUpCost ?? 0);
+        return (int)System.Math.Min(int.MaxValue, total);
+    }
 
     /// <summary>表示用「Lv.0（未出資）」「Lv.3」。</summary>
     public static string Label(int level, string prefix = "Lv.") => level <= Unfunded ? $"{prefix}0（未出資）" : $"{prefix}{level}";

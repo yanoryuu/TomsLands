@@ -27,6 +27,7 @@ public class StreamTuningTests
         Assert.AreEqual(1f, d.supportOddsHopeless);
         Assert.IsFalse(d.plazaBonusAfterRefund);
         Assert.IsFalse(d.paymentMorningLossFloor);
+        Assert.IsFalse(d.supportPayoutFloorToStake, "元本保証は既定 off（同梱の表では Lv4・Lv5 で額が変わるため）");
         Assert.AreEqual(ItemModel.HeroWinPriceMultiplier, d.heroWinPriceMultiplier);
         Assert.AreEqual(ItemModel.HeroWinBossPriceMultiplier, d.heroWinBossPriceMultiplier);
         Assert.AreEqual(1f, d.restockRefundRate);
@@ -217,7 +218,7 @@ public class StreamTuningTests
         var d = new StreamTuningData();
         const int baseReward = 45001;
         int legacy = UnityEngine.Mathf.RoundToInt(baseReward * relicMul); // 2026-10-30 までの式
-        var p = SupportOdds.Payout(baseReward, relicMul, pct, d);
+        var p = SupportOdds.Payout(baseReward, relicMul, pct, 0, d);
         Assert.IsFalse(SupportOdds.IsActive(d));
         Assert.AreEqual(legacy, p.Total);
         Assert.AreEqual(legacy, p.RelicReward);
@@ -233,13 +234,13 @@ public class StreamTuningTests
         Assert.IsFalse(old.HasOddsLine, "オッズを渡さない古い作り方も行を出さない");
 
         // 実績
-        Assert.AreEqual(legacy, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, d));
+        Assert.AreEqual(legacy, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, 0, d));
 
         // AI の見込み: オッズが全部 1 なら見込みのドライランを呼ばず、額もそのまま
         bool called = false;
-        Assert.AreEqual(legacy, SupportOdds.Expected(legacy, () => { called = true; return pct; }, d));
+        Assert.AreEqual(legacy, SupportOdds.Expected(legacy, () => { called = true; return pct; }, 0, d));
         System.Func<int, int> rewardAt = lv => baseReward * lv;
-        Assert.AreSame(rewardAt, PersonaSupportEv.RewardWithOdds(rewardAt, lv => { called = true; return pct; }, d));
+        Assert.AreSame(rewardAt, PersonaSupportEv.RewardWithOdds(rewardAt, lv => { called = true; return pct; }, null, d));
         Assert.IsFalse(called);
     }
 
@@ -248,7 +249,7 @@ public class StreamTuningTests
     {
         GameConst.ResetToDefault();
         Assert.IsFalse(SupportOdds.IsActive());
-        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f));
+        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f, 0));
     }
 
     // シートに予定の境目とオッズを入れたとき（GameConst 経由。境目の 75 / 55 / 45 / 15 をまたぐ）
@@ -267,7 +268,7 @@ public class StreamTuningTests
         GameConst.OverrideFromJson(PlannedJson);
         const int baseReward = 50000;
         const float relicMul = 1.2f;
-        var paid = SupportOdds.Payout(baseReward, relicMul, pct); // BattleSceneStarter.CalculateDefeatReward と同じ呼び出し
+        var paid = SupportOdds.Payout(baseReward, relicMul, pct, 0); // BattleSceneStarter.CalculateDefeatReward と同じ呼び出し
         Assert.IsTrue(SupportOdds.IsActive());
         Assert.AreEqual(60000, paid.RelicReward);
         Assert.AreEqual(odds, paid.OddsMultiplier, 1e-6f);
@@ -290,19 +291,19 @@ public class StreamTuningTests
         Assert.AreEqual(notice.FinalReward, notice.BaseReward + notice.RelicBonus + notice.OddsBonus);
 
         // 実績の「配当」
-        Assert.AreEqual(paid.Total, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct));
+        Assert.AreEqual(paid.Total, AchievementTracker.ComputeDefenseReward(baseReward, relicMul, pct, 0));
 
         // AI の見込み: レリック込みの額にオッズを掛けると実際の支払いと同じ
-        Assert.AreEqual(paid.Total, SupportOdds.Expected(paid.RelicReward, () => pct));
+        Assert.AreEqual(paid.Total, SupportOdds.Expected(paid.RelicReward, () => pct, 0));
         // 支援の期待値（レリックを掛けない rewardAt）: 同じ見込みならレリック 1 の支払いと同じ
-        var rewardAt = PersonaSupportEv.RewardWithOdds(lv => baseReward, lv => pct, StreamTuning.Data);
-        Assert.AreEqual(SupportOdds.Payout(baseReward, 1f, pct).Total, rewardAt(3));
+        var rewardAt = PersonaSupportEv.RewardWithOdds(lv => baseReward, lv => pct, null, StreamTuning.Data);
+        Assert.AreEqual(SupportOdds.Payout(baseReward, 1f, pct, 0).Total, rewardAt(3));
     }
 
     [Test]
     public void Payout_WithOdds_UnknownEstimate_NoLine()
     {
-        var paid = SupportOdds.Payout(50000, 1f, -1f, PlannedOdds());
+        var paid = SupportOdds.Payout(50000, 1f, -1f, 0, PlannedOdds());
         Assert.AreEqual(50000, paid.Total);
         Assert.IsFalse(DemonKingPayoutData.From("魔王城", 1, 0, paid, 0).HasOddsLine);
     }
@@ -312,11 +313,11 @@ public class StreamTuningTests
     {
         GameConst.OverrideFromJson("{\"streamTuning\":{\"supportOddsUnfavorable\":0.45}}");
         Assert.IsTrue(SupportOdds.IsActive());
-        var paid = SupportOdds.Payout(50000, 1.2f, 25f);
+        var paid = SupportOdds.Payout(50000, 1.2f, 25f, 0);
         Assert.AreEqual(27000, paid.Total);
-        Assert.AreEqual(27000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f));
-        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 59f), "1 のままの段は変わらない");
-        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 40f), "既定の境目では 40% は互角（1 のまま）");
+        Assert.AreEqual(27000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 25f, 0));
+        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 59f, 0), "1 のままの段は変わらない");
+        Assert.AreEqual(60000, AchievementTracker.ComputeDefenseReward(50000, 1.2f, 40f, 0), "既定の境目では 40% は互角（1 のまま）");
     }
 
     [Test]
@@ -327,10 +328,10 @@ public class StreamTuningTests
         // 上限 = 今のLv なので、支援しないときの期待値（負け率 × 防衛報酬）だけを見る
         var plain = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000, lv => 100000, 1000000);
         var withOdds = PersonaSupportEv.Choose(rates, "DemonKingCastle", 3, 3, lv => 10000,
-            PersonaSupportEv.RewardWithOdds(lv => 100000, lv => 25f, d), 1000000);
+            PersonaSupportEv.RewardWithOdds(lv => 100000, lv => 25f, null, d), 1000000);
         float p = rates.LossRate("DemonKingCastle", 3);
         Assert.AreEqual(p * 100000, plain.EvNone, 1f);
-        Assert.AreEqual(p * SupportOdds.Payout(100000, 1f, 25f, d).Total, withOdds.EvNone, 1f);
+        Assert.AreEqual(p * SupportOdds.Payout(100000, 1f, 25f, 0, d).Total, withOdds.EvNone, 1f);
     }
 
     // ---- 2. 広場の上乗せの土台 ----
