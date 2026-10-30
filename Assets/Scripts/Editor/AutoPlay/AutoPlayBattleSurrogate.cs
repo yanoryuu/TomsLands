@@ -107,13 +107,9 @@ public static class AutoPlayBattleSurrogate
     {
         var attr = HeroEquipmentBonus.GetWeaponAttribute(input.Hero, input.ItemModel);
         if (!attr.HasValue || input.Dungeon == null) return false;
-        var level = input.Dungeon.GetLevelData(input.Level);
-        if (level == null) return false;
-        var enemies = new List<EnemyData>();
-        if (level.phases != null) foreach (var p in level.phases) if (p?.enemies != null) enemies.AddRange(p.enemies.Where(e => e != null));
-        if (enemies.Count == 0)
-            foreach (var p in DungeonPhaseBuilder.BuildFromLegacy(level)) if (p?.enemies != null) enemies.AddRange(p.enemies.Where(e => e != null));
-        return enemies.Any(e => ElementAttributeMapper.IsEffective(attr.Value, e.elementType));
+        return BuildPhases(input.Dungeon, input.Level)
+            .SelectMany(p => p.enemies)
+            .Any(e => e != null && ElementAttributeMapper.IsEffective(attr.Value, e.elementType));
     }
 
     public static Outcome Simulate(StreamInput input)
@@ -484,15 +480,10 @@ public static class AutoPlayBattleSurrogate
         }
     }
 
-    /// <summary>ClearProbabilityCalculator.BuildPhases の写し（private のため。本体が変わったら追従する）。</summary>
-    private static List<DungeonPhaseData> BuildPhases(DungeonData dungeon, int level)
-    {
-        var data = dungeon.GetLevelData(level);
-        if (data == null) return new List<DungeonPhaseData>();
-        var phases = data.phases != null && data.phases.Any(p => p?.enemies != null && p.enemies.Any(e => e != null))
-            ? data.phases
-            : DungeonPhaseBuilder.BuildFromLegacy(data);
-        // 実戦闘・表示確率と同じく通常ウェーブの周回（normalWaveRepeat）を展開する
-        return BattleWavePlan.Expand(phases.Where(p => p?.enemies != null && p.enemies.Any(e => e != null)).ToList());
-    }
+    /// <summary>
+    /// 実戦闘（BattleContext.InitializePhases）・クリア見込みと同じ入り口のウェーブ列
+    /// （配信の dungeonPhases・bal_enemies・ダンジョンの敵の倍率・normalWaveRepeat まで同じ）。
+    /// </summary>
+    public static List<DungeonPhaseData> BuildPhases(DungeonData dungeon, int level)
+        => DungeonWaveSource.Build(dungeon, level);
 }

@@ -26,6 +26,12 @@ public class BattleInputData : ScriptableObject
     public int GameFlowIndex;
 
     /// <summary>
+    /// 配信開始時（配信の日の朝に配信を決めた時点）のクリア見込み（ClearProbabilityCalculator の表示％）。-1 = 分からない。
+    /// 魔王軍支援の配当のオッズ（SupportOdds）と計測ログに使う。アセットには保存しない。
+    /// </summary>
+    [NonSerialized] public float PreStreamClearPct = -1f;
+
+    /// <summary>
     /// 戦闘前にデータを書き込む
     /// </summary>
     public void Setup(DungeonName dungeonKey, int dungeonLevel, List<string> equippedItemIds, List<BattleInputItem> selectedItems, int gameFlowIndex)
@@ -35,6 +41,7 @@ public class BattleInputData : ScriptableObject
         EquippedItemIds = new List<string>(equippedItemIds);
         SelectedItems = new List<BattleInputItem>(selectedItems);
         GameFlowIndex = gameFlowIndex;
+        PreStreamClearPct = -1f; // 呼んだ側が見込みを計算して入れる（GameFlowManager.PrepareBattleInput）
         Debug.Log($"[BattleInputData] Setup: dungeon={dungeonKey}, level={DungeonLevel}, equipped={equippedItemIds.Count}, items={selectedItems.Count}, flowIndex={gameFlowIndex}");
     }
 
@@ -45,6 +52,7 @@ public class BattleInputData : ScriptableObject
         EquippedItemIds.Clear();
         SelectedItems.Clear();
         GameFlowIndex = 0;
+        PreStreamClearPct = -1f;
     }
 }
 

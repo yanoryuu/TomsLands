@@ -577,6 +577,13 @@ public sealed partial class AutoPlayController
         if (state == null || shop == null || toms == null) return;
 
         int startMoney = toms.PlayerMoney.Value;
+        // 1 段も上げられない（上限・所持金が 1 段の額に足りない）なら画面を開かない（2026-10-30: 0G の支援操作が 10/46。仕入れで使い切っていた）
+        var target = AutoPlayUi.Resolve<DungeonRepository>()?.GetById(prep.Dungeon);
+        if (target != null && (target.currentDungeonLevel >= GameConst.MaxDungeonLevel || target.levelUpCost <= 0 || target.levelUpCost > startMoney))
+        {
+            AutoPlay.AddLog($"配信前: {prep.DungeonLabel} の魔王軍支援はやめる（Lv{target.currentDungeonLevel}、1 段 {target.levelUpCost:N0}G / 所持金 {startMoney:N0}G）");
+            return;
+        }
         int floor = startMoney * 3 / 10;
         AutoPlay.AddLog($"配信前: {prep.DungeonLabel} の魔王軍支援へ（所持金 {startMoney:N0}G、{floor:N0}G を残して出資）");
         if (!await PressAsync(AutoPlayUi.GetField<Button>(shop, "DungeonLevelUpButton"), "店: 魔王軍支援", ct)) return;

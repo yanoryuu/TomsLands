@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [System.Serializable]
@@ -109,6 +110,14 @@ public class DungeonData
                 {
                     levelDataList[i] = new DungeonLevelData
                     {
+                        // フェーズ構成も写す（写していなかったためクリア見込みが旧方式の monsters から組み立てられ、
+                        // 氷のダンジョン Lv1 だけ実戦と敵が違っていた）
+                        phases = src.phases != null
+                            ? src.phases.Select(p => new DungeonPhaseData
+                              {
+                                  enemies = p?.enemies != null ? new List<EnemyData>(p.enemies) : new List<EnemyData>(),
+                              }).ToList()
+                            : new List<DungeonPhaseData>(),
                         monsters = src.monsters != null
                             ? new List<EnemyData>(src.monsters)
                             : new List<EnemyData>(),

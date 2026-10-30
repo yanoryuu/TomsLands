@@ -27,6 +27,9 @@
  *     1行=1ダンジョン×1レベル。dungeonId "*" は全ダンジョン共通、個別の id（bal_dungeons の id）はそのダンジョンだけ上書き。
  *   - メニューに「ダンジョン構成ビューア」「ダンジョン構成をチェック」を足す（本体は DungeonViewer.gs / DungeonViewerUI.html）。
  *     dungeonPhases シートはまだ配信しない（readDungeonPhases_ は用意だけ）。
+ *   - （同日・後）dungeonPhases を balance.json に載せる（buildBalanceEnvelope。本体 readDungeonPhases_ は DungeonViewer.gs）。
+ *     Unity 側の受け口は DungeonWaveSource。bal_dungeons の enemyHpRate / enemyAtkRate / enemyDefRate（float、空なら 1）も
+ *     "dungeons" 区画のまま Unity 側で敵に掛かる（列の型は ":float" を付けるのが望ましいが、数値の文字列でも Unity が読む）。
  */
 
 // ============================================================
@@ -63,7 +66,10 @@ const BALANCE_LISTS = {
   enemies: 'bal_enemies',
   dungeons: 'bal_dungeons',
   events: 'bal_events',
-  financialProducts: 'bal_financeProducts'
+  financialProducts: 'bal_financeProducts',
+  // ボスの反応の表（2026-10-30。列: id, phaseType, situation, heat:float, weaponMood:float, armorMood:float, moodTurns:int。
+  // シートが無い・空なら区画ごと出さない＝今と同じ動き。Unity 側 Assets/Scripts/Streaming/BossReaction.cs）
+  bossReaction: 'bal_bossReaction'
   // villageFacilities は入れ子構造のため専用リーダーで処理（下方の readVillageFacilities_）
 };
 const BALANCE_HEROLEVELS_SHEET = 'bal_heroLevels';
@@ -277,6 +283,17 @@ function buildBalanceEnvelope() {
   // dungeonLevels（1行=1ダンジョン×1レベル。"*" = 全ダンジョン共通）
   const dungeonLevels = readDungeonLevels_();
   if (dungeonLevels.length > 0) envelope.dungeonLevels = dungeonLevels;
+
+  // dungeonPhases（1行=1ダンジョン×1レベル×1ウェーブ。実際に戦うウェーブそのもの。シート未作成・空なら省略）
+  //   [ { dungeonId, level, phase, phaseType: 'normal'|'midboss'|'boss', enemyIds: ['demon1', ...] }, ... ]
+  //   Unity 側（DungeonWaveSource）はこのダンジョン×レベルを normalWaveRepeat で繰り返さずにそのまま戦う。
+  //   行が無いダンジョン×レベルはアセットの構成のまま。readDungeonPhases_ の本体は DungeonViewer.gs
+  if (typeof readDungeonPhases_ === 'function' && sheetExists_('dungeonPhases')) {
+    const dungeonPhases = readDungeonPhases_().filter(function (p) {
+      return isFinite(p.level) && p.level >= 1 && isFinite(p.phase) && p.phase >= 0;
+    });
+    if (dungeonPhases.length > 0) envelope.dungeonPhases = dungeonPhases;
+  }
 
   // heroLevels（空なら省略）
   const hero = readHeroLevels_();

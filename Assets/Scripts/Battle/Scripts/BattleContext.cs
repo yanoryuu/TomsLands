@@ -99,15 +99,14 @@ public class BattleContext
     {
         var level = CurrentStage?.GetLevelData(DungeonLevel);
 
-        List<DungeonPhaseData> phases = null;
-        if (level?.phases != null && level.phases.Any(p => p?.enemies != null && p.enemies.Any(e => e != null)))
+        // 配信の dungeonPhases → SOの phases → 旧方式の順。敵の値（bal_enemies × ダンジョンの倍率）・
+        // 通常ウェーブの周回（normalWaveRepeat）もここで済む。クリア見込み・自動プレイと同じ入り口（DungeonWaveSource）
+        var phases = DungeonWaveSource.Build(CurrentStage, DungeonLevel);
+        if (phases.Count > 0)
         {
-            phases = level.phases;
-        }
-        else if (level?.monsters != null && level.monsters.Count > 0)
-        {
-            phases = DungeonPhaseBuilder.BuildFromLegacy(level);
-            Debug.LogWarning($"[BattleContext] '{CurrentStage?.dungeonName}' Lv{DungeonLevel} の phases が未設定のため旧方式から自動変換しました（{phases.Count}フェーズ）。SOに phases を設定してください。");
+            if (!DungeonWaveSource.HasEnemies(level?.phases)
+                && !DungeonWaveSource.UsesRemotePhases(CurrentStage.key.ToString(), CurrentStage.levelDataList, DungeonLevel))
+                Debug.LogWarning($"[BattleContext] '{CurrentStage?.dungeonName}' Lv{DungeonLevel} の phases が未設定のため旧方式から自動変換しました（{phases.Count}フェーズ）。SOに phases を設定してください。");
         }
         else
         {
@@ -115,12 +114,14 @@ public class BattleContext
             var all = DungeonMonsters;
             var boss = all.FirstOrDefault(m => m != null && m.isBoss);
             var normals = all.Where(m => m != null && m != boss).ToList();
-            phases = DungeonPhaseBuilder.Build(normals, boss);
-            Debug.LogWarning($"[BattleContext] フォールバックのモンスターからフェーズを自動構成しました（{phases.Count}フェーズ）。");
+            var built = DungeonPhaseBuilder.Build(normals, boss);
+            foreach (var p in built) p.phaseType = p.ContainsBoss ? DungeonPhaseType.Boss : DungeonPhaseType.Normal;
+            Debug.LogWarning($"[BattleContext] フォールバックのモンスターからフェーズを自動構成しました（{built.Count}フェーズ）。");
+            // 通常ウェーブの周回数（GameConst.battleTempo.normalWaveRepeat。1 なら構成どおり）
+            phases = BattleWavePlan.Expand(built.Where(p => p?.enemies != null && p.enemies.Any(e => e != null)).ToList());
         }
 
-        // 通常ウェーブの周回数（GameConst.battleTempo.normalWaveRepeat。1 なら構成どおり）
-        Phases = BattleWavePlan.Expand(phases.Where(p => p?.enemies != null && p.enemies.Any(e => e != null)).ToList());
+        Phases = phases;
         CurrentPhaseIndex = 0;
         LoadPhaseQueue(0);
     }
@@ -136,6 +137,9 @@ public class BattleContext
 
     /// <summary>現在のフェーズ（全クリア後は null）。</summary>
     public DungeonPhaseData CurrentPhase => CurrentPhaseIndex >= 0 && CurrentPhaseIndex < Phases.Count ? Phases[CurrentPhaseIndex] : null;
+
+    /// <summary>現在のウェーブの種類（通常／中ボス／ボス。配信の dungeonPhases の phaseType。全クリア後は Normal）。</summary>
+    public DungeonPhaseType CurrentPhaseType => CurrentPhase?.phaseType ?? DungeonPhaseType.Normal;
 
     /// <summary>
     /// 介入（増援）: 現在フェーズの未出現キューの末尾に魔物を足す。

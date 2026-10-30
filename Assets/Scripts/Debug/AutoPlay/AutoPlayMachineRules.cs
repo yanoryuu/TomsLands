@@ -32,6 +32,21 @@ public static class AutoPlayMachineRules
         return days > 0f && days <= remainingMornings / 2f;
     }
 
+    /// <summary>周の終わりのこの日数以内には、価値の測れない設備（客寄せ・冷蔵など）を新しく置かない。</summary>
+    public const int LatePlaceMornings = 4;
+
+    /// <summary>
+    /// 新しく置くか（周の終わり近くの設置を避ける。2026-10-30: 設置・強化の 50/330 が周の終わり 4 日以内）。
+    /// 毎朝のお金が分かる設備は「設置費 ÷ 毎朝のお金 ≤ 残りの朝」、それ以外は残りの朝が LatePlaceMornings より多いとき。
+    /// remainingMornings が分からない（0 未満）ときは止めない。
+    /// </summary>
+    public static bool ShouldPlace(int cost, float dailyGold, int remainingMornings)
+    {
+        if (remainingMornings < 0) return true;
+        if (dailyGold > 0f) return PaybackDays(cost, dailyGold) <= remainingMornings;
+        return remainingMornings > LatePlaceMornings;
+    }
+
     /// <summary>修理するか（壊れたお金・製造の設備だけ。修理費が 1 日の価値の「残りの朝 ÷ 2」日ぶん以内）。</summary>
     public static bool ShouldRepair(ShopMachineEffectType type, int repairCost, float dailyValue, int remainingMornings)
     {

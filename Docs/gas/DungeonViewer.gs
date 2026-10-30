@@ -11,7 +11,7 @@
  *   bal_dungeons  : enemyHpRate / enemyAtkRate / enemyDefRate（ダンジョンごとの敵の倍率。ビューアの表示に掛ける）
  *
  * メニュー「GameConst」→「ダンジョン構成ビューア」「ダンジョン構成をチェック」から使う。
- * ※ dungeonPhases はまだ配信しない（Unity 側の受け口が未実装）。readDungeonPhases_() は下に用意だけしてある。
+ * dungeonPhases は balance.json の dungeonPhases として配信する（GameConstGas.gs の buildBalanceEnvelope が下の readDungeonPhases_() を呼ぶ。Unity 側は DungeonWaveSource）。
  */
 
 const DUNGEON_PHASES_SHEET = 'dungeonPhases';
@@ -143,7 +143,7 @@ function dvCopyPhaseForward(dungeonId, level, phase) {
 }
 
 // ============================================================
-// 配信用（TODO: まだ buildBalanceEnvelope からは呼ばない）
+// 配信用（GameConstGas.gs の buildBalanceEnvelope から呼ぶ）
 // ============================================================
 
 /**

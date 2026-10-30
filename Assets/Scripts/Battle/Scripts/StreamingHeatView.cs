@@ -84,12 +84,13 @@ public class StreamingHeatView : MonoBehaviour
         {
             if (priceMultiplier > 1f)
             {
-                priceDirectionText.text  = $"▲ +{Mathf.RoundToInt((priceMultiplier - 1f) * 100f)}%/ターン";
+                // 熱の段の倍率は値段に 1 回だけ乗る（段が変わったら差だけ掛け直す。毎ターン積み上がらない）ので「/ターン」は付けない
+                priceDirectionText.text  = $"▲ 値段 +{Mathf.RoundToInt((priceMultiplier - 1f) * 100f)}%";
                 priceDirectionText.color = new Color(0.25f, 0.9f, 0.35f);
             }
             else if (priceMultiplier < 1f)
             {
-                priceDirectionText.text  = $"▼ {Mathf.RoundToInt((priceMultiplier - 1f) * 100f)}%/ターン";
+                priceDirectionText.text  = $"▼ 値段 {Mathf.RoundToInt((priceMultiplier - 1f) * 100f)}%";
                 priceDirectionText.color = new Color(0.9f, 0.25f, 0.25f);
             }
             else

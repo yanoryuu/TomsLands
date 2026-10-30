@@ -375,6 +375,8 @@ public class PersonaCommentTests
             Assert.AreEqual("run_x", r["run"]);
             Assert.AreEqual(17L, r["day"]);
             Assert.IsFalse(r.ContainsKey("decision"), "集計に混ざらないように decision は付けない");
+            Assert.AreEqual("template", r["source"], "LLM が無いときはテンプレート");
+            Assert.IsFalse(r.ContainsKey("llmMs"));
             foreach (var k in new[] { "time", "phase", "speaker", "line", "e" }) Assert.IsTrue(r.ContainsKey(k), k);
         }
     }
@@ -508,5 +510,222 @@ public class PersonaCommentTests
             }
         foreach (var key in new[] { "m|told", "z|cry", "z|recover", "m|mount_reply", "m|thanks_reply", "m|blame_reply", "z|mount" })
             Assert.GreaterOrEqual(ConsultLines.Templates[key].Length, 8, key);
+    }
+
+    // =====================================================
+    // GPU サーバーの LLM（D:\Tools\tokotom-live\llm\GPU_LLM_SPEC.md）
+    // =====================================================
+
+    private static readonly PersonaCommentLlm.Endpoint FakeEp = new() { Url = "http://203.0.113.5:11434", Model = "qwen3:14b" };
+
+    private PersonaCommentEngine LlmEngine(Func<long> now, Func<PersonaCommentLlm.Endpoint, string, System.Threading.CancellationToken, System.Threading.Tasks.Task<string>> post)
+    {
+        var e = Engine(now);
+        e.LlmEndpoint = () => FakeEp;
+        e.LlmPost = post;
+        return e;
+    }
+
+    private static System.Threading.Tasks.Task<string> Answer(string json) => System.Threading.Tasks.Task.FromResult(json);
+
+    private static object Field(Dictionary<string, object> r, string key) => r.TryGetValue(key, out var v) ? v : null;
+
+    private static List<string> Problems(Dictionary<string, object> r) =>
+        Field(r, "problems") is IEnumerable<string> p ? p.ToList()
+        : Field(r, "problems") is Newtonsoft.Json.Linq.JArray a ? a.Select(x => (string)x).ToList() : new List<string>();
+
+    [Test]
+    public void Llm_Reply_WritesSourceAndMs_AndAskStartsWithMetan()
+    {
+        long now = 1_793_289_100_000;
+        string sentBody = null;
+        var e = LlmEngine(() => now, (ep, body, ct) =>
+        {
+            sentBody = body;
+            return Answer("{\"cat\":\"ask\",\"z\":\"ぼくも気になってたのだ\",\"m\":\"所持金は27,000Gよ。返済まで2日ね\"}");
+        });
+        Inbox("llm-1", now - 1000, "いまいくら持ってる？", "other");
+        var rows = e.Tick("s1");
+        Assert.AreEqual(2, rows.Count);
+        Assert.AreEqual("m", rows[0]["speaker"], "ask はめたんが先");
+        Assert.AreEqual("z", rows[1]["speaker"]);
+        foreach (var r in Rows())
+        {
+            Assert.AreEqual("llm", r["source"]);
+            Assert.IsTrue(r.ContainsKey("llmMs"));
+            Assert.AreEqual("ask", r["commentCat"], "LLM の cat を使う");
+            Assert.IsFalse(string.IsNullOrEmpty((string)r["line"]));
+        }
+        Assert.AreEqual(PersonaCommentLines.DefaultE("m", "ask"), rows[0]["e"]);
+        // 頼み方: think なし・スキーマ・今の状態・コメント
+        var body = Newtonsoft.Json.Linq.JObject.Parse(sentBody);
+        Assert.AreEqual("qwen3:14b", (string)body["model"]);
+        Assert.AreEqual(false, (bool)body["think"]);
+        Assert.AreEqual(false, (bool)body["stream"]);
+        Assert.AreEqual(8, ((Newtonsoft.Json.Linq.JArray)body["messages"]).Count, "system + 例 3 組 + user");
+        StringAssert.Contains("所持金 27,000G", (string)body["messages"][0]["content"]);
+        Assert.AreEqual("コメント: いまいくら持ってる？", (string)body["messages"][7]["content"]);
+        Assert.AreEqual(14, ((Newtonsoft.Json.Linq.JArray)body["format"]["properties"]["cat"]["enum"]).Count);
+    }
+
+    [Test]
+    public void Llm_Reply_ToOverridesLead_AndEmptyLineIsSkipped()
+    {
+        long now = 1_793_289_100_000;
+        var e = LlmEngine(() => now, (ep, body, ct) => Answer("{\"cat\":\"cheer\",\"z\":\"\",\"m\":\"ありがとう。……がんばるわ\"}"));
+        File.AppendAllText(Path.Combine(_dir, "inbox.jsonl"),
+            $"{{\"id\":\"llm-to\",\"unixMs\":{now},\"author\":\"たろう\",\"text\":\"めたんがんばれ\",\"cat\":\"cheer\",\"to\":\"m\"}}\n");
+        var rows = e.Tick("s1");
+        Assert.AreEqual(1, rows.Count, "もう一人の返事が空なら 1 行だけ");
+        Assert.AreEqual("m", rows[0]["speaker"]);
+    }
+
+    [Test]
+    public void Llm_Rejected_HasNoLine_AndMovesToNextComment()
+    {
+        long now = 1_793_289_100_000;
+        int calls = 0;
+        var e = LlmEngine(() => now, (ep, body, ct) => ++calls == 1
+            ? Answer("{\"cat\":\"game\",\"z\":\"Steamでは出てないのだ\",\"m\":\"そうですね\"}")
+            : Answer("{\"cat\":\"greet\",\"z\":\"こんばんはなのだ！\",\"m\":\"いらっしゃい。ゆっくりしていくといいわ\"}"));
+        Inbox("llm-bad", now - 1000, "これどこで買えるの", "game");
+        var rows = e.Tick("s1");
+        Assert.Greater(rows.Count, 0);
+        foreach (var r in rows)
+        {
+            Assert.IsFalse(r.ContainsKey("line"), "捨てた返事は line を付けない（読み上げが読まない）");
+            Assert.IsTrue(r.ContainsKey("rejected"));
+            Assert.AreEqual(true, r["dropped"]);
+            Assert.AreEqual("llm", r["source"]);
+        }
+        var z = rows.First(r => (string)r["speaker"] == "z");
+        Assert.AreEqual("Steamでは出てないのだ", z["rejected"]);
+        CollectionAssert.Contains(Problems(z), "z:事実と逆");
+        // 捨てたら間隔を空けずに次のコメントへ
+        Inbox("llm-next", now, "こんばんは", "greet");
+        var next = e.Tick("s1");
+        Assert.AreEqual(2, next.Count);
+        Assert.IsTrue(next.All(r => r.ContainsKey("line")));
+        Assert.AreEqual(0, Rows().Count(r => r.ContainsKey("line") && string.IsNullOrEmpty((string)r["line"])), "空の line の行は書かない");
+    }
+
+    [Test]
+    public void Llm_Timeout_DropsWithoutTemplate()
+    {
+        long now = 1_793_289_100_000;
+        var never = new System.Threading.Tasks.TaskCompletionSource<string>();
+        var e = LlmEngine(() => now, (ep, body, ct) => never.Task);
+        Inbox("llm-slow", now - 1000, "こんにちは", "greet");
+        Assert.AreEqual(0, e.Tick("s1").Count, "返りを待つ（Tick は止めない）");
+        Assert.IsTrue(e.LlmBusy);
+        Inbox("llm-wait", now, "がんばれ", "cheer");
+        now += 1000;
+        Assert.AreEqual(0, e.Tick("s1").Count, "待っているあいだは次のコメントを取らない");
+        now += PersonaCommentLlm.TimeoutMs;   // 3 秒を過ぎた
+        var rows = e.Tick("s1");
+        Assert.AreEqual(1, rows.Count);
+        Assert.IsFalse(rows[0].ContainsKey("line"));
+        Assert.AreEqual("llm-slow", rows[0]["commentId"]);
+        CollectionAssert.Contains(Problems(rows[0]), "打ち切り");
+        Assert.IsFalse(e.LlmBusy);
+        Assert.IsFalse(Rows().Any(r => Equals(Field(r, "source"), "template")), "打ち切りはテンプレートにも戻さない");
+    }
+
+    [Test]
+    public void Llm_ConnectionError_FallsBackToTemplate()
+    {
+        long now = 1_793_289_100_000;
+        var e = LlmEngine(() => now, (ep, body, ct) => throw new InvalidOperationException("HTTP 502"));
+        Inbox("llm-err", now - 1000, "がんばれ", "cheer");
+        var rows = e.Tick("s1");
+        Assert.Greater(rows.Count, 0);
+        Assert.IsTrue(rows.All(r => (string)r["source"] == "template" && r.ContainsKey("line") && r.ContainsKey("llmError")));
+    }
+
+    [Test]
+    public void Llm_NoEndpoint_UsesTemplate_AndStreamEndWritesDropRate()
+    {
+        long now = 1_793_289_100_000;
+        var e = Engine(() => now);
+        Inbox("tpl-1", now - 1000, "がんばれ", "cheer");
+        Assert.IsTrue(e.Tick("s1").All(r => (string)r["source"] == "template" && !r.ContainsKey("llmMs")));
+        Assert.AreEqual(0, e.EndStream().Count, "LLM に頼んでいなければ書かない");
+
+        int calls = 0;
+        e.LlmEndpoint = () => FakeEp;
+        e.LlmPost = (ep, body, ct) => ++calls % 2 == 1
+            ? Answer("{\"cat\":\"cheer\",\"z\":\"ありがとうなのだ！\",\"m\":\"ありがとう。……がんばるわ\"}")
+            : Answer("{\"cat\":\"cheer\",\"z\":\"ありがとう\",\"m\":\"ありがとう。……がんばるわ\"}");
+        for (int i = 0; i < 4; i++)
+        {
+            now += PersonaCommentEngine.MinGapMs;
+            Inbox("llm-" + i, now, "がんばれ", "cheer");
+            e.Tick("s1");
+        }
+        var sum = e.EndStream();
+        Assert.AreEqual(1, sum.Count);
+        Assert.AreEqual("llm_summary", sum[0]["kind"]);
+        Assert.AreEqual(4, sum[0]["tried"]);
+        Assert.AreEqual(2, sum[0]["dropped"]);
+        Assert.AreEqual(0.5, sum[0]["dropRate"]);
+        Assert.IsFalse(sum[0].ContainsKey("line"));
+        Assert.AreEqual(0, e.EndStream().Count, "数え直す");
+    }
+
+    [Test]
+    public void Llm_CheckLine_MatchesBench()
+    {
+        var f = InRun;
+        List<string> Z(string s, string comment = "こんにちは") => PersonaCommentLlm.CheckLine("z", s, comment, null, f);
+        List<string> M(string s, string comment = "こんにちは") => PersonaCommentLlm.CheckLine("m", s, comment, null, f);
+        CollectionAssert.IsEmpty(Z("こんばんはなのだ！ ゆっくりしていくのだ"));
+        CollectionAssert.IsEmpty(M("所持金は27,000G。返済は2日後の5万よ"), "今の状態の数字と「5万」の言い方はよい");
+        CollectionAssert.IsEmpty(Z("Steamでしか売ってないのだ！"), "「Steam でしか」は正しい");
+        CollectionAssert.Contains(Z("Steamでは出てないのだ"), "事実と逆");
+        CollectionAssert.Contains(M("まだ発売前なのよ"), "事実と逆");
+        CollectionAssert.Contains(Z("YouTubeでしか遊べないのだ"), "事実と逆");
+        CollectionAssert.Contains(Z("ゆっくりしていってね"), "ずんだもんの語尾");
+        CollectionAssert.Contains(M("そうなのだわ"), "めたんがのだ");
+        CollectionAssert.Contains(M("ぼくは知らないわ"), "めたんがぼく");
+        CollectionAssert.Contains(M("そうですね"), "です・ます");
+        CollectionAssert.Contains(M("いいわのよ"), "語尾の崩れ");
+        CollectionAssert.Contains(Z("wwwなのだ"), "文になっていない");
+        Assert.IsTrue(Z("100万Gも持ってるのだ").Any(p => p.StartsWith("作り話の数字")));
+        Assert.IsTrue(Z("これはamazingなのだ").Contains("英語"));
+        CollectionAssert.IsEmpty(Z("BGMいいのだ！ ぼくも好きなのだ", "このBGM好き"), "コメントに出た英字はよい");
+        CollectionAssert.Contains(Z("今日のお天気はどうなのだ", "今日のお天気はどう"), "コメントの丸写し");
+        Assert.IsTrue(Z(new string('あ', 47) + "のだ").Any(p => p.StartsWith("長い")));
+        Assert.IsTrue(Z("効いてくるのだ").Any(p => p.StartsWith("禁止語")));
+        CollectionAssert.IsEmpty(PersonaCommentLlm.CheckLine("z", "500円ありがとうなのだ！", "", "¥500", f), "スパチャの額はよい");
+
+        Assert.IsFalse(PersonaCommentLlm.Evaluate("{\"cat\":\"cheer\",\"z\":\"がんばるのだ\",\"m\":\"がんばるのだ\"}", "がんばれ", null, f).Ok);
+        Assert.IsFalse(PersonaCommentLlm.Evaluate("not json", "がんばれ", null, f).Ok);
+        Assert.IsFalse(PersonaCommentLlm.Evaluate("{\"cat\":\"cheer\",\"z\":\"\",\"m\":\"\"}", "がんばれ", null, f).Ok);
+    }
+
+    [Test]
+    public void Llm_Endpoint_And_Facts()
+    {
+        Assert.IsNotNull(PersonaCommentLlm.ParseEndpoint("{\"state\":\"RUNNING\",\"ready\":true,\"url\":\"http://34.146.168.172:11434\",\"model\":\"qwen3:14b\"}"));
+        Assert.IsNull(PersonaCommentLlm.ParseEndpoint("{\"state\":\"RUNNING\",\"ready\":false,\"url\":\"http://34.146.168.172:11434\"}"), "準備中");
+        Assert.IsNull(PersonaCommentLlm.ParseEndpoint("{\"state\":\"TERMINATED\",\"ready\":false,\"url\":null,\"model\":\"qwen3:14b\"}"));
+        Assert.IsNull(PersonaCommentLlm.ParseEndpoint("{\"state\":\"RUNNING\",\"ready\":true,\"url\":\"http://127.0.0.1:11434\"}"), "この PC の kev には頼まない");
+        Assert.IsNull(PersonaCommentLlm.ParseEndpoint("壊れた"));
+        Assert.IsNull(PersonaCommentLlm.ReadEndpoint(Path.Combine(_dir, "none.json")));
+
+        var f = new PersonaCommentFacts
+        {
+            InRun = true, Day = 12, Money = 45370, DebtDaysLeft = 3, DebtAmount = 30000, VillageFunds = 6743099, LastStreamDelta = 8200,
+        };
+        Assert.AreEqual("営業中・12日目・所持金 45,370G・次の返済まで 3日（30,000G）・村資金 6,743,099G・直前の配信の損益 プラス8,200G",
+            PersonaCommentLlm.FactsText(f));
+        Assert.AreEqual("ランの合間（村）・村資金 6,743,099G・ラン 91 回済み",
+            PersonaCommentLlm.FactsText(new PersonaCommentFacts { InRun = false, VillageFunds = 6743099, Runs = 91 }));
+        Assert.AreEqual("営業中", PersonaCommentLlm.FactsText(new PersonaCommentFacts { InRun = true }), "分からない値は書かない");
+        Assert.AreEqual("m", PersonaCommentLlm.Lead(null, "toko"));
+        Assert.AreEqual("z", PersonaCommentLlm.Lead(null, "greet"));
+        Assert.AreEqual("m", PersonaCommentLlm.Lead("m", "greet"));
+        Assert.AreEqual("ama", PersonaCommentLines.DefaultE("z", "greet"));
+        Assert.AreEqual("surprise", PersonaCommentLines.DefaultE("z", "superchat"));
     }
 }

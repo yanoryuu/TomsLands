@@ -6,9 +6,8 @@ using System.Linq;
 /// GameConst.battleTempo.normalWaveRepeat が 2 以上のとき、ボスを含まない通常フェーズを
 /// その回数ぶん繰り返し、ボスを含むフェーズは最後に1回だけ置く。
 ///
-/// ※ クリア確率表示（ClearProbabilityCalculator）も同じ構成でドライランする必要がある。
-///    normalWaveRepeat を 2 以上にする前に、ClearProbabilityCalculator.BuildPhases の戻り値を
-///    BattleWavePlan.Expand(...) に通すこと（2026-10 に 4 へ変更。未同期だとクリア確率が実戦より高く出る）。
+/// ※ 呼ぶのは DungeonWaveSource（実戦闘・クリア見込み・自動プレイが同じウェーブ列を使う）と、BattleContext の Resources フォールバックだけ。
+///    配信の dungeonPhases で戦うダンジョン×レベルは展開済みの形なので、ここを通さない。
 /// </summary>
 public static class BattleWavePlan
 {

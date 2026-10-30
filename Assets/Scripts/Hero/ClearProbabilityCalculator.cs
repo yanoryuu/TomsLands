@@ -23,6 +23,9 @@ using UnityEngine;
 /// ・不利: 負ける想定で、倒せる敵が 25〜75%（15〜35%）
 /// ・絶望: 負ける想定で、倒せる敵が 25% 未満（15% 未満）
 /// 属性は戦闘に効かせる予定だが、この計算には入れない（2026-10 の決定）。
+/// GameConst.clearOutlookProgressByEnemyHp = true のときは、負ける側の「倒せる敵の割合」を「削れる敵 HP の割合」に置き換える
+/// （魔王の残り HP が見込みに入る。2026-10-30 ユーザー決定。既定 false＝今までどおり）。
+/// 敵の構成は DungeonWaveSource（実戦闘と同じ入り口）から取る。
 /// </summary>
 public static class ClearProbabilityCalculator
 {
@@ -55,26 +58,25 @@ public static class ClearProbabilityCalculator
         return Simulate(hero, phases, HeroEquipmentBonus.Get(hero, itemModel), powerMul);
     }
 
-    /// <summary>実戦闘（BattleContext.InitializePhases）と同じ優先順でフェーズ構成を作る。</summary>
-    private static List<DungeonPhaseData> BuildPhases(DungeonData dungeon, int dungeonLevel)
+    /// <summary>
+    /// ドライランに使うウェーブ列。実戦闘（BattleContext.InitializePhases）と同じ入り口 DungeonWaveSource を使う
+    /// （配信の dungeonPhases・敵の値・ダンジョンの倍率・normalWaveRepeat まで同じ）。
+    /// </summary>
+    public static List<DungeonPhaseData> BuildPhases(DungeonData dungeon, int dungeonLevel)
+        => DungeonWaveSource.Build(dungeon, dungeonLevel);
+
+    /// <summary>GameConst の clearOutlookProgressByEnemyHp（負ける見込みの進み具合を削った HP で測るか）。</summary>
+    public static bool ProgressByEnemyHp => GameConst.Data != null && GameConst.Data.clearOutlookProgressByEnemyHp;
+
+    /// <summary>
+    /// 負ける見込みのときの進み具合（0〜1）。
+    /// byHp=false: 倒した敵の数 ÷ 敵の数（今まで）。byHp=true: 削った HP ÷ 敵の HP の合計（ボスの残り HP がそのまま効く）。
+    /// </summary>
+    public static float LossProgress(bool byHp, int defeated, int totalEnemies, long remainingEnemyHp, long totalEnemyHp)
     {
-        var level = dungeon.GetLevelData(dungeonLevel);
-        if (level == null) return new List<DungeonPhaseData>();
-
-        List<DungeonPhaseData> phases;
-        if (level.phases != null && level.phases.Any(p => p?.enemies != null && p.enemies.Any(e => e != null)))
-        {
-            phases = level.phases;
-        }
-        else
-        {
-            phases = DungeonPhaseBuilder.BuildFromLegacy(level);
-        }
-
-        // 実戦闘と同じく通常ウェーブの周回（normalWaveRepeat）を展開する
-        return BattleWavePlan.Expand(phases
-            .Where(p => p?.enemies != null && p.enemies.Any(e => e != null))
-            .ToList());
+        if (byHp)
+            return totalEnemyHp > 0 ? Mathf.Clamp01(1f - remainingEnemyHp / (float)totalEnemyHp) : 0f;
+        return totalEnemies > 0 ? Mathf.Clamp01(defeated / (float)totalEnemies) : 0f;
     }
 
     /// <summary>
@@ -93,6 +95,7 @@ public static class ClearProbabilityCalculator
         int heroHp    = heroMaxHp;
 
         int totalEnemies = phases.Sum(p => p.enemies.Count(e => e != null));
+        long totalEnemyHp = phases.Sum(p => p.enemies.Where(e => e != null).Sum(e => (long)Mathf.Max(1, e.hp)));
         int defeated = 0;
 
         int phaseIndex = 0;
@@ -155,7 +158,11 @@ public static class ClearProbabilityCalculator
         }
 
         // 敗北見込み（ターン上限による膠着含む）: 進行度が高いほど「惜しい」表示（5〜45%）
-        float progress = totalEnemies > 0 ? Mathf.Clamp01(defeated / (float)totalEnemies) : 0f;
+        // clearOutlookProgressByEnemyHp なら倒した数ではなく削った HP で測る（場・出現待ち・この先のウェーブの残り HP。魔王の残り HP を含む）
+        long remainingHp = field.Sum(e => (long)Mathf.Max(0, e.hp)) + spawnQueue.Sum(e => (long)Mathf.Max(1, e.hp));
+        for (int i = phaseIndex + 1; i < phases.Count; i++)
+            remainingHp += phases[i].enemies.Where(e => e != null).Sum(e => (long)Mathf.Max(1, e.hp));
+        float progress = LossProgress(ProgressByEnemyHp, defeated, totalEnemies, remainingHp, totalEnemyHp);
         return Mathf.Clamp(5f + progress * 40f, 5f, 45f);
     }
 

@@ -83,8 +83,10 @@ public class BattleResultHandler : IStartable, IDisposable
             Debug.Log($"[BattleResultHandler] Battle net earnings applied to PlayerMoney: {_outputData.TotalEarnings}G");
         }
 
-        // 村の広場: 配信で売れた額に上乗せ（途中終了でも売れた分には付く）
-        int streamBonus = VillageEffects.Current.StreamSalesBonusGold(RawStreamSales(_outputData.SoldItems));
+        // 村の広場: 配信で売れた額に上乗せ（途中終了でも売れた分には付く）。
+        // streamTuning.plazaBonusAfterRefund が on なら返金騒ぎを引いた売上に掛ける（既定 off = 返金前の売上。2026-10-30 決定）
+        int plazaBase = StreamTuning.PlazaBonusBase(RawStreamSales(_outputData.SoldItems), _outputData.HeroDefeatRefund);
+        int streamBonus = VillageEffects.Current.StreamSalesBonusGold(plazaBase);
         if (streamBonus > 0)
         {
             _tomsModel.AddRevenue(streamBonus);

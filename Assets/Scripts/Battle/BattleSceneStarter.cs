@@ -166,6 +166,11 @@ public class BattleSceneStarter : IAsyncStartable
         var director = _interventions?.CommentDirector;
         if (director != null) director.SetBetStance(ResolveBetStance());
 
+        // 計測ログ（BalanceLog）: この配信の行にダンジョン・Lv・日・配信開始時の見込みの段を付ける
+        BalanceLog.BeginStream(_inputData.DungeonKey.ToString(), _inputData.DungeonLevel,
+            _tomsModel != null ? _tomsModel.CurrentTurn.Value : -1, _inputData.GameFlowIndex,
+            _inputData.PreStreamClearPct, SupportOdds.FromClearPct(_inputData.PreStreamClearPct));
+
         // 勇者モデルを構築
         var heroModel = new HeroModel();
         heroModel.ApplyEquippedItems(_inputData.EquippedItemIds);
@@ -284,6 +289,12 @@ public class BattleSceneStarter : IAsyncStartable
         // ダンジョン側の値段はこのダンジョンLvの防衛報酬に合わせる（G-6）
         _interventions?.Start(_salesController, () => _battleSpending, InterventionPriceBase());
 
+        // ボスの状況の点数に使う勝敗メーターは、画面のメーターと同じ見込み（介入の効果込み）
+        if (_salesController != null)
+            _salesController.SetOutlookProvider(() => _battleSequencer.Context != null
+                ? BattleOutlookEstimator.Estimate(_battleSequencer.Context, _interventions?.Queue.Effects, _interactionSettings)
+                : 0.5f);
+
         _battleSequencer.StartBattle(heroModel);
 
         // 勝敗メーター・配信収支メーター（決着まで）
@@ -358,6 +369,10 @@ public class BattleSceneStarter : IAsyncStartable
             HeroDefeatRefund = heroDefeatRefund,
             HeroDefeatRefundRate = heroDefeatRefundRate,
         };
+
+        // 計測ログ: 配信 1 本の決着（stream_result）。お金の動きは変えない
+        WriteStreamResultLog(battleResult.result, rawSales, restockRefund, heroDefeatRefund, interventionSpent - interventionRefund,
+            declarationBonus, totalEarnings, defeatRewardBreakdown, defeatedMobCount, defeatedBossCount);
 
         // --- Phase 2.5: 決着の溜め（配信画面のまま。勝敗のコメント弾幕と最後の売上を見せる） ---
         if (battleResult.result != BattleResult.Abort)
@@ -731,18 +746,24 @@ public class BattleSceneStarter : IAsyncStartable
         return null;
     }
 
-    /// <summary>防衛報酬の内訳（基本額 × レリック倍率 = 受取額）</summary>
+    /// <summary>防衛報酬の内訳（基本額 × レリック倍率 × 見込みの段のオッズ = 受取額）</summary>
     private readonly struct DefeatRewardBreakdown
     {
         public readonly int BaseReward;
         public readonly float Multiplier;
         public readonly int Total;
+        /// <summary>配信開始時の見込みの段と、その段のオッズ（streamTuning.supportOdds*。既定 1）。</summary>
+        public readonly SupportOddsTier OddsTier;
+        public readonly float OddsMultiplier;
 
-        public DefeatRewardBreakdown(int baseReward, float multiplier, int total)
+        public DefeatRewardBreakdown(int baseReward, float multiplier, int total,
+            SupportOddsTier oddsTier = SupportOddsTier.Unknown, float oddsMultiplier = 1f)
         {
             BaseReward = baseReward;
             Multiplier = multiplier;
             Total = total;
+            OddsTier = oddsTier;
+            OddsMultiplier = oddsMultiplier;
         }
     }
 
@@ -762,9 +783,68 @@ public class BattleSceneStarter : IAsyncStartable
         float mul = RelicBattleEffects.DefeatRewardMul;
         int reward = Mathf.RoundToInt(baseReward * mul);
 
+        // 見込みに応じたオッズ: 配信開始時の見込みの段（互角は勇者寄り・魔王寄りの 2 つ）ごとの倍率。既定はどの段も 1（今と同じ）
+        var tier = SupportOdds.FromClearPct(_inputData.PreStreamClearPct);
+        float odds = SupportOdds.Multiplier(tier);
+        reward = SupportOdds.Apply(reward, odds);
+
         if (reward > 0)
-            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={mul:F2})");
-        return new DefeatRewardBreakdown(baseReward, mul, reward);
+            Debug.Log($"[BattleSceneStarter] 勇者敗北！ダンジョン防衛報酬: {reward}G ({_inputData.DungeonKey} Lv.{_inputData.DungeonLevel}, mul={mul:F2}, 見込み={SupportOdds.Label(tier)} オッズ×{odds:F2})");
+        return new DefeatRewardBreakdown(baseReward, mul, reward, tier, odds);
+    }
+
+    /// <summary>
+    /// 計測ログ stream_result（Recordings/balance_log_*.jsonl と Editor.log の「[BalanceLog]」行）。
+    /// 審議 panel_1030b の stream_result（見込みの段・支援の額と配当・補充と返金・広場の土台）と panel_1030e の熱の道筋・ボスの状況。
+    /// ログを書くだけで、お金の計算には触らない。
+    /// </summary>
+    private void WriteStreamResultLog(BattleResult result, int rawSales, int restockRefund, int heroDefeatRefund, int interventionNet,
+        int declarationBonus, int totalEarnings, DefeatRewardBreakdown reward, int mobs, int bosses)
+    {
+        try
+        {
+            var dungeon = _dungeonCatalog?.GetDungeon(_inputData.DungeonKey);
+            var tuning = StreamTuning.Data;
+            var tier = SupportOdds.FromClearPct(_inputData.PreStreamClearPct);
+            int plazaBase = StreamTuning.PlazaBonusBase(rawSales, heroDefeatRefund);
+            var payload = new Newtonsoft.Json.Linq.JObject
+            {
+                ["outcome"] = result.ToString(),
+                ["abortedByError"] = result == BattleResult.Abort && _abortedByError,
+                ["estimateTier"] = SupportOdds.Key(tier),
+                ["estimateLabel"] = SupportOdds.Label(tier),
+                ["sales"] = rawSales,
+                ["restockCost"] = _battleSpending,
+                ["restockRefund"] = restockRefund,
+                ["restockRefundRate"] = tuning.restockRefundRate,
+                ["heroDefeatRefund"] = heroDefeatRefund,
+                ["interventionNet"] = interventionNet,
+                ["supportPaid"] = CalculateSupportAmount(dungeon, _inputData.DungeonLevel),
+                ["payoutBase"] = reward.BaseReward,
+                ["relicMul"] = Math.Round(reward.Multiplier, 3),
+                ["oddsMul"] = Math.Round(SupportOdds.Multiplier(tier), 3),
+                ["payout"] = reward.Total,
+                ["declarationBonus"] = declarationBonus,
+                ["totalEarnings"] = totalEarnings,
+                ["plazaBase"] = plazaBase,
+                ["plazaBonus"] = VillageEffects.Current != null ? VillageEffects.Current.StreamSalesBonusGold(plazaBase) : 0,
+                ["plazaAfterRefund"] = tuning.plazaBonusAfterRefund,
+                ["heroWinMul"] = result == BattleResult.Victory ? Math.Round(ItemModel.HeroWinMultiplier(bosses), 3) : (double?)null,
+                ["mobs"] = mobs,
+                ["bosses"] = bosses,
+            };
+            var summary = _salesController != null ? _salesController.BuildBalanceSummary() : null;
+            if (summary != null) payload["heat"] = summary;
+            BalanceLog.Write("stream_result", payload);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[BattleSceneStarter] stream_result のログを書けませんでした: {e.Message}");
+        }
+        finally
+        {
+            BalanceLog.EndStream();
+        }
     }
 
     /// <summary>配当通知書に渡す表示データを組み立てる。</summary>
@@ -809,7 +889,8 @@ public class BattleSceneStarter : IAsyncStartable
             if (unsoldRestock <= 0) continue;
 
             int unitCost = _restockUnitCosts.TryGetValue(sold.ItemId, out var c) ? c : 0;
-            refund += unsoldRestock * unitCost;
+            // 払い戻しの率（streamTuning.restockRefundRate。既定 1 = 補充単価の全額で今と同じ）
+            refund += StreamTuning.RestockRefund(unsoldRestock, unitCost);
         }
         return refund;
     }

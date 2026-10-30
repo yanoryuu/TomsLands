@@ -808,6 +808,22 @@ public class GameFlowManager : IDisposable, IStartable
             new List<BattleInputItem>(),
             _currentIndex
         );
+        // 配信開始時のクリア見込み（店の勇者パネルと同じ計算）。魔王軍支援の配当のオッズ（SupportOdds）と計測ログに使う
+        _battleInputData.PreStreamClearPct = ComputePreStreamClearPct(dungeonData, dungeonLevel);
+    }
+
+    private float ComputePreStreamClearPct(DungeonData dungeonData, int dungeonLevel)
+    {
+        if (dungeonData == null || _heroModel?.heroData == null) return -1f;
+        try
+        {
+            return ClearProbabilityCalculator.Calculate(_heroModel.heroData, _itemModel, dungeonData, dungeonLevel, _relicResolver);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[GameFlowManager] 配信開始時のクリア見込みを計算できませんでした: {e.Message}");
+            return -1f;
+        }
     }
 
     /// <summary>

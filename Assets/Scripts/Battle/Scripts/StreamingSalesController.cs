@@ -290,6 +290,10 @@ public class StreamingSalesController : MonoBehaviour
         // 配信熱モデルを初期化して UI を購読
         _heatModel = new StreamingHeatModel(PriceSettings);
         _appliedHeatMultiplier = 1f;
+        // ボスの反応（配信ごとに作り直す。翌日へは持ち越さない）。表が空なら熱も売れ行きも今と同じ（影のログだけ）
+        _bossReaction = new BossReactionTracker(StreamTuning.BossReaction, PriceSettings.pinchHpRatio, PriceSettings.criticalPinchHpRatio, _heatModel.Heat.Value);
+        _bossReaction.SituationDecided += e => BossSituationDecided?.Invoke(e);
+        _model.SalesVolumeMultiplier = item => _bossReaction != null && item != null ? _bossReaction.GetVolumeMultiplier(item.ItemType) : 1f;
         SubscribeToHeatEvents();
         _heatModel.Heat
             .Subscribe(h =>
@@ -438,7 +442,7 @@ public class StreamingSalesController : MonoBehaviour
 
         // ボス出現（見せ場）
         battleSequencer.OnBossAppeared
-            .Subscribe(_ => AddHighlightHeat(PriceSettings.bossAppearHeat))
+            .Subscribe(_ => HandleBossAppeared())
             .AddTo(_battleDisposables);
 
         // 勇者が攻撃に関わった時点で勇者の HP を見始める（勇者はバトル開始後に生まれるため、ここで遅れて購読する）。
@@ -555,6 +559,9 @@ public class StreamingSalesController : MonoBehaviour
                 _appliedHeatMultiplier = target;
             }
         }
+
+        // ボスの反応: このターンの熱・勝敗メーター・HP の影のログ、中ボスの出現、ボスの後の逆転・崩れ（既定ではどれも熱 0）
+        TrackBossReactionTurn();
 
         RefreshAllSlotDisplays();
         RecordPriceHistory();
@@ -804,6 +811,104 @@ public class StreamingSalesController : MonoBehaviour
     {
         AddTacticsAdjustedHeat(baseDelta);
         _heatModel?.MarkHighlight();
+    }
+
+    // =====================================================
+    // ボスの反応（2026-10-30。Assets/Scripts/Streaming/BossReaction.cs。表 bal_bossReaction が空なら今と同じ動き）
+    // =====================================================
+
+    private BossReactionTracker _bossReaction;
+    private System.Func<float> _outlookProvider;
+
+    /// <summary>ボス・中ボスの状況が決まった（bossReaction.uiEnabled のときだけ。表示はまだ無い）。</summary>
+    public event System.Action<BossReactionTracker.Effect> BossSituationDecided;
+
+    /// <summary>勝敗メーターの値（0〜1）の出どころ。BattleSceneStarter が介入の効果込みの見込みを渡す。未設定なら介入なしで見積もる。</summary>
+    public void SetOutlookProvider(System.Func<float> provider) => _outlookProvider = provider;
+
+    /// <summary>この配信の熱の道筋・ボスの状況の要約（stream_result 用。配信前なら null）。</summary>
+    public Newtonsoft.Json.Linq.JObject BuildBalanceSummary() => _bossReaction?.BuildSummary();
+
+    /// <summary>ボス出現。表が空なら bossAppearHeat を足すだけ（今と同じ）。行があればその熱と売れ行きの気分。</summary>
+    private void HandleBossAppeared()
+    {
+        float heat = PriceSettings.bossAppearHeat;
+        BossReactionTracker.Effect? effect = null;
+        try
+        {
+            if (_bossReaction != null)
+            {
+                var boss = FindAliveEnemy(bossOnly: true);
+                effect = _bossReaction.OnAppear(BossReactionTracker.KindBoss, TakeReactionSnapshot(), IsWeakPoint(boss), heat);
+                heat = effect.Value.Heat;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogException(e);
+            effect = null;
+            heat = PriceSettings.bossAppearHeat;
+        }
+        float before = CurrentHeat;
+        AddHighlightHeat(heat);
+        if (effect.HasValue) _bossReaction.LogEffect(effect.Value, before, CurrentHeat);
+    }
+
+    /// <summary>ターンの終わり（熱の段の掛け直しの後）に呼ぶ。</summary>
+    private void TrackBossReactionTurn()
+    {
+        if (_bossReaction == null || _heatModel == null) return;
+        try
+        {
+            var ctx = battleSequencer != null ? battleSequencer.Context : null;
+            string phaseType = DungeonPhaseTypes.Of(ctx?.CurrentPhase);
+            var effects = _bossReaction.RecordTurn(TakeReactionSnapshot(), _heatModel.GetTierIndex(), _appliedHeatMultiplier,
+                phaseType, IsWeakPoint(FindAliveEnemy(bossOnly: false)));
+            foreach (var e in effects)
+            {
+                float before = CurrentHeat;
+                // 熱 0 の反応は見せ場にしない（既定ではどれも 0 なので今と同じ）
+                if (e.Heat != 0f) AddHighlightHeat(e.Heat);
+                _bossReaction.LogEffect(e, before, CurrentHeat);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+    }
+
+    private BossReactionTracker.Snapshot TakeReactionSnapshot()
+    {
+        var ctx = battleSequencer != null ? battleSequencer.Context : null;
+        var hero = ctx?.HeroPresenter?.GetModel();
+        float hp = hero != null && hero.MaxHp > 0 ? Mathf.Clamp01(hero.CurrentHp.CurrentValue / (float)hero.MaxHp) : 1f;
+        float meter = _outlookProvider != null ? _outlookProvider() : ctx != null ? BattleOutlookEstimator.Estimate(ctx, null, null) : 0.5f;
+        return new BossReactionTracker.Snapshot(CurrentHeat, meter, hp, ctx?.CurrentPhaseIndex ?? -1, ctx?.PhaseCount ?? 0);
+    }
+
+    /// <summary>場にいる生きた敵（bossOnly ならボス。いなければ null）。複数いれば最大 HP の大きい方。</summary>
+    private CharacterModel FindAliveEnemy(bool bossOnly)
+    {
+        var ctx = battleSequencer != null ? battleSequencer.Context : null;
+        if (ctx == null) return null;
+        CharacterModel best = null;
+        foreach (var p in ctx.EnemyPresenters)
+        {
+            var m = p?.GetModel();
+            if (m == null || m.IsDead || (bossOnly && !m.IsBoss)) continue;
+            if (best == null || m.MaxHp > best.MaxHp) best = m;
+        }
+        return best;
+    }
+
+    /// <summary>勇者の武器の属性がその敵の弱点か（実戦闘の HeroEquipmentBonus.AttributeAttackMul と同じ判定）。</summary>
+    private bool IsWeakPoint(CharacterModel enemy)
+    {
+        if (enemy == null || enemy.Element == ElementType.None) return false;
+        var hero = battleSequencer != null ? battleSequencer.Context?.HeroPresenter?.GetModel() : null;
+        var attr = hero?.WeaponAttribute;
+        return attr.HasValue && ElementAttributeMapper.IsEffective(attr.Value, enemy.Element);
     }
 
     private float GetWeaponPriceUpOnHit() => HeroBattleInfluence.GetWeaponPriceUpOnKill(PriceSettings, _heroTactics);

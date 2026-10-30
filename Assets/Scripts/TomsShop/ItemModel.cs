@@ -194,9 +194,12 @@ public class ItemModel
     // 勇者敗北で装備を半値にする罰は廃止した（賭けと無関係で手の打ちようがなかった）。
     // 負けの痛手は配信の精算の「返金騒ぎ」（HeroDefeatRefund）
 
-    /// <summary>勇者勝利時の装備の倍率（ボスを倒していれば ×2.2、それ以外 ×1.8）。</summary>
+    /// <summary>
+    /// 勇者勝利時の装備（武器・防具だけ）の倍率（ボスを倒していれば ×2.2、それ以外 ×1.8）。
+    /// 配信の gameconst の streamTuning.heroWinBossPriceMultiplier / heroWinPriceMultiplier で変えられる（既定は上の定数と同じ値）。
+    /// </summary>
     public static float HeroWinMultiplier(int defeatedBossCount)
-        => defeatedBossCount > 0 ? HeroWinBossPriceMultiplier : HeroWinPriceMultiplier;
+        => StreamTuning.HeroWinMultiplier(defeatedBossCount);
 
     /// <summary>
     /// 帰還後に店で付く装備の値段の見込み（勝敗の倍率を掛けたあと、日送りの ストップ高/安 で丸めた値）。

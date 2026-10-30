@@ -106,9 +106,14 @@ public class TomsEventExecutor
         // ペナルティ（負値）は所持金を下回らない（所持金がマイナスになると購入上限の計算や
         // 表示が壊れるため。払いきれない分は取り立てない）。Jev AutoPlay で検出（2026-10-05）
         int before = player.PlayerMoney.Value;
-        player.PlayerMoney.Value = amount < 0 ? Mathf.Max(0, before + amount) : before + amount;
-        if (amount < 0 && before + amount < 0)
+        // 納付日の朝の損は、所持金を納付額より下へは減らさない（streamTuning.paymentMorningLossFloor。既定 off = 0 で止めるだけ）
+        int floor = amount < 0 ? StreamTuning.PaymentMorningFloor(player, relicResolver) : 0;
+        int after = StreamTuning.MoneyAfterLoss(before, amount, floor);
+        player.PlayerMoney.Value = after;
+        if (amount < 0 && before + amount < 0 && floor <= 0)
             Debug.Log($"[Event] {eventId}: 支払い {-amount}G のうち {-(before + amount)}G は所持金不足のため免除");
+        if (amount < 0 && floor > 0 && after > Mathf.Max(0, before + amount))
+            Debug.Log($"[Event] {eventId}: 納付日の朝なので、損 {-amount}G のうち {after - Mathf.Max(0, before + amount)}G は取らない（所持金 {before}G・納付額 {floor}G）");
         player.SavePlayerMoney();
     }
 
