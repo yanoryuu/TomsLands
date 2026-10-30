@@ -30,6 +30,15 @@
   @media (max-width: 600px) { .phases { grid-template-columns: 1fr; } }
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
   .card.bossphase { border-color: #e6b3ad; }
+  .card.midphase { border-color: #ecc58f; }
+  .ptype { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .ptype.midboss { background: #fdebd3; color: #b05f00; }
+  .ptype.boss { background: #fbe6e3; color: var(--boss); }
+  .ptype.normal { background: #f1efe9; color: var(--sub); font-weight: 500; }
+  .ptype.bad { background: var(--err); color: #fff; }
+  .matrix td.pt-midboss { background: #fff8ef; }
+  .matrix td.pt-boss { background: #fff6f5; }
+  .matrix .ptype { font-size: 10px; padding: 0 6px; margin-bottom: 3px; }
   .card h3 { margin: 0; padding: 9px 12px; font-size: 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); background: #faf9f7; }
   .card h3 .tot { margin-left: auto; font-weight: 500; color: var(--sub); font-size: 12px; font-variant-numeric: tabular-nums; }
   table { border-collapse: collapse; width: 100%; }
@@ -95,6 +104,8 @@
 </main>
 <script>
 var EL_JA = { None: '無', Water: '水', Fire: '火', Wood: '木', Light: '光', Dark: '闇' };
+var PT_JA = { normal: '通常', midboss: '中ボス', boss: 'ボス' };
+function ptBadge(t) { return PT_JA[t] ? '<span class="ptype ' + t + '">' + PT_JA[t] + '</span>' : '<span class="ptype bad">phaseType 不正: ' + esc(t || '空欄') + '</span>'; }
 var state = { data: null, dungeonId: null, level: 1, view: 'phases', editing: null, busy: false };
 
 function $(id) { return document.getElementById(id); }
@@ -199,11 +210,12 @@ function viewCard(p, d, isLast) {
       cell(e.hp, d.hpRate) + cell(e.atk, d.atkRate) + cell(e.def, d.defRate) +
       '<td><span class="el" style="background:var(--' + esc(e.element) + ')">' + (EL_JA[e.element] || esc(e.element)) + '</span></td></tr>';
   }).join('');
-  return '<div class="card' + (hasBoss ? ' bossphase' : '') + '"><h3>フェーズ ' + p.phase + (isLast ? ' <span style="color:var(--sub);font-weight:400;font-size:11px">（最後）</span>' : '') +
+  var cls = p.phaseType === 'boss' ? ' bossphase' : p.phaseType === 'midboss' ? ' midphase' : '';
+  return '<div class="card' + cls + '"><h3>フェーズ ' + p.phase + ' ' + ptBadge(p.phaseType) +
     '<span class="tot">' + t.n + ' 体 ・ HP ' + fmt(t.hp) + ' ・ ATK ' + fmt(t.atk) + '</span></h3>' +
     (p.note ? '<div class="note" style="margin-top:8px">' + esc(p.note) + '</div>' : '') +
     '<table><tr><th>敵</th><th class="num">HP</th><th class="num">ATK</th><th class="num">DEF</th><th>属性</th></tr>' + rows + '</table>' +
-    '<div class="foot">' + (!isLast && !hasBoss ? '<button class="btn" data-copy="' + p.phase + '" title="ボスのいるフェーズには写さない">同じ敵を後ろのフェーズにも写す</button>' : '') +
+    '<div class="foot">' + (!isLast && !hasBoss && p.phaseType === 'normal' ? '<button class="btn" data-copy="' + p.phase + '" title="後ろの通常フェーズだけに写す（中ボス・ボスのフェーズはそのまま）">同じ敵を後ろのフェーズにも写す</button>' : '') +
     '<button class="btn" data-edit="' + p.row + '">編集</button></div></div>';
 }
 
@@ -222,7 +234,10 @@ function editCard(p) {
     return '<div class="edit-row"><span style="width:18px;color:var(--sub)">' + (i + 1) + '</span><select data-slot="' + i + '">' + opts(id) + '</select>' +
       '<button class="btn" data-up="' + i + '"' + (i === 0 ? ' disabled' : '') + '>↑</button><button class="btn danger" data-rm="' + i + '">×</button></div>';
   }).join('');
-  return '<div class="card"><h3>フェーズ ' + p.phase + ' を編集<span class="tot">出る順（3 体ずつ出て、倒すと補充）</span></h3>' + rows +
+  var ptSel = '<div class="edit-row"><span style="color:var(--sub)">種類</span><select id="ptype">' +
+    ['normal', 'midboss', 'boss'].map(function (t) { return '<option value="' + t + '"' + (t === state.draftType ? ' selected' : '') + '>' + PT_JA[t] + '（' + t + '）</option>'; }).join('') +
+    (PT_JA[state.draftType] ? '' : '<option value="" selected>（不正: ' + esc(state.draftType) + '）</option>') + '</select></div>';
+  return '<div class="card"><h3>フェーズ ' + p.phase + ' を編集<span class="tot">出る順（3 体ずつ出て、倒すと補充）</span></h3>' + ptSel + rows +
     '<div class="edit-row"><button class="btn" data-addslot="1">＋ 敵を足す</button></div>' +
     '<div class="foot"><button class="btn danger" data-delphase="' + p.phase + '">このフェーズを消す</button><span style="flex:1"></span>' +
     '<button class="btn" data-cancel="1">やめる</button><button class="btn primary" data-save="' + p.phase + '">シートに書く</button></div></div>';
@@ -242,7 +257,7 @@ function renderMatrix(d) {
       var p = ps[j];
       if (!p) { body += '<td style="color:var(--sub)">—</td>'; continue; }
       var t = phaseTotals(p, d); th += t.hp; ta += t.atk;
-      body += '<td>' + groupRuns(p.enemyIds).map(function (g) {
+      body += '<td class="pt-' + esc(p.phaseType) + '">' + (p.phaseType !== 'normal' ? ptBadge(p.phaseType) + '<br>' : '') + groupRuns(p.enemyIds).map(function (g) {
         var e = state.data.enemies[g.id];
         return '<span class="chip' + (e && e.isBoss ? ' b' : '') + '" title="' + esc(g.id) + '">' + esc(e ? e.name : '?' + g.id) + (g.n > 1 ? '<i>×' + g.n + '</i>' : '') + '</span>';
       }).join('') + '<span class="ptot">HP ' + fmt(t.hp) + ' ・ ATK ' + fmt(t.atk) + '</span></td>';
@@ -289,7 +304,7 @@ document.addEventListener('click', function (ev) {
   if (t.dataset.edit) {
     var row = Number(t.dataset.edit);
     var p = state.data.phases.filter(function (x) { return x.row === row; })[0];
-    state.editing = row; state.draft = p.enemyIds.slice(); render(); return;
+    state.editing = row; state.draft = p.enemyIds.slice(); state.draftType = p.phaseType; render(); return;
   }
   if (t.dataset.cancel) { state.editing = null; render(); return; }
   if (t.dataset.rm) { state.draft.splice(Number(t.dataset.rm), 1); render(); return; }
@@ -299,7 +314,8 @@ document.addEventListener('click', function (ev) {
     var bad = state.draft.filter(function (id) { return !state.data.enemies[id]; });
     if (bad.length) { alert('bal_enemies に無い enemyId: ' + bad.join(', ')); return; }
     if (!state.draft.length) { alert('敵が 1 体もいません。'); return; }
-    call('dvSavePhase', [state.dungeonId, state.level, Number(t.dataset.save), state.draft.slice()], function () { state.editing = null; });
+    if (!PT_JA[state.draftType]) { alert('種類（phaseType）を選んでください。'); return; }
+    call('dvSavePhase', [state.dungeonId, state.level, Number(t.dataset.save), state.draft.slice(), state.draftType], function () { state.editing = null; });
     return;
   }
   if (t.dataset.copy) {
@@ -313,6 +329,7 @@ document.addEventListener('click', function (ev) {
   }
 });
 document.addEventListener('change', function (ev) {
+  if (ev.target.id === 'ptype') { state.draftType = ev.target.value; return; }
   if (ev.target.dataset && ev.target.dataset.slot) { state.draft[Number(ev.target.dataset.slot)] = ev.target.value; return; }
   if (ev.target.id === 'dungeon') { state.dungeonId = ev.target.value; state.editing = null; render(); return; }
   if (ev.target.id === 'allEnemies' && state.editing) render();

@@ -2,7 +2,8 @@
  * ダンジョン構成ビューア（2026-10-30）
  *
  * シート:
- *   dungeonPhases : dungeonId / level / phase / enemyIds（カンマ区切り・出る順） / note
+ *   dungeonPhases : dungeonId / level / phase / phaseType / enemyIds（カンマ区切り・出る順） / note
+ *                   phaseType = normal（通常） / midboss（中ボス・門番） / boss（ボス。各レベルにちょうど 1 つ・最後）
  *                   1行=1ダンジョン×1レベル×1フェーズ（＝実際に戦うウェーブ）。
  *                   ゲームの通常ウェーブの繰り返し（GameConst.battleTempo.normalWaveRepeat = 4）を展開済みの形で書く。
  *                   例: 通常 4 ウェーブ + ボス 1 ウェーブ = phase 1〜5。シートのフェーズは繰り返さずにそのまま使う前提。
@@ -15,6 +16,8 @@
 
 const DUNGEON_PHASES_SHEET = 'dungeonPhases';
 const DV_EXPECTED_PHASES = 5; // 通常 4 ウェーブ + ボス 1 ウェーブ（数が違えば警告だけ出す）
+const DV_PHASE_TYPES = ['normal', 'midboss', 'boss'];
+const DV_PHASE_TYPE_JA = { normal: '通常', midboss: '中ボス', boss: 'ボス' };
 const DV_ELEMENTS =['None', 'Water', 'Fire', 'Wood', 'Light', 'Dark']; // Unity の ElementType の並び（int 値）
 
 // ============================================================
@@ -52,10 +55,11 @@ function dvGetViewerData() {
 }
 
 /**
- * 1フェーズ分の敵を書き換える（無ければ行を足す）。enemyIds は配列（出る順）。
- * bal_enemies に無い id があれば書かずにエラーにする。
+ * 1フェーズ分の敵（と phaseType）を書き換える（無ければ行を足す）。enemyIds は配列（出る順）。
+ * phaseType は省略可（省略時は今の値のまま。新しい行は normal）。
+ * bal_enemies に無い id や、normal / midboss / boss 以外の phaseType は書かずにエラーにする。
  */
-function dvSavePhase(dungeonId, level, phase, enemyIds) {
+function dvSavePhase(dungeonId, level, phase, enemyIds, phaseType) {
   dungeonId = String(dungeonId).trim();
   level = Number(level);
   phase = Number(phase);
@@ -68,12 +72,19 @@ function dvSavePhase(dungeonId, level, phase, enemyIds) {
   if (unknown.length > 0) throw new Error('bal_enemies に無い enemyId: ' + unknown.join(', '));
   if (!(level >= 1 && level <= 5)) throw new Error('level は 1〜5: ' + level);
   if (!(phase >= 1)) throw new Error('phase は 1 以上: ' + phase);
+  if (phaseType !== undefined && phaseType !== null && phaseType !== '') {
+    phaseType = String(phaseType).trim();
+    if (DV_PHASE_TYPES.indexOf(phaseType) < 0) throw new Error('phaseType は normal / midboss / boss: ' + phaseType);
+  } else {
+    phaseType = null;
+  }
 
   const sheet = dvPhasesSheet_();
   const row = dvFindPhaseRow_(data, dungeonId, level, phase);
   const col = data.phaseCols;
   if (row > 0) {
     sheet.getRange(row, col.enemyIds + 1).setValue(ids.join(','));
+    if (phaseType && 'phaseType' in col) sheet.getRange(row, col.phaseType + 1).setValue(phaseType);
   } else {
     const width = sheet.getLastColumn();
     const values = [];
@@ -82,6 +93,7 @@ function dvSavePhase(dungeonId, level, phase, enemyIds) {
     values[col.level] = level;
     values[col.phase] = phase;
     values[col.enemyIds] = ids.join(',');
+    if ('phaseType' in col) values[col.phaseType] = phaseType || 'normal';
     const target = dvInsertRowAfterLevel_(sheet, data, dungeonId, level, phase);
     sheet.getRange(target, 1, 1, width).setValues([values]);
   }
@@ -106,8 +118,8 @@ function dvDeletePhase(dungeonId, level, phase) {
 }
 
 /**
- * phase の敵を、同じダンジョン×レベルの後ろのフェーズに写す（ボスがいるフェーズには写さない）。
- * 例: P1 を直してから押すと P2〜P4 が同じ並びになり、ボスの P5 はそのまま。
+ * phase の敵を、同じダンジョン×レベルの後ろの通常フェーズ（phaseType = normal で、isBoss の敵がいない）に写す。
+ * 例: P1 を直してから押すと P2〜P3 が同じ並びになり、中ボスの P4・ボスの P5 はそのまま。
  */
 function dvCopyPhaseForward(dungeonId, level, phase) {
   dungeonId = String(dungeonId).trim();
@@ -121,7 +133,7 @@ function dvCopyPhaseForward(dungeonId, level, phase) {
   data.phases.forEach(function (p) {
     if (p.dungeonId !== dungeonId || p.level !== level || p.phase <= phase) return;
     const hasBoss = p.enemyIds.some(function (id) { const e = data.enemies[id]; return e && e.isBoss; });
-    if (hasBoss) return;
+    if (hasBoss || (p.phaseType && p.phaseType !== 'normal')) return;
     sheet.getRange(p.row, data.phaseCols.enemyIds + 1).setValue(src.enemyIds.join(','));
     n++;
   });
@@ -146,7 +158,7 @@ function dvCopyPhaseForward(dungeonId, level, phase) {
  *   Unity 側でこの配信を使うときは BattleWavePlan.Expand（normalWaveRepeat の繰り返し）を通さないこと。
  *   通すと通常ウェーブが 4 倍に増える。クリア確率の計算（ClearProbabilityCalculator）も同じ扱いにする。
  *
- * 出力: [ { dungeonId, level, phase, enemyIds: [ 'demon9', 'demon10', ... ] }, ... ]
+ * 出力: [ { dungeonId, level, phase, phaseType: 'normal'|'midboss'|'boss', enemyIds: [ 'demon9', 'demon10', ... ] }, ... ]
  *   dungeonId / level / phase の順に並べる。enemyIds が空の行は出さない。
  */
 function readDungeonPhases_() {
@@ -154,7 +166,7 @@ function readDungeonPhases_() {
   return data.phases
     .filter(function (p) { return p.enemyIds.length > 0; })
     .map(function (p) {
-      return { dungeonId: p.dungeonId, level: p.level, phase: p.phase, enemyIds: p.enemyIds.slice() };
+      return { dungeonId: p.dungeonId, level: p.level, phase: p.phase, phaseType: p.phaseType, enemyIds: p.enemyIds.slice() };
     })
     .sort(function (a, b) {
       if (a.dungeonId !== b.dungeonId) return a.dungeonId < b.dungeonId ? -1 : 1;
@@ -256,6 +268,7 @@ function dvLoad_() {
           dungeonId: id,
           level: dvNum_(v[r][c.level], NaN),
           phase: dvNum_(v[r][c.phase], NaN),
+          phaseType: 'phaseType' in c ? String(v[r][c.phaseType]).trim() : '',
           enemyIds: String(v[r][c.enemyIds]).split(',')
             .map(function (s) { return s.trim(); })
             .filter(function (s) { return s !== ''; }),
@@ -323,7 +336,9 @@ function dvInsertRowAfterLevel_(sheet, data, dungeonId, level, phase) {
  *   - フェーズ番号が 1 から続いていない
  *   - 敵が空のフェーズ
  *   - bal_enemies に無い enemyId
- *   - ボス（isBoss）が最後のフェーズ以外にいる
+ *   - phaseType が normal / midboss / boss 以外（空欄も）
+ *   - boss のフェーズがちょうど 1 つでない / boss が最後のフェーズでない / midboss が最後のフェーズにある
+ *   - isBoss の敵が boss 以外のフェーズにいる（warn）
  *   - フェーズの数が 5 でない（warn。今のゲームは通常 4 + ボス 1）
  *   - ダンジョン×レベルに行が 1 つも無い（warn: アセットの構成のまま）
  */
@@ -340,6 +355,7 @@ function dvValidate_(data) {
     if (!(p.level >= 1 && p.level <= 5 && Math.floor(p.level) === p.level)) add('error', p, 'level は 1〜5 の整数に');
     if (!(p.phase >= 1 && Math.floor(p.phase) === p.phase)) add('error', p, 'phase は 1 以上の整数に');
     if (p.enemyIds.length === 0) add('error', p, '敵がいない（空のフェーズ）');
+    if (DV_PHASE_TYPES.indexOf(p.phaseType) < 0) add('error', p, 'phaseType が "' + p.phaseType + '"（normal / midboss / boss のどれかに）');
     p.enemyIds.forEach(function (id) {
       if (!data.enemies[id]) add('error', p, 'bal_enemies に無い enemyId "' + id + '"');
     });
@@ -361,12 +377,20 @@ function dvValidate_(data) {
     if (nums.length !== DV_EXPECTED_PHASES) {
       add('warn', list[0], 'フェーズが ' + nums.length + ' 個（今のゲームは 5 = 通常 4 + ボス 1）');
     }
-    const maxPhase = list.length > 0 ? list[list.length - 1].phase : 0;
+    const last = list[list.length - 1];
+    const bosses = list.filter(function (p) { return p.phaseType === 'boss'; });
+    if (bosses.length !== 1) {
+      add('error', list[0], 'boss のフェーズが ' + bosses.length + ' 個（ちょうど 1 つにして最後に置く）');
+    }
+    bosses.forEach(function (p) {
+      if (p !== last) add('error', p, 'boss のフェーズが最後（P' + last.phase + '）ではない');
+    });
+    if (last.phaseType === 'midboss') add('error', last, 'midboss が最後のフェーズにある');
     list.forEach(function (p) {
-      if (p.phase === maxPhase) return;
+      if (p.phaseType === 'boss') return;
       p.enemyIds.forEach(function (id) {
         const e = data.enemies[id];
-        if (e && e.isBoss) add('warn', p, 'ボス "' + id + '" が最後のフェーズ（P' + maxPhase + '）以外にいる');
+        if (e && e.isBoss) add('warn', p, 'isBoss の敵 "' + id + '" が boss 以外のフェーズ（' + (p.phaseType || '空欄') + '）にいる');
       });
     });
   });
