@@ -69,9 +69,6 @@ public class DungeonData
     /// <summary>指定レベルの防衛報酬。Lv0（未出資）は 0。</summary>
     public int GetDefenseReward(int level) => DungeonLevels.DefenseReward(GetLevelData(level), level);
 
-    /// <summary>このダンジョンを level にするまでの魔王軍支援の出資の合計（DungeonLevels.InvestedTotal。配当の下限に使う）。</summary>
-    public int GetInvestedTotal(int level) => DungeonLevels.InvestedTotal(GetLevelData, initDungeonLevel, level);
-
     /// <summary>魔王軍支援で出資済み（Lv1 以上）か。</summary>
     public bool IsFunded => currentDungeonLevel > DungeonLevels.Unfunded;
 

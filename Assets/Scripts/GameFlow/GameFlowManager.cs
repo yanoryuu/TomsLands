@@ -814,7 +814,7 @@ public class GameFlowManager : IDisposable, IStartable
             new List<BattleInputItem>(),
             _currentIndex
         );
-        // 配信開始時のクリア見込み（店の勇者パネルと同じ計算）。魔王軍支援の配当のオッズ（SupportOdds）と計測ログに使う
+        // 配信開始時のクリア見込み（店の勇者パネルと同じ計算）。計測ログ（BalanceLog）に使う
         _battleInputData.PreStreamClearPct = ComputePreStreamClearPct(dungeonData, dungeonLevel);
     }
 

@@ -168,7 +168,7 @@ def day_view(f):
 
 
 def situation(q, f, extra=None):
-    """選択肢 → 倍率（無ければ 1）。noul の質問は "true" の倍率（オッズに掛ける）だけ返す。"""
+    """選択肢 → 倍率（無ければ 1）。noul の質問は "true" の倍率（true と false の比に掛ける）だけ返す。"""
     extra = extra or {}
     m = collections.defaultdict(lambda: 1.0)
     if f is None:

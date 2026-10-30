@@ -232,7 +232,6 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
             LevelText            = isMax ? $"Lv.{currentLevel}（MAX）" : $"{DungeonLevels.Label(currentLevel)} → Lv.{nextLevel}",
             RewardText           = BuildRewardText(data, currentLevel, nextLevel, isMax),
             ClearProbabilityText = BuildClearProbabilityText(data, currentLevel, nextLevel, isMax),
-            OddsPreview          = BuildSupportOdds(data, currentLevel, nextLevel, isMax),
             CurrentMonsters      = currentMonsters,
             NextMonsters         = nextMonsters,
         };
@@ -268,19 +267,6 @@ public class DungeonLevelUpPresenter : IPresenter, IStartable, IDisposable
 
         float nextProb = ClearPct(data, nextLevel, stats);
         return $"{label} {current} → {ClearProbabilityCalculator.FormatOutlook(nextProb)}";
-    }
-
-    /// <summary>
-    /// 配当のオッズの見込み（いまのLv と、もう 1 回支援したLv）。オッズが全部 1 なら出さない（見込みも計算しない）。
-    /// 額は SupportOdds.Payout（実際の支払いと同じ式）。見込みは配信開始時と同じ計算（ClearProbabilityCalculator.Calculate・今の装備）。
-    /// </summary>
-    private SupportOddsPreview.Result BuildSupportOdds(DungeonData data, int currentLevel, int nextLevel, bool isMax)
-    {
-        if (!SupportOdds.IsActive()) return SupportOddsPreview.Result.None;
-        var stats = HeroStatsNow();
-        return SupportOddsPreview.Build(currentLevel, isMax ? null : nextLevel,
-            lv => ClearPct(data, lv, stats), data.GetDefenseReward, data.GetInvestedTotal,
-            SupportOddsPreview.RelicMul(relicResolver), data.isShowedInfo);
     }
 
     /// <summary>戦うときの勇者の HP・攻撃・防御（装備・レリック込み。見込みの覚え書きの鍵）。</summary>

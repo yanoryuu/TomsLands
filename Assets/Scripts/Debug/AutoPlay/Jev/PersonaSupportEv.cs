@@ -109,22 +109,6 @@ public static class PersonaSupportEv
     }
 
     /// <summary>
-    /// 防衛報酬（rewardAt）に、そのレベルで配信したときの見込み（clearPctAt）の段のオッズ（streamTuning.supportOdds*）を掛ける。
-    /// 掛け方は実際の支払いと同じ SupportOdds（Expected → FromClearPct・Multiplier・Apply → 出資の合計 stakeAt(lv) を下限）。
-    /// オッズが全部 1 で元本保証も off なら rewardAt そのまま（見込みのドライランもしない）。
-    /// </summary>
-    public static Func<int, int> RewardWithOdds(Func<int, int> rewardAt, Func<int, float> clearPctAt, Func<int, int> stakeAt,
-        StreamTuningData tuning = null)
-    {
-        if (rewardAt == null) return null;
-        bool odds = clearPctAt != null && SupportOdds.IsActive(tuning);
-        bool floor = stakeAt != null && SupportOdds.FloorsToStake(tuning);
-        if (!odds && !floor) return rewardAt;
-        return lv => SupportOdds.Expected(rewardAt(lv), clearPctAt != null ? () => clearPctAt(lv) : null,
-            stakeAt != null ? stakeAt(lv) : 0, tuning);
-    }
-
-    /// <summary>
     /// 期待値のいちばん大きい段数。level = 今のLv、maxLevel = 上限、costAt(lv) = lv から lv+1 へ上げる額、rewardAt(lv) = lv での防衛報酬、
     /// budget = 出資に使ってよい額（これを超える段数は見ない）。同じ期待値なら少ない段数。
     /// </summary>
