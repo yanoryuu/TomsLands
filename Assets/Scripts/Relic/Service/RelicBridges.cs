@@ -19,10 +19,14 @@ public static class RelicBattleEffects
     public static void SetFrom(RelicEffectResolver resolver)
     {
         HeroPowerMul = resolver != null ? Mathf.Max(0.1f, resolver.Modify(RelicStatId.HeroPowerMul, 1f)) : 1f;
-        DefeatRewardMul = resolver != null ? Mathf.Max(0f, resolver.Modify(RelicStatId.DefeatRewardMul, 1f)) : 1f;
+        DefeatRewardMul = DefeatRewardMulOf(resolver);
         if (!Mathf.Approximately(HeroPowerMul, 1f) || !Mathf.Approximately(DefeatRewardMul, 1f))
             Debug.Log($"[RelicBattleEffects] HeroPowerMul={HeroPowerMul:F2}, DefeatRewardMul={DefeatRewardMul:F2}");
     }
+
+    /// <summary>所持レリックの防衛報酬の倍率（SetFrom が配信の直前に確定する値。魔王軍支援の画面の見込みもこれを使う）。</summary>
+    public static float DefeatRewardMulOf(RelicEffectResolver resolver)
+        => resolver != null ? Mathf.Max(0f, resolver.Modify(RelicStatId.DefeatRewardMul, 1f)) : 1f;
 }
 
 /// <summary>

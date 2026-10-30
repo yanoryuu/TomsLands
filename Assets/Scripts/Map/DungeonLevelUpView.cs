@@ -18,6 +18,10 @@ public class DungeonLevelUpView : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailRewardText;
     [Tooltip("勇者のクリア確率の変化表示")]
     [SerializeField] private TextMeshProUGUI detailClearProbabilityText;
+    [Tooltip("配当のオッズの見込みの枠（オッズが全部 1 のときは隠す）")]
+    [SerializeField] private GameObject supportOddsRoot;
+    [Tooltip("配当のオッズの見込み（いまのLv・もう 1 回支援したLv・倍率は配信開始時の見込みで決まる）")]
+    [SerializeField] private TextMeshProUGUI supportOddsText;
 
     [Header("モンスター表示")]
     [SerializeField] private Transform  currentMonsterContainer;
@@ -58,6 +62,7 @@ public class DungeonLevelUpView : MonoBehaviour
         if (detailLevelText)            detailLevelText.text            = detail.LevelText;
         if (detailRewardText)           detailRewardText.text           = detail.RewardText;
         if (detailClearProbabilityText) detailClearProbabilityText.text = detail.ClearProbabilityText;
+        ShowSupportOdds(detail.OddsPreview);
 
         PopulateMonsterContainer(currentMonsterContainer, currentMonsterObjects, detail.CurrentMonsters);
         PopulateMonsterContainer(nextMonsterContainer,    nextMonsterObjects,    detail.NextMonsters);
@@ -69,10 +74,24 @@ public class DungeonLevelUpView : MonoBehaviour
         if (detailLevelText)            detailLevelText.text            = string.Empty;
         if (detailRewardText)           detailRewardText.text           = string.Empty;
         if (detailClearProbabilityText) detailClearProbabilityText.text = string.Empty;
+        ShowSupportOdds(null);
 
         ClearMonsterObjects(currentMonsterObjects);
         ClearMonsterObjects(nextMonsterObjects);
     }
+
+    /// <summary>配当のオッズの見込みを出す。見せない（オッズが全部 1・null）なら枠ごと隠す。</summary>
+    public void ShowSupportOdds(SupportOddsPreview.Result odds)
+    {
+        bool visible = odds != null && odds.Visible;
+        if (supportOddsText) supportOddsText.text = visible ? odds.Text : string.Empty;
+        if (supportOddsRoot) supportOddsRoot.SetActive(visible);
+        else if (supportOddsText) supportOddsText.gameObject.SetActive(visible);
+    }
+
+    /// <summary>いま出ているオッズの見込みの文（隠れていれば空。テスト・確認用）。</summary>
+    public string SupportOddsShownText =>
+        supportOddsText != null && supportOddsText.gameObject.activeInHierarchy ? supportOddsText.text : string.Empty;
 
     // ---------------- パッド/キー ----------------
 
@@ -213,6 +232,8 @@ public class DungeonLevelUpDetailData
     public string          RewardText;
     /// <summary>勇者のクリア確率の変化表示</summary>
     public string          ClearProbabilityText;
+    /// <summary>配当のオッズの見込み（オッズが全部 1 なら Visible = false）</summary>
+    public SupportOddsPreview.Result OddsPreview;
     public List<EnemyData> CurrentMonsters;
     public List<EnemyData> NextMonsters;
 }

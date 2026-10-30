@@ -49,6 +49,39 @@ public class PersonaVillageSupportTests
         CollectionAssert.AreEqual(new[] { VillageModel.HallId, "tavern" }, added);
     }
 
+    // ---- 村の施設は元が取れそうか（村資金の単位で比べる） ----
+
+    [Test]
+    public void PaybackPlausible_ComparesWithVillageFundsReceivedLastLap()
+    {
+        // 村資金 1,000 万・残す 0 で、5% (50 万) を超える 210 万の施設
+        // 前の周に村へ 60 万入った → 4 周で 240 万まで → 元が取れる
+        Assert.IsTrue(PersonaChooser.PaybackPlausible(2100000, 10000000, 0, 600000));
+        // 前の周に村へ 50 万 → 4 周で 200 万まで → 210 万は取れない
+        Assert.IsFalse(PersonaChooser.PaybackPlausible(2100000, 10000000, 0, 500000));
+        // ちょうど PaybackLaps 倍は取れる
+        Assert.IsTrue(PersonaChooser.PaybackPlausible(PersonaChooser.PaybackLaps * 500000, 10000000, 0, 500000));
+    }
+
+    [Test]
+    public void PaybackPlausible_NoPreviousLap_OnlyIdleFundsRule()
+    {
+        // 前の周が無い（入った額 0）: 村資金の 5% 以下なら買う、それを超えれば見送る
+        Assert.IsTrue(PersonaChooser.PaybackPlausible(500000, 10000000, 0, 0));
+        Assert.IsFalse(PersonaChooser.PaybackPlausible(500001, 10000000, 0, 0));
+        Assert.IsFalse(PersonaChooser.PaybackPlausible(2100000, 10000000, 0, -1));
+    }
+
+    [Test]
+    public void PaybackPlausible_RespectsReserveAndCost()
+    {
+        // 残す額を割るなら、入った額がいくら大きくても買わない
+        Assert.IsFalse(PersonaChooser.PaybackPlausible(900000, 1000000, 200000, 100000000));
+        Assert.IsFalse(PersonaChooser.PaybackPlausible(0, 1000000, 0, 1000000));
+        // 大きな額でも桁あふれしない
+        Assert.IsTrue(PersonaChooser.PaybackPlausible(2000000000, int.MaxValue, 0, 600000000));
+    }
+
     // ---- 魔王軍支援の期待値 ----
 
     private static PersonaSupportRates Rates(string dungeon, params (int lv, int n, int losses)[] cells)

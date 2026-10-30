@@ -282,15 +282,20 @@ public static class PersonaChooser
         return m;
     }
 
+    /// <summary>村の施設を何周で取り返せれば「元が取れる」と見るか（前の周に村へ入った額の何倍まで払うか）。</summary>
+    public const int PaybackLaps = 4;
+
     /// <summary>
     /// 村の施設は元が取れそうか（めたん）: 費用が村資金から残す額を引いた範囲にあり、
-    /// 村資金の 5% 以下（遊ばせておくだけのお金）か、前のランの儲けの 4 倍以下（数ランで取り返せる）。
+    /// 村資金の 5% 以下（遊ばせておくだけのお金）か、前の周に村資金へ入った額の PaybackLaps 倍以下（数周で取り返せる）。
+    /// 比べるのは村資金の単位どうし（換金率 village.conversionRate を変えても判断がずれない）。
+    /// 前の周が無い（入った額が 0 以下）ときは 5% の決まりだけで見る。
     /// </summary>
-    public static bool PaybackPlausible(int cost, int funds, int reserve, int lastRunProfit)
+    public static bool PaybackPlausible(int cost, int funds, int reserve, int lastRunVillageFunds)
     {
         if (cost <= 0 || cost > funds - reserve) return false;
         if (cost <= funds * 0.05f) return true;
-        return lastRunProfit > 0 && cost <= 4L * lastRunProfit;
+        return lastRunVillageFunds > 0 && cost <= (long)PaybackLaps * lastRunVillageFunds;
     }
 }
 #endif

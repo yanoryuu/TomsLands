@@ -133,3 +133,43 @@ dungeonId `*` は全ダンジョン共通、bal_dungeons の id（例 DemonKingC
 - マラソンのセーブ（Library/PersonaMarathonSaves）は Library/PersonaMarathonSaves_before_reset_1030 に退避し、全員 村 Lv0 から。AI の記憶と学習（UserSettings/PersonaMemory）は残す（控えは _scratch_wt04\persona_memory_backup_1030）
 - まだ入れていないもの: 納付日の朝の損は納付額を割り込む分を取らない（C#、審議の最高点 L3-P3a）、配信の判断の抜けの記録（P9）、AI の支援先の選び方（L1-Q3d）
 - 損のイベントの額と配信熱は変えない（審議で見送り）
+
+## 2026-10-30 18:37 アップロード: オッズ・元本保証・敵とダンジョン構成・換金率 0.3
+
+審議（panel_1030b〜e）とユーザーの決定。体験版にも届くが、換金率以外は新しいビルド（このブランチ以降）でしか読まれない。
+
+| シート | キー | 前 | 後 | 理由 |
+|---|---|---|---|---|
+| data | village.conversionRate | 0.4 | 0.3 | 村の育ちが速すぎた（めたん 14 周・ずんだもん 16 周で Lv28。目標 普通 30・上手い 20 周） |
+| data | clearOutlook.easyMin / favorableMin / evenMin / unfavorableMin | （なし＝75/63/35/15） | 75 / 59 / 41 / 15 | 互角は「紙一重」だけ（勝つが残り HP 10% 未満／負けるが敵の 90% 以上を倒す）。表示とオッズで共有 |
+| data | streamTuning.supportOddsEasy / Favorable / Even / Unfavorable / Hopeless | （なし＝1） | 2 / 1.5 / 1 / 0.45 / 0.3 | 魔王軍支援をハイリスク・ハイリターンに。勝ちそうな勇者に逆張りして当てると大きい |
+| data | streamTuning.supportPayoutFloorToStake | （なし＝false） | true | 馬券のように、読みが当たれば最低でも出資の 1 倍 |
+| data | streamTuning.plazaBonusAfterRefund | （なし＝false） | true | 広場の上乗せを返金騒ぎを引いた売上に掛ける（終盤の雪だるま P1） |
+| data | streamTuning.paymentMorningLossFloor | （なし＝false） | true | 納付日の朝の損で、所持金を納付額より下へは減らさない（L3-P3a） |
+| data | clearOutlookProgressByEnemyHp | （なし＝false） | true | 見込みに魔王の残り HP を入れる |
+| dungeonPhases | 全ダンジョン×Lv | （配信なし＝アセットの 2 波 ×4 繰り返し） | 明示の 5 波＋phaseType | ダンジョンごとに敵の構成をシートで直せるように |
+| dungeonPhases | 魔王城・メタリオン | 旧構成 | 小手調べ→本隊→群れ→門番（中ボス）→魔王 | 「安易に倍率をかけず丁寧に」。勇者勝率の目標 魔王城 51/35/23/16/11%、メタリオン 50/37/28/19/12% |
+| dungeonPhases | 氷霧 Lv1 の通常波 | 5 体 | 3 体 | 見込みと実戦のずれ（5 体×4）を直した結果、Lv1 が重すぎた |
+| bal_enemies | demon1〜11・demon boss Lv1〜5・mech1〜11・mech boss Lv1〜5 | アセットの値 | 提案の値（_scratch_wt04\demoncastle） | 同上 |
+
+- マラソンのセーブは Library/PersonaMarathonSaves_cleared/*_20261030_reset に退避し、全員最初から。AI の記憶は残す
+- 占い師の干渉の数値（ProphetTuning）はコードに仮置き。マラソンで測ってから審議でマスタへ移す
+
+## 2026-10-30 22:03 アップロード: 換金率を 1 に戻し、村まわりの額を全部 3 倍に
+
+ユーザーの指摘（換金率 0.3 は分かりにくく計算しにくい）と審議（panel_1030f、全部 ×3 の案 84 点）。育つ速さは今とほぼ同じ（3〜5% 速い）。体験版には村が無いので体験版の遊びは変わらない。
+
+| シート | キー | 前 | 後 | 理由 |
+|---|---|---|---|---|
+| data | village.conversionRate | 0.3 | 1 | 儲けはそのまま村に入る、を約束にする |
+| data | village.clearBaseFlat | 420000 | 1260000 | ×3（単位をそろえる） |
+| data | village.clearDebtMultiplier | 0.5 | 1.5 | ×3 |
+| data | village.bankruptcyBaseFunds | 50000 | 150000 | ×3 |
+| data | village.bankruptcyPaidDebtRate | 1 | 3 | ×3 |
+| villageFacilities | 領主館 Lv1〜5 | 25/45/70/100/140万 | 75/135/210/300/420万 | ×3 |
+| villageFacilities | 銀行 Lv1〜5 | 20/40/80/130/180万 | 60/120/240/390/540万 | ×3 |
+| villageFacilities | ギルド・酒場・職人組合・広場 Lv1〜5 | 9/16/27/42/61万 | 27/48/81/126/183万 | ×3（合計 4,350 万） |
+
+- スタートダッシュ（30/50/70 万）と難易度の倍率（1/1.25/1.5）は据え置き
+- C#（71aa3d6f）: AI の施設の元が取れるかの判断を「前の周に村へ入った額 × 4」と比べる形に
+- マラソンのセーブは Library/PersonaMarathonSaves_cleared/*_20261030_x3 に退避して最初から
