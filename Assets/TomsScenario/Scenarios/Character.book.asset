@@ -25,6 +25,7 @@ MonoBehaviour:
       - Pivot
       - Scale
       - FileName
+      - Y
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -35,8 +36,9 @@ MonoBehaviour:
       - "\u30C8\u30B3"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_01_\u901A\u5E38.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -47,8 +49,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_02_\u7B11\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -59,8 +62,9 @@ MonoBehaviour:
       - 
       - "03_\u5927\u7B11\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_03_\u5927\u7B11\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -71,8 +75,9 @@ MonoBehaviour:
       - 
       - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_04_\u56F0\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -83,8 +88,9 @@ MonoBehaviour:
       - 
       - "05_\u60B2\u3057\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_05_\u60B2\u3057\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -95,8 +101,9 @@ MonoBehaviour:
       - 
       - "06_\u6CE3\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_06_\u6CE3\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -107,8 +114,9 @@ MonoBehaviour:
       - 
       - "07_\u6012\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_07_\u6012\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -119,8 +127,9 @@ MonoBehaviour:
       - 
       - "08_\u9A5A\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_08_\u9A5A\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -131,8 +140,9 @@ MonoBehaviour:
       - 
       - "09_\u7167\u308C"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_09_\u7167\u308C.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -143,8 +153,9 @@ MonoBehaviour:
       - 
       - "10_\u771F\u5263"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_10_\u771F\u5263.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -155,8 +166,9 @@ MonoBehaviour:
       - 
       - "11_\u30B8\u30C8\u76EE"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_11_\u30B8\u30C8\u76EE.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -167,8 +179,9 @@ MonoBehaviour:
       - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u30C8\u30B3_12_\u30C9\u30E4\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -179,8 +192,9 @@ MonoBehaviour:
       - "\u52C7\u8005"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_01_\u901A\u5E38.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -191,8 +205,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_02_\u7B11\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -203,8 +218,9 @@ MonoBehaviour:
       - 
       - "03_\u5927\u7B11\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_03_\u5927\u7B11\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -215,8 +231,9 @@ MonoBehaviour:
       - 
       - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_04_\u56F0\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -227,8 +244,9 @@ MonoBehaviour:
       - 
       - "05_\u60B2\u3057\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_05_\u60B2\u3057\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -239,8 +257,9 @@ MonoBehaviour:
       - 
       - "06_\u6CE3\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_06_\u6CE3\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -251,8 +270,9 @@ MonoBehaviour:
       - 
       - "07_\u6012\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_07_\u6012\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -263,8 +283,9 @@ MonoBehaviour:
       - 
       - "08_\u9A5A\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_08_\u9A5A\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -275,8 +296,9 @@ MonoBehaviour:
       - 
       - "09_\u7167\u308C"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_09_\u7167\u308C.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -287,8 +309,9 @@ MonoBehaviour:
       - 
       - "10_\u771F\u5263"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_10_\u771F\u5263.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -299,8 +322,9 @@ MonoBehaviour:
       - 
       - "11_\u30B8\u30C8\u76EE"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_11_\u30B8\u30C8\u76EE.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -311,8 +335,9 @@ MonoBehaviour:
       - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u52C7\u8005_12_\u30C9\u30E4\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -323,8 +348,9 @@ MonoBehaviour:
       - "\u5360\u3044\u5E2B"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_01_\u901A\u5E38.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -335,8 +361,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_02_\u7B11\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -347,8 +374,9 @@ MonoBehaviour:
       - 
       - "03_\u5927\u7B11\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_03_\u5927\u7B11\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -359,8 +387,9 @@ MonoBehaviour:
       - 
       - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_04_\u56F0\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -371,8 +400,9 @@ MonoBehaviour:
       - 
       - "05_\u60B2\u3057\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_05_\u60B2\u3057\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -383,8 +413,9 @@ MonoBehaviour:
       - 
       - "06_\u6CE3\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_06_\u6CE3\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -395,8 +426,9 @@ MonoBehaviour:
       - 
       - "07_\u6012\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_07_\u6012\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -407,8 +439,9 @@ MonoBehaviour:
       - 
       - "08_\u9A5A\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_08_\u9A5A\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -419,8 +452,9 @@ MonoBehaviour:
       - 
       - "09_\u7167\u308C"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_09_\u7167\u308C.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -431,8 +465,9 @@ MonoBehaviour:
       - 
       - "10_\u771F\u5263"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_10_\u771F\u5263.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -443,8 +478,9 @@ MonoBehaviour:
       - 
       - "11_\u30B8\u30C8\u76EE"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_11_\u30B8\u30C8\u76EE.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -455,8 +491,9 @@ MonoBehaviour:
       - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u5360\u3044\u5E2B_12_\u30C9\u30E4\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -467,8 +504,9 @@ MonoBehaviour:
       - "\u935B\u51B6\u5C4B"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_01_\u901A\u5E38.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -479,8 +517,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_02_\u7B11\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -491,8 +530,9 @@ MonoBehaviour:
       - 
       - "03_\u5927\u7B11\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_03_\u5927\u7B11\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -503,8 +543,9 @@ MonoBehaviour:
       - 
       - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_04_\u56F0\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -515,8 +556,9 @@ MonoBehaviour:
       - 
       - "05_\u60B2\u3057\u3044"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_05_\u60B2\u3057\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -527,8 +569,9 @@ MonoBehaviour:
       - 
       - "06_\u6CE3\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_06_\u6CE3\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -539,8 +582,9 @@ MonoBehaviour:
       - 
       - "07_\u6012\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_07_\u6012\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -551,8 +595,9 @@ MonoBehaviour:
       - 
       - "08_\u9A5A\u304D"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_08_\u9A5A\u304D.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -563,8 +608,9 @@ MonoBehaviour:
       - 
       - "09_\u7167\u308C"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_09_\u7167\u308C.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -575,8 +621,9 @@ MonoBehaviour:
       - 
       - "10_\u771F\u5263"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_10_\u771F\u5263.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -587,8 +634,9 @@ MonoBehaviour:
       - 
       - "11_\u30B8\u30C8\u76EE"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_11_\u30B8\u30C8\u76EE.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -599,8 +647,9 @@ MonoBehaviour:
       - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u935B\u51B6\u5C4B_12_\u30C9\u30E4\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -623,8 +672,9 @@ MonoBehaviour:
       - "\u60C5\u5831\u5C4B"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -635,8 +685,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -647,8 +698,9 @@ MonoBehaviour:
       - 
       - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -659,8 +711,9 @@ MonoBehaviour:
       - 
       - "07_\u6012\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -671,8 +724,9 @@ MonoBehaviour:
       - 
       - "10_\u771F\u5263"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -683,8 +737,9 @@ MonoBehaviour:
       - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u60C5\u5831\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -695,8 +750,9 @@ MonoBehaviour:
       - "\u9053\u5177\u5C4B"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -707,8 +763,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -719,8 +776,9 @@ MonoBehaviour:
       - 
       - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -731,8 +789,9 @@ MonoBehaviour:
       - 
       - "07_\u6012\u308A"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -743,8 +802,9 @@ MonoBehaviour:
       - 
       - "10_\u771F\u5263"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -755,8 +815,9 @@ MonoBehaviour:
       - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
+      - 0.95
       - "\u9053\u5177\u5C4B-\u80CC\u666F\u900F\u3051.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -767,8 +828,9 @@ MonoBehaviour:
       - "\u9B54\u738B"
       - "01_\u901A\u5E38"
       - Bottom
-      - 0.45
-      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      - 0.95
+      - "\u9B54\u738B_01_\u901A\u5E38.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -779,8 +841,9 @@ MonoBehaviour:
       - 
       - "02_\u7B11\u9854"
       - Bottom
-      - 0.45
-      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      - 0.95
+      - "\u9B54\u738B_02_\u7B11\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -789,10 +852,11 @@ MonoBehaviour:
       strings:
       - 
       - 
-      - "04_\u56F0\u308A"
+      - "03_\u5927\u7B11\u3044"
       - Bottom
-      - 0.45
-      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      - 0.95
+      - "\u9B54\u738B_03_\u5927\u7B11\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -801,10 +865,11 @@ MonoBehaviour:
       strings:
       - 
       - 
-      - "07_\u6012\u308A"
+      - "04_\u56F0\u308A"
       - Bottom
-      - 0.45
-      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      - 0.95
+      - "\u9B54\u738B_04_\u56F0\u308A.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -813,10 +878,11 @@ MonoBehaviour:
       strings:
       - 
       - 
-      - "10_\u771F\u5263"
+      - "05_\u60B2\u3057\u3044"
       - Bottom
-      - 0.45
-      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      - 0.95
+      - "\u9B54\u738B_05_\u60B2\u3057\u3044.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
@@ -825,15 +891,94 @@ MonoBehaviour:
       strings:
       - 
       - 
+      - "06_\u6CE3\u304D"
+      - Bottom
+      - 0.95
+      - "\u9B54\u738B_06_\u6CE3\u304D.png"
+      - -453
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 68
+      debugIndex: 68
+      strings:
+      - 
+      - 
+      - "07_\u6012\u308A"
+      - Bottom
+      - 0.95
+      - "\u9B54\u738B_07_\u6012\u308A.png"
+      - -453
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 69
+      debugIndex: 69
+      strings:
+      - 
+      - 
+      - "08_\u9A5A\u304D"
+      - Bottom
+      - 0.95
+      - "\u9B54\u738B_08_\u9A5A\u304D.png"
+      - -453
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 70
+      debugIndex: 70
+      strings:
+      - 
+      - 
+      - "09_\u7167\u308C"
+      - Bottom
+      - 0.95
+      - "\u9B54\u738B_09_\u7167\u308C.png"
+      - -453
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 71
+      debugIndex: 71
+      strings:
+      - 
+      - 
+      - "10_\u771F\u5263"
+      - Bottom
+      - 0.95
+      - "\u9B54\u738B_10_\u771F\u5263.png"
+      - -453
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 72
+      debugIndex: 72
+      strings:
+      - 
+      - 
+      - "11_\u30B8\u30C8\u76EE"
+      - Bottom
+      - 0.95
+      - "\u9B54\u738B_11_\u30B8\u30C8\u76EE.png"
+      - -453
+      isEmpty: 0
+      isCommentOut: 0
+      debugInfo: 
+    - rowIndex: 73
+      debugIndex: 73
+      strings:
+      - 
+      - 
       - "12_\u30C9\u30E4\u9854"
       - Bottom
-      - 0.45
-      - "\u9B54\u738B-\u80CC\u666F\u900F\u3051.png"
+      - 0.95
+      - "\u9B54\u738B_12_\u30C9\u30E4\u9854.png"
+      - -453
       isEmpty: 0
       isCommentOut: 0
       debugInfo: 
     name: Assets/TomsScenario/Scenarios/Character.csv
     type: 0
-    textLength: 1953
+    textLength: 2417
     headerRow: 0
     sourceAssetInEditor: {fileID: 4900000, guid: 5bfd41f7e7605af4b9b67ba6a0df3dab, type: 3}

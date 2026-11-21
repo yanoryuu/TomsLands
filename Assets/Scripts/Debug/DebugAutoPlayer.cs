@@ -885,6 +885,13 @@ public class DebugAutoPlayer : MonoBehaviour
     private bool HandleEventPanel(TurnPhase phase)
     {
         if (_pendingEvent == null || !_pendingEvent.HasPendingEvent || phase != TurnPhase.Event) return false;
+        // イベントは会話で流れる（会話の送りは HandleScenario）。会話の始まり待ち・終わった直後はポップアップが無いので待つ
+        if (_pendingEvent.IsPlayingConversation)
+        {
+            SetStatus($"T{CurrentTurnOrMinus()} イベント: 会話待ち");
+            _stallExempt = true;
+            return true;
+        }
         if (_eventView == null)
         {
             Pause(PauseKind.Error, "EventView が見つからずイベントを進められません");

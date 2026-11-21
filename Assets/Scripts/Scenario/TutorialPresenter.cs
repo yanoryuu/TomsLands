@@ -51,9 +51,6 @@ public class TutorialPresenter : IStartable, IDisposable
     /// <summary>開始会話のあと、暗転幕を開けて店を見せるまでの時間（秒）。</summary>
     private const float CurtainFadeSeconds = 0.6f;
 
-    /// <summary>ランダムイベントの会話ラベルの接頭辞。イベントIDを付けて Event_001 のようになる。</summary>
-    private const string EventLabelPrefix = "Event_";
-
     /// <summary>
     /// 占い師と出会う最も早いターン。出会うのは「初配信の前日の朝」（K-6。「早速広場で試してみよう」から配信まで日が空かないように）。
     /// 1日目の営業後（2ターン目の朝）は「注文が入った」会話（FundsShortage）を出すため、ぶつからないよう3以降にしている。
@@ -167,11 +164,14 @@ public class TutorialPresenter : IStartable, IDisposable
             .Subscribe(_ => EnqueueOnce(Display))
             .AddTo(_disposables);
 
-        // ランダムイベントのフェーズに入ったら、そのイベント専用の会話があれば再生する
-        _turnPhaseManager.CurrentTurnPhase
-            .Where(phase => phase == TurnPhase.Event)
-            .Subscribe(_ => EnqueuePendingEventScenario())
-            .AddTo(_disposables);
+        // ランダムイベントの会話そのものは店（TomsShopPresenter）が流し、終わったら効果を入れる。
+        // ここではイベントが片付いたあとに、イベントの説明を一度だけ流す
+        if (_pendingEventData != null)
+        {
+            _pendingEventData.OnCleared
+                .Subscribe(_ => EnqueueEventTutorial())
+                .AddTo(_disposables);
+        }
 
         // ターン数で発火するもの。CurrentTurn はセーブ復帰時にも流れるが、既読フラグで二重再生を防ぐ
         _gameFlow.CurrentTurn
@@ -363,7 +363,7 @@ public class TutorialPresenter : IStartable, IDisposable
         }
         // 出会いの直後に、勇者に何を持たせるかの会話をつなぐ（K-1。キューは順番に流れる）
         if (IsFirstStreamEve()) EnqueueOnce(HeroEquip, () => NavigateAfterNoticesAsync(TomsShopGamePhase.Hero).Forget());
-        // イベント・バズの説明は「起きたとき」に流す（K-9。EnqueuePendingEventScenario と Start のバズ購読）
+        // イベント・バズの説明は「起きたとき」に流す（K-9。EnqueueEventTutorial と Start のバズ購読）
     }
 
     /// <summary>
@@ -421,14 +421,9 @@ public class TutorialPresenter : IStartable, IDisposable
         await curtain.FadeOutAndDestroyAsync(CurtainFadeSeconds, cancellationToken);
     }
 
-    /// <summary>保留中のランダムイベントに対応する会話があれば積む（毎回再生する）。</summary>
-    private void EnqueuePendingEventScenario()
+    /// <summary>初めてのイベントのあとに、イベントの説明を一度だけ積む（K-9。占い師に出会う前は出さない）。</summary>
+    private void EnqueueEventTutorial()
     {
-        if (_pendingEventData == null || !_pendingEventData.HasPendingEvent) return;
-        string id = _pendingEventData.PendingEvent?.id;
-        if (string.IsNullOrEmpty(id)) return;
-        Enqueue(new QueuedScenario(EventLabelPrefix + id, onceOnly: false));
-        // 初めてのイベントのあとに、イベントの説明を一度だけ（K-9。占い師に出会う前は出さない）
         if (_meta.HasSeenTutorial(ProphetMeeting)) EnqueueOnce(EventTutorial);
     }
 

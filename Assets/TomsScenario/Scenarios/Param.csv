@@ -1,0 +1,4 @@
+Label,Type,Value,FileType
+//イベントの会話の最後に出す結果（もらったお金・品など）。TomsShopPresenter が会話の前に入れる。System にしておかないと会話の開始で初期値に戻る,,,
+EventResult,String,,System
+EventHasResult,Bool,false,System
