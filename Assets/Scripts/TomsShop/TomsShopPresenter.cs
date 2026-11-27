@@ -1084,20 +1084,87 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     }
 
     /// <summary>
-    /// 保留中のイベントがあればポップアップを表示する
+    /// 保留中のイベントがあれば、会話（宴の Event_&lt;id&gt;）で流す。もらったもの等は会話の最後の行に出し、会話が終わったら効果を入れる。
+    /// 会話が無い・会話システムが無いときだけ、従来のポップアップで出す。
     /// </summary>
     private void ShowPendingEventIfExists()
     {
         if (!pendingEventData.HasPendingEvent) return;
+        // 店の画面の入り直し（Entry のやり直し）で同じ会話を二重に流さない
+        if (pendingEventData.IsPlayingConversation) return;
 
-        var tomsEvent = pendingEventData.PendingEvent;
+        PlayPendingEventAsync(pendingEventData.PendingEvent, lifetimeCts.Token).Forget();
+    }
+
+    /// <summary>イベントの会話を流し、終わったら効果を入れる。会話を流せなければポップアップに切り替える。</summary>
+    private async UniTaskVoid PlayPendingEventAsync(TomsEvent tomsEvent, CancellationToken ct)
+    {
+        string label = PendingEventData.ConversationLabel(tomsEvent.id);
+        bool played = false;
+        pendingEventData.IsPlayingConversation = true;
+        try
+        {
+            // ScenarioPlayer.Instance は見つからないとエラーログを出すので、ここでは直接探す
+            var player = UnityEngine.Object.FindFirstObjectByType<ScenarioPlayer>();
+            if (player != null)
+            {
+                // シナリオデータの読み込み前だとラベル判定が常に失敗するため、先に完了を待つ
+                await player.WaitUntilReadyAsync(ct);
+                if (player.HasLabel(label))
+                {
+                    Debug.Log($"[TomsShopPresenter] イベントを会話で流します: {label} {tomsEvent.title}");
+                    // もらったお金・品などは、会話の最後の 1 行（Event.csv の <param=EventResult>）で見せる
+                    SetEventResultParams(player, BuildEffects(tomsEvent.commands));
+                    // 別の会話（配信からの帰還など）を再生中なら、終わるまで待ってから流れる
+                    await player.PlayAsync(label, ct);
+                    played = true;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return; // シーン破棄。保留イベントはセーブに残っているので、次に店を開いたとき流し直す
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"[TomsShopPresenter] イベントの会話の再生に失敗したため、ポップアップで出します: {label}\n{e}");
+        }
+        finally
+        {
+            pendingEventData.IsPlayingConversation = false;
+        }
+
+        if (ct.IsCancellationRequested) return;
+        // 会話の間に別の経路で片付いていたら何もしない
+        if (!ReferenceEquals(pendingEventData.PendingEvent, tomsEvent)) return;
+
+        if (played) CompletePendingEvent();
+        else ShowEventPopup(tomsEvent);
+    }
+
+    /// <summary>会話の変数に、イベントの結果の文（1 行ずつ改行でつなぐ）と、結果があるかを入れる。</summary>
+    private static void SetEventResultParams(ScenarioPlayer player, List<EventEffectLine> effects)
+    {
+        string text = string.Join("\n", effects.Select(x => x.DialogText));
+        bool ok = player.TrySetParameter(EventResultParam, text)
+                  & player.TrySetParameter(EventHasResultParam, effects.Count > 0);
+        if (!ok) Debug.LogWarning($"[TomsShopPresenter] 会話の変数 {EventResultParam} / {EventHasResultParam} を入れられませんでした（Param.csv を確認）。結果の行は出ません");
+    }
+
+    /// <summary>Param.csv の変数名（イベントの結果の文と、結果があるか）。</summary>
+    private const string EventResultParam = "EventResult";
+    private const string EventHasResultParam = "EventHasResult";
+
+    /// <summary>会話を持たないイベント用の、従来のポップアップ。</summary>
+    private void ShowEventPopup(TomsEvent tomsEvent)
+    {
         Debug.Log($"[TomsShopPresenter] Showing pending event popup: {tomsEvent.title}");
 
         // イベント表示の失敗で Entry 全体（ターンフェーズ開始）を巻き込まないようにガードする。
         // 失敗した場合は保留イベントを破棄してターンを続行する。
         try
         {
-            string effectText = BuildEffectText(tomsEvent.commands);
+            string effectText = string.Join("\n", BuildEffects(tomsEvent.commands).Select(x => x.Text));
             eventView.ShowEvent(tomsEvent.title, tomsEvent.description, effectText);
         }
         catch (Exception e)
@@ -1112,10 +1179,18 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
     /// </summary>
     private void OnEventPopupConfirmed()
     {
+        // 会話で流している最中は、ポップアップ経由で片付けない
+        if (pendingEventData.IsPlayingConversation) return;
+        CompletePendingEvent();
+    }
+
+    /// <summary>保留イベントの効果を入れて片付け、仕入れフェーズへ進める（結果は会話の最後の行かポップアップで見せ済み）。</summary>
+    private void CompletePendingEvent()
+    {
         if (!pendingEventData.HasPendingEvent) return;
 
         var tomsEvent = pendingEventData.PendingEvent;
-        Debug.Log($"[TomsShopPresenter] Event popup confirmed: {tomsEvent.title}");
+        Debug.Log($"[TomsShopPresenter] Event completed: {tomsEvent.title}");
 
         // コマンドを実行
         tomsEventExecutor.Execute(tomsEvent);
@@ -1130,12 +1205,21 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
         }
     }
 
-    /// <summary>
-    /// コマンドの効果をテキストとして構築する
-    /// </summary>
-    private string BuildEffectText(List<TomsEventCommand> commands)
+    /// <summary>イベントの効果 1 行分。Text はポップアップ用の短い書き方、DialogText は会話の最後の行に出す文。</summary>
+    private readonly struct EventEffectLine
     {
-        var sb = new StringBuilder();
+        public readonly string Text;
+        public readonly string DialogText;
+        public EventEffectLine(string text, string dialogText) { Text = text; DialogText = dialogText; }
+    }
+
+    /// <summary>
+    /// コマンドの効果を 1 行ずつの文言にする（ポップアップ・会話の最後の行とも改行でつなぐ）
+    /// </summary>
+    private List<EventEffectLine> BuildEffects(List<TomsEventCommand> commands)
+    {
+        var lines = new List<EventEffectLine>();
+        if (commands == null) return lines;
 
         foreach (var cmd in commands)
         {
@@ -1145,14 +1229,18 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                     // 不正なマスターデータ（数値でないamount）でも落とさない
                     if (cmd.parameters.TryGetValue("amount", out var moneyStr) && int.TryParse(moneyStr, out var amount))
                     {
-                        sb.AppendLine(amount >= 0 ? $"所持金 +{amount:N0}G" : $"所持金 {amount:N0}G");
+                        lines.Add(amount >= 0
+                            ? new EventEffectLine($"所持金 +{amount:N0}G", $"{amount:N0}G を手に入れた！")
+                            : new EventEffectLine($"所持金 {amount:N0}G", $"所持金が {-amount:N0}G 減った……"));
                     }
                     break;
 
                 case "ChangeTrust":
                     if (cmd.parameters.TryGetValue("amount", out var trustStr) && float.TryParse(trustStr, out var trustAmount))
                     {
-                        sb.AppendLine(trustAmount >= 0 ? $"信頼度 +{trustAmount}" : $"信頼度 {trustAmount}");
+                        lines.Add(trustAmount >= 0
+                            ? new EventEffectLine($"信頼度 +{trustAmount}", $"信頼度が {trustAmount} 上がった！")
+                            : new EventEffectLine($"信頼度 {trustAmount}", $"信頼度が {-trustAmount} 下がった……"));
                     }
                     break;
 
@@ -1161,13 +1249,14 @@ public class TomsShopPresenter : IDisposable, IPresenter, IStartable
                     {
                         // 画面には ID ではなく品名を出す（見つからないときだけ ID）
                         var gotName = itemModel.GetRuntimeItem(itemId)?.ItemName;
-                        sb.AppendLine($"{(string.IsNullOrEmpty(gotName) ? itemId : gotName)} を1つ入手");
+                        string shown = string.IsNullOrEmpty(gotName) ? itemId : gotName;
+                        lines.Add(new EventEffectLine($"{shown} を1つ入手", $"「{shown}」を1つ手に入れた！"));
                     }
                     break;
             }
         }
 
-        return sb.ToString().TrimEnd();
+        return lines;
     }
 
     private void OpenSelectionPanel() => itemSelectionPresenter.OnOpenSelectionPanel();

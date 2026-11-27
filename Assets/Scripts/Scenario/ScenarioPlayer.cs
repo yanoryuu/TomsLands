@@ -64,6 +64,16 @@ public class ScenarioPlayer : SingletonMonoBehaviour<ScenarioPlayer>
     }
 
     /// <summary>
+    /// 会話の変数（Param.csv で定義したもの）に値を入れる。定義が無い・型が違うときは false。
+    /// 会話の開始で初期値に戻らないよう、ゲームから入れる変数は Param.csv で FileType=System にしておく。
+    /// </summary>
+    public bool TrySetParameter(string key, object value)
+    {
+        if (engine == null || engine.Param == null) return false;
+        return engine.Param.TrySetParameter(key, value);
+    }
+
+    /// <summary>
     /// 指定ラベルの会話を再生し、終了するまで待つ。
     /// ラベルは先頭の * を付けても付けなくてもよい。
     /// </summary>
