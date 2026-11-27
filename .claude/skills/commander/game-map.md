@@ -10,7 +10,7 @@
 7. Docs
 
 ## 1. 環境
-Unity 6000.0.32f1 / URP / uGUI+TMP / DOTween / VContainer 1.17 / R3 / UniTask（UniRxは不使用）/ Addressables / Utage / Firebase Remote Config。asmdefなし（全てAssembly-CSharp）。解像度1920x1080。
+Unity 6000.0.85f2 / URP / uGUI+TMP / DOTween / VContainer 1.17 / R3 / UniTask（UniRxは不使用）/ Addressables / Utage / Firebase Remote Config。asmdefなし（全てAssembly-CSharp）。解像度1920x1080。
 
 ## 2. システム別ディレクトリ（Assets/Scripts/）
 | 領域 | ディレクトリ | 内容 |

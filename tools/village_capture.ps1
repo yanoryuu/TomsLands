@@ -13,7 +13,7 @@ param(
     [string]$Ranks = "",
     [int]$Funds = -1,
     [string]$Out = "",
-    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.0.32f1\Editor\Unity.exe"
+    [string]$Unity = "C:\Program Files\Unity\Hub\Editor\6000.0.85f2\Editor\Unity.exe"
 )
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path

@@ -8,7 +8,7 @@ description: TomsLands（Unity 6 / VContainer + R3 + UniTask + DOTween）の C# 
 元: TheOne Studio `theone-unity-standards`（https://github.com/truongtv22/theone-training-skills）。
 TomsLands の実態（VContainer 1.17 + R3 + UniTask + DOTween、名前空間なし、asmdef なし、日本語コメント文化、Android IL2CPP）に合わせて書き換えた。
 
-⚠️ Unity 6000.0.32f1 / **C# 9**。`record struct`、file-scoped namespace、global using、`required` など C# 10 以降の構文は使わない。
+⚠️ Unity 6000.0.85f2 / **C# 9**。`record struct`、file-scoped namespace、global using、`required` など C# 10 以降の構文は使わない。
 
 ## 優先順位
 

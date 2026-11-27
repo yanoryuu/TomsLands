@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "com.cysharp.r3": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
-    "com.rlabrecque.steamworks.net": "https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.164.1",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
+    "com.rlabrecque.steamworks.net": "https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.164.1",
     "com.unity.addressables": "2.2.2",
     "com.unity.cinemachine": "3.1.7",
     "com.unity.cloud.gltfast": "6.13.1",
@@ -13,11 +13,13 @@
     "com.unity.inputsystem": "1.11.2",
     "com.unity.multiplayer.center": "1.0.0",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
+    "com.unity.pipeline": "0.7.0-exp.1",
     "com.unity.probuilder": "6.1.2",
     "com.unity.recorder": "5.1.2",
     "com.unity.render-pipelines.universal": "17.0.3",
     "com.unity.test-framework": "1.4.5",
     "com.unity.timeline": "1.8.7",
+    "com.unity.toolchain.macos-arm64-linux-x86_64": "2.0.5",
     "com.unity.ugui": "2.0.0",
     "com.unity.visualeffectgraph": "17.0.3",
     "com.unity.visualscripting": "1.9.5",
@@ -53,7 +55,6 @@
     "com.unity.modules.video": "1.0.0",
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
-    "com.unity.modules.xr": "1.0.0",
-    "com.unity.pipeline": "0.7.0-exp.1"
+    "com.unity.modules.xr": "1.0.0"
   }
 }

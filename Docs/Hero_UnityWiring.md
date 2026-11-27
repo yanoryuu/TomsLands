@@ -5,10 +5,10 @@
 
 ```
 # 組み直す（-nographics 可）
-"C:\Program Files\Unity\Hub\Editor\6000.0.32f1\Editor\Unity.exe" -batchmode -nographics -projectPath <wt> ^
+"C:\Program Files\Unity\Hub\Editor\6000.0.85f2\Editor\Unity.exe" -batchmode -nographics -projectPath <wt> ^
   -executeMethod HeroUIBuilder.BuildBatch -logFile <log>
 # 撮る（描画が要るので -nographics は付けない。weapon / armor / drag / tactics）
-"C:\Program Files\Unity\Hub\Editor\6000.0.32f1\Editor\Unity.exe" -batchmode -projectPath <wt> ^
+"C:\Program Files\Unity\Hub\Editor\6000.0.85f2\Editor\Unity.exe" -batchmode -projectPath <wt> ^
   -executeMethod HeroCapture.RunBatch -captureOut <dir> [-captureShots weapon,drag] -logFile <log>
 # 階層を書き出す
   -executeMethod HeroUIBuilder.DumpBatch -dumpOut <file>
